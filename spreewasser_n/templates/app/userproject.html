@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!-- userproject -->
+{% extends "app/base.html" %}
+
+
+
+{% block body_block %}
+
+  <h1>Spreewasser:N Userproject</h1>
+  <h2>here is the form</h2>
+  
+  
+  
+  <div id="map">
+    <script>
+      var map = L.map('map').setView([51.505, -0.09], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+      }).addTo(map);
+    </script>
+  </div>
+ 
+{% endblock%}
+
+<!-- here comes the leaflet_map tag-->

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<!-- Home -->
+{% extends "app/base.html" %}
+
+{% block body_block %}
+
+    <h1>app/home</h1>
+    <h2>here are the relative paths over template inheritance</h2>
+    <a href="{% url 'app:Userinfo' %}">Userinfo</a>
+    <a href="{% url 'app:Userproject' %}">Userproject</a>
+    <a href="{% url 'app:form_sidebar' %}">sidebar</a>
+    <a href="{% url 'admin:index' %}">Admin login</a>
+
+{% endblock%}

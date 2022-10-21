@@ -1,0 +1,57 @@
+# version: "3.8"
+services:
+  app:
+    build: 
+      context: .
+      args:
+        - DEV=true
+    ports:
+      - 8000:8000
+    volumes:
+      - ./app:/app
+    command: >
+      sh -c "python3 manage.py wait_for_db &&
+            python3 manage.py migrate && 
+            python3 manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=postgis
+      - DB_USER=postgis
+      - DB_PASS=postgis
+    container_name: swn_geo_django
+    depends_on:
+      - db
+
+  # Postgres database
+  db:
+    image: postgis/postgis
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgis
+      - POSTGRES_USER=postgis
+      - POSTGRES_PASSWORD=postgis
+    ports:
+      - 5432:5432
+    container_name: swn_postgis
+
+
+
+   
+
+
+
+  # # Celery
+  # celery:
+  #   #restart: # needs to be changed to always once celery is used
+  #   build:
+  #     context: .
+  #   command: celery -A core worker -l DEBUG
+  #   volumes:
+  #     - .:/django
+  #   container_name: celery_swn
+  #   depends_on:
+  #   - db
+  #   - redis
+  #   - app
+

@@ -15,6 +15,10 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+TEMPLATES_DIR = Path.joinpath(BASE_DIR, 'templates')
+STATIC_DIR = Path.joinpath(BASE_DIR, 'static')
+# STATIC_DIR_APP = Path.joinpath(BASE_DIR, 'app/static')
+MEDIA_DIR = Path.joinpath(BASE_DIR, 'media')
 
 
 # Quick-start development settings - unsuitable for production
@@ -38,6 +42,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
+    'debug_toolbar',
+    'leaflet',
+    'djgeojson',
     'core',
     'rest_framework',
     'rest_framework.authtoken',
@@ -53,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'app.urls'
@@ -60,7 +69,7 @@ ROOT_URLCONF = 'app.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [TEMPLATES_DIR, ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -92,6 +101,13 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
+
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+]
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -125,6 +141,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    STATIC_DIR,# STATIC_DIR_APP
+]
+MEDIA_ROOT = MEDIA_DIR
+MEDIA_URL = 'media/'
+
+LOGIN_URL = 'app/Login/'
+LOGIN_REDIRECT_URL = 'Dashboard/'
+LOGOUT_REDIRECT_URL = '/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -135,4 +160,22 @@ AUTH_USER_MODEL = 'core.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+LEAFLET_CONFIG = {
+    #'SRID': 4326,
+    'DEFAULT_CENTER': (52.0825, 13.8),
+    'DEFAULT_ZOOM': 10,
+    'MAX_ZOOM': 30, 
+    'MIN_ZOOM': 1,
+    'SCALE': 'both', #'metric'
+    'ATTRIBUTION_PREFIX': 'Spreewasser:N',
+    'TILES': [('Open Street Map', 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+               {'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>', 'maxZoom': 20}),
+              ('Satellit', 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+               {'attribution': 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community', 'maxZoom': 20}),
+              ('OpenTopo Karte', 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+                    {'attribution': 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)', 'maxZoom': 20})
+               ],
+    #'OVERLAYS': [('Pilotregion', '{% static "pilotregion_4326.geojson" %}',{'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'})],
 }

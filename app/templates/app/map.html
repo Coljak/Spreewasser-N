@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!-- Home -->
+{% extends "app/base.html" %}
+{% load leaflet_tags %}
+
+
+{% block body_block %}
+
+    <h1>HERE COMES THE MAP!</h1>
+    {% leaflet_map "main"  %}
+
+
+
+
+{% endblock%}

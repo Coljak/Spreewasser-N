@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!-- Login -->
+{% extends "app/base.html" %}
+
+{% block body_block %}
+
+        <h1>Spreewasser: Login</h1>
+        <h2>LOGIN</h2>
+
+        <div class="container" >
+                <form action="{% url 'app:user_login' %}" method="post">
+                        {% csrf_token %}
+                        <label for="username">Username: </label>
+                        <input type="text" name="username" placeholder="Enter Username">
+
+                        <label for="username">Password: </label>
+                        <input type="password" name="password" placeholder="Enter Username">
+                        <input type="submit" name="" value="Login">
+                </form>
+        </div>
+{% endblock %}

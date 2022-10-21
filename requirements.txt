@@ -40,3 +40,6 @@ wcwidth==0.2.5
 wrapt==1.14.1
 yarl==1.8.1
 tzdata
+drf-spectacular>=0.15.1,<0.16
+djangorestframework>=3.12, <3.13
+drf-spectacular>=0.15.1,<0.16

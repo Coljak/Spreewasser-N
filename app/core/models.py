@@ -4,12 +4,15 @@ Database models.
 
 from email.policy import default
 from statistics import mode
-from django.db import models
+from django.contrib.gis.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
 )
+
+import datetime
+import os
 
 class UserManager(BaseUserManager):
     """Manager for users."""
@@ -43,4 +46,21 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
+
+class WinterSummerCrop(models.Model):
+    name = models.CharField(max_length=30)
     
+class Crop(models.Model):
+    name = models.CharField(max_length=64)
+    winter_summer_crop = models.ForeignKey(WinterSummerCrop, null=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return self.name
+
+
+class ProjectRegion(models.Model):
+    name = models.CharField(max_length=50)
+    geom = models.MultiPolygonField()
+
+    def __str__(self):
+        return self.name

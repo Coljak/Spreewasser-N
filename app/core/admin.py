@@ -3,11 +3,12 @@ Django admin customization.
 """
 
 from django.contrib import admin
+from leaflet.admin import LeafletGeoAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 # this is best practice to integrate translation
 from django.utils.translation import gettext_lazy as _
 
-from core import models
+from .models import User, ProjectRegion
 
 
 class UserAdmin(BaseUserAdmin):
@@ -45,4 +46,5 @@ class UserAdmin(BaseUserAdmin):
     )
 
 
-admin.site.register(models.User, UserAdmin)
+admin.site.register(User, UserAdmin)
+admin.site.register(ProjectRegion, LeafletGeoAdmin)

@@ -1,0 +1,45 @@
+
+{% extends "core/base.html" %}
+
+{% load leaflet_tags %}
+{% load geojson_tags %}
+
+{% block scripts %}
+    <script src="{% static 'core/map.js' %}" defer></script>
+    {% leaflet_js %}
+    {% leaflet_css %}
+
+{% endblock scripts %}
+
+{% comment %} <script src="/static/leaflet/leaflet.js"></script> {% endcomment %}
+
+{% block body_block %}
+
+    <h1>HERE COMES THE MAP!</h1>
+    <container class="map-container map" id="map-container">
+        <div class="has-text-centered"> 
+            {% leaflet_map "generalMap" callback="window.map_init" %}
+            <!--
+            <script>
+                var popup = L.popup();
+                var marker = L.marker([52.0825, 13.8]);
+
+                marker.addTo(generalMap);
+                function onMapClickPopup(e){
+                    marker.setLatLng(e.latlng);
+                    popup
+                    .setLatLng(e.latlng)
+                    .setContent("You clicked at " + e.latlng.toString())
+                    .openOn(generalMap);
+                }
+            
+                generalMap.on('click', onMapClickPopup);
+            </script>
+            -->
+        
+        </div>
+    </container>
+
+{% endblock%}
+
+

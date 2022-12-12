@@ -45,6 +45,9 @@ class UserAdmin(BaseUserAdmin):
         }),
     )
 
+# class ProjectRegionAdmin(LeafletGeoAdmin):
+#     pass
+
 
 admin.site.register(User, UserAdmin)
 admin.site.register(ProjectRegion, LeafletGeoAdmin)

@@ -1,6 +1,9 @@
+
+from attr import attr
 from django import forms
 from django.contrib.auth.models import User
-from core.models import User
+
+from core.models import User, Crop
 from django.core import  validators
 
 
@@ -12,6 +15,15 @@ class UserForm(forms.ModelForm):
         fields = ('name', 'email', 'password')
 
 
+class FormCrops(forms.ModelForm):
+    class Meta:
+        model = Crop
+        fields = ['name']
+        widgets = {
+            'name': forms.Select(attrs ={
+                'class': 'form-control',
+            }),
+        }
 
 
 class FormSidebar(forms.Form):

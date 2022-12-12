@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<!-- user dashboard -->
+{% extends "core/base.html" %}
+{% load leaflet_tags %}
+{% load geojson_tags %}
+
+{% block scripts %}
+
+
+  {% leaflet_js %}
+  {% leaflet_css %}
+{% endblock scripts %}
+
+{% block body_block %}
+  <h1>User Dashboard</h1>
+  <h2>here is the form</h2>
+
+
+  <div class="container">
+    <div class="row align-items-start">
+      <div id="map" class="column">
+        {% leaflet_map "dashboard_map"  callback="window.main_map_init" %}
+        <script type="text/javascript">
+          window.addEventListener("map:init", function (e) {
+              var detail = e.detail;
+              
+              L.marker([52.0825, 13.8]).addTo(detail.map);
+              
+          }, false);
+
+          var popup = new L.popup();
+            function onMapClick(e){
+                popup
+                .setLatLng(e.latlng)
+                .setContent("You clicked at " + e.latlng.toString())
+                .openOn(dashboard_map);
+            }
+
+
+          dashboard_map.on('click', onMapClick);
+
+          var button = new L.Control.Button('Menu', {
+            toggleButton: 'active',
+            position: 'topleft',
+        });
+
+      </script>
+
+      </div>
+
+      <div class="column">
+        <div>
+          <form method="POST" action = "">{% csrf_token %}
+            <p>Choose Crop</p> {{ form.name }}
+            <input type="submit" value="Submit"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock%}
+
+
+
+{% block javascript %}
+{{ block.super }}
+<script>
+function map_init(map, options) {
+    {% include 'shared/overlays.html' %}
+}
+</script>
+{% endblock %}

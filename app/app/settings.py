@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'django_extensions',
     'debug_toolbar',
     'leaflet',
     'djgeojson',
@@ -62,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # 'geoip2_extras.middleware.GeoIP2Middleware',
 ]
 
 ROOT_URLCONF = 'app.urls'
@@ -90,7 +92,7 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'HOST': os.environ.get('DB_HOST'),
         'NAME': os.environ.get('DB_NAME'),
         'USER': os.environ.get('DB_USER'),
@@ -128,7 +130,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'de-de'
 
 TIME_ZONE = 'UTC'
 
@@ -141,15 +143,29 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+# STATIC_ROOT = Path.joinpath(STATIC_DIR, )
 STATICFILES_DIRS = [
-    STATIC_DIR,# STATIC_DIR_APP
-]
+    STATIC_DIR,
+    Path.joinpath(BASE_DIR, 'core/static/'),
+    Path.joinpath(BASE_DIR, 'user/static/') ]
+# STATICFILES_DIRS = [Path.joinpath(BASE_DIR, 'static/core')]
+
 MEDIA_ROOT = MEDIA_DIR
 MEDIA_URL = 'media/'
 
-LOGIN_URL = 'app/Login/'
+LOGIN_URL = 'Login/'
 LOGIN_REDIRECT_URL = 'Dashboard/'
 LOGOUT_REDIRECT_URL = '/'
+
+# for Debug Toolbar, the internal IPS are necessary
+if DEBUG:
+    import socket  # only if you haven't already imported this
+    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    INTERNAL_IPS = [ip[: ip.rfind(".")] + ".1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
+# INTERNAL_IPS = [
+#     "127.0.0.1",
+#     "0.0.0.0",
+# ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -169,13 +185,34 @@ LEAFLET_CONFIG = {
     'MAX_ZOOM': 30, 
     'MIN_ZOOM': 1,
     'SCALE': 'both', #'metric'
+    'MINIMAP': True,
+    'RESET_VIEW': True,
+    # 'NO_GLOBALS': False, # adds all maps to window.maps
+    # 'PLUGINS': {
+    # 'name-of-plugin': {
+    #     'css': ['relative/path/to/stylesheet.css', '/root/path/to/stylesheet.css'],
+    #     'js': 'http://absolute-url.example.com/path/to/script.js',
+    #     'auto-include': True,
+    #     },
+    # . . .
+    # }
     'ATTRIBUTION_PREFIX': 'Spreewasser:N',
-    'TILES': [('Open Street Map', 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-               {'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>', 'maxZoom': 20}),
-              ('Satellit', 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-               {'attribution': 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community', 'maxZoom': 20}),
+    'TILES': [('Open Street Map', 
+                'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                {
+                    'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>', 
+                    'maxZoom': 20
+                    }),
+              ('Satellit', 
+              'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+               {'attribution': 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community', 
+               'maxZoom': 20}),
               ('OpenTopo Karte', 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-                    {'attribution': 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)', 'maxZoom': 20})
+                    {'attribution': 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)', 
+                    'maxZoom': 20
+                    })
                ],
-    #'OVERLAYS': [('Pilotregion', '{% static "pilotregion_4326.geojson" %}',{'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'})],
+    # 'OVERLAYS': [('Pilotregion', Path.joinpath(BASE_DIR, "core/static/geojson/pilotregion_4326.geojson"),{'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'})],
 }
+
+# GEOIP_PATH = os.path.join(BASE_DIR, 'geoip')

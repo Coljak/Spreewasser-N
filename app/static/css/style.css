@@ -1,5 +1,5 @@
 h1{
-    color: red;
+    color: purple;
   }
 
 footer{
@@ -16,10 +16,10 @@ body .container{
     background-color: whitesmoke;
 }
 
-.leaflet-container{
-    width: auto;
-    height: 70vh;
-  }
+.leaflet-container {  /* all maps */
+    width:  600px;
+    height: 400px;
+}
 
 .legend, .temporal-legend {
     padding: 6px 10px;

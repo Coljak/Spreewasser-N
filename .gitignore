@@ -162,3 +162,4 @@ cython_debug/
 
 # The PostgreSQL database
 data/
+database/

@@ -26,11 +26,19 @@ services:
   db:
     image: postgis/postgis
     volumes:
-      - ./data/db:/var/lib/postgresql/data
+    #  - ./data/db:/var/lib/postgresql/data/db:z
+    - ./database:/pg_data
+    #user: 1000:1000 
     environment:
-      - POSTGRES_DB=postgis
-      - POSTGRES_USER=postgis
-      - POSTGRES_PASSWORD=postgis
+      POSTGRES_DB: postgis
+      POSTGRES_USER: postgis
+      POSTGRES_PASSWORD: postgis
+      PGDATA: /pg_data
+
+      # - POSTGRES_DB=postgis
+      # - POSTGRES_USER=postgis
+      # - POSTGRES_PASSWORD=postgis
+
     ports:
       - 5432:5432
     container_name: swn_postgis

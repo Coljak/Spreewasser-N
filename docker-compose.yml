@@ -19,6 +19,8 @@ services:
       - DB_USER=postgis
       - DB_PASS=postgis
     container_name: swn_geo_django
+    # if the container does not run, this line delays the runserver command
+    # entrypoint: ["sh", "-c", "sleep 2073600"]
     depends_on:
       - db
 

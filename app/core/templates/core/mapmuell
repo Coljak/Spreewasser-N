@@ -1,0 +1,91 @@
+  
+        
+
+{% comment %} 
+            L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
+	            maxZoom: 20,
+                attribution: '<a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases" title="CyclOSM - Open Bicycle render">CyclOSM</a> | Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(generalMap); {% endcomment %}
+            
+            {% comment %} var generalMap = L.map('map').setView(coordinates, 8); {% endcomment %}
+
+            var littleton = L.marker([39.61, -105.02]).bindPopup('This is Littleton, CO.'),
+            denver    = L.marker([39.74, -104.99]).bindPopup('This is Denver, CO.'),
+            aurora    = L.marker([39.73, -104.8]).bindPopup('This is Aurora, CO.'),
+            golden    = L.marker([39.77, -105.23]).bindPopup('This is Golden, CO.');
+
+            var cities = L.layerGroup([littleton, denver, aurora, golden]);
+
+            const osm = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 20,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>', 
+                
+                }).addTo(map);
+
+            const  satellite = L.tileLayer('http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+             {
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community', 
+                maxZoom: 20,
+            }).addTo(map); 
+
+
+
+            var map = L.map('map', {
+                center: [39.73, -104.99],
+                zoom: 10,
+                layers: [osm, cities]
+            });
+
+            const baseMaps = {
+                "openStreetMap": osm,
+                "Satellit": satellite
+            };
+
+            const overlayMaps = {
+                "Cities": cities
+            };
+
+            {% comment %} var layerControl = L.control.layers(baseMaps).addTo(generalMap); {% endcomment %}
+            
+
+
+{% comment %} 
+            var popup = L.popup();
+            function onMapClickPopup(e){
+                popup
+                .setLatLng(e.latlng)
+                .setContent("You clicked at " + e.latlng.toString())
+                .openOn(generalMap);
+            }
+            generalMap.on('click', onMapClickPopup);
+
+            var marker = L.marker(coordinates).addTo(generalMap);
+            var circle = L.circle(coordinates,{
+                color: '#38f',
+                fillColor: '#048',
+                fillOpacity: 0.3,
+                radius: 800
+            }).addTo(generalMap);
+
+            marker.bindPopup("<strong>Der Marker</strong>")
+            circle.bindPopup("<strong>Der Kreis</strong>") {% endcomment %}
+        
+{% comment %} 
+            //jQuery to wait for map rendering until everything has finished
+            $(document).ready(function(){
+                var ozon_url = "ozon.json";
+                $.ajax({
+                    url: ozon_url,
+                    dataType: 'jsonp',
+                    jsonpCallback: 'jsonpResponse',
+                    success: function(response){
+                        //console.log('Callback in ozon_url ok!' + response);
+                        mapOzon(response);
+                    },
+                    error: function(xhr, status, error){
+                        console.log(status + error);
+                    }
+                });
+
+                var layerGroup;
+            }); {% endcomment %}

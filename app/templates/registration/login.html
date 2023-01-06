@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- Login -->
-{% extends "core/base.html" %}
+{% extends "swn/base.html" %}
 
 {% block body_block %}
 
@@ -8,7 +8,7 @@
         <h2>LOGIN</h2>
 
         <div class="container">
-                <form action="{% url 'core:user-login' %}" method="POST">
+                <form action="{% url 'swn:user_login' %}" method="POST">
                         {% csrf_token %}
                         <label for="username">Username: </label>
                         <input type="text" name="username" placeholder="Enter Username">

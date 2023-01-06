@@ -9,9 +9,13 @@ services:
       - 8000:8000
     volumes:
       - ./app:/app
-    command: >
-      sh -c "python3 manage.py wait_for_db &&
-            python3 manage.py migrate && 
+    command: 
+      sh -c "pip3 install pandas &&
+      pip3 install django-extensions &&
+      python3 manage.py wait_for_db &&
+      python3 manage.py migrate &&
+             
+            
             python3 manage.py runserver 0.0.0.0:8000"
     environment:
       - DB_HOST=db
@@ -29,13 +33,13 @@ services:
     image: postgis/postgis
     volumes:
     #  - ./data/db:/var/lib/postgresql/data/db:z
-    - ./database:/pg_data
+    - ./database:/pg_data_2
     #user: 1000:1000 
     environment:
       POSTGRES_DB: postgis
       POSTGRES_USER: postgis
       POSTGRES_PASSWORD: postgis
-      PGDATA: /pg_data
+      PGDATA: /pg_data_2
 
       # - POSTGRES_DB=postgis
       # - POSTGRES_USER=postgis

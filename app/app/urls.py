@@ -19,7 +19,7 @@ from drf_spectacular.views import (
 )
 from django.contrib import admin
 from django.urls import path, include
-from core import views, urls
+from swn import views, urls
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -27,9 +27,9 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
     #path('', views.IndexView.as_view(), name='index'),
-    path('', include('core.urls')),
+    path('', include('swn.urls')),
     path('admin/', admin.site.urls),
-    # path('app/', include('core.urls')),
+    # path('app/', include('swn.urls')),
 
     path('api/schema/', 
         SpectacularAPIView.as_view(), name='api-schema'),

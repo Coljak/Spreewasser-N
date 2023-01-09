@@ -136,8 +136,11 @@ def user_logout(request):
 
 @login_required
 def user_dashboard(request):
+    context = {
+        'crops': models.Crop.objects.all()
+    }
     
-    return render(request, 'swn/user_dashboard.html')
+    return render(request, 'swn/user_dashboard.html', context)
 
 class UserCropSelection(CreateView):
     model = models.Crop

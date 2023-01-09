@@ -65,3 +65,12 @@ class ProjectRegion(models.Model):
 
     def __str__(self):
         return self.name
+
+class UserField(models.Model):
+    name = models.CharField(max_length=255)
+    geom = models.MultiPolygonField()
+    comment = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name, self.user.name

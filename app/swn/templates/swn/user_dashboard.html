@@ -29,20 +29,17 @@
           }, false);
 
           var popup = new L.popup();
-            function onMapClick(e){
-                popup
-                .setLatLng(e.latlng)
-                .setContent("You clicked at " + e.latlng.toString())
-                .openOn(dashboard_map);
-            }
+          function onMapClick(e){
+              popup
+              .setLatLng(e.latlng)
+              .setContent("You clicked at " + e.latlng.toString())
+              .openOn(dashboard_map);
+          };
 
 
           dashboard_map.on('click', onMapClick);
 
-          var button = new L.Control.Button('Menu', {
-            toggleButton: 'active',
-            position: 'topleft',
-        });
+
 
       </script>
 
@@ -50,8 +47,17 @@
 
       <div class="column">
         <div>
-          <form method="POST" action = "">{% csrf_token %}
-            <p>Choose Crop</p> {{ form.name }}
+          <form method="POST" action = "">
+            {% csrf_token %}
+            <p>Choose Crop</p> 
+            <select id="crop_select">
+              {% for crop in crops %}
+                <option value="{{ crop.id }}">{{ crop.name }}</option>
+              {% endfor %}              
+            </select>
+
+            <input type="radio" name="precipitation_radio" value="Bewässert">
+              
             <input type="submit" value="Submit"/>
         </div>
       </div>

@@ -189,7 +189,7 @@ LEAFLET_CONFIG = {
     #'SRID': 4326,
     'DEFAULT_CENTER': (52.0825, 13.8),
     'DEFAULT_ZOOM': 10,
-    'MAX_ZOOM': 30, 
+    'MAX_ZOOM': 20, 
     'MIN_ZOOM': 1,
     'SCALE': 'both', #'metric'
     'MINIMAP': True,

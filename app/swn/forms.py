@@ -42,3 +42,5 @@ class FormSidebar(forms.Form):
         if len(botcatcher) > 0:
             raise (forms.ValidationError("GOTCHA BOT!"))
         return botcatcher
+
+    # TODO hier muss ich noch was machen

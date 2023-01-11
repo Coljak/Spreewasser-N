@@ -74,3 +74,16 @@ class UserField(models.Model):
 
     def __str__(self):
         return self.name, self.user.name
+
+class UserIrrigation(models.Model):
+    date = models.DateField()
+    amount = models.PositiveIntegerField()
+
+class UserProject(models.Model):
+    name = models.CharField(max_length=255)
+    field = models.ForeignKey(UserField, on_delete=models.DO_NOTHING)
+    comment = models.TextField()
+    irrigation = models.ForeignKey(UserIrrigation, on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return self.name, self.field.name

@@ -1,50 +1,96 @@
 <!DOCTYPE html>
 <!-- user dashboard -->
 {% extends "swn/base.html" %}
+{% load static %}
+
 {% load leaflet_tags %}
 {% load geojson_tags %}
 
 {% block scripts %}
 
 
+
+
+
   {% leaflet_js %}
+  
   {% leaflet_css %}
+  <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.css' %}">
+  <script src="{% static 'swn/js/leaflet-sidebar.js' %}"></script>
+ 
+
+  
 {% endblock scripts %}
 
 {% block body_block %}
   <h1>User Dashboard</h1>
   <h2>here is the form</h2>
+  <div id="map" class="sidebar-map">
+  
+  <div id="sidebar" class="sidebar collapsed">
+    <!-- Nav tabs -->
+    <div class="sidebar-tabs">
+        <ul role="tablist">
+            <li><a href="#home" role="tab"><i class="fa fa-bars"></i></a></li>
+            <li><a href="#profile" role="tab"><i class="fa fa-user"></i></a></li>
+            <li class="disabled"><a href="#messages" role="tab"><i class="fa fa-envelope"></i></a></li>
+            <li><a href="https://github.com/Turbo87/sidebar-v2" role="tab" target="_blank"><i class="fa fa-github"></i></a></li>
+        </ul>
+
+        <ul role="tablist">
+            <li><a href="#settings" role="tab"><i class="fa fa-gear"></i></a></li>
+        </ul>
+    </div>
+
+    <!-- Tab panes -->
+    <div class="sidebar-content">
+        <div class="sidebar-pane" id="home">
+            <h1 class="sidebar-header">
+                sidebar-v2
+                <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+            </h1>
+
+            <p>A responsive sidebar for mapping libraries like <a href="http://leafletjs.com/">Leaflet</a> or <a href="http://openlayers.org/">OpenLayers</a>.</p>
+            <p class="lorem">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+            <p class="lorem">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+            <p class="lorem">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+            <p class="lorem">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+        </div>
+
+        <div class="sidebar-pane" id="profile">
+            <h1 class="sidebar-header">Profile<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+        </div>
+
+        <div class="sidebar-pane" id="messages">
+            <h1 class="sidebar-header">Messages<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+        </div>
+
+        <div class="sidebar-pane" id="settings">
+            <h1 class="sidebar-header">Settings<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+        </div>
+    </div>
+</div>
+
+</div>
+
+  <script type="text/javascript">
+    function map_init_basic(map, options) {
+      map.setView([51.2, 7], 9);
 
 
-  <div class="container">
-    <div class="row align-items-start">
-      <div id="map" class="column">
-        {% leaflet_map "dashboard_map"  callback="window.main_map_init" %}
-        <script type="text/javascript">
-          window.addEventListener("map:init", function (e) {
-              var detail = e.detail;
-              
-              L.marker([52.0825, 13.8]).addTo(detail.map);
-              
-          }, false);
+      var marker = L.marker([51.2, 7]).addTo(map);
+      
+  
+      var sidebar = L.control.sidebar('sidebar').addTo(map);
+    };
+    
 
-          var popup = new L.popup();
-          function onMapClick(e){
-              popup
-              .setLatLng(e.latlng)
-              .setContent("You clicked at " + e.latlng.toString())
-              .openOn(dashboard_map);
-          };
+</script>
+
+{% leaflet_map "map" callback="window.map_init_basic" %}
 
 
-          dashboard_map.on('click', onMapClick);
-
-
-
-      </script>
-
-      </div>
-
+      
       <div class="column">
         <div>
           <form method="POST" action = "">
@@ -66,13 +112,3 @@
 
 {% endblock%}
 
-
-
-{% block javascript %}
-{{ block.super }}
-<script>
-function map_init(map, options) {
-    {% include 'shared/overlays.html' %}
-}
-</script>
-{% endblock %}

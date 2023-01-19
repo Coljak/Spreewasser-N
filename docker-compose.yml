@@ -11,7 +11,7 @@ services:
       - ./app:/app
     command: 
       sh -c "pip3 install pandas &&
-      pip3 install django-extensions &&
+      
       python3 manage.py wait_for_db &&
       python3 manage.py migrate &&
              

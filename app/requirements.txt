@@ -37,7 +37,7 @@ multidict==6.0.2
 numpy==1.21.5
 openpyxl
 packaging==21.3
-pandas
+pandas==1.5.2
 prompt-toolkit==3.0.31
 psycopg2==2.9.3
 pycodestyle==2.7.0

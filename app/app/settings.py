@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 from pathlib import Path
-# from swn.models import ProjectRegion
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -32,7 +31,7 @@ SECRET_KEY = 'django-insecure-hl9ukq&o_m6c&^7co0-qlivgsq%f^ouhu5j(vc21sk8!xmf-h*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [  ]
 
 
 # Application definition
@@ -185,45 +184,40 @@ SERIALIZATION_MODULES = {
     'geojson': 'djgeojson.serializers',
 }
 
-LEAFLET_CONFIG = {
-    #'SRID': 4326,
-    'DEFAULT_CENTER': (52.0825, 13.8),
-    'DEFAULT_ZOOM': 10,
-    'MAX_ZOOM': 20, 
-    'MIN_ZOOM': 1,
-    'SCALE': 'both', #'metric'
-    'MINIMAP': True,
-    'RESET_VIEW': True,
-    'NO_GLOBALS': False, # adds all maps to window.maps
-    'DRAW_CONTROL': True,
-    # 'PLUGINS': {
-    # 'name-of-plugin': {
-    #     'css': ['relative/path/to/stylesheet.css', '/root/path/to/stylesheet.css'],
-    #     'js': 'http://absolute-url.example.com/path/to/script.js',
-    #     'auto-include': True,
-    #     },
-    # }
-    
-    'ATTRIBUTION_PREFIX': 'Spreewasser:N',
-    'TILES': [('Open Street Map', 
-                'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                {
-                    'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>', 
-                    'maxZoom': 20
-                    }),
-              ('Satellit', 
-              'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-               {'attribution': 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community', 
-               'maxZoom': 20}),
-              ('OpenTopo Karte', 
-              'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-                    {'attribution': 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)', 
-                    'maxZoom': 20
-                    })
-               ],
-    # 'OVERLAYS': [
-    #     ('Projectregion', serialize('geojson',ProjectRegion.objects.all()), {'attribution': 'BlaBla'}),
-    # ],
-}
+# LEAFLET_CONFIG = {
+#     #'SRID': 4326,
+#     'DEFAULT_CENTER': (52.0825, 13.8),
+#     'DEFAULT_ZOOM': 10,
+#     'MAX_ZOOM': 20, 
+#     'MIN_ZOOM': 1,
+#     'SCALE': 'both', #'metric'
+#     'MINIMAP': True,
+#     'RESET_VIEW': True,
+#     'NO_GLOBALS': False, # adds all maps to window.maps
 
-# GEOIP_PATH = os.path.join(BASE_DIR, 'geoip')
+    
+    
+    
+#     'ATTRIBUTION_PREFIX': 'Spreewasser:N',
+#     'TILES': [('Open Street Map', 
+#                 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+#                 {
+#                     'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>', 
+#                     'maxZoom': 20
+#                     }),
+#               ('Satellit', 
+#               'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+#                {'attribution': 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community', 
+#                'maxZoom': 20}),
+#               ('OpenTopo Karte', 
+#               'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+#                     {'attribution': 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)', 
+#                     'maxZoom': 20
+#                     })
+#                ],
+#     # 'OVERLAYS': [
+#     #     ('Projectregion', serialize('geojson',ProjectRegion.objects.all()), {'attribution': 'BlaBla'}),
+#     # ],
+# }
+
+# # GEOIP_PATH = os.path.join(BASE_DIR, 'geoip')

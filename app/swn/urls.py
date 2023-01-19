@@ -25,6 +25,6 @@ urlpatterns = [
     # path('Logout/', views.user_logout, name='user_logout'),
     path('Logout/', LogoutView.as_view(), {'next_page': settings.LOGOUT_REDIRECT_URL}, name='user_logout'),
     path('testhtml/', views.TestHTML.as_view(), name='testname'),
-    
+    path('data.geojson', GeoJSONLayerView.as_view(model=models.ProjectRegion), name='project_region_geojson'),
 
 ]

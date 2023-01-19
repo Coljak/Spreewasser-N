@@ -3,7 +3,7 @@ from attr import attr
 from django import forms
 from django.contrib.auth.models import User
 
-from swn.models import User, Crop
+from swn.models import User, Crop, UserProject
 from django.core import  validators
 
 
@@ -25,22 +25,13 @@ class FormCrops(forms.ModelForm):
             }),
         }
 
+# class UserProjectForm(forms.ModelForm):
+#     class Meta:
+#         model = UserProject
+#         fields = [
+#             'field.name',
+#             'irrigation.date',
+#             'irrigation.amount',
+#             'comment'
+#         ]
 
-class FormSidebar(forms.Form):
-    name = forms.CharField(label='label')
-    email = forms.EmailField()
-    text = forms.CharField(widget=forms.Textarea)
-    botcatcher = forms.CharField(required=False,
-                        widget=forms.HiddenInput,
-                        validators=[validators.MaxLengthValidator(0)]
-        )
-                             
-    #TODO not working
-
-    def clean_botcather(self):
-        botcatcher = self.cleaned_data['botcatcher']
-        if len(botcatcher) > 0:
-            raise (forms.ValidationError("GOTCHA BOT!"))
-        return botcatcher
-
-    # TODO hier muss ich noch was machen

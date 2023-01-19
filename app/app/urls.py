@@ -46,7 +46,7 @@ Debugger is accessible in the browser if BEBUG is True
 """
 if settings.DEBUG:
     import debug_toolbar
-    urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls))
-        
-        ] + urlpatterns
+    urlpatterns = urlpatterns + [
+        path('__debug__/', include(debug_toolbar.urls)),
+            ] 
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

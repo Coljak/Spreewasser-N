@@ -1,0 +1,16 @@
+<div>
+    <form method="POST" action = "">
+      {% csrf_token %}
+      <p>Choose Crop</p> 
+      <select id="crop_select">
+        {% for crop in crops %}
+          <option value="{{ crop.id }}">{{ crop.name }}</option>
+        {% endfor %}              
+      </select>
+
+      <input type="radio" name="precipitation_radio" label="Bewässert">
+      
+      <input type="submit" value="Submit"/>
+    </form>
+  </div>
+  

@@ -33,8 +33,7 @@ html, body {
     padding-top: 3vh;
     padding-bottom: 3vh;
      
-    min-height: 80vh;
-    
+    min-height: 80vh;   
 }
 
 .sidebar-map {
@@ -44,7 +43,14 @@ html, body {
 .sidebar {
     height: inherit;
 
+
 } 
+.sidebar-left {
+    left: 0px;
+    top: 0px;
+    bottom: 0px;
+
+}
 
 /* Resize the "display_raw" textbox */
 .django-leaflet-raw-textarea {
@@ -52,33 +58,19 @@ html, body {
 }
 
 .leaflet-container {  /* all maps */
-    border: 2px solid rgba(0,0,0,0.8);
-    background-clip: padding-box;
+    border: 2px solid rgba(232, 17, 224, 0.8);
+    /* background-clip: padding-box; */
     box-sizing: border-box;
     border-radius: 4px;
-    border: 10px;
-    border-color: #000;
+    border: 25px;
+    
 }
 
-.legend, .temporal-legend {
-    padding: 6px 10px;
-    font: 14px/16px Arial, Helvetica, sans-serif;
-    background: rgba(0,0,0,0.85);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
-    color:whitesmoke;
-}
 
-#legendTitle {
-    text-align: center;
-    margin-bottom: 15px;
-    color: whitesmoke;
-    /* font-variant: small-caps; */
-    font-weight: bold;
-}
 .leaflet-control-scale, .leaflet-control {
-    position: relative;
-    text-align: left;
+    /* float: left; */
+
+
 }
 
 .symbolsContainer {
@@ -127,14 +119,9 @@ html, body {
     font-weight: bold;
 }
 
-.info #horBarChart {
-    width: 100% !important;
-    max-width: 800px;
-    /* height:inherit; */
-}
 
 .leaflet-control-layers {
-    float:right;
+    /* float:right; */
   
     right:0;
     /* margin-left:-200px; */
@@ -144,6 +131,7 @@ html, body {
     border-radius: 5px;
     color:whitesmoke;
 }
+
 
 .map-coordinate {
     position: absolute;

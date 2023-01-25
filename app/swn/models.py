@@ -80,10 +80,12 @@ class UserIrrigation(models.Model):
     amount = models.PositiveIntegerField()
 
 class UserProject(models.Model):
+    # TODO get User
+    # user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     name = models.CharField(max_length=255)
     field = models.ForeignKey(UserField, on_delete=models.DO_NOTHING)
     comment = models.TextField()
     irrigation = models.ForeignKey(UserIrrigation, on_delete=models.SET_NULL, null=True)
-
+    geom = models.PolygonField(null=True)
     def __str__(self):
         return self.name, self.field.name

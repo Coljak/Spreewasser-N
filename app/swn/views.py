@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
 from importlib.util import spec_from_file_location
+from pathlib import Path
 from multiprocessing import managers
 from django.http import HttpResponse
 #from core.forms import FormCrops, UserForm
@@ -11,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
 from django.core.serializers import serialize
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.gis.gdal import DataSource
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
 from . import forms
 from . import models
@@ -136,8 +138,17 @@ def user_logout(request):
 
 @login_required
 def user_dashboard(request):
+    region = Path(__file__).resolve().parent / 'data' / 'pilotregion_4326.geojson'
+    region = Path(__file__).resolve().parent / 'data' / 'pilotregion.json'
+    ds = DataSource(region)
+    print('TESTPRINT ds' ,ds)
+    pilotregion = ds[0]
+    print('TESTPRINT ds[0]' ,ds[0])
+    feature = pilotregion[0]
+    print('TESTPRINT feature' ,feature)
     context = {
-        'crops': models.Crop.objects.all()
+        'crops': models.Crop.objects.all(),
+        'pilotregion': ds
     }
     
     return render(request, 'swn/user_dashboard.html', context)

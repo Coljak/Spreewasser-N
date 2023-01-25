@@ -119,18 +119,18 @@ html, body {
     font-weight: bold;
 }
 
-
+/* 
 .leaflet-control-layers {
-    /* float:right; */
+   
   
     right:0;
-    /* margin-left:-200px; */
+   
     position:relative;
     background: rgba(0,0,0,0.85);
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color:whitesmoke;
-}
+} */
 
 
 .map-coordinate {
@@ -145,7 +145,7 @@ html, body {
     border-radius: 2%;
 }
 
-.full-screen {
+/* .full-screen {
     padding:5px;
     /* color:  */
     background-color: #fff;
@@ -160,5 +160,5 @@ html, body {
     position: absolute;
     right: 10px;
     top: 260px;
-}
+} */
 

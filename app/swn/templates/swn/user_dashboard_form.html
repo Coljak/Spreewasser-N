@@ -7,8 +7,8 @@
           <option value="{{ crop.id }}">{{ crop.name }}</option>
         {% endfor %}              
       </select>
-
-      <input type="radio" name="precipitation_radio" label="Bewässert">
+      <label for="radio_irrigation"></label>
+      <input id="radio_irrigation" type="radio" name="precipitation_radio"/>
       
       <input type="submit" value="Submit"/>
     </form>

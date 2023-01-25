@@ -34,4 +34,11 @@ class FormCrops(forms.ModelForm):
 #             'irrigation.amount',
 #             'comment'
 #         ]
-
+class UserProjectForm(forms.ModelForm):
+    class Meta:
+        model = UserProject
+        fields = ['name', 'field', 'irrigation', 'comment']
+        widgets = {
+            'name': forms.TextInput(),
+            
+        }

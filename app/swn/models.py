@@ -70,22 +70,22 @@ class UserField(models.Model):
     name = models.CharField(max_length=255)
     geom = models.MultiPolygonField()
     comment = models.TextField()
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name, self.user.name
 
-class UserIrrigation(models.Model):
-    date = models.DateField()
-    amount = models.PositiveIntegerField()
+# class UserIrrigation(models.Model):
+#     date = models.DateField()
+#     amount = models.PositiveIntegerField()
 
 class UserProject(models.Model):
     # TODO get User
-    # user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True)
     name = models.CharField(max_length=255)
     field = models.ForeignKey(UserField, on_delete=models.DO_NOTHING)
+    crop = models.ForeignKey(Crop, on_delete=models.DO_NOTHING, null=True)
     comment = models.TextField()
-    irrigation = models.ForeignKey(UserIrrigation, on_delete=models.SET_NULL, null=True)
-    geom = models.PolygonField(null=True)
+    irrigation_input = models.JSONField()
+    irrigation_output = models.JSONField()
     def __str__(self):
         return self.name, self.field.name

@@ -18,23 +18,11 @@ const baseMaps = {
   'Topomap': topo
 }
 
-
-
 const map = new L.Map('map', {
   layers: [osm],
   center: new L.LatLng(52.338145830363914, 13.85877631507592 ), 
   zoom: 8
- 
 });
-
-
-
-// Leaflet Control bottom-right
-//https://github.com/Leaflet/Leaflet.draw/tree/develop/docs
-var drawnItems = L.featureGroup();
-map.addLayer(drawnItems);
-
-
 
 // Leaflet Control top-right
 // https://github.com/brunob/leaflet.fullscreen
@@ -44,7 +32,7 @@ const fullScreenControl = new L.Control.FullScreen({
 map.addControl(fullScreenControl)
 
 
-
+// search for locations
 const GeocoderControl = new L.Control.geocoder({
   position: 'topright'
 })
@@ -59,30 +47,10 @@ var drawControl = new L.Control.Draw({
           allowIntersection: false,
           showArea: true
       }
-        
-    },
-    edit: {
-      featureGroup: drawnItems
     }
-  
 });
 
 map.addControl(drawControl)
-
-
-
-map.on(L.Draw.Event.CREATED, function (event) {
-  
-  let layer = event.layer;
-  drawnItems.addLayer(layer);
-
-  let type = event.layerType;
-  let shape = layer.toGeoJSON()
-  let shape_for_db = JSON.stringify(shape)
-  console.log(typeof shape_for_db)
-  
-});
-
 
 
 // Leaflet Control bottom-right
@@ -92,69 +60,127 @@ const sidebarLeft = L.control.sidebar('sidebar',{
   position: 'left'
 }).addTo(map);
 
+const sidebar = document.getElementById('sidebar')
+const baseLayers = document.getElementById('baseLayerList')
+
 //add map scale
 const mapScale = new L.control.scale({
   position: 'bottomright'
 }).addTo(map);
 
 
-L.control.layers({
-  'osm': osm.addTo(map),
-  "Satellit": satellite,
-  'Topografische Karte': topo
-}, { 'Acker': drawnItems }, { position: 'topright', collapsed: false }).addTo(map);
-
 const layerSwitcher = L.control.layers(baseMaps).addTo(map);
-
 const layerSwitcherObject = layerSwitcher.getContainer();
-const sidebarLayerDiv = document.getElementById('baselayer-01')
+const htmlParent = document.querySelector('#map > div.leaflet-control-container > div.leaflet-top.leaflet-right > div.leaflet-control-layers.leaflet-control > section > div.leaflet-control-layers-base')
+baseLayers.append(htmlParent)
+const layerControls = document.querySelectorAll('#baseLayerList > div')
 
-console.log(layerSwitcherObject)
-// const appendLayerControl = (child) => {
-//   appendLayerControl
-// }
-// function setParent(el, newParent) {
-  
-//     console.log(el.children)
-  
-  
-// }
+const htmlChildren = document.querySelectorAll('#baseLayerList > div > label')
+console.log(htmlChildren.length)
+console.log(htmlChildren)
 
-// setParent(layerSwitcherObject, sidebarLayerDiv)
-// Sidebar
-// // load a shape from DB/´
+// reverse order to prepend baselayers before project region
+for (let i = htmlChildren.length - 1; i >= 0; i--) {
+  console.log(htmlChildren[i])
+  let li = document.createElement('li')
+  li.classList.add('list-group-item')
+  li.appendChild(htmlChildren[i])
+  baseLayers.prepend(li)
+}
+
 const pilotGeojson = L.geoJSON(pilotRegion).addTo(map);
-
-
-
 
 // SIDEBAR 
 // const projectRegionSwitch = document.getElementById('projectRegionSwitch')
-
-
-  var checkbox = document.getElementById('projectRegionSwitch');
-  // const switchToggle = () => {
-  //   if (checkbox.checked) {
-  //     // do this
-      
-  //     console.log('Checked');
-  //   } else {
-  //     // do that
-  //     // pilotGeojson.remove()
-  //     console.log('Not checked');
-  //   }
-  // }
-
-  checkbox.addEventListener('change', function (){
-    if (checkbox.checked) {
-      // do this
-      pilotGeojson.addTo(map)
-      console.log('Checked');
-    } else {
-      // do that
-      pilotGeojson.remove()
-      console.log('Not checked');
-    }
-  });
+var pilotCheckbox = document.getElementById('projectRegionSwitch');
+pilotCheckbox.addEventListener('change', function (){
+  if (pilotCheckbox.checked) {
+    pilotGeojson.addTo(map)
+    console.log('Checked');
+  } else {
+    pilotGeojson.remove()
+    console.log('Not checked');
+  }
+});
 
   
+// User stuff
+const userProjects = [];
+let projectIndex = 0
+const userLayerList = document.getElementById("userLayerList")
+
+
+map.on(L.Draw.Event.CREATED, function (event) {
+  // console.log('event drawcreated' + JSON.stringify(event.layer))
+  let layer = event.layer;
+  let type = event.layerType;
+  let shape = layer.toGeoJSON()
+  console.log('shape')
+  console.log(shape)
+  // userProject.userFieldShape = shape
+  let shape_for_db = JSON.stringify(shape)
+
+  let fieldName = shapeNameInput()
+  projectIndex = userProjects.length
+  shape.id = projectIndex
+  layer.id = projectIndex
+  const currentProject = new Project(fieldName, layer, shape)
+  currentProject.id = projectIndex
+  userProjects.push(currentProject)
+  
+  addLayerToSidebar(currentProject)
+  const switchId = `fieldSwitch_${projectIndex}`
+  const inputSwitch = document.getElementById(switchId)
+  // switchId.checked = false
+  
+  inputSwitch.addEventListener('change', e => {
+      console.log("event has been fired")
+      console.log(currentProject.geom.id)
+      inputSwitch.addEventListener('change', function (){
+        
+      if (inputSwitch.checked) {
+        currentProject.geom.addTo(map)
+      } else {
+        currentProject.geom.remove()
+      }
+    });
+  })
+  // inputSwitch.checked = true
+  currentProject.geom.addTo(map)
+  inputSwitch.dispatchEvent(new Event('change'));
+  
+});
+// todo check if fieldname already exists, else add number
+function shapeNameInput() {
+  let fieldName = prompt("Bitte geben Sie einen Namen für das Feld an", "Acker Bezeichnung");
+  if (fieldName != null) { 
+  }
+  return fieldName;
+}
+
+class Project {
+  constructor(name, geom, shape) {
+    // this.user = user
+    this.name = name
+    this.geom = geom
+    this.shape = shape
+    this.id = null
+  }
+}
+
+// add li to ul
+const addLayerToSidebar = (project) =>  {
+  console.log('Project')
+  console.log(project)
+  const li = document.createElement('li');
+  li.setAttribute('class', 'list-group-item')
+  li.innerHTML = `
+  <div class="custom-control custom-switch">
+    <input type="checkbox" class="custom-control-input" id="fieldSwitch_${projectIndex}" checked>
+    <label class="custom-control-label" for="fieldSwitch_${projectIndex}">${project.name}</label>
+  </div>
+  `
+  userLayerList.appendChild(li)  
+}
+// hiding the default layer switcher icon
+document.querySelector('#map > div.leaflet-control-container > div.leaflet-top.leaflet-right > div.leaflet-control-layers.leaflet-control').hidden = true

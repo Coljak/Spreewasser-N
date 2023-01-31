@@ -24,25 +24,18 @@
 {% endblock scripts %}
 
 {% block body_block %}
-{{ pilotregion }}
-  {% comment %} <script> 
-    console.log('BEFORE')
-    var pilotRegion = {{ pilotregion }}
-    console.log('AFTER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    console.log('Pilotregion!!!!' +  pilotRegion)
-    
-  </script> {% endcomment %}
+<div class="container">
+  {{ pilotregion }}
+</div>
  
   <div id="map-container" class="container">
     <div id="map" class="sidebar-map">
-      
     
-
-    <div id="sidebar" class="sidebar collapsed ">
+    <div id="sidebar" class="sidebar collapsed">
       <!-- Nav tabs -->
       <div class="sidebar-tabs">
           <ul role="tablist">
-            <li><a href="#home" role="tab"><i class="fa fa-bars"></i></a></li>
+            <li><a href="#layerPane" role="tab"><i class="fa fa-bars"></i></a></li>
             <li><a href="#profile" role="tab"><i class="fa fa-user"></i></a></li>
             <li class="disabled"><a href="#messages" role="tab"><i class="fa fa-envelope"></i></a></li>
             <li><a href="https://github.com/Turbo87/sidebar-v2" role="tab" target="_blank"><i class="fa fa-github"></i></a></li>
@@ -55,12 +48,12 @@
 
       <!-- Tab panes -->
       <div class="sidebar-content">
-        <div class="sidebar-pane" id="home">
+        <div class="sidebar-pane" id="layerPane">
           <h1 class="sidebar-header">
             Baselayers
             <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
           </h1>
-          <ul class="list-group">
+          <ul class="list-group" id="baseLayerList">
             <li class="list-group-item">
               <!-- Default switch -->
               <div class="custom-control custom-switch">
@@ -68,13 +61,13 @@
                 <label class="custom-control-label" for="projectRegionSwitch">Spreewasser:N Projektgebiet</label>
               </div>
             </li>
-            <li class="list-group-item">Morbi leo risus</li>
-            <li class="list-group-item">Porta ac consectetur ac</li>
-            <li class="list-group-item">Vestibulum at eros</li>
-          </ul>
+            
+          </ul> 
+          <div id="baselayer-02">
+            <ul id="userLayerList" class="list-group"> 
 
-          
-          <div id="baselayer-02"></div>
+            </ul>
+          </div>
         </div>
 
         <div class="sidebar-pane" id="profile">

@@ -19,18 +19,20 @@
 {% leaflet_css %} 
 {% endblock scripts %} 
 {% block body_block %}
+    <div class="container">
+        <h1>style.css is loaded if this is red</h1>
+    </div>
 
-<h1>style.css is loaded if this is red</h1>
 
-{% leaflet_map "map" callback="window.map_init_basic" %} 
-<script>
-    var projectRegion = '{% static "pilotrgion_4326.geojson" %}';
-    
-    var sidebar = L.control.sidebar('sidebar', {
-        closeButton: true,
-        position: 'left'
-    }).addTo(map);
-</script>
+    {% leaflet_map "map" callback="window.map_init_basic" %} 
+    <script>
+        var projectRegion = '{% static "pilotrgion_4326.geojson" %}';
+        
+        var sidebar = L.control.sidebar('sidebar', {
+            closeButton: true,
+            position: 'left'
+        }).addTo(map);
+    </script>
 
 
 

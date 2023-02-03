@@ -26,14 +26,16 @@
 {% block body_block %}
 <div class="container">
   {{ pilotregion }}
-</div>
- 
+  {% comment %} <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#projectModal">
+    Launch demo modal!!! Damn it
+  </button> {% endcomment %}
+  
   <div id="map-container" class="container">
     <div id="map" class="sidebar-map">
-    
-    <div id="sidebar" class="sidebar collapsed">
-      <!-- Nav tabs -->
-      <div class="sidebar-tabs">
+      
+      <div id="sidebar" class="sidebar collapsed">
+          <!-- Nav tabs -->
+        <div class="sidebar-tabs">
           <ul role="tablist">
             <li><a href="#layerPane" role="tab"><i class="fa fa-bars"></i></a></li>
             <li><a href="#profile" role="tab"><i class="fa fa-user"></i></a></li>
@@ -44,65 +46,87 @@
           <ul role="tablist">
             <li><a href="#settings" role="tab"><i class="fa fa-gear"></i></a></li>
           </ul>
-      </div>
+        </div>
 
-      <!-- Tab panes -->
-      <div class="sidebar-content">
-        <div class="sidebar-pane" id="layerPane">
-          <h1 class="sidebar-header">
-            Baselayers
-            <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
-          </h1>
-          <ul class="list-group" id="baseLayerList">
-            <li class="list-group-item">
-              <!-- Default switch -->
-              <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="projectRegionSwitch" checked>
-                <label class="custom-control-label" for="projectRegionSwitch">Spreewasser:N Projektgebiet</label>
+          <!-- Tab panes -->
+        <div class="sidebar-content">
+          <div class="sidebar-pane" id="layerPane">
+            <h1 class="sidebar-header">
+              Baselayers
+              <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+            </h1>
+            <ul class="list-group sidebar-list" id="sidebarLayerList">
+              <li class="list-group-item">
+                <h5>Baselayers</h5>
+              </li>
+              <li class="list-group-item">
+                <div class="form-check form-switch">
+                  <input type="checkbox" class="form-check-input" id="projectRegionSwitch" checked>
+                  <label class="form-check-label" for="projectRegionSwitch">Spreewasser:N Projektgebiet</label>
+                </div>
+              </li>
+              <li class="list-group-item">
+                <div class="accordion accordion-flush" id="layerAccordion">
+                  <div class="accordion-item">
+                    <h2 class="accordion-header" id="projectRegionAccordionHeading">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#baseLayers-collapse" aria-expanded="false" aria-controls="baseLayers-collapse">
+                        Background Maps
+                      </button>
+                    </h2>
+                    <div id="baseLayers-collapse" class="accordion-collapse collapse" aria-labelledby="projectRegionAccordionHeading" data-bs-parent="#layerAccordion">
+                      <div class="accordion-body">
+                        <ul id="baseLayerList">
+                          <!--Baselayers are injected in user_dashboard.js-->
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="list-group-item" id="userFieldsSidebarHeader">
+                <h5>Projects</h5>
+              </li>
+
               </div>
-            </li>
-            
-          </ul> 
+            </ul>
+          </div>
+
           <div id="baselayer-02">
             <ul id="userLayerList" class="list-group"> 
-
             </ul>
+          </div>
+          
+
+          <div class="sidebar-pane" id="profile">
+            <h1 class="sidebar-header">Profile<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+          </div>
+
+          <div class="sidebar-pane" id="messages">
+            <h1 class="sidebar-header">Messages<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+          </div>
+
+          <div class="sidebar-pane" id="settings">
+              <h1 class="sidebar-header">Settings<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
           </div>
         </div>
 
-        <div class="sidebar-pane" id="profile">
-          <h1 class="sidebar-header">Profile<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
-        </div>
-
-        <div class="sidebar-pane" id="messages">
-          <h1 class="sidebar-header">Messages<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
-        </div>
-
-        <div class="sidebar-pane" id="settings">
-            <h1 class="sidebar-header">Settings<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
-        </div>
       </div>
     </div>
-  </div>
+    
+  
   </div>
 
-  <!-- Input Form -->
-  <div id="project-form" class="container">
-    <form action="">
-      <input type="submit" value="Speichern">
-    </form>
 
-  </div>
-  {% comment %} {% leaflet_map "map" %} {% endcomment %}
- <!--
-{% leaflet_map "map" callback="main_map_init" %}
-
-<script>
-  $("#map").addClass('sidebar-map');
-</script>
- -->
+</div>
+{% comment %} <button type="button" class="btn open-projectModal" data-toggle="modal" data-target="#projectModal">Open Modal</button> {% endcomment %}
+  {% block project_modal %}
+  {% include 'swn/project_modal.html' %}
+  {% endblock %}
 
 {% endblock %}
+
+
+
 
 {% block javascript %}
 {{ bock.super }}
@@ -112,6 +136,7 @@
 <script src="{% static './leaflet/print/leaflet.browser.print.min.js' %}"></script>
 {% comment %} <script src="{% static 'leaflet/markercluster/leaflet.markercluster.js' %}"></script> {% endcomment %}
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+{% comment %} <script src="{% static './leaflet/geocoder/Control.Geocoder.js' %}"></script> {% endcomment %}
 
 <script src="{% static 'leaflet/fullscreen/Control.FullScreen.js' %}"></script>
 <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>

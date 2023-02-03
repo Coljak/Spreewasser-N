@@ -10,8 +10,9 @@ const satellite = L.tileLayer(satelliteUrl, {maxZoom: 18, attribution: satellite
 
 const topoUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
 const topoAttrib = 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
-const topo = L.tileLayer(topoUrl, {maxZoom: 18, attribution: topoAttrib})
+const topo = L.tileLayer(topoUrl, {maxZoom: 18, attribution: topoAttrib}) 
 
+// create Map
 const baseMaps = {
   'Open Street Maps': osm,
   'Satellit': satellite,
@@ -23,6 +24,9 @@ const map = new L.Map('map', {
   center: new L.LatLng(52.338145830363914, 13.85877631507592 ), 
   zoom: 8
 });
+
+// Spreewasser:N overlay
+const pilotGeojson = L.geoJSON(pilotRegion).addTo(map);
 
 // Leaflet Control top-right
 // https://github.com/brunob/leaflet.fullscreen
@@ -38,6 +42,15 @@ const GeocoderControl = new L.Control.geocoder({
 })
 map.addControl(GeocoderControl)
 
+
+//add map scale
+const mapScale = new L.control.scale({
+  position: 'bottomright'
+}).addTo(map);
+
+var drawnItems = new L.FeatureGroup();
+     map.addLayer(drawnItems);
+// Draw functionality
 var drawControl = new L.Control.Draw({
   position: 'topright',
   draw: {
@@ -46,15 +59,26 @@ var drawControl = new L.Control.Draw({
         polygon: {
           allowIntersection: false,
           showArea: true
-      }
+        },
+        
+    },
+    edit: {
+      featureGroup: drawnItems
     }
 });
 
 map.addControl(drawControl)
 
+// function onMapClick(e) {
+//   alert("You clicked the map at " + e.latlng);
+//   console.log('Target')
+//   console.log(e.target.layer)
+// }
 
-// Leaflet Control bottom-right
-// Leaflet Control top-left
+// map.on('click', onMapClick);
+
+// SIDEBAR 
+// Adds the sidebar div from HTML to the map as sidebar
 const sidebarLeft = L.control.sidebar('sidebar',{
   closeButton: true,
   position: 'left'
@@ -63,90 +87,75 @@ const sidebarLeft = L.control.sidebar('sidebar',{
 const sidebar = document.getElementById('sidebar')
 const baseLayers = document.getElementById('baseLayerList')
 
-//add map scale
-const mapScale = new L.control.scale({
-  position: 'bottomright'
-}).addTo(map);
-
-
+// LayerControl is moved to sidebar
 const layerSwitcher = L.control.layers(baseMaps).addTo(map);
-const layerSwitcherObject = layerSwitcher.getContainer();
-const htmlParent = document.querySelector('#map > div.leaflet-control-container > div.leaflet-top.leaflet-right > div.leaflet-control-layers.leaflet-control > section > div.leaflet-control-layers-base')
-baseLayers.append(htmlParent)
-const layerControls = document.querySelectorAll('#baseLayerList > div')
-
-const htmlChildren = document.querySelectorAll('#baseLayerList > div > label')
-console.log(htmlChildren.length)
-console.log(htmlChildren)
+const layerControls = document.querySelectorAll('#map > div.leaflet-control-container > div.leaflet-top.leaflet-right > div.leaflet-control-layers.leaflet-control > section > div.leaflet-control-layers-base > label')
 
 // reverse order to prepend baselayers before project region
-for (let i = htmlChildren.length - 1; i >= 0; i--) {
-  console.log(htmlChildren[i])
+for (let i = layerControls.length - 1; i >= 0; i--) {
   let li = document.createElement('li')
   li.classList.add('list-group-item')
-  li.appendChild(htmlChildren[i])
+  li.appendChild(layerControls[i])
   baseLayers.prepend(li)
 }
 
-const pilotGeojson = L.geoJSON(pilotRegion).addTo(map);
+// hiding the default layer switcher icon
+document.querySelector('#map > div.leaflet-control-container > div.leaflet-top.leaflet-right > div.leaflet-control-layers.leaflet-control').hidden = true
 
-// SIDEBAR 
 // const projectRegionSwitch = document.getElementById('projectRegionSwitch')
-var pilotCheckbox = document.getElementById('projectRegionSwitch');
+const pilotCheckbox = document.getElementById('projectRegionSwitch');
+// pilotCheckbox.stopPropagation()
 pilotCheckbox.addEventListener('change', function (){
   if (pilotCheckbox.checked) {
     pilotGeojson.addTo(map)
-    console.log('Checked');
   } else {
     pilotGeojson.remove()
-    console.log('Not checked');
   }
 });
 
   
 // User stuff
-const userProjects = [];
+const userFields = [];
 let projectIndex = 0
-const userLayerList = document.getElementById("userLayerList")
+const userLayerList = document.getElementById("sidebarLayerList")
 
 
 map.on(L.Draw.Event.CREATED, function (event) {
   // console.log('event drawcreated' + JSON.stringify(event.layer))
+  event.layer.addTo(drawnItems)
   let layer = event.layer;
   let type = event.layerType;
   let shape = layer.toGeoJSON()
-  console.log('shape')
-  console.log(shape)
   // userProject.userFieldShape = shape
   let shape_for_db = JSON.stringify(shape)
 
-  let fieldName = shapeNameInput()
-  projectIndex = userProjects.length
+  
+  projectIndex = userFields.length
   shape.id = projectIndex
   layer.id = projectIndex
-  const currentProject = new Project(fieldName, layer, shape)
-  currentProject.id = projectIndex
-  userProjects.push(currentProject)
+  let fieldName = ''
+  const currentUserField = new UserField(
+    fieldName = shapeNameInput(), 
+    layer, 
+    shape)
+  currentUserField.id = projectIndex
+  userFields.push(currentUserField)
   
-  addLayerToSidebar(currentProject)
-  const switchId = `fieldSwitch_${projectIndex}`
+  addLayerToSidebar(currentUserField)
+  const switchId = `fieldSwitch-${projectIndex}`
   const inputSwitch = document.getElementById(switchId)
-  // switchId.checked = false
   
   inputSwitch.addEventListener('change', e => {
-      console.log("event has been fired")
-      console.log(currentProject.geom.id)
       inputSwitch.addEventListener('change', function (){
-        
       if (inputSwitch.checked) {
-        currentProject.geom.addTo(map)
+        currentUserField.geom.addTo(map)
       } else {
-        currentProject.geom.remove()
+        currentUserField.geom.remove()
       }
     });
   })
   // inputSwitch.checked = true
-  currentProject.geom.addTo(map)
+  currentUserField.geom.addTo(map)
   inputSwitch.dispatchEvent(new Event('change'));
   
 });
@@ -154,33 +163,92 @@ map.on(L.Draw.Event.CREATED, function (event) {
 function shapeNameInput() {
   let fieldName = prompt("Bitte geben Sie einen Namen für das Feld an", "Acker Bezeichnung");
   if (fieldName != null) { 
-  }
-  return fieldName;
+      if (userFields.some(proj => proj.name === fieldName)) {
+        alert(`please change name since ${fieldName} it already exists`);
+        fieldName = shapeNameInput()
+      } 
+    }
+    return fieldName;
 }
 
-class Project {
+class UserField {
   constructor(name, geom, shape) {
     // this.user = user
     this.name = name
     this.geom = geom
     this.shape = shape
+    this.user = 0 // TODO add user
     this.id = null
+    this.projects = []
   }
 }
 
-// add li to ul
-const addLayerToSidebar = (project) =>  {
-  console.log('Project')
-  console.log(project)
-  const li = document.createElement('li');
-  li.setAttribute('class', 'list-group-item')
-  li.innerHTML = `
-  <div class="custom-control custom-switch">
-    <input type="checkbox" class="custom-control-input" id="fieldSwitch_${projectIndex}" checked>
-    <label class="custom-control-label" for="fieldSwitch_${projectIndex}">${project.name}</label>
-  </div>
-  `
-  userLayerList.appendChild(li)  
+class UserProject {
+  constructor(userField, cropID) {
+    this.userField = userField
+    this.cropID = cropID
+    this.calculation = {};
+    this.timestamp = Date.now()
+  }
 }
-// hiding the default layer switcher icon
-document.querySelector('#map > div.leaflet-control-container > div.leaflet-top.leaflet-right > div.leaflet-control-layers.leaflet-control').hidden = true
+
+userLayerList.addEventListener('click', e => {
+  //console.log(e.target)
+  currentProject = e.target.closest('li')
+  console.log(currentProject.userField)
+  if(e.target.classList.contains('delete')) {
+    let confirmDelete = confirm('Are ou sure to delete')
+    if (confirmDelete) {   
+      console.log(userFields)
+      userFields.filter(proj => proj !== currentProject.userField)
+      currentProject.userField.geom.remove()
+      currentProject.remove()
+      console.log(userFields)
+    }
+  } else if(e.target.classList.contains('field-menu')) {
+    console.log('field-menu clicked')
+  } else if(e.target.classList.contains('field-edit')) {
+    console.log('field-edit clicked')}
+})
+
+const addLayerToSidebar = (userField) =>  {
+  console.log('userField')
+  console.log(userField)
+  const accordion = document.createElement('li');
+  accordion.setAttribute('class', 'list-group-item')
+  // accordion.focus()
+  accordion.innerHTML = `  
+  <div class="accordion-item">
+    <div class="accordion-header" id="accordionHeader-${projectIndex}">
+      <h6>
+        <div class="form-check form-switch">
+          <input type="checkbox" class="form-check-input" id="fieldSwitch-${projectIndex}" checked>
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseField-${projectIndex}" aria-expanded="true" aria-controls="collapseField-${projectIndex}">
+          ${userField.name}</button>
+      </h6>
+    </div>
+    <div id="collapseField-${projectIndex}" class="accordion-collapse collapse show" aria-labelledby="accordionHeader-${projectIndex}">
+      <span><button type="button" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-regular fa-pen-to-square field-edit"></i>
+        </button></span>
+          <span><button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#projectModal">
+            <i class="fa-solid fa-ellipsis-vertical field-menu"></i>
+            </button></span>
+            <span><button type="button" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-regular fa-trash-can delete"></i>
+          </button></span>
+    </div>
+  </div> 
+  `
+  accordion.userField = userField
+  console.log('UserField' + accordion.userField)
+
+  userLayerList.appendChild(accordion)  
+}
+
+
+
+
+// const myModal = document.getElementById('projectModal')
+// console.log(myModal.innerHTML)
+

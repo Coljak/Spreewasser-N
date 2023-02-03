@@ -1,14 +1,18 @@
-
+$theme-colors: (
+  "primary":    $primary,
+  "secondary":  $secondary,
+  "success":    $success,
+  "info":       $info,
+  "warning":    $warning,
+  "danger":     $danger,
+  "light":      $light,
+  "dark":       $dark
+);
 
 h1{
     color: red;
   }
-/* #map {
-    min-height: 600px;
-    min-width: 600px;
-    height: 100%;
-    width: 100%;
-} */
+
 html, body {
     height: 100%;
   }
@@ -67,12 +71,6 @@ html, body {
 }
 
 
-.leaflet-control-scale, .leaflet-control {
-    /* float: left; */
-
-
-}
-
 .symbolsContainer {
     float: left;
     margin-left: 50px;
@@ -92,6 +90,9 @@ html, body {
     font-size:10pt;
     text-align:center;
     font-weight: bold;
+}
+.border-box {
+    box-sizing: content-box;;
 }
 
 .info {
@@ -119,18 +120,6 @@ html, body {
     font-weight: bold;
 }
 
-/* 
-.leaflet-control-layers {
-   
-  
-    right:0;
-   
-    position:relative;
-    background: rgba(0,0,0,0.85);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
-    color:whitesmoke;
-} */
 
 
 .map-coordinate {
@@ -144,21 +133,26 @@ html, body {
     border: 1px solid black;
     border-radius: 2%;
 }
-
-/* .full-screen {
-    padding:5px;
-    /* color:  */
-    background-color: #fff;
-    position: absolute;
-    right: 10px;
-    top: 220px
-}
-
-.zoom-to-layer{
-    padding: 5px;
-    background-color: #fff;
-    position: absolute;
-    right: 10px;
-    top: 260px;
+/* #baseLayers-collapse > div {
+    padding: 0;
 } */
 
+#layerPane {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#baseLayerList {
+    padding: 0;
+}
+#flush-collapseOne div {
+    padding: 0;
+}
+
+.list-group .sidebar-list {
+    padding: 0;
+}
+
+.accordion-button {
+    padding:0;
+}

@@ -3,12 +3,12 @@ Django admin customization.
 """
 
 from django.contrib import admin
-from leaflet.admin import LeafletGeoAdmin
+from leaflet.admin import LeafletGeoAdmin, ModelAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 # this is best practice to integrate translation
 from django.utils.translation import gettext_lazy as _
 
-from .models import User, ProjectRegion
+from .models import User, ProjectRegion, UserProject, UserField, Crop
 # from Waterconsumption Tutorial
 from django.contrib.gis.geos import Point, Polygon, MultiPoint, MultiPolygon
 from datetime import datetime
@@ -50,9 +50,23 @@ class UserAdmin(BaseUserAdmin):
         }),
     )
 
+
 class ProjectRegionAdmin(LeafletGeoAdmin):
     pass
 
 
+
+# @admin.register(UserProject, LeafletGeoAdmin)
+class UserProjectsAdmin(ModelAdmin):
+    
+    pass
+
+# class UserFieldAdmin(LeafletGeoAdmin):
+#     pass
+
+
 admin.site.register(User, UserAdmin)
 admin.site.register(ProjectRegion, LeafletGeoAdmin)
+admin.site.register(UserProject, UserProjectsAdmin)
+admin.site.register(UserField, LeafletGeoAdmin)
+#admin.site.register(UserProject)

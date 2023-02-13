@@ -6,6 +6,7 @@ from email.policy import default
 from statistics import mode
 
 from django.contrib.gis.db import models
+from djgeojson.fields import PointField, PolygonField, MultiLineStringField, MultiPointField, MultiPolygonField
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -61,31 +62,30 @@ class Crop(models.Model):
 
 class ProjectRegion(models.Model):
     name = models.CharField(max_length=50)
-    geom = models.MultiPolygonField()
+    geom = models.MultiPolygonField(null=True)
 
     def __str__(self):
         return self.name
 
 class UserField(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
-    geom = models.MultiPolygonField()
-    comment = models.TextField()
+    geom = PolygonField(null=True)
+    comment = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return self.name, self.user.name
+        return self.name
 
 # class UserIrrigation(models.Model):
 #     date = models.DateField()
 #     amount = models.PositiveIntegerField()
 
-class UserProject(models.Model):
-    # TODO get User
-    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True)
+class UserProject(models.Model):    
     name = models.CharField(max_length=255)
-    field = models.ForeignKey(UserField, on_delete=models.DO_NOTHING)
+    field = models.ForeignKey(UserField, on_delete=models.CASCADE)
     crop = models.ForeignKey(Crop, on_delete=models.DO_NOTHING, null=True)
-    comment = models.TextField()
-    irrigation_input = models.JSONField()
-    irrigation_output = models.JSONField()
+    comment = models.TextField(null=True, blank=True)
+    irrigation_input = models.JSONField(null=True, blank=True)
+    irrigation_output = models.JSONField(null=True, blank=True)
     def __str__(self):
-        return self.name, self.field.name
+        return self.name

@@ -1,5 +1,3 @@
-console.log('user_dashboard.js is loaded!')
-
 const osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 const osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 const osm = L.tileLayer(osmUrl, {maxZoom: 18, attribution: osmAttrib})
@@ -26,7 +24,17 @@ const map = new L.Map('map', {
 });
 
 // Spreewasser:N overlay
-const pilotGeojson = L.geoJSON(pilotRegion).addTo(map);
+const pilotGeojson = L.geoJSON(pilotRegion)
+
+pilotGeojson.setStyle(function(feature) {
+  return {
+      fillColor: 'white',
+      color: 'purple',
+      
+      // borderColor: 'black'
+  }
+})
+pilotGeojson.addTo(map);
 
 // Leaflet Control top-right
 // https://github.com/brunob/leaflet.fullscreen
@@ -115,7 +123,7 @@ pilotCheckbox.addEventListener('change', function (){
 
   
 // User stuff
-const userFields = [];
+var userFields = [];
 let projectIndex = 0
 const userLayerList = document.getElementById("sidebarLayerList")
 
@@ -130,12 +138,12 @@ map.on(L.Draw.Event.CREATED, function (event) {
   let shape_for_db = JSON.stringify(shape)
 
   
-  projectIndex = userFields.length
+  projectIndex = userFields.length - 1
   shape.id = projectIndex
   layer.id = projectIndex
-  let fieldName = ''
+  
   const currentUserField = new UserField(
-    fieldName = shapeNameInput(), 
+    fieldName = userFieldNameInput(), 
     layer, 
     shape)
   currentUserField.id = projectIndex
@@ -160,13 +168,16 @@ map.on(L.Draw.Event.CREATED, function (event) {
   
 });
 // todo check if fieldname already exists, else add number
-function shapeNameInput() {
-  let fieldName = prompt("Bitte geben Sie einen Namen für das Feld an", "Acker Bezeichnung");
-  if (fieldName != null) { 
+function userFieldNameInput() {
+  let fieldName = prompt("Bitte geben Sie einen Namen für das Feld an", "Acker Bezeichnung").trim();
+  if (fieldName !== '') { 
       if (userFields.some(proj => proj.name === fieldName)) {
         alert(`please change name since ${fieldName} it already exists`);
-        fieldName = shapeNameInput()
+        fieldName = userFieldNameInput()
       } 
+    } else {
+      alert(`This field can not be empty. Please enter a name!`);
+        fieldName = userFieldNameInput()
     }
     return fieldName;
 }
@@ -194,16 +205,15 @@ class UserProject {
 
 userLayerList.addEventListener('click', e => {
   //console.log(e.target)
-  currentProject = e.target.closest('li')
-  console.log(currentProject.userField)
+  const listElement = e.target.closest('li')
+
   if(e.target.classList.contains('delete')) {
-    let confirmDelete = confirm('Are ou sure to delete')
+    let confirmDelete = confirm('Are you sure to delete')
     if (confirmDelete) {   
-      console.log(userFields)
-      userFields.filter(proj => proj !== currentProject.userField)
-      currentProject.userField.geom.remove()
-      currentProject.remove()
-      console.log(userFields)
+      userFields = userFields.filter(uf => uf !== listElement.userField)
+      listElement.userField.geom.remove() // removes shape from map
+      listElement.remove() // removes HTML element from sidebar
+
     }
   } else if(e.target.classList.contains('field-menu')) {
     console.log('field-menu clicked')
@@ -212,8 +222,6 @@ userLayerList.addEventListener('click', e => {
 })
 
 const addLayerToSidebar = (userField) =>  {
-  console.log('userField')
-  console.log(userField)
   const accordion = document.createElement('li');
   accordion.setAttribute('class', 'list-group-item')
   // accordion.focus()
@@ -228,7 +236,21 @@ const addLayerToSidebar = (userField) =>  {
       </h6>
     </div>
     <div id="collapseField-${projectIndex}" class="accordion-collapse collapse show" aria-labelledby="accordionHeader-${projectIndex}">
-      <span><button type="button" class="btn btn-outline-secondary btn-sm">
+      <!-- Temporary Insert -->
+    <form>
+      <input type="select">Feldfrucht</input></br>
+      Meteoroligischer Dürreindex 0,6</br>
+      landwirtschaftlicher Dürreindex 0,57</br>
+      Bodenfeuchtigkeit 15% Vol.</br>
+    
+    
+    </form>
+
+      
+    
+      <!-- Temporary Insert -->
+    
+    <span><button type="button" class="btn btn-outline-secondary btn-sm">
             <i class="fa-regular fa-pen-to-square field-edit"></i>
         </button></span>
           <span><button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#projectModal">
@@ -238,17 +260,38 @@ const addLayerToSidebar = (userField) =>  {
             <i class="fa-regular fa-trash-can delete"></i>
           </button></span>
     </div>
+    <button id="userFieldNewCalcBtn-${projectIndex}" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#projectModal">Neue Berechnung</button>
   </div> 
   `
   accordion.userField = userField
-  console.log('UserField' + accordion.userField)
+  console.log('Accordion UserField:')
+  console.log(accordion.userField)
 
   userLayerList.appendChild(accordion)  
 }
 
 
+// Monica-Modal 
 
 
-// const myModal = document.getElementById('projectModal')
+$(document).ready(function () {
+
+  $('#projectModal').on('show.bs.modal', function () {
+
+    var projectModal = $('.modal')
+
+    $('.modal-container').html(this)
+    $('#map-container').hide()
+  }),
+  $('#projectModal').on('hide.bs.modal', function () {
+    $('#map-container').show()
+  })
+})
 // console.log(myModal.innerHTML)
 
+// $(document).ready(function () {
+//   $('#myModal').on('show.bs.modal', function () {
+//       var mod = $('.modal'); 
+//       $('.insidemodal').html(mod);
+//   });
+// });

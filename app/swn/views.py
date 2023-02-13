@@ -9,7 +9,7 @@ from django.shortcuts import render
 #from requests import request
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
+from django.http import HttpResponseRedirect, HttpResponse, HttpRequest, JsonResponse
 from django.core.serializers import serialize
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.gis.gdal import DataSource
@@ -138,20 +138,18 @@ def user_logout(request):
 
 @login_required
 def user_dashboard(request):
-    region = Path(__file__).resolve().parent / 'data' / 'pilotregion_4326.geojson'
-    region = Path(__file__).resolve().parent / 'data' / 'pilotregion.json'
-    ds = DataSource(region)
-    print('TESTPRINT ds' ,ds)
-    pilotregion = ds[0]
-    print('TESTPRINT ds[0]' ,ds[0])
-    feature = pilotregion[0]
-    print('TESTPRINT feature' ,feature)
-    context = {
-        'crops': models.Crop.objects.all(),
-        'pilotregion': ds
-    }
+    projects = models.UserProject.objects.filter(field__user = request.user)
+    #projects_json = serialize('json', projects)
+    context = []
+    for proj in projects:
+        if request.user == proj.field.user:
+            item = {
+                'name': proj.name 
+            }
+            context.append(item)
+    data = {'context': context}
     
-    return render(request, 'swn/user_dashboard.html', context)
+    return render(request, 'swn/user_dashboard.html', data)
 
 class UserCropSelection(CreateView):
     model = models.Crop

@@ -28,17 +28,24 @@ class FormCrops(forms.ModelForm):
 # class UserProjectForm(forms.ModelForm):
 #     class Meta:
 #         model = UserProject
-#         fields = [
-#             'field.name',
-#             'irrigation.date',
-#             'irrigation.amount',
-#             'comment'
-#         ]
-class UserProjectForm(forms.ModelForm):
-    class Meta:
-        model = UserProject
-        fields = ['name', 'field', 'comment']
-        widgets = {
-            'name': forms.TextInput(),
-            
-        }
+
+#     def __init__(self, *args, **kwargs):
+#         user = kwargs.pop('user','')
+#         super(UserProjectForm, self).__init__(*args, **kwargs)
+        #self.fields['user_defined_code']=forms.ModelChoiceField(queryset=UserDefinedCode.objects.filter(owner=user))
+
+
+        # fields = [
+        #     'user_field.name',
+        #     'comment',
+        #     'crop.name'
+        # ]
+        # widgets = {
+        #     'field.name': forms.Select(attrs ={
+        #         'class': 'form-control',
+        #     }),
+        #     'crop.name': forms.Select(attrs ={
+        #         'class': 'form-control',
+        #     }),
+        # }
+

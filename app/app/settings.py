@@ -45,15 +45,20 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'django_extensions',
-    'debug_toolbar',
-    'leaflet',
-    'djgeojson',
     'swn',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
     'user',
+    # 3rd party
+    'debug_toolbar',
+    'leaflet',
+    'djgeojson',
+    'crispy_forms',
+    'crispy_bootstrap5',
+    
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -221,3 +226,7 @@ SERIALIZATION_MODULES = {
 # }
 
 # # GEOIP_PATH = os.path.join(BASE_DIR, 'geoip')
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+
+CRISPY_TEMPLATE_PACK = "bootstrap5"

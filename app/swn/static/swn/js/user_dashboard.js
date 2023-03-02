@@ -236,20 +236,7 @@ const addLayerToSidebar = (userField) =>  {
       </h6>
     </div>
     <div id="collapseField-${projectIndex}" class="accordion-collapse collapse show" aria-labelledby="accordionHeader-${projectIndex}">
-      <!-- Temporary Insert -->
-    <form>
-      <input type="select">Feldfrucht</input></br>
-      Meteoroligischer Dürreindex 0,6</br>
-      landwirtschaftlicher Dürreindex 0,57</br>
-      Bodenfeuchtigkeit 15% Vol.</br>
-    
-    
-    </form>
 
-      
-    
-      <!-- Temporary Insert -->
-    
     <span><button type="button" class="btn btn-outline-secondary btn-sm">
             <i class="fa-regular fa-pen-to-square field-edit"></i>
         </button></span>

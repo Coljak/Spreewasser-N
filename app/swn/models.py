@@ -89,3 +89,4 @@ class UserProject(models.Model):
     irrigation_output = models.JSONField(null=True, blank=True)
     def __str__(self):
         return self.name
+

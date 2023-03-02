@@ -29,8 +29,6 @@ urlpatterns = [
     #path('', views.IndexView.as_view(), name='index'),
     path('', include('swn.urls')),
     path('admin/', admin.site.urls),
-    # path('app/', include('swn.urls')),
-
     path('api/schema/', 
         SpectacularAPIView.as_view(), name='api-schema'),
     path(

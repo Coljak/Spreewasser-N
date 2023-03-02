@@ -37,15 +37,11 @@ class CropListView(ListView):
     model = models.Crop
 
 
-# class CropDetailView(ListView):
-#     context_object_name = 'crop_deatil'
-#     model = models.Crop
-#     template_name = 'app/crop_detail.html'
-
-
-
 def home(request):
     return render(request, 'swn/home.html')
+
+def impressum_information(request):
+    return render(request, 'swn/impressum_information.html')
 
 
 def form_sidebar(request):
@@ -89,7 +85,7 @@ def register(request):
         user_form = forms.UserForm()
         #profile_form = UserProfileInfoForm()
 
-    return render(request, 'registration/registration.html',
+    return render(request, 'user/registration.html',
                   {'user_form': user_form,
                    #'profile_form': profile_form,
                    'registered': registered})
@@ -97,36 +93,25 @@ def register(request):
 
 @login_required
 def user_login(request):
-    print("user_login KONTROLLPUNKT 1")
     if request.method == "POST":
-        print("user_login KONTROLLPUNKT 2")
         username = request.POST.get('username')
         password = request.POST.get('password')
 
-        print("user_login KONTROLLPUNKT 3")
 
         user = authenticate(username=username, password=password)
-        print("user_login KONTROLLPUNKT 4")
         if user:
-            print("user_login KONTROLLPUNKT 5")
             if user.is_active:
 
                 login(request, user)
-                print("user_login KONTROLLPUNKT 7")
                 return HttpResponseRedirect(reverse('swn-index'))
 
             else:
-                print("user_login KONTROLLPUNKT 8")
                 return HttpResponse("Account is not active!")
 
         else:
-            print("user_login KONTROLLPUNKT 9")
-            print('...the login failed...')
-
             return HttpResponse("the login failed")
 
     else:
-        print("user_login KONTROLLPUNKT 10")
         return render(request, 'registration/login.html', {})
 
 
@@ -178,8 +163,6 @@ def map(request):
         return HttpResponse(polydata, content_type='json')
  """
 
-# @login_required
-
-
+@login_required
 def userinfo(request):
     return render(request, 'swn/userinfo.html')

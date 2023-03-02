@@ -1,0 +1,28 @@
+
+{% extends "swn/base.html" %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+
+{% load static %}
+
+{% block body_block %}
+{% if registered %}
+    <h1> REGISTERED </h1>
+
+{% else %}
+<div class="container mt-5">
+        
+        <h3>Fill out the form:</h3>
+    
+        <form enctype="multipart/form-data" method="post" class="form-horizontal">
+            {% csrf_token %}
+            {% crispy user_form %}
+            
+            <input type="submit" name="" value="Register">
+        
+        </form>
+    </div>
+   
+{% endif %}
+
+{% endblock body_block %}

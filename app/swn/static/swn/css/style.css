@@ -144,7 +144,7 @@ html, body {
 
 #layerPane {
     padding-left: 0;
-    padding-right: 0;
+    padding-right: 2;
 }
 
 #baseLayerList {
@@ -155,12 +155,9 @@ html, body {
 }
 
 .list-group .sidebar-list {
-    padding: 0;
+    padding: 2;
 }
 
-/* .accordion {
-    --bs-accordion-body-padding: 0;
-} */
 
 
 ul#baseLayerList li {
@@ -186,7 +183,7 @@ ul#baseLayerList li {
     --bs-accordion-active-color: #fff;
     --bs-accordion-active-color: #fff;
     box-shadow: #fff;
-    /* padding:0; */
+    
 }
 
 .accordion {
@@ -194,8 +191,8 @@ ul#baseLayerList li {
     --bs-accordion-active-color: #fff;
     --bs-accordion-active-color: #fff;
     --bs-accordion-btn-focus-box-shadow: #fff;
-    
-}
+} */
+
 .modal-backdrop {
     display:none 
 }
@@ -226,4 +223,7 @@ ul#baseLayerList li {
     line-height: 1;
     position: relative;
     top: calc(var(--avatar-size) / 4); /* 25% of parent */
+  }
+  .temp {
+    box-sizing: content-box;
   }

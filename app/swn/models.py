@@ -6,13 +6,13 @@ from email.policy import default
 from statistics import mode
 
 from django.contrib.gis.db import models
-from djgeojson.fields import PointField, PolygonField, MultiLineStringField, MultiPointField, MultiPolygonField
+from djgeojson.fields import PointField, PolygonField, MultiLineStringField, MultiPointField, MultiPolygonField, GeometryField
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
 )
-
+import gettext as _
 import datetime
 import os
 
@@ -70,15 +70,13 @@ class ProjectRegion(models.Model):
 class UserField(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
-    geom = PolygonField(null=True)
+    geom_json = PolygonField(null=True)
+    geom = GeometryField(null=True)
     comment = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.name
 
-# class UserIrrigation(models.Model):
-#     date = models.DateField()
-#     amount = models.PositiveIntegerField()
 
 class UserProject(models.Model):    
     name = models.CharField(max_length=255)
@@ -87,6 +85,9 @@ class UserProject(models.Model):
     comment = models.TextField(null=True, blank=True)
     irrigation_input = models.JSONField(null=True, blank=True)
     irrigation_output = models.JSONField(null=True, blank=True)
+    calculation = models.JSONField(null=True, blank=True)
+    date = models.DateField(auto_now_add=True, blank=True)
+
     def __str__(self):
         return self.name
 

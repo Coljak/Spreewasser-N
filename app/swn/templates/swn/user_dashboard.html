@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <!-- user dashboard -->
 {% extends "swn/base.html" %}
 {% load static %}
@@ -6,22 +5,16 @@
 {% load leaflet_tags %}
 {% load geojson_tags %}
 
-{% block scripts %}
-  
-  
+{% block css %}
   {% leaflet_css %}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
   <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.css' %}" />
-  
   <link rel="stylesheet" href="{% static 'leaflet/fullscreen/Control.FullScreen.css' %}" />
   <link rel="stylesheet" href="{% static 'leaflet/markercluster/MarkerCluster.css' %}">
   <link rel="stylesheet" href="{% static 'leaflet/markercluster/MarkerCluster.Default.css' %}">
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <link rel="stylesheet" href="{% static "swn/css/style.css" %}"/>
-    
-
-  
-{% endblock scripts %}
+{% endblock css %}
 
 {% block body_block %}
   {% comment %} {% for proj in projects %}
@@ -30,44 +23,16 @@
     <p>{{ proj.field.user.name }}</p>
   {% endfor %} {% endcomment %}
   Context: {{ context }}
+  <ul id="display-data">
 
-<!-- Chart -->
-<!-- Button trigger modal -->
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#chartModal">
-  Launch chart modal
-</button>
-
-<!-- Modal -->
-<div class="modal fade" id="chartModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        ...
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
+  </ul>
 <!-- modal -->
 <div class="modal-container"></div>
 
 <!-- map -->
 <div class="container">
-  
   <div id="map-container" class="container">
     <div id="map" class="sidebar-map">
-      
       <div id="sidebar" class="sidebar collapsed" tabindex="2">
           <!-- Nav tabs -->
         <div class="sidebar-tabs">
@@ -77,12 +42,10 @@
             <li class="disabled"><a href="#messages" role="tab"><i class="fa fa-envelope"></i></a></li>
             <li><a href="https://github.com/Turbo87/sidebar-v2" role="tab" target="_blank"><i class="fa fa-home"></i></a></li>
           </ul>
-
           <ul role="tablist">
             <li><a href="#settings" role="tab"><i class="fa fa-gear"></i></a></li>
           </ul>
         </div>
-
           <!-- Tab panes -->
         <div class="sidebar-content">
           <div class="sidebar-pane" id="layerPane">
@@ -94,7 +57,6 @@
               {% comment %} <li class="list-group-item">
                 <h5>Baselayers</h5>
               </li> {% endcomment %}
-              
               <li class="list-group-item no-padding-list-group-item">
                 <div class="accordion accordion-flush" id="layerAccordion">
                   <div class="accordion-item">
@@ -103,9 +65,7 @@
                         Hintergrundkarten
                       </button>
                     </h2>
-                    
-                    <div id="baseLayers-collapse" class="accordion-collapse collapse" aria-labelledby="projectRegionAccordionHeading" data-bs-parent="#layerAccordion">
-                      
+                    <div id="baseLayers-collapse" class="accordion-collapse collapse" aria-labelledby="projectRegionAccordionHeading" data-bs-parent="#layerAccordion"> 
                       <div class="accordion-body">
                         <hr class="py-0 mt-1 mb-0">
                         <ul id="baseLayerList">
@@ -121,313 +81,41 @@
                     </div>
                   </div>
                 </div>
-              </li>
-              
+              </li>  
               {% comment %} <li class="list-group-item" id="userFieldsSidebarHeader">
                 <h5>Projekte</h5>
               </li> {% endcomment %}
-
-                <!--Temporary-->
-                <li class="list-group-item">
-                  <div class="accordion-item">
-                    <div class="accordion-header" id="accordionHeader-${projectIndex}">
-                      <h6>
-                        <div class="form-check form-switch">
-                          <input type="checkbox" class="form-check-input" id="fieldSwitch-${projectIndex}" checked>
-                          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseField-${projectIndex}" aria-expanded="true" aria-controls="collapseField-${projectIndex}">
-                          Pagram Acker 1</button></div>
-                      </h6>
-                    </div>
-                    <div id="collapseField-${projectIndex}" class="accordion-collapse collapse show" aria-labelledby="accordionHeader-${projectIndex}">
-                      <div class="container">
-                        <div class="row">
-                          <label class="col-sm pull-left" style="font-size: 0.9rem;" for="pet-select">Feldfrucht: </label>
-
-                          <select class="col-sm pull-right" style="font-size: 0.9rem;" name="pets" id="pet-select">
-                            <option value="">--Please choose an option--</option>
-                            <option value="dog">Winterweizen</option>
-                            <option value="cat">Gerste</option>
-                            <option value="hamster">Raps</option>
-                            <option value="parrot">Mais</option>
-                            <option value="spider">Spider</option>
-                            <option value="goldfish">Goldfish</option>
-                          </select>
-                          </br>
-                        </div>
-                        <div class="row mt-1">
-                          <div class="col-9 pull-left" style="font-size: 0.9rem;">
-                            Meteoroligischer Dürreindex
-                          </div>
-                          <div class="col-3 pull-right border border-dark text-end" style="font-size: 0.9rem; background-color: #f90">
-                            0,6
-                          </div>
-                        </div>
-                        <div class="row mt-1" >
-                          <div class="col-9 pull-left" style="font-size: 0.9rem;">
-                            Landwirtschaftlicher Dürreindex
-                          </div>
-                          <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #fb4">
-                            0,57
-                          </div>
-                          
-                        </div>
-                        <div class="row my-1">
-                          <div class="col-9 pull-left" style="font-size: 0.9rem;">
-                            Bodenfeuchtigkeit
-                          </div>
-                          <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #f84">
-                            15% Vol.
-                          </div>
-                        </div>
-                      </div>
-
-
-                      
-                   
-          
-                      <div class="d-flex flex-row"> 
-                        <div class="d-flex justify-content-start">
-                          <span>
-                            <button type="button" class="btn btn-outline-secondary btn-sm">
-                              <i class="fa-regular fa-pen-to-square field-edit"></i>
-                            </button>
-                          </span>
-                          <span class="px-1">
-                            <button type="button" class="btn btn-outline-secondary btn-sm">
-                              <i class="fa-regular fa-trash-can delete"></i>
-                            </button>
-                          </span>
-                          <span>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#projectModal">
-                              <i class="fa-solid fa-ellipsis-vertical field-menu"></i>
-                            </button>
-                          </span>
-                          <span class="px-4">
-                            <button id="userFieldNewCalcBtn-${projectIndex}" class="btn btn-sm  btn-outline-primary">Neue Berechnung</button>
-
-                          </span>
-                       
-                    
-                        
-                      </div>
-                    </div>
-                  </div>
-                </li>
-
-                <li class="list-group-item">
-                  <div class="accordion-item">
-                    <div class="accordion-header" id="accordionHeader-${projectIndex}">
-                      <h6>
-                        <div class="form-check form-switch">
-                          <input type="checkbox" class="form-check-input" id="fieldSwitch-${projectIndex}" checked>
-                          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseField-${projectIndex}" aria-expanded="true" aria-controls="collapseField-${projectIndex}">
-                          Pagram Acker 2</button></div>
-                      </h6>
-                    </div>
-                    <div id="collapseField-${projectIndex}" class="accordion-collapse collapse show" aria-labelledby="accordionHeader-${projectIndex}">
-                      <div class="container">
-                        <div class="row">
-                          <label class="col-sm pull-left" style="font-size: 0.9rem;" for="pet-select">Feldfrucht: </label>
-
-                          <select class="col-sm pull-right" style="font-size: 0.9rem;" name="pets" id="pet-select">
-                            <option value="">--Please choose an option--</option>
-                            <option value="dog">Winterweizen</option>
-                            <option value="cat">Gerste</option>
-                            <option value="hamster">Raps</option>
-                            <option value="parrot">Mais</option>
-                            <option value="spider">Spider</option>
-                            <option value="goldfish">Goldfish</option>
-                          </select>
-                          </br>
-                        </div>
-                        <div class="row mt-1">
-                          <div class="col-9 pull-left" style="font-size: 0.9rem;">
-                            Meteoroligischer Dürreindex
-                          </div>
-                          <div class="col-3 pull-right border border-dark text-end" style="font-size: 0.9rem; background-color: #bb4">
-                            0,33
-                          </div>
-                        </div>
-                        <div class="row mt-1" >
-                          <div class="col-9 pull-left" style="font-size: 0.9rem;">
-                            Landwirtschaftlicher Dürreindex
-                          </div>
-                          <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #8b4">
-                            0,13
-                          </div>
-                          
-                        </div>
-                        <div class="row my-1">
-                          <div class="col-9 pull-left" style="font-size: 0.9rem;">
-                            Bodenfeuchtigkeit
-                          </div>
-                          <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #eb4">
-                            30% Vol.
-                          </div>
-                        </div>
-                      </div>
-
-
-                      
-                   
-          
-                      <div class="d-flex flex-row"> 
-                        <div class="d-flex justify-content-start">
-                          <span>
-                            <button type="button" class="btn btn-outline-secondary btn-sm">
-                              <i class="fa-regular fa-pen-to-square field-edit"></i>
-                            </button>
-                          </span>
-                          <span class="px-1">
-                            <button type="button" class="btn btn-outline-secondary btn-sm">
-                              <i class="fa-regular fa-trash-can delete"></i>
-                            </button>
-                          </span>
-                          <span>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#projectModal">
-                              <i class="fa-solid fa-ellipsis-vertical field-menu"></i>
-                            </button>
-                          </span>
-                          <span class="px-4">
-                            <button id="userFieldNewCalcBtn-${projectIndex}" class="btn btn-sm  btn-outline-primary">Neue Berechnung</button>
-
-                          </span>        
-                        
-                      </div>
-                    </div>
-                  </div>
-                </li>
-
-                <li class="list-group-item">
-                  <div class="accordion-item">
-                    <div class="accordion-header" id="accordionHeader-${projectIndex}">
-                      <h6>
-                        <div class="form-check form-switch">
-                          <input type="checkbox" class="form-check-input" id="fieldSwitch-${projectIndex}" checked>
-                          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseField-${projectIndex}" aria-expanded="true" aria-controls="collapseField-${projectIndex}">
-                          Pfingstberg</button></div>
-                      </h6>
-                    </div>
-                    <div id="collapseField-${projectIndex}" class="accordion-collapse collapse show" aria-labelledby="accordionHeader-${projectIndex}">
-                      <div class="container">
-                        <div class="row">
-                          <label class="col-sm pull-left" style="font-size: 0.9rem;" for="pet-select">Feldfrucht: </label>
-
-                          <select class="col-sm pull-right" style="font-size: 0.9rem;" name="pets" id="pet-select">
-                            <option value="">--Please choose an option--</option>
-                            <option value="dog">Winterweizen</option>
-                            <option value="cat">Gerste</option>
-                            <option value="hamster">Raps</option>
-                            <option value="parrot">Mais</option>
-                            <option value="spider">Spider</option>
-                            <option value="goldfish">Goldfish</option>
-                          </select>
-                          </br>
-                        </div>
-                        <div class="row mt-1">
-                          <div class="col-9 pull-left" style="font-size: 0.9rem;">
-                            Meteoroligischer Dürreindex
-                          </div>
-                          <div class="col-3 pull-right border border-dark text-end" style="font-size: 0.9rem; background-color: #e54">
-                            0,73
-                          </div>
-                        </div>
-                        <div class="row mt-1" >
-                          <div class="col-9 pull-left" style="font-size: 0.9rem;">
-                            Landwirtschaftlicher Dürreindex
-                          </div>
-                          <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #c54">
-                            0,85
-                          </div>
-                          
-                        </div>
-                        <div class="row my-1">
-                          <div class="col-9 pull-left" style="font-size: 0.9rem;">
-                            Bodenfeuchtigkeit
-                          </div>
-                          <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #c44">
-                            7% Vol.
-                          </div>
-                        </div>
-                      </div>
-
-
-                      
-                   
-          
-                      <div class="d-flex flex-row"> 
-                        <div class="d-flex justify-content-start">
-                          <span>
-                            <button type="button" class="btn btn-outline-secondary btn-sm">
-                              <i class="fa-regular fa-pen-to-square field-edit"></i>
-                            </button>
-                          </span>
-                          <span class="px-1">
-                            <button type="button" class="btn btn-outline-secondary btn-sm">
-                              <i class="fa-regular fa-trash-can delete"></i>
-                            </button>
-                          </span>
-                          <span>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#projectModal">
-                              <i class="fa-solid fa-ellipsis-vertical field-menu"></i>
-                            </button>
-                          </span>
-                          <span class="px-4">
-                            <button id="userFieldNewCalcBtn-${projectIndex}" class="btn btn-sm  btn-outline-primary">Neue Berechnung</button>
-
-                          </span>        
-                        
-                      </div>
-                    </div>
-                  </div>
-                </li>
-
-                  <!--Temporary-->
-
               </div>
             </ul>
           </div>
-
           <div id="baselayer-02">
             <ul id="userLayerList" class="list-group"> 
             </ul>
           </div>
-          
-
           <div class="sidebar-pane" id="profile">
             <h1 class="sidebar-header">Profile<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
           </div>
-
           <div class="sidebar-pane" id="messages">
             <h1 class="sidebar-header">Messages<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
           </div>
-
           <div class="sidebar-pane" id="settings">
               <h1 class="sidebar-header">Settings<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
           </div>
         </div>
-
       </div>
-    </div>
-    
-  
+    </div>  
   </div>
-
-
 </div>
-{% comment %} <button type="button" class="btn open-projectModal" data-toggle="modal" data-target="#projectModal">Open Modal</button> {% endcomment %}
-  {% block project_modal %}
+<button  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fieldInfoModal">Chart</button>
+{% block project_modal %}
   {% include 'swn/project_modal.html' %}
-  {% endblock %}
-
+  {% include 'swn/field_name_modal.html' %}
+  {% include 'swn/charts_modal.html' %}
 {% endblock %}
 
-
-
-
+{% endblock %}
 {% block javascript %}
 {{ bock.super }}
-
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> {% endcomment %}
 <script src="{% static './leaflet/print/leaflet.browser.print.min.js' %}"></script>
@@ -438,10 +126,6 @@
 <script src="{% static 'leaflet/fullscreen/Control.FullScreen.js' %}"></script>
 <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-
-
 <script src="{% static './data/pilotregion.js' %}"></script>
 <script src="{% static 'swn/js/user_dashboard.js' %}"></script>
-
 {% endblock%}
-

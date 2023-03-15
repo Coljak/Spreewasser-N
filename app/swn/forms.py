@@ -3,7 +3,7 @@ from attr import attr
 from django import forms
 from django.contrib.auth.models import User
 
-from swn.models import User, Crop, UserProject
+from swn.models import User, Crop, UserProject, UserField
 from django.core import  validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
@@ -67,4 +67,9 @@ class FormCrops(forms.ModelForm):
         #         'class': 'form-control',
         #     }),
         # }
+
+class UserFieldForm(forms.ModelForm):
+    model = UserField
+    fields = ('name', 'geom')
+
 

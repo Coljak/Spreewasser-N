@@ -56,10 +56,6 @@ html, body {
 
 }
 
-#projectModal {
-    z-index: 8000;
-    position: relative;
-}
 
 /* Resize the "display_raw" textbox */
 .django-leaflet-raw-textarea {
@@ -67,7 +63,9 @@ html, body {
 }
 
 .leaflet-container {  /* all maps */
-    border: 2px solid rgba(232, 17, 224, 0.8);
+    
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+    border: 1px solid #ccc !important;
     /* background-clip: padding-box; */
     box-sizing: border-box;
     border-radius: 4px;
@@ -193,16 +191,16 @@ ul#baseLayerList li {
     --bs-accordion-btn-focus-box-shadow: #fff;
 } */
 
-.modal-backdrop {
+/* .modal-backdrop {
     display:none 
 }
 .modal-backdrop.in {
     opacity: 0;
-}
-.modal {
+} */
+/* .modal {
     z-index: inherit !important; 
     position: relative; 
-}
+} */
 
 
 :root {

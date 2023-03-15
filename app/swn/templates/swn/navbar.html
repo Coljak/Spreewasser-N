@@ -1,51 +1,39 @@
 {% load static %}
 <header>
-<nav class="navbar navbar-expand-md navbar-light bg-white shadow navbar-fixed-top pt-3 mb-0">
+  <nav class="navbar navbar-expand-md navbar-light bg-white shadow navbar-fixed-top pt-3 mb-0">
     <div class="container">
-        
-        <ul class="nav navbar-nav flex-row flex-wrap">
-          <li class="mb-1"><a  class="nav-brand mb-2" href="{% url 'swn:swn_index' %}"><img src="{% static 'img/SpreeWasser-Logo.png' %}" height="60px" alt="SWN-Logo"/></a></li>
-        {% if user.is_authenticated  %}
-        <!--
+      <ul class="nav navbar-nav flex-row flex-wrap">
+        <li class="mb-1"><a  class="nav-brand mb-2" href="{% url 'swn:swn_index' %}"><img src="{% static 'img/SpreeWasser-Logo.png' %}" height="60px" alt="SWN-Logo"/></a></li>
+        {% if user.is_superuser %}
           <li><a  class="nav-link" href="{% url 'admin:index' %}">ADMIN</a></li>
-          
-          <li><a  class="nav-link" href="{% url 'swn:user_info' %}">USERINFO</a></li>
-          -->
-          <li class="nav-item"><a  class="nav-link" href="{% url 'swn:user_dashboard' %}">Dürrevorhersage</a></li>
-          
         {% endif %}
-          <!--
-        <li><a  class="nav-link" href="{% url 'swn:map' %}">MAP</a></li>
-            -->
-        
-        {% if user.is_authenticated  %}
+        {% if user.is_authenticated  %}    
+        <li class="nav-item"><a  class="nav-link" href="{% url 'swn:user_dashboard' %}">Dürrevorhersage</a></li>
+        {% endif %}
+        <li class="nav-item"><a  class="nav-link" href="{% url 'swn:impressum_information' %}">Impressum information</a></li>
+      </ul>
+          {% comment %} <li>
+          <form class="navbar-form" role="search"><i class="fa-solid fa-magnifying-glass"></i>search here...</form>
+          </li> {% endcomment %}
+      <ul class="nav navbar-nav flex-row flex-wrap">
+        {% if user.is_authenticated  %}    
         <li class="nav-item">
-            <span>
-                <div class="circle">
-            <span class="initials">{{ initials }}</span>
-          </div></span>
-          <li class="nav-item">
-          <li><a class='nav-link' href="{% url 'swn:user_logout' %}">Logout</a>
+          <span>
+            <div class="circle">
+              <span class="initials">{{ initials }}CK</span>
+            </div>
+          </span>
         </li>
-
+        <li class="nav-item">
+          <a class='nav-link' href="{% url 'swn:user_logout' %}">Logout</a>
+        </li>
         {% else %}
-          <li><a  class="nav-link" href="{% url 'swn:user_login' %}">Login</a></li>
-          <li><a  class="nav-link" href="{% url 'swn:registration' %}">Register</a></li>
-          <li class="nav-item"><a  class="nav-link" href="{% url 'swn:impressum_information' %}">Impressum information</a></li>
-        {% endif %}
-    </ul>
-        {% comment %} <li>
-        <form class="navbar-form" role="search"><i class="fa-solid fa-magnifying-glass"></i>search here...</form>
-        </li> {% endcomment %}
-        <ul class="nav navbar-nav flex-row flex-wrap">      
-            <li><a  class="nav-brand px-3" href="https://www.zalf.de" target="_blank"><img src="{% static 'img/zalf.jpeg' %}" height="60px" alt="SWN-Logo"/></a></li>
-            
-            <li><a  class="nav-brand px-3" href="https://www.bmbf-wax.de/" target="_blank"><img src="{% static 'img/wax-300x126.png' %}" height="60px" alt="SWN-Logo"/></a></li>
-        </ul>
-      
-      
-     
+        <li><a  class="nav-link" href="{% url 'swn:user_login' %}">Login</a></li>
+        <li><a  class="nav-link" href="{% url 'swn:registration' %}">Register</a></li>
+        {% endif %} 
+        <li><a  class="nav-brand px-3" href="https://www.zalf.de" target="_blank"><img src="{% static 'img/zalf.jpeg' %}" height="60px" alt="SWN-Logo"/></a></li> 
+        <li><a  class="nav-brand px-3" href="https://www.bmbf-wax.de/" target="_blank"><img src="{% static 'img/wax-300x126.png' %}" height="60px" alt="SWN-Logo"/></a></li>
+      </ul>
     </div>
-    
   </nav>
 </header>

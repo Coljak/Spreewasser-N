@@ -1,19 +1,16 @@
-from django.shortcuts import render
-
-from importlib.util import spec_from_file_location
-from pathlib import Path
+import json
 from multiprocessing import managers
-from django.http import HttpResponse
-#from core.forms import FormCrops, UserForm
-from django.shortcuts import render
-#from requests import request
+from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse
+from importlib.util import spec_from_file_location
+
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, HttpResponse, HttpRequest, JsonResponse
 from django.core.serializers import serialize
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.gis.gdal import DataSource
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
+from django.views.decorators.csrf import csrf_protect
 from . import forms
 from . import models
 from app.helpers import is_ajax
@@ -123,16 +120,27 @@ def user_logout(request):
 
 @login_required
 def user_dashboard(request):
-    projects = models.UserProject.objects.filter(field__user = request.user)
+    user_fields = models.UserProject.objects.filter(field__user = request.user)
     #projects_json = serialize('json', projects)
     context = []
-    for proj in projects:
-        if request.user == proj.field.user:
+    for user_field in user_fields:
+        if request.user == user_field.field.user:
             item = {
-                'name': proj.name 
+                'name': user_field.name,
+                'user_name': user_field.field.user.name,
+                'field': user_field.field.name,
+                'irrigation_input': user_field.irrigation_input,
+                'irrigation_otput': user_field.irrigation_output,
+                'geom': user_field.field.geom,
+                'field_id': user_field.field.id,
+                'monica_calculation': user_field.calculation,
             }
             context.append(item)
+            
     data = {'context': context}
+
+    if is_ajax(request):
+        geom = request.geom
     
     return render(request, 'swn/user_dashboard.html', data)
 
@@ -166,3 +174,93 @@ def map(request):
 @login_required
 def userinfo(request):
     return render(request, 'swn/userinfo.html')
+
+def save_shape(request):
+    if(request.method == 'POST'):
+        name = request.POST.get('name')
+        geom = request.POST.get('geom')
+        user = request.POST.get('user')
+
+        user_field = models.UserField(name=name, geom=geom, user=user)
+
+class ChartView(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'swn/chart.html', {})
+
+def get_chart(request, *args, **kwargs):
+    from .data import monica_calc
+    
+    return  JsonResponse(monica_calc)
+
+def save_user_field(request):
+    if is_ajax(request):
+        print("Save user field is AJAX")
+        print(request)
+    return JsonResponse({})
+
+# from ajax: post_detail
+@login_required
+def calc_data(request, pk):
+    obj = models.Post.objects.get(pk=pk)
+    form = forms.PostForm()
+
+    context = {
+        'obj': obj,
+        'form': form,
+    }
+
+    return render(request, 'posts/detail.html', context)
+
+def get_user_fields(request):
+    if is_ajax(request):
+        user_projects = models.UserProject.objects.filter(field__user = request.user)
+        user_fields = models.UserField.objects.filter(user = request.user)
+        some_dict = serialize('json', user_fields)
+        # for user_field in list(user_fields.values()):
+        #     #some_dict[user_field.id] = user_field
+        print("user_field", some_dict) 
+        print("Request.user", request.user.id)
+
+        return JsonResponse({'user_fields': list(user_fields.values()), 'user_projects': list(user_projects.values())})
+
+@login_required
+# @action_permission
+def update_user_field(request, pk):
+    obj = models.UserField.objects.get(pk=pk)
+    if is_ajax(request):
+        
+        obj.name = request.POST.get('fieldName')
+        obj.geom_json = request.POST.get('geomJson')
+        obj.geom = request.POST.get('geomJson')
+        
+        obj.save()
+        return JsonResponse({
+            'fieldName': obj.name,
+            'geom': obj.geom,
+        })
+    return redirect('swn:user_dashboard')
+    
+
+@login_required
+@csrf_protect
+# @action_permission
+def save_user_field(request):
+    
+    form = forms.UserFieldForm(request.POST or None)
+    if is_ajax(request):
+        instance = form.save(commit=False)
+        instance.name = request.POST.get('fieldName')
+        instance.geom_json = request.POST.get('geomJson')
+        instance.geom = request.POST.get('geomJson')
+        instance.id = request.user.id
+        instance.save()
+        return JsonResponse({
+            'fieldName': instance.name,
+            'geom': instance.geom,
+        })
+    return redirect('swn:user_dashboard')
+
+
+
+
+

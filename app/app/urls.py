@@ -20,24 +20,25 @@ from drf_spectacular.views import (
 from django.contrib import admin
 from django.urls import path, include
 from swn import views, urls
+# from accounts import views, urls
 from django.conf import settings
 from django.conf.urls.static import static
 
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
-    #path('', views.IndexView.as_view(), name='index'),
+    # path('', views.IndexView.as_view(), name='index'),
     path('', include('swn.urls')),
     path('admin/', admin.site.urls),
-    path('api/schema/', 
-        SpectacularAPIView.as_view(), name='api-schema'),
+    path('api/schema/',
+         SpectacularAPIView.as_view(), name='api-schema'),
     path(
-        'api/docs/', 
+        'api/docs/',
         SpectacularSwaggerView.as_view(url_name='api-schema'),
         name='api-docs',
     ),
     path('api/user/', include('user.urls')),
-    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 """
 Debugger is accessible in the browser if BEBUG is True
@@ -46,5 +47,6 @@ if settings.DEBUG:
     import debug_toolbar
     urlpatterns = urlpatterns + [
         path('__debug__/', include(debug_toolbar.urls)),
-            ] 
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    ]
+    urlpatterns += static(settings.STATIC_URL,
+                          document_root=settings.STATIC_ROOT)

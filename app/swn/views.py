@@ -1,22 +1,32 @@
 import json
+
 from multiprocessing import managers
 from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse
 from importlib.util import spec_from_file_location
-
+from django.contrib.auth import authenticate, login, logout
+#from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.serializers import serialize
-from django.contrib.auth import authenticate, login, logout
+
+from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.gdal import DataSource
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
 from django.views.decorators.csrf import csrf_protect
 from . import forms
 from . import models
 from app.helpers import is_ajax
+# from django.contrib.auth.forms import UserCreationForm
+# from django.urls import reverse_lazy
+# from django.views import generic
 
 from .utils import get_geolocation
 
+# class SignUpView(generic.CreateView):
+#     form_class = forms.UserForm
+#     success_url = reverse_lazy("user_login")
+#     template_name = "swn/signup.html"
 
 class IndexView(TemplateView):
     template_name = "swn/home.html"
@@ -26,65 +36,36 @@ class IndexView(TemplateView):
         context['injectme'] = 'BASIC INJECTION'
         return context
 
-class TestHTML(TemplateView):
-    template_name = "swn/testhtml.html"
-
-
-class CropListView(ListView):
-    model = models.Crop
-
-
-def home(request):
-    return render(request, 'swn/home.html')
 
 def impressum_information(request):
     return render(request, 'swn/impressum_information.html')
 
 
-def form_sidebar(request):
-    form = forms.FormSidebar()
-
-    if request.method == 'POST':
-        form = forms.FormSidebar(request.POST)
-
-        if form.is_valid():
-            print('data has come in...')
-            print(form.cleaned_data['name'])
-            print(form.cleaned_data['email'])
-            print(form.cleaned_data['text'])
-    return render(request, 'app/form_sidebar.html', {'form': form})
-
-
 def register(request):
 
     registered = False
-
+    print("register")
     if request.method == "POST":
+        print("if request.method == POST:")
         user_form = forms.UserForm(data=request.POST)
         # profile_form = UserProfileInfoForm(data=request.POST)
 
-        if user_form.is_valid(): # and profile_form.is_valid():
+        if user_form.is_valid():  # and profile_form.is_valid():
+            print("userForm valid")
             user = user_form.save()
             user.set_password(user.password)
             user.save()
-
-            # profile = profile_form.save(commit=False)
-            # profile.user = user
-
-            # profile.save()
-
             registered = True
         else:
-            #print(user_form.errors, profile_form.errors)
+            print("userForm NOT valid")
             print(user_form.errors)
 
     else:
         user_form = forms.UserForm()
-        #profile_form = UserProfileInfoForm()
 
     return render(request, 'user/registration.html',
                   {'user_form': user_form,
-                   #'profile_form': profile_form,
+                   # 'profile_form': profile_form,
                    'registered': registered})
 
 
@@ -93,7 +74,6 @@ def user_login(request):
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
-
 
         user = authenticate(username=username, password=password)
         if user:
@@ -109,7 +89,7 @@ def user_login(request):
             return HttpResponse("the login failed")
 
     else:
-        return render(request, 'registration/login.html', {})
+        return render(request, 'swn/login.html', {})
 
 
 @login_required
@@ -120,9 +100,11 @@ def user_logout(request):
 
 @login_required
 def user_dashboard(request):
-    user_fields = models.UserProject.objects.filter(field__user = request.user)
-    #projects_json = serialize('json', projects)
+    user_fields = models.UserProject.objects.filter(field__user=request.user)
+    name_form = forms.UserFieldForm(request.POST or None)
+    # projects_json = serialize('json', projects)
     context = []
+
     for user_field in user_fields:
         if request.user == user_field.field.user:
             item = {
@@ -131,72 +113,32 @@ def user_dashboard(request):
                 'field': user_field.field.name,
                 'irrigation_input': user_field.irrigation_input,
                 'irrigation_otput': user_field.irrigation_output,
-                'geom': user_field.field.geom,
+
                 'field_id': user_field.field.id,
                 'monica_calculation': user_field.calculation,
             }
             context.append(item)
-            
-    data = {'context': context}
 
-    if is_ajax(request):
-        geom = request.geom
-    
+    data = {'context': context, 'name_form': name_form}
+
     return render(request, 'swn/user_dashboard.html', data)
 
-class UserCropSelection(CreateView):
-    model = models.Crop
-    template_name = 'app/user_dashboard.html'
-    form_class = forms.FormCrops
-
-
-def map(request):
-    # ip = '80.187.68.143'
-    # lat, lon = get_geolocation(ip)
-    # print('LAT and LON detected: ', lat, lon)
-    pilotregion = models.ProjectRegion.objects.get(id=1)
-    print(pilotregion)
-    context = {
-        'pilotregion': pilotregion
-    }
-
-    return render(request, 'swn/map.html', context)
-
-
-""" def map_overlay(request):
-    template_name = 'rsmgui_nav.html'
-
-    if request.POST.get("area-overlay"):
-        polydata = serialize('geojson', ModelArea.objects.filter(name=request.POST.get("aoi-choice")))
-        return HttpResponse(polydata, content_type='json')
- """
 
 @login_required
 def userinfo(request):
     return render(request, 'swn/userinfo.html')
 
-def save_shape(request):
-    if(request.method == 'POST'):
-        name = request.POST.get('name')
-        geom = request.POST.get('geom')
-        user = request.POST.get('user')
-
-        user_field = models.UserField(name=name, geom=geom, user=user)
 
 class ChartView(View):
     def get(self, request, *args, **kwargs):
         return render(request, 'swn/chart.html', {})
 
+
 def get_chart(request, *args, **kwargs):
     from .data import monica_calc
-    
-    return  JsonResponse(monica_calc)
 
-def save_user_field(request):
-    if is_ajax(request):
-        print("Save user field is AJAX")
-        print(request)
-    return JsonResponse({})
+    return JsonResponse(monica_calc)
+
 
 # from ajax: post_detail
 @login_required
@@ -211,56 +153,53 @@ def calc_data(request, pk):
 
     return render(request, 'posts/detail.html', context)
 
+
 def get_user_fields(request):
     if is_ajax(request):
-        user_projects = models.UserProject.objects.filter(field__user = request.user)
-        user_fields = models.UserField.objects.filter(user = request.user)
-        some_dict = serialize('json', user_fields)
-        # for user_field in list(user_fields.values()):
-        #     #some_dict[user_field.id] = user_field
-        print("user_field", some_dict) 
-        print("Request.user", request.user.id)
+        user_projects = models.UserProject.objects.filter(
+            field__user=request.user)
+        user_fields = models.UserField.objects.filter(user=request.user)
 
-        return JsonResponse({'user_fields': list(user_fields.values()), 'user_projects': list(user_projects.values())})
+    return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json')), 'user_projects': list(user_projects.values())})
+
 
 @login_required
 # @action_permission
 def update_user_field(request, pk):
     obj = models.UserField.objects.get(pk=pk)
     if is_ajax(request):
-        
-        obj.name = request.POST.get('fieldName')
+
+        obj.name = request.POST.get('name')
         obj.geom_json = request.POST.get('geomJson')
-        obj.geom = request.POST.get('geomJson')
-        
+        obj.geom = request.POST.get('geom')
+
         obj.save()
         return JsonResponse({
             'fieldName': obj.name,
             'geom': obj.geom,
         })
     return redirect('swn:user_dashboard')
-    
+
 
 @login_required
 @csrf_protect
 # @action_permission
 def save_user_field(request):
-    
-    form = forms.UserFieldForm(request.POST or None)
+    # if request.user.is_authenticated:
+    # user = models.User.objects.get(user=request.user)
+    print("request in views:", request.user)
     if is_ajax(request):
-        instance = form.save(commit=False)
-        instance.name = request.POST.get('fieldName')
-        instance.geom_json = request.POST.get('geomJson')
-        instance.geom = request.POST.get('geomJson')
-        instance.id = request.user.id
+        print("Save IS AJAX")
+        form = forms.UserFieldForm(request.POST or None)
+        name = request.POST.get('name')
+        geom = json.loads(request.POST.get('geom'))
+        geos = GEOSGeometry(request.POST.get('geom'), srid=4326)
+        user = request.user
+        instance = models.UserField()
+        instance.name = name
+        instance.geom_json = geom
+        instance.geom = geos
+        instance.user = user
         instance.save()
-        return JsonResponse({
-            'fieldName': instance.name,
-            'geom': instance.geom,
-        })
+        return JsonResponse({'id': instance.id})
     return redirect('swn:user_dashboard')
-
-
-
-
-

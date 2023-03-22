@@ -8,12 +8,13 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 # this is best practice to integrate translation
 from django.utils.translation import gettext_lazy as _
 
-from .models import User, ProjectRegion, UserProject, UserField, Crop
-# from Waterconsumption Tutorial
+from .models import User, ProjectRegion, UserProject, UserField, Crop #UserInfo,
+
 from django.contrib.gis.geos import Point, Polygon, MultiPoint, MultiPolygon
 from datetime import datetime
 import pandas as pd
 from pandas import ExcelWriter, ExcelFile
+
 
 
 class UserAdmin(BaseUserAdmin):
@@ -64,7 +65,7 @@ class UserProjectsAdmin(ModelAdmin):
 # class UserFieldAdmin(LeafletGeoAdmin):
 #     pass
 
-
+# admin.site.register(UserInfo)
 admin.site.register(User, UserAdmin)
 admin.site.register(ProjectRegion, LeafletGeoAdmin)
 admin.site.register(UserProject, UserProjectsAdmin)

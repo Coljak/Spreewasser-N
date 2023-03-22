@@ -3,12 +3,19 @@ from attr import attr
 from django import forms
 from django.contrib.auth.models import User
 
-from swn.models import User, Crop, UserProject, UserField
-from django.core import  validators
+from swn.models import User, Crop, UserProject, UserField#, UserInfo
+from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 
+
+# class UserInfoForm(forms.ModelForm):
+#     class Meta():
+#         model = UserInfo
+#         fields = ('name', 'email', 'password')
+    
+    
 
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())
@@ -39,7 +46,7 @@ class FormCrops(forms.ModelForm):
         model = Crop
         fields = ['name']
         widgets = {
-            'name': forms.Select(attrs ={
+            'name': forms.Select(attrs={
                 'class': 'form-control',
             }),
         }
@@ -51,8 +58,7 @@ class FormCrops(forms.ModelForm):
 #     def __init__(self, *args, **kwargs):
 #         user = kwargs.pop('user','')
 #         super(UserProjectForm, self).__init__(*args, **kwargs)
-        #self.fields['user_defined_code']=forms.ModelChoiceField(queryset=UserDefinedCode.objects.filter(owner=user))
-
+        # self.fields['user_defined_code']=forms.ModelChoiceField(queryset=UserDefinedCode.objects.filter(owner=user))
 
         # fields = [
         #     'user_field.name',
@@ -68,8 +74,8 @@ class FormCrops(forms.ModelForm):
         #     }),
         # }
 
+
 class UserFieldForm(forms.ModelForm):
-    model = UserField
-    fields = ('name', 'geom')
-
-
+    class Meta:
+        model = UserField
+        fields = ('name',)

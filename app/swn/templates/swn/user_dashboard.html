@@ -17,17 +17,23 @@
 {% endblock css %}
 
 {% block body_block %}
+  {% include 'swn/variables.html' %}
   {% comment %} {% for proj in projects %}
     <p><strong>{{ proj.name }}</strong></p>
     <p>{{ proj.field.name }}</p>
     <p>{{ proj.field.user.name }}</p>
   {% endfor %} {% endcomment %}
   Context: {{ context }}
-  <ul id="display-data">
+  {% comment %} <ul id="display-data">
 
-  </ul>
+  </ul> {% endcomment %}
 <!-- modal -->
 <div class="modal-container"></div>
+{% block project_modal %}
+  {% include 'swn/project_modal.html' %}
+  {% include 'swn/field_name_modal.html' %}
+  {% include 'swn/charts_modal.html' %}
+{% endblock %}
 
 <!-- map -->
 <div class="container">
@@ -74,6 +80,10 @@
                               <input type="checkbox" class="form-check-input" id="projectRegionSwitch" checked>
                               <label class="form-check-label" for="projectRegionSwitch">Spreewasser:N Projektgebiet</label>
                             </div>
+                            <div class="form-check form-switch mt-2 h6">
+                              <input type="checkbox" class="form-check-input" id="DEMSwitch">
+                              <label class="form-check-label" for="projectRegionSwitch">DEM</label>
+                            </div>
                           </li>
                           <!--Baselayers are injected in user_dashboard.js-->
                         </ul>
@@ -107,25 +117,38 @@
   </div>
 </div>
 <button  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fieldInfoModal">Chart</button>
-{% block project_modal %}
-  {% include 'swn/project_modal.html' %}
-  {% include 'swn/field_name_modal.html' %}
-  {% include 'swn/charts_modal.html' %}
-{% endblock %}
+
 
 {% endblock %}
 {% block javascript %}
 {{ bock.super }}
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-{% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> {% endcomment %}
-<script src="{% static './leaflet/print/leaflet.browser.print.min.js' %}"></script>
-{% comment %} <script src="{% static 'leaflet/markercluster/leaflet.markercluster.js' %}"></script> {% endcomment %}
-<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-{% comment %} <script src="{% static './leaflet/geocoder/Control.Geocoder.js' %}"></script> {% endcomment %}
+<script src="{% static 'data/dem_3857.png' %}"></script>
+<script>
+  const imageUrl= "{% static 'data/dem_3857.png' %}"
+</script>
 
-<script src="{% static 'leaflet/fullscreen/Control.FullScreen.js' %}"></script>
-<script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-<script src="{% static './data/pilotregion.js' %}"></script>
-<script src="{% static 'swn/js/user_dashboard.js' %}"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> {% endcomment %}
+    <script src="{% static './leaflet/print/leaflet.browser.print.min.js' %}"></script>
+    {% comment %} <script src="{% static 'leaflet/markercluster/leaflet.markercluster.js' %}"></script> {% endcomment %}
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    {% comment %} <script src="{% static './leaflet/geocoder/Control.Geocoder.js' %}"></script> {% endcomment %}
+
+    <script src="{% static 'leaflet/fullscreen/Control.FullScreen.js' %}"></script>
+    <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="{% static './data/pilotregion.js' %}"></script>
+    <script src="{% static 'swn/js/user_dashboard.js' %}"></script>
+    <!-- Tiff overlay -->
+    
+    
+    <script src="https://unpkg.com/chroma-js"></script>
+    <script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.min.js">
+    <script src="https://unpkg.com/georaster"></script>
+    <script src="https://unpkg.com/proj4"></script>
+    <script src="https:///unpkg.com/georaster-layer-for-leaflet@latest"></script>
+  {% comment %} <script src="{% static 'dist/leaflet-geotiff-vector.js' %}"></script> {% endcomment %}
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
+<script src="{% static 'swn/js/chart_page.js' %}" defer></script>
 {% endblock%}

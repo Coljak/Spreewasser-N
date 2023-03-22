@@ -1,8 +1,10 @@
 
 <!-- Vertically centered scrollable modal -->
-
+{% comment %} {% load static %} {% endcomment %}
     
 <!-- Button trigger modal -->
+{% comment %} <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
+<script src="{% static 'swn/js/chart_page.js' %}" defer></script> {% endcomment %}
 <div class="modal" id="projectModal" tabindex="-1" aria-labelledby="projectModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -37,24 +39,9 @@
             </div>
           </div>
           <div class="row">
-            <div class="col-md-6 ms-auto">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>
-            </div>
-              
-            <div class="col-md-6 ms-auto">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>
+            <div class="col-md-12 ms-auto">
+              {% comment %} {% include 'swn/chart.html' %} {% endcomment %}
+              <canvas id="myChart"></canvas>
             </div>
           </div>
           <div class="row">

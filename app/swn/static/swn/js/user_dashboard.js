@@ -1,3 +1,39 @@
+// -----------User Field Name Modal -----------------
+const btnSaveUserField = document.getElementById('btnSaveUserField2')
+const btnSaveUserFieldDismiss = document.getElementById('btnSaveUserDismiss')
+const btnSaveUserFieldAndCalc = document.getElementById('btnSaveAndCalc')
+
+btnSaveUserField.addEventListener('submit', e => {
+  e.preventDefault()
+
+})
+
+btnSaveUserFieldAndCalc.addEventListener('submit', e => {
+  e.preventDefault()
+})
+
+btnSaveUserFieldDismiss.addEventListener('click', e => {
+  console.log(currentUserField)
+})
+
+const saveUserField = (userField) => {
+  $.ajax({
+    type: 'POST',
+    url: '/save/',
+    data: {
+        'csrfmiddlewaretoken': csrf[0].value,
+    },
+    success: function(response){
+        window.location.href = window.location.origin // das ist z.B. 127.0.0.1:8000/
+        localStorage.setItem('title', titleInput.value)
+    },
+    error: function(response){
+        console.log(error)
+    }
+})
+}
+
+// -------------MAP --------------------------------------
 const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const osmAttrib =
   '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
@@ -17,13 +53,22 @@ const topoAttrib =
   'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
 const topo = L.tileLayer(topoUrl, { maxZoom: 18, attribution: topoAttrib });
 
+// const imageBounds = [[47.139868905, 15.585439895], [55.063879917, 5.557237723]]
+const imageBounds = [[47.136744752, 15.572418820], [55.058996788, 5.564783468]]
+const dem = L.imageOverlay(imageUrl, imageBounds, opacity=.1)
+
+
+
 const alertBox = document.getElementById("alert-box");
 //const loadUrl = window.location.href + "load/";
 const loadUrl = "load/";
-const saveUrl = window.location.href + "save/";
+const saveUrl = "save/";
+
+// const userFieldNameModal = getElementById("userFieldNameModal")
 
 const csrf = document.getElementsByName("csrfmiddlewaretoken");
 function getCookie(name) {
+  console.log("Dashboard.js getCookie")
   let cookieValue = null;
   if (document.cookie && document.cookie !== "") {
     const cookies = document.cookie.split(";");
@@ -54,15 +99,21 @@ const handleAlerts = (type, msg) => {
   }, 2000);
 };
 
+
+
 // create Map
 const baseMaps = {
   "Open Street Maps": osm,
   Satellit: satellite,
   Topomap: topo,
+  // Ndvi: ndvi,
+  // DEM: dem_germany,
+  // DEM: dem_germany,
 };
 
 const map = new L.Map("map", {
-  layers: [osm],
+  layers: [osm,],
+  overlay: [dem,],
   center: new L.LatLng(52.338145830363914, 13.85877631507592),
   zoom: 8,
 });
@@ -79,6 +130,10 @@ pilotGeojson.setStyle(function (feature) {
   };
 });
 pilotGeojson.addTo(map);
+
+// DEM 
+
+
 
 // Leaflet Control top-right
 // https://github.com/brunob/leaflet.fullscreen
@@ -118,14 +173,6 @@ var drawControl = new L.Control.Draw({
 
 map.addControl(drawControl);
 
-// function onMapClick(e) {
-//   alert("You clicked the map at " + e.latlng);
-//   console.log('Target')
-//   console.log(e.target.layer)
-// }
-
-// map.on('click', onMapClick);
-
 // SIDEBAR
 // Adds the sidebar div from HTML to the map as sidebar
 const sidebarLeft = L.control
@@ -158,6 +205,7 @@ document.querySelector(
 ).hidden = true;
 
 const projectRegionSwitch = document.getElementById("projectRegionSwitch");
+const demSwitch = document.getElementById("DEMSwitch")
 // pilotCheckbox.stopPropagation()
 projectRegionSwitch.addEventListener("change", function () {
   if (projectRegionSwitch.checked) {
@@ -167,16 +215,24 @@ projectRegionSwitch.addEventListener("change", function () {
   }
 });
 
+demSwitch.addEventListener("change", function () {
+  if (demSwitch.checked) {
+    dem.addTo(map);
+  } else {
+    dem.remove();
+  }
+});
+
 class UserField {
   constructor(name, geom_json, layer, id) {
     this.name = name;
-    this.geoJson = geom_json;
+    this.geom = geom_json;
     this.layer = layer;
-    this.user = 0;
     this.id = id;
     this.projects = [];
+    console.log("UserField created", this.name = name, this.geom = geom_json, this.layer = layer, this.user = 0, this.id = id, this.projects)
   }
-}
+};
 
 class UserProject {
   constructor(userField, cropID) {
@@ -190,59 +246,64 @@ class UserProject {
 var userFields = [];
 let projectIndex = 0;
 const userLayerList = document.getElementById("sidebarLayerList");
-// Load all user projects and fields
-$.ajax({
-  type: "GET",
-  url: loadUrl,
-  success: function (response) {
-    $("#display-data").empty();
 
-    const userFields = response.user_fields;
-    userFields.forEach((el) => {
-      $("#display-data").append(`<li>${el.name}</li><li>${el.geom_json}</li>`);
-      const userField = new UserField(
-        el.name,
-        el.geom_json,
-        L.geoJSON(el.geom_json),
-        el.id
-      );
-      addLayerToSidebar(userField);
-    });
-  },
-  error: function (error) {
-    console.log(error);
-  },
-});
+// Load all user  fields
+const getData = () => {  
+  console.log("GetData executed")
+  $.ajax({
+    type: "GET",
+    url: loadUrl,
+    success: function (response) {
+      $("#display-data").empty();
+
+      const userFields = response.user_fields;
+      userFields.forEach((el) => {
+        
+        const userField = new UserField(
+          el.name,
+          el.geom_json,
+          L.geoJSON(el.geom_json),
+          el.id
+        );
+        addLayerToSidebar(userField);
+      });
+    },
+    error: function (error) {
+      console.log(error);
+    }
+  });
+}
 
 map.on(L.Draw.Event.CREATED, function (event) {
-  // console.log('event drawcreated' + JSON.stringify(event.layer))
-  event.layer.addTo(drawnItems);
+  console.log('event drawcreated')
   let layer = event.layer;
-  let type = event.layerType;
-  let geomJson = layer.toGeoJSON();
+  let geom = layer.toGeoJSON();
+  let name = userFieldNameInput()
   const currentUserField = new UserField(
-    (fieldName = userFieldNameInput()),
-    geomJson,
+    (fieldName = name),
+    geom,
     layer,
     (id = 5)
   );
 
   addLayerToSidebar(currentUserField);
+  console.log("draw Created done")
 });
 
-/// 2023-03-8 WAS TRYING TO MAKE THE PROMPT A MODAL, CSRF TOKEN is the problem!!!
+
 // todo check if fieldname already exists, else add number
-function userFieldNameInput() {
-  // userFieldNameModal.classList.remove('fade')
-  // userFieldNameModal.classList.add('show')
-  const userFieldNameModal = new bootstrap.Modal(
-    document.getElementById("userFieldNameModal")
-  );
-  userFieldNameModal.show();
+const userFieldNameInput = () => {
+  
+  // const userFieldNameModal = new bootstrap.Modal(
+  //   document.getElementById("userFieldNameModal")
+  // );
+  // userFieldNameModal.show();
+  
   let fieldName = prompt(
     "Bitte geben Sie einen Namen für das Feld an",
     "Acker Bezeichnung"
   ).trim();
+
   if (fieldName !== "") {
     if (userFields.some((proj) => proj.name === fieldName)) {
       alert(`please change name since ${fieldName} it already exists`);
@@ -252,10 +313,27 @@ function userFieldNameInput() {
     alert(`This field can not be empty. Please enter a name!`);
     fieldName = userFieldNameInput();
   }
+  // return tuple/json with parameters from selection, e.g. as json {fieldname, selection: cancel/calculate/save}
   return fieldName;
+  /*
+  switch(an expression which needs to be checked) {
+  case "cancel":
+  // block of code or instructions
+  break;
+  case "save":
+  // block of code or instructions
+  break;
+  default:
+  // save and calculate
+  }
+  */
 }
 
+
+
 const addLayerToSidebar = (userField) => {
+  console.log("userFied")
+  console.log(userField)
   const accordion = document.createElement("li");
   accordion.setAttribute("class", "list-group-item");
   // accordion.focus()
@@ -287,9 +365,9 @@ const addLayerToSidebar = (userField) => {
         </button>
       </span>
     </div>
-    <form>
-      <button id="userFieldNewCalcBtn-${userField.id}" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#projectModal">Neue Berechnung</button>
-      <button id="userFieldSaveBtn-${userField.id}" class="btn btn-danger">Feld speichern</button>
+    <form id="deleteAndCalcForm-${userField.id}">
+      <button  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#projectModal">Neue Berechnung</button>
+      <button  class="btn btn-danger" type="submit">Feld speichern</button>
     </form>
   </div> 
   `;
@@ -302,59 +380,46 @@ const addLayerToSidebar = (userField) => {
   const inputSwitch = document.getElementById(switchId);
 
   inputSwitch.addEventListener("change", (e) => {
-    inputSwitch.addEventListener("change", function () {
+    
       if (inputSwitch.checked) {
         userField.layer.addTo(map);
       } else {
         userField.layer.remove();
       }
     });
-  });
+  
 
   inputSwitch.dispatchEvent(new Event("change"));
 
-  const saveBtnId = `userFieldSaveBtn-${userField.id}`;
-  const saveBtn = document.getElementById(saveBtnId);
+  const deleteCalcId = `deleteAndCalcForm-${userField.id}`;
+  const deleteAndCalcForm = document.getElementById(deleteCalcId);
 
-  saveBtn.addEventListener("click", (e) => {
-    console.log("Field save");
-    console.log(e);
-    handleAlerts("danger", "Field save");
-    // temp
-    let save = true;
-    if (save) {
-      $.ajax({
-        type: "POST",
-        url: saveUrl,
-        data: {
-          csrfmiddlewaretoken: csrftoken,
-        },
-        success: function (response) {
-          console.log("Save success");
-          console.log(response);
-        },
-        error: function (error) {
-          console.log("Ajax error");
-          console.log(error);
-        },
-      });
-    } else {
-      // update
-      $.ajax({
-        type: "POST",
-        url: updateUrl + userField.id,
-        data: {
-          csrfmiddlewaretoken: csrf[0].value,
-        },
-        success: function (response) {
-          console.log("Save success");
-        },
-        error: function (error) {
-          console.log(error);
-        },
-      });
-    }
-  });
+  deleteAndCalcForm.addEventListener("submit", (e) => {
+    console.log("UserField.geom.geometry");
+    console.log(userField.geom.geometry);
+    $.ajax({
+      method: "POST",
+      url: saveUrl,
+      data: {
+        csrfmiddlewaretoken: csrftoken,
+        geom: JSON.stringify(userField.geom.geometry),
+        // layer: userField.layer,
+        name: userField.name
+      },
+      success: function (response) {
+        console.log("Save success");
+        console.log(response);
+        userField.id = response.id
+      },
+      error: function (error) {
+        console.log("Ajax error");
+        console.log(error);
+      }
+    })
+    e.preventDefault()
+  })
+
+
 };
 
 userLayerList.addEventListener("click", (e) => {
@@ -374,31 +439,7 @@ userLayerList.addEventListener("click", (e) => {
     console.log("field-edit clicked");
   }
 });
-// Monica-Modal
 
-// $(document).ready(function () {
-
-//   $('#projectModal').on('show.bs.modal', function () {
-
-//     var projectModal = $('#projectModal')
-
-//     $('.modal-container').html(this)
-//     $('#map-container').hide()
-//   }),
-//   $('#projectModal').on('hide.bs.modal', function () {
-//     $('#map-container').show()
-//   });
-//   $('#chartModal').on('show.bs.modal', function () {
-
-//     var chartModal = $('#chartModal')
-
-//     $('.modal-container').html(this)
-//     $('#map-container').hide()
-//   }),
-//   $('#chartModal').on('hide.bs.modal', function () {
-//     $('#map-container').show()
-//   })
-// })
 
 $(document).ready(function () {
   $("#chartModal").on("show.bs.modal", function () {
@@ -411,11 +452,15 @@ $(document).ready(function () {
       $("#map-container").show();
     });
 });
-// console.log(myModal.innerHTML)
 
-// $(document).ready(function () {
-//   $('#myModal').on('show.bs.modal', function () {
-//       var mod = $('.modal');
-//       $('.insidemodal').html(mod);
-//   });
-// });
+
+getData()
+
+
+
+// NDVI from https://github.com/GeoTIFF/georaster-layer-for-leaflet-example/blob/master/examples/ndvi.html
+
+
+
+// const demUrl = "{% static 'data/dem_de_1000_rendered_img_4326.tif' %}"
+// const dem_germany = L.tileLayer(demUrl, { maxZoom: 18, attribution: topoAttrib });

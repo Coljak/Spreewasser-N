@@ -5,6 +5,7 @@ Database models.
 from email.policy import default
 from statistics import mode
 
+
 from django.contrib.gis.db import models
 from djgeojson.fields import PointField, PolygonField, MultiLineStringField, MultiPointField, MultiPolygonField, GeometryField
 from django.contrib.auth.models import (
@@ -15,6 +16,13 @@ from django.contrib.auth.models import (
 import gettext as _
 import datetime
 import os
+
+
+# class UserInfo(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE)
+#     profile_pic = models.ImageField(upload_to='profile_pics', blank=True)
+#     def __str__(self):
+#         return self.user.name
 
 class UserManager(BaseUserManager):
     """Manager for users."""
@@ -42,6 +50,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     """User in the system."""
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
+    
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
@@ -71,8 +80,11 @@ class UserField(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
     geom_json = PolygonField(null=True)
-    geom = GeometryField(null=True)
+    # geom = GeometryField(null=True)
     comment = models.TextField(null=True, blank=True)
+    geom = models.GeometryField(null=True, srid=4326)
+    #geom2 = models.GeometryField(null=True, srid=4326)
+    
 
     def __str__(self):
         return self.name

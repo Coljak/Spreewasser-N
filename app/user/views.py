@@ -4,6 +4,9 @@
 from rest_framework import authentication, generics, permissions
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
+from django.contrib.auth.forms import UserCreationForm
+from django.urls import reverse_lazy
+from django.views import generic
 
 from user.serializers import AuthTokenSerializer, UserSerializer
 from django.views import generic
@@ -31,4 +34,7 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
 # class UserDetailView(generics.DetailView):
 #     model = User
     
-        
+class SignUpView(generic.CreateView):
+    form_class = UserCreationForm
+    success_url = reverse_lazy("login")
+    template_name = "user/signup.html"

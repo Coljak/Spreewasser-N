@@ -1,3 +1,5 @@
+{% load crispy_forms_tags %}
+
 <div class="modal fade " id="userFieldNameModal" tabindex="-1" aria-labelledby="userFieldNameModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -6,21 +8,18 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Bitte geben Sie eine Bezeichnung für das Feld ein:
-                <form id="userFieldNameBtnForm">
-                    <input type="text">
-                </form>
-                
                 <div id="alert-box"></div>
-                
-                    <div class="modal-footer">
-                        <form id="userFieldNameBtnForm">
-                            {% csrf_token %}
-                            <button type="button" id="btnSaveUserFieldClose" class="btn btn-danger" data-bs-dismiss="modal">Schließen</button>
-                            <button type="submit" id="btnSaveUserField" class="btn btn-success">Speichern</button>
-                        </form>
+                Bitte geben Sie eine Bezeichnung für das Feld ein:
+                <form id="userFieldNameForm">
+                    {% csrf_token %}
+                    {{ name_form|crispy }}
+                    
+                    <div class="modal-footer">  
+                        <button type="button" id="btnSaveUserDismiss" class="btn btn-secondary" data-dismiss="modal">Abbrechen</button>
+                        <button type="submit" id="btnSaveUserField2" class="btn btn-light">Speichern</button>
+                        <button type="submit" id="btnSaveAndCalc" class="btn btn-light">Speichern und neue Berechnung</button>
                     </div>
-                
+                </form>
             </div>             
         </div>
     </div>

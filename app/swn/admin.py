@@ -22,6 +22,7 @@ class UserAdmin(BaseUserAdmin):
     ordering = ['id']
     list_display = ['email', 'name']
     fieldsets = (
+        # None is the title
         (None, {'fields': ('email', 'password')}),
         ( # get_lazy is called
             _('Permissions'),
@@ -66,7 +67,7 @@ class UserProjectsAdmin(ModelAdmin):
 #     pass
 
 # admin.site.register(UserInfo)
-admin.site.register(User, UserAdmin)
+# admin.site.register(User, UserAdmin)
 admin.site.register(ProjectRegion, LeafletGeoAdmin)
 admin.site.register(UserProject, UserProjectsAdmin)
 admin.site.register(UserField, LeafletGeoAdmin)

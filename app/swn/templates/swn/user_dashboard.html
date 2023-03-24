@@ -24,6 +24,7 @@
     <p>{{ proj.field.user.name }}</p>
   {% endfor %} {% endcomment %}
   Context: {{ context }}
+  
   {% comment %} <ul id="display-data">
 
   </ul> {% endcomment %}
@@ -46,7 +47,7 @@
             <li><a href="#layerPane" role="tab"><i class="fa fa-bars"></i></a></li>
             <li><a href="#profile" role="tab"><i class="fa fa-user"></i></a></li>
             <li class="disabled"><a href="#messages" role="tab"><i class="fa fa-envelope"></i></a></li>
-            <li><a href="https://github.com/Turbo87/sidebar-v2" role="tab" target="_blank"><i class="fa fa-home"></i></a></li>
+            <li><a href="{% url 'swn:swn_index' %}" role="tab"><i class="fa fa-home"></i></a></li>
           </ul>
           <ul role="tablist">
             <li><a href="#settings" role="tab"><i class="fa fa-gear"></i></a></li>
@@ -92,19 +93,27 @@
                   </div>
                 </div>
               </li>  
-              {% comment %} <li class="list-group-item" id="userFieldsSidebarHeader">
-                <h5>Projekte</h5>
-              </li> {% endcomment %}
-              </div>
+            
             </ul>
           </div>
-          <div id="baselayer-02">
-            <ul id="userLayerList" class="list-group"> 
-            </ul>
-          </div>
+
           <div class="sidebar-pane" id="profile">
-            <h1 class="sidebar-header">Profile<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+            <h1 class="sidebar-header">
+              Userprofil
+              <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+            </h1>
+            <ul class="list-group sidebar-list" id="sidebarLayerList">
+              <li class="list-group-item ">
+                <strong>Username:</strong> {{ user.username }}
+              </li>  
+              <li class="list-group-item">
+                <strong>E-mail:</strong> {{ user.email }}
+              </li> 
+              
+            </ul>
           </div>
+
+          
           <div class="sidebar-pane" id="messages">
             <h1 class="sidebar-header">Messages<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
           </div>

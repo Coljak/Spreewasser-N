@@ -8,7 +8,7 @@
         <h2>LOGIN</h2>
 
         <div class="container">
-                <form action="{% url 'swn:user_login' %}" method="POST">
+                <form method="POST">
                         {% csrf_token %}
                         <label for="username">Username: </label>
                         <input type="text" name="username" placeholder="Enter Username">

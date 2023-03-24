@@ -23,10 +23,6 @@ from app.helpers import is_ajax
 
 from .utils import get_geolocation
 
-# class SignUpView(generic.CreateView):
-#     form_class = forms.UserForm
-#     success_url = reverse_lazy("user_login")
-#     template_name = "swn/signup.html"
 
 class IndexView(TemplateView):
     template_name = "swn/home.html"
@@ -40,56 +36,85 @@ class IndexView(TemplateView):
 def impressum_information(request):
     return render(request, 'swn/impressum_information.html')
 
+def sign_up(request):
+    if request.method == 'POST':
+        form = forms.RegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('swn:user_dashboard')
+    else:
+        form = forms.RegistrationForm()
+
+    return render(request, 'registration/sign_up.html', {'form': form})
+
 
 def register(request):
 
     registered = False
-    print("register")
+
     if request.method == "POST":
-        print("if request.method == POST:")
+        
         user_form = forms.UserForm(data=request.POST)
         # profile_form = UserProfileInfoForm(data=request.POST)
 
         if user_form.is_valid():  # and profile_form.is_valid():
-            print("userForm valid")
+          
             user = user_form.save()
             user.set_password(user.password)
             user.save()
             registered = True
+            return redirect('swn:user_login')
         else:
             print("userForm NOT valid")
             print(user_form.errors)
 
     else:
+        print("Register ELSE")
         user_form = forms.UserForm()
 
-    return render(request, 'user/registration.html',
+    return render(request, 'swn/registration.html',
                   {'user_form': user_form,
-                   # 'profile_form': profile_form,
+                   # 'pk': user.id,
                    'registered': registered})
 
 
-@login_required
-def user_login(request):
-    if request.method == "POST":
-        username = request.POST.get('username')
-        password = request.POST.get('password')
 
-        user = authenticate(username=username, password=password)
+def user_login(request):
+    print("USER_LOGIN")
+    if request.method == "POST":
+        print("POST:", request.POST.values())
+        username = request.POST.get('name')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        user = authenticate(email=email, name=username, password=password)
+        # if '@' in username:
+        #     email = username
+        #     user = authenticate(email=email, password=password)
+        # else:
+        #     user = authenticate(name=username, password=password)
+
+        print("email:", email, "password: ", password, "username: ", username)
+        #user = authenticate(email=email, password=password)
         if user:
+            print("IF USER")
             if user.is_active:
 
                 login(request, user)
-                return HttpResponseRedirect(reverse('swn-index'))
+                return HttpResponseRedirect(reverse('swn:user_dashboard'))
 
             else:
                 return HttpResponse("Account is not active!")
-
+            
+        # TODO make this go to handle alerts
         else:
-            return HttpResponse("the login failed")
+            print("ELSE USER")
+            return JsonResponse({'alert': "the login failed"})
 
     else:
-        return render(request, 'swn/login.html', {})
+        login_form = forms.LoginForm()
+        print("login_form: ", login_form)
+        return render(request, 'swn/login.html', {'login_form': login_form})
 
 
 @login_required

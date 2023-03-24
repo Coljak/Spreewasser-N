@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!-- Login -->
+{% extends "swn/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block body_block %}
+
+        <div class="container">
+            <h2>Django Contrib Register</h2>
+            <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <input type="submit" class="btn border" name="" value="Registrieren">
+                    <p>Sie haben schon ein Account? Loggen Sie sich <a href={% url 'swn:login' %}>hier</a> ein.</p>
+            </form>
+        </div>
+{% endblock %}

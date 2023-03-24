@@ -20,17 +20,17 @@
         <li class="nav-item">
           <span>
             <div class="circle">
-              <span class="initials">{{ initials }}CK</span>
+              <span class="initials text-small">{{ user.username }}</span>
             </div>
           </span>
         </li>
         <li class="nav-item">
-          <a class='nav-link' href="{% url 'swn:user_logout' %}">Logout</a>
+          <a class='nav-link' href="{% url 'swn:logout' %}">Logout</a>
         </li>
         {% else %}
-        <li><a  class="nav-link" href="{% url 'swn:user_login' %}">Login</a></li>
-        {% comment %} <li><a  class="nav-link" href="{% url 'swn:registration' %}">Register</a></li> {% endcomment %}
-        <li><a  class="nav-link" href="{% url 'swn:registration' %}">Register</a></li>
+        <li><a  class="nav-link" href="{% url 'swn:login' %}">Login</a></li>
+        
+        <li><a  class="nav-link" href="{% url 'swn:sign_up' %}">Register</a></li>
         {% endif %} 
         <li><a  class="nav-brand px-3" href="https://www.zalf.de" target="_blank"><img src="{% static 'img/zalf.jpeg' %}" height="60px" alt="SWN-Logo"/></a></li> 
         <li><a  class="nav-brand px-3" href="https://www.bmbf-wax.de/" target="_blank"><img src="{% static 'img/wax-300x126.png' %}" height="60px" alt="SWN-Logo"/></a></li>

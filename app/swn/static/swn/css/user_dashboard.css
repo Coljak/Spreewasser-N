@@ -1,37 +1,16 @@
-/* $theme-colors: (
-  "primary":    $primary,
-  "secondary":  $secondary,
-  "success":    $success,
-  "info":       $info,
-  "warning":    $warning,
-  "danger":     $danger,
-  "light":      $light,
-  "dark":       $dark
-); */
 
-h1{
-    color: red;
-  }
-
-html, body {
-    height: 100%;
-  }
   html, body, #map-container {
     height: 100%;
 }
   
-  body {
-    background: #ffffff;
-    display: flex;
-    flex-flow: column;
-  }
-  
-  #map {
-    position: relative;
-    height: inherit;
-    width: inherit;
 
+  
+#map {
+position: relative;
+height: inherit;
+width: inherit;
 }
+
 #map-container { 
     position: relative; 
     z-index: 1;
@@ -158,9 +137,10 @@ html, body {
 
 
 
-ul#baseLayerList li {
+ul #baseLayerList li {
     --bs-list-group-border-width: 0;
 } 
+
 #baseLayers-collapse {
     --bs-accordion-body-padding-y: 0rem;
     
@@ -202,19 +182,6 @@ ul#baseLayerList li {
     position: relative; 
 } */
 
-
-:root {
-    --avatar-size: 2.5rem;
-    /* change this value anything, e.g., 100px, 10rem, etc. */
-  }
-  
-  .circle {
-    background-color: #8a0;
-    border-radius: 50%;
-    height: var(--avatar-size);
-    text-align: center;
-    width: var(--avatar-size);
-  }
   
   .initials {
     font-size: calc(var(--avatar-size) / 2); /* 50% of parent */

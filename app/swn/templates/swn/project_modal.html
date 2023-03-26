@@ -1,6 +1,4 @@
-
-<!-- Vertically centered scrollable modal -->
-{% comment %} {% load static %} {% endcomment %}
+{% load crispy_forms_tags %}
     
 <!-- Button trigger modal -->
 {% comment %} <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
@@ -9,121 +7,33 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">
-          Some tag
-            <script>{{ listElement.userField.name }}</script>
-         
-        </h1>
+        <h1 class="modal-title fs-5" id="projectModalTitle"></h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+      
       <div class="modal-body">
         <div class="container-fluid">
           <div class="row">
-            <div class="col-md-6">
+            
               <div class="card">
                 <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
+                  <h5 class="card-title">Bodenfeuchteberechnung</h5>
+                  {% csrf_token %}
+                  {{ crop_form|crispy }}
+                  {% comment %} <p class="card-text">With supporting text below as a natural lead-in to additional content.</p> {% endcomment %}
+                  
+                  <a href="#Chart" class="btn btn-primary mb-2">Berechnen</a>
+                  <div class="card mb-3">
+                    <div class="card-body">
+                      <h5 class="card-title">Monica Brechnung</h5>
+                      <canvas id="Chart"></canvas>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="col-md-6 ms-auto">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>
-            </div>
+            
           </div>
-          <div class="row">
-            <div class="col-md-12 ms-auto">
-              {% comment %} {% include 'swn/chart.html' %} {% endcomment %}
-              <canvas id="myChart"></canvas>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6 ms-auto">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6 ms-auto">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6 ms-auto">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6 ms-auto">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6 ms-auto">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6 ms-auto">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6 ms-auto">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>  
-            </div>
-            <div class="col-md-6 ms-auto">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Special title treatment</h5>
-                  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>
-            </div>
-          </div>
+
         </div>  
       </div>
       <div class="modal-footer">

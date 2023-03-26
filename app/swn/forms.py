@@ -10,6 +10,7 @@ from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 from django.contrib.auth.forms import UserCreationForm
 
+
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
 
@@ -24,7 +25,7 @@ class RegistrationForm(UserCreationForm):
 #         fields = ('name', 'email', 'password1', 'password2')
 
 # class LoginForm(forms.ModelForm):
-    
+
 #     class Meta:
 #         model = User
 #         widgets = {
@@ -32,16 +33,22 @@ class RegistrationForm(UserCreationForm):
 #             }
 #         fields = ('username', 'email', 'password')
 
+class CropForm(forms.ModelForm):
+    Feldfrucht = forms.ModelChoiceField(queryset=Crop.objects.all())
 
-class FormCrops(forms.ModelForm):
     class Meta:
         model = Crop
-        fields = ['name']
-        widgets = {
-            'name': forms.Select(attrs={
-                'class': 'form-control',
-            }),
-        }
+        fields = ['Feldfrucht']
+
+# class CropForm(forms.ModelForm):
+#     class Meta:
+#         model = Crop
+#         fields = ['name']
+#         widgets = {
+#             'name': forms.Select(attrs={
+#                 'class': 'form-control',
+#             }),
+#         }
 
 # class UserProjectForm(forms.ModelForm):
 #     class Meta:
@@ -67,7 +74,7 @@ class FormCrops(forms.ModelForm):
         # }
 
 
-class UserFieldForm(forms.ModelForm):
-    class Meta:
-        model = UserField
-        fields = ('name',)
+# class UserFieldForm(forms.ModelForm):
+#     class Meta:
+#         model = UserField
+#         fields = ('name',)

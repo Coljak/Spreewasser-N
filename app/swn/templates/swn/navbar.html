@@ -10,7 +10,7 @@
         {% if user.is_authenticated  %}    
         <li class="nav-item"><a  class="nav-link" href="{% url 'swn:user_dashboard' %}">Dürrevorhersage</a></li>
         {% endif %}
-        <li class="nav-item"><a  class="nav-link" href="{% url 'swn:impressum_information' %}">Impressum information</a></li>
+        <li class="nav-item"><a  class="nav-link" href="{% url 'swn:impressum_information' %}">Impressum</a></li>
       </ul>
           {% comment %} <li>
           <form class="navbar-form" role="search"><i class="fa-solid fa-magnifying-glass"></i>search here...</form>
@@ -20,20 +20,23 @@
         <li class="nav-item">
           <span>
             <div class="circle">
-              <span class="initials text-small">{{ user.username }}</span>
+              <span class="initials text-small">{{ user.username|slice:"1" }}</span>
             </div>
           </span>
         </li>
         <li class="nav-item">
-          <a class='nav-link' href="{% url 'swn:logout' %}">Logout</a>
+          <a class="nav-link" href="{% url 'swn:logout' %}">Logout</a>
         </li>
         {% else %}
         <li><a  class="nav-link" href="{% url 'swn:login' %}">Login</a></li>
         
-        <li><a  class="nav-link" href="{% url 'swn:sign_up' %}">Register</a></li>
+        <li><a  class="nav-link" href="{% url 'swn:sign_up' %}">Anmelden</a></li>
         {% endif %} 
-        <li><a  class="nav-brand px-3" href="https://www.zalf.de" target="_blank"><img src="{% static 'img/zalf.jpeg' %}" height="60px" alt="SWN-Logo"/></a></li> 
+  
+        <li><a  class="nav-brand" href="https://www.zalf.de" target="_blank"><img src="{% static 'img/zalf.jpeg' %}" height="60px" alt="SWN-Logo"/></a></li> 
+      
         <li><a  class="nav-brand px-3" href="https://www.bmbf-wax.de/" target="_blank"><img src="{% static 'img/wax-300x126.png' %}" height="60px" alt="SWN-Logo"/></a></li>
+        
       </ul>
     </div>
   </nav>

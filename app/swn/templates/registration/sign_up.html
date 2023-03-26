@@ -5,12 +5,12 @@
 
 {% block body_block %}
 
-        <div class="container">
-            <h2>Django Contrib Register</h2>
+        <div class="container mt-3">
+            <h2>Anmelden</h2>
             <form method="POST">
                     {% csrf_token %}
                     {{ form|crispy }}
-                    <input type="submit" class="btn border" name="" value="Registrieren">
+                    <input type="submit" class="btn border mb-3" name="" value="Registrieren">
                     <p>Sie haben schon ein Account? Loggen Sie sich <a href={% url 'swn:login' %}>hier</a> ein.</p>
             </form>
         </div>

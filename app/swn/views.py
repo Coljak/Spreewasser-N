@@ -101,6 +101,7 @@ def user_login(request):
             if user.is_active:
 
                 login(request, user)
+                initial = user.username
                 return HttpResponseRedirect(reverse('swn:user_dashboard'))
 
             else:
@@ -126,9 +127,11 @@ def user_logout(request):
 @login_required
 def user_dashboard(request):
     user_fields = models.UserProject.objects.filter(field__user=request.user)
-    name_form = forms.UserFieldForm(request.POST or None)
+    # name_form = forms.UserFieldForm(request.POST or None)
     # projects_json = serialize('json', projects)
-    context = []
+    crop_form = forms.CropForm(request.POST or None)
+
+    user_projects = []
 
     for user_field in user_fields:
         if request.user == user_field.field.user:
@@ -142,9 +145,9 @@ def user_dashboard(request):
                 'field_id': user_field.field.id,
                 'monica_calculation': user_field.calculation,
             }
-            context.append(item)
+            user_projects.append(item)
 
-    data = {'context': context, 'name_form': name_form}
+    data = {'user_projects': user_projects, 'crop_form': crop_form}
 
     return render(request, 'swn/user_dashboard.html', data)
 

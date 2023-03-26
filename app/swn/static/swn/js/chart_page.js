@@ -11,7 +11,7 @@ $.ajax({
     success: function(data){
         console.log(data)
 
-    const ctx = document.getElementById('myChart');
+    const ctx = document.getElementById('Chart');
 
     new Chart(ctx, {
     type: 'line',

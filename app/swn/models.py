@@ -61,7 +61,7 @@ class WinterSummerCrop(models.Model):
     
 class Crop(models.Model):
     name = models.CharField(max_length=64)
-    winter_summer_crop = models.ForeignKey(WinterSummerCrop, null=True, on_delete=models.SET_NULL)
+    # winter_summer_crop = models.ForeignKey(WinterSummerCrop, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.name

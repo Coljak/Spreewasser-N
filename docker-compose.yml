@@ -10,7 +10,7 @@ services:
     volumes:
       - ./app:/app
     command: 
-      sh -c "pip3 install pandas &&
+      sh -c "pip3 install pandas && 
       
       python3 manage.py wait_for_db &&
       python3 manage.py migrate &&

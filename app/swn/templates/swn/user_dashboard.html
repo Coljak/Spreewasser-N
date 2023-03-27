@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="{% static 'leaflet/markercluster/MarkerCluster.css' %}">
   <link rel="stylesheet" href="{% static 'leaflet/markercluster/MarkerCluster.Default.css' %}">
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
   <link rel="stylesheet" href="{% static "swn/css/user_dashboard.css" %}"/>
 {% endblock css %}
 
@@ -33,7 +34,7 @@
 {% block project_modal %}
   {% include 'swn/project_modal.html' %}
   {% include 'swn/field_name_modal.html' %}
-  {% include 'swn/charts_modal.html' %}
+  {% include 'swn/modal_project_list.html' %}
 {% endblock %}
 
 <!-- map -->

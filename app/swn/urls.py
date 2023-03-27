@@ -24,9 +24,10 @@ urlpatterns = [
     path('login/Dashboard/save/', views.save_user_field, name='save-user-field'),
     path('login/Dashboard/load/', views.get_user_fields, name='get-user-fields'),
     path('login/Dashboard/update/', views.update_user_field, name='update-user-fields'),
+    path('login/Dashboard/delete/<int:id>', views.delete_user_field, name='delete-user-field'),
     # path('Logout/', LogoutView.as_view(), {'next_page': settings.LOGOUT_REDIRECT_URL}, name='user_logout'),  
     path('data.geojson', GeoJSONLayerView.as_view(model=models.ProjectRegion), name='project_region_geojson'),
     path('Chart/', views.ChartView.as_view(), name='chart'), 
-    path('chartdata/', views.get_chart, name='chart-api'),
+    path('login/Dashboard/chartdata/', views.get_chart, name='chart-api'),
     
     ]

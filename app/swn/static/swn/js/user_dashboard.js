@@ -1,55 +1,20 @@
-
 const csrf = document.getElementsByName("csrfmiddlewaretoken");
-console.log("CSRF")
-console.log(csrf)
+console.log("CSRF");
+console.log(csrf);
 // -----------User Field Name Modal -----------------
 const btnSaveUserField = document.getElementById("btnSaveUserField2");
 const btnSaveUserFieldDismiss = document.getElementById("btnSaveUserDismiss");
 const btnSaveUserFieldAndCalc = document.getElementById("btnSaveAndCalc");
-let projectModalTitle = document.getElementById("projectModalTitle")
 
-btnSaveUserField.addEventListener("submit", (e) => {
-  e.preventDefault();
-});
+const projectModal = document.getElementById("projectModal")
+const projectModalTitle = document.getElementById("projectModalTitle");
+const chartCard = document.getElementById("chartCard")
+const btnModalCal = document.getElementById("btnModalCal")
 
-btnSaveUserFieldAndCalc.addEventListener("submit", (e) => {
-  e.preventDefault();
-});
+const alertBox = document.getElementById("alert-box");
+//const loadUrl = window.location.href + "load/";
 
-btnSaveUserFieldDismiss.addEventListener("click", (e) => {
-  console.log(currentUserField);
-});
-const loadUrl = "load/";
-const saveUrl = "save/";
-
-const saveUserField = (userField) => {
-  console.log("CSRF AJAX")
-  console.log(csrf[0].value)
-  $.ajax({
-    type: "POST",
-    url: saveUrl,
-    data: {
-      csrfmiddlewaretoken: csrf[0].value,
-      geom: JSON.stringify(userField.geom.geometry),
-      name: userField.name,
-    },
-    success: function (response) {
-      // window.location.href = window.location.origin; // das ist z.B. 127.0.0.1:8000/
-      // localStorage.setItem("title", titleInput.value);
-      // currentUserField.id = response.id;
-      console.log("Save Success")
-      userField.id = response.id
-      console.log(userField)
-      addLayerToSidebar(userField);
-      console.log("added to sidebar")
-      userFields.push(userField)
-      console.log("userField pushed")
-    },
-    error: function (response) {
-      console.log(error);
-    },
-  });
-};
+// const userFieldNameModal = getElementById("userFieldNameModal")
 
 // -------------MAP --------------------------------------
 const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -77,12 +42,6 @@ const imageBounds = [
   [55.058996788, 5.564783468],
 ];
 const dem = L.imageOverlay(imageUrl, imageBounds, (opacity = 0.1));
-
-const alertBox = document.getElementById("alert-box");
-//const loadUrl = window.location.href + "load/";
-
-
-// const userFieldNameModal = getElementById("userFieldNameModal")
 
 
 function getCookie(name) {
@@ -147,7 +106,6 @@ pilotGeojson.setStyle(function (feature) {
 });
 pilotGeojson.addTo(map);
 
-// DEM
 
 // Leaflet Control top-right
 // https://github.com/brunob/leaflet.fullscreen
@@ -237,8 +195,49 @@ demSwitch.addEventListener("change", function () {
   }
 });
 
+//---------------MAP END-------------------------------
+
+
+// btnSaveUserField.addEventListener("submit", (e) => {
+//   e.preventDefault();
+// });
+
+// btnSaveUserFieldAndCalc.addEventListener("submit", (e) => {
+//   e.preventDefault();
+// });
+
+// btnSaveUserFieldDismiss.addEventListener("click", (e) => {
+//   console.log(currentUserField);
+// });
+
+const loadUrl = "load/";
+const saveUrl = "save/";
+const deleteUrl = "delete/";
+
+const saveUserField = (userField) => {
+  console.log("CSRF AJAX");
+  console.log(csrf[0].value);
+  $.ajax({
+    type: "POST",
+    url: saveUrl,
+    data: {
+      csrfmiddlewaretoken: csrf[0].value,
+      geom: JSON.stringify(userField.geom.geometry),
+      name: userField.name,
+    },
+    success: function (response) {
+      userField.id = response.id;
+      addLayerToSidebar(userField);
+      userFields.push(userField);
+    },
+    error: function (response) {
+      console.log(error);
+    },
+  });
+};
+
 class UserField {
-  constructor(name, geom_json, layer, id=null) {
+  constructor(name, geom_json, layer, id = null) {
     this.name = name;
     this.geom = geom_json;
     this.layer = layer;
@@ -268,7 +267,7 @@ class UserProject {
 var userFields = [];
 let projectIndex = 0;
 const userLayerList = document.getElementById("sidebarLayerList");
-// const userFields = [];
+
 // Load all user  fields
 const getData = () => {
   console.log("GetData executed");
@@ -286,7 +285,7 @@ const getData = () => {
           L.geoJSON(el.geom_json),
           el.id
         );
-        userFields.push(userField)
+        userFields.push(userField);
         addLayerToSidebar(userField);
       });
     },
@@ -296,17 +295,14 @@ const getData = () => {
   });
 };
 
-
-
 map.on(L.Draw.Event.CREATED, function (event) {
   console.log("event drawcreated");
   let layer = event.layer;
   let geom = layer.toGeoJSON();
   let name = userFieldNameInput();
   let userField = new UserField((fieldName = name), geom, layer);
-  
+
   saveUserField(userField);
-  
 });
 
 // todo check if fieldname already exists, else add number
@@ -331,23 +327,10 @@ const userFieldNameInput = () => {
   }
   // return tuple/json with parameters from selection, e.g. as json {fieldname, selection: cancel/calculate/save}
   return fieldName;
-  /*
-  switch(an expression which needs to be checked) {
-  case "cancel":
-  // block of code or instructions
-  break;
-  case "save":
-  // block of code or instructions
-  break;
-  default:
-  // save and calculate
-  }
-  */
+  
 };
 
 const addLayerToSidebar = (userField) => {
-  console.log("userFied");
-  console.log(userField);
   const accordion = document.createElement("li");
   accordion.setAttribute("class", "list-group-item");
   // accordion.focus()
@@ -387,11 +370,14 @@ const addLayerToSidebar = (userField) => {
     </div> 
   </div> 
   `;
-
+  // adding the UserField to the HTML-list element
   accordion.userField = userField;
-
+  //adding the geometry to the displayed drawnItems-layer
   userField.layer.addTo(drawnItems);
+  //append the list element to list
   userLayerList.appendChild(accordion);
+
+  // connect the field geometry to the switch in the sidebar
   const switchId = `fieldSwitch-${userField.id}`;
   const inputSwitch = document.getElementById(switchId);
 
@@ -404,58 +390,97 @@ const addLayerToSidebar = (userField) => {
   });
 
   inputSwitch.dispatchEvent(new Event("change"));
+}
+  
+//   const deleteCalcId = `deleteAndCalcForm-${userField.id}`;
+//   const deleteAndCalcForm = document.getElementById(deleteCalcId);
 
-  const deleteCalcId = `deleteAndCalcForm-${userField.id}`;
-  const deleteAndCalcForm = document.getElementById(deleteCalcId);
-
-  deleteAndCalcForm.addEventListener("submit", (e) => {
-    console.log("UserField.geom.geometry");
-    console.log(userField.geom.geometry);
-    $.ajax({
-      method: "POST",
-      url: saveUrl,
-      data: {
-        csrfmiddlewaretoken: csrftoken,
-        geom: JSON.stringify(userField.geom.geometry),
-        name: userField.name,
-      },
-      success: function (response) {
-        console.log("Save success");
-        console.log(response);
-        userField.id = response.id;
-      },
-      error: function (error) {
-        console.log("Ajax error");
-        console.log(error);
-      },
-    });
-    e.preventDefault();
-  });
-};
+//   deleteAndCalcForm.addEventListener("submit", (e) => {
+//     console.log("UserField.geom.geometry");
+//     console.log(userField.geom.geometry);
+//     $.ajax({
+//       method: "POST",
+//       url: saveUrl,
+//       data: {
+//         csrfmiddlewaretoken: csrftoken,
+//         geom: JSON.stringify(userField.geom.geometry),
+//         name: userField.name,
+//       },
+//       success: function (response) {
+//         console.log("Save success");
+//         console.log(response);
+//         userField.id = response.id;
+//       },
+//       error: function (error) {
+//         console.log("Ajax error");
+//         console.log(error);
+//       },
+//     });
+//     e.preventDefault();
+//   });
+// };
 
 userLayerList.addEventListener("click", (e) => {
-  console.log("userLayerList.addEventListener")
-  console.log(e.target)
+  console.log("userLayerList.addEventListener");
+  console.log(e.target);
   const listElement = e.target.closest("li");
 
   if (e.target.classList.contains("delete")) {
+    console.log("DELETE");
     let confirmDelete = confirm("Are you sure to delete");
     if (confirmDelete) {
+      const id = listElement.userField.id;
+      console.log("ID: ", id);
       userFields = userFields.filter((uf) => uf !== listElement.userField);
-      listElement.userField.geom.remove(); // removes shape from map
+      console.log("userFields=....");
+      listElement.userField.layer.remove(); // removes shape from map
+      console.log("listElement.userField.geom.remove()");
       listElement.remove(); // removes HTML element from sidebar
+      // removes field from db
+      $.ajax({
+        type: "POST",
+        url: deleteUrl + id,
+        data: {
+          csrfmiddlewaretoken: csrf[0].value,
+        },
+        success: function (response) {
+
+          console.log("Delete Success");
+        },
+        error: function (response) {
+          console.log(error);
+        },
+      });
     }
   } else if (e.target.classList.contains("field-menu")) {
-    
+    // TODO the hardcoded modal is triggered from button
     console.log("field-menu clicked");
   } else if (e.target.classList.contains("field-edit")) {
+    // TODO the hardcoded modal is triggered from button
     console.log("field-edit clicked");
-    projectModalTitle.innerText = listElement.userField.name
-    console.log("listElement.layer", listElement.userField.layer)
+    projectModalTitle.innerText = listElement.userField.name;
+    console.log("listElement.layer", listElement.userField.layer);
     // console.log("Area", L.GeometryUtil.geodesicArea(listElement.userField.layer.getLatLngs()))
-
   }
 });
+
+const monicaFieldCalculation = () => {
+  console.log("monicaFieldCalculation")
+}
+
+btnModalCal.addEventListener('click', function () {
+  getChart()
+  chartCard.classList.remove("d-none");
+
+})
+
+$('#projectModal').on('hide.bs.modal', function (e){
+  if (!chartCard.classList.contains("d-none")) {
+    chartCard.classList.add("d-none")
+    
+  }
+})
+
 
 $(document).ready(function () {
   $("#chartModal").on("show.bs.modal", function () {
@@ -475,3 +500,4 @@ getData();
 
 // const demUrl = "{% static 'data/dem_de_1000_rendered_img_4326.tif' %}"
 // const dem_germany = L.tileLayer(demUrl, { maxZoom: 18, attribution: topoAttrib });
+

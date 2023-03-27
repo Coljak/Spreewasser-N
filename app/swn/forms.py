@@ -50,31 +50,33 @@ class CropForm(forms.ModelForm):
 #             }),
 #         }
 
-# class UserProjectForm(forms.ModelForm):
-#     class Meta:
-#         model = UserProject
 
-#     def __init__(self, *args, **kwargs):
-#         user = kwargs.pop('user','')
-#         super(UserProjectForm, self).__init__(*args, **kwargs)
-        # self.fields['user_defined_code']=forms.ModelChoiceField(queryset=UserDefinedCode.objects.filter(owner=user))
+class UserProjectForm(forms.ModelForm):
+    crop_id = forms.ModelChoiceField(queryset=Crop.objects.all())
+    field_id =  forms.ModelChoiceField(queryset=UserField.objects.all())
+    class Meta:
+        model = UserProject
+        
+        fields = [
+            'crop_id',
+            # 'irrigation_input',
+            # 'irrigation_output',
+            'field_id',
+            #'date',
+            'comment',
+            
+        ]
+        widgets = {
+            'field_id.name': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'crop_id.name': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+        }
 
-        # fields = [
-        #     'user_field.name',
-        #     'comment',
-        #     'crop.name'
-        # ]
-        # widgets = {
-        #     'field.name': forms.Select(attrs ={
-        #         'class': 'form-control',
-        #     }),
-        #     'crop.name': forms.Select(attrs ={
-        #         'class': 'form-control',
-        #     }),
-        # }
 
-
-# class UserFieldForm(forms.ModelForm):
-#     class Meta:
-#         model = UserField
-#         fields = ('name',)
+class UserFieldForm(forms.ModelForm):
+    class Meta:
+        model = UserField
+        fields = ('name',)

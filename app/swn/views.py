@@ -22,6 +22,7 @@ from app.helpers import is_ajax
 # from django.views import generic
 
 from .utils import get_geolocation
+import random
 
 
 class IndexView(TemplateView):
@@ -39,12 +40,16 @@ def impressum_information(request):
 def sign_up(request):
     if request.method == 'POST':
         form = forms.RegistrationForm(request.POST)
+        print("Sign_up form", form)
         if form.is_valid():
+            print("Sign_up is_valid")
             user = form.save()
+            print("Sign_up user saved", user)
             login(request, user)
             return redirect('swn:user_dashboard')
     else:
         form = forms.RegistrationForm()
+        print("Sign_up else")
 
     return render(request, 'registration/sign_up.html', {'form': form})
 
@@ -130,7 +135,7 @@ def user_dashboard(request):
     # name_form = forms.UserFieldForm(request.POST or None)
     # projects_json = serialize('json', projects)
     crop_form = forms.CropForm(request.POST or None)
-
+    project_form = forms.UserProjectForm()
     user_projects = []
 
     for user_field in user_fields:
@@ -147,7 +152,7 @@ def user_dashboard(request):
             }
             user_projects.append(item)
 
-    data = {'user_projects': user_projects, 'crop_form': crop_form}
+    data = {'user_projects': user_projects, 'crop_form': crop_form, 'project_form': project_form}
 
     return render(request, 'swn/user_dashboard.html', data)
 
@@ -163,9 +168,11 @@ class ChartView(View):
 
 
 def get_chart(request, *args, **kwargs):
-    from .data import monica_calc
+    from .data import monica_calc, monica_calc_1, monica_calc_2, monica_calc_3
+    calc_list = [monica_calc, monica_calc_1, monica_calc_2, monica_calc_3]
+    rand = random.randint(0, len(calc_list))
 
-    return JsonResponse(monica_calc)
+    return JsonResponse(calc_list[rand])
 
 
 # from ajax: post_detail
@@ -230,4 +237,20 @@ def save_user_field(request):
         instance.user = user
         instance.save()
         return JsonResponse({'id': instance.id})
+    return redirect('swn:user_dashboard')
+
+@login_required
+@csrf_protect
+# @action_permission
+def delete_user_field(request, id):
+    print("request in views:", request.user)
+    if is_ajax(request):
+        print("Save IS AJAX")
+        form = forms.UserFieldForm(request.POST or None)
+        name = request.POST.get('id')
+        user_id = request.user.id
+        user_field = models.UserField.objects.get(id=id, user_id = user_id)
+        user_field.delete()
+        
+        return JsonResponse({})
     return redirect('swn:user_dashboard')

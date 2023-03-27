@@ -171,6 +171,9 @@ ul #baseLayerList li {
     --bs-accordion-btn-focus-box-shadow: #fff;
 } */
 
+/* .hidden {
+    visibility: hidden;
+} */
 /* .modal-backdrop {
     display:none 
 }

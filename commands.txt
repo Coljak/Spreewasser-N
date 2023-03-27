@@ -1,3 +1,10 @@
 superuser:
 admin@example.com
 pass1234
+
+Usermanagement
+https://www.youtube.com/watch?v=WuyKxdLcw3w
+
+It is important to use python3! Otherwise crispy is not imported.!!!!
+
+docker-compose run --rm app sh -c "python3 manage.py makemigrations"

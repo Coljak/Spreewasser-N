@@ -52,6 +52,11 @@ width: inherit;
     
 }
 
+.leaflet-control-home {
+    background-image: url(location-crosshairs-solid.svg);
+    background-size: 1.2rem;
+}
+
 
 .symbolsContainer {
     float: left;

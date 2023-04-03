@@ -1,17 +1,18 @@
 const csrf = document.getElementsByName("csrfmiddlewaretoken");
-console.log("CSRF");
-console.log(csrf);
+
 // -----------User Field Name Modal -----------------
 const btnSaveUserField = document.getElementById("btnSaveUserField2");
 const btnSaveUserFieldDismiss = document.getElementById("btnSaveUserDismiss");
 const btnSaveUserFieldAndCalc = document.getElementById("btnSaveAndCalc");
 
-const projectModal = document.getElementById("projectModal")
+const projectModal = document.getElementById("projectModal");
 const projectModalTitle = document.getElementById("projectModalTitle");
-const chartCard = document.getElementById("chartCard")
-const btnModalCal = document.getElementById("btnModalCal")
+const chartCard = document.getElementById("chartCard");
+const btnModalCal = document.getElementById("btnModalCal");
 
 const alertBox = document.getElementById("alert-box");
+
+const highlightColor = "#aabb22";
 //const loadUrl = window.location.href + "load/";
 
 // const userFieldNameModal = getElementById("userFieldNameModal")
@@ -36,13 +37,12 @@ const topoAttrib =
   'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
 const topo = L.tileLayer(topoUrl, { maxZoom: 18, attribution: topoAttrib });
 
-// const imageBounds = [[47.139868905, 15.585439895], [55.063879917, 5.557237723]]
+// Bounds for DEM image overlay
 const imageBounds = [
   [47.136744752, 15.57241882],
   [55.058996788, 5.564783468],
 ];
 const dem = L.imageOverlay(imageUrl, imageBounds, (opacity = 0.1));
-
 
 function getCookie(name) {
   console.log("Dashboard.js getCookie");
@@ -106,13 +106,16 @@ pilotGeojson.setStyle(function (feature) {
 });
 pilotGeojson.addTo(map);
 
-
 // Leaflet Control top-right
 // https://github.com/brunob/leaflet.fullscreen
 const fullScreenControl = new L.Control.FullScreen({
   position: "topright",
 });
 map.addControl(fullScreenControl);
+
+$(".leaflet-control-zoom").append(
+  '<a class="leaflet-control-home" href="#" role="button"></a>'
+);
 
 // search for locations
 const GeocoderControl = new L.Control.geocoder({
@@ -125,8 +128,19 @@ const mapScale = new L.control.scale({
   position: "bottomright",
 }).addTo(map);
 
-var drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
+var prevent = false;
+var timer = 0;
+var delay = 200;
+
+var drawnItems = new L.FeatureGroup()
+  .on("click", function (event) {
+    highlightLayer(event.layer._leaflet_id);
+    // event.layer.remove()
+  })
+  .on("dblclick", (event) => {
+    map.fitBounds(event.layer.getBounds());
+  })
+  .addTo(map);
 // Draw functionality
 var drawControl = new L.Control.Draw({
   position: "topright",
@@ -176,6 +190,12 @@ document.querySelector(
   "#map > div.leaflet-control-container > div.leaflet-top.leaflet-right > div.leaflet-control-layers.leaflet-control"
 ).hidden = true;
 
+// zoom to user's layers via chrosshair
+$(".leaflet-control-home").click(function () {
+  var bounds = drawnItems.getBounds();
+  map.fitBounds(bounds);
+});
+
 const projectRegionSwitch = document.getElementById("projectRegionSwitch");
 const demSwitch = document.getElementById("DEMSwitch");
 // pilotCheckbox.stopPropagation()
@@ -187,6 +207,7 @@ projectRegionSwitch.addEventListener("change", function () {
   }
 });
 
+// image of digital elevation model on/off
 demSwitch.addEventListener("change", function () {
   if (demSwitch.checked) {
     dem.addTo(map);
@@ -196,19 +217,6 @@ demSwitch.addEventListener("change", function () {
 });
 
 //---------------MAP END-------------------------------
-
-
-// btnSaveUserField.addEventListener("submit", (e) => {
-//   e.preventDefault();
-// });
-
-// btnSaveUserFieldAndCalc.addEventListener("submit", (e) => {
-//   e.preventDefault();
-// });
-
-// btnSaveUserFieldDismiss.addEventListener("click", (e) => {
-//   console.log(currentUserField);
-// });
 
 const loadUrl = "load/";
 const saveUrl = "save/";
@@ -241,6 +249,7 @@ class UserField {
     this.name = name;
     this.geom = geom_json;
     this.layer = layer;
+
     this.id = id;
     this.projects = [];
     console.log(
@@ -327,7 +336,6 @@ const userFieldNameInput = () => {
   }
   // return tuple/json with parameters from selection, e.g. as json {fieldname, selection: cancel/calculate/save}
   return fieldName;
-  
 };
 
 const addLayerToSidebar = (userField) => {
@@ -350,7 +358,7 @@ const addLayerToSidebar = (userField) => {
         <div class="column col-4">
           <form id="deleteAndCalcForm-${userField.id}">
             <span>
-              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#projectModal">
+              <button type="button" class="btn btn-outline-secondary btn-sm field-name" data-bs-toggle="modal" data-bs-target="#projectModal">
                 <i class="fa-regular fa-pen-to-square field-edit"></i>
               </button>
             </span>
@@ -373,6 +381,7 @@ const addLayerToSidebar = (userField) => {
   // adding the UserField to the HTML-list element
   accordion.userField = userField;
   //adding the geometry to the displayed drawnItems-layer
+
   userField.layer.addTo(drawnItems);
   //append the list element to list
   userLayerList.appendChild(accordion);
@@ -390,36 +399,31 @@ const addLayerToSidebar = (userField) => {
   });
 
   inputSwitch.dispatchEvent(new Event("change"));
+};
+
+var highlight = {
+  color: highlightColor,
+  weight: 2,
+  opacity: 1,
+};
+
+function highlightLayer(layerID) {
+  console.log("highlighting layer ", layerID);
+  Object.keys(drawnItems._layers).forEach((key) => {
+    map._layers[key].resetStyle();
+  });
+  map._layers[layerID].setStyle(highlight);
 }
-  
-//   const deleteCalcId = `deleteAndCalcForm-${userField.id}`;
-//   const deleteAndCalcForm = document.getElementById(deleteCalcId);
 
-//   deleteAndCalcForm.addEventListener("submit", (e) => {
-//     console.log("UserField.geom.geometry");
-//     console.log(userField.geom.geometry);
-//     $.ajax({
-//       method: "POST",
-//       url: saveUrl,
-//       data: {
-//         csrfmiddlewaretoken: csrftoken,
-//         geom: JSON.stringify(userField.geom.geometry),
-//         name: userField.name,
-//       },
-//       success: function (response) {
-//         console.log("Save success");
-//         console.log(response);
-//         userField.id = response.id;
-//       },
-//       error: function (error) {
-//         console.log("Ajax error");
-//         console.log(error);
-//       },
-//     });
-//     e.preventDefault();
-//   });
-// };
+userLayerList.addEventListener("dblclick", (e) => {
+  console.log("doubleclick");
+  console.log(e.target);
+  const listElement = e.target.closest("li");
+  console.log("Bounds", listElement.userField.layer.getBounds());
+  map.fitBounds(listElement.userField.layer.getBounds());
+});
 
+// interactions with sidebar via eventbubbling
 userLayerList.addEventListener("click", (e) => {
   console.log("userLayerList.addEventListener");
   console.log(e.target);
@@ -444,7 +448,6 @@ userLayerList.addEventListener("click", (e) => {
           csrfmiddlewaretoken: csrf[0].value,
         },
         success: function (response) {
-
           console.log("Delete Success");
         },
         error: function (response) {
@@ -461,26 +464,29 @@ userLayerList.addEventListener("click", (e) => {
     projectModalTitle.innerText = listElement.userField.name;
     console.log("listElement.layer", listElement.userField.layer);
     // console.log("Area", L.GeometryUtil.geodesicArea(listElement.userField.layer.getLatLngs()))
+  } else {
+    // TODO the hardcoded modal is triggered from button
+
+    highlightLayer(listElement.userField.layer._leaflet_id);
+
+    // console.log("Area", L.GeometryUtil.geodesicArea(listElement.userField.layer.getLatLngs()))
   }
 });
 
 const monicaFieldCalculation = () => {
-  console.log("monicaFieldCalculation")
-}
+  console.log("monicaFieldCalculation");
+};
 
-btnModalCal.addEventListener('click', function () {
-  getChart()
+btnModalCal.addEventListener("click", function () {
+  getChart();
   chartCard.classList.remove("d-none");
+});
 
-})
-
-$('#projectModal').on('hide.bs.modal', function (e){
+$("#projectModal").on("hide.bs.modal", function (e) {
   if (!chartCard.classList.contains("d-none")) {
-    chartCard.classList.add("d-none")
-    
+    chartCard.classList.add("d-none");
   }
-})
-
+});
 
 $(document).ready(function () {
   $("#chartModal").on("show.bs.modal", function () {
@@ -500,4 +506,3 @@ getData();
 
 // const demUrl = "{% static 'data/dem_de_1000_rendered_img_4326.tif' %}"
 // const dem_germany = L.tileLayer(demUrl, { maxZoom: 18, attribution: topoAttrib });
-

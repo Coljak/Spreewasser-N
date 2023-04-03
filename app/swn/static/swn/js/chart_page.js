@@ -69,6 +69,7 @@ const getChart = function () {
                 display: true,
                 position: "right",
                 beginAtZero: true,
+                max: 0.3,
                 },
             },
             },

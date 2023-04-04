@@ -5,8 +5,8 @@ Database models.
 from email.policy import default
 from statistics import mode
 
-
-from django.contrib.gis.db import models
+from django.db import models
+from django.contrib.gis.db import models as gis_models
 from djgeojson.fields import PointField, PolygonField, MultiLineStringField, MultiPointField, MultiPolygonField, GeometryField
 #from user.models import User
 from django.contrib.auth.models import User
@@ -69,7 +69,7 @@ class Crop(models.Model):
 
 class ProjectRegion(models.Model):
     name = models.CharField(max_length=50)
-    geom = models.MultiPolygonField(null=True)
+    geom = gis_models.MultiPolygonField(null=True)
 
     def __str__(self):
         return self.name
@@ -80,7 +80,7 @@ class UserField(models.Model):
     geom_json = PolygonField(null=True)
     # geom = GeometryField(null=True)
     comment = models.TextField(null=True, blank=True)
-    geom = models.GeometryField(null=True, srid=4326)
+    geom = gis_models.GeometryField(null=True, srid=4326)
     #geom2 = models.GeometryField(null=True, srid=4326)
     
 

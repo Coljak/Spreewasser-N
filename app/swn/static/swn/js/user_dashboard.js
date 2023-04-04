@@ -466,8 +466,11 @@ userLayerList.addEventListener("click", (e) => {
     // console.log("Area", L.GeometryUtil.geodesicArea(listElement.userField.layer.getLatLngs()))
   } else {
     // TODO the hardcoded modal is triggered from button
-
-    highlightLayer(listElement.userField.layer._leaflet_id);
+    console.log("Else in user_dashboard");
+    if (listElement.userField !== undefined) {
+      highlightLayer(listElement.userField.layer._leaflet_id);
+    } else { console.log("lielement undefined")}
+    
 
     // console.log("Area", L.GeometryUtil.geodesicArea(listElement.userField.layer.getLatLngs()))
   }

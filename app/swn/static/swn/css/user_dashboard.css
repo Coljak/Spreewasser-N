@@ -22,18 +22,20 @@ width: inherit;
 
 .sidebar-map {
     height: inherit;
-
 }
-.sidebar {
+/* .sidebar {
     height: inherit;
     z-index: 500;
-} 
-.sidebar-left {
-    left: 0px;
-    top: 0px;
-    bottom: 0px;
-
+}  */
+@media (min-width: 768px) {
+    .sidebar-left {
+        left: 15px;
+        top: 15px;
+        bottom: 15px;
+    
+    } 
 }
+
 
 
 /* Resize the "display_raw" textbox */

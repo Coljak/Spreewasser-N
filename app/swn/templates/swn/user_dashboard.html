@@ -35,24 +35,28 @@
   {% include 'swn/project_modal.html' %}
   {% include 'swn/field_name_modal.html' %}
   {% include 'swn/modal_project_list.html' %}
+  
 {% endblock %}
 
 <!-- map -->
-<div class="container">
+
   <div id="map-container" class="container">
     {% include 'swn/sidebar.html' %}
+    <div id="map" class="sidebar-map"></div>
   </div>
-</div>
+
 {% comment %} <button  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fieldInfoModal">Chart</button> {% endcomment %}
 
 
 {% endblock %}
 {% block javascript %}
 {{ bock.super }}
-<script src="{% static 'data/dem_3857.png' %}"></script>
-<script>
-  const imageUrl= "{% static 'data/dem_3857.png' %}"
-</script>
+ 
+  <script>
+    const demUrl= "{% static 'data/dem_3857.png' %}"
+    const droughtUrl= "{% static 'data/4326_reprojected_3857.png' %}"
+    
+  </script>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> {% endcomment %}
@@ -65,6 +69,7 @@
     <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="https://unpkg.com/leaflet-highlightable-layers"></script>
+    {% comment %} <script src="{% static 'leaflet/highlightable/highlightableLayers.js' %}"></script> {% endcomment %}
     <script src="{% static './data/pilotregion.js' %}"></script>
     <script src="{% static 'swn/js/user_dashboard.js' %}"></script>
     <!-- Tiff overlay -->

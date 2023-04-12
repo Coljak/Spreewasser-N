@@ -38,11 +38,17 @@ const topoAttrib =
 const topo = L.tileLayer(topoUrl, { maxZoom: 18, attribution: topoAttrib });
 
 // Bounds for DEM image overlay
-const imageBounds = [
+const demBounds = [
   [47.136744752, 15.57241882],
   [55.058996788, 5.564783468],
 ];
-const dem = L.imageOverlay(imageUrl, imageBounds, (opacity = 0.1));
+
+const droughtBounds = [
+  [46.89, 15.33],
+  [55.31, 5.41],
+]
+const dem = L.imageOverlay(demUrl, demBounds, {opacity: 0.8});
+const drought = L.imageOverlay(droughtUrl, droughtBounds, {opacity: 0.8});
 
 function getCookie(name) {
   console.log("Dashboard.js getCookie");
@@ -62,9 +68,10 @@ function getCookie(name) {
 }
 const csrftoken = getCookie("csrftoken");
 
-const handleAlerts = (type, msg) => {
-  // https://getbootstrap.com/docs/5.2/components/alerts/#examples
+// alert bar at the top of the main container 
+// https://getbootstrap.com/docs/5.2/components/alerts/#examples
   // types can be: primary, secondary, success, danger, warning, info, light, dark
+const handleAlerts = (type, msg) => {
   alertBox.innerHTML = `
       <div class="alert alert-${type} alert-dismissible " role="alert">
           ${msg}
@@ -76,16 +83,20 @@ const handleAlerts = (type, msg) => {
   }, 2000);
 };
 
-// create Map
+// basemaps 
 const baseMaps = {
   "Open Street Maps": osm,
   Satellit: satellite,
   Topomap: topo,
-  // Ndvi: ndvi,
-  // DEM: dem_germany,
-  // DEM: dem_germany,
 };
 
+// TODO overlays from geoserver such as NDVI and drought index
+const overlayMaps = {
+
+};
+
+//Map with open street map,opentopo-map and arcgis satellite map
+// opens at Müncheberg by default
 const map = new L.Map("map", {
   layers: [osm],
   overlay: [dem],
@@ -100,8 +111,6 @@ pilotGeojson.setStyle(function (feature) {
   return {
     fillColor: "white",
     color: "purple",
-
-    // borderColor: 'black'
   };
 });
 pilotGeojson.addTo(map);
@@ -113,6 +122,7 @@ const fullScreenControl = new L.Control.FullScreen({
 });
 map.addControl(fullScreenControl);
 
+// added back-to-home crosshair button to zoom controls 
 $(".leaflet-control-zoom").append(
   '<a class="leaflet-control-home" href="#" role="button"></a>'
 );
@@ -120,8 +130,11 @@ $(".leaflet-control-zoom").append(
 // search for locations
 const GeocoderControl = new L.Control.geocoder({
   position: "topright",
+  marker: false,
 });
 map.addControl(GeocoderControl);
+
+// $('.leaflet-popup-close-button')
 
 //add map scale
 const mapScale = new L.control.scale({
@@ -198,6 +211,9 @@ $(".leaflet-control-home").click(function () {
 
 const projectRegionSwitch = document.getElementById("projectRegionSwitch");
 const demSwitch = document.getElementById("DEMSwitch");
+const droughtSwitch = document.getElementById("droughtSwitch");
+const demOpacity = document.getElementById("demOpacity");
+const droughtOpacity = document.getElementById("droughtOpacity");
 // pilotCheckbox.stopPropagation()
 projectRegionSwitch.addEventListener("change", function () {
   if (projectRegionSwitch.checked) {
@@ -210,9 +226,22 @@ projectRegionSwitch.addEventListener("change", function () {
 // image of digital elevation model on/off
 demSwitch.addEventListener("change", function () {
   if (demSwitch.checked) {
+    demOpacity.disabled = false;
     dem.addTo(map);
   } else {
+    demOpacity.disabled = true;
     dem.remove();
+  }
+});
+
+// image of digital elevation model on/off
+droughtSwitch.addEventListener("change", function () {
+  if (droughtSwitch.checked) {
+    droughtOpacity.disabled = false;
+    drought.addTo(map);
+  } else {
+    droughtOpacity.disabled = true;
+    drought.remove();
   }
 });
 

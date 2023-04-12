@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
+    # shapefileimport is probably only necessary during development
+    # 'shapefileimport',
     # 'user',
     # 'accounts',
     # 3rd party
@@ -58,6 +60,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
 
 ]
+
 
 
 MIDDLEWARE = [

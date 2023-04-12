@@ -8,8 +8,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 # this is best practice to integrate translation
 from django.utils.translation import gettext_lazy as _
 
-from .models import User, ProjectRegion, UserProject, UserField, Crop #UserInfo,
-
+from .models import User, ProjectRegion, UserProject, UserField
 from django.contrib.gis.geos import Point, Polygon, MultiPoint, MultiPolygon
 from datetime import datetime
 import pandas as pd
@@ -59,16 +58,18 @@ class ProjectRegionAdmin(LeafletGeoAdmin):
 
 
 # @admin.register(UserProject, LeafletGeoAdmin)
-class UserProjectsAdmin(ModelAdmin):
-    
-    pass
+# class BuekDataAdmin(LeafletGeoAdmin):
+#     list_filter = ('nrkart', 'polygon_id')
+   
+# class SoilProfileAllAdmin(ModelAdmin):
+#     list_filter = ('polygon_id', 'profile_id_in_polygon',)
 
-# class UserFieldAdmin(LeafletGeoAdmin):
-#     pass
 
 # admin.site.register(UserInfo)
 # admin.site.register(User, UserAdmin)
 admin.site.register(ProjectRegion, LeafletGeoAdmin)
-admin.site.register(UserProject, UserProjectsAdmin)
+# admin.site.register(BuekData, BuekDataAdmin)
+# admin.site.register(SoilProfileAll, SoilProfileAllAdmin)
+admin.site.register(UserProject, LeafletGeoAdmin)
 admin.site.register(UserField, LeafletGeoAdmin)
 #admin.site.register(UserProject)

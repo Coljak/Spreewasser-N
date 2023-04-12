@@ -11,8 +11,8 @@ services:
       - ./app:/app
     command: 
       sh -c "python3 manage.py wait_for_db &&
-        python3 manage.py migrate &&
         python3 manage.py runserver 0.0.0.0:8000"
+        # python3 manage.py migrate &&
       
     environment:
       - DB_HOST=db
@@ -27,9 +27,8 @@ services:
 
   # Postgres database
   db:
-    image: postgis/postgis
+    image: postgis/postgis:14-3.3
     volumes:
-    #  - ./data/db:/var/lib/postgresql/data/db:z
     - ./database:/pg_data_2
     #user: 1000:1000 
     environment:
@@ -37,10 +36,6 @@ services:
       POSTGRES_USER: postgis
       POSTGRES_PASSWORD: postgis
       PGDATA: /pg_data_2
-
-      # - POSTGRES_DB=postgis
-      # - POSTGRES_USER=postgis
-      # - POSTGRES_PASSWORD=postgis
 
     ports:
       - 5432:5432

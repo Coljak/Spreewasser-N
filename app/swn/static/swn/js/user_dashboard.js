@@ -47,8 +47,8 @@ const droughtBounds = [
   [46.89, 15.33],
   [55.31, 5.41],
 ]
-const dem = L.imageOverlay(demUrl, demBounds, {opacity: 0.8});
-const drought = L.imageOverlay(droughtUrl, droughtBounds, {opacity: 0.8});
+const dem = L.imageOverlay(demUrl, demBounds, {opacity: 0.5});
+const drought = L.imageOverlay(droughtUrl, droughtBounds, {opacity: 0.5});
 
 function getCookie(name) {
   console.log("Dashboard.js getCookie");
@@ -214,6 +214,13 @@ const demSwitch = document.getElementById("DEMSwitch");
 const droughtSwitch = document.getElementById("droughtSwitch");
 const demOpacity = document.getElementById("demOpacity");
 const droughtOpacity = document.getElementById("droughtOpacity");
+droughtOpacity.addEventListener("change", () => {
+  drought.setOpacity(droughtOpacity.value)
+  });
+demOpacity.addEventListener("change", () => {
+  dem.setOpacity(demOpacity.value)
+  });
+
 // pilotCheckbox.stopPropagation()
 projectRegionSwitch.addEventListener("change", function () {
   if (projectRegionSwitch.checked) {
@@ -495,10 +502,10 @@ userLayerList.addEventListener("click", (e) => {
     // console.log("Area", L.GeometryUtil.geodesicArea(listElement.userField.layer.getLatLngs()))
   } else {
     // TODO the hardcoded modal is triggered from button
-    console.log("Else in user_dashboard");
+    
     if (listElement.userField !== undefined) {
       highlightLayer(listElement.userField.layer._leaflet_id);
-    } else { console.log("lielement undefined")}
+    } else { console.log("listlement undefined")}
     
 
     // console.log("Area", L.GeometryUtil.geodesicArea(listElement.userField.layer.getLatLngs()))

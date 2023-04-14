@@ -24,6 +24,7 @@ from app.helpers import is_ajax
 from .utils import get_geolocation
 import random
 
+from .data import monica_calc, monica_calc_1, monica_calc_2, monica_calc_3
 
 class IndexView(TemplateView):
     template_name = "swn/home.html"
@@ -168,25 +169,37 @@ class ChartView(View):
 
 
 def get_chart(request, *args, **kwargs):
-    from .data import monica_calc, monica_calc_1, monica_calc_2, monica_calc_3
-    calc_list = [monica_calc, monica_calc_1, monica_calc_2, monica_calc_3]
-    rand = random.randint(0, len(calc_list))
+    if is_ajax(request):
+        calc_list = [monica_calc, monica_calc_1, monica_calc_2, monica_calc_3]
+        rand = random.randint(0, len(calc_list) - 1)
+        calc = calc_list[rand]
+        response = {
+            'mois_max': max([max(calc['Mois_1']), max(calc['Mois_2']), max(calc['Mois_3'])]),
+            'lai_max': max(calc['LAI']),
+            'Date': calc['Date'],
+            'Mois_1': calc['Mois_1'],
+            'Mois_2': calc['Mois_2'],
+            'Mois_3': calc['Mois_3'],
+            'LAI': calc['LAI'],
+            
+        }
+        print('get_chart Jsonresponse \n', JsonResponse(response))
 
-    return JsonResponse(calc_list[rand])
+    return JsonResponse(response)
 
 
 # from ajax: post_detail
-@login_required
-def calc_data(request, pk):
-    obj = models.Post.objects.get(pk=pk)
-    form = forms.PostForm()
+# @login_required
+# def calc_data(request, pk):
+#     obj = models.Post.objects.get(pk=pk)
+#     form = forms.PostForm()
 
-    context = {
-        'obj': obj,
-        'form': form,
-    }
+#     context = {
+#         'obj': obj,
+#         'form': form,
+#     }
 
-    return render(request, 'posts/detail.html', context)
+    # return render(request, 'posts/detail.html', context)
 
 
 def get_user_fields(request):

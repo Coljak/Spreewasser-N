@@ -12,74 +12,77 @@ const getChart = function () {
         method: "GET",
         url: endpoint,
         success: function (data) {
-        
-        
-        const chart = new Chart(ctx, {
-            type: "line",
-            data: {
-            labels: data.Date,
-            datasets: [
-                {
-                label: "Bodenfeuchte 1",
-                data: data.Mois_1,
-                borderColor: "#aa8800",
-                borderWidth: 2,
-                },
-                {
-                label: "Bodenfeuchte 2",
-                data: data.Mois_2,
-                borderColor: "#ccaa00",
-                borderWidth: 2,
-                },
-                {
-                label: "Bodenfeuchte 3",
-                data: data.Mois_3,
-                borderColor: "#ffcc00",
-                borderWidth: 2,
-                },
-                {
-                label: "LAI",
-                data: data.LAI,
-                borderWidth: 2,
-                borderColor: "#00cc22",
-                },
-                // {
-                //     label: 'Niederschlag',
-                //     data: data.Precip,
-                //     borderWidth: 1,
-                //     borderColor: '#00ccbb',
-                //     type: 'bar'
-                // },
-            ],
-            },
-            options: {
-            elements: {
-                point: {
-                radius: 0,
-                },
-            },
-            responsive: true,
-            scales: {
-                y: {
-                display: true,
-                position: "left",
-                beginAtZero: true,
-                },
-                y1: {
-                display: true,
-                position: "right",
-                beginAtZero: true,
-                max: 0.3,
-                },
-            },
-            },
-        });
-        console.log("chart")
-        console.log(chart)
-        chart.update()
+            console.log('SUCCESS data: ', data)
+            const chart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: data.Date,
+                    datasets: [{
+                        yAxisID: 'y',
+                        label: "Bodenfeuchte 1",
+                        data: data.Mois_1,
+                        borderColor: "#aa8800",
+                        borderWidth: 2,
+                        },
+                        {
+                        yAxisID: 'y',
+                        label: "Bodenfeuchte 2",
+                        data: data.Mois_2,
+                        borderColor: "#ccaa00",
+                        borderWidth: 2,
+                        },
+                        {
+                        yAxisID: 'y',
+                        label: "Bodenfeuchte 3",
+                        data: data.Mois_3,
+                        borderColor: "#ffcc00",
+                        borderWidth: 2,
+                        },
+                        {
+                        yAxisID: 'y1',
+                        label: "LAI",
+                        data: data.LAI,
+                        borderWidth: 2,
+                        borderColor: "#00cc22",
+                        }],
+                    },
+                options: {
+                    
+                    elements: {
+                        point: {
+                        radius: 0,
+                        },
+                    },
+                    responsive: true,
+                    scales: {
+                        y: {
+                            // id: 'y',
+                            type: 'linear',
+                            position: 'left',
+                            ticks: {
+                                min: 0,
+                                max: data.mois_max * 1.1,
+                                }
+                            },
+                        y1: {
+                            // id: 'y1',
+                            type: 'linear',
+                            position: 'right',
+                            label: 'LAI',
+                            ticks: {
+                                min: 0,
+                                max: data.lai_max * 1.1,
+                                color: "#00cc22",
+                                }
+                            }
+                        }
+                    }
+            });
+
+            chart.update()
         },
         error: function (error_data) {
-        console.log(error_data);
+        console.log('Chart error: ', error_data);
         },
     });
 };

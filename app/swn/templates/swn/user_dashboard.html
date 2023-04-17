@@ -68,15 +68,15 @@
     <script src="{% static 'leaflet/fullscreen/Control.FullScreen.js' %}"></script>
     <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-    <script src="https://unpkg.com/leaflet-highlightable-layers"></script>
-    {% comment %} <script src="{% static 'leaflet/highlightable/highlightableLayers.js' %}"></script> {% endcomment %}
+    {% comment %} <script src="https://unpkg.com/leaflet-highlightable-layers@1.2.1/dist/L.HighlightableLayers.js"></script> {% endcomment %}
+    <script src="{% static 'leaflet/highlightable/highlightableLayers.js' %}"></script>
     <script src="{% static './data/pilotregion.js' %}"></script>
     <script src="{% static 'swn/js/user_dashboard.js' %}"></script>
     <!-- Tiff overlay -->
     
     
     <script src="https://unpkg.com/chroma-js"></script>
-    <script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.min.js">
+    {% comment %} <script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.min.js"> {% endcomment %}
     <script src="https://unpkg.com/georaster"></script>
     <script src="https://unpkg.com/proj4"></script>
     <script src="https:///unpkg.com/georaster-layer-for-leaflet@latest"></script>

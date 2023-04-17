@@ -205,8 +205,13 @@ document.querySelector(
 
 // zoom to user's layers via chrosshair
 $(".leaflet-control-home").click(function () {
-  var bounds = drawnItems.getBounds();
-  map.fitBounds(bounds);
+  try {
+    var bounds = drawnItems.getBounds();
+    map.fitBounds(bounds);
+  } catch {
+    return;
+  }
+  
 });
 
 const projectRegionSwitch = document.getElementById("projectRegionSwitch");
@@ -373,10 +378,11 @@ const userFieldNameInput = () => {
   // return tuple/json with parameters from selection, e.g. as json {fieldname, selection: cancel/calculate/save}
   return fieldName;
 };
+// list of all userfields
 
 const addLayerToSidebar = (userField) => {
   const accordion = document.createElement("li");
-  accordion.setAttribute("class", "list-group-item");
+  accordion.setAttribute("class", "list-group-item focus");
   // accordion.focus()
   accordion.innerHTML = `  
   <div class="accordion-item">

@@ -1,6 +1,4 @@
-superuser:
-admin@example.com
-pass1234
+
 
 Usermanagement
 https://www.youtube.com/watch?v=WuyKxdLcw3w

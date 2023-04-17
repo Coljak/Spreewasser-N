@@ -161,6 +161,11 @@ cython_debug/
 #.idea/
 
 # The PostgreSQL database
-data/
+data_temp/
 database/
 notes/
+
+# local files and folders for data import 
+db_data/
+xx_obsolete/
+shapefileimport/

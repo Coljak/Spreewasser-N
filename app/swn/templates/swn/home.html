@@ -1,27 +1,90 @@
 {% extends "swn/base.html" %}
 
+{% load static %}
+
 {% block body_block %}
 <div class="container">
     <div class="">
         
-        <h1 class="swn-logo my-4">SpreeWasser:N</h1>
-        <h2>Keypoints</h2>
-        <ul>
-            <li class="text-justify">Ableitung von Grenz- und Schwellenwerten für das Eintreten einer landwirtschaftlichen und hydrologischen Dürre</li>
-            <li class="text-justify">Quantifizierung des Einflusses saisonaler Extrem-Wetterereignisse und klein-skaliger klimatischer Wetterstrukturen auf die Wahrscheinlichkeit und Intensität von Trockenperioden und Dürren und den Wasserstress der landwirtschaftlichen Kulturen</li>
-            <li class="text-justify">Ableitung der Eignung, Unsicherheiten und optimalen Vorhersagehorizonten von saisonalen Witterungsvorhersagen (3-6 Monate) für die Prognose einer Dürre</li>
-        
-        </ul>
-        <div class="mt-5">
-            <h2>Herausforderungen</h2>
-            <p class="text-justify">In Zeiten von Klimawandel und steigenden Temperaturen ist es wichtiger denn je, die Auswirkungen von Dürren auf die landwirtschaftliche Produktion zu verstehen. Eine Vorhersage und frühzeitige Erkennung von Dürreereignissen kann Landwirten helfen, sich besser auf solche Phänomene vorzubereiten und somit Schäden an ihren Kulturen zu minimieren. Das Projekt soll ein Dürre-Frühwarnsystem entwickeln, das auf einer quantitativen Analyse von Wetterextremen und saisonalen Vorhersagen basiert, um eine effektive Vorhersage von Dürreereignissen zu ermöglichen.</p>
-            <p class="text-justify">Die Ableitung von Grenzwerten für das Eintreten einer Dürre, insbesondere in Bezug auf die landwirtschaftlichen Kulturen, ist eine komplexe Aufgabe, die ein tiefes Verständnis von agro-meteorologischen Zusammenhängen erfordert. Auch die Quantifizierung des Einflusses saisonaler Extreme und kleinskaliger klimatischer Wetterstrukturen auf die Wahrscheinlichkeit und Intensität von Trockenperioden und Dürren ist eine Herausforderung. Zudem müssen die Vorhersagehorizonte und die Eignung von saisonalen Witterungsvorhersagen für die Vorhersage von Dürren genau bewertet werden, um ein zuverlässiges Frühwarnsystem zu entwickeln.</p>
+        <h1 class="swn-logo py-5">SpreeWasser:N</h1>
+        <!-- Carousel -->
+        <div class="container-md pb-4 px-4">
+            <div id="carouselIndicators" class="carousel slide" data-bs-ride="true">
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#carouselIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#carouselIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#carouselIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                </div>
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img class="d-block w-100" src="{% static 'img/Forecasting.jpg' %}" alt="Forecasting">
+                    </div>
+                    <div class="carousel-item">
+                        <img class="d-block w-100" src="{% static 'img/mais.jpg' %}" alt="mais">
+                    </div>
+                    <div class="carousel-item">
+                        <img class="d-block w-100" src="{% static 'img/Landwirtschaft.jpg' %}" alt="Landwirtschaft">
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselIndicators" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselIndicators" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
         </div>
+
+        <!-- Keypoints as accordion -->
+        <div class="accordion pt-4" id="accordionExample">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        <h2>Keypoints</h2>
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <ul>
+                            <li class="text-justify">Ableitung von Grenz- und Schwellenwerten für das Eintreten einer landwirtschaftlichen und hydrologischen Dürre</li>
+                            <li class="text-justify">Quantifizierung des Einflusses saisonaler Extrem-Wetterereignisse und klein-skaliger klimatischer Wetterstrukturen auf die Wahrscheinlichkeit und Intensität von Trockenperioden und Dürren und den Wasserstress der landwirtschaftlichen Kulturen</li>
+                            <li class="text-justify">Ableitung der Eignung, Unsicherheiten und optimalen Vorhersagehorizonten von saisonalen Witterungsvorhersagen (3-6 Monate) für die Prognose einer Dürre</li>
+                        </ul>               
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTwo">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                        <h2>Herausforderungen</h2>
+                    </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <p class="text-justify">In Zeiten von Klimawandel und steigenden Temperaturen ist es wichtiger denn je, die Auswirkungen von Dürren auf die landwirtschaftliche Produktion zu verstehen. Eine Vorhersage und frühzeitige Erkennung von Dürreereignissen kann Landwirten helfen, sich besser auf solche Phänomene vorzubereiten und somit Schäden an ihren Kulturen zu minimieren. Das Projekt soll ein Dürre-Frühwarnsystem entwickeln, das auf einer quantitativen Analyse von Wetterextremen und saisonalen Vorhersagen basiert, um eine effektive Vorhersage von Dürreereignissen zu ermöglichen.</p>
+                        <p class="text-justify">Die Ableitung von Grenzwerten für das Eintreten einer Dürre, insbesondere in Bezug auf die landwirtschaftlichen Kulturen, ist eine komplexe Aufgabe, die ein tiefes Verständnis von agro-meteorologischen Zusammenhängen erfordert. Auch die Quantifizierung des Einflusses saisonaler Extreme und kleinskaliger klimatischer Wetterstrukturen auf die Wahrscheinlichkeit und Intensität von Trockenperioden und Dürren ist eine Herausforderung. Zudem müssen die Vorhersagehorizonte und die Eignung von saisonalen Witterungsvorhersagen für die Vorhersage von Dürren genau bewertet werden, um ein zuverlässiges Frühwarnsystem zu entwickeln.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingThree">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        <h2>Methoden</h2>
+                    </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <p class="text-justify">Das Dürre-Frühwarnsystem nutzt ein agrarökosystematisches Modell namens MONICA, um die Reaktion von Kulturpflanzen auf eine mangelhafte Wasserversorgung im Boden zu simulieren. Die Simulationen werden auf dem ZALF High Performance Computer durchgeführt. Hochaufgelöste saisonale Witterungsvorhersagen des Deutschen Wetterdienstes werden genutzt, um den Ertrag der angebauten Kulturen in einem bestimmten Gebiet mittelfristig vorherzusagen. Eine Projektion, die unter dem langjährigen Ertragsmittel liegt, dient als Indikator für das Stufen-Warnsystem. Zusätzlich wird das Warnsystem durch hydrologische Dürre-Grenzwerte unterstützt, die direkt aus der Witterungsvorhersage abgeleitet werden. Die Forschung befasst sich mit der Bestimmung geeigneter Grenzwerte für die Dürrevorhersage, um eine frühzeitige Erkennung von Dürren und eine effektivere Nutzung von Wasserressourcen in der Landwirtschaft zu ermöglichen.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+      
     
-        <h2>Methoden</h2>
-        <p class="text-justify">Das Dürre-Frühwarnsystem nutzt ein agrarökosystematisches Modell namens MONICA, um die Reaktion von Kulturpflanzen auf eine mangelhafte Wasserversorgung im Boden zu simulieren. Die Simulationen werden auf dem ZALF High Performance Computer durchgeführt. Hochaufgelöste saisonale Witterungsvorhersagen des Deutschen Wetterdienstes werden genutzt, um den Ertrag der angebauten Kulturen in einem bestimmten Gebiet mittelfristig vorherzusagen. Eine Projektion, die unter dem langjährigen Ertragsmittel liegt, dient als Indikator für das Stufen-Warnsystem. Zusätzlich wird das Warnsystem durch hydrologische Dürre-Grenzwerte unterstützt, die direkt aus der Witterungsvorhersage abgeleitet werden. Die Forschung befasst sich mit der Bestimmung geeigneter Grenzwerte für die Dürrevorhersage, um eine frühzeitige Erkennung von Dürren und eine effektivere Nutzung von Wasserressourcen in der Landwirtschaft zu ermöglichen.</p>
-    </div>
-</div>
+        
     
 
 

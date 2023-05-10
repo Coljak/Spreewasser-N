@@ -214,4 +214,4 @@ var __publicField = (obj, key, value) => {
   exports2.setLayerRenderer = setLayerRenderer;
   Object.defineProperty(exports2, Symbol.toStringTag, { value: "Module" });
 });
-//# sourceMappingURL=L.HighlightableLayers.js.map
+

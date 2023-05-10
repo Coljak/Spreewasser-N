@@ -28,6 +28,6 @@ urlpatterns = [
     # path('Logout/', LogoutView.as_view(), {'next_page': settings.LOGOUT_REDIRECT_URL}, name='user_logout'),  
     path('data.geojson', GeoJSONLayerView.as_view(model=models.ProjectRegion), name='project_region_geojson'),
     path('Chart/', views.ChartView.as_view(), name='chart'), 
-    path('login/Dashboard/chartdata/', views.get_chart, name='chart-api'),
+    path('login/Dashboard/chartdata/<int:crop_id>', views.get_chart, name='chart-api'),
     
     ]

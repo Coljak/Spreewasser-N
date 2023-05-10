@@ -142,11 +142,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'de-de'
 
+USE_TZ = True
+
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
+
 
 
 # Static files (CSS, JavaScript, Images)
@@ -158,7 +160,6 @@ STATICFILES_DIRS = [
     STATIC_DIR,
     Path.joinpath(BASE_DIR, 'swn/static/'),
     Path.joinpath(BASE_DIR, 'swn/static/')]
-# STATICFILES_DIRS = [Path.joinpath(BASE_DIR, 'static/core')]
 
 MEDIA_ROOT = MEDIA_DIR
 MEDIA_URL = 'media/'

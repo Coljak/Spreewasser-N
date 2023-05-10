@@ -14,6 +14,18 @@ import gettext as _
 import datetime
 import os
 
+from geo.Geoserver import Geoserver
+# from psycopg2 import connect
+
+# db = Pg(dbname=os.environ.get('DB_NAME'), 
+#         user=os.environ.get('DB_USER'), 
+#         password=os.environ.get('DB_PASS'), 
+#         host=os.environ.get('DB_HOST'))
+
+
+geo = Geoserver(os.environ.get('GEOSERVER_URL'), 
+                username=os.environ.get('GEOSERVER_USER'), 
+                password=os.environ.get('GEOSERVER_PASS'))
 
 # class UserInfo(models.Model):
 #     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -101,6 +113,15 @@ class UserProject(models.Model):
     def __str__(self):
         return self.name
 
+
+class GeoData(models.Model):
+    name = models.CharField(max_length=56)
+    description = models.CharField(max_length=1024, blank=True)
+    file = models.FileField(upload_to='geodata', blank=True)
+    date = models.DateField(default=datetime.date.today, blank=True)
+
+    def __str__(self):
+        return self.name
 
 # ----------BUEK 200 data ------------------------------------------------
 # class BuekData(models.Model):

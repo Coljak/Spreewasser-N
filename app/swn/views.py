@@ -24,7 +24,8 @@ from app.helpers import is_ajax
 from .utils import get_geolocation
 import random
 
-from .data import monica_calc, monica_calc_1, monica_calc_2, monica_calc_3
+from .data import calc_list, calc_dict
+
 
 class IndexView(TemplateView):
     template_name = "swn/home.html"
@@ -153,7 +154,13 @@ def user_dashboard(request):
             }
             user_projects.append(item)
 
-    data = {'user_projects': user_projects, 'crop_form': crop_form, 'project_form': project_form}
+    # get all data from general calclations
+    shp = models.GeoData.objects.all()
+
+    data = {'shp': shp, 
+            'user_projects': user_projects, 
+            'crop_form': crop_form, 
+            'project_form': project_form}
 
     return render(request, 'swn/user_dashboard.html', data)
 
@@ -168,11 +175,30 @@ class ChartView(View):
         return render(request, 'swn/chart.html', {})
 
 
-def get_chart(request, *args, **kwargs):
+def get_chart(request, crop_id):
+    print('Request:', crop_id)
+    key = ''
+    if crop_id == 0:
+        key = 'winterwheat'
+    elif crop_id == 1:
+        key = 'winterbarley'
+    elif crop_id == 2:
+        key = 'winterrape'
+    elif crop_id == 3:
+        key = 'winterrye'
+    elif crop_id == 4:
+        key = 'potato'
+    elif crop_id == 5:
+        key = 'silage_maize'
+    elif crop_id == 6:
+        key = 'springbarley'
+    print(key)
+    # key_list = ['winterwheat', 'winterbarley', 'winterrape', 'winterrye', 'potato', 'silage_maize', 'springbarley', ]
     if is_ajax(request):
-        calc_list = [monica_calc, monica_calc_1, monica_calc_2, monica_calc_3]
-        rand = random.randint(0, len(calc_list) - 1)
-        calc = calc_list[rand]
+        # rand = random.randint(0, len(key_list) - 1)
+        # key = key_list[rand]
+        calc = calc_dict[key]
+        # calc = calc_list[rand]
         response = {
             'mois_max': max([max(calc['Mois_1']), max(calc['Mois_2']), max(calc['Mois_3'])]),
             'lai_max': max(calc['LAI']),
@@ -186,20 +212,6 @@ def get_chart(request, *args, **kwargs):
         print('get_chart Jsonresponse \n', JsonResponse(response))
 
     return JsonResponse(response)
-
-
-# from ajax: post_detail
-# @login_required
-# def calc_data(request, pk):
-#     obj = models.Post.objects.get(pk=pk)
-#     form = forms.PostForm()
-
-#     context = {
-#         'obj': obj,
-#         'form': form,
-#     }
-
-    # return render(request, 'posts/detail.html', context)
 
 
 def get_user_fields(request):
@@ -249,7 +261,7 @@ def save_user_field(request):
         instance.geom = geos
         instance.user = user
         instance.save()
-        return JsonResponse({'id': instance.id})
+        return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
     return redirect('swn:user_dashboard')
 
 @login_required

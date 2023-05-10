@@ -1,4 +1,5 @@
-FROM ubuntu:jammy
+FROM ubuntu:jammy-20230308
+
 LABEL maintainer="Colja"
 
 ENV PYTHONUNBUFFERED 1
@@ -28,13 +29,16 @@ RUN apt-get update -qq && apt-get install -y -qq \
     wget https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get-pip.py && \
     pip3 install --no-cache-dir setuptools wheel -U && \
     python3 -m venv /py && \
-    #/py/bin/pip3 install --upgrade pip3 && \
+    /py/bin/pip3 install --upgrade pip && \
+    # pip install --upgrade pip && \
     #apk add --update --no-cache postgresql-client && \
     # apk add --update --no-cache --virtual .tmp-build-deps \
     #     build-base postgresql-dev musl-dev && \
     /py/bin/pip3 install -r /tmp/requirements.txt && \
+    # pip install -r /tmp/requirements.txt && \
     if [ $DEV = "true" ]; \
         then /py/bin/pip3 install -r /tmp/requirements.dev.txt ; \
+        #then pip install -r /tmp/requirements.dev.txt ; \
     fi && \
     rm -rf /tmp && \
     #apk del .tmp-build-deps 

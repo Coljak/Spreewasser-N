@@ -164,6 +164,7 @@ cython_debug/
 data_temp/
 database/
 notes/
+geoserver/
 
 # local files and folders for data import 
 db_data/

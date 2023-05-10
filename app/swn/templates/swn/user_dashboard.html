@@ -54,7 +54,24 @@
  
   <script>
     const demUrl= "{% static 'data/dem_3857.png' %}"
+    console.log("demUrl", demUrl)
     const droughtUrl= "{% static 'data/4326_reprojected_3857.png' %}"
+    {% comment %} {% for s in shp %}
+      var {{ s.name }} = L.tileLayer.wms("http://localhost:8080/geoserver/wms", {
+        layers: '{{ s.name }}',
+        format: 'image/png',
+        transparent: true,
+        version: '1.1.0',
+        attribution: 'Swn',
+        opacity: 0.5,
+        zIndex: 100,
+        crs: L.CRS.EPSG3857,
+        maxZoom: 20,
+        minZoom: 0,
+        maxNativeZoom: 20,
+        minNativeZoom: 0,
+        tileSize: 256,
+    {% endfor %} {% endcomment %}
     
   </script>
 
@@ -70,6 +87,7 @@
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     {% comment %} <script src="https://unpkg.com/leaflet-highlightable-layers@1.2.1/dist/L.HighlightableLayers.js"></script> {% endcomment %}
     <script src="{% static 'leaflet/highlightable/highlightableLayers.js' %}"></script>
+    {% comment %} <script src="https://unpkg.com/leaflet-highlightable-layers"></script> {% endcomment %}
     <script src="{% static './data/pilotregion.js' %}"></script>
     <script src="{% static 'swn/js/user_dashboard.js' %}"></script>
     <!-- Tiff overlay -->
@@ -79,9 +97,10 @@
     {% comment %} <script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.min.js"> {% endcomment %}
     <script src="https://unpkg.com/georaster"></script>
     <script src="https://unpkg.com/proj4"></script>
-    <script src="https:///unpkg.com/georaster-layer-for-leaflet@latest"></script>
+    {% comment %} <script src="https:///unpkg.com/georaster-layer-for-leaflet@latest"></script> {% endcomment %}
+    <script src="{% static 'leaflet/georaster/georaster-layer-for-leaflet.min.js' %}"></script>
   {% comment %} <script src="{% static 'dist/leaflet-geotiff-vector.js' %}"></script> {% endcomment %}
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
-<script src="{% static 'swn/js/chart_page.js' %}" defer></script>
+  <script src="{% static 'swn/js/chart_page.js' %}" defer></script>
 {% endblock%}

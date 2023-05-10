@@ -2,15 +2,18 @@ console.log("chart_page");
 
 const endpoint = "chartdata/";
 const chartDiv = document.getElementById("chartDiv")
+const crop = document.getElementById("id_Feldfrucht")
 
 // chart params
 
 const getChart = function () {
     chartDiv.innerHTML = '<canvas id="Chart"></canvas>'
     const ctx = document.getElementById("Chart")
+    console.log("Feldfrucht:", crop.value)
     $.ajax({
         method: "GET",
-        url: endpoint,
+        url: endpoint + crop.value,
+
         success: function (data) {
             console.log('SUCCESS data: ', data)
             const chart = new Chart(ctx, {

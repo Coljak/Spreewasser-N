@@ -46,9 +46,17 @@ const demBounds = [
 const droughtBounds = [
   [46.89, 15.33],
   [55.31, 5.41],
-]
-const dem = L.imageOverlay(demUrl, demBounds, {opacity: 0.5});
-const drought = L.imageOverlay(droughtUrl, droughtBounds, {opacity: 0.5});
+];
+const dem = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
+const drought = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5 });
+var videoUrl = 'https://www.mapbox.com/bites/00188/patricia_nasa.webm',
+    videoBounds = droughtBounds;
+
+const animation = L.videoOverlay(videoUrl, videoBounds, {opacity: 0.0});
+
+
+
+
 
 function getCookie(name) {
   console.log("Dashboard.js getCookie");
@@ -68,9 +76,9 @@ function getCookie(name) {
 }
 const csrftoken = getCookie("csrftoken");
 
-// alert bar at the top of the main container 
+// alert bar at the top of the main container
 // https://getbootstrap.com/docs/5.2/components/alerts/#examples
-  // types can be: primary, secondary, success, danger, warning, info, light, dark
+// types can be: primary, secondary, success, danger, warning, info, light, dark
 const handleAlerts = (type, msg) => {
   alertBox.innerHTML = `
       <div class="alert alert-${type} alert-dismissible " role="alert">
@@ -83,7 +91,7 @@ const handleAlerts = (type, msg) => {
   }, 2000);
 };
 
-// basemaps 
+// basemaps
 const baseMaps = {
   "Open Street Maps": osm,
   Satellit: satellite,
@@ -91,9 +99,7 @@ const baseMaps = {
 };
 
 // TODO overlays from geoserver such as NDVI and drought index
-const overlayMaps = {
-
-};
+const overlayMaps = {};
 
 //Map with open street map,opentopo-map and arcgis satellite map
 // opens at Müncheberg by default
@@ -102,6 +108,8 @@ const map = new L.Map("map", {
   overlay: [dem],
   center: new L.LatLng(52.338145830363914, 13.85877631507592),
   zoom: 8,
+  zoomSnap: 0.25,
+  wheelPxPerZoomLevel: 500,
 });
 
 // Spreewasser:N overlay, pilotRegion from data/pilotregion.js
@@ -122,7 +130,9 @@ const fullScreenControl = new L.Control.FullScreen({
 });
 map.addControl(fullScreenControl);
 
-// added back-to-home crosshair button to zoom controls 
+animation.addTo(map);
+
+// added back-to-home crosshair button to zoom controls
 $(".leaflet-control-zoom").append(
   '<a class="leaflet-control-home" href="#" role="button"></a>'
 );
@@ -141,6 +151,7 @@ const mapScale = new L.control.scale({
   position: "bottomright",
 }).addTo(map);
 
+// TODO delete?
 var prevent = false;
 var timer = 0;
 var delay = 200;
@@ -165,11 +176,10 @@ var drawControl = new L.Control.Draw({
       showArea: true,
     },
   },
-  edit: {
-    featureGroup: drawnItems,
-  },
+  // edit: {
+  //   featureGroup: drawnItems,
+  // },
 });
-
 map.addControl(drawControl);
 
 // SIDEBAR
@@ -204,27 +214,34 @@ document.querySelector(
 ).hidden = true;
 
 // zoom to user's layers via chrosshair
-$(".leaflet-control-home").click(function () {
+const chrosshair = document.getElementsByClassName("leaflet-control-home")[0];
+console.log("Crosshair", chrosshair);
+
+chrosshair.addEventListener("click", () => {
   try {
     var bounds = drawnItems.getBounds();
     map.fitBounds(bounds);
   } catch {
     return;
   }
-  
 });
 
 const projectRegionSwitch = document.getElementById("projectRegionSwitch");
 const demSwitch = document.getElementById("DEMSwitch");
 const droughtSwitch = document.getElementById("droughtSwitch");
+const animationSwitch = document.getElementById("animationSwitch");
 const demOpacity = document.getElementById("demOpacity");
 const droughtOpacity = document.getElementById("droughtOpacity");
+const animationOpacity = document.getElementById("animationOpacity");
 droughtOpacity.addEventListener("change", () => {
-  drought.setOpacity(droughtOpacity.value)
-  });
+  drought.setOpacity(droughtOpacity.value);
+});
 demOpacity.addEventListener("change", () => {
-  dem.setOpacity(demOpacity.value)
-  });
+  dem.setOpacity(demOpacity.value);
+});
+animationOpacity.addEventListener("change", () => {
+  animation.setOpacity(animationOpacity.value);
+});
 
 // pilotCheckbox.stopPropagation()
 projectRegionSwitch.addEventListener("change", function () {
@@ -257,6 +274,16 @@ droughtSwitch.addEventListener("change", function () {
   }
 });
 
+animationSwitch.addEventListener("change", function () {
+  if (animationSwitch.checked) {
+    animationOpacity.disabled = false;
+    animation.setOpacity(animationOpacity.value);
+  } else {
+    animationOpacity.disabled = true;
+    animation.setOpacity(0);
+  }
+});
+
 //---------------MAP END-------------------------------
 
 const loadUrl = "load/";
@@ -271,13 +298,22 @@ const saveUserField = (userField) => {
     url: saveUrl,
     data: {
       csrfmiddlewaretoken: csrf[0].value,
-      geom: JSON.stringify(userField.geom.geometry),
+      geom: JSON.stringify(userField.geom),
       name: userField.name,
     },
     success: function (response) {
-      userField.id = response.id;
-      addLayerToSidebar(userField);
+      const userField = new UserField(
+        response.name,
+        response.geom_json,
+        L.geoJSON(response.geom_json),
+        response.id
+      );
+
+      userField.layer.addTo(drawnItems);
       userFields.push(userField);
+      addLayerToSidebar(userField);
+    
+      
     },
     error: function (response) {
       console.log(error);
@@ -295,11 +331,18 @@ class UserField {
     this.projects = [];
     console.log(
       "UserField created",
-      this.name,
-      this.geom,
-      this.layer,
-      this.user,
-      this.id,
+      this.name)
+    console.log(
+      'geom:',
+      this.geom)
+    console.log(
+      'layer:',
+      this.layer)
+    console.log(
+      'id:',
+      this.id)
+    console.log(
+      'projects:',
       this.projects
     );
   }
@@ -335,6 +378,7 @@ const getData = () => {
           L.geoJSON(el.geom_json),
           el.id
         );
+        userField.layer.addTo(drawnItems);
         userFields.push(userField);
         addLayerToSidebar(userField);
       });
@@ -348,11 +392,12 @@ const getData = () => {
 map.on(L.Draw.Event.CREATED, function (event) {
   console.log("event drawcreated");
   let layer = event.layer;
-  let geom = layer.toGeoJSON();
+  let geom = layer.toGeoJSON().geometry;
   let name = userFieldNameInput();
   let userField = new UserField((fieldName = name), geom, layer);
 
   saveUserField(userField);
+  
 });
 
 // todo check if fieldname already exists, else add number
@@ -387,17 +432,16 @@ const addLayerToSidebar = (userField) => {
   accordion.innerHTML = `  
   <div class="accordion-item">
     <div class="accordion-header" id="accordionHeader-${userField.id}">
-      <div class="row">
-        <div class="column col-8">
-          <h6>
-            <div class="form-check form-switch">
-              <input type="checkbox" class="form-check-input" id="fieldSwitch-${userField.id}" checked>
-              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseField-${userField.id}" aria-expanded="true" aria-controls="collapseField-${projectIndex}">
+      <div class="row h6">
+        <div class="column col-8 field-name-col">
+          <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" id="fieldSwitch-${userField.id}" checked>
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseField-${userField.id}" aria-expanded="true" aria-controls="collapseField-${projectIndex}">
                 ${userField.name}
-              </button>
-          </h6>
+            </button>
+          </div>
         </div>
-        <div class="column col-4">
+        <div class="column col-4 field-btns-col">
           <form id="deleteAndCalcForm-${userField.id}">
             <span>
               <button type="button" class="btn btn-outline-secondary btn-sm field-name" data-bs-toggle="modal" data-bs-target="#projectModal">
@@ -416,17 +460,19 @@ const addLayerToSidebar = (userField) => {
             </span>
           </form>
         </div> 
-      
+      </div> 
     </div> 
-  </div> 
+  </div>
   `;
   // adding the UserField to the HTML-list element
   accordion.userField = userField;
   //adding the geometry to the displayed drawnItems-layer
 
-  userField.layer.addTo(drawnItems);
+  //userField.layer.addTo(drawnItems);
   //append the list element to list
   userLayerList.appendChild(accordion);
+
+  
 
   // connect the field geometry to the switch in the sidebar
   const switchId = `fieldSwitch-${userField.id}`;
@@ -451,7 +497,10 @@ var highlight = {
 
 function highlightLayer(layerID) {
   console.log("highlighting layer ", layerID);
+  console.log('map._layers', map._layers)
   Object.keys(drawnItems._layers).forEach((key) => {
+    // console.log('Key', key)
+    // console.log('map._layers[key]', map._layers[key])
     map._layers[key].resetStyle();
   });
   map._layers[layerID].setStyle(highlight);
@@ -476,11 +525,8 @@ userLayerList.addEventListener("click", (e) => {
     let confirmDelete = confirm("Are you sure to delete");
     if (confirmDelete) {
       const id = listElement.userField.id;
-      console.log("ID: ", id);
       userFields = userFields.filter((uf) => uf !== listElement.userField);
-      console.log("userFields=....");
       listElement.userField.layer.remove(); // removes shape from map
-      console.log("listElement.userField.geom.remove()");
       listElement.remove(); // removes HTML element from sidebar
       // removes field from db
       $.ajax({
@@ -508,11 +554,12 @@ userLayerList.addEventListener("click", (e) => {
     // console.log("Area", L.GeometryUtil.geodesicArea(listElement.userField.layer.getLatLngs()))
   } else {
     // TODO the hardcoded modal is triggered from button
-    
+
     if (listElement.userField !== undefined) {
       highlightLayer(listElement.userField.layer._leaflet_id);
-    } else { console.log("listlement undefined")}
-    
+    } else {
+      console.log("listlement undefined");
+    }
 
     // console.log("Area", L.GeometryUtil.geodesicArea(listElement.userField.layer.getLatLngs()))
   }

@@ -1,4 +1,11 @@
 # version: "3.8"
+# networks:
+#   - django-network
+# volumes:
+#   - ./app
+#   - ./geoserver/data_dir
+#   - ./database
+
 services:
   app:
     build: 
@@ -6,7 +13,7 @@ services:
       args:
         - DEV=true
     ports:
-      - 8000:8000
+      - 8000:8000 
     volumes:
       - ./app:/app
     command: 
@@ -19,9 +26,15 @@ services:
       - DB_NAME=postgis
       - DB_USER=postgis
       - DB_PASS=postgis
+
+      - GEOSERVER_URL=http://geoserver:8080/geoserver
+      - GEOSERVER_USER=admin
+      - GEOSERVER_PASS=geoserver
     container_name: swn_geo_django
     # if the container does not run, this line delays the runserver command
     # entrypoint: ["sh", "-c", "sleep 2073600"]
+    # networks:
+    #   - django-network
     depends_on:
       - db
 
@@ -39,7 +52,33 @@ services:
 
     ports:
       - 5432:5432
+    # networks:
+    #   - django-network
     container_name: swn_postgis
+
+  # #geoserver for visualisation and sharing of geodata
+  geoserver:
+    image: kartoza/geoserver:2.22.1
+    #image: geonode/geoserver:2.23.0
+    container_name: swn_geoserver
+    volumes:
+      # - ./geoserver/data_dir3:/opt/geoserver/data_dir
+      - ./geoserver/data_dir3:/geoserver_data/data
+    environment:
+      # - GEOSERVER_URL=geoserver
+      - GEOSERVER_ADMIN_USER=admin
+      - GEOSERVER_ADMIN_PASSWORD=geoserver
+      - GEOSERVER_DATA_DIR=/geoserver_data/data
+    
+    ports:
+      - 8080:8080
+      # - ${GEOSERVER_PORT}:8080
+    depends_on:
+      - db
+
+
+    
+    
 
   
 

@@ -53,4 +53,20 @@ top: calc(var(--avatar-size) / 4); /* 25% of parent */
 box-sizing: content-box;
 }
 
-
+.accordion-button:not(.collapsed) {
+  color: #111 !important;
+  /* background-color: rgba(19, 110, 191, 0.284) !important; */
+  box-shadow: rgba(19, 110, 191, 0.284) !important;
+}
+accordion-button:focus {
+  z-index: 3;
+  border-color: rgba(19, 110, 191, 0.561) !important;
+  outline: 0;
+  box-shadow: rgba(19, 110, 191, 0.561) !important;
+}
+.accordion {
+  --bs-accordion-btn-focus-border-color: rgba(19, 110, 191, 0.561) !important;
+    --bs-accordion-btn-focus-box-shadow: 0 0 0 0.25rem rgba(19, 110, 191, 0.25) !important;
+    --bs-accordion-active-color: rgba(19, 110, 191, 0.561) !important;
+    --bs-accordion-active-bg: rgba(19, 110, 191, 0.561) !important;
+}

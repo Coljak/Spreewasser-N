@@ -168,5 +168,6 @@ geoserver/
 
 # local files and folders for data import 
 db_data/
+thredds_data/
 xx_obsolete/
 shapefileimport/

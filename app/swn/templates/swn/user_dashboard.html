@@ -27,19 +27,17 @@
   {% comment %} Context: {{ context }} {% endcomment %}
   
   {% comment %} <ul id="display-data">
-
   </ul> {% endcomment %}
 <!-- modal -->
 <div class="modal-container"></div>
-{% block project_modal %}
-  {% include 'swn/project_modal.html' %}
-  {% include 'swn/field_name_modal.html' %}
-  {% include 'swn/modal_project_list.html' %}
+{% comment %} {% block project_modal %} {% endcomment %}
+{% include 'swn/project_modal.html' %}
+{% include 'swn/field_name_modal.html' %}
+{% include 'swn/modal_project_list.html' %}
   
-{% endblock %}
+{% comment %} {% endblock %} {% endcomment %}
 
-<!-- map -->
-
+  <!-- map -->
   <div id="map-container" class="container">
     {% include 'swn/sidebar.html' %}
     <div id="map" class="sidebar-map"></div>

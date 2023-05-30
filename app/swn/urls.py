@@ -16,6 +16,7 @@ urlpatterns = [
     path('', include('django.contrib.auth.urls')),
     path('sign-up/', views.sign_up, name='sign_up'),
     path('Impressum-Information/', views.impressum_information, name='impressum_information'),
+    path('Timelapse/', views.timelapse, name='timelapse'),
     # path('Registration/', views.register, name='registration'),
     # path('Login/', LoginView.as_view(), name='user_login'),
     # path('Login/', views.user_login, name='user_login'),
@@ -29,5 +30,5 @@ urlpatterns = [
     path('data.geojson', GeoJSONLayerView.as_view(model=models.ProjectRegion), name='project_region_geojson'),
     path('Chart/', views.ChartView.as_view(), name='chart'), 
     path('login/Dashboard/chartdata/<int:crop_id>', views.get_chart, name='chart-api'),
-    
+    path('login/Dashboard/monica-map/', views.thredds_wms_view, name='monica-map'),
     ]

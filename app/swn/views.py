@@ -39,6 +39,9 @@ class IndexView(TemplateView):
 def impressum_information(request):
     return render(request, 'swn/impressum_information.html')
 
+def timelapse(request):
+    return render(request, 'swn/map_thredds.html')
+
 def sign_up(request):
     if request.method == 'POST':
         form = forms.RegistrationForm(request.POST)
@@ -279,3 +282,15 @@ def delete_user_field(request, id):
         
         return JsonResponse({})
     return redirect('swn:user_dashboard')
+
+"""
+The MONICA calculations are stored in a NetCDF file on the THREDDS-Server.
+"""
+
+
+def thredds_wms_view(request):
+    thredds_server_hostname = 'thredds'  # Thredds server service name
+    thredds_api_url = f'http://{thredds_server_hostname}/thredds/api/wms'
+    response = request.get(thredds_api_url)
+    wms_data = response.text  # Or process the response as per your requirement
+    return JsonResponse({'wms_data': wms_data})

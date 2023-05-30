@@ -10,6 +10,8 @@ services:
   app:
     build: 
       context: .
+      dockerfile: Dockerfile.django
+      # for DEV=false, expose port 80
       args:
         - DEV=true
     ports:
@@ -37,6 +39,8 @@ services:
     #   - django-network
     depends_on:
       - db
+    networks:
+      - swn_network
 
   # Postgres database
   db:
@@ -55,26 +59,53 @@ services:
     # networks:
     #   - django-network
     container_name: swn_postgis
+    networks:
+      - swn_network
 
-  # #geoserver for visualisation and sharing of geodata
-  geoserver:
-    image: kartoza/geoserver:2.22.1
-    #image: geonode/geoserver:2.23.0
-    container_name: swn_geoserver
-    volumes:
-      # - ./geoserver/data_dir3:/opt/geoserver/data_dir
-      - ./geoserver/data_dir3:/geoserver_data/data
-    environment:
-      # - GEOSERVER_URL=geoserver
-      - GEOSERVER_ADMIN_USER=admin
-      - GEOSERVER_ADMIN_PASSWORD=geoserver
-      - GEOSERVER_DATA_DIR=/geoserver_data/data
+  # # #geoserver for visualisation and sharing of geodata
+  # geoserver:
+  #   image: kartoza/geoserver:2.22.1
+  #   #image: geonode/geoserver:2.23.0
+  #   container_name: swn_geoserver
+  #   volumes:
+  #     - ./geoserver/data_dir3:/geoserver_data/data
+  #   environment:
+  #     # - GEOSERVER_URL=geoserver
+  #     - GEOSERVER_ADMIN_USER=admin
+  #     - GEOSERVER_ADMIN_PASSWORD=geoserver
+  #     - GEOSERVER_DATA_DIR=/geoserver_data/data
     
+  #   ports:
+  #     - 8080:8080
+  #     # - ${GEOSERVER_PORT}:8080
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - swn_network
+
+  # thredds for sharing of netcdf data
+  thredds:
+    build:
+      context: .
+      dockerfile: Dockerfile.thredds
+    
+   
+    container_name: swn_thredds
+    volumes:
+      - ./thredds_data/data:/usr/local/tomcat/content/thredds/public/data
+    # command:
+    #   sh -c "mv /temp/catalog.xml /usr/local/tomcat/content/thredds/catalog.xml && \
+    #     mv /temp/threddsConfig.xml /usr/local/tomcat/content/thredds/threddsConfig.xml"
     ports:
-      - 8080:8080
-      # - ${GEOSERVER_PORT}:8080
+      - 8088:8080
+
     depends_on:
       - db
+    networks:
+      - swn_network
+
+networks:
+  swn_network:
 
 
     

@@ -1,5 +1,21 @@
 const csrf = document.getElementsByName("csrfmiddlewaretoken");
 
+
+// alert bar at the top of the main container
+// https://getbootstrap.com/docs/5.2/components/alerts/#examples
+// types can be: primary, secondary, success, danger, warning, info, light, dark
+const handleAlerts = (type, msg) => {
+  alertBox.innerHTML = `
+      <div class="alert alert-${type} alert-dismissible " role="alert">
+          ${msg}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+      </div>`;
+  alertBox.classList.remove("d-none");
+  setTimeout(() => {
+    alertBox.classList.add("d-none");
+  }, 2000);
+};
+
 // -----------User Field Name Modal -----------------
 const btnSaveUserField = document.getElementById("btnSaveUserField2");
 const btnSaveUserFieldDismiss = document.getElementById("btnSaveUserDismiss");
@@ -58,39 +74,6 @@ const animation = L.videoOverlay(videoUrl, videoBounds, {opacity: 0.0});
 
 
 
-function getCookie(name) {
-  console.log("Dashboard.js getCookie");
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      // Does this cookie string begin with the name we want?
-      if (cookie.substring(0, name.length + 1) === name + "=") {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
-const csrftoken = getCookie("csrftoken");
-
-// alert bar at the top of the main container
-// https://getbootstrap.com/docs/5.2/components/alerts/#examples
-// types can be: primary, secondary, success, danger, warning, info, light, dark
-const handleAlerts = (type, msg) => {
-  alertBox.innerHTML = `
-      <div class="alert alert-${type} alert-dismissible " role="alert">
-          ${msg}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-      </div>`;
-  alertBox.classList.remove("d-none");
-  setTimeout(() => {
-    alertBox.classList.add("d-none");
-  }, 2000);
-};
-
 // basemaps
 const baseMaps = {
   "Open Street Maps": osm,
@@ -98,8 +81,6 @@ const baseMaps = {
   Topomap: topo,
 };
 
-// TODO overlays from geoserver such as NDVI and drought index
-const overlayMaps = {};
 
 //Map with open street map,opentopo-map and arcgis satellite map
 // opens at Müncheberg by default

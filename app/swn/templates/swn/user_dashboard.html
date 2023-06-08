@@ -30,12 +30,11 @@
   </ul> {% endcomment %}
 <!-- modal -->
 <div class="modal-container"></div>
-{% comment %} {% block project_modal %} {% endcomment %}
-{% include 'swn/project_modal.html' %}
-{% include 'swn/field_name_modal.html' %}
+
+{% include 'swn/modal_project.html' %}
+{% include 'swn/modal_field_name.html' %}
 {% include 'swn/modal_project_list.html' %}
-  
-{% comment %} {% endblock %} {% endcomment %}
+
 
   <!-- map -->
   <div id="map-container" class="container">
@@ -87,7 +86,7 @@
     <script src="{% static 'leaflet/highlightable/highlightableLayers.js' %}"></script>
     {% comment %} <script src="https://unpkg.com/leaflet-highlightable-layers"></script> {% endcomment %}
     <script src="{% static './data/pilotregion.js' %}"></script>
-    <script src="{% static 'swn/js/user_dashboard.js' %}"></script>
+    <script src="{% static 'swn/js/user_dashboard.js' %}" type="module"></script>
     <!-- Tiff overlay -->
     
     
@@ -100,5 +99,5 @@
   {% comment %} <script src="{% static 'dist/leaflet-geotiff-vector.js' %}"></script> {% endcomment %}
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
-  <script src="{% static 'swn/js/chart_page.js' %}" defer></script>
+  {% comment %} <script src="{% static 'swn/js/chart_page.js' %}" defer></script> {% endcomment %}
 {% endblock%}

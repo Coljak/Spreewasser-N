@@ -1,12 +1,12 @@
 console.log("chart_page");
 
-const endpoint = "chartdata/";
-const chartDiv = document.getElementById("chartDiv")
-const crop = document.getElementById("id_Feldfrucht")
+export const endpoint = "chartdata/";
+export const chartDiv = document.getElementById("chartDiv")
+export const crop = document.getElementById("id_Feldfrucht")
 
 // chart params
 
-const getChart = function () {
+export const getChart = function () {
     chartDiv.innerHTML = '<canvas id="Chart"></canvas>'
     const ctx = document.getElementById("Chart")
     console.log("Feldfrucht:", crop.value)

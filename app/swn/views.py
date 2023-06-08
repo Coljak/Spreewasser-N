@@ -1,9 +1,9 @@
-import json
-
+import json, asyncio
+from django.middleware import csrf
 from multiprocessing import managers
 from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
-from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
 from importlib.util import spec_from_file_location
 from django.contrib.auth import authenticate, login, logout
 #from django.contrib.auth.models import User
@@ -27,6 +27,14 @@ import random
 from .data import calc_list, calc_dict
 
 
+def get_csrf_token(request):
+    data = {
+        'csrfToken': csrf.get_token(request)
+    }
+    return JsonResponse(data)
+
+
+
 class IndexView(TemplateView):
     template_name = "swn/home.html"
 
@@ -39,8 +47,13 @@ class IndexView(TemplateView):
 def impressum_information(request):
     return render(request, 'swn/impressum_information.html')
 
+# this renders the example for the NetCDF timelapse from https://github.com/socib/Leaflet.TimeDimension
+# an alternative could be https://github.com/smlum/netcdf-vis
 def timelapse(request):
     return render(request, 'swn/map_thredds.html')
+
+def timelapse_c(request):
+    return render(request, 'swn/map_thredds_colja.html')
 
 def sign_up(request):
     if request.method == 'POST':
@@ -141,6 +154,7 @@ def user_dashboard(request):
     # projects_json = serialize('json', projects)
     crop_form = forms.CropForm(request.POST or None)
     project_form = forms.UserProjectForm()
+    field_name_form = forms.UserFieldForm()
     user_projects = []
 
     for user_field in user_fields:
@@ -162,6 +176,7 @@ def user_dashboard(request):
 
     data = {'shp': shp, 
             'user_projects': user_projects, 
+            'user_field_form': field_name_form,
             'crop_form': crop_form, 
             'project_form': project_form}
 
@@ -218,12 +233,34 @@ def get_chart(request, crop_id):
 
 
 def get_user_fields(request):
-    if is_ajax(request):
+    if request.method == "GET":
+        print("GET, headers:", request.headers)
+        print("GET, body:", request.body)
+        user_projects = models.UserProject.objects.filter(
+            field__user=request.user)
+        user_fields = models.UserField.objects.filter(user=request.user)
+    else:
         user_projects = models.UserProject.objects.filter(
             field__user=request.user)
         user_fields = models.UserField.objects.filter(user=request.user)
 
     return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json')), 'user_projects': list(user_projects.values())})
+
+async def get_user_fields_async(request):
+    task1 = asyncio.create_task(models.UserProject.objects.filter(field__user=request.user))
+    task2 = asyncio.create_task(models.UserField.objects.filter(user=request.user))
+    await asyncio.wait([task1, task2])
+    return JsonResponse({'user_fields': list(task1.values('id', 'user', 'name', 'geom_json')), 'user_projects': list(task2.values())})
+
+# def get_user_fields(request):
+#     print("get_user_fields")
+  
+#     if is_ajax(request):
+#         user_projects = models.UserProject.objects.filter(
+#             field__user=request.user)
+#         user_fields = models.UserField.objects.filter(user=request.user)
+ 
+#     return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json')), 'user_projects': list(user_projects.values())})
 
 
 @login_required
@@ -244,20 +281,46 @@ def update_user_field(request, pk):
     return redirect('swn:user_dashboard')
 
 
-@login_required
-@csrf_protect
-# @action_permission
-def save_user_field(request):
-    # if request.user.is_authenticated:
-    # user = models.User.objects.get(user=request.user)
-    print("request in views:", request.user)
-    if is_ajax(request):
+# @login_required
+# @csrf_protect
+# # @action_permission
+# def save_user_field(request):
+#     # if request.user.is_authenticated:
+#     # user = models.User.objects.get(user=request.user)
+#     print("request in views:", request.user)
+#     if is_ajax(request):
+#         print("Save IS AJAX")
+#         form = forms.UserFieldForm(request.POST or None)
+#         name = request.POST.get('name')
+#         geom = json.loads(request.POST.get('geom'))
+#         geos = GEOSGeometry(request.POST.get('geom'), srid=4326)
+#         user = request.user
+#         instance = models.UserField()
+#         instance.name = name
+#         instance.geom_json = geom
+#         instance.geom = geos
+#         instance.user = user
+#         instance.save()
+#         return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
+#     return redirect('swn:user_dashboard')
+
+# This view eliminates the AJAX request above
+async def save_user_field_async(request):
+    if request.method == 'POST':
         print("Save IS AJAX")
-        form = forms.UserFieldForm(request.POST or None)
-        name = request.POST.get('name')
-        geom = json.loads(request.POST.get('geom'))
-        geos = GEOSGeometry(request.POST.get('geom'), srid=4326)
+        body = json.loads(request.body)
+        print('User field:', body)
+        # form = forms.UserFieldForm(request.POST)
+        # print('Form:', form)
+        
+        name = body['name']
+        print('FORMDATA name:', name)
+        geom = json.loads(body['geom'])
+        print('FORMDATA geom:', geom)
+        geos = GEOSGeometry(body['geom'], srid=4326)
+        print('FORMDATA geos:', geos)
         user = request.user
+        print('FORMDATA user:', user)
         instance = models.UserField()
         instance.name = name
         instance.geom_json = geom
@@ -266,6 +329,41 @@ def save_user_field(request):
         instance.save()
         return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
     return redirect('swn:user_dashboard')
+
+@login_required
+@csrf_protect
+def save_user_field(request):
+    print('Request:', request, request.user, request.method, request.body)
+    if request.method == 'POST':
+        print("Is POST")
+        print("Request header: ", request.headers)
+        print("CSRF token:", request.headers.get('X-Csrftoken'))
+        print("CSRF cookie:", request.COOKIES.get('csrftoken'))
+        if not request.headers.get('X-Csrftoken') == request.COOKIES.get('csrftoken'):
+            
+            return HttpResponseBadRequest('Invalid CSRF token')
+        else:
+            print("Valid CSRF token")
+            body = json.loads(request.body)
+            print('User field:', body)
+            # form = forms.UserFieldForm(request.POST)
+            # print('Form:', form)
+            
+            name = body['name']
+            print('FORMDATA name:', name)
+            geom = json.loads(body['geom'])
+            print('FORMDATA geom:', geom, 'Type:', type(geom))
+            geos = GEOSGeometry(body['geom'], srid=4326)
+            user = request.user
+            print('FORMDATA user:', user)
+            instance = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
+            print('Instancae: ', instance, "Type:", type(instance))
+            instance.save()
+            return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
+        
+    else:
+        return HttpResponseRedirect('swn:user_dashboard')
+
 
 @login_required
 @csrf_protect
@@ -288,9 +386,22 @@ The MONICA calculations are stored in a NetCDF file on the THREDDS-Server.
 """
 
 
+# def thredds_wms_view(request):
+#     thredds_server_hostname = 'thredds'  # Thredds server service name
+#     thredds_api_url = f'http://{thredds_server_hostname}/thredds/api/wms'
+#     response = request.get(thredds_api_url)
+#     wms_data = response.text  # Or process the response as per your requirement
+#     return JsonResponse({'wms_data': wms_data})
+
+
+
 def thredds_wms_view(request):
-    thredds_server_hostname = 'thredds'  # Thredds server service name
-    thredds_api_url = f'http://{thredds_server_hostname}/thredds/api/wms'
-    response = request.get(thredds_api_url)
-    wms_data = response.text  # Or process the response as per your requirement
-    return JsonResponse({'wms_data': wms_data})
+    thredds_server_url = 'https://thredds.socib.es/thredds/wms'  # Replace with the actual Thredds server URL
+
+    # Proxy the request to the Thredds server
+    headers = {'User-Agent': request.META.get('HTTP_USER_AGENT')}
+    response = request.get(thredds_server_url, headers=headers, params=request.GET)
+    
+    # Return the Thredds server response as the response of your Django view
+    content_type = response.headers.get('Content-Type', 'application/octet-stream')
+    return HttpResponse(response.content, content_type=content_type)

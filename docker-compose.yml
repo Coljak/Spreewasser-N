@@ -10,7 +10,7 @@ services:
   app:
     build: 
       context: .
-      dockerfile: Dockerfile.django
+    dockerfile: Dockerfile.django
       # for DEV=false, expose port 80
       args:
         - DEV=true
@@ -29,9 +29,9 @@ services:
       - DB_USER=postgis
       - DB_PASS=postgis
 
-      - GEOSERVER_URL=http://geoserver:8080/geoserver
-      - GEOSERVER_USER=admin
-      - GEOSERVER_PASS=geoserver
+      # - GEOSERVER_URL=http://geoserver:8080/geoserver
+      # - GEOSERVER_USER=admin
+      # - GEOSERVER_PASS=geoserver
     container_name: swn_geo_django
     # if the container does not run, this line delays the runserver command
     # entrypoint: ["sh", "-c", "sleep 2073600"]

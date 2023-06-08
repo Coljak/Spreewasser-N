@@ -149,7 +149,7 @@ def user_logout(request):
 
 @login_required
 def user_dashboard(request):
-    user_fields = models.UserProject.objects.filter(field__user=request.user)
+    user_fields = models.UserProject.objects.filter(user_field__user=request.user)
     # name_form = forms.UserFieldForm(request.POST or None)
     # projects_json = serialize('json', projects)
     crop_form = forms.CropForm(request.POST or None)
@@ -236,8 +236,7 @@ def get_user_fields(request):
     if request.method == "GET":
         print("GET, headers:", request.headers)
         print("GET, body:", request.body)
-        user_projects = models.UserProject.objects.filter(
-            field__user=request.user)
+        user_projects = models.UserProject.objects.filter(user_field__user=request.user)
         user_fields = models.UserField.objects.filter(user=request.user)
     else:
         user_projects = models.UserProject.objects.filter(

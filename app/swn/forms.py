@@ -80,3 +80,6 @@ class UserFieldForm(forms.ModelForm):
     class Meta:
         model = UserField
         fields = ('name',)
+        widgets = {
+            'name': forms.TextInput(attrs={'id': 'fieldNameInput'}),
+        }

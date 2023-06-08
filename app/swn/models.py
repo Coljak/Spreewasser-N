@@ -102,13 +102,15 @@ class UserField(models.Model):
 
 class UserProject(models.Model):    
     name = models.CharField(max_length=255)
-    field = models.ForeignKey(UserField, on_delete=models.CASCADE)
+    user_field = models.ForeignKey(UserField, on_delete=models.CASCADE)
     crop = models.ForeignKey(Crop, on_delete=models.DO_NOTHING, null=True)
     comment = models.TextField(null=True, blank=True)
     irrigation_input = models.JSONField(null=True, blank=True)
     irrigation_output = models.JSONField(null=True, blank=True)
+    calculation_start_date = models.DateField(null=True, blank=True)
+    calculation_end_date = models.DateField(null=True, blank=True)
     calculation = models.JSONField(null=True, blank=True)
-    date = models.DateField(auto_now_add=True, blank=True)
+    creation_date = models.DateField(auto_now_add=True, blank=True)
 
     def __str__(self):
         return self.name

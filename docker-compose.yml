@@ -10,7 +10,7 @@ services:
   app:
     build: 
       context: .
-    dockerfile: Dockerfile.django
+      dockerfile: Dockerfile.django
       # for DEV=false, expose port 80
       args:
         - DEV=true

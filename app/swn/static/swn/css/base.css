@@ -1,13 +1,4 @@
-/* $theme-colors: (
-  "primary":    $primary,
-  "secondary":  $secondary,
-  "success":    $success,
-  "info":       $info,
-  "warning":    $warning,
-  "danger":     $danger,
-  "light":      $light,
-  "dark":       $dark
-); */
+
 
 .swn-logo {
     color: #136ebf;
@@ -27,7 +18,7 @@ html, body {
     flex-flow: column;
   }
  
-
+/* for the login avatar circle in the navbar */
 :root {
     --avatar-size: 2.5rem;
     /* change this value anything, e.g., 100px, 10rem, etc. */
@@ -49,13 +40,10 @@ position: relative;
 top: calc(var(--avatar-size) / 4); /* 25% of parent */
 }
 
-.temp {
-box-sizing: content-box;
-}
 
 .accordion-button:not(.collapsed) {
   color: #111 !important;
-  /* background-color: rgba(19, 110, 191, 0.284) !important; */
+ 
   box-shadow: rgba(19, 110, 191, 0.284) !important;
 }
 accordion-button:focus {

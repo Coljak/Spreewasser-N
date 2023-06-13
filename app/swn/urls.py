@@ -19,6 +19,7 @@ urlpatterns = [
     path('Impressum-Information/', views.impressum_information, name='impressum_information'),
     path('Timelapse/', views.timelapse, name='timelapse'),
     path('TimelapseC/', views.timelapse_c, name='timelapse-c'),
+    path('sidebar/', views.sidebar, name='sidebar'),
     path('thredds/', views.thredds_wms_view, name='thredds-wms'),
     # path('Registration/', views.register, name='registration'),
     # path('Login/', LoginView.as_view(), name='user_login'),

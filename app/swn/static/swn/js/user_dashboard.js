@@ -156,7 +156,11 @@ var drawnItems = new L.FeatureGroup()
     console.log("drawnitems on click event");
     let leafletID = Object.keys(event.layer._eventParents)[0];
     console.log("leafletID: " + leafletID);
-    highlightLayer(leafletID);
+    if ($("#accordion-"+leafletID).hasClass("focus")) {
+      deselectLayer(leafletID);
+    } else {
+      highlightLayer(leafletID);
+    }
   })
   .on("dblclick", (event) => {
     console.log("drawnitems on dbclick event");
@@ -181,8 +185,18 @@ map.addControl(drawControl);
 
 // SIDEBAR
 // Adds the sidebar div from HTML to the map as sidebar
+// const sidebarLeft = L.control
+//   .sidebar("sidebar", {
+//     autopan: true,
+//     container: 'sidebar',
+//     closeButton: true,
+//     position: "left",
+//   })
+//   .addTo(map);
 const sidebarLeft = L.control
   .sidebar("sidebar", {
+    autopan: true,
+    container: 'sidebar',
     closeButton: true,
     position: "left",
   })
@@ -453,7 +467,7 @@ map.on(L.Draw.Event.CREATED, function (event) {
 // A list element is created and the corresponding userField object is attached to the li element in the sidebar
 const addLayerToSidebar = (userField) => {
   const accordion = document.createElement("li");
-  accordion.setAttribute("class", "list-group-item focus");
+  accordion.setAttribute("class", "list-group-item");
   accordion.setAttribute("id", `accordion-${userField.leafletID}`);
   // accordion.focus()
   accordion.innerHTML = `  
@@ -521,20 +535,31 @@ var highlight = {
 
 // highlight layer and li element on click in the sidebar
 function highlightLayer(id) {
+  console.log("highlightLayer")
   // reset all styles
   Object.keys(drawnItems._layers).forEach((key) => {
     try {
+      //reset style for all layers
       map._layers[key].resetStyle();
     }
     catch(err) {}
-    $("#accordion-"+ key).css("background-color", '');
+    // $("#accordion-"+ key).css("background-color", '');
+    $("#accordion-"+ key).removeClass("focus");
   });
   try {
     // set style for the selected layer
     map._layers[id].setStyle(highlight);
   } catch(err) {console.log("highlight error ID ", id)}
   // set style for the selected sidebar item
-  $("#accordion-"+ id).css("background-color", highlightColor);
+  // $("#accordion-"+ id).css("background-color", highlightColor);
+  
+  $("#accordion-"+ id).addClass("focus");
+};
+
+function deselectLayer(id) {
+  console.log("deselectLayer");
+  $("#accordion-" + id).removeClass("focus");
+  map._layers[id].resetStyle();
 }
 
 // Sidebar
@@ -584,7 +609,12 @@ userLayerList.addEventListener("click", (e) => {
     // TODO the hardcoded modal is triggered from button
 
     if (listElement.userField !== undefined) {
-      highlightLayer(listElement.userField.leafletID);
+      let id = listElement.userField.leafletID;
+      if (listElement.classList.contains("focus")) {
+        deselectLayer(id);
+      } else {
+        highlightLayer(listElement.userField.leafletID);
+      }
       console.log("listElement.userfield", listElement.userField)
     } else {
       console.log("listlement undefined");

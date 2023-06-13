@@ -8,42 +8,37 @@
 {% block css %}
   {% leaflet_css %}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
-  <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.css' %}" />
+  
   <link rel="stylesheet" href="{% static 'leaflet/fullscreen/Control.FullScreen.css' %}" />
   <link rel="stylesheet" href="{% static 'leaflet/markercluster/MarkerCluster.css' %}">
   <link rel="stylesheet" href="{% static 'leaflet/markercluster/MarkerCluster.Default.css' %}">
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
-  <link rel="stylesheet" href="{% static "swn/css/user_dashboard.css" %}"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
+  
+  {% comment %} <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.css' %}"/> {% endcomment %}
+  <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.min.css' %}" />
 {% endblock css %}
 
 {% block body_block %}
   {% include 'swn/variables.html' %}
-  {% comment %} {% for proj in projects %}
-    <p><strong>{{ proj.name }}</strong></p>
-    <p>{{ proj.field.name }}</p>
-    <p>{{ proj.field.user.name }}</p>
-  {% endfor %} {% endcomment %}
-  {% comment %} Context: {{ context }} {% endcomment %}
-  
-  {% comment %} <ul id="display-data">
-  </ul> {% endcomment %}
 <!-- modal -->
-<div class="modal-container"></div>
+{% comment %} <div class="modal-container"></div> {% endcomment %}
 
-{% include 'swn/modal_project.html' %}
-{% include 'swn/modal_field_name.html' %}
-{% include 'swn/modal_project_list.html' %}
+  {% include 'swn/modal_project.html' %}
+  {% include 'swn/modal_field_name.html' %}
+  {% include 'swn/modal_project_list.html' %}
 
+{% comment %} </div> {% endcomment %}
+<!--sidebar-->
 
-  <!-- map -->
-  <div id="map-container" class="container">
-    {% include 'swn/sidebar.html' %}
-    <div id="map" class="sidebar-map"></div>
-  </div>
+<!-- map -->
 
-{% comment %} <button  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fieldInfoModal">Chart</button> {% endcomment %}
-
+<div id="map-container" class="container" >
+  {% include 'swn/sidebar.html' %}
+  <div id="map" > 
+  
+</div>
 
 {% endblock %}
 {% block javascript %}
@@ -52,52 +47,29 @@
   <script>
     const demUrl= "{% static 'data/dem_3857.png' %}"
     console.log("demUrl", demUrl)
-    const droughtUrl= "{% static 'data/4326_reprojected_3857.png' %}"
-    {% comment %} {% for s in shp %}
-      var {{ s.name }} = L.tileLayer.wms("http://localhost:8080/geoserver/wms", {
-        layers: '{{ s.name }}',
-        format: 'image/png',
-        transparent: true,
-        version: '1.1.0',
-        attribution: 'Swn',
-        opacity: 0.5,
-        zIndex: 100,
-        crs: L.CRS.EPSG3857,
-        maxZoom: 20,
-        minZoom: 0,
-        maxNativeZoom: 20,
-        minNativeZoom: 0,
-        tileSize: 256,
-    {% endfor %} {% endcomment %}
-    
+    const droughtUrl= "{% static 'data/4326_reprojected_3857.png' %}" 
   </script>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> {% endcomment %}
     <script src="{% static './leaflet/print/leaflet.browser.print.min.js' %}"></script>
-    {% comment %} <script src="{% static 'leaflet/markercluster/leaflet.markercluster.js' %}"></script> {% endcomment %}
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-    {% comment %} <script src="{% static './leaflet/geocoder/Control.Geocoder.js' %}"></script> {% endcomment %}
-
+  
     <script src="{% static 'leaflet/fullscreen/Control.FullScreen.js' %}"></script>
-    <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-    {% comment %} <script src="https://unpkg.com/leaflet-highlightable-layers@1.2.1/dist/L.HighlightableLayers.js"></script> {% endcomment %}
     <script src="{% static 'leaflet/highlightable/highlightableLayers.js' %}"></script>
-    {% comment %} <script src="https://unpkg.com/leaflet-highlightable-layers"></script> {% endcomment %}
     <script src="{% static './data/pilotregion.js' %}"></script>
     <script src="{% static 'swn/js/user_dashboard.js' %}" type="module"></script>
     <!-- Tiff overlay -->
     
     
     <script src="https://unpkg.com/chroma-js"></script>
-    {% comment %} <script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.min.js"> {% endcomment %}
     <script src="https://unpkg.com/georaster"></script>
     <script src="https://unpkg.com/proj4"></script>
-    {% comment %} <script src="https:///unpkg.com/georaster-layer-for-leaflet@latest"></script> {% endcomment %}
     <script src="{% static 'leaflet/georaster/georaster-layer-for-leaflet.min.js' %}"></script>
-  {% comment %} <script src="{% static 'dist/leaflet-geotiff-vector.js' %}"></script> {% endcomment %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" defer></script>
+  <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
-  {% comment %} <script src="{% static 'swn/js/chart_page.js' %}" defer></script> {% endcomment %}
+  <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
+  <script src="{% static 'swn/js/chart_page.js' %}" defer></script>
 {% endblock%}

@@ -404,3 +404,6 @@ def thredds_wms_view(request):
     # Return the Thredds server response as the response of your Django view
     content_type = response.headers.get('Content-Type', 'application/octet-stream')
     return HttpResponse(response.content, content_type=content_type)
+
+def sidebar(request):
+    return render(request, 'swn/leaflet-latest.html')

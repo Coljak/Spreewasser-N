@@ -304,22 +304,16 @@ def update_user_field(request, pk):
 #     return redirect('swn:user_dashboard')
 
 # This view eliminates the AJAX request above
+@login_required
+@csrf_protect
 async def save_user_field_async(request):
     if request.method == 'POST':
-        print("Save IS AJAX")
         body = json.loads(request.body)
-        print('User field:', body)
-        # form = forms.UserFieldForm(request.POST)
-        # print('Form:', form)
         
         name = body['name']
-        print('FORMDATA name:', name)
         geom = json.loads(body['geom'])
-        print('FORMDATA geom:', geom)
         geos = GEOSGeometry(body['geom'], srid=4326)
-        print('FORMDATA geos:', geos)
         user = request.user
-        print('FORMDATA user:', user)
         instance = models.UserField()
         instance.name = name
         instance.geom_json = geom
@@ -334,10 +328,7 @@ async def save_user_field_async(request):
 def save_user_field(request):
     print('Request:', request, request.user, request.method, request.body)
     if request.method == 'POST':
-        print("Is POST")
-        print("Request header: ", request.headers)
-        print("CSRF token:", request.headers.get('X-Csrftoken'))
-        print("CSRF cookie:", request.COOKIES.get('csrftoken'))
+
         if not request.headers.get('X-Csrftoken') == request.COOKIES.get('csrftoken'):
             
             return HttpResponseBadRequest('Invalid CSRF token')
@@ -405,5 +396,6 @@ def thredds_wms_view(request):
     content_type = response.headers.get('Content-Type', 'application/octet-stream')
     return HttpResponse(response.content, content_type=content_type)
 
-def sidebar(request):
-    return render(request, 'swn/leaflet-latest.html')
+
+def bootstrap(request):
+    return render(request, 'swn/bootstrap_colors.html')

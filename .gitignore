@@ -1,4 +1,7 @@
 
+# IDE
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -166,8 +169,13 @@ database/
 notes/
 geoserver/
 
+# Django stuff
+migrations/
+
+
 # local files and folders for data import 
 db_data/
 thredds_data/
 xx_obsolete/
 shapefileimport/
+geodata/

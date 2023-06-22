@@ -19,10 +19,10 @@ urlpatterns = [
     path('Impressum-Information/', views.impressum_information, name='impressum_information'),
     path('Timelapse/', views.timelapse, name='timelapse'),
     path('TimelapseC/', views.timelapse_c, name='timelapse-c'),
-    path('sidebar/', views.sidebar, name='sidebar'),
+    # path('sidebar/', views.sidebar, name='sidebar'),
     path('thredds/', views.thredds_wms_view, name='thredds-wms'),
     # path('Registration/', views.register, name='registration'),
-    # path('Login/', LoginView.as_view(), name='user_login'),
+    # path('map/', LoginView.as_view(), name='map'),
     # path('Login/', views.user_login, name='user_login'),
     path('login/Dashboard/', views.user_dashboard, name='user_dashboard'),
     path('Login/Userinfo/', views.userinfo, name='user_info'),
@@ -38,4 +38,6 @@ urlpatterns = [
     path('Chart/', views.ChartView.as_view(), name='chart'), 
     path('login/Dashboard/chartdata/<int:crop_id>', views.get_chart, name='chart-api'),
     path('login/Dashboard/monica-map/', views.thredds_wms_view, name='monica-map'),
+    # Bootstrap test colors
+    path('bootstrap', views.bootstrap, name='bootstrap'),
     ]

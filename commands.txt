@@ -11,3 +11,16 @@ requirements have changed:
 docker-compose -f docker-compose.yml up --build -d
 
 compose build --no-cache
+
+
+
+BOOTSTRAP SASS:
+cd into /app
+// INSTALL
+npm init -y
+npm install bootstrap
+npm install sass
+
+// compile scss to css 
+npx sass styles.scss bootstrap_scss.css
+

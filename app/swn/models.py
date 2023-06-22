@@ -93,7 +93,7 @@ class UserField(models.Model):
     # geom = GeometryField(null=True)
     comment = models.TextField(null=True, blank=True)
     geom = gis_models.GeometryField(null=True, srid=4326)
-    #geom2 = models.GeometryField(null=True, srid=4326)
+
     
 
     def __str__(self):
@@ -124,6 +124,48 @@ class GeoData(models.Model):
 
     def __str__(self):
         return self.name
+    
+# Counties, States, Countries
+
+# Bundesländer
+class NUTS5000_N1(models.Model):
+    objid = models.CharField(max_length=16)
+    beginn = models.DateField()
+    gf = models.IntegerField()
+    nuts_level = models.IntegerField()
+    nuts_code = models.CharField(max_length=5)
+    nuts_name = models.CharField(max_length=100)
+    geom = gis_models.MultiPolygonField(srid=4326)
+
+    def __str__(self):
+        return self.nuts_name
+#Regierungsbezirke
+class NUTS5000_N2(models.Model):
+    objid = models.CharField(max_length=16)
+    beginn = models.DateField()
+    gf = models.IntegerField()
+    nuts_level = models.IntegerField()
+    nuts_code = models.CharField(max_length=5)
+    nuts_name = models.CharField(max_length=100)
+    geom = gis_models.MultiPolygonField(srid=4326)
+
+    def __str__(self):
+        return self.nuts_name
+    
+class NUTS5000_N3(models.Model):
+    objid = models.CharField(max_length=16)
+    beginn = models.DateField()
+    gf = models.IntegerField()
+    nuts_level = models.IntegerField()
+    nuts_code = models.CharField(max_length=5)
+    nuts_name = models.CharField(max_length=100)
+    geom = gis_models.MultiPolygonField(srid=4326)
+
+    def __str__(self):
+        return self.nuts_name
+
+
+    
 
 # ----------BUEK 200 data ------------------------------------------------
 # class BuekData(models.Model):

@@ -7,21 +7,10 @@
     font-weight: 400;
   }
 
-html, body {
-    height: 100%;
-  }
-
-  
-  body {
-    background: #ffffff;
-    display: flex;
-    flex-flow: column;
-  }
  
 /* for the login avatar circle in the navbar */
 :root {
     --avatar-size: 2.5rem;
-    /* change this value anything, e.g., 100px, 10rem, etc. */
     
   }
   
@@ -40,21 +29,44 @@ position: relative;
 top: calc(var(--avatar-size) / 4); /* 25% of parent */
 }
 
+/* Leaflet */
+/* .leaflet-container a {
+	color: var(--bs-primary) !important;
+	} */
 
-.accordion-button:not(.collapsed) {
-  color: #111 !important;
- 
-  box-shadow: rgba(19, 110, 191, 0.284) !important;
+  .leaflet-sidebar {
+    z-index: 1000 !important;
+  }
+
+  .leaflet-sidebar-tabs>li.active,
+  .leaflet-sidebar-tabs>ul>li.active {
+    background-color: var(--bs-primary) !important;
 }
-accordion-button:focus {
-  z-index: 3;
-  border-color: rgba(19, 110, 191, 0.561) !important;
-  outline: 0;
-  box-shadow: rgba(19, 110, 191, 0.561) !important;
+
+leaflet-control-layers-selector:checked {
+  background-color: brown;
+  color: brown;
+
+  color: var(--bs-primary) !important;
 }
-.accordion {
-  --bs-accordion-btn-focus-border-color: rgba(19, 110, 191, 0.561) !important;
-    --bs-accordion-btn-focus-box-shadow: 0 0 0 0.25rem rgba(19, 110, 191, 0.25) !important;
-    --bs-accordion-active-color: rgba(19, 110, 191, 0.561) !important;
-    --bs-accordion-active-bg: rgba(19, 110, 191, 0.561) !important;
-}
+
+/* .leaflet-container a {
+	-webkit-tap-highlight-color: var(--bs-primary) !important;
+  color: var(--bs-primary) !important;
+} */
+/* .leaflet-bar a:focus {
+	background-color: #f4f4f4;
+	}
+
+.leaflet-bar a.leaflet-disabled {
+  
+  background-color: #f4f4f4;
+  color: #bbb;
+  } */
+
+  /* changes the color of polygons an the map */
+/* .leaflet-interactive {
+  stroke: var(--bs-primary);
+  fill: var(--bs-primary);
+  
+} */

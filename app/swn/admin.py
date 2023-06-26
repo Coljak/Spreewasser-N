@@ -3,17 +3,17 @@ Django admin customization.
 """
 
 from django.contrib import admin
-from leaflet.admin import LeafletGeoAdmin
+from leaflet.admin import LeafletGeoAdmin, ModelAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 # this is best practice to integrate translation
 from django.utils.translation import gettext_lazy as _
 
-from .models import User, ProjectRegion
-# from Waterconsumption Tutorial
+from .models import User, ProjectRegion, UserProject, UserField, GeoData, NUTS5000_N1, NUTS5000_N2, NUTS5000_N3
 from django.contrib.gis.geos import Point, Polygon, MultiPoint, MultiPolygon
 from datetime import datetime
 import pandas as pd
 from pandas import ExcelWriter, ExcelFile
+
 
 
 class UserAdmin(BaseUserAdmin):
@@ -21,6 +21,7 @@ class UserAdmin(BaseUserAdmin):
     ordering = ['id']
     list_display = ['email', 'name']
     fieldsets = (
+        # None is the title
         (None, {'fields': ('email', 'password')}),
         ( # get_lazy is called
             _('Permissions'),
@@ -50,9 +51,28 @@ class UserAdmin(BaseUserAdmin):
         }),
     )
 
+
 class ProjectRegionAdmin(LeafletGeoAdmin):
     pass
 
 
-admin.site.register(User, UserAdmin)
+
+# @admin.register(UserProject, LeafletGeoAdmin)
+# class BuekDataAdmin(LeafletGeoAdmin):
+#     list_filter = ('nrkart', 'polygon_id')
+   
+# class SoilProfileAllAdmin(ModelAdmin):
+#     list_filter = ('polygon_id', 'profile_id_in_polygon',)
+
+
+admin.site.register(GeoData)
+# admin.site.register(User, UserAdmin)
 admin.site.register(ProjectRegion, LeafletGeoAdmin)
+#admin.site.register(BuekData, BuekDataAdmin)
+# admin.site.register(SoilProfileAll, SoilProfileAllAdmin)
+admin.site.register(UserProject, LeafletGeoAdmin)
+admin.site.register(UserField, LeafletGeoAdmin)
+admin.site.register(NUTS5000_N1, LeafletGeoAdmin)
+admin.site.register(NUTS5000_N2, LeafletGeoAdmin)
+admin.site.register(NUTS5000_N3, LeafletGeoAdmin)
+#admin.site.register(UserProject)

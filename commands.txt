@@ -1,3 +1,26 @@
-superuser:
-admin@example.com
-pass1234
+
+
+Usermanagement
+https://www.youtube.com/watch?v=WuyKxdLcw3w
+
+It is important to use python3! Otherwise crispy is not imported.!!!!
+
+docker-compose run --rm app sh -c "python3 manage.py makemigrations"
+
+requirements have changed:
+docker-compose -f docker-compose.yml up --build -d
+
+compose build --no-cache
+
+
+
+BOOTSTRAP SASS:
+cd into /app
+// INSTALL
+npm init -y
+npm install bootstrap
+npm install sass
+
+// compile scss to css 
+npx sass styles.scss bootstrap_scss.css
+

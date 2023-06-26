@@ -14,13 +14,12 @@ import os
 from pathlib import Path
 
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = Path.joinpath(BASE_DIR, 'templates')
 STATIC_DIR = Path.joinpath(BASE_DIR, 'static')
-# STATIC_DIR_APP = Path.joinpath(BASE_DIR, 'app/static')
 MEDIA_DIR = Path.joinpath(BASE_DIR, 'media')
 
+# AUTH_USER_MODEL = 'user.User'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -31,7 +30,7 @@ SECRET_KEY = 'django-insecure-hl9ukq&o_m6c&^7co0-qlivgsq%f^ouhu5j(vc21sk8!xmf-h*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [  ]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -45,15 +44,24 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'django_extensions',
-    'debug_toolbar',
-    'leaflet',
-    'djgeojson',
     'swn',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
-    'user',
+    # shapefileimport is probably only necessary during development
+    # 'shapefileimport',
+    # 'user',
+    # 'accounts',
+    # 3rd party
+    'debug_toolbar',
+    'leaflet',
+    'djgeojson',
+    'crispy_forms',
+    'crispy_bootstrap5',
+
 ]
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -116,8 +124,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
-    {
+    {  # TODO change min length
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 4}
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -133,11 +142,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'de-de'
 
+USE_TZ = True
+
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
+
 
 
 # Static files (CSS, JavaScript, Images)
@@ -148,13 +159,12 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     STATIC_DIR,
     Path.joinpath(BASE_DIR, 'swn/static/'),
-    Path.joinpath(BASE_DIR, 'swn/static/') ]
-# STATICFILES_DIRS = [Path.joinpath(BASE_DIR, 'static/core')]
+    Path.joinpath(BASE_DIR, 'swn/static/')]
 
 MEDIA_ROOT = MEDIA_DIR
 MEDIA_URL = 'media/'
 
-LOGIN_URL = 'Login/'
+LOGIN_URL = 'login/'
 LOGIN_REDIRECT_URL = 'Dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
@@ -162,18 +172,17 @@ LOGOUT_REDIRECT_URL = '/'
 if DEBUG:
     import socket  # only if you haven't already imported this
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-    INTERNAL_IPS = [ip[: ip.rfind(".")] + ".1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
+    INTERNAL_IPS = [
+        ip[: ip.rfind('.')] + '.1' for ip in ips] + ['127.0.0.1', '10.0.2.2']
 # INTERNAL_IPS = [
-#     "127.0.0.1",
-#     "0.0.0.0",
+#     '127.0.0.1',
+#     '0.0.0.0',
 # ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-AUTH_USER_MODEL = 'swn.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -188,30 +197,28 @@ SERIALIZATION_MODULES = {
 #     #'SRID': 4326,
 #     'DEFAULT_CENTER': (52.0825, 13.8),
 #     'DEFAULT_ZOOM': 10,
-#     'MAX_ZOOM': 20, 
+#     'MAX_ZOOM': 20,
 #     'MIN_ZOOM': 1,
 #     'SCALE': 'both', #'metric'
 #     'MINIMAP': True,
 #     'RESET_VIEW': True,
 #     'NO_GLOBALS': False, # adds all maps to window.maps
 
-    
-    
-    
+
 #     'ATTRIBUTION_PREFIX': 'Spreewasser:N',
-#     'TILES': [('Open Street Map', 
+#     'TILES': [('Open Street Map',
 #                 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 #                 {
-#                     'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>', 
+#                     'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 #                     'maxZoom': 20
 #                     }),
-#               ('Satellit', 
+#               ('Satellit',
 #               'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-#                {'attribution': 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community', 
+#                {'attribution': 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
 #                'maxZoom': 20}),
-#               ('OpenTopo Karte', 
+#               ('OpenTopo Karte',
 #               'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-#                     {'attribution': 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)', 
+#                     {'attribution': 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
 #                     'maxZoom': 20
 #                     })
 #                ],
@@ -221,3 +228,7 @@ SERIALIZATION_MODULES = {
 # }
 
 # # GEOIP_PATH = os.path.join(BASE_DIR, 'geoip')
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
+
+CRISPY_TEMPLATE_PACK = 'bootstrap5'

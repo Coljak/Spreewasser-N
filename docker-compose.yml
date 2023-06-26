@@ -1,38 +1,51 @@
 # version: "3.8"
+# networks:
+#   - django-network
+# volumes:
+#   - ./app
+#   - ./geoserver/data_dir
+#   - ./database
+
 services:
   app:
     build: 
       context: .
+      dockerfile: Dockerfile.django
+      # for DEV=false, expose port 80
       args:
         - DEV=true
     ports:
-      - 8000:8000
+      - 8000:8000 
     volumes:
       - ./app:/app
     command: 
-      sh -c "pip3 install pandas &&
-      
-      python3 manage.py wait_for_db &&
-      python3 manage.py migrate &&
-             
-            
-            python3 manage.py runserver 0.0.0.0:8000"
+      sh -c "python3 manage.py wait_for_db &&
+        python3 manage.py runserver 0.0.0.0:8000"
+        
+      # python3 manage.py migrate &&
     environment:
       - DB_HOST=db
       - DB_NAME=postgis
       - DB_USER=postgis
       - DB_PASS=postgis
+
+      # - GEOSERVER_URL=http://geoserver:8080/geoserver
+      # - GEOSERVER_USER=admin
+      # - GEOSERVER_PASS=geoserver
     container_name: swn_geo_django
     # if the container does not run, this line delays the runserver command
     # entrypoint: ["sh", "-c", "sleep 2073600"]
+    # networks:
+    #   - django-network
     depends_on:
       - db
+    networks:
+      - swn_network
 
   # Postgres database
   db:
-    image: postgis/postgis
+    image: postgis/postgis:14-3.3
     volumes:
-    #  - ./data/db:/var/lib/postgresql/data/db:z
     - ./database:/pg_data_2
     #user: 1000:1000 
     environment:
@@ -41,14 +54,64 @@ services:
       POSTGRES_PASSWORD: postgis
       PGDATA: /pg_data_2
 
-      # - POSTGRES_DB=postgis
-      # - POSTGRES_USER=postgis
-      # - POSTGRES_PASSWORD=postgis
-
     ports:
       - 5432:5432
+    # networks:
+    #   - django-network
     container_name: swn_postgis
+    networks:
+      - swn_network
 
+  # # #geoserver for visualisation and sharing of geodata
+  # geoserver:
+  #   image: kartoza/geoserver:2.22.1
+  #   #image: geonode/geoserver:2.23.0
+  #   container_name: swn_geoserver
+  #   volumes:
+  #     - ./geoserver/data_dir3:/geoserver_data/data
+  #   environment:
+  #     # - GEOSERVER_URL=geoserver
+  #     - GEOSERVER_ADMIN_USER=admin
+  #     - GEOSERVER_ADMIN_PASSWORD=geoserver
+  #     - GEOSERVER_DATA_DIR=/geoserver_data/data
+    
+  #   ports:
+  #     - 8080:8080
+  #     # - ${GEOSERVER_PORT}:8080
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - swn_network
+
+  # thredds for sharing of netcdf data
+  thredds:
+    build:
+      context: .
+      dockerfile: Dockerfile.thredds
+    
+   
+    container_name: swn_thredds
+    volumes:
+      - ./thredds_data/data:/usr/local/tomcat/content/thredds/public/data
+    # command:
+    #   sh -c "mv /temp/catalog.xml /usr/local/tomcat/content/thredds/catalog.xml && \
+    #     mv /temp/threddsConfig.xml /usr/local/tomcat/content/thredds/threddsConfig.xml"
+    ports:
+      - 8088:8080
+
+    depends_on:
+      - db
+    networks:
+      - swn_network
+
+networks:
+  swn_network:
+
+
+    
+    
+
+  
 
 
    

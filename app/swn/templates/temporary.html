@@ -1,0 +1,249 @@
+
+                <!--Temporary list items for presentation-->
+                <li class="list-group-item">
+                    <div class="accordion-item">
+                      <div class="accordion-header" id="accordionHeader-${projectIndex}">
+                        <h6>
+                          <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="fieldSwitch-${projectIndex}" checked>
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseField-${projectIndex}" aria-expanded="true" aria-controls="collapseField-${projectIndex}">
+                            Pagram Acker 1</button></div>
+                        </h6>
+                      </div>
+                      <div id="collapseField-${projectIndex}" class="accordion-collapse collapse show" aria-labelledby="accordionHeader-${projectIndex}">
+                        <div class="container">
+                          <div class="row">
+                            <label class="col-sm pull-left" style="font-size: 0.9rem;" for="pet-select">Feldfrucht: </label>
+  
+                            <select class="col-sm pull-right" style="font-size: 0.9rem;" name="pets" id="pet-select">
+                              <option value="">--Please choose an option--</option>
+                              <option value="dog">Winterweizen</option>
+                              <option value="cat">Gerste</option>
+                              <option value="hamster">Raps</option>
+                              <option value="parrot">Mais</option>
+                              <option value="spider">Spider</option>
+                              <option value="goldfish">Goldfish</option>
+                            </select>
+                            </br>
+                          </div>
+                          <div class="row mt-1">
+                            <div class="col-9 pull-left" style="font-size: 0.9rem;">
+                              Meteoroligischer Dürreindex
+                            </div>
+                            <div class="col-3 pull-right border border-dark text-end" style="font-size: 0.9rem; background-color: #f90">
+                              0,6
+                            </div>
+                          </div>
+                          <div class="row mt-1" >
+                            <div class="col-9 pull-left" style="font-size: 0.9rem;">
+                              Landwirtschaftlicher Dürreindex
+                            </div>
+                            <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #fb4">
+                              0,57
+                            </div>
+                            
+                          </div>
+                          <div class="row my-1">
+                            <div class="col-9 pull-left" style="font-size: 0.9rem;">
+                              Bodenfeuchtigkeit
+                            </div>
+                            <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #f84">
+                              15% Vol.
+                            </div>
+                          </div>
+                        </div>
+  
+                        <div class="d-flex flex-row"> 
+                          <div class="d-flex justify-content-start">
+                            <span>
+                              <button type="button" class="btn btn-outline-secondary btn-sm">
+                                <i class="fa-regular fa-pen-to-square field-edit"></i>
+                              </button>
+                            </span>
+                            <span class="px-1">
+                              <button type="button" class="btn btn-outline-secondary btn-sm">
+                                <i class="fa-regular fa-trash-can delete"></i>
+                              </button>
+                            </span>
+                            <span>
+                              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#projectModal">
+                                <i class="fa-solid fa-ellipsis-vertical field-menu"></i>
+                              </button>
+                            </span>
+                            <span class="px-4">
+                              <button id="userFieldNewCalcBtn-${projectIndex}" class="btn btn-sm  btn-outline-primary">Neue Berechnung</button>
+  
+                            </span>
+                         
+                      
+                          
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+  
+                  <li class="list-group-item">
+                    <div class="accordion-item">
+                      <div class="accordion-header" id="accordionHeader-${projectIndex}">
+                        <h6>
+                          <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="fieldSwitch-${projectIndex}" checked>
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseField-${projectIndex}" aria-expanded="true" aria-controls="collapseField-${projectIndex}">
+                            Pagram Acker 2</button></div>
+                        </h6>
+                      </div>
+                      <div id="collapseField-${projectIndex}" class="accordion-collapse collapse show" aria-labelledby="accordionHeader-${projectIndex}">
+                        <div class="container">
+                          <div class="row">
+                            <label class="col-sm pull-left" style="font-size: 0.9rem;" for="pet-select">Feldfrucht: </label>
+  
+                            <select class="col-sm pull-right" style="font-size: 0.9rem;" name="pets" id="pet-select">
+                              <option value="">--Please choose an option--</option>
+                              <option value="dog">Winterweizen</option>
+                              <option value="cat">Gerste</option>
+                              <option value="hamster">Raps</option>
+                              <option value="parrot">Mais</option>
+                              <option value="spider">Spider</option>
+                              <option value="goldfish">Goldfish</option>
+                            </select>
+                            </br>
+                          </div>
+                          <div class="row mt-1">
+                            <div class="col-9 pull-left" style="font-size: 0.9rem;">
+                              Meteoroligischer Dürreindex
+                            </div>
+                            <div class="col-3 pull-right border border-dark text-end" style="font-size: 0.9rem; background-color: #bb4">
+                              0,33
+                            </div>
+                          </div>
+                          <div class="row mt-1" >
+                            <div class="col-9 pull-left" style="font-size: 0.9rem;">
+                              Landwirtschaftlicher Dürreindex
+                            </div>
+                            <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #8b4">
+                              0,13
+                            </div>
+                            
+                          </div>
+                          <div class="row my-1">
+                            <div class="col-9 pull-left" style="font-size: 0.9rem;">
+                              Bodenfeuchtigkeit
+                            </div>
+                            <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #eb4">
+                              30% Vol.
+                            </div>
+                          </div>
+                        </div>
+  
+                        <div class="d-flex flex-row"> 
+                          <div class="d-flex justify-content-start">
+                            <span>
+                              <button type="button" class="btn btn-outline-secondary btn-sm">
+                                <i class="fa-regular fa-pen-to-square field-edit"></i>
+                              </button>
+                            </span>
+                            <span class="px-1">
+                              <button type="button" class="btn btn-outline-secondary btn-sm">
+                                <i class="fa-regular fa-trash-can delete"></i>
+                              </button>
+                            </span>
+                            <span>
+                              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#projectModal">
+                                <i class="fa-solid fa-ellipsis-vertical field-menu"></i>
+                              </button>
+                            </span>
+                            <span class="px-4">
+                              <button id="userFieldNewCalcBtn-${projectIndex}" class="btn btn-sm  btn-outline-primary">Neue Berechnung</button>
+  
+                            </span>        
+                          
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+  
+                  <li class="list-group-item">
+                    <div class="accordion-item">
+                      <div class="accordion-header" id="accordionHeader-${projectIndex}">
+                        <h6>
+                          <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="fieldSwitch-${projectIndex}" checked>
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseField-${projectIndex}" aria-expanded="true" aria-controls="collapseField-${projectIndex}">
+                            Pfingstberg</button></div>
+                        </h6>
+                      </div>
+                      <div id="collapseField-${projectIndex}" class="accordion-collapse collapse show" aria-labelledby="accordionHeader-${projectIndex}">
+                        <div class="container">
+                          <div class="row">
+                            <label class="col-sm pull-left" style="font-size: 0.9rem;" for="pet-select">Feldfrucht: </label>
+  
+                            <select class="col-sm pull-right" style="font-size: 0.9rem;" name="pets" id="pet-select">
+                              <option value="">--Please choose an option--</option>
+                              <option value="dog">Winterweizen</option>
+                              <option value="cat">Gerste</option>
+                              <option value="hamster">Raps</option>
+                              <option value="parrot">Mais</option>
+                              <option value="spider">Spider</option>
+                              <option value="goldfish">Goldfish</option>
+                            </select>
+                            </br>
+                          </div>
+                          <div class="row mt-1">
+                            <div class="col-9 pull-left" style="font-size: 0.9rem;">
+                              Meteoroligischer Dürreindex
+                            </div>
+                            <div class="col-3 pull-right border border-dark text-end" style="font-size: 0.9rem; background-color: #e54">
+                              0,73
+                            </div>
+                          </div>
+                          <div class="row mt-1" >
+                            <div class="col-9 pull-left" style="font-size: 0.9rem;">
+                              Landwirtschaftlicher Dürreindex
+                            </div>
+                            <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #c54">
+                              0,85
+                            </div>
+                            
+                          </div>
+                          <div class="row my-1">
+                            <div class="col-9 pull-left" style="font-size: 0.9rem;">
+                              Bodenfeuchtigkeit
+                            </div>
+                            <div class="col-3 pull-right text-end" style="font-size: 0.9rem; background-color: #c44">
+                              7% Vol.
+                            </div>
+                          </div>
+                        </div>
+  
+  
+                        
+                     
+            
+                        <div class="d-flex flex-row"> 
+                          <div class="d-flex justify-content-start">
+                            <span>
+                              <button type="button" class="btn btn-outline-secondary btn-sm">
+                                <i class="fa-regular fa-pen-to-square field-edit"></i>
+                              </button>
+                            </span>
+                            <span class="px-1">
+                              <button type="button" class="btn btn-outline-secondary btn-sm">
+                                <i class="fa-regular fa-trash-can delete"></i>
+                              </button>
+                            </span>
+                            <span>
+                              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#projectModal">
+                                <i class="fa-solid fa-ellipsis-vertical field-menu"></i>
+                              </button>
+                            </span>
+                            <span class="px-4">
+                              <button id="userFieldNewCalcBtn-${projectIndex}" class="btn btn-sm  btn-outline-primary">Neue Berechnung</button>
+  
+                            </span>        
+                          
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+  
+                    <!--Temporary-->

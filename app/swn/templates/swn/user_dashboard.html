@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <!-- user dashboard -->
 {% extends "swn/base.html" %}
 {% load static %}
@@ -6,110 +5,70 @@
 {% load leaflet_tags %}
 {% load geojson_tags %}
 
-{% block scripts %}
-  
-  
+{% block css %}
   {% leaflet_css %}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
-  <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.css' %}" />
   
   <link rel="stylesheet" href="{% static 'leaflet/fullscreen/Control.FullScreen.css' %}" />
   <link rel="stylesheet" href="{% static 'leaflet/markercluster/MarkerCluster.css' %}">
   <link rel="stylesheet" href="{% static 'leaflet/markercluster/MarkerCluster.Default.css' %}">
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-  <link rel="stylesheet" href="{% static "swn/css/style.css" %}"/>
-    
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
   
-{% endblock scripts %}
+  {% comment %} <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.css' %}"/> {% endcomment %}
+  <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.min.css' %}" />
+{% endblock css %}
 
 {% block body_block %}
+<!-- modal -->
 
+
+  {% include 'swn/modal_project.html' %}
+  {% include 'swn/modal_field_name.html' %}
+  {% include 'swn/modal_project_list.html' %}
+
+{% comment %} </div> {% endcomment %}
+<!--sidebar-->
+
+<!-- map -->
+
+<div id="map-container" class="container" >
+  {% include 'swn/sidebar.html' %}
+  <div id="map" > 
   
- 
-  <div id="map-container" class="container">
-    <div id="map" class="sidebar-map">
-      
-    
-
-    <div id="sidebar" class="sidebar collapsed ">
-      <!-- Nav tabs -->
-      <div class="sidebar-tabs">
-          <ul role="tablist">
-            <li><a href="#home" role="tab"><i class="fa fa-bars"></i></a></li>
-            <li><a href="#profile" role="tab"><i class="fa fa-user"></i></a></li>
-            <li class="disabled"><a href="#messages" role="tab"><i class="fa fa-envelope"></i></a></li>
-            <li><a href="https://github.com/Turbo87/sidebar-v2" role="tab" target="_blank"><i class="fa fa-github"></i></a></li>
-          </ul>
-
-          <ul role="tablist">
-            <li><a href="#settings" role="tab"><i class="fa fa-gear"></i></a></li>
-          </ul>
-      </div>
-
-      <!-- Tab panes -->
-      <div class="sidebar-content">
-        <div class="sidebar-pane" id="home">
-          <h1 class="sidebar-header">
-            sidebar-v2
-            <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
-          </h1>
-
-          <p>A responsive sidebar for mapping libraries like <a href="http://leafletjs.com/">Leaflet</a> or <a href="http://openlayers.org/">OpenLayers</a>.</p>
-
-          <p class="lorem">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-
-          <p class="lorem">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-
-          <p class="lorem">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-
-          <p class="lorem">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-        </div>
-
-        <div class="sidebar-pane" id="profile">
-          <h1 class="sidebar-header">Profile<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
-        </div>
-
-        <div class="sidebar-pane" id="messages">
-          <h1 class="sidebar-header">Messages<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
-        </div>
-
-        <div class="sidebar-pane" id="settings">
-            <h1 class="sidebar-header">Settings<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
-        </div>
-      </div>
-    </div>
-  </div>
-  </div>
-  {% comment %} {% leaflet_map "map" %} {% endcomment %}
- <!--
-{% leaflet_map "map" callback="main_map_init" %}
-
-<script>
-  $("#map").addClass('sidebar-map');
-</script>
- -->
+</div>
 
 {% endblock %}
-
 {% block javascript %}
 {{ bock.super }}
+ 
+  <script>
+    const demUrl= "{% static 'data/dem_3857.png' %}"
+    console.log("demUrl", demUrl)
+    const droughtUrl= "{% static 'data/4326_reprojected_3857.png' %}" 
+  </script>
 
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="{% static './leaflet/print/leaflet.browser.print.min.js' %}"></script>
-<script src="{% static 'leaflet/markercluster/leaflet.markercluster.js' %}"></script>
-<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="{% static './leaflet/print/leaflet.browser.print.min.js' %}"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  
+    <script src="{% static 'leaflet/fullscreen/Control.FullScreen.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="{% static 'leaflet/highlightable/highlightableLayers.js' %}"></script>
+    <script src="{% static './data/pilotregion.js' %}"></script>
+    <script src="{% static 'swn/js/user_dashboard.js' %}" type="module"></script>
+    <!-- Tiff overlay -->
+    
+    
+    <script src="https://unpkg.com/chroma-js"></script>
+    <script src="https://unpkg.com/georaster"></script>
+    <script src="https://unpkg.com/proj4"></script>
+    <script src="{% static 'leaflet/georaster/georaster-layer-for-leaflet.min.js' %}"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" defer></script>
+  <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
 
-<script src="{% static 'leaflet/fullscreen/Control.FullScreen.js' %}"></script>
-<script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-
-<script src="{% static './data/test.js' %}"></script>
-<script src="{% static 'swn/js/user_dashboard.js' %}"></script>
-<!--
-<script src="{% static 'swn/js/web-GIS.js' %}"></script>
--->
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
+  <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
+  <script src="{% static 'swn/js/chart_page.js' %}" defer></script>
 {% endblock%}
-

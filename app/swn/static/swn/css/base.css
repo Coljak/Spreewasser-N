@@ -1,0 +1,72 @@
+
+
+.swn-logo {
+    color: #136ebf;
+    font-family: Roboto Slab;
+    letter-spacing: 1px;
+    font-weight: 400;
+  }
+
+ 
+/* for the login avatar circle in the navbar */
+:root {
+    --avatar-size: 2.5rem;
+    
+  }
+  
+.circle {
+background-color: #8a0;
+border-radius: 50%;
+height: var(--avatar-size);
+text-align: center;
+width: var(--avatar-size);
+}
+  
+.initials {
+font-size: calc(var(--avatar-size) / 2); /* 50% of parent */
+line-height: 1;
+position: relative;
+top: calc(var(--avatar-size) / 4); /* 25% of parent */
+}
+
+/* Leaflet */
+/* .leaflet-container a {
+	color: var(--bs-primary) !important;
+	} */
+
+  .leaflet-sidebar {
+    z-index: 1000 !important;
+  }
+
+  .leaflet-sidebar-tabs>li.active,
+  .leaflet-sidebar-tabs>ul>li.active {
+    background-color: var(--bs-primary) !important;
+}
+
+leaflet-control-layers-selector:checked {
+  background-color: brown;
+  color: brown;
+
+  color: var(--bs-primary) !important;
+}
+
+/* .leaflet-container a {
+	-webkit-tap-highlight-color: var(--bs-primary) !important;
+  color: var(--bs-primary) !important;
+} */
+/* .leaflet-bar a:focus {
+	background-color: #f4f4f4;
+	}
+
+.leaflet-bar a.leaflet-disabled {
+  
+  background-color: #f4f4f4;
+  color: #bbb;
+  } */
+
+  /* changes the color of polygons an the map */
+/* .leaflet-interactive {
+  stroke: var(--bs-primary);
+  fill: var(--bs-primary);
+  
+} */

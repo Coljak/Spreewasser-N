@@ -40,7 +40,7 @@ var singleMarker = L.marker([38.8610, 71.2761])
 L.control.scale().addTo(map);
 
 //Map coordinate display
-map.on('mousemove', function (e) {
+map.on('mousemover', function (e) {
     $('.coordinate').html(`Lat: ${e.latlng.lat} Lng: ${e.latlng.lng}`)
 })
 

@@ -12,6 +12,7 @@
   #map {
     position: relative;
     height: inherit;
+    min-height: 400px;
     width: inherit;
   }
 

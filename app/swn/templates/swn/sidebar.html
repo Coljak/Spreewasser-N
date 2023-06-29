@@ -1,9 +1,19 @@
+<!-- Baselayers remain the same over drought warning system and toolbox-->
+<template id="baselayersTemplate">
+
+
+  <ul class="list-group sidebar-list base-layer-control-list" id="baseLayerList"></ul>
+  <!-- leaflet layer control items are inserted here-->
+
+
+</template>
+
 <div id="sidebar" class="leaflet-sidebar">
   <!-- Nav tabs -->
   <div class="leaflet-sidebar-tabs">
     <ul role="tablist">
       <li>
-        <a href="#layerPane" role="tab"><i class="bi bi-layers"></i></a>
+        <a href="#droughtWarning" role="tab"><i class="bi bi-layers"></i></a>
       </li>
       <li>
         <a href="#toolbox" role="tab"><i class="bi bi-moisture"></i></a>
@@ -28,7 +38,7 @@
   </div>
   <!-- Tab panes -->
   <div class="leaflet-sidebar-content">
-    <div class="leaflet-sidebar-pane active" id="layerPane">
+    <div class="leaflet-sidebar-pane active" id="droughtWarning">
       <h1 class="leaflet-sidebar-header">
         Dürrevorhersage
         <span class="leaflet-sidebar-close"
@@ -36,30 +46,35 @@
         ></span>
       </h1>
       <!-- accordion items of layer pane -->
-      <div class="accordion accordion-flush" id="layerAccordion">
-        {% include 'swn/sidebar_baselayers.html' %}
-        {% comment %} <div class="accordion-item">
+      <div class="accordion accordion-flush" id="droughtAccordion">
+        {% comment %} {% include 'swn/sidebar_baselayers.html' %} {% endcomment %}
+        
+        {% comment %} <div class="row" id="controlContainer"></div> {% endcomment %}
+        
+        
+        <div class="accordion-item">
           <h2 class="accordion-header">
             <button
               class="accordion-button"
               type="button"
               data-bs-toggle="collapse"
-              data-bs-target="#baseLayer-collapse"
+              data-bs-target="#droughtBaseLayerCollapse"
               aria-expanded="true"
-              aria-controls="baseLayer-collapse"
+              aria-controls="droughtBaseLayerCollapse"
             >
               Baselayers
             </button>
           </h2>
           <div
-            id="baseLayer-collapse"
+            id="droughtBaseLayerCollapse"
             class="accordion-collapse collapse show"
-            data-bs-parent="#layerAccordion"
+            data-bs-parent="#droughtAccordion"
           >
-              <ul class="list-group sidebar-list" id="baseLayerList"></ul>
+            <ul class="list-group sidebar-list" id="baseLayerControlList"></ul>
+              {% comment %} <ul class="list-group sidebar-list" id="baseLayerList"></ul> {% endcomment %}
               <!-- leaflet layer control items are inserted here-->
           </div>
-        </div> {% endcomment %}
+        </div> 
         <!-- overlay items -->
         <div class="accordion-item">
           <h2 class="accordion-header">
@@ -77,14 +92,14 @@
           <div
             id="overlayAccordion"
             class="accordion-collapse collapse"
-            data-bs-parent="#layerAccordion"
+            data-bs-parent="#droughtAccordion"
           >
             <ul class="list-group sidebar-list" id="overlayList">
               <!-- project region -->
               <li class="list-group-item">
                 <div class="row">
                   <div class="form-check form-switch col">
-                    <input type="checkbox" class="form-check-input" id="projectRegionSwitch" checked/>
+                    <input type="checkbox" data-layer="ProjectRegion" class="form-check-input overlay-switch" id="projectRegionSwitch" checked/>
                     <label class="form-check-label" for="projectRegionSwitch">
                       Spreewasser:N Projektgebiet
                     </label>
@@ -95,14 +110,14 @@
               <li class="list-group-item">
                 <div class="row">
                   <div class="form-check form-switch col">
-                    <input type="checkbox" class="form-check-input" id="animationSwitch" unchecked/>
+                    <input type="checkbox" data-layer="animation" class="form-check-input overlay-switch" id="animationSwitch" unchecked/>
                     <label class="form-check-label" for="animationSwitch">
                       Konzeptanimation
                     </label>
                   </div>
 
                   <div class="range col-5">
-                    <input type="range" class="form-range" min="0.0" max="1.0" step="0.1" id="animationOpacity" disabled/>
+                    <input type="range" class="form-range layer-opacity" data-layer="animation" min="0.0" max="1.0" step="0.1" id="animationOpacity" disabled/>
                   </div>
                 </div>
               </li>
@@ -111,17 +126,18 @@
               <li class="list-group-item">
                 <div class="row">
                   <div class="form-check form-switch col">
-                    <input type="checkbox" class="form-check-input" id="DEMSwitch" unchecked />
+                    <input type="checkbox" data-layer="demOverlay" class="form-check-input overlay-switch" id="DEMSwitch" unchecked />
                     <label class="form-check-label" for="DEMSwitch">Höhenmodell</label>
                   </div>
                   <div class="range col-5">
                     <input
                       type="range"
-                      class="form-range"
+                      class="form-range layer-opacity"
+                      data-layer="demOverlay"
                       min="0.0"
                       max="1.0"
                       step="0.1"
-                      id="demOpacity"
+                      id="demOverlayOpacity"
                       disabled
                     />
                   </div>
@@ -132,11 +148,11 @@
               <li class="list-group-item">
                 <div class="row">
                   <div class="form-check form-switch col">
-                    <input type="checkbox" class="form-check-input" id="droughtSwitch" unchecked>
+                    <input type="checkbox" class="form-check-input overlay-switch" data-layer="droughtOverlay" id="droughtSwitch" unchecked>
                     <label class="form-check-label" for="droughtSwitch">Dürreindex</label>
                   </div>
                   <div class="range col-5">
-                    <input type="range" class="form-range" min="0.0" max="1.0" step="0.1" id="droughtOpacity" disabled />
+                    <input type="range" class="form-range layer-opacity" data-layer="droughtOverlay" min="0.0" max="1.0" step="0.1" id="droughtOverlayOpacity" disabled />
                   </div>
                 </div>
               </li>
@@ -161,7 +177,7 @@
           <div
             id="userFieldsAccordion"
             class="accordion-collapse collapse"
-            data-bs-parent="#layerAccordion"
+            data-bs-parent="#droughtAccordion"
           >
               <!-- userFields -->
               <div class="accordion" id="accordionUserFields">
@@ -178,13 +194,97 @@
     <div class="leaflet-sidebar-pane" id="toolbox">
       <h1 class="leaflet-sidebar-header">
         Toolbox
-        <span class="leafle-sidebar-close"
+        <span class="leaflet-sidebar-close"
           ><i class="fa fa-caret-left"></i
         ></span>
       </h1>
       <!-- accordion items of layer pane -->
-      <div class="accordion accordion-flush" id="layerAccordion">
-      {% include 'swn/sidebar_baselayers.html' %}
+      <div class="accordion accordion-flush" id="toolboxAccordion">
+        {% comment %} {% include 'swn/sidebar_baselayers.html' %} {% endcomment %}
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button
+              class="accordion-button"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#droughtBaseLayerCollapse"
+              aria-expanded="true"
+              aria-controls="droughtBaseLayerCollapse"
+            >
+              Baselayers
+            </button>
+          </h2>
+          <div
+            id="toolboxBaseLayerCollapse"
+            class="accordion-collapse collapse show"
+            data-bs-parent="#droughtAccordion"
+          >
+              {% comment %} <ul class="list-group sidebar-list" id="baseLayerList"></ul> {% endcomment %}
+              <!-- leaflet layer control items are inserted here-->
+          </div>
+        </div> 
+        <!-- overlay items -->
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#toolboxOverlayAccordion"
+              aria-expanded="false"
+              aria-controls="overlayAccordion"
+            >
+              Overlays
+            </button>
+          </h2>
+          <div
+            id="toolboxOverlayAccordion"
+            class="accordion-collapse collapse"
+            data-bs-parent="#toolboxAccordion"
+          >
+            <ul class="list-group sidebar-list" id="toolboxOverlayList">
+              <!-- project region -->
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" class="form-check-input" id="projectRegionSwitch" checked/>
+                    <label class="form-check-label" for="projectRegionSwitch">
+                      Spreewasser:N Projektgebiet
+                    </label>
+                  </div>
+                </div>
+              </li>
+              <!-- TODO duplicate Node and make selection in settings-->
+            </ul>
+          </div>
+        </div>
+
+        <!-- userfields -->
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#userFieldsAccordion"
+              aria-expanded="false"
+              aria-controls="userFieldsAccordion"
+            >
+              Benutzerfelder
+            </button>
+          </h2>
+          <div
+            id="userFieldsAccordion"
+            class="accordion-collapse collapse"
+            data-bs-parent="#droughtAccordion"
+          >
+              <!-- userFields -->
+              <div class="accordion" id="accordionUserFields">
+                <!-- userFields are injected here -->
+              </div>
+
+          </div>
+        </div>
       </div>
     </div>
 
@@ -192,7 +292,7 @@
     <div class="leaflet-sidebar-pane" id="profile">
       <h1 class="leaflet-sidebar-header">
         Userprofil
-        <span class="leafle-sidebar-close"
+        <span class="leaflet-sidebar-close"
           ><i class="fa fa-caret-left"></i
         ></span>
       </h1>
@@ -219,6 +319,9 @@
           ><i class="fa fa-caret-left"></i
         ></span>
       </h1>
+      <div>
+        <p>Make selection for Overlays in each pane</p>
+      </div>
     </div>
   </div>
 </div>

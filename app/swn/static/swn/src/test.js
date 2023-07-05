@@ -1,0 +1,3 @@
+VirtualSelect.init({ 
+    ele: '#multipleSelect' 
+  });

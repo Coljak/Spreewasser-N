@@ -10,23 +10,23 @@ const osmAttrib =
 const osm = L.tileLayer(osmUrl, { maxZoom: 18, attribution: osmAttrib });
 
 var map = L.map('map', {
-    zoom: 8,
+    zoom: 5,
     layers: [osm],
     fullscreenControl: true,
-    timeDimensionControl: true,
+    timeDimensionControl: false,
     timeDimensionControlOptions: {
         position: 'bottomleft',
         playerOptions: {
             transitionTime: 1000,
         }
     },
-    timeDimension: true,
-    center: [39.3, 2.9]
+    timeDimension: false,
+    center: [51, 12]
 });
 
-var sapoWMS = "https://thredds.socib.es/thredds/wms/operational_models/oceanographical/wave/model_run_aggregation/sapo_ib/sapo_ib_best.ncd";
+var sapoWMS = "http://127.0.0.1:8088/thredds/wms/data/zalf_hurs_amber_2011_v1-0.nc";
 var sapoHeightLayer = L.tileLayer.wms(sapoWMS, {
-    layers: 'significant_wave_height',
+    layers: 'Grid Latitude',
     format: 'image/png',
     transparent: true,
     colorscalerange: '0,3',

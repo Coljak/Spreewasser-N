@@ -4,6 +4,8 @@
 
 {% load leaflet_tags %}
 {% load geojson_tags %}
+{% load crispy_forms_tags %}
+
 
 {% block css %}
   {% leaflet_css %}
@@ -16,8 +18,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
   
+  <link rel="stylesheet" href="{% static 'swn/src/virtual-select.min.css' %}" />
   {% comment %} <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.css' %}"/> {% endcomment %}
   <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.min.css' %}" />
+  <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
 {% endblock css %}
 
 {% block body_block %}
@@ -38,6 +42,11 @@
   <div id="map" > 
   
 </div>
+{% comment %} <form method="post"> {% endcomment %}
+  {% comment %} {% csrf_token %} {% endcomment %}
+  
+  {% comment %} {{ state_county_district_form.as_ul  }} {% endcomment %}
+{% comment %} </form> {% endcomment %}
 
 {% endblock %}
 {% block javascript %}
@@ -66,9 +75,11 @@
     <script src="https://unpkg.com/proj4"></script>
     <script src="{% static 'leaflet/georaster/georaster-layer-for-leaflet.min.js' %}"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
   <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
-  <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
+  
+  <script type="text/javascript" src="{% static 'swn/src/virtual-select.js' %}"></script>
   <script src="{% static 'swn/js/chart_page.js' %}" defer></script>
 {% endblock%}

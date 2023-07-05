@@ -14,6 +14,8 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.gdal import DataSource
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
 from django.views.decorators.csrf import csrf_protect
+from django.shortcuts import render
+from .forms import PolygonSelectionForm
 from . import forms
 from . import models
 from app.helpers import is_ajax
@@ -174,11 +176,27 @@ def user_dashboard(request):
     # get all data from general calclations
     shp = models.GeoData.objects.all()
 
+    # state, county and district choices
+
+    state_county_district_form = PolygonSelectionForm(request.POST or None)
+
+    if state_county_district_form.is_valid():
+        selected_states = state_county_district_form.cleaned_data['states']
+        selected_counties = state_county_district_form.cleaned_data['counties']
+        selected_districts = state_county_district_form.cleaned_data['districts']
+        
+        # Process the selected polygons and pass the data to the map template
+
+
     data = {'shp': shp, 
             'user_projects': user_projects, 
             'user_field_form': field_name_form,
             'crop_form': crop_form, 
-            'project_form': project_form}
+            'project_form': project_form,
+            'state_county_district_form': state_county_district_form,
+            }
+    
+
 
     return render(request, 'swn/user_dashboard.html', data)
 
@@ -251,16 +269,6 @@ async def get_user_fields_async(request):
     await asyncio.wait([task1, task2])
     return JsonResponse({'user_fields': list(task1.values('id', 'user', 'name', 'geom_json')), 'user_projects': list(task2.values())})
 
-# def get_user_fields(request):
-#     print("get_user_fields")
-  
-#     if is_ajax(request):
-#         user_projects = models.UserProject.objects.filter(
-#             field__user=request.user)
-#         user_fields = models.UserField.objects.filter(user=request.user)
- 
-#     return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json')), 'user_projects': list(user_projects.values())})
-
 
 @login_required
 # @action_permission
@@ -279,29 +287,6 @@ def update_user_field(request, pk):
         })
     return redirect('swn:user_dashboard')
 
-
-# @login_required
-# @csrf_protect
-# # @action_permission
-# def save_user_field(request):
-#     # if request.user.is_authenticated:
-#     # user = models.User.objects.get(user=request.user)
-#     print("request in views:", request.user)
-#     if is_ajax(request):
-#         print("Save IS AJAX")
-#         form = forms.UserFieldForm(request.POST or None)
-#         name = request.POST.get('name')
-#         geom = json.loads(request.POST.get('geom'))
-#         geos = GEOSGeometry(request.POST.get('geom'), srid=4326)
-#         user = request.user
-#         instance = models.UserField()
-#         instance.name = name
-#         instance.geom_json = geom
-#         instance.geom = geos
-#         instance.user = user
-#         instance.save()
-#         return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
-#     return redirect('swn:user_dashboard')
 
 # This view eliminates the AJAX request above
 @login_required
@@ -399,3 +384,40 @@ def thredds_wms_view(request):
 
 def bootstrap(request):
     return render(request, 'swn/bootstrap_colors.html')
+
+def multiselect(request):
+    return render(request, 'swn/multiselect.html')
+
+
+    
+def load_polygon(request, entity, polygon_id):
+    try:
+        # Retrieve the polygon based on the ID
+        if entity == 'states':
+            polygon = models.NUTS5000_N1.objects.get(id=polygon_id)
+        elif entity == 'districts':
+            polygon = models.NUTS5000_N2.objects.get(id=polygon_id)
+        elif entity == 'counties':
+            polygon = models.NUTS5000_N3.objects.get(id=polygon_id)
+        
+        # Generate the GeoJSON representation of the polygon
+        geometry = GEOSGeometry(polygon.geom)
+        geojson = json.loads(geometry.geojson)
+
+        feature = {
+            "type": "Feature",
+            "geometry": geojson,
+            "properties": {
+                "nuts_name": polygon.nuts_name,
+                
+            }
+        }
+        print('GeoJSON:', feature)
+        return JsonResponse(feature)
+    except:
+        # Return an error response if the polygon is not found
+        error_response = {
+            "error": "Polygon not found."
+        }
+        return JsonResponse(error_response, status=404)
+ 

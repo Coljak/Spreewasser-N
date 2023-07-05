@@ -19,10 +19,6 @@ class RegistrationForm(UserCreationForm):
         fields = ['username', 'email', 'password1', 'password2']
 
 
-# class UserForm(UserCreationForm):
-#     class Meta:
-#         model = User
-#         fields = ('name', 'email', 'password1', 'password2')
 
 # class LoginForm(forms.ModelForm):
 
@@ -83,3 +79,50 @@ class UserFieldForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'id': 'fieldNameInput'}),
         }
+
+
+# Selection of state, county and district
+
+from .models import NUTS5000_N1, NUTS5000_N2, NUTS5000_N3
+
+class PolygonSelectionForm(forms.Form):
+    state_choices = sorted([(state.id, state.nuts_name) for state in NUTS5000_N1.objects.all()], key=lambda x: x[1])
+    district_choices = sorted([(district.id, district.nuts_name) for district in NUTS5000_N2.objects.all()], key=lambda x: x[1])
+    county_choices = sorted([(county.id, county.nuts_name) for county in NUTS5000_N3.objects.all()], key=lambda x: x[1])
+
+    states = forms.MultipleChoiceField(
+        # queryset= NUTS5000_N1.objects,
+        choices=state_choices,
+        widget=forms.SelectMultiple(attrs={'id': 'stateSelect', 'class': 'state-dropdown administrative-area'}),
+        label=False,
+        required=False,
+    )
+    
+    districts = forms.MultipleChoiceField(
+        # queryset= NUTS5000_N2.objects,
+        choices=district_choices,
+        widget=forms.SelectMultiple(attrs={'id': 'districtSelect', 'class': 'district-dropdown administrative-area'}),
+        label=False,
+        required=False,
+    )
+    counties = forms.MultipleChoiceField(
+        # queryset= NUTS5000_N3.objects,
+        choices=county_choices,
+        widget=forms.SelectMultiple(attrs={'id': 'countySelect', 'class': 'county-dropdown administrative-area'}),
+        label=False,
+        required=False,
+    )
+
+    selected_states = forms.CharField(widget=forms.HiddenInput, required=False)
+    selected_counties = forms.CharField(widget=forms.HiddenInput, required=False)
+    selected_districts = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    # def __init__(self, *args, **kwargs):
+    #     super(PolygonSelectionForm, self).__init__(*args, **kwargs)
+    #     for visible in self.visible_fields():
+    #         visible.field.widget.attrs['class'] = 'list-group-item'
+    # crispy helper
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.helper = FormHelper()
+    #     self.helper.form_method = "POST"

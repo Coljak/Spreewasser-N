@@ -155,7 +155,13 @@
                     <input type="range" class="form-range layer-opacity" data-layer="droughtOverlay" min="0.0" max="1.0" step="0.1" id="droughtOverlayOpacity" disabled />
                   </div>
                 </div>
-              </li>
+              
+              {% for field in state_county_district_form.visible_fields %}
+
+                  <li  class="list-group-item">
+                    {{ field }}
+                  </li>
+              {% endfor %}
             </ul>
           </div>
         </div>

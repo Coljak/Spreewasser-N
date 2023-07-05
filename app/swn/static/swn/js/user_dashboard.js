@@ -186,15 +186,10 @@ var drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
 
 drawnItems.on("click", function (event) {
-  console.log("drawnItems.on('click')", event.target);
   const layer = event.layer;
   const leafletId = drawnItems.getLayerId(layer);
   let leafletId2 = Object.keys(event.layer._eventParents)[0];
   highlightLayer(leafletId2);
-  // console.log("Clicked leafletId", leafletId);
-  // console.log("Clicked leafletId2", leafletId2);
-
-  // console.log("event.target._layers.options", event.target._layers.options);
 });
 
   
@@ -258,7 +253,6 @@ const overlayLayers = {
 // ------------------- Sidebar eventlisteners -------------------
 leafletSidebarContent.addEventListener("click", (event) => {
   const clickedElement = event.target;
-  console.log("leafletSidebarContent.addEventListener", clickedElement)
   if (clickedElement.classList.contains("user-field-header") || clickedElement.classList.contains("user-field-btn")) {
     const leafletId = clickedElement.getAttribute("leaflet-id");
     console.log("user-field-header clicked", leafletId);
@@ -273,7 +267,6 @@ leafletSidebarContent.addEventListener("click", (event) => {
     const userField = userFields[leafletId];
     currentUserField = userField;
     if (clickedElement.classList.contains("delete")) {
-      console.log("delete clicked", leafletId);
       let confirmDelete = confirm(`Are you sure to delete ` + userField.name + "?");
       if (confirmDelete) {
         delete userFields[userField.leafletId];
@@ -465,7 +458,6 @@ class UserProject {
 
 // Save a newly created userField in DB
 function saveUserField(userField) {
-  console.log("saveUserField");
   return new Promise((resolve, reject) => {
     const requestData = {
       csrfmiddlewaretoken: csrfToken,
@@ -496,7 +488,6 @@ function saveUserField(userField) {
 
 // Load all user fields from DB
 const getData = async function () {
-  console.log("getData executed")
   fetch(loadUrl, {
     method: "GET",
     credentials: "same-origin",
@@ -510,11 +501,9 @@ const getData = async function () {
     .then(data => {
       // clear all userFields from map and sidebar
       $("#display-data").empty();
-      console.log("getData response: ", data);
       const userFieldsDb = data.user_fields;
       userFieldsDb.forEach((el) => {
         var layer = L.geoJSON(el.geom_json);
-        console.log("drawnItems before: ", drawnItems);
 
         const userField = new UserField(
           el.name,
@@ -527,17 +516,14 @@ const getData = async function () {
 
         // Add the layer to the drawnItems layer group
         drawnItems.addLayer(userField.layer);
-        console.log("drawnItems after: ", drawnItems);
         // Store the userField object using the layer's leafletId
         const leafletId = drawnItems.getLayerId(userField.layer);
-        console.log("GetData layer: ", Object.keys(userField.layer._layers)[0]);
         userField.leafletId = leafletId;
         userFields[userField.leafletId] = userField;
 
         addLayerToSidebar(userField);
       });
 
-      console.log("userFields from getData: ", userFields);
     });
 };
 
@@ -732,6 +718,161 @@ $(document).ready(function () {
       $("#map-container").show();
     });
 });
+
+// state county district selection
+
+// Create a LayerGroup to hold the displayed polygons
+var stateCountyDistrictLayer = L.layerGroup().addTo(map);
+
+// Handle dropdown menu change event
+// Multiple Select from https://www.cssscript.com/select-box-virtual-scroll/
+VirtualSelect.init({ 
+  ele: '#stateSelect',
+  placeholder: 'Bundessland',
+  required: false,
+});
+
+VirtualSelect.init({ 
+  ele: '#districtSelect',
+  placeholder: 'Regierungsbezirk',
+  required: false,
+});
+VirtualSelect.init({ 
+  ele: '#countySelect',
+  placeholder: 'Landkreis',
+  required: false,
+});
+
+var administrativeAreaDDDiv = document.querySelectorAll('div.administrative-area');
+var selectedAdminAreas = {
+  states: [],
+  counties: [],
+  districts: [],
+};
+administrativeAreaDDDiv.forEach(function (areaDropdown) {
+  areaDropdown.addEventListener('change', function (event) {
+    stateCountyDistrictLayer.clearLayers();
+    var name = areaDropdown.getAttribute("name");
+    var selectedOptions = areaDropdown.value;
+    selectedAdminAreas[name] = selectedOptions;
+    console.log("event fired", selectedAdminAreas);
+
+    for (let key in selectedAdminAreas) {
+      if (selectedAdminAreas[key].length > 0) {
+        selectedAdminAreas[key].forEach(function (polygon) {
+          var url = '/login/Dashboard/load_polygon/' + key + '/' + polygon + '/';
+        console.log("URL", url)
+        var color = '';
+        if (key == 'states') {
+            color = 'purple';
+        } else if (key == 'counties') {
+            color = 'blue';
+        } else if (key == 'districts') {
+            color = 'green';
+        }
+        var geojsonLayer = new L.GeoJSON.AJAX(url, {
+            style: function (feature) {
+                return { color: color };
+            },
+            onEachFeature: function (feature, layer) {
+                layer.bindTooltip(feature.properties.nuts_name);
+            }
+        });
+        console.log("geojsonLayer", geojsonLayer)
+        geojsonLayer.addTo(stateCountyDistrictLayer);
+        });
+      }
+    // console.log("event fired name", event.target.getAttribute("name"), selectedOptions);
+    // // console.log("selectedOptions", name,': ', selectedOptions);
+    // // if (selectedOptions != undefined) {
+    //   selectedOptions.forEach(function (polygon) {
+      
+    //     var url = '/login/Dashboard/load_polygon/' + name + '/' + polygon + '/';
+    //     console.log("URL", url)
+    //     var color = '';
+    //     if (name == 'states') {
+    //         color = 'purple';
+    //     } else if (name == 'counties') {
+    //         color = 'blue';
+    //     } else if (name == 'districts') {
+    //         color = 'green';
+    //     }
+    //     var geojsonLayer = new L.GeoJSON.AJAX(url, {
+    //         style: function (feature) {
+    //             return { color: color };
+    //         },
+    //         onEachFeature: function (feature, layer) {
+    //             layer.bindTooltip(feature.properties.nuts_name);
+    //         }
+    //     });
+    //     console.log("geojsonLayer", geojsonLayer)
+    //     geojsonLayer.addTo(stateCountyDistrictLayer);
+      
+    // });
+            // }
+
+  };
+});
+});
+// dropdowns.forEach(function (dropdown) {
+//     dropdown.addEventListener('change', function (event) {
+      
+//         // Clear the previous polygons from the map
+//         stateCountyDistrictLayer.clearLayers();
+
+//         // Retrieve the selected dropdown values
+        
+//         dropdowns.forEach(function (dropdown) {
+//             var name = dropdown.getAttribute("name");
+//             var selectedOptions = 
+//             Array
+//             .from(dropdown.selectedOptions)
+//             .map(function(option) {
+//               if ({ [name]: option.value } in selectedPolygons) {
+//                 console.log("selectedPolygons before remove", selectedPolygons);
+//                 selectedPolygons.remove({ [name]: option.value })
+//                 console.log("selectedPolygons after remove", selectedPolygons);
+//               } else {
+//                 selectedPolygons.push({ [name]: option.value });
+//               }
+                
+//             });
+            
+//             console.log("selectedOptions", selectedOptions); 
+//             console.log("selectedPolygons", selectedPolygons);
+//         });
+
+//         // Load and display the selected polygons
+//         selectedPolygons.forEach(function (polygon) {
+//             var name = Object.keys(polygon)[0];
+//             var polygonId = polygon[name];
+//             var url = '/login/Dashboard/load_polygon/' + name + '/' + polygonId + '/';
+//             console.log("URL", url)
+//             var color = '';
+//             if (name == 'states') {
+//                 color = 'purple';
+//             } else if (name == 'counties') {
+//                 color = 'blue';
+//             } else if (name == 'districts') {
+//                 color = 'green';
+//             }
+//             var geojsonLayer = new L.GeoJSON.AJAX(url, {
+//                 style: function (feature) {
+//                     return { color: color };
+//                 },
+//                 onEachFeature: function (feature, layer) {
+//                     layer.bindTooltip(feature.properties.nuts_name);
+//                 }
+//             });
+//             console.log("geojsonLayer", geojsonLayer)
+//             geojsonLayer.addTo(stateCountyDistrictLayer);
+//         });
+//     });
+// });
+
+
+
+
 
 
 getData();

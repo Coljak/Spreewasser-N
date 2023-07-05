@@ -40,4 +40,6 @@ urlpatterns = [
     path('login/Dashboard/monica-map/', views.thredds_wms_view, name='monica-map'),
     # Bootstrap test colors
     path('bootstrap', views.bootstrap, name='bootstrap'),
+    path('multiselect', views.multiselect, name='multiselect'),
+    path('login/Dashboard/load_polygon/<str:entity>/<int:polygon_id>/', views.load_polygon, name='load_polygon'),
     ]

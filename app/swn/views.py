@@ -16,7 +16,7 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render
 
-from .forms import PolygonSelectionForm
+#from .forms import PolygonSelectionForm
 from . import forms
 from . import models
 from app.helpers import is_ajax
@@ -179,14 +179,14 @@ def user_dashboard(request):
 
     # state, county and district choices
 
-    state_county_district_form = PolygonSelectionForm(request.POST or None)
+    # state_county_district_form = PolygonSelectionForm(request.POST or None)
 
-    if state_county_district_form.is_valid():
-        selected_states = state_county_district_form.cleaned_data['states']
-        selected_counties = state_county_district_form.cleaned_data['counties']
-        selected_districts = state_county_district_form.cleaned_data['districts']
+    # if state_county_district_form.is_valid():
+    #     selected_states = state_county_district_form.cleaned_data['states']
+    #     selected_counties = state_county_district_form.cleaned_data['counties']
+    #     selected_districts = state_county_district_form.cleaned_data['districts']
         
-        # Process the selected polygons and pass the data to the map template
+    #     # Process the selected polygons and pass the data to the map template
 
 
     data = {'shp': shp, 
@@ -194,7 +194,7 @@ def user_dashboard(request):
             'user_field_form': field_name_form,
             'crop_form': crop_form, 
             'project_form': project_form,
-            'state_county_district_form': state_county_district_form,
+            #'state_county_district_form': state_county_district_form,
             }
     
 
@@ -378,27 +378,28 @@ def multiselect(request):
     
 def load_polygon(request, entity, polygon_id):
     try:
-        # Retrieve the polygon based on the ID
-        if entity == 'states':
-            polygon = models.NUTS5000_N1.objects.get(id=polygon_id)
-        elif entity == 'districts':
-            polygon = models.NUTS5000_N2.objects.get(id=polygon_id)
-        elif entity == 'counties':
-            polygon = models.NUTS5000_N3.objects.get(id=polygon_id)
+        feature = {'type': 'Feature', 'geometry': {'type': 'Polygon', 'coordinates': []}, 'properties': {}}
+        # # Retrieve the polygon based on the ID
+        # if entity == 'states':
+        #     polygon = models.NUTS5000_N1.objects.get(id=polygon_id)
+        # elif entity == 'districts':
+        #     polygon = models.NUTS5000_N2.objects.get(id=polygon_id)
+        # elif entity == 'counties':
+        #     polygon = models.NUTS5000_N3.objects.get(id=polygon_id)
         
-        # Generate the GeoJSON representation of the polygon
-        geometry = GEOSGeometry(polygon.geom)
-        geojson = json.loads(geometry.geojson)
+        # # Generate the GeoJSON representation of the polygon
+        # geometry = GEOSGeometry(polygon.geom)
+        # geojson = json.loads(geometry.geojson)
 
-        feature = {
-            "type": "Feature",
-            "geometry": geojson,
-            "properties": {
-                "nuts_name": polygon.nuts_name,
+        # feature = {
+        #     "type": "Feature",
+        #     "geometry": geojson,
+        #     "properties": {
+        #         "nuts_name": polygon.nuts_name,
                 
-            }
-        }
-        print('GeoJSON:', feature)
+        #     }
+        # }
+        # print('GeoJSON:', feature)
         return JsonResponse(feature)
     except:
         # Return an error response if the polygon is not found

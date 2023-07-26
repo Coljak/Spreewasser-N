@@ -165,46 +165,46 @@ class GeoData(models.Model):
     
 # Counties, States, Countries
 
-# Bundesländer
-class NUTS5000_N1(models.Model):
-    #nuts_code_1 = models.CharField(max_length=2)
-    objid = models.CharField(max_length=16)
-    beginn = models.DateField()
-    gf = models.IntegerField()
-    nuts_level = models.IntegerField()
-    nuts_code = models.CharField(max_length=5)
-    nuts_name = models.CharField(max_length=100)
-    geom = gis_models.MultiPolygonField(srid=4326)
+# # Bundesländer
+# class NUTS5000_N1(models.Model):
+#     #nuts_code_1 = models.CharField(max_length=2)
+#     objid = models.CharField(max_length=16)
+#     beginn = models.DateField()
+#     gf = models.IntegerField()
+#     nuts_level = models.IntegerField()
+#     nuts_code = models.CharField(max_length=5)
+#     nuts_name = models.CharField(max_length=100)
+#     geom = gis_models.MultiPolygonField(srid=4326)
 
-    def __str__(self):
-        return self.nuts_name
+#     def __str__(self):
+#         return self.nuts_name
     
-#Regierungsbezirke
-class NUTS5000_N2(models.Model):
-    nuts_code_1 = models.ForeignKey(NUTS5000_N1, on_delete=models.CASCADE, default=3)
-    objid = models.CharField(max_length=16)
-    beginn = models.DateField()
-    gf = models.IntegerField()
-    nuts_level = models.IntegerField()
-    nuts_code = models.CharField(max_length=5)
-    nuts_name = models.CharField(max_length=100)
-    geom = gis_models.MultiPolygonField(srid=4326)
+# #Regierungsbezirke
+# class NUTS5000_N2(models.Model):
+#     nuts_code_1 = models.ForeignKey(NUTS5000_N1, on_delete=models.CASCADE, default=3)
+#     objid = models.CharField(max_length=16)
+#     beginn = models.DateField()
+#     gf = models.IntegerField()
+#     nuts_level = models.IntegerField()
+#     nuts_code = models.CharField(max_length=5)
+#     nuts_name = models.CharField(max_length=100)
+#     geom = gis_models.MultiPolygonField(srid=4326)
 
-    def __str__(self):
-        return self.nuts_name
+#     def __str__(self):
+#         return self.nuts_name
     
-class NUTS5000_N3(models.Model):
-    nuts_code_2 = models.ForeignKey(NUTS5000_N2, on_delete=models.CASCADE, default=3)
-    objid = models.CharField(max_length=16)
-    beginn = models.DateField()
-    gf = models.IntegerField()
-    nuts_level = models.IntegerField()
-    nuts_code = models.CharField(max_length=5)
-    nuts_name = models.CharField(max_length=100)
-    geom = gis_models.MultiPolygonField(srid=4326)
+# class NUTS5000_N3(models.Model):
+#     nuts_code_2 = models.ForeignKey(NUTS5000_N2, on_delete=models.CASCADE, default=3)
+#     objid = models.CharField(max_length=16)
+#     beginn = models.DateField()
+#     gf = models.IntegerField()
+#     nuts_level = models.IntegerField()
+#     nuts_code = models.CharField(max_length=5)
+#     nuts_name = models.CharField(max_length=100)
+#     geom = gis_models.MultiPolygonField(srid=4326)
 
-    def __str__(self):
-        return self.nuts_name
+#     def __str__(self):
+#         return self.nuts_name
 
 
     

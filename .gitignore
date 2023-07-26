@@ -169,8 +169,7 @@ database/
 notes/
 geoserver/
 
-# Django stuff
-migrations/
+
 
 
 # local files and folders for data import 

@@ -179,3 +179,5 @@ thredds_data/
 xx_obsolete/
 shapefileimport/
 geodata/
+app/swn/rasterio_tut.py
+app/media/geotiffs/

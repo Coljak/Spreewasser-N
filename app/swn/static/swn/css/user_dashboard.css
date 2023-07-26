@@ -61,6 +61,16 @@
     padding-left: 0;
     padding-right: 0;
   } */
+  .leaflet-sidebar-content .accordion-button:nth-child(1).collapsed {
+    background-color: var(--bs-secondary-bg-subtle);
+  }
+  
+  .leaflet-sidebar-content .accordion-button:nth-child(1):not(.collapsed) {
+    
+    border: var(--bs-primary) 4px solid;
+    
+  }
+
   .leaflet-sidebar-tabs {
     border-right: 2px solid rgba(0,0,0,.2);
   }

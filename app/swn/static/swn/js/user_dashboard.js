@@ -1,5 +1,8 @@
 import { endpoint, chartDiv, crop, getChart } from "./chart_page.js";
 import { btnSaveUserFieldDismiss, btnSaveUserFieldAndCalc } from "./modal_user_field_name.js";
+
+document.addEventListener("DOMContentLoaded", () => {
+
 let userFieldLayerCounter = 0;
 
 /// helper functions
@@ -70,7 +73,7 @@ const handleAlerts = (type, msg) => {
 const projectModal = document.getElementById("projectModal");
 const projectModalTitle = document.getElementById("projectModalTitle");
 const chartCard = document.getElementById("chartCard");
-const btnModalCal = document.getElementById("btnModalCal");
+// const btnModalCal = document.getElementById("btnModalCal");
 
 const alertBox = document.getElementById("alert-box");
 
@@ -250,6 +253,14 @@ const overlayLayers = {
   "projectRegion": projectRegion,
 };
 
+// ------------------- Field Menu Modal -------------------
+function populateFieldMenuModalWithData(data) {
+  // Assuming you have elements with IDs in your modal to display the data
+  document.getElementById("fieldMenuModalTitle").innerText = data.text;
+
+}
+
+
 // ------------------- Sidebar eventlisteners -------------------
 leafletSidebarContent.addEventListener("click", (event) => {
   const clickedElement = event.target;
@@ -289,12 +300,21 @@ leafletSidebarContent.addEventListener("click", (event) => {
         });
       }
     } else if (clickedElement.classList.contains("field-menu")) {
-      // TODO the hardcoded modal is triggered from button
-      console.log("field-menu clicked", leafletId);
+      // TODO the hardcoded # fieldMenuModal is triggered from button
+      
+      // Send an AJAX request to the Django view to get the data
+      
+        const fieldMenuModal = new bootstrap.Modal(document.getElementById('fieldMenuModal'));
+          fieldMenuModal.show();
+      // $('#fieldMenuModal').modal('show');
+      // console.log("field-menu clicked", leafletId);
+
     } else if (clickedElement.classList.contains("field-edit")) {
-      // TODO the hardcoded modal is triggered from button
-      console.log("field-edit clicked", leafletId);
-      projectModalTitle.innerText = userField.name;
+        // TODO the hardcoded modal is triggered from button
+        console.log("field-edit clicked", leafletId, userField.id);
+        // projectModalTitle.innerText = userField.name;
+        const url = `/login/Dashboard/field-menu/${userField.id}/`;
+        // window.location.href = url;
     } else { console.log("else in eventlistener") }
  
     }
@@ -410,6 +430,9 @@ initialBasemap.checked = true;
 changeBasemap(initialBasemap);
 
 //-------------------- Baselayers end ------------------------------
+
+//-------------------- Overlays start ------------------------------
+const overlayLayerCollapses = document.querySelectorAll(".overlay-layer-collapse");
 
 
 //---------------MAP END-------------------------------
@@ -623,11 +646,11 @@ const addLayerToSidebar = (userField) => {
         </button>
       <span class="column col-4 field-btns-col">
         <form id="deleteAndCalcForm-${userField.leafletId}">
-          <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" data-bs-toggle="modal" data-bs-target="#projectModal">
+          <a href="field-menu/${userField.id}" type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}">
             <span><i class="fa-regular fa-pen-to-square user-field-action field-edit" leaflet-id="${userField.leafletId}"></i></span>
-          </button>
+          </a>
     
-          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}" data-bs-toggle="modal" data-bs-target="#fieldInfoModal">
+          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}">
             <span><i class="fa-solid fa-ellipsis-vertical user-field-action field-menu" leaflet-id="${userField.leafletId}"></i></span>
           </button>
           <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}">
@@ -696,10 +719,7 @@ const monicaFieldCalculation = () => {
   console.log("monicaFieldCalculation");
 };
 
-btnModalCal.addEventListener("click", function () {
-  getChart();
-  chartCard.classList.remove("d-none");
-});
+
 
 $("#projectModal").on("hide.bs.modal", function (e) {
   if (!chartCard.classList.contains("d-none")) {
@@ -782,98 +802,10 @@ administrativeAreaDDDiv.forEach(function (areaDropdown) {
         geojsonLayer.addTo(stateCountyDistrictLayer);
         });
       }
-    // console.log("event fired name", event.target.getAttribute("name"), selectedOptions);
-    // // console.log("selectedOptions", name,': ', selectedOptions);
-    // // if (selectedOptions != undefined) {
-    //   selectedOptions.forEach(function (polygon) {
-      
-    //     var url = '/login/Dashboard/load_polygon/' + name + '/' + polygon + '/';
-    //     console.log("URL", url)
-    //     var color = '';
-    //     if (name == 'states') {
-    //         color = 'purple';
-    //     } else if (name == 'counties') {
-    //         color = 'blue';
-    //     } else if (name == 'districts') {
-    //         color = 'green';
-    //     }
-    //     var geojsonLayer = new L.GeoJSON.AJAX(url, {
-    //         style: function (feature) {
-    //             return { color: color };
-    //         },
-    //         onEachFeature: function (feature, layer) {
-    //             layer.bindTooltip(feature.properties.nuts_name);
-    //         }
-    //     });
-    //     console.log("geojsonLayer", geojsonLayer)
-    //     geojsonLayer.addTo(stateCountyDistrictLayer);
-      
-    // });
-            // }
-
   };
 });
 });
-// dropdowns.forEach(function (dropdown) {
-//     dropdown.addEventListener('change', function (event) {
-      
-//         // Clear the previous polygons from the map
-//         stateCountyDistrictLayer.clearLayers();
-
-//         // Retrieve the selected dropdown values
-        
-//         dropdowns.forEach(function (dropdown) {
-//             var name = dropdown.getAttribute("name");
-//             var selectedOptions = 
-//             Array
-//             .from(dropdown.selectedOptions)
-//             .map(function(option) {
-//               if ({ [name]: option.value } in selectedPolygons) {
-//                 console.log("selectedPolygons before remove", selectedPolygons);
-//                 selectedPolygons.remove({ [name]: option.value })
-//                 console.log("selectedPolygons after remove", selectedPolygons);
-//               } else {
-//                 selectedPolygons.push({ [name]: option.value });
-//               }
-                
-//             });
-            
-//             console.log("selectedOptions", selectedOptions); 
-//             console.log("selectedPolygons", selectedPolygons);
-//         });
-
-//         // Load and display the selected polygons
-//         selectedPolygons.forEach(function (polygon) {
-//             var name = Object.keys(polygon)[0];
-//             var polygonId = polygon[name];
-//             var url = '/login/Dashboard/load_polygon/' + name + '/' + polygonId + '/';
-//             console.log("URL", url)
-//             var color = '';
-//             if (name == 'states') {
-//                 color = 'purple';
-//             } else if (name == 'counties') {
-//                 color = 'blue';
-//             } else if (name == 'districts') {
-//                 color = 'green';
-//             }
-//             var geojsonLayer = new L.GeoJSON.AJAX(url, {
-//                 style: function (feature) {
-//                     return { color: color };
-//                 },
-//                 onEachFeature: function (feature, layer) {
-//                     layer.bindTooltip(feature.properties.nuts_name);
-//                 }
-//             });
-//             console.log("geojsonLayer", geojsonLayer)
-//             geojsonLayer.addTo(stateCountyDistrictLayer);
-//         });
-//     });
-// });
-
-
-
-
-
 
 getData();
 
+});

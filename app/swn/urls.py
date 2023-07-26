@@ -36,10 +36,12 @@ urlpatterns = [
     # path('Logout/', LogoutView.as_view(), {'next_page': settings.LOGOUT_REDIRECT_URL}, name='user_logout'),  
     path('data.geojson', GeoJSONLayerView.as_view(model=models.ProjectRegion), name='project_region_geojson'),
     path('Chart/', views.ChartView.as_view(), name='chart'), 
-    path('login/Dashboard/chartdata/<int:crop_id>', views.get_chart, name='chart-api'),
+    path('login/Dashboard/field-menu/<int:field_id>/chartdata/<int:crop_id>', views.get_chart, name='chart-api'),
     path('login/Dashboard/monica-map/', views.thredds_wms_view, name='monica-map'),
     # Bootstrap test colors
     path('bootstrap', views.bootstrap, name='bootstrap'),
     path('multiselect', views.multiselect, name='multiselect'),
     path('login/Dashboard/load_polygon/<str:entity>/<int:polygon_id>/', views.load_polygon, name='load_polygon'),
+    path('login/Dashboard/field-menu/<int:id>/', views.field_menu, name='field_menu'),
+    path('login/Dashboard/get-soil-data/<int:id>/', views.get_soil_data, name='get_soil_data'),
     ]

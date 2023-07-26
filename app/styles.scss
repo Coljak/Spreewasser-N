@@ -94,7 +94,7 @@ $prefix:                      $variable-prefix !default;
 
 
 
-$accordion-button-active-bg:              var(--#{$prefix}secondary-bg) !default;
+$accordion-button-active-bg:              var(--#{$prefix}primary-bg) !default;
 
 $accordion-button-focus-border-color:     transparent !default;
 $accordion-button-focus-box-shadow:       none !default;

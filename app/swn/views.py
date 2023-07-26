@@ -15,6 +15,7 @@ from django.contrib.gis.gdal import DataSource
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render
+
 from .forms import PolygonSelectionForm
 from . import forms
 from . import models
@@ -211,7 +212,7 @@ class ChartView(View):
         return render(request, 'swn/chart.html', {})
 
 
-def get_chart(request, crop_id):
+def get_chart(request, field_id, crop_id):
     print('Request:', crop_id)
     key = ''
     if crop_id == 0:
@@ -269,7 +270,7 @@ async def get_user_fields_async(request):
     await asyncio.wait([task1, task2])
     return JsonResponse({'user_fields': list(task1.values('id', 'user', 'name', 'geom_json')), 'user_projects': list(task2.values())})
 
-
+# userfields are updated for the leaflet sidebar
 @login_required
 # @action_permission
 def update_user_field(request, pk):
@@ -305,8 +306,12 @@ async def save_user_field_async(request):
         instance.geom = geos
         instance.user = user
         instance.save()
+        
+        models.UserField.get_intersecting_soil_data(id)
+        
         return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
-    return redirect('swn:user_dashboard')
+    else: 
+        return redirect('swn:user_dashboard')
 
 @login_required
 @csrf_protect
@@ -318,22 +323,15 @@ def save_user_field(request):
             
             return HttpResponseBadRequest('Invalid CSRF token')
         else:
-            print("Valid CSRF token")
             body = json.loads(request.body)
-            print('User field:', body)
-            # form = forms.UserFieldForm(request.POST)
-            # print('Form:', form)
-            
             name = body['name']
-            print('FORMDATA name:', name)
             geom = json.loads(body['geom'])
-            print('FORMDATA geom:', geom, 'Type:', type(geom))
             geos = GEOSGeometry(body['geom'], srid=4326)
             user = request.user
-            print('FORMDATA user:', user)
             instance = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
-            print('Instancae: ', instance, "Type:", type(instance))
             instance.save()
+
+            instance.get_intersecting_soil_data()
             return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
         
     else:
@@ -355,18 +353,6 @@ def delete_user_field(request, id):
         
         return JsonResponse({})
     return redirect('swn:user_dashboard')
-
-"""
-The MONICA calculations are stored in a NetCDF file on the THREDDS-Server.
-"""
-
-
-# def thredds_wms_view(request):
-#     thredds_server_hostname = 'thredds'  # Thredds server service name
-#     thredds_api_url = f'http://{thredds_server_hostname}/thredds/api/wms'
-#     response = request.get(thredds_api_url)
-#     wms_data = response.text  # Or process the response as per your requirement
-#     return JsonResponse({'wms_data': wms_data})
 
 
 
@@ -420,4 +406,77 @@ def load_polygon(request, entity, polygon_id):
             "error": "Polygon not found."
         }
         return JsonResponse(error_response, status=404)
+    
+
+def field_menu(request, id):
+    crop_form  = forms.CropForm(request.POST or None)
+    name = models.UserField.objects.get(id=id).name
+    data_menu = {
+        'crop_form': crop_form,
+        'text': name,
+        'id': id,
+    }
+    return render(request, 'swn/field_projects_edit.html', data_menu)
+
+def get_soil_data(request, id):
+    print("VIEW get_soil_data EXECUTED")
+    user_field = models.UserField.objects.get(id=id)
+    print("user_field.soil_profile_polygon_ids", user_field.soil_profile_polygon_ids)
+    #soil_profiles = models.SoilProfile.objects.filter(polygon_id__in=user_field.soil_profile_polygon_ids)
+    intersecting_buek_data = models.BuekData.objects.filter(polygon_id_in_buek__in=user_field.soil_profile_polygon_ids['buek_polygon_ids'])
+    #intersecting_buek_data = list(intersecting_buek_data)# print("soil_profiles", soil_profiles)
+    # print('intersecting_buek_data', intersecting_buek_data)
+    # for item in intersecting_buek_data:
+    #     # dict = item.__dict__
+    #     print(dict)
+    #     for key in item.__dict__.keys():
+    #         print(key, item.__dict__[key])
+
+    # data by polygon_id
+    data = {}
+    for polygon_id in user_field.soil_profile_polygon_ids['buek_polygon_ids']:
+        print(polygon_id)
+        data['polygon_id'] = polygon_id
+        buek_data = models.BuekData.objects.filter(polygon_id_in_buek=polygon_id)
+        
+        data = {}
+        
+        # for item in buek_data:
+        #     item_data = item.__dict__
+        #     print(item_data)
+        #     data[polygon_id] = item_data
+        for obj in buek_data:
+            polygon_id_in_buek = obj.polygon_id_in_buek
+            profile_id_in_polygon = obj.profile_id_in_polygon
+            horizon_id = obj.horizon_id
+
+            data.setdefault(polygon_id_in_buek, {})
+            data[polygon_id_in_buek].setdefault(profile_id_in_polygon, {})
+            data[polygon_id_in_buek][profile_id_in_polygon].setdefault(horizon_id, {})
+
+            # this only contains parameters that are not null
+            data[polygon_id_in_buek][profile_id_in_polygon][horizon_id] = {
+                'range_percentage_of_area': obj.range_percentage_of_area,
+                'range_percentage_minimum': obj.range_percentage_minimum,
+                'range_percentage_maximum': obj.range_percentage_maximum,
+                'avg_range_percentage_of_area': obj.avg_range_percentage_of_area,
+                'layer_depth': obj.layer_depth,
+                'bulk_density': obj.bulk_density,
+                'raw_density': obj.raw_density,
+                'soil_organic_carbon': obj.soil_organic_carbon,
+                'ph': obj.ph,
+                'ka5_texture_class': obj.ka5_texture_class,
+                'sand': obj.sand,
+                'clay': obj.clay,
+                'silt': obj.silt,
+                'layer_description': obj.layer_description,
+                'is_in_groundwater': obj.is_in_groundwater,
+                'is_impenetrable': obj.is_impenetrable,
+                
+        # Add other parameters here...
+    }
+
+        # print(buek_data)
+    #return JsonResponse(user_field.soil_profile_polygon_ids)
+    return JsonResponse(data)
  

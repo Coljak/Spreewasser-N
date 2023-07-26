@@ -28,9 +28,10 @@
 <!-- modal -->
 
 
-  {% include 'swn/modal_project.html' %}
+  {% comment %} {% include 'swn/modal_project.html' %} {% endcomment %}
   {% include 'swn/modal_field_name.html' %}
-  {% include 'swn/modal_project_list.html' %}
+  {% include 'swn/modal_field_menu.html' %} 
+  {% comment %} <script>const fieldMenuModal = document.getElementById('fieldMenuModal')</script>  {% endcomment %}
 
 {% comment %} </div> {% endcomment %}
 <!--sidebar-->
@@ -42,11 +43,7 @@
   <div id="map" > 
   
 </div>
-{% comment %} <form method="post"> {% endcomment %}
-  {% comment %} {% csrf_token %} {% endcomment %}
-  
-  {% comment %} {{ state_county_district_form.as_ul  }} {% endcomment %}
-{% comment %} </form> {% endcomment %}
+
 
 {% endblock %}
 {% block javascript %}
@@ -66,7 +63,7 @@
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="{% static 'leaflet/highlightable/highlightableLayers.js' %}"></script>
     <script src="{% static './data/pilotregion.js' %}"></script>
-    <script src="{% static 'swn/js/user_dashboard.js' %}" type="module"></script>
+
     <!-- Tiff overlay -->
     
     
@@ -81,5 +78,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
   
   <script type="text/javascript" src="{% static 'swn/src/virtual-select.js' %}"></script>
+  <script src="{% static 'swn/js/user_dashboard.js' %}" type="module"></script>
   <script src="{% static 'swn/js/chart_page.js' %}" defer></script>
 {% endblock%}

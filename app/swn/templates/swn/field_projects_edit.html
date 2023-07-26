@@ -1,0 +1,58 @@
+{% extends "swn/base.html" %}
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block body_block %}
+
+<script>
+    var userFieldId = {{ id }};
+</script>
+
+<div class="container-fluid">
+    <div class="row">
+        <h1>ID:{{ id }} Feld: {{ text }}</h1>
+        
+          <div id="soilDiv">
+
+          </div>
+        <button class="btn btn-primary" id="getSoilData">Get Soil Data</button>
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Bodenfeuchteberechnung</h5>
+            <label for="startDate">Berechnung von</label>
+            <input type="date" class="mx-1" id="startDate" name="calculationStart" value="2023-03-01"> 
+            <label for="endDate">bis</label>
+            <input type="date" class="mx-1" id="endDate" name="calculationEnd" value="2023-09-25"> 
+                {% csrf_token %}   
+                {{ crop_form|crispy }}
+                <button type="submit" id="btnModalCal" class="btn btn-primary mb-2">Berechnen</button>
+            <div class="card mb-3 d-none" id="chartCard">
+              <div class="card-body">
+                <h5 class="card-title" id="chart-title">Monica Brechnung</h5>
+                <div id="chartDiv"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+    </div>
+    <div class="row">
+        <div class="card">
+            <div class="card-body">
+                
+                    <a class="btn btn-primary" href="{% url 'swn:user_dashboard' %}">Zurück</a></li>
+            </div>
+        </div>
+    </div>
+
+  </div>  
+
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static 'swn/js/field_projects_edit.js' %}" type="module"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
+{% endblock %}
+```

@@ -24,7 +24,7 @@ var map = L.map('map', {
     center: [51, 12]
 });
 
-var sapoWMS = "http://127.0.0.1:8088/thredds/wms/data/zalf_hurs_amber_2011_v1-0.nc";
+var sapoWMS = "http://127.0.0.1:8088/thredds/wms/data/zalf_hurs_amber_2007_v1-0_V2.nc";
 var sapoHeightLayer = L.tileLayer.wms(sapoWMS, {
     layers: 'Grid Latitude',
     format: 'image/png',

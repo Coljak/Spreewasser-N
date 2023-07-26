@@ -178,6 +178,7 @@ class NUTS5000_N1(models.Model):
 
     def __str__(self):
         return self.nuts_name
+    
 #Regierungsbezirke
 class NUTS5000_N2(models.Model):
     nuts_code_1 = models.ForeignKey(NUTS5000_N1, on_delete=models.CASCADE, default=3)

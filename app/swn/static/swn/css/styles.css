@@ -4514,7 +4514,7 @@ textarea.form-control-lg {
   --bs-accordion-body-padding-x: 1.25rem;
   --bs-accordion-body-padding-y: 1rem;
   --bs-accordion-active-color: var(--bs-primary-text-emphasis);
-  --bs-accordion-active-bg: var(--bs-secondary-bg);
+  --bs-accordion-active-bg: var(--bs-primary-bg);
 }
 
 .accordion-button {

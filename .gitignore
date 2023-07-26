@@ -170,23 +170,3 @@ cython_debug/
 # The PostgreSQL database
 data_temp/
 database/
-notes/
-geoserver/
-
-# Django stuff
-migrations/
-
-
-# local files and folders for data import 
-db_data/
-thredds_data/
-xx_obsolete/
-shapefileimport/
-
-swn/data_temp/
-app/geodata/
-
-# large files
-*.nc
-*.tif
-*.zip

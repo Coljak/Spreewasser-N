@@ -1,3 +1,5 @@
+"""This script loads the NUTS shapefiles into the database"""
+
 from pathlib import Path
 from django.contrib.gis.utils import LayerMapping
 from .models import *   

@@ -16,7 +16,7 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render
 
-#from .forms import PolygonSelectionForm
+from .forms import PolygonSelectionForm
 from . import forms
 from . import models
 from app.helpers import is_ajax
@@ -179,14 +179,14 @@ def user_dashboard(request):
 
     # state, county and district choices
 
-    # state_county_district_form = PolygonSelectionForm(request.POST or None)
+    state_county_district_form = PolygonSelectionForm(request.POST or None)
 
-    # if state_county_district_form.is_valid():
-    #     selected_states = state_county_district_form.cleaned_data['states']
-    #     selected_counties = state_county_district_form.cleaned_data['counties']
-    #     selected_districts = state_county_district_form.cleaned_data['districts']
+    if state_county_district_form.is_valid():
+        selected_states = state_county_district_form.cleaned_data['states']
+        selected_counties = state_county_district_form.cleaned_data['counties']
+        selected_districts = state_county_district_form.cleaned_data['districts']
         
-    #     # Process the selected polygons and pass the data to the map template
+        # Process the selected polygons and pass the data to the map template
 
 
     data = {'shp': shp, 

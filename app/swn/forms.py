@@ -3,7 +3,7 @@ from attr import attr
 from django import forms
 from django.contrib.auth.models import User
 
-from swn.models import Crop, UserProject, UserField #, NUTS5000_N1, NUTS5000_N2, NUTS5000_N3  # , UserInfo
+from swn.models import Crop, UserProject, UserField, NUTS5000_N1, NUTS5000_N2, NUTS5000_N3  # , UserInfo
 from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
@@ -83,37 +83,36 @@ class UserFieldForm(forms.ModelForm):
 
 # Selection of state, county and district
 
-# from .models import NUTS5000_N1, NUTS5000_N2, NUTS5000_N3
 
-# class PolygonSelectionForm(forms.Form):
-#     state_choices = sorted([(state.id, state.nuts_name) for state in NUTS5000_N1.objects.all()], key=lambda x: x[1])
-#     district_choices = sorted([(district.id, district.nuts_name) for district in NUTS5000_N2.objects.all()], key=lambda x: x[1])
-#     county_choices = sorted([(county.id, county.nuts_name) for county in NUTS5000_N3.objects.all()], key=lambda x: x[1])
+class PolygonSelectionForm(forms.Form):
+    state_choices = sorted([(state.id, state.nuts_name) for state in NUTS5000_N1.objects.all()], key=lambda x: x[1])
+    district_choices = sorted([(district.id, district.nuts_name) for district in NUTS5000_N2.objects.all()], key=lambda x: x[1])
+    county_choices = sorted([(county.id, county.nuts_name) for county in NUTS5000_N3.objects.all()], key=lambda x: x[1])
 
-#     states = forms.MultipleChoiceField(
-#         # queryset= NUTS5000_N1.objects,
-#         choices=state_choices,
-#         widget=forms.SelectMultiple(attrs={'id': 'stateSelect', 'class': 'state-dropdown administrative-area'}),
-#         label=False,
-#         required=False,
-#     )
+    states = forms.MultipleChoiceField(
+        # queryset= NUTS5000_N1.objects,
+        choices=state_choices,
+        widget=forms.SelectMultiple(attrs={'id': 'stateSelect', 'class': 'state-dropdown administrative-area'}),
+        label=False,
+        required=False,
+    )
     
-#     districts = forms.MultipleChoiceField(
-#         # queryset= NUTS5000_N2.objects,
-#         choices=district_choices,
-#         widget=forms.SelectMultiple(attrs={'id': 'districtSelect', 'class': 'district-dropdown administrative-area'}),
-#         label=False,
-#         required=False,
-#     )
-#     counties = forms.MultipleChoiceField(
-#         # queryset= NUTS5000_N3.objects,
-#         choices=county_choices,
-#         widget=forms.SelectMultiple(attrs={'id': 'countySelect', 'class': 'county-dropdown administrative-area'}),
-#         label=False,
-#         required=False,
-#     )
+    districts = forms.MultipleChoiceField(
+        # queryset= NUTS5000_N2.objects,
+        choices=district_choices,
+        widget=forms.SelectMultiple(attrs={'id': 'districtSelect', 'class': 'district-dropdown administrative-area'}),
+        label=False,
+        required=False,
+    )
+    counties = forms.MultipleChoiceField(
+        # queryset= NUTS5000_N3.objects,
+        choices=county_choices,
+        widget=forms.SelectMultiple(attrs={'id': 'countySelect', 'class': 'county-dropdown administrative-area'}),
+        label=False,
+        required=False,
+    )
 
-#     selected_states = forms.CharField(widget=forms.HiddenInput, required=False)
-#     selected_counties = forms.CharField(widget=forms.HiddenInput, required=False)
-#     selected_districts = forms.CharField(widget=forms.HiddenInput, required=False)
+    selected_states = forms.CharField(widget=forms.HiddenInput, required=False)
+    selected_counties = forms.CharField(widget=forms.HiddenInput, required=False)
+    selected_districts = forms.CharField(widget=forms.HiddenInput, required=False)
 

@@ -194,7 +194,7 @@ def user_dashboard(request):
             'user_field_form': field_name_form,
             'crop_form': crop_form, 
             'project_form': project_form,
-            #'state_county_district_form': state_county_district_form,
+            'state_county_district_form': state_county_district_form,
             }
     
 
@@ -378,28 +378,28 @@ def multiselect(request):
     
 def load_polygon(request, entity, polygon_id):
     try:
-        feature = {'type': 'Feature', 'geometry': {'type': 'Polygon', 'coordinates': []}, 'properties': {}}
-        # # Retrieve the polygon based on the ID
-        # if entity == 'states':
-        #     polygon = models.NUTS5000_N1.objects.get(id=polygon_id)
-        # elif entity == 'districts':
-        #     polygon = models.NUTS5000_N2.objects.get(id=polygon_id)
-        # elif entity == 'counties':
-        #     polygon = models.NUTS5000_N3.objects.get(id=polygon_id)
+        #feature = {'type': 'Feature', 'geometry': {'type': 'Polygon', 'coordinates': []}, 'properties': {}}
+        # Retrieve the polygon based on the ID
+        if entity == 'states':
+            polygon = models.NUTS5000_N1.objects.get(id=polygon_id)
+        elif entity == 'districts':
+            polygon = models.NUTS5000_N2.objects.get(id=polygon_id)
+        elif entity == 'counties':
+            polygon = models.NUTS5000_N3.objects.get(id=polygon_id)
         
-        # # Generate the GeoJSON representation of the polygon
-        # geometry = GEOSGeometry(polygon.geom)
-        # geojson = json.loads(geometry.geojson)
+        # Generate the GeoJSON representation of the polygon
+        geometry = GEOSGeometry(polygon.geom)
+        geojson = json.loads(geometry.geojson)
 
-        # feature = {
-        #     "type": "Feature",
-        #     "geometry": geojson,
-        #     "properties": {
-        #         "nuts_name": polygon.nuts_name,
+        feature = {
+            "type": "Feature",
+            "geometry": geojson,
+            "properties": {
+                "nuts_name": polygon.nuts_name,
                 
-        #     }
-        # }
-        # print('GeoJSON:', feature)
+            }
+        }
+        print('GeoJSON:', feature)
         return JsonResponse(feature)
     except:
         # Return an error response if the polygon is not found

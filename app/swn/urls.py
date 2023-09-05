@@ -44,4 +44,5 @@ urlpatterns = [
     path('login/Dashboard/load_polygon/<str:entity>/<int:polygon_id>/', views.load_polygon, name='load_polygon'),
     path('login/Dashboard/field-menu/<int:id>/', views.field_menu, name='field_menu'),
     path('login/Dashboard/get-soil-data/<int:id>/', views.get_soil_data, name='get_soil_data'),
+    path('login/Dashboard/buek-data/<int:buek_id>/', views.buek_test_view, name='buek_test_view'),
     ]

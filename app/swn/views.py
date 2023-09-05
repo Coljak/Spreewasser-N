@@ -15,11 +15,12 @@ from django.contrib.gis.gdal import DataSource
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render
-
+import requests
 from .forms import PolygonSelectionForm
 from . import forms
 from . import models
 from app.helpers import is_ajax
+from bs4 import BeautifulSoup
 # from django.contrib.auth.forms import UserCreationForm
 # from django.urls import reverse_lazy
 # from django.views import generic
@@ -418,34 +419,141 @@ def field_menu(request, id):
     }
     return render(request, 'swn/field_projects_edit.html', data_menu)
 
+def buek_test_view(request, buek_id):
+    buek_data_url = "https://fisbo.bgr.de/app/FISBoBGR_Profilanzeige/getProfile.php?"
+    params = {
+        'KARTE': 'BUEK200',
+        'LEGNR': buek_id,
+    }
+    response = requests.get(buek_data_url, params=params)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    profiles = soup.find_all('table', class_='profil')
+    data = {}
+    for profile in profiles:
+        table_rows = profile.find_all('tr')
+        print(table_rows)
+        land_cover_code = profile.find('title', class_='Landnutzung nach Corine 2000')
+        profile_img = profile.find('table', class_='showProfile')
+        profile_img_html = profile_img.prettify()
+
+    # print(response.content)
+    return HttpResponse(response.content, content_type="text/html")
+
+def get_soil_data_from_wms(id):
+    """"
+    https://www.bgr.bund.de/DE/Themen/Boden/Informationsgrundlagen/Bodenkundliche_Karten_Datenbanken/BUEK200/Sachdatenbank/felder_und_parameter.html?nn=2960024
+    """
+    user_field = models.UserField.objects.get(id=id)
+    user_field_geom = user_field.geom
+    polygon = user_field_geom.geojson
+    # bbox = ','.join(map(str, user_field_geom.extent))
+    bbox = (47.5, 8.7, 47.6, 8.8)
+    # print("bbox", bbox)
+
+    wms_url = 'https://services.bgr.de/wms/boden/buek200/?'
+    params = {
+        'service': 'WMS',
+        'version': '1.3.0',
+        'request': 'GetCapabilities',
+        
+    }
+    params2 = {
+        'bbox':'-2210783.259641736%2C6171667.260493002%2C4510783.259641736%2C7228332.739506998',
+        'bboxSR':'3857',
+        'imageSR':'3857',
+        'size':'1717%2C270',
+        'dpi':'120',
+        'format':'png32',
+        'transparent':True,
+        'layers':'show%3A0%2C1',
+        'f':'image'
+        }
+    params2 = {
+        'bbox':'-2210783.259641736%2C6171667.260493002%2C4510783.259641736%2C7228332.739506998',
+        'bboxSR':'3857',
+        'imageSR':'3857',
+        'size':'1717%2C270',
+        'dpi':'120',
+        'format':'png32',
+        'transparent':True,
+        'layers':'show%3A0%2C1',
+        'f':'image'
+        }
+
+
+    # params = {
+    #     'service': 'WMS',
+    #     'version': '1.1.1',
+    #     'request': 'GetFeatureInfo',
+    #     'layers': 3,
+    #     'styles': '',
+    #     'format': 'text/xml',
+    #     'transparent': 'true',
+    #     'srs': 'EPSG:4326',
+    #     
+    #     'bbox': bbox,
+    #     'width': 200,
+    #     'height': 200,
+    # }
+
+    wml_url = 'https://services.bgr.de/wms/boden/buek200/?'
+    """
+    This is a set of working parameters for the buek REST-Api. 
+    The request takes very long because the buek is split up in layers that define areas.
+    56 Layers are being queried, only three seem to render a result. The result containing data
+    refers to this 
+    URL: https://fisbo.bgr.de/app/FISBoBGR_Profilanzeige/getProfile.php?KARTE=BUEK200&amp;LEGNR=311865"""
+    params = {
+        'SERVICE': 'WMS',
+        'VERSION': '1.3.0',
+        'REQUEST': 'GetFeatureInfo',
+        'BBOX': '1198111.96795441047288477,6647127.53802930749952793,1351146.27870820206589997,6819672.87509871460497379',
+        'CRS': 'EPSG:3857',
+        'WIDTH': 902,
+        'HEIGHT': 1017,
+        'LAYERS': 50,
+        'STYLES': '',
+        'FORMAT': 'image/jpeg',
+        'QUERY_LAYERS': 50,
+        'INFO_FORMAT': 'text/html',
+        'I': 469, 
+        'J': 326,
+        'FEATURE_COUNT': 10}
+
+    response = requests.get(wms_url, params=params)
+    print(response.headers)
+    # if response.status_code == 200:
+    #     import os
+    #     from pathlib import Path
+        
+    #     image_filename = f'map_image_{id}.png'
+    #     image_filepath = os.path.join('/app/swn/templates/swn/wms_testfolder', image_filename)
+    #     print('IMAGE FILEPATH', image_filepath)
+
+    #     with open(image_filepath, 'wb') as f:
+    #         f.write(response.content)
+
+    # content = response.content
+    # for key in response.__dict__.keys():
+    #     print("content\n", key, response.__dict__[key])
+    # with open('map_image.png', 'wb') as f:
+    #     f.write(image_content)
+
 def get_soil_data(request, id):
     print("VIEW get_soil_data EXECUTED")
     user_field = models.UserField.objects.get(id=id)
     print("user_field.soil_profile_polygon_ids", user_field.soil_profile_polygon_ids)
     #soil_profiles = models.SoilProfile.objects.filter(polygon_id__in=user_field.soil_profile_polygon_ids)
     intersecting_buek_data = models.BuekData.objects.filter(polygon_id_in_buek__in=user_field.soil_profile_polygon_ids['buek_polygon_ids'])
-    #intersecting_buek_data = list(intersecting_buek_data)# print("soil_profiles", soil_profiles)
-    # print('intersecting_buek_data', intersecting_buek_data)
-    # for item in intersecting_buek_data:
-    #     # dict = item.__dict__
-    #     print(dict)
-    #     for key in item.__dict__.keys():
-    #         print(key, item.__dict__[key])
+    
+    print('intersecting_buek_data', intersecting_buek_data)
 
-    # data by polygon_id
     data = {}
     for polygon_id in user_field.soil_profile_polygon_ids['buek_polygon_ids']:
         print(polygon_id)
-        data['polygon_id'] = polygon_id
-        buek_data = models.BuekData.objects.filter(polygon_id_in_buek=polygon_id)
         
-        data = {}
         
-        # for item in buek_data:
-        #     item_data = item.__dict__
-        #     print(item_data)
-        #     data[polygon_id] = item_data
-        for obj in buek_data:
+        for obj in intersecting_buek_data:
             polygon_id_in_buek = obj.polygon_id_in_buek
             profile_id_in_polygon = obj.profile_id_in_polygon
             horizon_id = obj.horizon_id
@@ -456,9 +564,7 @@ def get_soil_data(request, id):
 
             # this only contains parameters that are not null
             data[polygon_id_in_buek][profile_id_in_polygon][horizon_id] = {
-                'range_percentage_of_area': obj.range_percentage_of_area,
-                'range_percentage_minimum': obj.range_percentage_minimum,
-                'range_percentage_maximum': obj.range_percentage_maximum,
+                
                 'avg_range_percentage_of_area': obj.avg_range_percentage_of_area,
                 'layer_depth': obj.layer_depth,
                 'bulk_density': obj.bulk_density,
@@ -473,10 +579,11 @@ def get_soil_data(request, id):
                 'is_in_groundwater': obj.is_in_groundwater,
                 'is_impenetrable': obj.is_impenetrable,
                 
-        # Add other parameters here...
-    }
+                # Add other parameters here...
+                }
+    
 
-        # print(buek_data)
+    print("data", data)
     #return JsonResponse(user_field.soil_profile_polygon_ids)
     return JsonResponse(data)
  

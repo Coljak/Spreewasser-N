@@ -1,3 +1,4 @@
+beautifulsoup4==4.12.2
 debugpy==1.6.2
 django==4.2
 django-debug-toolbar==3.7.0

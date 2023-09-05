@@ -7,6 +7,7 @@ from statistics import mode
 
 from django.db import models
 from django.contrib.gis.db import models as gis_models
+
 from django.contrib.gis.db.models.functions import Intersection
 from django.db.models import Func, F
 from django.contrib.gis.gdal import GDALRaster
@@ -59,8 +60,6 @@ class UserField(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
     geom_json = PolygonField(null=True)
-    # geom = GeometryField(null=True)
-    
     comment = models.TextField(null=True, blank=True)
     geom = gis_models.GeometryField(null=True, srid=4326)
     soil_profile_polygon_ids = models.JSONField(null=True, blank=True)
@@ -92,10 +91,7 @@ class UserField(models.Model):
         print( 'polygon_json ', polygon_json)
         self.soil_profile_polygon_ids = polygon_json
         self.save()
-
         # return intersecting_buek_data
-    
-
     
 class SoilProfile(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
@@ -205,21 +201,28 @@ class NUTS5000_N3(models.Model):
     def __str__(self):
         return self.nuts_name
 
-
-    
-
 # ----------BUEK 200 data ------------------------------------------------
+
+class BuekSoilProfileInfo(models.Model):
+    polygon_id_in_buek = models.IntegerField(null=True, blank=True)
+    system_unit = models.CharField(max_length=56, null=True, blank=True)
+    soil_profile_no = models.IntegerField(null=True, blank=True)
+    soil_profile_id = models.ForeignKey(SoilProfile, on_delete=models.CASCADE, null=True, blank=True)
+    area_percentage = models.IntegerField(null=True, blank=True)
+    landusage_corine_code = models.IntegerField(null=True, blank=True)
+    landusage_name = models.CharField(max_length=56, null=True, blank=True)
+
+    def __str__(self):
+        return 'soil_profile_info of Polygon' + str(self.polygon_id)
+    
+# TODO can probably be deleted
 class BaseRasterData(models.Model):
     name = models.CharField(max_length=100)
     rast = gis_models.RasterField(srid=4326, null=True, blank=True)
     geotiff = models.FileField(upload_to='geotiffs/')
     
-
     def __str__(self):
         return self.name
-    
-
-from django.contrib.gis.db import models
 
 
 class Buek(models.Model):
@@ -231,10 +234,21 @@ class Buek(models.Model):
     hinweis = models.CharField(max_length=91, null=True, blank=True)
     shape_area = models.FloatField()
     shape_leng = models.FloatField()
-    geom = models.MultiPolygonField(srid=4326)
+    geom = gis_models.MultiPolygonField(srid=4326)
 
+class NewBuek(models.Model):
+    polygon_id = models.BigIntegerField(primary_key=True)  # Set polygon_id as primary key
+    bgl = models.CharField(max_length=80, null=True, blank=True)
+    symbol = models.CharField(max_length=80, null=True, blank=True)
+    legende = models.CharField(max_length=200, null=True, blank=True)
+    hinweis = models.CharField(max_length=91, null=True, blank=True)
+    shape_area = models.FloatField()
+    shape_leng = models.FloatField()
+    geom = gis_models.MultiPolygonField(srid=4326)
 
-    
+    class Meta:
+        db_table = 'swn_buek_old'
+
 
 class BuekData(models.Model):
     
@@ -245,11 +259,11 @@ class BuekData(models.Model):
     range_percentage_maximum = models.IntegerField(null=True, blank=True)
     avg_range_percentage_of_area = models.IntegerField(null=True, blank=True)
     horizon_id = models.IntegerField(null=True, blank=True)
-    layer_depth = models.IntegerField(null=True, blank=True)
-    bulk_density = models.IntegerField(null=True, blank=True)
+    layer_depth = models.FloatField(null=True, blank=True)
+    bulk_density = models.FloatField(null=True, blank=True)
     raw_density = models.IntegerField(null=True, blank=True)
     soil_organic_carbon = models.FloatField(null=True, blank=True)
-    soil_organic_matter = models.IntegerField(null=True, blank=True)
+    soil_organic_matter = models.FloatField(null=True, blank=True)
     ph = models.IntegerField(null=True, blank=True)
     ka5_texture_class = models.CharField(max_length=56, null=True, blank=True)
     sand = models.IntegerField(null=True, blank=True)
@@ -271,5 +285,6 @@ class BuekData(models.Model):
     def __str__(self):
         return 'soil_profile_all' + str(self.polygon_id_in_buek) + str(self.profile_id_in_polygon)
     
-
+class BuekSoilProfile(models.Model):
+    somethin = models.CharField(max_length=255, null=True, blank=True)
 

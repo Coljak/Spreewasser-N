@@ -182,3 +182,7 @@ geodata/
 app/swn/rasterio_tut.py
 app/media/geotiffs/
 2023-07-26_db.json
+monica/
+node_modules/
+thredds_tomcat/
+app/buek_data/

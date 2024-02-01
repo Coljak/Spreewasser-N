@@ -1,0 +1,49 @@
+{% extends 'swn/base.html' %} 
+{% load static %} 
+{% load leaflet_tags %} 
+{% load geojson_tags %} 
+{% block css %} 
+{% leaflet_css %}
+{% comment %} <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css"> {% endcomment %}
+{% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.5.1/dist/leaflet.css"> {% endcomment %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.2/Control.FullScreen.min.css">
+{% comment %} <link rel="stylesheet" href="{% static "swn/css/leaflet.timedimension.control.min.css" %}"/> {% endcomment %}
+<link rel="stylesheet" href="{% static "swn/css/user_dashboard.css" %}"/>
+<link rel="stylesheet" href="{% static "swn/css/base.css" %}"/>
+
+
+{% endblock css %} 
+{% block body_block %}
+<html>
+    <head>
+        <title>Leaflet TimeDimension Demo</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.5.1/dist/leaflet.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css" />
+    </head>
+    <body>
+        <div id="threddsCatalog" class="container">
+            <h1>Thredds Catalog</h1>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Size</th>
+                        <th scope="col">Date modified</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dataset in catalog_json %}
+                    <tr scope="row">
+                        <td>{{ dataset.name }}</td>
+                        <td>{{ dataset.size }}</td>
+                        <td>{{ dataset.date_modified }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            
+            
+        </div>
+    </body>
+</html>
+
+{% endblock%} 

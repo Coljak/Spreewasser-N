@@ -6,48 +6,52 @@ ENV PYTHONUNBUFFERED 1
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG C.UTF-8
 
+ARG DEV=true
+
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements.dev.txt /tmp/requirements.dev.txt
 COPY ./app /app
 WORKDIR /app
 EXPOSE 8000
 
-ARG DEV=false
+# Install Node.js
 RUN apt-get update -qq && apt-get install -y -qq \
-    # std libs
+    ca-certificates curl gnupg wget
+
+# RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+
+RUN NODE_MAJOR=20 && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+
+RUN apt-get install -y -qq nodejs
+RUN apt-get install -y -qq npm
+RUN apt-get clean && \
+    rm -rf /var/apt/lists/* && \
+    rm -rf /var/cache/apt/*
+
+# Continue with the rest of your Dockerfile
+RUN apt-get install -y -qq \
     git less nano curl \
-    ca-certificates \
-    wget build-essential\
-    # python basic libs
+    build-essential \
     python3.10 python3.10-dev python3.10-venv gettext \
-    # geodjango
     gdal-bin binutils libproj-dev libgdal-dev \
-    # postgresql
     libpq-dev postgresql-client && \
-    apt-get clean all && rm -rf /var/apt/lists/* && rm -rf /var/cache/apt/* && \
-    # install pip
-    wget https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get-pip.py && \
-    pip3 install --no-cache-dir setuptools wheel -U && \
+    apt-get clean all && rm -rf /var/apt/lists/* && rm -rf /var/cache/apt/* 
+RUN wget https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get-pip.py 
+RUN npm init -y 
+RUN npm install bootstrap 
+RUN npm install sass 
+RUN pip3 install --no-cache-dir setuptools wheel -U && \
     python3 -m venv /py && \
     /py/bin/pip3 install --upgrade pip && \
-    # pip install --upgrade pip && \
-    #apk add --update --no-cache postgresql-client && \
-    # apk add --update --no-cache --virtual .tmp-build-deps \
-    #     build-base postgresql-dev musl-dev && \
     /py/bin/pip3 install -r /tmp/requirements.txt && \
-    # pip install -r /tmp/requirements.txt && \
     if [ $DEV = "true" ]; \
         then /py/bin/pip3 install -r /tmp/requirements.dev.txt ; \
-        #then pip install -r /tmp/requirements.dev.txt ; \
     fi && \
-    rm -rf /tmp && \
-    #apk del .tmp-build-deps 
-    adduser \
+    rm -rf /tmp 
+RUN adduser \
         --disabled-password \
         --no-create-home \
         django-user
 
 ENV PATH="/py/bin:$PATH"
-
-
-

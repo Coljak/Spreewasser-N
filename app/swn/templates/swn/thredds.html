@@ -1,0 +1,17 @@
+{% extends "swn/base.html" %}
+{% load static %}
+
+{% block body_block %}
+    
+    <div class="threddsContent container">
+        {% if thredds_content %}
+            {{ thredds_content|safe }}
+        {% else %}
+            <p>Error loading Thredds content.</p>
+        {% endif %}
+    </div>
+{% endblock body_block %}
+{% comment %} 
+{% block javascript %}
+    <script src="{% static 'swn/js/thredds.js' %}" type="module"></script>
+{% endblock javascript %} {% endcomment %}

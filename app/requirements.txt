@@ -29,5 +29,8 @@ geoserver-rest==2.4.1
 # TODO geolite city and country databases need to be added https://www.youtube.com/watch?v=MOKEB3EjP3Y&list=PLgjw1dR712jqRdvbOYxBugzbqlfcy17DU&index=2
 geoip2==4.7.0
 geopy==2.3.0
+libsass
+django-compressor
+django-sass-processor
 ``` 
 

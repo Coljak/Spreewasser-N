@@ -1,10 +1,5 @@
 # version: "3.8"
-# networks:
-#   - django-network
-# volumes:
-#   - ./app
-#   - ./geoserver/data_dir
-#   - ./database
+
 
 services:
   app:
@@ -20,23 +15,25 @@ services:
       - ./app:/app
     command: 
       sh -c "python3 manage.py wait_for_db &&
-        python3 manage.py runserver 0.0.0.0:8000"
+      python3 manage.py migrate &&
+      python3 manage.py runserver 0.0.0.0:8000"
         
-      # python3 manage.py migrate &&
     environment:
       - DB_HOST=db
       - DB_NAME=postgis
       - DB_USER=postgis
       - DB_PASS=postgis
 
-      # - GEOSERVER_URL=http://geoserver:8080/geoserver
-      # - GEOSERVER_USER=admin
-      # - GEOSERVER_PASS=geoserver
+      - GEOSERVER_URL=http://geoserver:8080/geoserver
+      - GEOSERVER_USER=admin
+      - GEOSERVER_PASS=geoserver
+
+      - THREDDS_URL=http://thredds:8080/thredds
+      
+      
     container_name: swn_geo_django
     # if the container does not run, this line delays the runserver command
-    # entrypoint: ["sh", "-c", "sleep 2073600"]
-    # networks:
-    #   - django-network
+    entrypoint: ["sh", "-c", "sleep 2073600"]
     depends_on:
       - db
     networks:
@@ -56,67 +53,91 @@ services:
 
     ports:
       - 5432:5432
-    # networks:
-    #   - django-network
     container_name: swn_postgis
     networks:
       - swn_network
 
-  # # #geoserver for visualisation and sharing of geodata
-  # geoserver:
-  #   image: kartoza/geoserver:2.22.1
-  #   #image: geonode/geoserver:2.23.0
-  #   container_name: swn_geoserver
-  #   volumes:
-  #     - ./geoserver/data_dir3:/geoserver_data/data
-  #   environment:
-  #     # - GEOSERVER_URL=geoserver
-  #     - GEOSERVER_ADMIN_USER=admin
-  #     - GEOSERVER_ADMIN_PASSWORD=geoserver
-  #     - GEOSERVER_DATA_DIR=/geoserver_data/data
-    
-  #   ports:
-  #     - 8080:8080
-  #     # - ${GEOSERVER_PORT}:8080
-  #   depends_on:
-  #     - db
-  #   networks:
-  #     - swn_network
+  # #geoserver for visualisation and sharing of geodata
+  geoserver:
+    image: kartoza/geoserver:2.23.2
+    #user: "1000:1000"
+    container_name: swn_geoserver
+    volumes:
+      - ./geoserver/data:/geoserver_data/data
+    environment:
+      - GEOSERVER_URL=geoserver
+      - GEOSERVER_ADMIN_USER=admin
+      - GEOSERVER_ADMIN_PASSWORD=geoserver
+      - GEOSERVER_DATA_DIR=/geoserver_data/data
+    ports:
+      - 8080:8080
+      # - ${GEOSERVER_PORT}:8080
+    depends_on:
+      - db
+    networks:
+      - swn_network
+    # aliases:
+    #   - swn_geoserver
 
   # thredds for sharing of netcdf data
   thredds:
     build:
       context: .
       dockerfile: Dockerfile.thredds
-    
-   
     container_name: swn_thredds
     volumes:
+      - ./thredds_tomcat/tomcat_logs:/usr/local/tomcat/logs/
+      - ./thredds_tomcat/thredds_logs:/usr/local/tomcat/content/thredds/logs/
+      # - ./thredds_tomcat/users/tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml
+      - ./thredds_data/data/tomcat/content/thredds:/usr/local/tomcat/content/thredds
+      # - /path/to/your/data/directory1:/path/to/your/data/directory1
+      # - /path/to/your/data/directory2:/path/to/your/data/directory2
       - ./thredds_data/data:/usr/local/tomcat/content/thredds/public/data
+      # - ./path/to/your/server.xml:/usr/local/tomcat/conf/server.xml
+      # - /path/to/your/web.xml:/usr/local/tomcat/conf/web.xml
+      # - /path/to/your/keystore.jks:/usr/local/tomcat/conf/keystore.jks
     # command:
     #   sh -c "mv /temp/catalog.xml /usr/local/tomcat/content/thredds/catalog.xml && \
     #     mv /temp/threddsConfig.xml /usr/local/tomcat/content/thredds/threddsConfig.xml"
+
+    environment:
+      - THREDDS_URL=thredds
+  
+      - THREDDS_DATA_DIR=/usr/local/tomcat/content/thredds/public/data
     ports:
       - 8088:8080
-
     depends_on:
       - db
     networks:
       - swn_network
+    # aliases:
+    #   - swn_thredds
+
+  # MONICA
+  monica:
+    build:
+      context: .
+      dockerfile: Dockerfile.monica  # Use the Dockerfile name you provided
+    container_name: swn_monica
+    volumes:
+      - ./monica:/run/monica
+    expose:
+      - 6666  # monica_producer_port
+      - 6677  # monica_intern_in_port
+      - 7777  # monica_consumer_port
+      - 7788  # monica_intern_out_port
+    ports:
+      - 6666:6666
+      - 6677:6677
+      - 7777:7777
+      - 7788:7788
+    entrypoint: ["sh", "-c", "sleep 2073600"]
+    networks:
+      - swn_network
+
 
 networks:
   swn_network:
-
-
-    
-    
-
-  
-
-
-   
-
-
 
   # # Celery
   # celery:

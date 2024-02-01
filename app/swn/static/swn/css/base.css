@@ -50,23 +50,4 @@ leaflet-control-layers-selector:checked {
   color: var(--bs-primary) !important;
 }
 
-/* .leaflet-container a {
-	-webkit-tap-highlight-color: var(--bs-primary) !important;
-  color: var(--bs-primary) !important;
-} */
-/* .leaflet-bar a:focus {
-	background-color: #f4f4f4;
-	}
 
-.leaflet-bar a.leaflet-disabled {
-  
-  background-color: #f4f4f4;
-  color: #bbb;
-  } */
-
-  /* changes the color of polygons an the map */
-/* .leaflet-interactive {
-  stroke: var(--bs-primary);
-  fill: var(--bs-primary);
-  
-} */

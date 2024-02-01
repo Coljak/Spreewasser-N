@@ -29,6 +29,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 urlpatterns = [
     # path('', views.IndexView.as_view(), name='index'),
     path('', include('swn.urls')),
+    path('toolbox/', include('toolbox.urls')),
     path('admin/', admin.site.urls),
     path('api/schema/',
          SpectacularAPIView.as_view(), name='api-schema'),

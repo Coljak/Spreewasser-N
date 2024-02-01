@@ -1,18 +1,16 @@
-console.log("chart_page");
-
 export const endpoint = "chartdata/";
 export const chartDiv = document.getElementById("chartDiv")
 export const crop = document.getElementById("id_Feldfrucht")
 
 // chart params
 
-export const getChart = function () {
+export const getChart = function (soilId, cropId) {
     chartDiv.innerHTML = '<canvas id="Chart"></canvas>'
     const ctx = document.getElementById("Chart")
     console.log("Feldfrucht:", crop.value)
     $.ajax({
         method: "GET",
-        url: endpoint + crop.value,
+        url: endpoint + cropId + '/' + soilId,
 
         success: function (data) {
             console.log('SUCCESS data: ', data)

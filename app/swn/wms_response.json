@@ -1,0 +1,221 @@
+{ 
+    "WMS_Capabilities": { 
+        "@version": "1.3.0", 
+        "@updateSequence": "2024-01-30T10:19:12.786Z", 
+        "@xmlns": "http://www.opengis.net/wms", 
+        "@xmlns:xlink": "http://www.w3.org/1999/xlink", 
+        "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance", 
+        "@xmlns:edal": "http://reading-escience-centre.github.io/edal-java/wms", 
+        "@xsi:schemaLocation": "http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd", 
+        "Service": { 
+            "Name": "WMS", 
+            "Title": "Spreewasser:N THREDDS", 
+            "Abstract": "Scientific Data", 
+            "KeywordList": { 
+                "Keyword": [ "meteorology", "atmosphere", "climate", "ocean", "earth science" ] 
+                }, 
+            "OnlineResource": { 
+                "@xlink:type": "simple", 
+                "@xlink:href": "http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc" 
+                }, 
+            "ContactInformation": { 
+                "ContactPersonPrimary": { 
+                    "ContactPerson": "Support", 
+                    "ContactOrganization": "Zentrum f\u00fcr Agrarlandschaftsforschung e.V." 
+                    }, 
+                "ContactVoiceTelephone": null, 
+                "ContactElectronicMailAddress": "colja.krugmann@zalf.de" 
+                }, 
+            "Fees": "none", 
+            "AccessConstraints": "none", 
+            "LayerLimit": "1", 
+            "MaxWidth": "2048", 
+            "MaxHeight": "2048" 
+        }, 
+        "Capability": { 
+            "Request": { 
+                "GetCapabilities": { 
+                    "Format": "text/xml", 
+                    "DCPType": { 
+                        "HTTP": { 
+                            "Get": { 
+                                "OnlineResource": { 
+                                    "@xlink:type": "simple", 
+                                    "@xlink:href": "http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc" 
+                                } 
+                            } 
+                        } 
+                    } 
+                }, 
+                "GetMap": { 
+                    "Format": [ "image/png", "image/png;mode=32bit", "image/gif", "image/jpeg", "application/vnd.google-earth.kmz" ], 
+                    "DCPType": { 
+                        "HTTP": { 
+                            "Get": { 
+                                "OnlineResource": { 
+                                    "@xlink:type": "simple", 
+                                    "@xlink:href": "http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc" 
+                                } 
+                            } 
+                        } 
+                    } 
+                }, 
+                "GetFeatureInfo": { 
+                    "Format": [ "text/plain", "text/xml", "text/html" ], 
+                    "DCPType": { 
+                        "HTTP": { 
+                            "Get": { 
+                                "OnlineResource": { 
+                                    "@xlink:type": "simple", 
+                                    "@xlink:href": "http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc" 
+                                } 
+                            } 
+                        } 
+                    } 
+                } 
+            }, 
+            "Exception": { 
+                "Format": "XML" 
+            }, 
+            "edal:ExtendedCapabilities": { 
+                "edal:CapabilitiesType": "ncWMS2", 
+                "edal:ExtendedRequest": [ { 
+                    "edal:Request": "GetMap", 
+                    "edal:UrlParameter": [ { 
+                        "edal:ParameterName": "COLORSCALERANGE", 
+                        "edal:ParameterDescription": "Of the form min,max this is the scale range used for plotting the data." 
+                    }, { 
+                        "edal:ParameterName": "NUMCOLORBANDS", 
+                        "edal:ParameterDescription": "The number of discrete colours to plot the data. Must be between 2 and 250" 
+                    }, { 
+                        "edal:ParameterName": "ABOVEMAXCOLOR", 
+                        "edal:ParameterDescription": "The colour to plot values which are above the maximum end of the scale range. Colours are as defined above, with the addition of \"extend\", which will use the maximum value of the palette." 
+                    }, { 
+                        "edal:ParameterName": "BELOWMINCOLOR", 
+                        "edal:ParameterDescription": "The colour to plot values which are below the minimum end of the scale range. Colours are as defined above, with the addition of \"extend\", which will use the minimum value of the palette." 
+                    }, { 
+                        "edal:ParameterName": "LOGSCALE", 
+                        "edal:ParameterDescription": "\"true\" or \"false\" - whether to plot data with a logarithmic scale" 
+                    }, { 
+                        "edal:ParameterName": "TARGETTIME", 
+                        "edal:ParameterDescription": "For in-situ data, all points which fall within the time range (specified in the TIME parameter) will be plotted. In the case that an in-situ point has multiple time readings within that range, the colour used to plot them will depend on the time value which is closest to this given value" 
+                    }, { 
+                        "edal:ParameterName": "TARGETELEVATION", 
+                        "edal:ParameterDescription": "For in-situ data, all points which fall within the elevation range (specified in the ELEVATION parameter) will be plotted. In the case that an in-situ point has multiple elevation readings within that range, the colour used to plot them will depend on the elevation value which is closest to this given value" 
+                    }, { 
+                        "edal:ParameterName": "OPACITY", 
+                        "edal:ParameterDescription": "The percentage opacity of the final output image" 
+                    }, { 
+                        "edal:ParameterName": "ANIMATION", 
+                        "edal:ParameterDescription": "\"true\" or \"false\" - whether to generate an animation. This also needs the TIME to be of the formstarttime/endtime, and currently is only implemented for features with a discrete time axis." 
+                    } ] 
+                }, { 
+                    "edal:Request": "GetTimeseries", 
+                    "edal:RequestDescription": "This produces either a timeseries graph or, if downloading is enabled, a CSV file containing the data. The URL parameters are identical to those of a GetFeatureInfo request. The TIME parameter should specify a range of times in the form starttime/endtime, and the supported formats are: image/png,image/jpg,image/jpeg,text/csv,text/json,application/prs.coverage+json,application/prs.coverage json" 
+                }, { 
+                    "edal:Request": "GetVerticalProfile", 
+                    "edal:RequestDescription": "This produces either a vertical profile graph or, if downloading is enabled, a CSV file containing the data. The URL parameters are identical to those of a GetFeatureInfo request. The ELEVATION parameter should specify a range of elevations in the form startelevation/endelevation, and the supported formats are: image/png,image/jpg,image/jpeg,text/csv,text/json,application/prs.coverage+json,application/prs.coverage json" 
+                }, { 
+                    "edal:Request": "GetTransect", 
+                    "edal:RequestDescription": "This produces a graph of data values along an arbitrary path. Additionally if there is vertical information present in the dataset, it will produce a vertical section along the same path. It accepts the same URL parameters as a GetMap requestion, with the additional mandatory parameter LINESTRING", 
+                    "edal:UrlParameter": { 
+                        "edal:ParameterName": "LINESTRING", 
+                        "edal:ParameterDescription": "The points which define the path of the transect to plot. Of the form x1 y1,x2 y2,x3 y3..." 
+                    } 
+                }, { 
+                    "edal:Request": "GetMetadata", 
+                    "edal:RequestDescription": "Fetches small pieces of metadata. Many of these are also present in this capabilities document, but GetMetadata provides a more convenient method of accessing such data. GetMetadata always returns data in the JSON format", 
+                    "edal:UrlParameter": { 
+                        "edal:ParameterName": "ITEM", 
+                        "edal:ParameterDescription": "This specifies the metadata to return. This can take the values:\n menu: Returns a tree representation of the available WMS layers, with IDs. Takes the optional parameter DATASET to return the same tree for a single dataset\n layerDetails: Returns a set of details needed to plot a given layer. This includes such data as units, layer bounding box, configured scale range, etc. Takes the parameters LAYERNAME and TIME. The TIME parameter is optional, and if it is specified then the nearest available time is returned as part of the layer's details.\n minmax: Calculates the range of values in the given area. Takes the same parameters as a GetMap request.\n timesteps: Returns the available times for a given day. Takes the parameters LAYERNAME and DAY (yyyy-mm-dd)\n animationTimesteps: Returns a list of time strings at different temporal resolutions for a given time range. This is used to present to the user different frequencies for the generation of an animation. Takes the parameters LAYERNAME, START, and END" 
+                    } 
+                }, { 
+                    "edal:Request": "GetLegendGraphic", 
+                    "edal:RequestDescription": "The GetLegendGraphic request generates an image which can be used as a legend. There are two main options: Generating just a colourbar, and generating a full legend.", 
+                    "edal:UrlParameter": { 
+                        "edal:ParameterName": "COLORBARONLY", 
+                        "edal:ParameterDescription": "\"true\" or \"false\". Whether to generate a full legend or just the colour bar. If it's \"true\", the following URL parameters are required:\n PALETTE: The name of the palette to use. If missing, set to \"default\"\n NUMCOLORBANDS: The number of colour bands to use. If missing, set to 250\n VERTICAL: Whether to very colours vertically. If missing, defaults to true\n WIDTH: The width of the image to generate. If missing, defaults to 50\n HEIGHT: The height of the image to generate. If missing, defaults to 200\n \n For a full legend, the additional parameters LAYERS and either STYLES, SLD, or SLD_BODY must be supplied. This is because a single WMS layer may depend on an arbitrary number of sub-layers, depending on the style it is plotted in. In addition to these parameters, the optional parameters controlling the style may be supplied (these are the same as documented in the GetMap request). Note that for full legends, the supplied width and height are NOT the final height of the image, but rather the width and height of each individual coloured plot area (i.e. the 1d/2d colourbar)" 
+                    } 
+                } ] 
+            }, 
+            "Layer": { 
+                "Title": "Spreewasser:N THREDDS", 
+                "CRS": [ "EPSG:4326", "CRS:84", "EPSG:41001", "EPSG:27700", "EPSG:3408", "EPSG:3409", "EPSG:3857", "EPSG:5041", "EPSG:5042", "EPSG:32661", "EPSG:32761" ], 
+                "Layer": { 
+                    "Title": "DWD precipitation flux data", 
+                    "Layer": { 
+                        "@queryable": "1", 
+                        "Name": "pr", 
+                        "Title": "Precipitation", 
+                        "Abstract": "Precipitation", 
+                        "EX_GeographicBoundingBox": { 
+                            "westBoundLongitude": "5.866250515", 
+                            "eastBoundLongitude": "15.041815757777801", 
+                            "southBoundLatitude": "47.270122528055595", 
+                            "northBoundLatitude": "55.0565261841667" 
+                        }, 
+                        "BoundingBox": { 
+                            "@CRS": "CRS:84", 
+                            "@minx": "5.866250515", 
+                            "@maxx": "15.041815757777801", 
+                            "@miny": "47.270122528055595", 
+                            "@maxy": "55.0565261841667" 
+                        }, 
+                        "Dimension": { 
+                            "@name": "time", 
+                            "@units": "ISO8601", 
+                            "@multipleValues": "true", 
+                            "@current": "true", 
+                            "@default": "2009-12-31T00:00:00.000Z", 
+                            "#text": "2009-01-01T00:00:00.000Z/2009-12-31T00:00:00.000Z/P1D" 
+                        }, 
+                        "Style": [ { 
+                            "Name": "default-scalar/default", 
+                            "Title": "default-scalar/default", 
+                            "Abstract": "default-scalar style, using the default palette. Available palettes can be found in the response to http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc?request=GetMetadata&item=layerDetails&layerName=pr", 
+                            "LegendURL": { 
+                                "@width": "110", 
+                                "@height": "264", 
+                                "Format": "image/png", 
+                                "OnlineResource": { 
+                                    "@xlink:type": "simple", 
+                                    "@xlink:href": "http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc?REQUEST=GetLegendGraphic&PALETTE=default&LAYERS=pr&STYLES=default-scalar/default" 
+                                } 
+                            } 
+                        }, { 
+                            "Name": "colored_contours/default", 
+                            "Title": "colored_contours/default", 
+                            "Abstract": "colored_contours style, using the default palette. Available palettes can be found in the response to http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc?request=GetMetadata&item=layerDetails&layerName=pr", 
+                            "LegendURL": { 
+                                "@width": "110", 
+                                "@height": "264", 
+                                "Format": "image/png", 
+                                "OnlineResource": { 
+                                    "@xlink:type": "simple", 
+                                    "@xlink:href": "http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc?REQUEST=GetLegendGraphic&PALETTE=default&LAYERS=pr&STYLES=colored_contours/default" 
+                                } 
+                            } 
+                        }, { 
+                            "Name": "contours", 
+                            "Title": "contours", 
+                            "Abstract": "contours style" 
+                        }, { 
+                            "Name": "raster/default", 
+                            "Title": "raster/default", 
+                            "Abstract": "raster style, using the default palette. Available palettes can be found in the response to http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc?request=GetMetadata&item=layerDetails&layerName=pr", 
+                            "LegendURL": { 
+                                "@width": "110", 
+                                "@height": "264", 
+                                "Format": "image/png", 
+                                "OnlineResource": { 
+                                    "@xlink:type": "simple", 
+                                    "@xlink:href": "http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc?REQUEST=GetLegendGraphic&PALETTE=default&LAYERS=pr&STYLES=raster/default" 
+                                } 
+                            } 
+                        } ] 
+                    } 
+                } 
+            } 
+        } 
+    } 
+} 

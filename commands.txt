@@ -24,3 +24,15 @@ npm install sass
 // compile scss to css 
 npx sass styles.scss bootstrap_scss.css
 
+// https://blog.logrocket.com/how-switch-node-js-versions-nvm/
+Into dockerfile: in app/
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+//source line added
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+
+#https://www.youtube.com/watch?v=nCX3QVl_PiI
+npm install bootstrap@5.3
+
+

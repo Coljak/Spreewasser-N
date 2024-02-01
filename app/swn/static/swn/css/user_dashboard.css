@@ -2,9 +2,9 @@
     height: 100%;
   } */
   .highlight {
-    background-color: var(--bs-warning);
+    background-color: var(--bs-success);
     border-width: 2px;
-    border-color: var(--bs-warning);
+    border-color: var(--bs-success);
 
   }
 
@@ -85,6 +85,17 @@
     
   }
 
+
+  .leaflet-interactive {
+    stroke: var(--bs-primary);
+    fill: var(--bs-secondary-bg-subtle);
+    fill-opacity: 0.2; 
+  } 
+  .leaflet-interactive.highlight {
+    stroke: var(--bs-success);
+    fill: var(--bs-secondary-bg-subtle);
+    fill-opacity: 0.2; 
+  } 
 
   .sidebar-list .list-group-item {
     border-radius: 0%;

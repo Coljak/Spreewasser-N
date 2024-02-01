@@ -45,20 +45,19 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'django_extensions',
     'swn',
+    'toolbox',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
-    # shapefileimport is probably only necessary during development
-    # 'shapefileimport',
-    # 'user',
-    # 'accounts',
+    'sass_processor',
+
     # 3rd party
     'debug_toolbar',
     'leaflet',
     'djgeojson',
     'crispy_forms',
     'crispy_bootstrap5',
-
+    # 'raster',
 ]
 
 
@@ -109,6 +108,11 @@ DATABASES = {
     }
 }
 
+GEOSERVER_URL = os.environ.get('GEOSERVER_URL')
+THREDDS_URL = os.environ.get('THREDDS_URL')
+THREDDS_CATALOG_XML = Path(THREDDS_URL).joinpath('catalog', 'testAll', 'data', 'DWD_SpreeWasser_N_cf_v4', 'catalog.xml')
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -149,8 +153,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 
-
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
@@ -160,6 +162,14 @@ STATICFILES_DIRS = [
     STATIC_DIR,
     Path.joinpath(BASE_DIR, 'swn/static/'),
     Path.joinpath(BASE_DIR, 'swn/static/')]
+
+# https://pypi.org/project/django-sass-processor/
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'sass_processor.finders.CssFinder',
+    
+]
 
 MEDIA_ROOT = MEDIA_DIR
 MEDIA_URL = 'media/'
@@ -193,41 +203,6 @@ SERIALIZATION_MODULES = {
     'geojson': 'djgeojson.serializers',
 }
 
-# LEAFLET_CONFIG = {
-#     #'SRID': 4326,
-#     'DEFAULT_CENTER': (52.0825, 13.8),
-#     'DEFAULT_ZOOM': 10,
-#     'MAX_ZOOM': 20,
-#     'MIN_ZOOM': 1,
-#     'SCALE': 'both', #'metric'
-#     'MINIMAP': True,
-#     'RESET_VIEW': True,
-#     'NO_GLOBALS': False, # adds all maps to window.maps
-
-
-#     'ATTRIBUTION_PREFIX': 'Spreewasser:N',
-#     'TILES': [('Open Street Map',
-#                 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-#                 {
-#                     'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-#                     'maxZoom': 20
-#                     }),
-#               ('Satellit',
-#               'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-#                {'attribution': 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-#                'maxZoom': 20}),
-#               ('OpenTopo Karte',
-#               'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-#                     {'attribution': 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
-#                     'maxZoom': 20
-#                     })
-#                ],
-#     # 'OVERLAYS': [
-#     #     ('Projectregion', serialize('geojson',ProjectRegion.objects.all()), {'attribution': 'BlaBla'}),
-#     # ],
-# }
-
-# # GEOIP_PATH = os.path.join(BASE_DIR, 'geoip')
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
 

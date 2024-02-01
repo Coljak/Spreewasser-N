@@ -7,48 +7,108 @@
 {% block body_block %}
 
 <script>
-    var userFieldId = {{ id }};
+  
+    var userFieldId = {{ id }}
+    var polygonIds = {{ polygon_ids }};
+    var polygonIdsStr = polygonIds.join(','); 
+    var systemUnitJson = JSON.parse('{{ system_unit_json|escapejs }}');
+    var landusageChoices = JSON.parse('{{ landusage_choices|escapejs }}');
+    var startDate = {{ date_picker.start_date }};
+    var endDate = {{ date_picker.end_date }};
+
 </script>
 
-<div class="container-fluid">
+<div class="container-fluid p-5">
     <div class="row">
-        <h1>ID:{{ id }} Feld: {{ text }}</h1>
-        
-          <div id="soilDiv">
-
-          </div>
-        <button class="btn btn-primary" id="getSoilData">Get Soil Data</button>
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Bodenfeuchteberechnung</h5>
-            <label for="startDate">Berechnung von</label>
-            <input type="date" class="mx-1" id="startDate" name="calculationStart" value="2023-03-01"> 
-            <label for="endDate">bis</label>
-            <input type="date" class="mx-1" id="endDate" name="calculationEnd" value="2023-09-25"> 
-                {% csrf_token %}   
-                {{ crop_form|crispy }}
-                <button type="submit" id="btnModalCal" class="btn btn-primary mb-2">Berechnen</button>
-            <div class="card mb-3 d-none" id="chartCard">
-              <div class="card-body">
-                <h5 class="card-title" id="chart-title">Monica Brechnung</h5>
-                <div id="chartDiv"></div>
-              </div>
+      <h1>ID:{{ id }} Feld: {{ text }}</h1>
+    </div>
+    <div class="row">
+      <div class="card mb-3">
+        <div id="soilDiv" class="card-body">
+          <h5 class="card-title">Soil Data</h5>
+          <span class="input-group-text mb-2">
+            
+            
+            <form method="post" id="soilProfileForm">
+              {% csrf_token %}
+              <span class="input-group-text mb-2 d-flex align-items-start">
+                <div id="div_id_land_usage" class="m-3">
+                  <label for="id_land_usage" class="form-label">
+                    Flächennutzungsart
+                  <label>
+                  <select name="land_usage" class="form-select" id="id_land_usage"></select>
+                </div>
+                <div id="div_id_area_percentage" class="m-3">
+                  <label for="id_area_percentage" class="form-label">
+                    Anteil des Bodenprofils in %
+                  <label>
+                  <select name="area_percentage" class="form-select" id="id_area_percentage"></select> 
+                </div>
+                <div id="div_id_system_unit" class="m-3">
+                  <label for="id_system_unit" class="form-label">
+                    Systemeinheit
+                  <label>
+                  <select name="system_unit" class="form-select" id="id_system_unit"></select> 
+                </div>
+              </span>
+              <span class="input-group-text mb-2 d-flex align-items-start">
+                <div id="div_id_soil_profile" class="m-3">
+                  <label for="id_soil_profile" class="form-label">
+                    Bodenprofil
+                  <label>
+                  <select name="soil_profile" class="form-select" id="id_soil_profile"></select> 
+                </div>
+                <div id="div_id_horizons" class="m-3 p-2 border rounded " >
+                  {% comment %} <label for="id_horizons" class="form-label">
+                    Horizonte
+                  <label> {% endcomment %}
+                  
+                  {% comment %} <button class="btn btn-primary">Profil auswählen</button> {% endcomment %}
+                </div>
+              </span>
+            <div>
+              <table id="tableHorizons" class="table table-bordered border-4 rounded table-hover table-striped ">
+              </table>
             </div>
-          </div>
+          </form> 
         </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-body">
+          {{ crop_form|crispy }}
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Bodenfeuchteberechnung</h5>
+          <label for="startDate">Berechnung von</label>
+          <input type="date" class="mx-1" id="startDatePicker" name="calculationStart" value={{ date_picker.start_date }} pattern="\d{4}-\d{2}-\d{2}"></input>
+          <label for="endDate">bis</label>
+          <input type="date" class="mx-1" id="endDatePicker" name="calculationEnd" value={{ date_picker.end_date }} pattern="\d{4}-\d{2}-\d{2}"></input>
+
+          
+          
+        </div>
+      </div>
+      <div class="card mb-3 d-none" id="chartCard">
+        <div class="card-body">
+          <h5 class="card-title" id="chart-title">Monica Brechnung</h5>
+          <div id="chartDiv"></div>
+        </div>
+      </div>
       
     </div>
     <div class="row">
-        <div class="card">
-            <div class="card-body">
-                
-                    <a class="btn btn-primary" href="{% url 'swn:user_dashboard' %}">Zurück</a></li>
-            </div>
+      <div class="card mb-3">
+        <div class="card-body">
+            
+          <a class="btn btn-primary" href="{% url 'swn:user_dashboard' %}">Zurück</a>
+          <button type="submit" id="btnModalCal" class="btn btn-primary mb-2">Berechnen</button>
         </div>
+      </div>
     </div>
-
   </div>  
-
+</div> 
 {% endblock %}
 
 {% block javascript %}

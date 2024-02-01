@@ -19,7 +19,6 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
   
   <link rel="stylesheet" href="{% static 'swn/src/virtual-select.min.css' %}" />
-  {% comment %} <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.css' %}"/> {% endcomment %}
   <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.min.css' %}" />
   <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
 {% endblock css %}
@@ -49,11 +48,12 @@
 {% block javascript %}
 {{ bock.super }}
  
-  <script>
-    const demUrl= "{% static 'data/dem_3857.png' %}"
-    console.log("demUrl", demUrl)
-    const droughtUrl= "{% static 'data/4326_reprojected_3857.png' %}" 
-  </script>
+    <script>
+      const demUrl= "{% static 'data/dem_3857.png' %}"
+      console.log("demUrl", demUrl)
+      const droughtUrl= "{% static 'data/4326_reprojected_3857.png' %}" 
+    
+    </script>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="{% static './leaflet/print/leaflet.browser.print.min.js' %}"></script>
@@ -62,7 +62,6 @@
     <script src="{% static 'leaflet/fullscreen/Control.FullScreen.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="{% static 'leaflet/highlightable/highlightableLayers.js' %}"></script>
-    <script src="{% static './data/pilotregion.js' %}"></script>
 
     <!-- Tiff overlay -->
     
@@ -71,13 +70,13 @@
     <script src="https://unpkg.com/georaster"></script>
     <script src="https://unpkg.com/proj4"></script>
     <script src="{% static 'leaflet/georaster/georaster-layer-for-leaflet.min.js' %}"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
-  <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+    <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
-  
-  <script type="text/javascript" src="{% static 'swn/src/virtual-select.js' %}"></script>
-  <script src="{% static 'swn/js/user_dashboard.js' %}" type="module"></script>
-  <script src="{% static 'swn/js/chart_page.js' %}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
+    
+    <script type="text/javascript" src="{% static 'swn/src/virtual-select.js' %}"></script>
+    <script src="{% static 'swn/js/user_dashboard.js' %}" type="module"></script>
+    <script src="{% static 'swn/js/chart_page.js' %}" defer></script>
 {% endblock%}

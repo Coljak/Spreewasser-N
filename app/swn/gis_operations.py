@@ -6,7 +6,7 @@ from rasterio.transform import from_bounds
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
-from swn.models import BaseRasterData, UserField
+from swn.models import UserField
 
 
 user_field = UserField.objects.get(pk=287)

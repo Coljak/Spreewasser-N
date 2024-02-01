@@ -20,6 +20,8 @@ var map = L.map('map', {
     center: [39.3, 2.9]
 });
 
+// var sapoWMS = "http://localhost:8088/thredds/wms/testEnhanced/2004050412_eta_211.nc";
+
 var sapoWMS = "https://thredds.socib.es/thredds/wms/operational_models/oceanographical/wave/model_run_aggregation/sapo_ib/sapo_ib_best.ncd";
 var sapoHeightLayer = L.tileLayer.wms(sapoWMS, {
     layers: 'significant_wave_height',

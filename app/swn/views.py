@@ -23,7 +23,7 @@ from . import models
 from toolbox import models as toolbox_models
 from app.helpers import is_ajax
 import xmltodict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # from django.contrib.auth.forms import UserCreationForm
 # from django.urls import reverse_lazy
@@ -70,6 +70,7 @@ def thredds_catalog(request):
     response = requests.get(url)
     catalog_dict = xmltodict.parse(response.content)
 
+    # thredds content as dataset from list comprehension
     catalog_dict_list = [
         {
             "name": dataset['@name'],
@@ -84,27 +85,155 @@ def thredds_catalog(request):
         for dataset in catalog_dict['catalog']['dataset']['dataset']
     ]
 
-    catalog = {'catalog': catalog_dict_list}
-    catalog_json = json.dumps(catalog_dict_list, indent=2)
-
     return render(request, 'swn/thredds_catalog.html', {'catalog_json': catalog_dict_list})
 
+def get_wms_capabilities_json(request, name):
+    url = "http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/" + name
+    params = {
+        'service': 'WMS',
+        'version': '1.3.0',
+        'request': 'GetCapabilities', 
+    }
+    response = requests.get(url, params=params)
+    response_json = xmltodict.parse(response.content)
+    print('json_response', response_json)
+    return JsonResponse(response_json)
 
-def timelapse_test_django_passthrough(request):
-    return render(request, 'swn/map_thredds_4.html')
+def get_wms_capabilities(request, name):
+    url = "http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/" + name
+    params = {
+        'service': 'WMS',
+        'version': '1.3.0',
+        'request': 'GetCapabilities', 
+    }
+    response = requests.get(url, params=params)
+    return HttpResponse(response)
+
+def get_ncml_metadata(request, name):
+    url = "http://thredds:8080/thredds/ncml/testAll/data/DWD_SpreeWasser_N_cf_v4/" + name
+    nc_dict = {}
+    ncml = requests.get(url)
+    ncml_data = xmltodict.parse(ncml.text)
+    try:
+        nc_dict['global_attributes'] = {}
+        for attr in ncml_data['netcdf']['attribute']:
+            nc_dict['global_attributes'][attr['@name']] = attr['@value']
+
+        nc_dict['dimensions'] = {}
+        for var in ncml_data['netcdf']['dimension']:
+            nc_dict['dimensions'][var['@name']] = {'length': var['@length']}
+            if '@isUnlimited' in var.keys():
+                nc_dict['dimensions'][var['@name']]['isUnlimited'] = var['@isUnlimited']
+
+        nc_dict['variables'] = {}
+        for var in ncml_data['netcdf']['variable']:
+            nc_dict['variables'][var['@name']] = {'shape': var['@shape'], 'type': var['@type'], 'attributes': {}}
+            for att in var['attribute']:  
+                nc_dict['variables'][var['@name']]['attributes'][att['@name']] = att['@value']
+    except:
+        nc_dict = {'error': 'No metadata available'}
+
+    data = {}
+    data['title'] = nc_dict['global_attributes']['title']
+    data['variable'] = [x for x in list(nc_dict['variables'].keys()) if x not in list(nc_dict['dimensions'].keys())]
+    time_coverage_start = nc_dict['global_attributes']['time_coverage_start']
+    
+    start_date = datetime.strptime(time_coverage_start, "%Y-%m-%d %H:%M:%SA")
+    time_coverage_start = start_date.strftime("%Y-%m-%d")
+    data['time_coverage_start'] = time_coverage_start
+    new_date = start_date + timedelta(days=int(nc_dict['dimensions']['time']['length']))
+    data['time_coverage_end'] = new_date.strftime("%Y-%m-%d")
+
+    # print('data', data)         
+
+    return JsonResponse(data)
+
+
+# This view outputs a json containing all relevant attributes of a netcdf file
+def get_ncml_capabilities_2(request, name):
+    print('{\n get_wms_capabilities \n', name)
+    url = 'http://thredds:8080/thredds/ncml/testAll/data/DWD_SpreeWasser_N_cf_v4/' + name
+   
+    response = requests.get(url)
+    catalog_dict = xmltodict.parse(response.content)
+
+    capabilities = {} # important ones: title, time_coverage_start 
+    global_attributes = {}
+
+             
+    # for the ncml method
+    for item in catalog_dict["netcdf"]["attribute"]:
+        global_attributes[item['@name']] = item['@value']
+    capabilities['global_attributes'] = global_attributes
+
+    capabilities['attributes'] = {}
+    for attr in catalog_dict["netcdf"]["attribute"]:
+        
+        capabilities['attributes'][attr['@name']] = attr['@value']
+        # if attr['@name'] == 'title':
+        #     capabilities['title'] = attr['@value']
+        # elif attr['@name'] == 'time_coverage_start':
+        #     capabilities['time_coverage_start'] = attr['@value']
+        # elif attr['@name'] == 'time_coverage_end':
+        #     capabilities['time_coverage_end'] = attr['@value']
+    capabilities['dimensions'] = {}
+    for dim in catalog_dict["netcdf"]["dimension"]:
+        
+        capabilities['dimensions'][dim['@name']] = {'length': dim['@length'], 'isUnlimited': dim['@isUnlimited'] if '@isUnlimited' in dim.keys() else "false"}
+
+    capabilities['groups'] = {}
+    for group in catalog_dict["netcdf"]["group"]:
+        capabilities['groups'][group['@name']] = {}
+        for attr in group["attribute"]:
+            capabilities['groups'][group['@name']][attr['@name']] = attr['@value']
+
+    capabilities['variables'] = {}
+    for variable in catalog_dict["netcdf"]["variable"]:
+        
+        capabilities['variables'][variable['@name']] = {}
+        capabilities['variables'][variable['@name']]['shape'] = variable['@shape']
+        capabilities['variables'][variable['@name']]['type'] = variable['@type']
+        for attr in variable['attribute']:
+            capabilities['variables'][variable['@name']][attr['@name']] = attr['@value']
+        
+    print("capabilities", capabilities)
+    # return JsonResponse(catalog_dict)
+    return JsonResponse(capabilities)
+    
+# This view outputs a json containing all relevant catalog infos of all netcdf files and renders the HTML template
+def timelapse_items(request):
+    # List of datasaet as in the thredds_catalog view
+    url = 'http://thredds:8080/thredds/catalog/testAll/data/DWD_SpreeWasser_N_cf_v4/catalog.xml'
+
+    response = requests.get(url)
+    catalog_dict = xmltodict.parse(response.content)
+
+    # thredds content as dataset from list comprehension
+    catalog_dict_list = [
+        {
+            "name": dataset['@name'],
+            "urlPath": dataset['@urlPath'],
+            "size": f"{dataset['dataSize']['#text']} {dataset['dataSize']['@units']}",
+            "date_modified": (
+                datetime.strptime(dataset['date']['#text'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                if '.' in dataset['date']['#text']
+                else datetime.strptime(dataset['date']['#text'], "%Y-%m-%dT%H:%M:%SZ")
+            ).strftime("%d-%m-%Y"),
+        }
+        for dataset in catalog_dict['catalog']['dataset']['dataset']
+    ]
+
+    return render(request, 'swn/map_thredds_4.html', {'catalog_json': catalog_dict_list, 'thredds_data': 'thredds_data'})
 
 def timelapse_test_django_passthrough_wms(request, netcdf):
     # example netcdf from frontend: zalf_pr_amber_2009_v1-0_cf_v4.nc 
 
     print("timelapse_test_django_passthrough_wms", netcdf)
     url = 'http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/' + netcdf
+    
     params = request.GET.dict()
-    print("params", params)
-    print("url", url)
     # Timeseries legend image
-    layer_name = 'pr'
-    legendUrl = '{wmsUrl}?REQUEST=GetLegendGraphic&PALETTE=default&LAYERS={layer_name}'.format(wmsUrl=url, layer_name=layer_name)
-
+    
     # Timeseries WMS
     try:
         response = requests.get(url, params=params)
@@ -117,43 +246,19 @@ def timelapse_test_django_passthrough_wms(request, netcdf):
         return HttpResponse(f"Error: {e}", content_type='text/plain')
 
 
+#  direct connection to the thredds server from browser
 def timelapse_test(request):
-    url = 'https://thredds.socib.es/thredds/wms/operational_models/oceanographical/wave/model_run_aggregation/sapo_ib/sapo_ib_best.ncd'
-    url2 = 'http://0.0.0.0:8080/thredds/wms/testAll/data/zalf_hurs_amber_2007_v1-0_ck_v14_compressed_9.nc?service=WMS&version=1.3.0&request=GetMap&layers=relative_humidity&styles=&format=image%2Fpng&transparent=true&height=256&width=256&crs=EPSG%3A4326&bbox=5.564783468,47.136744752,15.57241882,55.058996788&time=2007-01-01T00%3A00%3A00.000Z'
-    url_3 = 'http://thredds:8080/thredds/wms/testAll/data/zalf_hurs_amber_2007_v1-0_ck_v14_compressed_9.nc'
-    wms_params = {
-        'servive': 'WMS',
-        'version': '1.3.0',        
-        'request': 'GetCapabilities',
-        'layers': 'significant_wave_height',
-        'format': 'image/png',
-        'transparent': 'true',
-        # 'colorscalerange': '0,3',
-        # 'bbox': '156543.03392804097,4852834.051769271,313086.06785608194,5009377.085697314',
-
-    }
-    
-    # response = requests.get(url, params=wms_params)
-    response = requests.get(url_3)
-    print("response\n", response)
-    return HttpResponse(response.content, content_type='image/png')
-
-def timelapse_test_2(request):
     return render(request, 'swn/map_thredds_2.html')
 
 def sign_up(request):
     if request.method == 'POST':
         form = forms.RegistrationForm(request.POST)
-        print("Sign_up form", form)
         if form.is_valid():
-            print("Sign_up is_valid")
             user = form.save()
-            print("Sign_up user saved", user)
             login(request, user)
             return redirect('swn:user_dashboard')
     else:
         form = forms.RegistrationForm()
-        print("Sign_up else")
 
     return render(request, 'registration/sign_up.html', {'form': form})
 
@@ -178,7 +283,6 @@ def register(request):
             print(user_form.errors)
 
     else:
-        print("Register ELSE")
         user_form = forms.UserForm()
 
     return render(request, 'swn/registration.html',
@@ -189,7 +293,6 @@ def register(request):
 def user_login(request):
     print("USER_LOGIN")
     if request.method == "POST":
-        print("POST:", request.POST.values())
         username = request.POST.get('name')
         email = request.POST.get('email')
         password = request.POST.get('password')
@@ -199,11 +302,8 @@ def user_login(request):
         #     user = authenticate(email=email, password=password)
         # else:
         #     user = authenticate(name=username, password=password)
-
-        print("email:", email, "password: ", password, "username: ", username)
         #user = authenticate(email=email, password=password)
         if user:
-            print("IF USER")
             if user.is_active:
 
                 login(request, user)
@@ -215,12 +315,10 @@ def user_login(request):
             
         # TODO make this go to handle alerts
         else:
-            print("ELSE USER")
             return JsonResponse({'alert': "the login failed"})
 
     else:
         login_form = forms.LoginForm()
-        print("login_form: ", login_form)
         return render(request, 'swn/login.html', {'login_form': login_form})
 
 @login_required
@@ -351,15 +449,6 @@ def load_projectregion(request):
         }
     return JsonResponse(feature)
 
-# @login_required
-# def userinfo(request):
-#     return render(request, 'swn/userinfo.html')
-
-
-# class ChartView(View):
-#     def get(self, request, *args, **kwargs):
-#         return render(request, 'swn/chart.html', {})
-
 
 def get_chart(request, field_id, crop_id, soil_id):
     print('Request:', crop_id)
@@ -421,15 +510,8 @@ def get_user_fields(request):
 
     return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json', 'swn_tool')), 'user_projects': list(user_projects.values())})
 
-# async def get_user_fields_async(request):
-#     task1 = asyncio.create_task(models.UserProject.objects.filter(field__user=request.user))
-#     task2 = asyncio.create_task(models.UserField.objects.filter(user=request.user))
-#     await asyncio.wait([task1, task2])
-#     return JsonResponse({'user_fields': list(task1.values('id', 'user', 'name', 'geom_json')), 'user_projects': list(task2.values())})
 
-# userfields are updated for the leaflet sidebar
 @login_required
-# @action_permission
 def update_user_field(request, pk):
     obj = models.UserField.objects.get(pk=pk)
     if is_ajax(request):
@@ -445,8 +527,6 @@ def update_user_field(request, pk):
             'geom': obj.geom,
         })
     return redirect('swn:user_dashboard')
-
-
 
 @login_required
 @csrf_protect
@@ -562,54 +642,17 @@ def thredds_wms_view(request, **args):
         print('catalog\n\n', div)
         return render(request, 'swn/thredds.html', {'thredds_content': str(div)})
 
-        # Get the first div element with the class "content"
-        div = ''
-        try:
-            div = soup.find('div', class_='container')
-            catalog_contents = div.find_all('div', class_='content')
-            catalog = ""
-            if len(catalog_contents) > 1:
-                catalog = catalog_contents[1]
-            else:
-                catalog = catalog_contents[0]
-        except:
-            div = soup.find('table')
 
-        return render(request, 'swn/thredds.html', {'thredds_content': str(div)})
     except requests.RequestException as e:
         # Handle request exception, e.g., log the error
         thredds_content = f"Error: {e}"
 
     # return render(request, 'swn/thredds.html', {'thredds_content': soup})
 
-
-
-
-def thredds_wms_view_2(request):
-    # # thredds_server_url = settings.THREDDS_URL
-    # # thredds_server_url = 'http://thredds:8080/thredds/wms/allDataScan/zalf_hurs_amber_2007_v1-0.nc'  # Replace with the actual Thredds server URL
-    # thredds_url = 'http://thredds:8080/thredds/catalog/catalog.html'
-    # # Proxy the request to the Thredds server
-    # headers = {'User-Agent': request.META.get('HTTP_USER_AGENT')}
-    # # response = request.get(thredds_server_url, headers=headers, params=request.GET)
-    # # response = request.get(thredds_server_url,  params=request.GET)
-    # response = request.get(thredds_url)
-    
-    # # Return the Thredds server response as the response of your Django view
-    # content_type = response.headers.get('Content-Type', 'application/octet-stream')
-    # #content_type2 = response.headers['Content-Type']
-    # return HttpResponse(response.content, content_type=content_type)
-    # Replace 'http://127.0.0.1:8088/thredds/catalog/catalog.html' with your Thredds catalog URL
-    thredds_catalog_url = 'http://127.0.0.1:8088/thredds/catalog/catalog.html'
-    
-    # Redirect the user to the Thredds catalog URL
-    return redirect(thredds_catalog_url)
-
-
+# dev feature displays all bootstrap colors etc.
 def bootstrap(request):
     return render(request, 'swn/bootstrap_colors.html')
 
-    
 def load_polygon(request, entity, polygon_id):
     try:
         # Retrieve the polygon based on the ID
@@ -800,101 +843,3 @@ def field_menu(request, id):
     elapsed_time = end_time - start_time
     print('elapsed_time', elapsed_time, ' seconds')
     return render(request, 'swn/field_projects_edit.html', data_menu)
-
-
-
-# def update_soil_profile_choices(request):
-#     land_usage = request.GET.get('land_usage')
-#     polygon_ids_str = request.GET.get('polygon_ids')
-#     polygon_ids = [int(id_str) for id_str in polygon_ids_str.split(',')]
-
-#     # Query BuekSoilProfile to get soil_profile choices based on the selected land_usage
-#     soil_profile_choices = models.BuekSoilProfile.objects.filter(
-#         landusage_corine_code=land_usage, polygon_id__in=polygon_ids
-#     ).values_list('system_unit').distinct()
-
-#     print('soil_profile_choices', soil_profile_choices)
-#     choices_system_unit = [system_unit for system_unit in soil_profile_choices]
-#     choices_area_percentage = [area_percenteage for area_percenteage in soil_profile_choices]
-
-#     choices = {
-#         'system_unit': choices_system_unit,
-#         'area_percentage': choices_area_percentage,
-#     }
-    
-#     print('system_unit choices', choices)
-
-#     return JsonResponse(choices, safe=False)
-
-
-
-def get_soil_data_from_wms(id):
-    """"
-    https://www.bgr.bund.de/DE/Themen/Boden/Informationsgrundlagen/Bodenkundliche_Karten_Datenbanken/BUEK200/Sachdatenbank/felder_und_parameter.html?nn=2960024
-    """
-    user_field = models.UserField.objects.get(id=id)
-    user_field_geom = user_field.geom
-    polygon = user_field_geom.geojson
-    # bbox = ','.join(map(str, user_field_geom.extent))
-    bbox = (47.5, 8.7, 47.6, 8.8)
-    # print("bbox", bbox)
-
-    wms_url = 'https://services.bgr.de/wms/boden/buek200/?'
-    params = {
-        'service': 'WMS',
-        'version': '1.3.0',
-        'request': 'GetCapabilities',
-        
-    }
-    params2 = {
-        'bbox':'-2210783.259641736%2C6171667.260493002%2C4510783.259641736%2C7228332.739506998',
-        'bboxSR':'3857',
-        'imageSR':'3857',
-        'size':'1717%2C270',
-        'dpi':'120',
-        'format':'png32',
-        'transparent':True,
-        'layers':'show%3A0%2C1',
-        'f':'image'
-        }
-    params2 = {
-        'bbox':'-2210783.259641736%2C6171667.260493002%2C4510783.259641736%2C7228332.739506998',
-        'bboxSR':'3857',
-        'imageSR':'3857',
-        'size':'1717%2C270',
-        'dpi':'120',
-        'format':'png32',
-        'transparent':True,
-        'layers':'show%3A0%2C1',
-        'f':'image'
-        }
-
-
-    wml_url = 'https://services.bgr.de/wms/boden/buek200/?'
-    """
-    This is a set of working parameters for the buek REST-Api. 
-    The request takes very long because the buek is split up in layers that define areas.
-    56 Layers are being queried, only three seem to render a result. The result containing data
-    refers to this 
-    URL: https://fisbo.bgr.de/app/FISBoBGR_Profilanzeige/getProfile.php?KARTE=BUEK200&amp;LEGNR=311865"""
-    params = {
-        'SERVICE': 'WMS',
-        'VERSION': '1.3.0',
-        'REQUEST': 'GetFeatureInfo',
-        'BBOX': '1198111.96795441047288477,6647127.53802930749952793,1351146.27870820206589997,6819672.87509871460497379',
-        'CRS': 'EPSG:3857',
-        'WIDTH': 902,
-        'HEIGHT': 1017,
-        'LAYERS': 50,
-        'STYLES': '',
-        'FORMAT': 'image/jpeg',
-        'QUERY_LAYERS': 50,
-        'INFO_FORMAT': 'text/html',
-        'I': 469, 
-        'J': 326,
-        'FEATURE_COUNT': 10}
-
-    response = requests.get(wms_url, params=params)
-    print(response.headers)
-  
-

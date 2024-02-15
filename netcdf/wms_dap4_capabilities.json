@@ -1,0 +1,45 @@
+{
+"DatasetServices": {
+    "@xmlns": "http://xml.opendap.org/ns/DAP/4.0/dataset-services#", 
+    "DapVersion": "4.0", 
+    "ServerSoftwareVersion": "TDS-4", 
+    "Service": [
+        {
+        "@title": "DAP4 Dataset Services", 
+        "@role": "http://services.opendap.org/dap4/dataset-services", 
+        "link": [{
+        "@type": "application/vnd.opendap.dap4.dataset-services+xml", 
+        "@href": "http://thredds:8080/thredds/dap4/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc", 
+        "alt": {
+            "@type": "text/xml"}
+        },
+        {
+        "@type": "text/xml", 
+        "@href": "http://thredds:8080/thredds/dap4/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc.xml"}
+        ]
+        },
+        {
+        "@title": "DAP4 Dataset Metadata", 
+        "@role": "http://services.opendap.org/dap4/dataset-metadata", 
+        "link": [
+            {
+            "@type": "application/vnd.opendap.dap4.dataset-metadata+xml", 
+            "@href": "http://thredds:8080/thredds/dap4/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc.dmr", 
+            "alt": {
+            "@type": "text/xml"}
+            },
+            {
+            "@type": "text/xml", 
+            "@href": "http://thredds:8080/thredds/dap4/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc.dmr.xml"}
+            ]
+        },
+        {
+        "@title": "DAP4 Dataset Data", 
+        "@role": "http://services.opendap.org/dap4/data", 
+        "link": {
+        "@type": "application/vnd.opendap.dap4.data", 
+        "@href": "http://thredds:8080/thredds/dap4/testAll/data/DWD_SpreeWasser_N_cf_v4/zalf_pr_amber_2009_v1-0_cf_v4.nc.dap"}
+        }
+        ]
+    }
+}

@@ -11,26 +11,12 @@ from . import models
 app_name = 'swn'
 
 urlpatterns = [
-    
+    # general paths
     path('', views.IndexView.as_view(), name='swn_index'),
     path('', include('django.contrib.auth.urls')),
     path('favicon.ico', views.favicon_view, name='favicon'),
+    #user related paths
     path('sign-up/', views.sign_up, name='sign_up'),
-    path('Impressum-Information/', views.ImpressumView.as_view(), name='impressum_information'),
-    path('acknoledgements/', views.AcknoledgementsView.as_view(), name='acknoledgements'),
-    path('Timelapse_test/', views.timelapse_test_2, name='timelapse-test'),
-    path('Timelapse_test_django/passthrough/', views.timelapse_test_django_passthrough, name='timelapse-test-passthrough'),
-    path('Timelapse_test_django/passthrough/wms/<str:netcdf>', views.timelapse_test_django_passthrough_wms, name='timelapse-test-passthrough-wms'),
-    path('catalog/', views.thredds_catalog, name='catalog'),
-    #path('thredds/', views.thredds_wms_view, name='thredds-wms'),
-    path('thredds/', views.thredds_catalog, name='thredds-wms'),
-    path('thredds/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
-    # path('thredds/dodsC/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
-    # path('thredds/dap4/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
-    # path('thredds/fileServer/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
-    # path('thredds/wcs/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
-    # path('thredds/wms/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
-
     path('login/Dashboard/', views.user_dashboard, name='user_dashboard'),
     # path('login/Userinfo/', views.userinfo, name='user_info'),
     path('login/Dashboard/get-csrf-token/', views.get_csrf_token, name='get-csrf-token'),
@@ -44,6 +30,26 @@ urlpatterns = [
     # path('Chart/', views.ChartView.as_view(), name='chart'), 
     path('login/Dashboard/field-menu/<int:field_id>/chartdata/<int:crop_id>/<int:soil_id>/', views.get_chart, name='chart-api'),
     path('login/Dashboard/monica-map/', views.thredds_wms_view, name='monica-map'),
+    # Impressum and Acknoledgements
+    path('Impressum-Information/', views.ImpressumView.as_view(), name='impressum_information'),
+    path('acknoledgements/', views.AcknoledgementsView.as_view(), name='acknoledgements'),
+    # Thredds timelapse paths
+    # test can be deleted - it is a direct access from the browser to the thredds server 
+    path('Timelapse_test/', views.timelapse_test, name='timelapse-test'),
+    # Thredds Timelapse page, metadata and capabilities
+    path('Timelapse/', views.timelapse_items, name='timelapse-page'),
+    path('Thredds/get_ncml_metadata/<str:name>', views.get_ncml_metadata, name='get-ncml-metadata'),
+    path('Thredds/get_wms_capabilities/<str:name>', views.get_wms_capabilities, name='get-wms-capabilities'),
+    path('Thredds/wms/<str:netcdf>', views.timelapse_test_django_passthrough_wms, name='timelapse-test-passthrough-wms'),
+    path('Thredds/catalog/', views.thredds_catalog, name='thredds-catalog'),
+    # path('Thredds/catalog/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
+    # path('Thredds/dodsC/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
+    # path('Thredds/dap4/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
+    # path('Thredds/fileServer/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
+    # path('Thredds/wcs/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
+    # path('Thredds/wms/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
+
+    
     # Bootstrap test colors
     path('bootstrap/', views.bootstrap, name='bootstrap'),
     path('login/Dashboard/load_projectregion/', views.load_projectregion, name='load_projectregion'),

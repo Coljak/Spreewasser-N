@@ -6,16 +6,18 @@
         <li class="mb-1"><a  class="nav-brand mb-2" href="{% url 'swn:swn_index' %}"><img src="{% static 'img/SpreeWasser-Logo.png' %}" height="60px" alt="SWN-Logo"/></a></li>
         {% if user.is_superuser %}
           <li><a  class="nav-link" href="{% url 'admin:index' %}">ADMIN</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'swn:bootstrap' %}">Bootsrap</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'swn:timelapse-test' %}">Timelapse_test</a></li>
         {% endif %}
         {% if user.is_authenticated  %}    
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:user_dashboard' %}">Dürreindikatoren</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:toolbox_dashboard' %}">Toolbox</a></li>
         {% endif %}
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:impressum_information' %}">Impressum</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'swn:timelapse-test' %}">Timelapse_test</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'swn:timelapse-test-passthrough' %}">Timelapse_passthrough</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'swn:bootstrap' %}">Bootsrap</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'swn:thredds-wms' %}">Thredds</a></li>
+        
+        <li class="nav-item"><a class="nav-link" href="{% url 'swn:timelapse-page' %}">Timelapse</a></li>
+        
+        <li class="nav-item"><a class="nav-link" href="{% url 'swn:thredds-catalog' %}">Thredds catalog</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:acknoledgements' %}">Acknoledgements</a></li>
         {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:multiselect' %}">Multiselect</a></li> {% endcomment %}
       </ul>

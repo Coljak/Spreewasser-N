@@ -22,28 +22,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-const csrf = document.getElementsByName("csrfmiddlewaretoken");
-// Fetch the CSRF token from the server
-async function getCsrfToken() {
-  const response = await fetch('get-csrf-token/');
-  const data = await response.json();
-  return data.csrfToken;
-}
+  const csrf = document.getElementsByName("csrfmiddlewaretoken");
+  // Fetch the CSRF token from the server
+  async function getCsrfToken() {
+    const response = await fetch('get-csrf-token/');
+    const data = await response.json();
+    return data.csrfToken;
+  }
 
-let csrfToken = document.cookie
-  .split("; ")
-  .find(row => row.startsWith("csrftoken="))
-  .split("=")[1];
-
-// Update the CSRF token value if it changes
-function updateCsrfToken() {
-  console.log("updateCsrfToken");
-  csrfToken = document.cookie
+  let csrfToken = document.cookie
     .split("; ")
     .find(row => row.startsWith("csrftoken="))
     .split("=")[1];
-  return csrfToken;
-};
+
+  // Update the CSRF token value if it changes
+  function updateCsrfToken() {
+    console.log("updateCsrfToken");
+    csrfToken = document.cookie
+      .split("; ")
+      .find(row => row.startsWith("csrftoken="))
+      .split("=")[1];
+    return csrfToken;
+  };
 
 
 // -----------User Field Name Modal -----------------

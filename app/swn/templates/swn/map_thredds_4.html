@@ -44,6 +44,12 @@
                       </select>
 
                       <select id='netcdfVariableSelector' class="form-select" aria-label="netcdfVariableSelector-label"></select>
+                      <select id='styleSelector' class="form-select" aria-label="styleSelector-label"></select>
+                      <div class="input-group" id="color-range" >
+                        <input type="text" id="lowerRange" class="input-sm form-control" name="start" />
+                        <span class="input-group-addon  px-3"> bis </span>
+                        <input type="text" id="upperRange" class="input-sm form-control" name="end" />
+                    </div>
                         
                       <div class="input-daterange input-group" id="datepicker" style="display: none">
                         <input type="text" id="startDatePicker" class="input-sm form-control" name="start" />

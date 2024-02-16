@@ -5,6 +5,7 @@ and the bootstrap datepicker https://bootstrap-datepicker.readthedocs.io/en/late
 */
 const palettes = [ "default", "default-inv", "div-BrBG", "div-BrBG-inv", "div-BuRd", "div-BuRd-inv", "div-BuRd2", "div-BuRd2-inv", "div-PRGn", "div-PRGn-inv", "div-PiYG", "div-PiYG-inv", "div-PuOr", "div-PuOr-inv", "div-RdBu", "div-RdBu-inv", "div-RdGy", "div-RdGy-inv", "div-RdYlBu", "div-RdYlBu-inv", "div-RdYlGn", "div-RdYlGn-inv", "div-Spectral", "div-Spectral-inv", "psu-inferno", "psu-inferno-inv", "psu-magma", "psu-magma-inv", "psu-plasma", "psu-plasma-inv", "psu-viridis", "psu-viridis-inv", "seq-BkBu", "seq-BkBu-inv", "seq-BkGn", "seq-BkGn-inv", "seq-BkRd", "seq-BkRd-inv", "seq-BkYl", "seq-BkYl-inv", "seq-BlueHeat", "seq-BlueHeat-inv", "seq-Blues", "seq-Blues-inv", "seq-BuGn", "seq-BuGn-inv", "seq-BuPu", "seq-BuPu-inv", "seq-BuYl", "seq-BuYl-inv", "seq-GnBu", "seq-GnBu-inv", "seq-Greens", "seq-Greens-inv", "seq-Greys", "seq-Greys-inv", "seq-GreysRev", "seq-GreysRev-inv", "seq-Heat", "seq-Heat-inv", "seq-OrRd", "seq-OrRd-inv", "seq-Oranges", "seq-Oranges-inv", "seq-PuBu", "seq-PuBu-inv", "seq-PuBuGn", "seq-PuBuGn-inv", "seq-PuRd", "seq-PuRd-inv", "seq-Purples", "seq-Purples-inv", "seq-RdPu", "seq-RdPu-inv", "seq-Reds", "seq-Reds-inv", "seq-YlGn", "seq-YlGn-inv", "seq-YlGnBu", "seq-YlGnBu-inv", "seq-YlOrBr", "seq-YlOrBr-inv", "seq-YlOrRd", "seq-YlOrRd-inv", "seq-cubeYF", "seq-cubeYF-inv", "x-Ncview", "x-Ncview-inv", "x-Occam", "x-Occam-inv", "x-Rainbow", "x-Rainbow-inv", "x-Sst", "x-Sst-inv",]
 
+// in this object, defaults are set for the color palette and the min and max values for the color scale. This can be moved to the thredds server metadata, but has to be modified theer for each dataset
 const palette_and_min_max = {
     //  hurs is %
     'hurs': {
@@ -12,7 +13,7 @@ const palette_and_min_max = {
         'valueRange': '0, 100',
     },
     'pr': {
-        'style': 'default-scalar/seq-Heat',
+        'style': 'default-scalar/default-inv',
         'valueRange': '0, 200',
     },
     'rsds': {
@@ -40,24 +41,21 @@ const palette_and_min_max = {
 const styles = ['default-scalar/seq-Heat', 'colored_contours/default', 'contours', 'raster/default'];
 var style = 'raster/psu-inferno-inv';
 
+var ncmlMetadata;
+
 var lowerRangeinput = document.getElementById('lowerRange');
 var upperRangeinput = document.getElementById('upperRange');
 var styleSelector = document.getElementById('styleSelector');
 
+// add all possible styles to the styleSelector
 palettes.forEach(palette => {
     var option = document.createElement("option");
     option.text = palette;
     styleSelector.add(option);
 });
 
-styleSelector.addEventListener('change', (event) => {
-    console.log('event', event.target.value);
-    style = 'raster/' + event.target.value;
-    console.log('style', style);
-});
-// let timeDimensionLayer;
 
-// Format the yyyy-mm-dd date to dd/mm/yyyy
+// Format the yyyy-mm-dd date to dd/mm/yyyy as required for the bootstrap-datepicker
 const dateFormatter = function(date) {
     var components = date.split('-');
     var formattedDate = components[2] + '/' + components[1] + '/' + components[0];
@@ -83,7 +81,8 @@ const formatDatePicker = function(startDate, endDate) {
     $('#endDatePicker').datepicker('update', endDate);
     $('#datepicker').show()
 };
-var attribution;
+
+// var attribution;
 // Get selected parameters and load the netCDF file
 loadNetCDFButton.addEventListener('click', function() {
     try {
@@ -102,8 +101,9 @@ loadNetCDFButton.addEventListener('click', function() {
         'variable': variable,
         'startDate': startDate,
         'endDate': endDate,
-        'style': style,
-        'attribution': attribution,
+        'style': 'default-scalar/'+ styleSelector.value,
+        'colorerscaleRange': palette_and_min_max[variable].valueRange,
+        'attribution': ncmlMetadata.global_attributes.title,
     };
     console.log('params', params);
     initializeWms(params);
@@ -127,12 +127,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('data', data);
                 var data_json = JSON.parse(data);
                 console.log('data_json', data_json);
-                // const text = data_json.global_attributes['title'] + data_json.global_attributes.creator_name + data_json.time_coverage_start + data_json.time_coverage_end;
-                // var formattedStartDate = dateFormatter(data_json.time_coverage_start);
-                // var formattedEndDate = dateFormatter(data_json.time_coverage_end);
+
+                // formatting the start and end date of the dataset for the datepicker
                 var formattedStartDate = dateFormatter(data_json.global_attributes.time_coverage_start_ymd);
                 var formattedEndDate = dateFormatter(data_json.global_attributes.time_coverage_end_ymd);
-                // formatDatePicker(data_json.time_coverage_start, data_json.time_coverage_end)
                 formatDatePicker(formattedStartDate, formattedEndDate)
 
                 Object.keys(data_json.variables).forEach(variable => {
@@ -147,6 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // console.log('lowerRangeinput', data_json.variables[selectedVariable].attributes.minimum_value);
 
                 attribution = data_json.variables[selectedVariable].attributes.long_name;
+                ncmlMetadata = data_json;
 
                 // data_json.variable.forEach(variable => {
                 //     var option = document.createElement("option");
@@ -188,49 +187,26 @@ function createBaseMap() {
 };
 
 // Function to create WMS layer
-function createWMSLayer(wmsUrl, layerName, colorscaleRange, style, attribution) {
+function createWMSLayer(wmsUrl, layerName,  style) {
 
     return L.tileLayer.wms(wmsUrl, {
         layers: layerName,
         version: "1.3.0",
         format: 'image/png',
         transparent: true,
-        attribution: attribution,
+        attribution: ncmlMetadata.global_attributes.title,
         tileSize: 1024,
         transparent: true,
-        colorscalerange: palette_and_min_max[layerName].valueRange,
+        colorscalerange: palette_and_min_max[layerName].valueRange, // the range is set as a constant in palette_and_min_max
         abovemaxcolor: "extend",
         belowmincolor: "extend",
         numcolorbands: 100,
         styles: style,
     });
 };
-function createTimeDimension(params) {
-    return new L.timeDimension({
-    availableTimes: params.availableTimes,
-    currentTimeIndex: 0,});
-};
 
 
-// Function to create TimeDimension layer
-function createTimeDimensionLayer(wmsLayer,style) {
-    // const timeDimensionUrl = `${wmsUrl}?service=WMS&request=GetCapabilities&version=1.3.0`;
-    const layer = L.timeDimension.layer.wms(wmsLayer, {
-        wmsVersion: "1.3.0",
-        updateTimeDimension: true,
-        updateTimeDimensionMode: 'replace',
-        cache: 24,
-        styles: style,
-    });
-    
-    // Return a promise that resolves when the layer is added to the map
-    return new Promise(resolve => {
-        layer.on('added', () => resolve(layer));
-    });
-};
-// L.control.timeDimension({}).addTo(map);
-
-// Function to create legend control
+// Function to create legend control. the div gets the image directly from the WMS server
 function createLegendControl(legendUrl) {
     const legendControl = L.control({
         position: 'topright',
@@ -248,13 +224,19 @@ function createLegendControl(legendUrl) {
 
 // Main function to initialize the map
 const map = createBaseMap();
+map.addEventListener('click', function(e) {
+    console.log('MAP CLICKED');
+    var lat = e.latlng.lat;
+    var lng = e.latlng.lng;
+    console.log('You clicked the map at: ' + lat + ', ' + lng);
+});
 map.timeDimension.on('availabletimeschanged', function() {
     console.log('timeloading', );
-        map.timeDimension.setCurrentTimeIndex(0);});
+        map.timeDimension.setCurrentTimeIndex(0);
+    });
 
 
-let timeDimensionControl;
-let timeDimension;
+// let timeDimension;
 let wmsLayer;
 let timeDimensionWmsLayer;
 let legendControl;
@@ -272,19 +254,18 @@ async function initializeWms(params) {
      } catch (error) {console.log('Deleting old time dimension items failed')  }
 
     const wmsUrl = `/Thredds/wms/${params.netCdf}`;
-    const capabilitiesurl = `/Thredds/get_wms_capabilities/${params.netCdf}`;
     
-    const layerName = params.variable;
-    const colorscaleRange = palette_and_min_max[layerName].valueRange;
-    const attribution = 'DWD hindcast | precipitation_flux';
+    const colorscaleRange = palette_and_min_max[params.variable].valueRange;
+    const attribution = ncmlMetadata.global_attributes.title;
+    console.log('attribution', attribution, 'colorscaleRange', colorscaleRange, 'layerName', params.variable, 'params.style', params.style);
 
     
-    const legendUrl = `${wmsUrl}?request=GetLegendGraphic&PALETTE=default&LAYERS=${params.variable}&transparent=TRUE&&colorscalerange=${colorscaleRange}&numcolorbands=100&styles=${style}`;
+    const legendUrl = `${wmsUrl}?request=GetLegendGraphic&PALETTE=default&LAYERS=${params.variable}&transparent=TRUE&&colorscalerange=${colorscaleRange}&numcolorbands=100&styles=${params.style}`;
 
     legendControl = createLegendControl(legendUrl);
     legendControl.addTo(map);
     // the actual WMS layer is created with the selected parameters
-    wmsLayer = createWMSLayer(wmsUrl, params.variable, colorscaleRange, params.style, attribution);
+    wmsLayer = createWMSLayer(wmsUrl, params.variable, params.style);
     wmsLayer.addTo(map);
     try {
         timeDimensionWmsLayer =  L.timeDimension.layer.wms(wmsLayer, {

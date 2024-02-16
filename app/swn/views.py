@@ -65,7 +65,7 @@ def favicon_view(request):
 
 # This view outputs a json file containing a list of jsons of all available datasets on the thredds server
 def thredds_catalog(request):
-    url = 'http://thredds:8080/thredds/catalog/testAll/data/DWD_SpreeWasser_N_cf_v4/catalog.xml'
+    url = 'http://thredds:8080/thredds/catalog/testAll/data/DWD_Data/catalog.xml'
 
     response = requests.get(url)
     catalog_dict = xmltodict.parse(response.content)
@@ -88,7 +88,7 @@ def thredds_catalog(request):
     return render(request, 'swn/thredds_catalog.html', {'catalog_json': catalog_dict_list})
 
 def get_wms_capabilities_json(request, name):
-    url = "http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/" + name
+    url = "http://thredds:8080/thredds/wms/testAll/data/DWD_Data/" + name
     params = {
         'service': 'WMS',
         'version': '1.3.0',
@@ -100,7 +100,7 @@ def get_wms_capabilities_json(request, name):
     return JsonResponse(response_json)
 
 def get_wms_capabilities(request, name):
-    url = "http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/" + name
+    url = "http://thredds:8080/thredds/wms/testAll/data/DWD_Data/" + name
     params = {
         'service': 'WMS',
         'version': '1.3.0',
@@ -110,7 +110,7 @@ def get_wms_capabilities(request, name):
     return HttpResponse(response)
 
 def get_ncml_metadata(request, name):
-    url = "http://thredds:8080/thredds/ncml/testAll/data/DWD_SpreeWasser_N_cf_v4/" + name
+    url = "http://thredds:8080/thredds/ncml/testAll/data/DWD_Data/" + name
     nc_dict = {}
     ncml = requests.get(url)
     ncml_data = xmltodict.parse(ncml.text)
@@ -143,16 +143,18 @@ def get_ncml_metadata(request, name):
     data['time_coverage_start'] = time_coverage_start
     new_date = start_date + timedelta(days=int(nc_dict['dimensions']['time']['length']))
     data['time_coverage_end'] = new_date.strftime("%Y-%m-%d")
+    nc_dict['global_attributes']['time_coverage_start_ymd'] = time_coverage_start
+    nc_dict['global_attributes']['time_coverage_end_ymd'] = new_date.strftime("%Y-%m-%d")
 
     # print('data', data)         
 
-    return JsonResponse(data)
+    return JsonResponse(nc_dict)
 
 
 # This view outputs a json containing all relevant attributes of a netcdf file
 def get_ncml_capabilities_2(request, name):
     print('{\n get_wms_capabilities \n', name)
-    url = 'http://thredds:8080/thredds/ncml/testAll/data/DWD_SpreeWasser_N_cf_v4/' + name
+    url = 'http://thredds:8080/thredds/ncml/testAll/data/DWD_Data/' + name
    
     response = requests.get(url)
     catalog_dict = xmltodict.parse(response.content)
@@ -203,7 +205,7 @@ def get_ncml_capabilities_2(request, name):
 # This view outputs a json containing all relevant catalog infos of all netcdf files and renders the HTML template
 def timelapse_items(request):
     # List of datasaet as in the thredds_catalog view
-    url = 'http://thredds:8080/thredds/catalog/testAll/data/DWD_SpreeWasser_N_cf_v4/catalog.xml'
+    url = 'http://thredds:8080/thredds/catalog/testAll/data/DWD_Data/catalog.xml'
 
     response = requests.get(url)
     catalog_dict = xmltodict.parse(response.content)
@@ -229,7 +231,7 @@ def timelapse_test_django_passthrough_wms(request, netcdf):
     # example netcdf from frontend: zalf_pr_amber_2009_v1-0_cf_v4.nc 
 
     print("timelapse_test_django_passthrough_wms", netcdf)
-    url = 'http://thredds:8080/thredds/wms/testAll/data/DWD_SpreeWasser_N_cf_v4/' + netcdf
+    url = 'http://thredds:8080/thredds/wms/testAll/data/DWD_Data/' + netcdf
     
     params = request.GET.dict()
     # Timeseries legend image

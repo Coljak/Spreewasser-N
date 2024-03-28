@@ -9,7 +9,7 @@ const palettes = [ "default", "default-inv", "div-BrBG", "div-BrBG-inv", "div-Bu
 const palette_and_min_max = {
     //  hurs is %
     'hurs': {
-        'style': 'default-scalar/seq-Heat',
+        'style': 'default-scalar/default-inv',
         'valueRange': '0, 100',
     },
     'pr': {
@@ -17,7 +17,7 @@ const palette_and_min_max = {
         'valueRange': '0, 200',
     },
     'rsds': {
-        'style': 'default-scalar/seq-Heat',
+        'style': 'default-scalar/seq-Heat-inv',
         'valueRange': '0, 10000',
     },
     'sfcWind': {
@@ -25,24 +25,22 @@ const palette_and_min_max = {
         'valueRange': '0, 30',
     },
     'tas': {
-        'style': 'default-scalar/seq-Heat',
-        'valueRange': '-25, 40',
+        'style': 'default-scalar/div-RdYlBu-inv',
+        'valueRange': '-30, 30',
     },
     'tasmax': {
-        'style': 'default-scalar/seq-Heat',
+        'style': 'default-scalar/div-RdYlBu-inv',
         'valueRange': '-25, 42',
     },
     'tasmin': {
-        'style': 'default-scalar/seq-Heat',
+        'style': 'default-scalar/div-RdYlBu-inv',
         'valueRange': '-30, 40',
     },
 };
 
-const styles = ['default-scalar/seq-Heat', 'colored_contours/default', 'contours', 'raster/default'];
-var style = 'raster/psu-inferno-inv';
 
 var ncmlMetadata;
-
+// TODO the lower and upper range is only for development purposes, also the style selector will not be needed in the final version
 var lowerRangeinput = document.getElementById('lowerRange');
 var upperRangeinput = document.getElementById('upperRange');
 var styleSelector = document.getElementById('styleSelector');
@@ -63,7 +61,7 @@ const dateFormatter = function(date) {
     return formattedDate;
 };
 
-// initialize the datepickers with the start and end date of the dataset
+// initialize the datepickers with the start and end date of the dataset - datepicker runs with jQuery
 const formatDatePicker = function(startDate, endDate) {
     $('.input-daterange').datepicker({
         language: 'de-DE',
@@ -82,7 +80,7 @@ const formatDatePicker = function(startDate, endDate) {
     $('#datepicker').show()
 };
 
-// var attribution;
+
 // Get selected parameters and load the netCDF file
 loadNetCDFButton.addEventListener('click', function() {
     try {
@@ -96,12 +94,16 @@ loadNetCDFButton.addEventListener('click', function() {
     var variable = netcdfVariableSelector.value;
     console.log('startDate', startDate);
     console.log('endDate', endDate);
+    let style;
+    if (styleSelector.value == 'default') {
+        style = palette_and_min_max[variable].style;
+    } else { style = 'default-scalar/'+ styleSelector.value; }
     params = {
         'netCdf': netCdf,
         'variable': variable,
         'startDate': startDate,
         'endDate': endDate,
-        'style': 'default-scalar/'+ styleSelector.value,
+        'style': style,
         'colorerscaleRange': palette_and_min_max[variable].valueRange,
         'attribution': ncmlMetadata.global_attributes.title,
     };
@@ -109,8 +111,6 @@ loadNetCDFButton.addEventListener('click', function() {
     initializeWms(params);
     map.timeDimension.setCurrentTimeIndex(0);
 })
-
-
 
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -142,22 +142,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 var selectedVariable = netcdfVariableSelector.value;
                 lowerRangeinput.value = data_json.variables[selectedVariable].attributes.minimum_value;
                 upperRangeinput.value = data_json.variables[selectedVariable].attributes.maximum_value;
-                // console.log('lowerRangeinput', data_json.variables[selectedVariable].attributes.minimum_value);
 
                 attribution = data_json.variables[selectedVariable].attributes.long_name;
                 ncmlMetadata = data_json;
 
-                // data_json.variable.forEach(variable => {
-                //     var option = document.createElement("option");
-                //     option.text = variable;
-                //     netcdfVariableSelector.add(option);
-                // });
 
                 return data;
             })
         // initializeWms(dataset, style);
     }); 
 });
+
+
 
 // Function to create the base map with OpenStreetMap layer
 function createBaseMap() {
@@ -180,11 +176,29 @@ function createBaseMap() {
                 startOver: false,
             },
         },
+        contextmenu: true,
+        contextmenuWidth: 140,
+        contextmenuItems: [{
+            text: 'Show coordinates',
+            callback: showCoordinates
+        },
+        {
+            text: 'Show data',
+            callback: showData
+        }],
         center: [51.0, 10.0]
     });
 
     return map;
 };
+function showCoordinates (e) {
+    alert(e.latlng);
+};
+
+function showData (e) {
+    alert(e.latlng, 'data will be shown at this point');
+};
+
 
 // Function to create WMS layer
 function createWMSLayer(wmsUrl, layerName,  style) {

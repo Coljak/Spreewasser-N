@@ -48,3 +48,41 @@ class UserProject(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     area = gis_models.MultiPolygonField(srid=25833, null=True)
+
+# DE: Injektion
+class OutlineInjection(gis_models.Model):
+    name = models.CharField(max_length=64, null=True, blank=True)
+    geom = gis_models.MultiPolygonField('Injection')
+
+    def __str__(self):
+                return self.name
+
+# DE: Ufer
+class OutlineSurfaceWater(gis_models.Model):
+    name = models.CharField(max_length=64, null=True, blank=True)
+    geom = gis_models.MultiPolygonField('Surface Water')
+
+    def __str__(self):
+            return self.name
+
+# DE: Versickerung
+class OutlineInfiltration(gis_models.Model):
+    name = models.CharField(max_length=64, null=True, blank=True)
+    geom = gis_models.MultiPolygonField('Infiltration')  
+
+# DE: Geste??
+class OutlineGeste(gis_models.Model):
+    name = models.CharField(max_length=64, null=True, blank=True)
+    geom = gis_models.MultiPolygonField('Injection')
+
+    def __str__(self):
+                return self.name
+    
+
+# DE: Dränung
+class OutlineDrainage(gis_models.Model):
+    name = models.CharField(max_length=64, blank=True, null=True)
+    geom = gis_models.MultiPolygonField('Drainage')
+
+    def __str__(self):
+                return self.name

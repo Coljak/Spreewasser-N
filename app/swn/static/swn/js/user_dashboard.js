@@ -319,7 +319,7 @@ const overlayLayers = {
 
 // ------------------- Field Menu Modal -------------------
 function populateFieldMenuModalWithData(data) {
-  // Assuming you have elements with IDs in your modal to display the data
+  // TODO check if it can be deleted
   document.getElementById("fieldMenuModalTitle").innerText = data.text;
 };
 
@@ -334,6 +334,9 @@ const sidebarTabDrought = document.getElementById("sidebarTabDrought");
 const listElementDem = document.getElementById("liElementDem")
 const listElementDroughtIndex = document.getElementById("liElementDroughtIndex")
 const listElementNetCDF = document.getElementById("liElementNetCDF")
+const droughtSidebarLiElements = document.querySelectorAll(".drought-overlay-sidebar-item")
+const toolboxSidebarLiElements = document.querySelectorAll(".toolbox-overlay-sidebar-item")
+console.log("droughtSidebarLiElements", droughtSidebarLiElements)
 
 const accordionDroughtFields = document.getElementById("accordionDroughtFields")
 const accordionToolboxFields = document.getElementById("accordionToolboxFields")
@@ -345,9 +348,15 @@ function changeTab(swnTool) {
   switch (swnTool) {
     case 'drought':
       sidebarToolsHeader.innerText = "Dürreberechnung";
-      listElementDem.classList.remove("d-none");
-      listElementDroughtIndex.classList.remove("d-none");
-      listElementNetCDF.classList.remove("d-none");
+      
+      droughtSidebarLiElements.forEach(element => {
+        element.classList.remove("d-none");
+      });
+      
+      toolboxSidebarLiElements.forEach(element => {
+        element.classList.add("d-none");
+      });
+      toolboxSidebarLiElements.classList.add("d-none")
       accordionDroughtFields.classList.remove("d-none");
       accordionToolboxFields.classList.add("d-none");
 
@@ -359,12 +368,16 @@ function changeTab(swnTool) {
       break;
     case 'toolbox':
       sidebarToolsHeader.innerText = "Toolbox";
-      listElementDem.classList.add("d-none");
-      listElementDroughtIndex.classList.add("d-none");
-      listElementNetCDF.classList.add("d-none");
+      
       accordionDroughtFields.classList.add("d-none");
       accordionToolboxFields.classList.remove("d-none");
-
+      toolboxSidebarLiElements.forEach(element => {
+        element.classList.remove("d-none");
+      });
+      droughtSidebarLiElements.forEach(element => {
+        element.classList.add("d-none");
+      });
+ 
       droughtFeatureGroup.remove();
       toolboxFeatureGroup.addTo(map);
       currentFeatureGroup = toolboxFeatureGroup;

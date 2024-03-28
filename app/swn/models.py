@@ -97,7 +97,8 @@ class UserField(models.Model):
         self.soil_profile_polygon_ids = json.dumps(polygon_json)
         self.save()
         # return intersecting_buek_data
-    
+        
+# TODO this table is empty-- canlikely be deleted
 class SoilProfile(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     horizon_id = models.IntegerField(null=True, blank=True)
@@ -275,14 +276,11 @@ class CLC2018(models.Model):
     def __str__(self):
         return self.label
     
-# # TODO can probably be deleted
-# class BaseRasterData(models.Model):
-#     name = models.CharField(max_length=100)
-#     rast = gis_models.RasterField(srid=4326, null=True, blank=True)
-#     geotiff = models.FileField(upload_to='geotiffs/')
-    
-#     def __str__(self):
-#         return self.name
+class BuekCapillaryRise(models.Model):
+    soil_type = models.CharField(max_length=255, null=True, blank=True)
+    ka5textureclass_id = models.IntegerField(null=True, blank=True)
+    distance = models.IntegerField(null=True, blank=True)
+    capillary_rate = models.FloatField(null=True, blank=True)
     
 class BuekBulkDensityClass(models.Model):
     bulk_density_class = models.CharField(null=True, blank=True)

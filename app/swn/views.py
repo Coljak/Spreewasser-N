@@ -1,4 +1,4 @@
-import json, asyncio
+import json, asyncio, csv
 from django.middleware import csrf
 from multiprocessing import managers
 from django.shortcuts import render, redirect
@@ -16,6 +16,7 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render
 from django.conf import settings
+import numpy as np
 import requests
 from . import forms
 from . import models
@@ -38,6 +39,10 @@ import time
 import urllib
 from bs4 import BeautifulSoup
 
+
+# helper function to convert np arrays of date strings 
+def convert_to_datetime(date_string):
+    return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%d-%m-%Y')
 
 def get_csrf_token(request):
     data = {
@@ -251,6 +256,67 @@ def timelapse_test_django_passthrough_wms(request, netcdf):
 #  direct connection to the thredds server from browser
 def timelapse_test(request):
     return render(request, 'swn/map_thredds_2.html')
+
+def get_timeseries_data(request):
+    start = datetime.now()
+    params = request.GET.dict()
+
+    p = {
+        'layers': 'hurs',
+        'start_time': '2011-01-01',
+        'end_time': '2011-12-04',
+        'lat_lon': '50.986099,11.975098',
+    }
+    lat = p['lat_lon'].split(',')[0]
+    lon = p['lat_lon'].split(',')[1]
+    lat_2 = float(lat) + 0.1
+    lon_2 = float(lon) + 0.1
+    bbox = f'{lat},{lon},{lat_2},{lon_2}'
+
+    params = {
+        'version': '1.3.0',
+        'request':'GetTimeseries',
+        'layers': p['layers'],
+        'styles': 'default',
+        'crs': 'EPSG:4326',
+        'BBOX': bbox,
+        'WIDTH': '1',
+        'HEIGHT': '1',
+        # 'format': 'image/png',
+        'info_format': 'text/json',
+        'query_layers': p['layers'],
+        'TIME': p['start_time'] + '/' + p['end_time'],
+        'i': 0,
+        'j': 0
+    }
+    netcdf = 'zalf_hurs_amber_2011_v1-0_cf_v6.nc'
+    url = 'http://thredds:8080/thredds/wms/testAll/data/DWD_Data/' + netcdf
+    response = requests.get(url, params=params)
+    layer = p['layers']
+    response_json = response.json()
+    # the loop is a little one second faster than the conversion to a numpy array
+    formatted_dates = [datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%d-%m-%Y') for date_string in response_json['domain']['axes']['t']['values']]
+
+    # dates = np.array(response_json['domain']['axes']['t']['values']),
+    # # Vectorize the conversion function
+    # convert_to_datetime_vec = np.vectorize(convert_to_datetime)
+
+
+    # # Convert the date strings to datetime objects and format them as dd-mm-yyyy
+    # formatted_dates = convert_to_datetime_vec(dates)
+    values = response_json['ranges'][layer]['values']
+    chart_data = {
+                'Date': formatted_dates,
+                layer: values, 
+                'max': max([max(values)]),     
+            }
+    print('chart_data', chart_data)
+
+    response.raise_for_status()
+    end = datetime.now()
+    print('Time to get timeseries data:', end - start)
+    return JsonResponse(chart_data)
+
 
 def sign_up(request):
     if request.method == 'POST':
@@ -845,3 +911,78 @@ def field_menu(request, id):
     elapsed_time = end_time - start_time
     print('elapsed_time', elapsed_time, ' seconds')
     return render(request, 'swn/field_projects_edit.html', data_menu)
+
+
+def monica(request):
+    return render(request, 'swn/monica_hohenfinow.html')
+
+def monica_generate_hohenfinow(request):
+    
+    from . import monica_io3_swn
+    from .run_producer import run_producer
+    from .run_consumer_swn import run_consumer
+    run_producer()
+    msg = run_consumer()
+    print('msg', msg["data"], "TYPE ", type(msg))
+    return JsonResponse({'result': 'success', 'msg': msg})
+
+def monica_generate_from_env_file(request):
+    
+    from . import monica_io3_swn
+    from monica import views as monica_views
+    from .run_consumer_swn import run_consumer
+    monica_views.use_existing_env()
+    msg = run_consumer()
+    # print('msg', msg["data"], "TYPE ", type(msg))
+    return JsonResponse({'result': 'success', 'msg': msg})
+
+
+def monica_generate_hohenfinow_from_db(request):
+    
+    from . import monica_io3_swn
+    from .run_producer_from_db import create_env
+    from monica import views as monica_views
+    from .run_consumer_swn import run_consumer
+    from pathlib import Path
+    # create_env()
+    # env = json.dumps(monica_views.create_monica_env())
+    env = monica_views.create_monica_env()
+    print('Type env', json.dumps(env))
+    # print('env', env)
+    file_path = Path(__file__).resolve().parent
+    with open('env_from_db.json', 'w') as _: 
+        json.dump(env, _)
+    msg = run_consumer()
+
+    # export_monica_result_to_csv(msg)
+    return JsonResponse({'result': 'success', 'msg': msg})
+
+
+def export_monica_result_to_csv(msg):
+    from . import monica_io3_swn
+    from pathlib import Path
+    import json
+    file_path = Path(__file__).resolve().parent
+    
+    file_name = 'monica_result_.csv'
+    file_path = Path.joinpath(file_path, 'monica_csv_exports/', file_name)
+    with open(file_path, 'w', newline='') as _:
+        writer = csv.writer(_, delimiter=",")
+
+        for data_ in msg.get("data", []):
+            results = data_.get("results", [])
+            orig_spec = data_.get("origSpec", "")
+            output_ids = data_.get("outputIds", [])
+
+            if len(results) > 0:
+                writer.writerow([orig_spec.replace("\"", "")])
+                for row in monica_io3_swn.write_output_header_rows(output_ids,
+                                                                include_header_row=True,
+                                                                include_units_row=True,
+                                                                include_time_agg=False):
+                    writer.writerow(row)
+
+                for row in monica_io3_swn.write_output(output_ids, results):
+                    writer.writerow(row)
+
+            writer.writerow([])

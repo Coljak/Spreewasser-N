@@ -1,0 +1,79 @@
+http://127.0.0.1:8088/thredds/wms/testAll/data/DWD_Data/zalf_hurs_amber_2011_v1-0_cf_v6.nc?service=WMS
+&version=1.3.0&request=GetTimeseries&LAYER=hurs
+&CRS=EPSG:4326
+&BBOX=50.979182,12.504273,51.0,12.6&WIDTH=1024&HEIGHT=200&QUERY_LAYERS=hurs&I=0&J=0&format=text/json
+
+This also needs the TIME to be of the formstarttime/endtime, a
+
+2011-12-01/2011-12-04
+
+
+Timeseries as ascii:
+http://127.0.0.1:8088/thredds/dodsC/testAll/data/DWD_Data/zalf_hurs_amber_2011_v1-0_cf_v6.nc.ascii?time%5B0:1:364%5D,lat%5B0:200:200%5D,lon%5B0:200:200%5D,hurs%5B0:1:364%5D%5B0:200:0%5D%5B0:200:0%5D
+
+
+&version=1.3.0
+&request=GetFeatureInfo
+&layers=your_layer_name
+&styles=
+&crs=EPSG:4326
+&bbox=lat_min,lon_min,lat_max,lon_max
+&width=1
+&height=1
+&format=image/png
+&info_format=text/xml
+&query_layers=your_layer_name
+&i=0
+&j=0
+
+
+
+http://127.0.0.1:8088/thredds/wms/testAll/data/DWD_Data/zalf_hurs_amber_2011_v1-0_cf_v6.nc?&version=1.3.0&request=GetFeatureInfo&layers=hurs&styles=default&crs=EPSG:4326&BBOX=50.979182,12.504273,51.0,12.6&width=1&height=1&format=image/png&info_format=text/xml&query_layers=hurs&i=0&j=0
+
+WORKING REQUEST FOR POINT and ONE DAY:
+http://127.0.0.1:8088/thredds/wms/testAll/data/DWD_Data/zalf_hurs_amber_2011_v1-0_cf_v6.nc?&version=1.3.0&request=GetFeatureInfo&layers=hurs&styles=default&crs=EPSG:4326&BBOX=50.979182,12.504273,51.0,12.6&width=1&height=1&format=image/png&info_format=text/xml&query_layers=hurs&i=0&j=0&time=2011-12-01
+
+In the context of a WMS (Web Map Service) request to a Thredds server:
+
+    Width and Height: These parameters define the dimensions of the image that the WMS service will generate in response to the request. The width and height specify the number of pixels horizontally and vertically, respectively. They determine the resolution and size of the image returned by the server.
+
+    Query Layers: The QUERY_LAYERS parameter specifies which layers should be queried for feature information. This parameter allows you to specify a subset of the layers available in the WMS service that should be considered for feature queries. It is similar to the LAYERS parameter but is used specifically for querying purposes.
+
+    I and J: These parameters are used to specify the position within the image for which feature information is requested. They represent the column (I) and row (J) indices of the pixel in the image. When making a GetFeatureInfo request to a WMS service, you typically provide the coordinates of a point on the map (latitude and longitude), and the server translates these coordinates into pixel coordinates (I and J) on the image returned by the WMS service.
+
+Make sure that the values provided for these parameters are appropriate for your use case and adhere to the specifications of the WMS service provided by the Thredds
+ server.
+ 
+ 
+ 
+ 
+ WORKING:
+ http://127.0.0.1:8088/thredds/wms/testAll/data/DWD_Data/zalf_hurs_amber_2011_v1-0_cf_v6.nc?&version=1.3.0&request=GetTimeseries&layers=hurs&styles=default&crs=EPSG:4326&BBOX=50.979182,12.504273,51.0,12.6&WIDTH=1&HEIGHT=1&format=image/png&info_format=text/csv&query_layers=hurs&TIME=2011-12-01/2011-12-04&i=0&j=0
+ 
+  http://127.0.0.1:8088/thredds/wms/testAll/data/DWD_Data/zalf_hurs_amber_2011_v1-0_cf_v6.nc?&version=1.3.0&request=GetTimeseries&layers=hurs&styles=default&crs=EPSG:4326&BBOX=50.979182,12.504273,51.0,12.6&WIDTH=1&HEIGHT=1&info_format=text/json&query_layers=hurs&TIME=2011-12-01/2011-12-04&i=0&j=0
+ 
+ http://127.0.0.1:8088/thredds/wms/testAll/data/DWD_Data/zalf_hurs_amber_2011_v1-0_cf_v6.nc?&version=1.3.0&request=GetTimeseries&layers=hurs&styles=default&crs=EPSG:4326&BBOX=50.979182,12.504273,51.0,12.6&WIDTH=1&HEIGHT=1&format=image/png&info_format=text/json&query_layers=hurs&TIME=2011-12-01/2011-12-04&i=0&j=0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ http://127.0.0.1:8088/thredds/wms/testAll/data/DWD_Data/zalf_hurs_amber_2011_v1-0_cf_v6.nc?&version=1.3.0&request=GetTimeseries&layers=hurs&styles=default&crs=EPSG:4326
+&BBOX=50.979182,12.504273,51.0,12.6&WIDTH=1&HEIGHT=1&format=image/png&info_format=text/csv&query_layers=hurs&TIME=2011-12-01/2011-12-04&i=0&j=0
+

@@ -30,6 +30,7 @@ urlpatterns = [
     # path('', views.IndexView.as_view(), name='index'),
     path('', include('swn.urls')),
     path('toolbox/', include('toolbox.urls')),
+    path('monica/', include('monica.urls')),
     path('admin/', admin.site.urls),
     path('api/schema/',
          SpectacularAPIView.as_view(), name='api-schema'),

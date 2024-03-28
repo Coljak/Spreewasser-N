@@ -65,6 +65,9 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# Node.js
+node_modules/
+app/node_modules/
 # Flask stuff:
 instance/
 .webassets-cache
@@ -182,7 +185,16 @@ geodata/
 app/swn/rasterio_tut.py
 app/media/geotiffs/
 2023-07-26_db.json
-monica/
 node_modules/
 thredds_tomcat/
 app/buek_data/
+netcdf_data/
+
+# data files
+*.nc
+*.tif
+*.tiff
+*.shp
+*.shx
+*.dbf
+*.dods

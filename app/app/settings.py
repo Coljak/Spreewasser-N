@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'swn',
     'toolbox',
+    'monica',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',

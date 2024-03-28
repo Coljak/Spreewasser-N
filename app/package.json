@@ -2,6 +2,7 @@
   "dependencies": {
     "bootstrap": "5.3",
     "bootstrap5": "^1.1.9",
-    "require": "^2.4.20"
+    "require": "^0.4.4",
+    "sass": "^1.71.1"
   }
 }

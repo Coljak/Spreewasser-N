@@ -42,13 +42,17 @@ urlpatterns = [
     path('Thredds/get_wms_capabilities/<str:name>', views.get_wms_capabilities, name='get-wms-capabilities'),
     path('Thredds/wms/<str:netcdf>', views.timelapse_test_django_passthrough_wms, name='timelapse-test-passthrough-wms'),
     path('Thredds/catalog/', views.thredds_catalog, name='thredds-catalog'),
+    path('Thredds/wms/timeseries/', views.get_timeseries_data, name='get-timeseries-data'),
     # path('Thredds/catalog/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     # path('Thredds/dodsC/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     # path('Thredds/dap4/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     # path('Thredds/fileServer/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     # path('Thredds/wcs/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     # path('Thredds/wms/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
-
+    path('monica/', views.monica, name='monica'),
+    path('monica/hohenfinow/', views.monica_generate_hohenfinow, name='monica_hohenfinow'),
+    path('monica/hohenfinowdb/', views.monica_generate_hohenfinow_from_db, name='monica_hohenfinow_from_db'),
+    path('monica/hohenfinowFile/', views.monica_generate_from_env_file, name='monica_hohenfinow_from_file'),
     
     # Bootstrap test colors
     path('bootstrap/', views.bootstrap, name='bootstrap'),

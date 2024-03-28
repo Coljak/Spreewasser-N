@@ -84,10 +84,10 @@
             id="overlayAccordion"
             class="accordion-collapse collapse"
             data-bs-parent="#droughtAccordion"
-          >
+            >
             <ul class="list-group sidebar-list" id="overlayList">
               <!-- project region -->
-              <li class="list-group-item">
+              <li class="list-group-item drought-overlay-sidebar-item">
                 <div class="row">
                   <div class="form-check form-switch col">
                     <input type="checkbox" data-layer="projectRegion" class="form-check-input overlay-switch" id="projectRegionSwitch"/>
@@ -98,7 +98,7 @@
                 </div>
               </li>
               <!-- NetCDF animation -->
-              <li class="list-group-item" id="liElementNetCDF">
+              <li class="list-group-item drought-overlay-sidebar-item" id="liElementNetCDF">
                 <div class="row">
                   <div class="form-check form-switch col">
                     <input type="checkbox" data-layer="animation" class="form-check-input overlay-switch" id="animationSwitch" unchecked/>
@@ -114,7 +114,7 @@
               </li>
 
               <!-- digital elevation model -->
-              <li class="list-group-item" id='liElementDem'>
+              <li class="list-group-item drought-overlay-sidebar-item" id='liElementDem'>
                 <div class="row">
                   <div class="form-check form-switch col">
                     <input type="checkbox" data-layer="demOverlay" class="form-check-input overlay-switch" id="DEMSwitch" unchecked />
@@ -136,7 +136,7 @@
               </li>
 
               <!-- drought index -->
-              <li class="list-group-item" id="liElementDroughtIndex">
+              <li class="list-group-item drought-overlay-sidebar-item" id="liElementDroughtIndex">
                 <div class="row">
                   <div class="form-check form-switch col">
                     <input type="checkbox" class="form-check-input overlay-switch" data-layer="droughtOverlay" id="droughtSwitch" unchecked>
@@ -146,6 +146,53 @@
                     <input type="range" class="form-range layer-opacity" data-layer="droughtOverlay" min="0.0" max="1.0" step="0.1" id="droughtOverlayOpacity" disabled />
                   </div>
                 </div>
+              </li>
+
+              <!-- Toolbox overlays -->
+              <li class="list-group-item toolbox-overlay-sidebar-item d-none">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOverlayInjection" class="form-check-input overlay-switch" id="toolboxOverlayInjectionSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlayInjectionSwitch">
+                      Injektionsgebiet
+                    </label>
+                  </div>
+                </div>
+              </li>
+
+              <li class="list-group-item toolbox-overlay-sidebar-item d-none">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOverlayInfiltration" class="form-check-input overlay-switch" id="toolboxOverlayInfiltrationSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlayInfiltrationSwitch">
+                      Versickerung
+                    </label>
+                  </div>
+                </div>
+              </li>
+
+              <li class="list-group-item toolbox-overlay-sidebar-item d-none">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOverlayGeste" class="form-check-input overlay-switch" id="toolboxOverlayGesteSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlayGesteSwitch">
+                      Geste
+                    </label>
+                  </div>
+                </div>
+              </li>
+
+              <li class="list-group-item toolbox-overlay-sidebar-item d-none">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOverlaySurfaceWater" class="form-check-input overlay-switch" id="toolboxOverlaySurfaceWaterSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlaySurfaceWaterSwitch">
+                      Ufer
+                    </label>
+                  </div>
+                </div>
+              </li>
+
               
               {% for field in state_county_district_form.visible_fields %}
 

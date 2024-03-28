@@ -12,5 +12,5 @@ app_name = 'toolbox'
 
 urlpatterns = [
     path('startpage/', views.toolbox_start, name='toolbox_start'),
-    path('startpage/', views.toolbox_dashboard, name='toolbox_dashboard'),
+    path('dashboard/', views.toolbox_dashboard, name='toolbox_dashboard'),
     ]

@@ -115,12 +115,11 @@ services:
 
   # MONICA
   monica:
-    build:
-      context: .
-      dockerfile: Dockerfile.monica  # Use the Dockerfile name you provided
+    image: zalfrpm/monica-cluster:3.6.10.soil_organic_fixed
+    
     container_name: swn_monica
-    volumes:
-      - ./monica:/run/monica
+    # volumes:
+    #   - ./monica:/run/monica
     expose:
       - 6666  # monica_producer_port
       - 6677  # monica_intern_in_port
@@ -131,7 +130,7 @@ services:
       - 6677:6677
       - 7777:7777
       - 7788:7788
-    entrypoint: ["sh", "-c", "sleep 2073600"]
+    # entrypoint: ["sh", "-c", "sleep 2073600"]
     networks:
       - swn_network
 

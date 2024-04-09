@@ -753,7 +753,7 @@ def load_polygon(request, entity, polygon_id):
         return JsonResponse(error_response, status=404)
 
 # generate jsons of all choices in the field-menu page for faster update whithin UI
-def field_menu(request, id):
+def field_edit(request, id):
     print("field_menu id: ", id)
     
     start_time = time.time()

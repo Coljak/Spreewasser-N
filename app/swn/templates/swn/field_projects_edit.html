@@ -8,7 +8,7 @@
 
 <script>
   
-    var userFieldId = {{ id }}
+    var userFieldId = {{ id }};
     var polygonIds = {{ polygon_ids }};
     var polygonIdsStr = polygonIds.join(','); 
     var systemUnitJson = JSON.parse('{{ system_unit_json|escapejs }}');

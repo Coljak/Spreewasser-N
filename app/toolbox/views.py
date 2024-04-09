@@ -1,11 +1,16 @@
 from django.shortcuts import render
 from . import models
+from swn import models as swn_models
 from . import forms
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib.gis.geos import GEOSGeometry
 import json
+from django.core.serializers.json import DjangoJSONEncoder
+from datetime import datetime
 
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.db.models import PointField
 # Create your views here.
 def toolbox_start(request):
     return render(request, 'toolbox/toolbox_start.html')
@@ -52,3 +57,180 @@ def toolbox_dashboard(request):
 
 
     return JsonResponse(data)
+
+
+def load_toolbox_sinks(request):
+    # Retrieve all polygons from the database table
+    toolbox_sinks = models.SinksWithLandUseAndSoilPropertiesAsPoints.objects.all()
+
+    # Initialize an empty list to store GeoJSON features
+    features = []
+    start_time = datetime.now()
+    # Loop through each polygon and convert it to GeoJSON format
+    for toolbox_sink in toolbox_sinks:
+        geometry = GEOSGeometry(toolbox_sink.geom)
+        # print(geometry.geojson)
+        geojson = json.loads(geometry.geojson)
+       
+        features.append(geojson)
+
+    # Create a GeoJSON FeatureCollection containing all GeoJSON features
+    feature_collection = {
+        "type": "FeatureCollection",
+        "features": features,
+    }
+    end_time = datetime.now()
+    print('Duration: {}'.format(end_time - start_time))
+    # Return the GeoJSON FeatureCollection as a JSON response
+    return JsonResponse(feature_collection)
+
+
+# def load_toolbox_sinks(request):
+#     with open('toolbox/static/data/geo_json_1.geojson') as f:
+#         data = json.load(f)
+#         print("Data: ", data)
+#     return JsonResponse(data)
+
+def load_outline_injection(request):
+    outline_injection = models.OutlineInjection.objects.all()
+    geometry = GEOSGeometry(outline_injection[0].geom)
+    geojson = json.loads(geometry.geojson)
+    feature = {
+            "type": "Feature",
+            "geometry": geojson,
+            "properties": {
+                "name": 'Toolbox Injection',
+            }
+        }
+    return JsonResponse(feature)
+
+def load_outline_surface_water(request):
+    outline_surface_water = models.OutlineSurfaceWater.objects.all()
+    geometry = GEOSGeometry(outline_surface_water[0].geom)
+    geojson = json.loads(geometry.geojson)
+    feature = {
+            "type": "Feature",
+            "geometry": geojson,
+            "properties": {
+                "name": 'Toolbox Surface Water',
+            }
+        }
+    return JsonResponse(feature)
+
+def load_outline_infiltration(request):
+    outline_infiltration = models.OutlineInfiltration.objects.all()
+    geometry = GEOSGeometry(outline_infiltration[0].geom)
+    geojson = json.loads(geometry.geojson)
+    feature = {
+            "type": "Feature",
+            "geometry": geojson,
+            "properties": {
+                "name": 'Toolbox Infiltration',
+            }
+        }
+    return JsonResponse(feature)
+
+def load_outline_geste(request):
+    outline_geste = models.OutlineInfiltration.objects.all()
+    geometry = GEOSGeometry(outline_geste[0].geom)
+    geojson = json.loads(geometry.geojson)
+    feature = {
+            "type": "Feature",
+            "geometry": geojson,
+            "properties": {
+                "name": 'Toolbox Geste',
+            }
+        }
+    return JsonResponse(feature)
+
+def toolbox_get_sinks_within(request, area_id):
+    user_field = swn_models.UserField.objects.get(id=area_id)
+    user_field_geom = GEOSGeometry(user_field.geom)
+    sinks = models.SinksWithLandUseAndSoilPropertiesAsPoints.objects.filter(
+        geom__within=user_field_geom
+    )
+    features = []
+    # print(sinks)
+    for sink in sinks:
+        geometry = GEOSGeometry(sink.geom)
+        
+        geojson = json.loads(geometry.geojson)
+        geojson['properties'] = {
+            "Tiefe": sink.depth_sink,
+            "Fläche": sink.area_sink,
+            "Eignung": str(sink.index_sink * 100) + "%",
+            "Eignung 2": str(sink.index_si_1 * 100) + "%",
+            "Landnuntzung 1": sink.land_use_1,
+            "Landnuntzung 2": sink.land_use_2,
+            "Landnuntzung 3": sink.land_use_3,
+            "Bodenindex": sink.index_soil ,
+        }
+        features.append(geojson)
+    feature_collection = {
+        "type": "FeatureCollection",
+        "features": features,
+        }
+    
+    # soils = models.SoilProperties4326.objects.objects.filter(
+    #     geom__within=user_field_geom
+    # )
+    # index_soil = sinks.values_list('index_soil', flat=True).distinct()
+    # Return the GeoJSON FeatureCollection as a JSON response
+    return JsonResponse(feature_collection)
+
+    
+
+def toolbox_sinks_edit(request, id):
+    #user project
+    area_id = id
+    user_field = swn_models.UserField.objects.get(id=id)
+    user_field_geom = GEOSGeometry(user_field.geom)
+    sinks = models.SinksWithLandUseAndSoilPropertiesAsPoints.objects.filter(
+        geom__within=user_field_geom
+    )
+    toolbox_edit_data = {
+        'name': user_field.name,
+        'area_id': area_id
+    }
+
+    sinks_list = []
+    for obj in sinks:
+        dict = {}
+        dict['type'] = 'Point'
+        dict['geom'] = json.loads(obj.geom.geojson)['coordinates']
+        dict['objectid'] = obj.objectid
+        dict['depth_sink'] = obj.depth_sink
+        dict['area_sink'] = obj.area_sink
+        dict['index_soil'] = obj.index_soil
+        # dict['index_sink'] = obj.index_sink
+        # dict['index_si_1'] = obj.index_si_1
+        dict['land_use_1'] = obj.land_use_1
+        dict['land_use_2'] = obj.land_use_2
+        sinks_list.append(dict)
+        # print(obj.geom)
+    
+    sinks_list_json = json.dumps(sinks_list)
+    toolbox_edit_data['sinks'] = sinks_list
+
+    distinct_land_use_1 = sinks.values_list('land_use_1', flat=True).distinct()
+    distinct_land_use_2 = sinks.values_list('land_use_2', flat=True).distinct()
+    depths_sink = sinks.values_list('depth_sink', flat=True).distinct()
+    # max_depth_sink = sinks.values_list('depth_sink', flat=True).max()
+    areas_sink = sinks.values_list('area_sink', flat=True).distinct()
+    depths_sink = list(depths_sink)
+    rounded_depths_list = [round(value, 2) for value in depths_sink]
+    rounded_depths_list = list(set(rounded_depths_list))
+    rounded_depths_list.sort()
+    areas_sink = list(areas_sink)
+    areas_sink.sort()
+    toolbox_edit_data['depths_sink'] = rounded_depths_list
+    toolbox_edit_data['areas_sink'] = areas_sink
+    # max_area_sink = sinks.values_list('area_sink', flat=True).max()
+    toolbox_edit_data['distinct_land_use_1'] = distinct_land_use_1
+    toolbox_edit_data['distinct_land_use_2'] = distinct_land_use_2
+    # toolbox_edit_data['min_depth_sink'] = min_depth_sink
+    # toolbox_edit_data['max_depth_sink'] = max_depth_sink
+    # toolbox_edit_data['min_area_sink'] = min_area_sink
+    # toolbox_edit_data['max_area_sink'] = max_area_sink
+    # print(distinct_land_use_1)
+    return render(request, 'toolbox/toolbox_project_edit.html', toolbox_edit_data)

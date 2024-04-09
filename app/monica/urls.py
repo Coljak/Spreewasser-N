@@ -8,4 +8,6 @@ from . import models
 # template tagging
 app_name = 'monica'
 
-urlpatterns = []
+urlpatterns = [
+    path('crop_rotation/', views.crop_rotation, name='monica-crop-rotation'),
+]

@@ -198,3 +198,5 @@ netcdf_data/
 *.shx
 *.dbf
 *.dods
+
+_hohenfinow/

@@ -29,7 +29,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 urlpatterns = [
     # path('', views.IndexView.as_view(), name='index'),
     path('', include('swn.urls')),
-    path('toolbox/', include('toolbox.urls')),
+    path('', include('toolbox.urls')),
     path('monica/', include('monica.urls')),
     path('admin/', admin.site.urls),
     path('api/schema/',

@@ -37,12 +37,11 @@
   <div class="leaflet-sidebar-content">
     <div class="leaflet-sidebar-pane active" id="droughtWarning">
       <h1 class="leaflet-sidebar-header" id="sidebarToolsHeader"> Dürreberechnung
-        <span class="leaflet-sidebar-close"
-          ><i class="bi bi-caret-left"></i></span>
+        <span class="leaflet-sidebar-close"><i class="bi bi-caret-left"></i></span>
       </h1>
       <!-- accordion items of layer pane -->
       <div class="accordion accordion-flush" id="droughtAccordion">
-
+        <!-- Baselayer accordion items -->
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button
@@ -56,17 +55,17 @@
               Baselayers
             </button>
           </h2>
+          <!-- Baselayer collapse -->
           <div
             id="baseLayerCollapse"
             class="accordion-collapse collapse show"
             data-bs-parent="#droughtAccordion"
           >
-            {% comment %} <ul class="list-group sidebar-list" id="baseLayerControlList"></ul> {% endcomment %}
             <ul class="list-group sidebar-list base-layer-control-list" id="baseLayerList"></ul>
               <!-- leaflet layer control items are inserted here-->
           </div>
         </div> 
-        <!-- overlay items -->
+        <!-- overlay accordion items -->
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button
@@ -87,7 +86,7 @@
             >
             <ul class="list-group sidebar-list" id="overlayList">
               <!-- project region -->
-              <li class="list-group-item drought-overlay-sidebar-item">
+              <li class="list-group-item">
                 <div class="row">
                   <div class="form-check form-switch col">
                     <input type="checkbox" data-layer="projectRegion" class="form-check-input overlay-switch" id="projectRegionSwitch"/>
@@ -95,6 +94,7 @@
                       Spreewasser:N Projektgebiet
                     </label>
                   </div>
+                  
                 </div>
               </li>
               <!-- NetCDF animation -->
@@ -152,9 +152,43 @@
               <li class="list-group-item toolbox-overlay-sidebar-item d-none">
                 <div class="row">
                   <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="toolboxOverlayInjection" class="form-check-input overlay-switch" id="toolboxOverlayInjectionSwitch"/>
+                    <input type="checkbox" data-layer="toolboxOverlaySoil" class="form-check-input overlay-switch" id="toolboxOverlaySoilwitch"/>
+                    <label class="form-check-label" for="toolboxOverlaySoilSwitch">
+                      Bodenanalyse
+                    </label>
+                  </div>
+                </div>
+              </li>
+
+              <!-- Toolbox overlays -->
+              <li class="list-group-item toolbox-overlay-sidebar-item d-none">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOverlaySinks" class="form-check-input overlay-switch" id="toolboxOverlaySinksSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlaySinksSwitch">
+                      Senken
+                    </label>
+                  </div>
+                </div>
+              </li>
+
+              {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item d-none">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxSinks" class="form-check-input overlay-switch" id="toolboxSinksSwitch"/>
+                    <label class="form-check-label" for="toolboxSinksSwitch">
+                      Senken
+                    </label>
+                  </div>
+                </div>
+              </li> {% endcomment %}
+
+              <li class="list-group-item toolbox-overlay-sidebar-item d-none">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOutlineInjection" class="form-check-input overlay-switch" id="toolboxOverlayInjectionSwitch"/>
                     <label class="form-check-label" for="toolboxOverlayInjectionSwitch">
-                      Injektionsgebiet
+                      Grundwasseranreicherung durch Injektionsgebiet <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Grundwasseranreicherung durch Injektionsgebiet" style="text-align: left;"></i>
                     </label>
                   </div>
                 </div>
@@ -163,20 +197,22 @@
               <li class="list-group-item toolbox-overlay-sidebar-item d-none">
                 <div class="row">
                   <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="toolboxOverlayInfiltration" class="form-check-input overlay-switch" id="toolboxOverlayInfiltrationSwitch"/>
+                    <input type="checkbox" data-layer="toolboxOutlineInfiltration" class="form-check-input overlay-switch" id="toolboxOverlayInfiltrationSwitch"/>
                     <label class="form-check-label" for="toolboxOverlayInfiltrationSwitch">
-                      Versickerung
+                      Grundwasseranreicherung durch Versickerung <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Grundwasseranreicherung durch Versickerung" style="text-align: left;"></i>
+
                     </label>
                   </div>
+                  
                 </div>
               </li>
 
               <li class="list-group-item toolbox-overlay-sidebar-item d-none">
                 <div class="row">
                   <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="toolboxOverlayGeste" class="form-check-input overlay-switch" id="toolboxOverlayGesteSwitch"/>
+                    <input type="checkbox" data-layer="toolboxOutlineGeste" class="form-check-input overlay-switch" id="toolboxOverlayGesteSwitch"/>
                     <label class="form-check-label" for="toolboxOverlayGesteSwitch">
-                      Geste
+                      Gesteuerte Drainagen <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Gesteuerte Drainagen" style="text-align: left;"></i>
                     </label>
                   </div>
                 </div>
@@ -185,9 +221,9 @@
               <li class="list-group-item toolbox-overlay-sidebar-item d-none">
                 <div class="row">
                   <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="toolboxOverlaySurfaceWater" class="form-check-input overlay-switch" id="toolboxOverlaySurfaceWaterSwitch"/>
+                    <input type="checkbox" data-layer="toolboxOutlineSurfaceWater" class="form-check-input overlay-switch" id="toolboxOverlaySurfaceWaterSwitch"/>
                     <label class="form-check-label" for="toolboxOverlaySurfaceWaterSwitch">
-                      Ufer
+                      Senken in Ufernähe <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Senken in Ufernähe" style="text-align: left;"></i>
                     </label>
                   </div>
                 </div>
@@ -204,29 +240,16 @@
           </div>
         </div>
 
-        <!-- userfields -->
+        <!-- drought warning userfields -->
         <div class="accordion-item" id="accordionDroughtFields">
           <h2 class="accordion-header">
-            <button
-              class="accordion-button collapsed"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#userFieldsAccordion"
-              aria-expanded="false"
-              aria-controls="userFieldsAccordion"
-            >
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#userFieldsAccordion" aria-expanded="false" aria-controls="userFieldsAccordion">
               Benutzerfelder
             </button>
           </h2>
-          <div
-            id="userFieldsAccordion"
-            class="accordion-collapse collapse"
-            data-bs-parent="#droughtAccordion"
-          >
+          <div id="userFieldsAccordion" class="accordion-collapse collapse" data-bs-parent="#droughtAccordion">
               <!-- userFields -->
-              <div class="accordion" id="accordionUserFields">
-                <!-- userFields are injected here -->
-              </div>
+             
 
           </div>
         </div>
@@ -258,10 +281,6 @@
         </div>
       </div>
     </div>
-
-
-    
-
     <!-- Profile pane -->
     <div class="leaflet-sidebar-pane" id="profile">
       <h1 class="leaflet-sidebar-header">
@@ -287,6 +306,7 @@
         ></span>
       </h1>
     </div>
+    
     <div class="leaflet-sidebar-pane" id="settings">
       <h1 class="leaflet-sidebar-header">
         Settings<span class="leaflet-sidebar-close"

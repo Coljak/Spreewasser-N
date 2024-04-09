@@ -32,8 +32,6 @@
   {% include 'swn/modal_field_menu.html' %} 
   {% comment %} <script>const fieldMenuModal = document.getElementById('fieldMenuModal')</script>  {% endcomment %}
 
-{% comment %} </div> {% endcomment %}
-<!--sidebar-->
 
 <!-- map -->
 
@@ -52,6 +50,8 @@
       const demUrl= "{% static 'data/dem_3857.png' %}"
       console.log("demUrl", demUrl)
       const droughtUrl= "{% static 'data/4326_reprojected_3857.png' %}" 
+      const toolboxUrl= "{% static 'data/soil_4326_rendered_image_2.png' %}"
+      const toolboxSinksUrl = "{% static 'data/sinks_3857_pink.png' %}"
     
     </script>
 

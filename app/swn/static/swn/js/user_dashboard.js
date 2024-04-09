@@ -117,6 +117,16 @@ const droughtBounds = [
   [46.89, 15.33],
   [55.31, 5.41],
 ];
+
+const toolboxBounds = [
+  [51.9015194452089901, 14.5048979594768852],
+  [52.7436194452089921, 13.4503979594768843]
+];
+const sinksBounds = [[51.903417526,14.473467455],[52.742055454,13.500732582]]
+
+const toolboxOverlaySoil = L.imageOverlay(toolboxUrl, toolboxBounds, { opacity: 1.0 });
+const toolboxOverlaySinks = L.imageOverlay(toolboxSinksUrl, sinksBounds, { opacity: 1.0 });
+
 const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
 const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5 });
 var videoUrl = 'https://www.mapbox.com/bites/00188/patricia_nasa.webm',
@@ -176,6 +186,9 @@ var toolboxFeatureGroup = new L.FeatureGroup();
 var currentFeatureGroup = droughtFeatureGroup;
 
 map.addLayer(currentFeatureGroup);
+
+// All Overays are stored in Variables
+
 var projectRegion = new L.GeoJSON.AJAX('load_projectregion/',
   {
     style: function (feature) {
@@ -189,10 +202,100 @@ var projectRegion = new L.GeoJSON.AJAX('load_projectregion/',
     }
   });
 
+var toolboxSinks = new L.GeoJSON.AJAX('toolbox_sinks/',
+{
+  style: function (feature) {
+    return { 
+      fillColor: lightColor,
+      color: infoColor,};
+  },
+  attribution: 'Toolbox Sinks',
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.Tiefe);
+  }
+});
+
+var toolboxOutlineInjection = new L.GeoJSON.AJAX('toolbox_outline_injection/',
+{
+  style: function (feature) {
+    return { 
+      fillColor: lightColor,
+      color: infoColor,};
+  },
+  attribution: 'Toolbox Injection',
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.name);
+  }
+});
+
+var toolboxOutlineInjection = new L.GeoJSON.AJAX('toolbox_outline_injection/',
+{
+  style: function (feature) {
+    return { 
+      fillColor: lightColor,
+      color: infoColor,};
+  },
+  attribution: 'Toolbox Injection',
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.name);
+  }
+});
+
+var toolboxOutlineSurfaceWater = new L.GeoJSON.AJAX('load_outline_surface_water/',
+{
+  style: function (feature) {
+    return { 
+      fillColor: lightColor,
+      color: infoColor,};
+  },
+  attribution: 'Toolbox Surface Water',
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.name);
+  }
+});
+var toolboxOutlineInfiltration = new L.GeoJSON.AJAX('load_outline_infiltration/',
+{
+  style: function (feature) {
+    return { 
+      fillColor: lightColor,
+      color: infoColor,};
+  },
+  attribution: 'Toolbox Infiltration',
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.name);
+  }
+});
+var toolboxOutlineGeste = new L.GeoJSON.AJAX('load_outline_geste/',
+{
+  style: function (feature) {
+    return { 
+      fillColor: lightColor,
+      color: infoColor,};
+  },
+  attribution: 'Toolbox Geste',
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.name);
+  }
+});
+
+  // var toolboxOutlineDrainage = new L.GeoJSON.AJAX('load_outline_drainage/',
+  // {
+  //   style: function (feature) {
+  //     return { 
+  //       fillColor: lightColor,
+  //       color: infoColor,};
+  //   },
+  //   attribution: 'Toolbox Dränung',
+  //   onEachFeature: function (feature, layer) {
+  //     layer.bindTooltip(feature.properties.name);
+  //   }
+  // });
+
+  
+
   currentFeatureGroup.bringToFront();
 
 droughtFeatureGroup.on("click", function (event) {
-  const layer = event.layer;
   
   // const leafletId = droughtFeutureGroup.getLayerId(layer);
   let leafletId = Object.keys(event.layer._eventParents)[0];
@@ -315,6 +418,13 @@ const overlayLayers = {
   "demOverlay": demOverlay,
   "animation": animation,
   "projectRegion": projectRegion,
+  "toolboxOverlaySoil": toolboxOverlaySoil,
+  "toolboxOverlaySinks": toolboxOverlaySinks,
+  "toolboxOutlineInjection": toolboxOutlineInjection,
+  "toolboxOutlineSurfaceWater": toolboxOutlineSurfaceWater,
+  "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
+  "toolboxOutlineGeste": toolboxOutlineGeste,
+  "sinks": toolboxSinks,
 };
 
 // ------------------- Field Menu Modal -------------------
@@ -336,10 +446,13 @@ const listElementDroughtIndex = document.getElementById("liElementDroughtIndex")
 const listElementNetCDF = document.getElementById("liElementNetCDF")
 const droughtSidebarLiElements = document.querySelectorAll(".drought-overlay-sidebar-item")
 const toolboxSidebarLiElements = document.querySelectorAll(".toolbox-overlay-sidebar-item")
-console.log("droughtSidebarLiElements", droughtSidebarLiElements)
 
-const accordionDroughtFields = document.getElementById("accordionDroughtFields")
-const accordionToolboxFields = document.getElementById("accordionToolboxFields")
+var accordionDroughtFields = document.getElementById("accordionDroughtFields")
+var accordionToolboxFields = document.getElementById("accordionToolboxFields")
+
+var userFieldsAccordion = document.getElementById("userFieldsAccordion");
+var toolboxFieldsAccordion = document.getElementById("toolboxFieldsAccordion");
+
 const sidebarToolsHeader = document.getElementById("sidebarToolsHeader");
 let swnTool = 'drought'
 
@@ -348,19 +461,19 @@ function changeTab(swnTool) {
   switch (swnTool) {
     case 'drought':
       sidebarToolsHeader.innerText = "Dürreberechnung";
-      
+      // overlays
       droughtSidebarLiElements.forEach(element => {
         element.classList.remove("d-none");
       });
-      
       toolboxSidebarLiElements.forEach(element => {
         element.classList.add("d-none");
       });
-      toolboxSidebarLiElements.classList.add("d-none")
+      
       accordionDroughtFields.classList.remove("d-none");
       accordionToolboxFields.classList.add("d-none");
 
       console.log("Case drought", sidebarToolsHeader.innerText );
+
       toolboxFeatureGroup.remove();
       droughtFeatureGroup.addTo(map);
       currentFeatureGroup = droughtFeatureGroup;
@@ -369,14 +482,17 @@ function changeTab(swnTool) {
     case 'toolbox':
       sidebarToolsHeader.innerText = "Toolbox";
       
-      accordionDroughtFields.classList.add("d-none");
-      accordionToolboxFields.classList.remove("d-none");
+      // overlays
       toolboxSidebarLiElements.forEach(element => {
         element.classList.remove("d-none");
       });
       droughtSidebarLiElements.forEach(element => {
         element.classList.add("d-none");
       });
+
+
+      accordionDroughtFields.classList.add("d-none");
+      accordionToolboxFields.classList.remove("d-none");
  
       droughtFeatureGroup.remove();
       toolboxFeatureGroup.addTo(map);
@@ -413,6 +529,11 @@ sidebarTabToolbox.addEventListener("click", () => {
       changeTab(swnTool);
     }
   }
+});
+
+
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip();
 });
 
 // -------------------Sidebar new end----------------
@@ -456,13 +577,71 @@ leafletSidebarContent.addEventListener("click", (event) => {
           fieldMenuModal.show();
       // $('#fieldMenuModal').modal('show');
       // console.log("field-menu clicked", leafletId);
+    } else if (clickedElement.classList.contains("toolbox-menu")) {
+      // TODO the hardcoded # fieldMenuModal is triggered from button
+        const fieldMenuModal = new bootstrap.Modal(document.getElementById('toolboxMenuModal'));
+          fieldMenuModal.show();
     } else if (clickedElement.classList.contains("field-edit")) {
         // TODO the hardcoded modal is triggered from button
         console.log("field-edit clicked", leafletId, userField.id);
-        // projectModalTitle.innerText = userField.name;
-        const url = `/login/Dashboard/field-menu/${userField.id}/`;
-        // window.location.href = url;
-    } else { console.log("else in eventlistener") }
+    } else if (clickedElement.classList.contains("toolbox-edit")) {
+      // TODO the hardcoded modal is triggered from button
+      try{
+        toolboxSinks.remove();
+      }
+      catch(err){console.log(err)};
+    
+      console.log("toolbox-edit clicked", leafletId, userField.id);
+      var toolboxSinks = new L.GeoJSON.AJAX('toolbox_get_sinks_within/' + userField.id + '/',
+      {
+        style: function (feature) {
+          return { 
+            fillColor: lightColor,
+            color: infoColor,};
+        },
+        attribution: 'Toolbox Sinks',
+        onEachFeature: function (feature, layer) {
+          var tooltipContent = '';
+          for (var key in feature.properties) {
+              tooltipContent += key + ': ' + feature.properties[key] + '<br>';
+          }
+          layer.bindTooltip(tooltipContent);
+      }
+      });
+      
+      currentFeatureGroup.addLayer(toolboxSinks);
+      // toolboxSinks.addTo(map);
+
+      // fetch('toolbox_get_sinks_within/' + userField.id)
+      // .then(response => response.json())
+      // .then(data => {
+      //   console.log("fetch toolbox_edit", data);
+      //   // Parse the GeoJSON FeatureCollection
+      //   var pointFeatureGroup = L.featureGroup();
+      //   // Iterate over each feature in the FeatureCollection
+      //   data.features.forEach(function(feature) {
+      //       // Extract coordinates
+      //       var coordinates = feature.coordinates;
+            
+      //       // Extract properties
+      //       var properties = feature.properties;
+            
+      //       // Create a Leaflet marker at the coordinates
+      //       var marker = L.marker([coordinates[1], coordinates[0]]);
+            
+      //       // Bind a popup displaying the properties
+      //       var popupContent = "<b>Properties:</b><br>";
+      //       for (var key in properties) {
+      //           popupContent += key + ": " + properties[key] + "<br>";
+      //       }
+      //       marker.bindPopup(popupContent);      
+      //       // Add the marker to the feature group
+      //       marker.addTo(pointFeatureGroup);
+      //   });
+      //   // Add the feature group to the Leaflet map
+      //   pointFeatureGroup.addTo(map);
+      // })
+     } else { console.log("else in eventlistener") }
     }
   });
 
@@ -581,8 +760,6 @@ createBaseLayerSwitchGroup();
 
 //---------------MAP END-------------------------------
 var userFields = {};
-// const accordionDroughtFields = document.getElementById("accordionDroughtFields");
-// const accordionToolboxFields = document.getElementById("accordionToolboxFields");
 
 
 
@@ -764,29 +941,40 @@ map.on("draw:created", function (event) {
     const layer2 = L.geoJSON(layer.toGeoJSON().geometry);
     currentFeatureGroup.addLayer(layer2);
 
-        
-      let userField = new UserField("", layer, swnTool);
-      console.log("draw:created userField", userField);
-      userField.leafletId = layer2._leaflet_id;
-      currentUserField = userField;
-
-      $('#userFieldNameModal').modal('show'); 
-    }
+    let userField = new UserField("", layer, swnTool);
+    console.log("draw:created userField", userField);
+    userField.leafletId = layer2._leaflet_id;
+    currentUserField = userField;
+    // Show the modal to enter the userField name. After the name is entered, the userField is saved in the DB
+    $('#userFieldNameModal').modal('show'); 
+  }
 });
 
 
 
 // A list element is created and the corresponding userField object is attached to the li element in the sidebar
 const addLayerToSidebar = (userField) => {
-  
+  var menuType = '';
+  if (userField.swnTool === 'drought') {
+    menuType = 'field-edit';
+  } else if (userField.swnTool === 'toolbox') {
+    menuType = 'toolbox-edit';
+  };
+  // const menuType = 'field-menu';
   // new Accordion UserField style
   const accordion = document.createElement("div");
   accordion.setAttribute("class", "accordion-item");
   accordion.setAttribute("id", `accordion-${userField.leafletId}`);
   accordion.setAttribute("leaflet-id", userField.leafletId);
+ 
 
   accordion.innerHTML = ` 
-    <div class="accordion-header nested user-field-header d-flex align-items-center justify-content-between" id="accordionHeader-${userField.leafletId}" leaflet-id="${userField.leafletId}">
+    <div 
+    class="accordion-header nested user-field-header d-flex align-items-center justify-content-between" 
+    id="accordionHeader-${userField.leafletId}" 
+    leaflet-id="${userField.leafletId}"
+    
+    >
     <span class="form-check form-switch h6">  
       <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" id="fieldSwitch-${userField.leafletId}" checked>
     </span>
@@ -795,12 +983,12 @@ const addLayerToSidebar = (userField) => {
         </button>
       <span class="column col-4 field-btns-col">
         <form id="deleteAndCalcForm-${userField.leafletId}">
-          <a href="field-menu/${userField.id}" type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}">
+          <a href="${menuType}/${userField.id}" type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action" leaflet-id="${userField.leafletId}">
             <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}"></i></span>
           </a>
     
-          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}">
-            <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}"></i></span>
+          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action ${menuType}" leaflet-id="${userField.leafletId}">
+            <span><i class="bi bi-list user-field-action ${menuType}" leaflet-id="${userField.leafletId}"></i></span>
           </button>
           <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}">
             <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}"></i></span>
@@ -816,17 +1004,17 @@ const addLayerToSidebar = (userField) => {
       <ul>
     </div>
   </div>
-`;
+  `;
 
   // adding the UserField to the HTML-list element
   accordion.userField = userField;
 
   if (userField.swnTool === 'drought') {
     console.log('AddLayerToSidebar drought')
-    accordionDroughtFields.appendChild(accordion);
+    userFieldsAccordion.appendChild(accordion);
   } else if (userField.swnTool === 'toolbox') {
     console.log('AddLayerToSidebar toolbox')
-    accordionToolboxFields.appendChild(accordion);
+    toolboxFieldsAccordion.appendChild(accordion);
   } else { console.log('else in addLayerToSidebar') };
 };
 

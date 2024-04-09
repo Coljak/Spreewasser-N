@@ -1,4 +1,9 @@
 from . import models
+from . import forms
+from django.shortcuts import render, redirect
+from django.urls import reverse, reverse_lazy
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
+
 import json
 import zmq
 # create a new monica env
@@ -271,3 +276,19 @@ def use_existing_env():
     socket.send_json(envj)
 
     return envj
+
+def crop_rotation(request):
+    form = forms.CropForm()
+
+    if request.method == 'POST':
+        form = forms.CropRotationForm(request.POST)
+        if form.is_valid():
+            # create_monica_env()
+            use_existing_env()
+            return redirect('swn:monica')
+        else:
+            return HttpResponseBadRequest('Form is not valid')
+        
+    return render(request, 'monica/crop_rotation.html', {'form': form})
+
+

@@ -6,7 +6,7 @@
         <li class="mb-1"><a  class="nav-brand mb-2" href="{% url 'swn:swn_index' %}"><img src="{% static 'img/SpreeWasser-Logo.png' %}" height="60px" alt="SWN-Logo"/></a></li>
         {% if user.is_superuser %}
           <li><a  class="nav-link" href="{% url 'admin:index' %}">ADMIN</a></li>
-          {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:bootstrap' %}">Bootsrap</a></li> {% endcomment %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'swn:bootstrap' %}">Bootsrap</a></li>
           {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:timelapse-test' %}">Timelapse_test</a></li> {% endcomment %}
         {% endif %}
         {% if user.is_authenticated  %}    

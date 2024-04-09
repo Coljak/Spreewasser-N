@@ -28,7 +28,8 @@ urlpatterns = [
     path('login/Dashboard/delete/<int:id>', views.delete_user_field, name='delete-user-field'),
     # path('Logout/', LogoutView.as_view(), {'next_page': settings.LOGOUT_REDIRECT_URL}, name='user_logout'),  
     # path('Chart/', views.ChartView.as_view(), name='chart'), 
-    path('login/Dashboard/field-menu/<int:field_id>/chartdata/<int:crop_id>/<int:soil_id>/', views.get_chart, name='chart-api'),
+    path('login/Dashboard/field-edit/<int:id>/', views.field_edit, name='field_edit'),
+    path('login/Dashboard/field-edit/<int:field_id>/chartdata/<int:crop_id>/<int:soil_id>/', views.get_chart, name='chart-api'),
     path('login/Dashboard/monica-map/', views.thredds_wms_view, name='monica-map'),
     # Impressum and Acknoledgements
     path('Impressum-Information/', views.ImpressumView.as_view(), name='impressum_information'),
@@ -58,7 +59,7 @@ urlpatterns = [
     path('bootstrap/', views.bootstrap, name='bootstrap'),
     path('login/Dashboard/load_projectregion/', views.load_projectregion, name='load_projectregion'),
     path('login/Dashboard/load_polygon/<str:entity>/<int:polygon_id>/', views.load_polygon, name='load_polygon'),
-    path('login/Dashboard/field-menu/<int:id>/', views.field_menu, name='field_menu'),
+    
     # path('update_soil_profile_choices/', views.update_soil_profile_choices, name='update_soil_profile_choices'),
     # path('login/Dashboard/get-soil-data/<int:id>/', views.get_soil_data, name='get_soil_data'),
     

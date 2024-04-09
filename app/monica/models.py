@@ -3,17 +3,25 @@ from django.contrib.postgres.fields import ArrayField
 from typing import List, Tuple
 import json
 
-# Monica model parameters
-# Crops
-# python shell command:
-# from monica import models
-# crop = models.Crop()
-# crop.import_from_json('/app/swn/_hohenfinow/monica-parameters/crops/alfalfa.json', 'Alfalfa')
+# TODO Questions:
+# - Why are there crop residuues for species that have no species parameters?
+# - -> select ms.id, ms.species_name, mc.species_name as residue_name from monica_speciesparameters ms 
+# - -> full join monica_cropresidueparameters mc on mc.species_name = ms.species_name
+# - -> order by ms.species_name, mc.species_name 
 
+class CropParametersExist(models.Model):
+    species_name = models.CharField(max_length=100, blank=True)
+    
+    in_species = models.BooleanField(default=False)
+    in_cultivar = models.BooleanField(default=False)
+    in_residues = models.BooleanField(default=False)
+
+    
 # TODO get foreign keys of CropSpeciesParameters 
 # this is the model for all jsons in monica-parammeters/crops/<crop-name>/.json
 class CultivarParameters(models.Model):
     species_name = models.CharField(max_length=100, blank=True)
+    species_parameters = models.ForeignKey('SpeciesParameters', on_delete=models.CASCADE, blank=True, null=True)
     assimilate_partitioning_coeff = ArrayField(ArrayField(models.FloatField()))
     base_daylength = ArrayField(ArrayField(models.FloatField()))
     begin_sensitive_phase_heat_stress = models.FloatField()
@@ -351,7 +359,8 @@ class CropResidueParameters(models.Model):
     part_aom_to_aom_fast = models.FloatField(blank=True, null=True)
     part_aom_to_aom_slow = models.FloatField(blank=True, null=True)
     residue_type = models.CharField(max_length=100, blank=True, null=True)
-    species = models.CharField(max_length=100,blank=True, null=True)
+    species_name = models.CharField(max_length=100,blank=True, null=True)
+    species_parameters = models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE, blank=True, null=True)
 
     @classmethod
     def create_or_update_from_json(cls, json_file_path):
@@ -464,7 +473,6 @@ class CropResidueParameters(models.Model):
             "species": self.species,
             "type": self.__class__.__name__
         }
-
 
 class OrganicFertiliser(models.Model):
     aom_dry_matter_content = models.FloatField(blank=True, null=True)
@@ -637,7 +645,6 @@ class UserCropParameters(models.Model):
     saturation_beta = models.FloatField()
     stomata_conductance_alpha = models.FloatField() # TODO integer
     tortuosity = models.FloatField()
-    # type = models.CharField(max_length=100)
 
     def to_json(self):
         return {
@@ -691,7 +698,6 @@ class UserCropParameters(models.Model):
 
                 return crop_params
         
-
 class UserEnvironmentParameters(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
     albedo = models.FloatField()
@@ -747,7 +753,6 @@ class UserEnvironmentParameters(models.Model):
                     user_params.save()
 
                 return user_params
-
 
 class UserSoilMoistureParameters(models.Model):
     correction_rain = models.FloatField() # TODO integer
@@ -845,7 +850,6 @@ class UserSoilMoistureParameters(models.Model):
                     soil_params.save()
 
                 return soil_params
-
 
 class UserSoilOrganicParameters(models.Model):
     name = models.CharField(max_length=100)
@@ -1279,7 +1283,6 @@ class UserSoilOrganicParameters(models.Model):
             )
             return soil_organic_params
 
-
 class SoilTemperatureModuleParameters(models.Model):
     base_temperature = models.FloatField()
     initial_surface_temperature = models.FloatField()
@@ -1341,7 +1344,6 @@ class SoilTemperatureModuleParameters(models.Model):
 
             return soil_temp_params
 
-
 class UserSoilTransportParameters(models.Model):
     ad = models.FloatField()
     diffusion_coefficient_standard = models.FloatField()
@@ -1376,7 +1378,7 @@ class UserSoilTransportParameters(models.Model):
 
             return soil_transport_params
 
-
+# Simulation related models
 class SimulationEnvironment(models.Model):
     type = models.CharField(max_length=100)
     debug_mode = models.BooleanField(default=True)
@@ -1400,12 +1402,10 @@ class SimulationEnvironment(models.Model):
             "GeneralSoilTransport": self.general_soil_transport.to_json()
         }
 
-
-
 class Workstep(models.Model):
     date = models.DateField()
 
-class MineralFertilization(Workstep):
+class WorkstepMineralFertilization(Workstep):
     amount = models.FloatField()
     mineral_fertiliser = models.ForeignKey(MineralFertiliser, on_delete=models.CASCADE)
 

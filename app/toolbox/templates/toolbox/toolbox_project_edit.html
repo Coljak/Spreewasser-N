@@ -1,0 +1,154 @@
+
+
+{% extends "swn/base.html" %}
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block body_block %}
+
+<script>
+    console.log("Toolbox Sinks Edit", {{ area_id }});
+    var userToolboxAreaId = '{{ area_id }}';
+
+    function selectRow(btn) {
+        // Get the parent row of the clicked button
+        var row = btn.parentNode.parentNode;
+
+        // Toggle a CSS class to change the background color
+        row.classList.toggle("selected");
+    }
+
+  
+    
+</script>
+
+<div class="container-fluid p-5">
+
+    <form id="sinkSelectionForm">
+
+        <div class="row px-5 py-1">
+
+            <h1> TOOLBOX Senken: {{ name }}, ID {{ area_id }}</h1>
+
+        </div>
+        {% comment %} <div class="row px-5 py-1">
+
+            <div class="row">
+                
+                <div class="card col-6">
+                    <div id="landUse1Card" class="card-body">
+                        <h5 class="card-title">Landnutzung 1</h5> 
+                        {% for land_use in distinct_land_use_1 %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="{{ land_use }}" id="defaultCheck1">{{ land_use }}</input>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card col-6 p-1">
+                    <div id="landUse2Card" class="card-body">
+                        <h5 class="card-title">Landnutzung 2</h5> 
+                        {% for land_use in distinct_land_use_2 %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="{{ land_use }}" id="defaultCheck1">{{ land_use }}</input>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            
+            </div>
+
+            <div class="row">
+                <div class="card col-6">
+                    <div class="card-body">
+                        <h5 class="card-title">Tiefe der Senke</h5>
+                        {% for depth in depths_sink %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="{{ depth }}" id="defaultCheck1">{{ depth }}</input>
+                            </div>
+                        {% endfor %}
+                        
+                    </div>
+                </div>
+                <div class="card col-6">
+                    <div class="card-body">
+                        <h5 class="card-title">Fläche der Senke</h5>
+                        {% for area in areas_sink %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="{{ area }}" id="defaultCheck1">{{ area }}</input>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div> {% endcomment %}
+
+        <div class="row px-5 py-1">
+
+            <div class="card mb-3">
+            <div class="card-body">
+                <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Tiefe</th>
+                        <th scope="col">Fläche</th>
+                        <th scope="col">Bodenindex</th>
+                        {% comment %} <th scope="col">Index 2</th> {% endcomment %}
+                        <th scope="col">Landnutzung</th>
+                        {% comment %} <th scope="col">Landnutzung 2</th> {% endcomment %}
+                        {% comment %} <th scope="col">Geom</th> {% endcomment %}
+                    </tr>
+                </thead>
+                <tbody id="sinkTable">
+                    {% for sink in sinks %}
+                        <tr>
+                        <th scope="row">{{ sink.objectid }}</th>
+                        <td>{{ sink.depth_sink }}</td>
+                        <td>{{ sink.area_sink }}</td>
+                        <td>{{ sink.index_soil }}</td>
+                        <td>{{ sink.land_use_1 }}</td>
+                        {% comment %} <td>{{ sink.land_use_2 }}</td> {% endcomment %}
+                        {% comment %} <td>{{ sink.geom }}</td> {% endcomment %}
+                        <td>
+                            <a class="btn btn-success" onclick="selectRow(this)">Auswählen</a>
+                        </td>
+                        <td>
+                            <a class="btn btn-danger">Löschen</a>
+                        </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+            </div>
+            </div>
+
+        </div>
+
+        <div class="row px-5 py-1">
+            <div class="card mb-3">
+                <div class="card-body">
+                    
+                  <a class="btn btn-primary" href="{% url 'swn:user_dashboard' %}">Zurück</a>
+                  <a type="submit" id="btnModalCal" class="btn btn-primary mb-2">Berechnen</a>
+                </div>
+              </div>
+
+        </div>
+    </form>
+  
+</div>
+
+
+
+
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript" src="{% static 'js/toolbox_sinks_edit.js' %}" type="module"></script>
+
+{% endblock %}
+```

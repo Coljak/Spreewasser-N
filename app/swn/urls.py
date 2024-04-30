@@ -50,12 +50,6 @@ urlpatterns = [
     # path('Thredds/fileServer/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     # path('Thredds/wcs/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     # path('Thredds/wms/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
-    path('monica/', views.monica, name='monica'),
-    path('monica/hohenfinow/', views.monica_generate_hohenfinow, name='monica_hohenfinow'),
-    path('monica/hohenfinowdb/', views.monica_generate_hohenfinow_from_db, name='monica_hohenfinow_from_db'),
-    path('monica/hohenfinowFile/', views.monica_generate_from_env_file, name='monica_hohenfinow_from_file'),
-    
-    # Bootstrap test colors
     path('bootstrap/', views.bootstrap, name='bootstrap'),
     path('login/Dashboard/load_projectregion/', views.load_projectregion, name='load_projectregion'),
     path('login/Dashboard/load_polygon/<str:entity>/<int:polygon_id>/', views.load_polygon, name='load_polygon'),

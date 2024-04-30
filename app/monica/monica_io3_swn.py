@@ -209,11 +209,7 @@ def is_absolute_path(p):
 
 
 
-#------------------------------------------------------------------------------
 
-# def default_value(dic, key, default):
-#     "return default value if key not there"
-#     return dic[key] if key in dic else default
 
 #------------------------------------------------------------------------------
 

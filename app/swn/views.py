@@ -19,6 +19,7 @@ from django.conf import settings
 import numpy as np
 import requests
 from . import forms
+from monica import forms as monica_forms
 from . import models
 
 from toolbox import models as toolbox_models
@@ -542,8 +543,7 @@ def get_chart(request, field_id, crop_id, soil_id):
     #         ).order_by('horizont_nr')
     # key_list = ['winterwheat', 'winterbarley', 'winterrape', 'winterrye', 'potato', 'silage_maize', 'springbarley', ]
     if is_ajax(request):
-        # rand = random.randint(0, len(key_list) - 1)
-        # key = key_list[rand]
+
         calc = calc_dict[key]
         # calc = calc_list[rand]
         response = {
@@ -758,7 +758,8 @@ def field_edit(request, id):
     
     start_time = time.time()
 
-    crop_form  = forms.CropForm(request.POST or None)
+    crop_form  = forms.CropForm()
+    crop_cultivar_form = monica_forms.CultivarParametersForm()
     name = models.UserField.objects.get(id=id).name
     user_field = models.UserField.objects.get(id=id)
     print("field_menu Checkpoint 1: ", (time.time() - start_time))
@@ -898,6 +899,7 @@ def field_edit(request, id):
     print("field_menu Checkpoint 5: ", (time.time() - start_time))
     data_menu = {
         'crop_form': crop_form,
+        'crop_cultivar_form': crop_cultivar_form,
         'soil_profile_form': soil_profile_form,
         'text': name,
         'id': id,
@@ -912,77 +914,3 @@ def field_edit(request, id):
     print('elapsed_time', elapsed_time, ' seconds')
     return render(request, 'swn/field_projects_edit.html', data_menu)
 
-
-def monica(request):
-    return render(request, 'swn/monica_hohenfinow.html')
-
-def monica_generate_hohenfinow(request):
-    
-    from . import monica_io3_swn
-    from .run_producer import run_producer
-    from .run_consumer_swn import run_consumer
-    run_producer()
-    msg = run_consumer()
-    print('msg', msg["data"], "TYPE ", type(msg))
-    return JsonResponse({'result': 'success', 'msg': msg})
-
-def monica_generate_from_env_file(request):
-    
-    from . import monica_io3_swn
-    from monica import views as monica_views
-    from .run_consumer_swn import run_consumer
-    monica_views.use_existing_env()
-    msg = run_consumer()
-    # print('msg', msg["data"], "TYPE ", type(msg))
-    return JsonResponse({'result': 'success', 'msg': msg})
-
-
-def monica_generate_hohenfinow_from_db(request):
-    
-    from . import monica_io3_swn
-    from .run_producer_from_db import create_env
-    from monica import views as monica_views
-    from .run_consumer_swn import run_consumer
-    from pathlib import Path
-    # create_env()
-    # env = json.dumps(monica_views.create_monica_env())
-    env = monica_views.create_monica_env()
-    print('Type env', json.dumps(env))
-    # print('env', env)
-    file_path = Path(__file__).resolve().parent
-    with open('env_from_db.json', 'w') as _: 
-        json.dump(env, _)
-    msg = run_consumer()
-
-    # export_monica_result_to_csv(msg)
-    return JsonResponse({'result': 'success', 'msg': msg})
-
-
-def export_monica_result_to_csv(msg):
-    from . import monica_io3_swn
-    from pathlib import Path
-    import json
-    file_path = Path(__file__).resolve().parent
-    
-    file_name = 'monica_result_.csv'
-    file_path = Path.joinpath(file_path, 'monica_csv_exports/', file_name)
-    with open(file_path, 'w', newline='') as _:
-        writer = csv.writer(_, delimiter=",")
-
-        for data_ in msg.get("data", []):
-            results = data_.get("results", [])
-            orig_spec = data_.get("origSpec", "")
-            output_ids = data_.get("outputIds", [])
-
-            if len(results) > 0:
-                writer.writerow([orig_spec.replace("\"", "")])
-                for row in monica_io3_swn.write_output_header_rows(output_ids,
-                                                                include_header_row=True,
-                                                                include_units_row=True,
-                                                                include_time_agg=False):
-                    writer.writerow(row)
-
-                for row in monica_io3_swn.write_output(output_ids, results):
-                    writer.writerow(row)
-
-            writer.writerow([])

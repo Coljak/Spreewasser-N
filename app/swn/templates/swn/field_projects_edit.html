@@ -80,9 +80,14 @@
       </div>
       <div class="card mb-3">
         <div class="card-body">
+          {{ crop_cultivar_form|crispy }}
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-body">
           <h5 class="card-title">Bodenfeuchteberechnung</h5>
           <label for="startDate">Berechnung von</label>
-          <input type="date" class="mx-1" id="startDatePicker" name="calculationStart" value={{ date_picker.start_date }} pattern="\d{4}-\d{2}-\d{2}"></input>
+          <input type="date" class="mx-1" id="startDatePicker" name="calculationStart" value="2024-04-24" format:'dd/mm/yy' pattern="\d{2}-\d{2}-\d{4}"></input>
           <label for="endDate">bis</label>
           <input type="date" class="mx-1" id="endDatePicker" name="calculationEnd" value={{ date_picker.end_date }} pattern="\d{4}-\d{2}-\d{2}"></input>
 
@@ -94,6 +99,7 @@
         <div class="card-body">
           <h5 class="card-title" id="chart-title">Monica Brechnung</h5>
           <div id="chartDiv"></div>
+          <div id="chartDiv2"></div>
         </div>
       </div>
       
@@ -103,7 +109,8 @@
         <div class="card-body">
             
           <a class="btn btn-primary" href="{% url 'swn:user_dashboard' %}">Zurück</a>
-          <button type="submit" id="btnModalCal" class="btn btn-primary mb-2">Berechnen</button>
+          <button type="submit" id="btnMonicaCalculate" class="btn btn-primary mb-2">Berechnen</button>
+          <button type="submit" id="btnMonicaCalculateDB" class="btn btn-primary mb-2">Berechnen aus DB</button>
         </div>
       </div>
     </div>
@@ -113,6 +120,7 @@
 
 {% block javascript %}
 <script src="{% static 'swn/js/field_projects_edit.js' %}" type="module"></script>
+<script type="text/javascript" src="{% static 'monica/monica_crop.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
 {% endblock %}
 ```

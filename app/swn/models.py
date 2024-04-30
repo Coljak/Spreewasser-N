@@ -88,8 +88,6 @@ class UserField(models.Model):
         # Filter Buek objects that intersect with the UserField object's geometry
         intersecting_buek_ids = Buek.objects.filter(geom__intersects=userfield_geom).values_list('polygon_id', flat=True)
         print( 'intersecting_buek_ids ', intersecting_buek_ids )
-        # Get BuekData objects where polygon_id matches the intersecting_buek_ids
-        #intersecting_buek_data = BuekData.objects.filter(polygon_id__in=intersecting_buek_ids)
         polygon_json = {'buek_polygon_ids': list(intersecting_buek_ids)}
         
             
@@ -404,8 +402,30 @@ class BuekSoilProfileHorizon(models.Model):
 
     def __str__(self):
         return super().__str__() + ' soilprofile_id: ' + str(self.bueksoilprofile_id) + ' horizont_nr: ' + str(self.horizont_nr)
-    
-
+    # TODO pH value is a range - how to use it
+    # TODO Sceleton fraction 0-1, soil stone content
+    def to_json(self):
+        return {
+            'Thickness': [(self.untergrenze_m - self.obergrenze_m), "m"],
+            'Sand': [self.ka5_texture_class.sand, "%"],
+            'Clay': [self.ka5_texture_class.clay, "%"],
+            'pH': (self.ph_class.ph_lower_value + self.ph_class.ph_upper_value) / 2,
+            # 'Sceleton': soil stone content, a fraction between 0 and 1
+            # 'Lambda': soil water conductivity coefficient
+            # 'FieldCapacity':  	field capacity
+            # 'PoreVolume': 	m3 m-3 (fraction [0-1]) 	saturation
+            # 'PermanentWiltingPoint': 	m3 m-3 (fraction [0-1]) 	permanent wilting point
+            'KA5TextureClass': self.ka5_texture_class.ka5_soiltype,
+            # 'SoilAmmonium': [self.soil_ammonium, "mg kg-1"],
+            # 'SoilNitrate': 	kg NO3-N m-3 	initial soil nitrate content
+            # 'CN': 		soil C/N ratio
+            'SoilRawDensity': [self.bulk_density_class.raw_density_g_per_cm3 * 1000, "kg m-3"],
+            # SoilBulkDensity 	kg m-3 	soil bulk density
+            'SoilOrganicCarbon': [self.humus_class.corg / 100, "%"],
+            # TODO wiki: SoilOrganicCarbon 	% [0-100] ([kg C kg-1] * 100)  a percentage between 0 and 100 BUT it seems to be a percenteage
+            # 'SoilOrganicMatter': 	kg OM kg-1 (fraction [0-1]) 	soil organic matter
+            # 'SoilMoisturePercentFC': % [0-100] 	initial soil moisture in percent of field capacity
+        }
 
 class CorineLandCover2018(models.Model):
     '''

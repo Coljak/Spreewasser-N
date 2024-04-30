@@ -792,7 +792,7 @@ class UserField {
 };
 
 
-class droughtProject {
+class DroughtProject {
   constructor(userField, cropID) {
     this.userField = userField;
     this.cropID = cropID;

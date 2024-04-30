@@ -4,7 +4,7 @@ from typing import List, Tuple
 import json
 
 # TODO Questions:
-# - Why are there crop residuues for species that have no species parameters?
+# - Why are there crop residues for species that have no species parameters?
 # - -> select ms.id, ms.species_name, mc.species_name as residue_name from monica_speciesparameters ms 
 # - -> full join monica_cropresidueparameters mc on mc.species_name = ms.species_name
 # - -> order by ms.species_name, mc.species_name 
@@ -15,6 +15,8 @@ class CropParametersExist(models.Model):
     in_species = models.BooleanField(default=False)
     in_cultivar = models.BooleanField(default=False)
     in_residues = models.BooleanField(default=False)
+    def __str__(self):
+        return self.species_name
 
     
 # TODO get foreign keys of CropSpeciesParameters 
@@ -55,6 +57,9 @@ class CultivarParameters(models.Model):
     stage_kc_factor = ArrayField(ArrayField(models.FloatField()))
     stage_temperature_sum = ArrayField(ArrayField(models.FloatField()))
     vernalisation_requirement = ArrayField(models.FloatField())
+
+    def __str__(self):
+        return self.cultivar_name
 
     def to_json(self) -> dict:
         return {
@@ -117,7 +122,8 @@ class CultivarParameters(models.Model):
 
             # Create or update SpeciesParameters object based on JSON data
             species_params, created = cls.objects.update_or_create(
-                species_name=species_name,
+                # species_name=species_name,
+                cultivar_name=data["CultivarName"],
                 defaults={
                     'species_name': species_name,
                     'assimilate_partitioning_coeff':  data["AssimilatePartitioningCoeff"],
@@ -151,12 +157,11 @@ class CultivarParameters(models.Model):
                     'respiratory_stress':  data["RespiratoryStress"],
                     'specific_leaf_area':  data["SpecificLeafArea"][0],
                     'stage_kc_factor':  data["StageKcFactor"][0],
-                    'stage_kc_factor_unit':  data["StageKcFactor"][1],
                     'stage_temperature_sum':  data["StageTemperatureSum"][0],
                     'vernalisation_requirement':  data["VernalisationRequirement"],
                 }
-                )
-
+            )
+            print("created", created)
             # Save the instance if it was created or updated
             if created or not species_params._state.adding:
                 species_params.save()
@@ -211,6 +216,9 @@ class SpeciesParameters(models.Model):
     target_n30 = models.FloatField(blank=True, null=True)
     target_n_sampling_depth = models.FloatField(blank=True, null=True)
     stage_mobil_from_storage_coeff = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return self.species_name
 
     @classmethod
     def create_or_update_from_json(cls, json_file_path):
@@ -334,7 +342,8 @@ class SpeciesParameters(models.Model):
 # TODO probably obsolete. is actually already in the SpeciesParameters model
 class OrganFromDB(models.Model):
     species_name = models.CharField(max_length=100, blank=True)
-    organ_id = models.IntegerField(blank=True, null=True)
+    species_parameters= models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE, blank=True, null=True)   
+    organ = models.ForeignKey('Organ', on_delete=models.CASCADE, blank=True, null=True)
     organ_name = models.CharField(max_length=100, blank=True)
     initial_organ_biomass = models.FloatField(blank=True, null=True)
     organ_maintainance_respiration = models.FloatField(blank=True, null=True)
@@ -470,7 +479,7 @@ class CropResidueParameters(models.Model):
                 "Part of AOM that is assigned to the slowly decomposing pool"
                 ],
             "residueType": self.residue_type,
-            "species": self.species,
+            "species": self.species_name,
             "type": self.__class__.__name__
         }
 

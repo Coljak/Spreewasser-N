@@ -1,4 +1,12 @@
 import { endpoint, chartDiv, crop, getChart } from "./chart_page.js";
+// Function to retrieve the CSRF token from the cookies
+function getCSRFToken() {
+    const cookieValue = document.cookie
+      .split('; ')
+      .find(cookie => cookie.startsWith('csrftoken='))
+      .split('=')[1];
+    return cookieValue;
+  }
 
 document.addEventListener('DOMContentLoaded', function() {
     // console.log('userFieldId', userFieldId);
@@ -13,6 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // const headerRow = document.getElementById('tableHorizonsHeader');
 
     const cropField = document.getElementById("id_Feldfrucht")
+    const speciesParameters = document.getElementById('id_species_parameters');
+    const cultivarParameters = document.getElementById('id_cultivar_parameters');
 
     var selectedSoilProfile = 0;
 
@@ -124,18 +134,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('selectableSystemUnits', selectableSystemUnits.sort());
     });
 
-
-    // monica chart
-    const btnModalCal = document.getElementById("btnModalCal");
-
-    btnModalCal.addEventListener("click", function () {
-        // project = new swnProject();
-        getChart(soilProfileField.value, cropField.value);
-        chartCard.classList.remove("d-none");
-      });
-
-    console.log('landausageChoices', landusageChoices)
-
     for (const key in landusageChoices) {
         const option = document.createElement('option');
         option.value = key;
@@ -146,6 +144,107 @@ document.addEventListener('DOMContentLoaded', function() {
     landUsageField.dispatchEvent(new Event('change'));
 
 
+
+    // monica chart
+    const btnMonicaCalculate = document.getElementById("btnMonicaCalculate");
+
+    btnMonicaCalculate.addEventListener("click", function () {
+        // project = new swnProject();
+        getChart(soilProfileField.value, cropField.value);
+        chartCard.classList.remove("d-none");
+      });
+
+    const btnMonicaCalculateDB = document.getElementById("btnMonicaCalculateDB");
+
+    const chartDiv2 = document.getElementById("chartDiv2")
+    
+
+    btnMonicaCalculateDB.addEventListener("click", function () {
+        chartCard.classList.remove("d-none");
+        // project = new swnProject();
+        var soilProfileId = soilProfileField.value;
+        var speciesId = speciesParameters.value;
+        var cultivarId = cultivarParameters.value;
+        console.log("speciesId", speciesId);
+        console.log("cultivarId", cultivarId);
+        console.log("soilProfileId", soilProfileId);
+        var requestParams = {
+            soilProfileId: soilProfileId,
+            speciesId: speciesId,
+            cultivarId: cultivarId,
+        };
+        fetch('/monica/monica_calc_w_params_from_db/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: JSON.stringify(requestParams),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        if (data.result == "success") {
+            const dailyData = data.msg.daily;
+            chartDiv2.innerHTML = '<canvas id="Chart"></canvas>'
+            const ctx = document.getElementById("Chart")
+            console.log("CHART data: ", dailyData.Mois_1)
+            const chart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: dailyData.Date,
+                    datasets: [{
+                        yAxisID: 'y',
+                        label: "Bodenfeuchte 1",
+                        data: dailyData.Mois_1,
+                        borderColor: "#aa8800",
+                        borderWidth: 2,
+                        },
+                        {
+                        yAxisID: 'y',
+                        label: "Bodenfeuchte 2",
+                        data: dailyData.Mois_2,
+                        borderColor: "#ccaa00",
+                        borderWidth: 2,
+                        },
+                        {
+                        yAxisID: 'y',
+                        label: "Bodenfeuchte 3",
+                        data: dailyData.Mois_3,
+                        borderColor: "#ffcc00",
+                        borderWidth: 2,
+                        },
+                        {
+                        yAxisID: 'y1',
+                        label: "LAI",
+                        data: dailyData.LAI,
+                        borderWidth: 2,
+                        borderColor: "#00cc22",
+                        }
+                    ],
+                },
+                options: {
+                    elements: {
+                        point: {
+                        radius: 0,
+                        },
+                    },
+                    responsive: true,
+
+                }
+            });
+            chart.update();
+            console.log("CHART: ", chart);
+        }
+        
+    });
+        // const monicaCard = document.getElementById("monicaCard");
+        // monicaCard.classList.remove("d-none");
+        // const monicaCardText = document.getElementById("monicaCardText");
+        // monicaCardText.textContent = data.message;
+
+
+    });
 
 });
 

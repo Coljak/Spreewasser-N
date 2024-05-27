@@ -1,0 +1,38 @@
+{"This Json is defined in https://github.com/zalf-rpm/mas-infrastructure/blob/master/src/cpp/climate/climate-common.cpp Line 384":"",
+"climate-common.cpp Line 384":"",
+}
+
+enum AvailableClimateData {
+    0 day = 0,
+    1 month,
+    2 year,
+    3 tmin,
+    4 tavg,
+    5 tmax,
+    6 precip,
+    7 precipOrig,
+    8 globrad,
+    9 wind,
+    10 sunhours,
+    11 cloudamount,
+    12 relhumid,
+    13 airpress,
+    14 vaporpress,
+    15 isoDate,
+    16 deDate,
+    17 co2,
+    18 o3,
+    19 et0,
+    20 skip,
+    21 patternDate
+  };
+
+
+
+    3: tmin: tasmin,
+    4: tavg: tas,
+    5: tmax: tasmax,
+    6: precip: pr,
+    8: globrad: rsds,
+    9: wind: sfcWind,
+    12: relhumid: hurs

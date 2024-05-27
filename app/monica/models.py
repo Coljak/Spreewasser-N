@@ -1,7 +1,13 @@
 from django.db import models
+from django.contrib.gis.db import models as gis_models
 from django.contrib.postgres.fields import ArrayField
 from typing import List, Tuple
 import json
+from django.contrib.gis.db.models import functions as gis_functions
+# from django.contrib.gis.measure import Distance
+from django.db.models import Q
+from django.contrib.gis.db.models.functions import Distance
+from datetime import datetime
 
 # TODO Questions:
 # - Why are there crop residues for species that have no species parameters?
@@ -1495,3 +1501,107 @@ class OutputAggregation(models.Model):
 class Organ(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
+
+
+
+# --------------------GEODATA ------------------------------------
+
+# from django.contrib.gis.db import models
+
+# class DigitalElevationModel(models.Model):
+#     name = models.CharField(max_length=255)
+#     description = models.TextField(blank=True)
+#     grid_file = models.FileField(upload_to='ascii_grids/')
+#     crs = models.IntegerField(default=25832) 
+
+#     def __str__(self):
+#         return self.name
+
+
+# wheather data
+
+class WeatherData(models.Model):
+    point = gis_models.PointField(blank=True, null=True)
+    lat = models.FloatField(blank=True, null=True)
+    lon = models.FloatField(blank=True, null=True)
+    date = models.DateField()
+    tas = models.FloatField()
+    tasmin = models.FloatField()
+    tasmax = models.FloatField()
+    sfcwind = models.FloatField()
+    rsds = models.FloatField()
+    pr = models.FloatField()
+    hurs = models.FloatField()
+
+    def __str__(self):
+        return f"{self.date} - {self.point}"
+
+
+"""
+This model is a GIS multipoint of the centroids of the DWD weather grid.
+All gridcells are represented in this table, the column is_valid iholds the Boolean of weather it is a no_data point. 
+"""
+class DWDGridToPointIndices(models.Model):
+    point = gis_models.PointField()
+    lat = models.FloatField()
+    lon = models.FloatField()
+    lat_idx = models.IntegerField()
+    lon_idx = models.IntegerField()
+    is_valid = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.point} - {self.lat_idx} - {self.lon_idx}"
+    
+    def to_folder_path(self):
+        return f"{self.lat_idx}/{self.lon_idx}/"
+    
+    def create_instance(self, lat, lat_idx, lon, lon_idx):
+        return self.objects.create(point=Point(lat, lon), lat=lat, lat_idx=lat_idx, lon=lon, lon_idx=lon_idx)
+    
+    @classmethod
+    def get_points_within_geom(cls, geom):
+        """
+        Returns all DWDGridToPointIndices instances with points within the given geometry.
+        If no points are within the geometry, returns the closest point.
+        `geom` should be a GEOSGeometry object representing the desired geometry.
+        """
+        start = datetime.now()
+        
+        # Filter instances based on point geometry within the provided geometry
+        points_within_geom = cls.objects.filter(point__within=geom)
+
+        if points_within_geom.exists():
+            print("Time elapsed: ", datetime.now() - start, 'multiple', len(points_within_geom))
+            
+            return list(points_within_geom)
+        else:
+            """
+            The input geometry is buffered by 0.0085 degrees, roughly 500+m to find the nearest points in the grid.
+            This approach is faster than simply finding the nearest distance and it limits the disatnce to the existing 
+            weather data to the buffer"""
+
+            buffered_geom = geom.buffer(.0085)
+            filtered_points = cls.objects.filter(point__within=buffered_geom)
+            if filtered_points.exists():
+                annotated_points = filtered_points.annotate(
+                    distance_to_geom=Distance('point', geom)
+                )
+
+                closest_point = annotated_points.order_by('distance_to_geom').first()
+
+                if closest_point is not None:
+                                      
+                    print("Time elapsed: ", datetime.now() - start)
+            
+                    return [closest_point]
+            else:
+                # TODO handle error when search area or point is outside of the available weather data
+                print("No points found within the buffered geometry")
+                return None
+            
+            
+           
+        
+
+
+

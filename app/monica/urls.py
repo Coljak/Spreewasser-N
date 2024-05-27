@@ -10,7 +10,6 @@ app_name = 'monica'
 
 urlpatterns = [
     path('', views.monica, name='monica'),
-    path('monica_db/', views.monica_db, name='monica_db'),
     path('hohenfinow/', views.monica_generate_hohenfinow, name='monica_hohenfinow'),
     path('hohenfinowdb/', views.monica_generate_hohenfinow_from_db, name='monica_hohenfinow_from_db'),
     path('monica_calc_w_params_from_db/', views.monica_calc_w_params_from_db, name='monica_calc_w_params_from_db'),

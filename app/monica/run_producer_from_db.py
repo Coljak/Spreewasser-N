@@ -16,10 +16,8 @@
 # Copyright (C: Leibniz Centre for Agricultural Landscape Research (ZALF)
 
 import json
-import sys
 import zmq
 import os
-from . import  monica_io3_swn as monica_io3
 import errno
 from datetime import datetime
 from monica import models as monica_models

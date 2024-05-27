@@ -15,16 +15,8 @@
 # Landscape Systems Analysis at the ZALF.
 # Copyright (C: Leibniz Centre for Agricultural Landscape Research (ZALF)
 
-
-import csv
 import os
-import json
-
 import zmq
-#print("pyzmq version: ", zmq.pyzmq_version(), " zmq version: ", zmq.zmq_version())
-
-from . import  monica_io3
-#print("path to monica_io: ", monica_io.__file__)
 
 def run_consumer(path_to_output_dir = None, leave_after_finished_run = True, server = {"server": None, "port": None}, shared_id = None):
     "collect data from workers"
@@ -33,7 +25,7 @@ def run_consumer(path_to_output_dir = None, leave_after_finished_run = True, ser
         "port": "7777",
         "server": "swn_monica", 
         "shared_id": shared_id,
-        "out": path_to_output_dir if path_to_output_dir else os.path.join(os.path.dirname(__file__), '_hohenfinow/out_csv/'),
+        "out": path_to_output_dir if path_to_output_dir else os.path.join(os.path.dirname(__file__), 'monica_output/'),
         "leave_after_finished_run": leave_after_finished_run
     }
 

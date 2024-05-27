@@ -71,7 +71,7 @@ def favicon_view(request):
 
 # This view outputs a json file containing a list of jsons of all available datasets on the thredds server
 def thredds_catalog(request):
-    url = 'http://thredds:8080/thredds/catalog/testAll/data/DWD_Data/catalog.xml'
+    url = 'http://thredds:8080/thredds/catalog/data/DWD_Data/catalog.xml'
 
     response = requests.get(url)
     catalog_dict = xmltodict.parse(response.content)
@@ -94,7 +94,7 @@ def thredds_catalog(request):
     return render(request, 'swn/thredds_catalog.html', {'catalog_json': catalog_dict_list})
 
 def get_wms_capabilities_json(request, name):
-    url = "http://thredds:8080/thredds/wms/testAll/data/DWD_Data/" + name
+    url = "http://thredds:8080/thredds/wms/data/DWD_Data/" + name
     params = {
         'service': 'WMS',
         'version': '1.3.0',
@@ -106,7 +106,7 @@ def get_wms_capabilities_json(request, name):
     return JsonResponse(response_json)
 
 def get_wms_capabilities(request, name):
-    url = "http://thredds:8080/thredds/wms/testAll/data/DWD_Data/" + name
+    url = "http://thredds:8080/thredds/wms/data/DWD_Data/" + name
     params = {
         'service': 'WMS',
         'version': '1.3.0',
@@ -116,7 +116,7 @@ def get_wms_capabilities(request, name):
     return HttpResponse(response)
 
 def get_ncml_metadata(request, name):
-    url = "http://thredds:8080/thredds/ncml/testAll/data/DWD_Data/" + name
+    url = "http://thredds:8080/thredds/ncml/data/DWD_Data/" + name
     nc_dict = {}
     ncml = requests.get(url)
     ncml_data = xmltodict.parse(ncml.text)
@@ -160,7 +160,7 @@ def get_ncml_metadata(request, name):
 # This view outputs a json containing all relevant attributes of a netcdf file
 def get_ncml_capabilities_2(request, name):
     print('{\n get_wms_capabilities \n', name)
-    url = 'http://thredds:8080/thredds/ncml/testAll/data/DWD_Data/' + name
+    url = 'http://thredds:8080/thredds/ncml/data/DWD_Data/' + name
    
     response = requests.get(url)
     catalog_dict = xmltodict.parse(response.content)
@@ -211,7 +211,7 @@ def get_ncml_capabilities_2(request, name):
 # This view outputs a json containing all relevant catalog infos of all netcdf files and renders the HTML template
 def timelapse_items(request):
     # List of datasaet as in the thredds_catalog view
-    url = 'http://thredds:8080/thredds/catalog/testAll/data/DWD_Data/catalog.xml'
+    url = 'http://thredds:8080/thredds/catalog/data/DWD_Data/catalog.xml'
 
     response = requests.get(url)
     catalog_dict = xmltodict.parse(response.content)
@@ -237,7 +237,7 @@ def timelapse_test_django_passthrough_wms(request, netcdf):
     # example netcdf from frontend: zalf_pr_amber_2009_v1-0_cf_v4.nc 
 
     print("timelapse_test_django_passthrough_wms", netcdf)
-    url = 'http://thredds:8080/thredds/wms/testAll/data/DWD_Data/' + netcdf
+    url = 'http://thredds:8080/thredds/wms/data/DWD_Data/' + netcdf
     
     params = request.GET.dict()
     # Timeseries legend image
@@ -253,10 +253,6 @@ def timelapse_test_django_passthrough_wms(request, netcdf):
         # Handle request exception, e.g., log the error
         return HttpResponse(f"Error: {e}", content_type='text/plain')
 
-
-#  direct connection to the thredds server from browser
-def timelapse_test(request):
-    return render(request, 'swn/map_thredds_2.html')
 
 def get_timeseries_data(request):
     start = datetime.now()
@@ -291,7 +287,7 @@ def get_timeseries_data(request):
         'j': 0
     }
     netcdf = 'zalf_hurs_amber_2011_v1-0_cf_v6.nc'
-    url = 'http://thredds:8080/thredds/wms/testAll/data/DWD_Data/' + netcdf
+    url = 'http://thredds:8080/thredds/wms/data/DWD_Data/' + netcdf
     response = requests.get(url, params=params)
     layer = p['layers']
     response_json = response.json()
@@ -472,7 +468,7 @@ def user_dashboard(request):
                 'user_name': user_field.field.user.name,
                 'field': user_field.field.name,
                 'irrigation_input': user_field.irrigation_input,
-                'irrigation_otput': user_field.irrigation_output,
+                'irrigation_output': user_field.irrigation_output,
 
                 'field_id': user_field.field.id,
                 'monica_calculation': user_field.calculation,
@@ -578,7 +574,6 @@ def get_user_fields(request):
 
     return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json', 'swn_tool')), 'user_projects': list(user_projects.values())})
 
-
 @login_required
 def update_user_field(request, pk):
     obj = models.UserField.objects.get(pk=pk)
@@ -613,16 +608,15 @@ def save_user_field(request):
             geos = GEOSGeometry(body['geom'], srid=4326)
             user = request.user
             instance = models.UserField(name=name, swn_tool=swn_tool, geom_json=geom, geom=geos, user=user)
-            print("UserField Save: ", name, geom, user)
             instance.save()
-            print("UserfIeld saved")
-            instance.get_intersecting_soil_data()
-            print("get inetrsecting soil data")
+            if swn_tool == 'drought':
+                instance.get_intersecting_soil_data()
+                instance.get_weather_data()
+            
             return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id, 'swn_tool': instance.swn_tool})
         
     else:
         return HttpResponseRedirect('swn:user_dashboard')
-
 
 @login_required
 @csrf_protect
@@ -647,75 +641,75 @@ TODO: make it possible to access the data by accessing the xmls on the server,ex
 The THREDDS Server is not open for direct access to limit security risks.
 """  
 
-def thredds_wms_view(request, **args):
-    print("\nNew call of thredds_wms_view \n")
-    thredds_catalog_url = 'http://thredds:8080/thredds/'
-    print("args: ", args)
+# def thredds_wms_view(request, **args):
+#     print("\nNew call of thredds_wms_view \n")
+#     thredds_catalog_url = 'http://thredds:8080/thredds/'
+#     print("args: ", args)
 
-    if args == {}:
-            thredds_catalog_url = thredds_catalog_url + 'catalog/catalog.html'
-    elif args['thredds_link'].split('/')[-1].split('.')[-1] not in ('html', 'nc', 'ncd', 'ncml', 'xml'):
-        return HttpResponse()
-    elif args['thredds_link'] == 'catalog.html' or args['thredds_link'] == 'enhancedCatalog.html':
-        thredds_catalog_url = thredds_catalog_url  + 'catalog/' + args['thredds_link']
-    elif args['thredds_link'].split('/')[-1] == 'catalog.html':
-        thredds_catalog_url = thredds_catalog_url  + args['thredds_link']
-    else:
-        thredds_catalog_url = thredds_catalog_url + args['thredds_link']
-    print("THREDDS URL: ", thredds_catalog_url)
+#     if args == {}:
+#             thredds_catalog_url = thredds_catalog_url + 'catalog/catalog.html'
+#     elif args['thredds_link'].split('/')[-1].split('.')[-1] not in ('html', 'nc', 'ncd', 'ncml', 'xml'):
+#         return HttpResponse()
+#     elif args['thredds_link'] == 'catalog.html' or args['thredds_link'] == 'enhancedCatalog.html':
+#         thredds_catalog_url = thredds_catalog_url  + 'catalog/' + args['thredds_link']
+#     elif args['thredds_link'].split('/')[-1] == 'catalog.html':
+#         thredds_catalog_url = thredds_catalog_url  + args['thredds_link']
+#     else:
+#         thredds_catalog_url = thredds_catalog_url + args['thredds_link']
+#     print("THREDDS URL: ", thredds_catalog_url)
 
     
-    if request.GET:
-        thredds_catalog_url = thredds_catalog_url + '?'
-        for key, value in request.GET.items():
-            print("GET parameter - key: ", key, "value: ", value)
+#     if request.GET:
+#         thredds_catalog_url = thredds_catalog_url + '?'
+#         for key, value in request.GET.items():
+#             print("GET parameter - key: ", key, "value: ", value)
 
-            print("Get request: ", args['thredds_link'])
+#             print("Get request: ", args['thredds_link'])
             
                 
-            thredds_catalog_url = thredds_catalog_url  + key +'='+ value
+#             thredds_catalog_url = thredds_catalog_url  + key +'='+ value
 
-    try:
-        print('REQUEST: ', request, '\nURL: ', thredds_catalog_url)
-        response = requests.get(thredds_catalog_url)
-        # print('response: \n', response.text)
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        thredds_content = response.text
-        # print("thredds_content: ", thredds_content)
+#     try:
+#         print('REQUEST: ', request, '\nURL: ', thredds_catalog_url)
+#         response = requests.get(thredds_catalog_url)
+#         # print('response: \n', response.text)
+#         response.raise_for_status()  # Raise an exception for HTTP errors
+#         thredds_content = response.text
+#         # print("thredds_content: ", thredds_content)
 
-        # Parse the HTML content
-        soup = BeautifulSoup(thredds_content, 'html.parser')
-        # Replace <img> tags with Bootstrap folder icons
-        i_tag = soup.new_tag('i', **{'class': 'bi bi-folder'})
-        a_tag = soup.new_tag('a', **{'href': 'catalog.html'})
-        for img in soup.find_all('img', alt='Folder'):
-            img.replace_with(i_tag)
-        try:
-            print("trying...")
-            buttons = soup.find_all('a', href='http://thredds/catalog/catalog.html')
-            for button in buttons:
-                print("button: ", button)
-                button['href'] = 'catalog/catalog.html'
-            print("replaced")
-        except:
-            print("except")
-            pass
-        # Find the div element with id "footer"
-        footer_div = soup.find('div', id='footer')
-        header_div = soup.find('div', id='header')
-        # Delete all parent divs of the footer_div
-        footer_div.decompose()
-        header_div.decompose()
-        div = soup.find('div', class_='container')
-        print('catalog\n\n', div)
-        return render(request, 'swn/thredds.html', {'thredds_content': str(div)})
+#         # Parse the HTML content
+#         soup = BeautifulSoup(thredds_content, 'html.parser')
+#         # Replace <img> tags with Bootstrap folder icons
+#         i_tag = soup.new_tag('i', **{'class': 'bi bi-folder'})
+#         a_tag = soup.new_tag('a', **{'href': 'catalog.html'})
+#         for img in soup.find_all('img', alt='Folder'):
+#             img.replace_with(i_tag)
+#         try:
+#             print("trying...")
+#             buttons = soup.find_all('a', href='http://thredds/catalog/catalog.html')
+#             for button in buttons:
+#                 print("button: ", button)
+#                 button['href'] = 'catalog/catalog.html'
+#             print("replaced")
+#         except:
+#             print("except")
+#             pass
+#         # Find the div element with id "footer"
+#         footer_div = soup.find('div', id='footer')
+#         header_div = soup.find('div', id='header')
+#         # Delete all parent divs of the footer_div
+#         footer_div.decompose()
+#         header_div.decompose()
+#         div = soup.find('div', class_='container')
+#         print('catalog\n\n', div)
+#         return render(request, 'swn/thredds.html', {'thredds_content': str(div)})
 
 
-    except requests.RequestException as e:
-        # Handle request exception, e.g., log the error
-        thredds_content = f"Error: {e}"
+#     except requests.RequestException as e:
+#         # Handle request exception, e.g., log the error
+#         thredds_content = f"Error: {e}"
 
-    # return render(request, 'swn/thredds.html', {'thredds_content': soup})
+#     # return render(request, 'swn/thredds.html', {'thredds_content': soup})
 
 # dev feature displays all bootstrap colors etc.
 def bootstrap(request):
@@ -753,102 +747,232 @@ def load_polygon(request, entity, polygon_id):
         return JsonResponse(error_response, status=404)
 
 # generate jsons of all choices in the field-menu page for faster update whithin UI
+# def field_edit(request, id):
+#     print("field_menu id: ", id)
+    
+#     start_time = time.time()
+
+#     crop_form  = forms.CropForm()
+#     crop_cultivar_form = monica_forms.CultivarParametersForm()
+#     user_field = models.UserField.objects.get(id=id)
+#     name = user_field.name
+#     print("field_menu Checkpoint 1: ", (time.time() - start_time))
+#     # retrieving soil data from db:
+#     soil_profile_polygon_ids = user_field.soil_profile_polygon_ids['buek_polygon_ids']
+    
+#     land_usage_choices = {}
+
+#     print("field_menu Checkpoint 2: ", (time.time() - start_time))
+    
+#     soil_data = models.BuekSoilProfileHorizon.objects.select_related('bueksoilprofile').filter(
+#             bueksoilprofile__polygon_id__in=soil_profile_polygon_ids
+#             ).order_by('bueksoilprofile__polygon_id', '-bueksoilprofile__area_percenteage', 'bueksoilprofile__id', 'horizont_nr')
+#     unique_land_usages = soil_data.values_list(
+#         'bueksoilprofile__landusage_corine_code', 'bueksoilprofile__landusage'
+#         ).order_by(
+#             'bueksoilprofile__landusage_corine_code', 'bueksoilprofile__landusage'
+#             ).distinct(
+#                 'bueksoilprofile__landusage_corine_code', 'bueksoilprofile__landusage'
+#                 )
+    
+#     for code, usage in unique_land_usages:
+#         if code != 51:
+#             land_usage_choices[code] = usage
+#     print('land_usage_choices', land_usage_choices)
+#     # Assuming soil_data is the queryset obtained earlier
+#     print("field_menu Checkpoint 2-1: ", (time.time() - start_time))
+    
+#     data_json = {}
+#     # Now, you have sets containing distinct values for each field
+#     for landusage_corine_code in list(land_usage_choices.keys()):
+#         data_json[landusage_corine_code] = {}
+
+
+#     for item in soil_data:
+#         try:
+#             if item.bueksoilprofile.landusage_corine_code != 51:
+            
+#                 if item.bueksoilprofile.system_unit not in data_json[item.bueksoilprofile.landusage_corine_code]:
+#                     data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit] = {
+#                         'area_percentages': {item.bueksoilprofile.area_percenteage},
+#                         'soil_profiles': {item.bueksoilprofile.area_percenteage: {item.bueksoilprofile.id: {'horizons': {}}}}
+#                     }
+#                 else:
+#                     data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['area_percentages'].add(item.bueksoilprofile.area_percenteage)
+#                     if item.bueksoilprofile.area_percenteage not in data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles']:
+#                         data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles'][item.bueksoilprofile.area_percenteage] = {item.bueksoilprofile.id: {'horizons': {}}}
+
+#                     if item.bueksoilprofile.id not in data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles'][item.bueksoilprofile.area_percenteage]:
+#                         data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles'][item.bueksoilprofile.area_percenteage] = {item.bueksoilprofile.id: {'horizons': {}}}
+
+                
+
+#                 if item.bulk_density_class_id is not None:
+#                     # print('horizon.bulk_density_class_id', horizon.bulk_density_class.bulk_density_class)
+#                     bulk_density_class = item.bulk_density_class.bulk_density_class
+#                     bulk_density = item.bulk_density_class.raw_density_g_per_cm3
+#                 else:
+#                     bulk_density_class = 'no data'
+#                     bulk_density = 'no data'
+
+
+#                 if item.humus_class_id is not None:
+#                     humus_class = item.humus_class.humus_class
+#                     humus_corg = item.humus_class.corg
+#                 else:
+#                     humus_class = 'no data'
+#                     humus_corg = 'no data'
+    
+#                 if item.ka5_texture_class_id is not None:
+#                     ka5_texture_class = item.ka5_texture_class.ka5_soiltype
+#                     sand = item.ka5_texture_class.sand
+#                     clay = item.ka5_texture_class.clay
+#                     silt = item.ka5_texture_class.silt
+#                 else:
+#                     ka5_texture_class = 'no data'
+#                     sand = 'no data'
+#                     clay = 'no data'
+#                     silt = 'no data'
+
+#                 if item.ph_class_id is not None:
+#                     ph_class = item.ph_class.ph_class
+#                     ph_lower_value = item.ph_class.ph_lower_value
+#                     ph_upper_value = item.ph_class.ph_upper_value
+#                 else:
+#                     ph_class = 'no data'
+#                     ph_lower_value = 'no data'
+#                     ph_upper_value = 'no data'
+
+#                 data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles']\
+#                     [item.bueksoilprofile.area_percenteage][item.bueksoilprofile.id]['horizons'][item.horizont_nr] = {
+#                     'obergrenze_m': item.obergrenze_m,
+#                     'untergrenze_m': item.untergrenze_m,
+#                     'stratigraphie': item.stratigraphie,
+#                     'herkunft': item.herkunft,
+#                     'geogenese': item.geogenese,
+#                     'fraktion': item.fraktion,
+#                     'summe': item.summe,
+#                     'gefuege': item.gefuege,
+#                     'torfarten': item.torfarten,
+#                     'substanzvolumen': item.substanzvolumen,
+#                     'bulk_density_class': bulk_density_class,
+#                     'bulk_density': bulk_density,
+#                     'humus_class': humus_class,
+#                     'humus_corg': humus_corg,
+#                     'ka5_texture_class': ka5_texture_class,
+#                     'sand': sand,
+#                     'clay': clay,
+#                     'silt': silt,
+#                     'ph_class': ph_class,
+#                     'ph_lower_value': ph_lower_value,
+#                     'ph_upper_value': ph_upper_value,                    
+#                 }
+#         except:
+#             print("except block XX")
+           
+#     for landusage_corine_code in data_json:
+#         for system_unit in data_json[landusage_corine_code]:
+#             data_json[landusage_corine_code][system_unit]['area_percentages']  = sorted(list(data_json[landusage_corine_code][system_unit]['area_percentages'] ))
+
+    
+
+#     soil_profile_form = forms.SoilProfileSelectionForm()
+#     soil_profile_form.set_choices(land_usage_choices)
+
+#     today = date.today()
+#     start_date = today.replace(year=(today.year -1))
+#     end_month = (today.month + 6) % 12
+#     end_date = today.replace(month=end_month)
+#     if today.month > 6:
+#         end_date = end_date.replace(year=(today.year+1))
+    
+
+#     date_picker_str = {
+#         'start_date': start_date.strftime('%d/%m/%Y'),
+#         'end_date': end_date.strftime('%d/%m/%Y')
+#     }
+#     print("startEndDate: ", type(date_picker_str["start_date"]))
+
+#     print("field_menu Checkpoint 5: ", (time.time() - start_time))
+#     data_menu = {
+#         'crop_form': crop_form,
+#         'crop_cultivar_form': crop_cultivar_form,
+#         'soil_profile_form': soil_profile_form,
+#         'text': name,
+#         'id': id,
+#         'polygon_ids': soil_profile_polygon_ids,
+#         'system_unit_json': json.dumps(data_json),
+#         'landusage_choices': json.dumps(land_usage_choices),
+#         'date_picker': date_picker_str
+        
+#     }
+#     with open('land_usage_choices.json', 'w') as f:
+#         json.dump(land_usage_choices, f)
+#     end_time = time.time()
+#     elapsed_time = end_time - start_time
+#     print('elapsed_time', elapsed_time, ' seconds')
+#     return render(request, 'swn/field_projects_edit.html', data_menu)
+
+
 def field_edit(request, id):
     print("field_menu id: ", id)
     
     start_time = time.time()
 
-    crop_form  = forms.CropForm()
+    crop_form = forms.CropForm()
     crop_cultivar_form = monica_forms.CultivarParametersForm()
-    name = models.UserField.objects.get(id=id).name
     user_field = models.UserField.objects.get(id=id)
+    name = user_field.name
     print("field_menu Checkpoint 1: ", (time.time() - start_time))
+    
     soil_profile_polygon_ids = user_field.soil_profile_polygon_ids['buek_polygon_ids']
-
-
+    
+    print("field_menu Checkpoint 2: ", (time.time() - start_time))
+    
+    # Retrieve unique land usage choices
     unique_land_usages = models.BuekSoilProfile.objects.filter(
         polygon_id__in=soil_profile_polygon_ids
     ).values_list('landusage_corine_code', 'landusage').distinct()
-    land_usage_choices = {}
-    for code, usage in unique_land_usages:
-        if code != 51:
-            land_usage_choices[code] = usage
+
+    # Filter out certain codes, if needed
+    land_usage_choices = {code: usage for code, usage in unique_land_usages if code != 51}
     print('land_usage_choices', land_usage_choices)
 
-    print("field_menu Checkpoint 2: ", (time.time() - start_time))
-    
-    soil_data = models.BuekSoilProfileHorizon.objects.select_related('bueksoilprofile').filter(
-            bueksoilprofile__polygon_id__in=soil_profile_polygon_ids
-            ).order_by('bueksoilprofile__polygon_id', '-bueksoilprofile__area_percenteage', 'bueksoilprofile__id', 'horizont_nr')
-    
-    # Assuming soil_data is the queryset obtained earlier
     print("field_menu Checkpoint 2-1: ", (time.time() - start_time))
-    # Extracting distinct values for the specified fields
-    distinct_landusage_ids = set(item.bueksoilprofile.landusage_corine_code for item in soil_data)
-    print("field_menu Checkpoint 2-2: ", (time.time() - start_time))
-    data_json = {}
-    # Now, you have sets containing distinct values for each field
-    for landusage_corine_code in distinct_landusage_ids:
-        data_json[landusage_corine_code] = {}
-
+    
+    # Initialize data_json with land usage codes
+    data_json = {code: {} for code in land_usage_choices.keys()}
+    
+    # Loop through soil data and populate data_json
+    soil_data = models.BuekSoilProfileHorizon.objects.select_related('bueksoilprofile').filter(
+        bueksoilprofile__polygon_id__in=soil_profile_polygon_ids
+    ).order_by('bueksoilprofile__landusage_corine_code', 'bueksoilprofile__system_unit', 'bueksoilprofile__area_percenteage', 'horizont_nr')
 
     for item in soil_data:
         try:
             if item.bueksoilprofile.landusage_corine_code != 51:
-            
-                if item.bueksoilprofile.system_unit not in data_json[item.bueksoilprofile.landusage_corine_code]:
-                    data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit] = {
-                        'area_percentages': {item.bueksoilprofile.area_percenteage},
-                        'soil_profiles': {item.bueksoilprofile.area_percenteage: {item.bueksoilprofile.id: {'horizons': {}}}}
+                land_code = item.bueksoilprofile.landusage_corine_code
+                system_unit = item.bueksoilprofile.system_unit
+                area_percentage = item.bueksoilprofile.area_percenteage
+                profile_id = item.bueksoilprofile.id
+                horizon_nr = item.horizont_nr
+
+                if system_unit not in data_json[land_code]:
+                    data_json[land_code][system_unit] = {
+                        'area_percentages': set(),
+                        'soil_profiles': {}
                     }
-                else:
-                    data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['area_percentages'].add(item.bueksoilprofile.area_percenteage)
-                    if item.bueksoilprofile.area_percenteage not in data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles']:
-                        data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles'][item.bueksoilprofile.area_percenteage] = {item.bueksoilprofile.id: {'horizons': {}}}
 
-                    if item.bueksoilprofile.id not in data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles'][item.bueksoilprofile.area_percenteage]:
-                        data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles'][item.bueksoilprofile.area_percenteage] = {item.bueksoilprofile.id: {'horizons': {}}}
+                data_json[land_code][system_unit]['area_percentages'].add(area_percentage)
 
-                
+                if area_percentage not in data_json[land_code][system_unit]['soil_profiles']:
+                    data_json[land_code][system_unit]['soil_profiles'][area_percentage] = {}
 
-                if item.bulk_density_class_id is not None:
-                    # print('horizon.bulk_density_class_id', horizon.bulk_density_class.bulk_density_class)
-                    bulk_density_class = item.bulk_density_class.bulk_density_class
-                    bulk_density = item.bulk_density_class.raw_density_g_per_cm3
-                else:
-                    bulk_density_class = 'no data'
-                    bulk_density = 'no data'
+                if profile_id not in data_json[land_code][system_unit]['soil_profiles'][area_percentage]:
+                    data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id] = {'horizons': {}}
 
-
-                if item.humus_class_id is not None:
-                    humus_class = item.humus_class.humus_class
-                    humus_corg = item.humus_class.corg
-                else:
-                    humus_class = 'no data'
-                    humus_corg = 'no data'
-    
-                if item.ka5_texture_class_id is not None:
-                    ka5_texture_class = item.ka5_texture_class.ka5_soiltype
-                    sand = item.ka5_texture_class.sand
-                    clay = item.ka5_texture_class.clay
-                    silt = item.ka5_texture_class.silt
-                else:
-                    ka5_texture_class = 'no data'
-                    sand = 'no data'
-                    clay = 'no data'
-                    silt = 'no data'
-
-                if item.ph_class_id is not None:
-                    ph_class = item.ph_class.ph_class
-                    ph_lower_value = item.ph_class.ph_lower_value
-                    ph_upper_value = item.ph_class.ph_upper_value
-                else:
-                    ph_class = 'no data'
-                    ph_lower_value = 'no data'
-                    ph_upper_value = 'no data'
-
-                data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles']\
-                    [item.bueksoilprofile.area_percenteage][item.bueksoilprofile.id]['horizons'][item.horizont_nr] = {
+                # Populate horizon data
+                data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id]['horizons'][horizon_nr] = {
                     'obergrenze_m': item.obergrenze_m,
                     'untergrenze_m': item.untergrenze_m,
                     'stratigraphie': item.stratigraphie,
@@ -859,58 +983,58 @@ def field_edit(request, id):
                     'gefuege': item.gefuege,
                     'torfarten': item.torfarten,
                     'substanzvolumen': item.substanzvolumen,
-                    'bulk_density_class': bulk_density_class,
-                    'bulk_density': bulk_density,
-                    'humus_class': humus_class,
-                    'humus_corg': humus_corg,
-                    'ka5_texture_class': ka5_texture_class,
-                    'sand': sand,
-                    'clay': clay,
-                    'silt': silt,
-                    'ph_class': ph_class,
-                    'ph_lower_value': ph_lower_value,
-                    'ph_upper_value': ph_upper_value,                    
+                    'bulk_density_class': item.bulk_density_class.bulk_density_class if item.bulk_density_class_id is not None else 'no data',
+                    'bulk_density': item.bulk_density_class.raw_density_g_per_cm3 if item.bulk_density_class_id is not None else 'no data',
+                    'humus_class': item.humus_class.humus_class if item.humus_class_id is not None else 'no data',
+                    'humus_corg': item.humus_class.corg if item.humus_class_id is not None else 'no data',
+                    'ka5_texture_class': item.ka5_texture_class.ka5_soiltype if item.ka5_texture_class_id is not None else 'no data',
+                    'sand': item.ka5_texture_class.sand if item.ka5_texture_class_id is not None else 'no data',
+                    'clay': item.ka5_texture_class.clay if item.ka5_texture_class_id is not None else 'no data',
+                    'silt': item.ka5_texture_class.silt if item.ka5_texture_class_id is not None else 'no data',
+                    'ph_class': item.ph_class.ph_class if item.ph_class_id is not None else 'no data',
+                    'ph_lower_value': item.ph_class.ph_lower_value if item.ph_class_id is not None else 'no data',
+                    'ph_upper_value': item.ph_class.ph_upper_value if item.ph_class_id is not None else 'no data',                    
                 }
-        except:
-            print("except block XX")
+        except Exception as e:
+            print("Exception occurred:", e)
            
-    for landusage_corine_code in data_json:
-        for system_unit in data_json[landusage_corine_code]:
-            data_json[landusage_corine_code][system_unit]['area_percentages']  = sorted(list(data_json[landusage_corine_code][system_unit]['area_percentages'] ))
+    # Sort area percentages
+    for land_code in data_json:
+        for system_unit in data_json[land_code]:
+            data_json[land_code][system_unit]['area_percentages'] = sorted(list(data_json[land_code][system_unit]['area_percentages']))
 
-    
-
-    soil_profile_form = forms.SoilProfileSelectionForm()
-    soil_profile_form.set_choices(land_usage_choices)
-
+    # Initialize and format date picker strings
     today = date.today()
-    start_date = today.replace(year=(today.year -1))
+    start_date = today.replace(year=(today.year - 1))
     end_month = (today.month + 6) % 12
     end_date = today.replace(month=end_month)
     if today.month > 6:
-        end_date = end_date.replace(year=(today.year+1))
-    
+        end_date = end_date.replace(year=(today.year + 1))
 
-    date_picker = {
-        'start_date': start_date.isoformat(),
-        'end_date': end_date.isoformat()
+    date_picker_str = {
+        'start_date': start_date.strftime('%d/%m/%Y'),
+        'end_date': end_date.strftime('%d/%m/%Y')
     }
 
+    print("startEndDate: ", type(date_picker_str["start_date"]))
+
     print("field_menu Checkpoint 5: ", (time.time() - start_time))
+
     data_menu = {
         'crop_form': crop_form,
         'crop_cultivar_form': crop_cultivar_form,
-        'soil_profile_form': soil_profile_form,
+        'soil_profile_form': forms.SoilProfileSelectionForm().set_choices(land_usage_choices),
         'text': name,
         'id': id,
         'polygon_ids': soil_profile_polygon_ids,
         'system_unit_json': json.dumps(data_json),
         'landusage_choices': json.dumps(land_usage_choices),
-        'date_picker': date_picker
-        
+        'date_picker': date_picker_str
     }
+
     end_time = time.time()
     elapsed_time = end_time - start_time
     print('elapsed_time', elapsed_time, ' seconds')
     return render(request, 'swn/field_projects_edit.html', data_menu)
+
 

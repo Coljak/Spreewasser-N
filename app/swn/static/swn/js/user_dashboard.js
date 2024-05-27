@@ -460,7 +460,7 @@ function changeTab(swnTool) {
   console.log('changeTabFunction', swnTool)
   switch (swnTool) {
     case 'drought':
-      sidebarToolsHeader.innerText = "Dürreberechnung";
+      sidebarToolsHeader.innerText = "Dürrefrühwarnsystem";
       // overlays
       droughtSidebarLiElements.forEach(element => {
         element.classList.remove("d-none");
@@ -480,7 +480,7 @@ function changeTab(swnTool) {
 
       break;
     case 'toolbox':
-      sidebarToolsHeader.innerText = "Toolbox";
+      sidebarToolsHeader.innerText = "Speicher Toolbox";
       
       // overlays
       toolboxSidebarLiElements.forEach(element => {

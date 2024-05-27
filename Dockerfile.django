@@ -18,13 +18,9 @@ EXPOSE 8000
 RUN apt-get update -qq && apt-get install -y -qq \
     ca-certificates curl gnupg wget
 
-# RUN NODE_MAJOR=20 && \
-#     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-RUN curl -fsSL https://deb.nodesource.com/setup_21.x | -E bash - &&\
-    apt-get install -y -qq nodejs npm
-
-# RUN apt-get update && apt-get install -y -qq nodejs npm
-# RUN apt-get install -y -qq npm
+RUN apt-get update && apt-get upgrade -y
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -E -
+RUN apt-get install -y -qq nodejs
 RUN apt-get clean && \
     rm -rf /var/apt/lists/* && \
     rm -rf /var/cache/apt/*
@@ -41,12 +37,12 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get
 RUN npm init -y 
 RUN npm install bootstrap 
 RUN npm install sass 
-RUN pip3 install --no-cache-dir setuptools wheel -U && \
+RUN pip install --no-cache-dir setuptools wheel -U && \
     python3 -m venv /py && \
-    /py/bin/pip3 install --upgrade pip && \
-    /py/bin/pip3 install -r /tmp/requirements.txt && \
+    /py/bin/pip install --upgrade pip && \
+    /py/bin/pip install -r /tmp/requirements.txt && \
     if [ $DEV = "true" ]; \
-        then /py/bin/pip3 install -r /tmp/requirements.dev.txt ; \
+        then /py/bin/pip install -r /tmp/requirements.dev.txt ; \
     fi && \
     rm -rf /tmp 
 RUN adduser \
@@ -55,3 +51,9 @@ RUN adduser \
         django-user
 
 ENV PATH="/py/bin:$PATH"
+
+
+
+
+# python -m pip install "dask[complete]" 
+# MAYBE pip3 instead of pip

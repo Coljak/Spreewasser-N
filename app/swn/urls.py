@@ -30,13 +30,11 @@ urlpatterns = [
     # path('Chart/', views.ChartView.as_view(), name='chart'), 
     path('login/Dashboard/field-edit/<int:id>/', views.field_edit, name='field_edit'),
     path('login/Dashboard/field-edit/<int:field_id>/chartdata/<int:crop_id>/<int:soil_id>/', views.get_chart, name='chart-api'),
-    path('login/Dashboard/monica-map/', views.thredds_wms_view, name='monica-map'),
+    
     # Impressum and Acknoledgements
     path('Impressum-Information/', views.ImpressumView.as_view(), name='impressum_information'),
     path('acknoledgements/', views.AcknoledgementsView.as_view(), name='acknoledgements'),
     # Thredds timelapse paths
-    # test can be deleted - it is a direct access from the browser to the thredds server 
-    path('Timelapse_test/', views.timelapse_test, name='timelapse-test'),
     # Thredds Timelapse page, metadata and capabilities
     path('Timelapse/', views.timelapse_items, name='timelapse-page'),
     path('Thredds/get_ncml_metadata/<str:name>', views.get_ncml_metadata, name='get-ncml-metadata'),

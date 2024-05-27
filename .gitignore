@@ -177,6 +177,7 @@ migrations/
 
 
 # local files and folders for data import 
+climate_data/
 db_data/
 thredds_data/
 xx_obsolete/

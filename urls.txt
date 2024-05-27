@@ -1,1 +1,0 @@
-http://127.0.0.1:8088/thredds/wcs/testAll/data/DWD_Data/zalf_hurs_amber_2011_v1-0_cf_v6.nc?service=WCS&version=1.0.0&request=GetCoverage&coverage=hurs&crs=EPSG:4326&bbox=8.0,50.0,8.0,50.0&time=2011-01-01T00:00:00Z/2011-12-31T00:00:00Z&format=application/netcdf

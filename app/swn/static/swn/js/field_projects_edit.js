@@ -1,12 +1,33 @@
 import { endpoint, chartDiv, crop, getChart } from "./chart_page.js";
+
 // Function to retrieve the CSRF token from the cookies
 function getCSRFToken() {
     const cookieValue = document.cookie
-      .split('; ')
-      .find(cookie => cookie.startsWith('csrftoken='))
-      .split('=')[1];
-    return cookieValue;
-  }
+        .split('; ')
+        .find(cookie => cookie.startsWith('csrftoken='));
+    const csrfToken = cookieValue ? cookieValue.split('=')[1] : null;
+    return csrfToken;
+}
+
+
+const formatDatePicker = function(startDate, endDate) {
+    $('.input-daterange').datepicker({
+        language: 'de-DE',
+        format: "dd.mm.yyyy",
+        startDate: startDate,
+        endDate: endDate,
+        weekStart: 1,
+        immediateUpdates: true,
+        startView: 1,
+        maxViewMode: 3,
+        clearBtn: true, 
+        autoclose: true,
+    })
+    $('#monicaStartDatePicker').datepicker('update', startDate);
+    $('#monicaEndDatePicker').datepicker('update', endDate);
+    $('#monicaDatepicker').show()
+};
+
 
 document.addEventListener('DOMContentLoaded', function() {
     // console.log('userFieldId', userFieldId);
@@ -23,6 +44,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const cropField = document.getElementById("id_Feldfrucht")
     const speciesParameters = document.getElementById('id_species_parameters');
     const cultivarParameters = document.getElementById('id_cultivar_parameters');
+    const monicaStartDatePicker = document.getElementById('monicaStartDatePicker');
+    const monicaEndDatePicker = document.getElementById('monicaEndDatePicker');
+    formatDatePicker(startDate, endDate);
 
     var selectedSoilProfile = 0;
 
@@ -52,7 +76,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
         }
         for (let key in horizons[1]) {
-            console.log('key', key);
             const dataRow = table.insertRow();
             const dataRowHeaderCell  = dataRow.insertCell();
             dataRowHeaderCell.classList.add("table-dark")
@@ -68,7 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } 
         }
     });
-
 
     // Populate soil profile and area percenteage when land usage changes
     areaPercenteageField.addEventListener('change', function() {
@@ -98,8 +120,6 @@ document.addEventListener('DOMContentLoaded', function() {
         soilProfileField.dispatchEvent(new Event('change'));
     
     });
-
-   
 
     systemUnitField.addEventListener('change', function() {
         console.log('systemUnitField change event');
@@ -145,6 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+
     // monica chart
     const btnMonicaCalculate = document.getElementById("btnMonicaCalculate");
 
@@ -165,13 +186,23 @@ document.addEventListener('DOMContentLoaded', function() {
         var soilProfileId = soilProfileField.value;
         var speciesId = speciesParameters.value;
         var cultivarId = cultivarParameters.value;
-        console.log("speciesId", speciesId);
-        console.log("cultivarId", cultivarId);
-        console.log("soilProfileId", soilProfileId);
+        var startDate = monicaStartDatePicker.value;
+        var endDate = monicaEndDatePicker.value;
+        var startDate = $('#monicaStartDatePicker').datepicker('getDate');
+        var endDate = $('#monicaEndDatePicker').datepicker('getDate');
+        var startDateStr = startDate.toLocaleDateString();
+        var endDateStr = endDate.toLocaleDateString();
+        
+        console.log("startDate.toLocaleDateString()", startDate.toLocaleDateString());
+        
+        
         var requestParams = {
+            userFieldId: userFieldId,
             soilProfileId: soilProfileId,
             speciesId: speciesId,
             cultivarId: cultivarId,
+            startDate: startDateStr,
+            endDate: endDateStr,
         };
         fetch('/monica/monica_calc_w_params_from_db/', {
             method: 'POST',

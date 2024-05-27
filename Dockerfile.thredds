@@ -2,18 +2,9 @@ FROM unidata/thredds-docker:5.4
 
 LABEL maintainer="Colja"
 
-
-COPY ./thredds_config/catalog.xml /usr/local/tomcat/temp/catalog.xml
-COPY ./thredds_config/threddsConfig.xml /usr/local/tomcat/temp/threddsConfig.xml
+COPY ./thredds_config/catalog.xml /usr/local/tomcat/content/thredds/catalog.xml
+COPY ./thredds_config/threddsConfig.xml /usr/local/tomcat/content/thredds/threddsConfig.xml
 COPY ./thredds_data/ /usr/local/tomcat/content/thredds/public/
 
 WORKDIR /usr/local/tomcat/
-# EXPOSE 8080
-
-RUN cp temp/catalog.xml content/thredds/ && \
-    cp temp/threddsConfig.xml content/thredds/
-    #  && \
-    # rm -rf /temp
-
-
 

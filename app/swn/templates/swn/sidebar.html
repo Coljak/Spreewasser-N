@@ -8,10 +8,10 @@
   <!-- Nav tabs -->
   <div class="leaflet-sidebar-tabs">
     <ul role="tablist">
-      <li id="sidebarTabListDrought" class="active" data-toggle="tooltip" data-placement="right" title="Dürrevorhersage">
+      <li id="sidebarTabListDrought" class="active" data-toggle="tooltip" data-placement="right" title="Dürrefrühwarnsystem">
         <a id="sidebarTabDrought" href="#droughtWarning" role="tab"><i class="bi bi-layers"></i></a>
       </li>
-      <li  id="sidebarTabListToolbox" data-toggle="tooltip" data-placement="right" title="Spreewasser:N Toolbox">
+      <li  id="sidebarTabListToolbox" data-toggle="tooltip" data-placement="right" title="Speicher Toolbox">
         <a id="sidebarTabToolbox" href="#droughtWarning" role="tab"><i class="bi bi-moisture"></i></a>
       </li>
       <li data-toggle="tooltip" data-placement="right" title="Userinfo">
@@ -36,7 +36,7 @@
   <!-- Tab panes -->
   <div class="leaflet-sidebar-content">
     <div class="leaflet-sidebar-pane active" id="droughtWarning">
-      <h1 class="leaflet-sidebar-header" id="sidebarToolsHeader"> Dürreberechnung
+      <h1 class="leaflet-sidebar-header" id="sidebarToolsHeader"> Dürrefrühwarnsystem
         <span class="leaflet-sidebar-close"><i class="bi bi-caret-left"></i></span>
       </h1>
       <!-- accordion items of layer pane -->
@@ -188,7 +188,7 @@
                   <div class="form-check form-switch col">
                     <input type="checkbox" data-layer="toolboxOutlineInjection" class="form-check-input overlay-switch" id="toolboxOverlayInjectionSwitch"/>
                     <label class="form-check-label" for="toolboxOverlayInjectionSwitch">
-                      Grundwasseranreicherung durch Injektionsgebiet <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Grundwasseranreicherung durch Injektionsgebiet" style="text-align: left;"></i>
+                      Grundwasseranreicherung durch Injektion <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Grundwasseranreicherung durch Injektionsgebiet" style="text-align: left;"></i>
                     </label>
                   </div>
                 </div>
@@ -227,12 +227,12 @@
               </li>
 
               
-              {% for field in state_county_district_form.visible_fields %}
+              {% comment %} {% for field in state_county_district_form.visible_fields %}
 
                   <li  class="list-group-item">
                     {{ field }}
                   </li>
-              {% endfor %}
+              {% endfor %} {% endcomment %}
             </ul>
           </div>
         </div>

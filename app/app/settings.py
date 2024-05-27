@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'sass_processor',
 
     # 3rd party
+    # 'raster',
     'debug_toolbar',
     'leaflet',
     'djgeojson',

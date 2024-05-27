@@ -18,6 +18,7 @@ from djgeojson.fields import PointField, PolygonField, MultiLineStringField, Mul
 #from user.models import User
 from django.contrib.auth.models import User
 import json
+from monica import models as monica_models
 
 import gettext as _
 import datetime
@@ -63,18 +64,21 @@ class ProjectRegion(models.Model):
 class UserField(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
+    creation_date = models.DateField(auto_now_add=True, blank=True, null=True)
     swn_tool = models.CharField(max_length=16, null=True, blank=True)
     geom_json = PolygonField(null=True)
     comment = models.TextField(null=True, blank=True)
     geom = gis_models.GeometryField(null=True, srid=4326)
     soil_profile_polygon_ids = models.JSONField(null=True, blank=True)
-
+    # TODO check if that is correct or even needed: it is probably BuekSoilProfie and not SoilProfile
     soil_profiles = models.ManyToManyField(
         'SoilProfile',
         through='SoilProfileUserField',
         related_name='user_fields',
         blank=True,
     )
+    
+    weather_grid_points = models.JSONField(null=True, blank=True)
     
 
     def __str__(self):
@@ -95,6 +99,43 @@ class UserField(models.Model):
         self.soil_profile_polygon_ids = json.dumps(polygon_json)
         self.save()
         # return intersecting_buek_data
+
+    def get_weather_data(self):
+        # Get the weather data from the DWD raster/ respectively the point representation in the monica.models.DWDGridToPointIndices class
+        # that intersects with the UserField object's geometry
+        print("get_weather_data")
+        userfield_geom = self.geom
+        # userfield_geom = GEOSGeometry(userfield_geom)
+        weather_data_indices = monica_models.DWDGridToPointIndices.get_points_within_geom(userfield_geom)
+        
+        weather_indices_list = []
+        for w in weather_data_indices:
+            print( 'w ', w.id, w.lat_idx, w.lon_idx, w.lat, w.lon, w.is_valid)
+            dict = {
+                'id': w.id,
+                'lat': w.lat,
+                'lon': w.lon,
+                'lat_idx': w.lat_idx,
+                'lon_idx': w.lon_idx,
+                'is_valid': w.is_valid,
+            }
+            weather_indices_list.append(dict)
+        weather_indices_json = {'weather_indices': weather_indices_list}
+        self.weather_grid_points = json.dumps(weather_indices_json)
+        self.save()
+        print( 'weather_indices_json ', weather_indices_json)
+        return weather_indices_list
+    
+    # models.py
+
+    # TODO celery task UserField.save
+    # def save(self, *args, **kwargs):
+    #     from .tasks import process_user_field
+    #     super(UserField, self).save(*args, **kwargs) 
+
+    #     # After saving, trigger the Celery task asynchronously
+    #     process_user_field.delay(self.pk)
+
         
 # TODO this table is empty-- canlikely be deleted
 class SoilProfile(models.Model):
@@ -348,7 +389,12 @@ class BuekVector(models.Model):
 
 class BuekSoilProfile(models.Model):
     polygon = models.ForeignKey(BuekPolygon, on_delete=models.CASCADE, null=True, blank=True)
+    legacy_gen_id = models.IntegerField(null=True, blank=True)
     system_unit = models.CharField(max_length=255, null=True, blank=True)
+    legacy_bodsysteinh = models.CharField(max_length=255, null=True, blank=True)
+    legacy_bodtyp = models.CharField(max_length=255, null=True, blank=True)
+    legacy_bo_subtyp = models.CharField(max_length=255, null=True, blank=True)
+    legacy_bo_subtyp_txt = models.CharField(max_length=255, null=True, blank=True)
     area_percenteage = models.IntegerField(null=True, blank=True)
     landusage = models.CharField(max_length=255, null=True, blank=True)
     landusage_corine_code = models.IntegerField(null=True, blank=True)
@@ -405,7 +451,7 @@ class BuekSoilProfileHorizon(models.Model):
     # TODO pH value is a range - how to use it
     # TODO Sceleton fraction 0-1, soil stone content
     def to_json(self):
-        return {
+        monica_json = {
             'Thickness': [(self.untergrenze_m - self.obergrenze_m), "m"],
             'Sand': [self.ka5_texture_class.sand, "%"],
             'Clay': [self.ka5_texture_class.clay, "%"],
@@ -420,12 +466,18 @@ class BuekSoilProfileHorizon(models.Model):
             # 'SoilNitrate': 	kg NO3-N m-3 	initial soil nitrate content
             # 'CN': 		soil C/N ratio
             'SoilRawDensity': [self.bulk_density_class.raw_density_g_per_cm3 * 1000, "kg m-3"],
-            # SoilBulkDensity 	kg m-3 	soil bulk density
-            'SoilOrganicCarbon': [self.humus_class.corg / 100, "%"],
+            #  OR SoilBulkDensity 	kg m-3 	soil bulk density
+            'SoilOrganicCarbon': [self.humus_class.corg, "%"],
             # TODO wiki: SoilOrganicCarbon 	% [0-100] ([kg C kg-1] * 100)  a percentage between 0 and 100 BUT it seems to be a percenteage
-            # 'SoilOrganicMatter': 	kg OM kg-1 (fraction [0-1]) 	soil organic matter
+            # OR 'SoilOrganicMatter': 	kg OM kg-1 (fraction [0-1]) 	soil organic matter
             # 'SoilMoisturePercentFC': % [0-100] 	initial soil moisture in percent of field capacity
         }
+        soil_raw_density = []
+        if self.bulk_density_class.raw_density_g_per_cm3:
+            monica_json['SoilRawDensity'] = [self.bulk_density_class.raw_density_g_per_cm3 * 1000, "kg m-3"]
+        else:
+            monica_json['SoilBulkDensity'] = []   
+        return monica_json
 
 class CorineLandCover2018(models.Model):
     '''

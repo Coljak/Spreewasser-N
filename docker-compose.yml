@@ -1,6 +1,5 @@
 # version: "3.8"
 
-
 services:
   app:
     build: 
@@ -13,6 +12,7 @@ services:
       - 8000:8000 
     volumes:
       - ./app:/app
+      - ./thredds_data/data:/app/thredds_data
     command: 
       sh -c "python3 manage.py wait_for_db &&
       python3 manage.py migrate &&
@@ -29,6 +29,7 @@ services:
       - GEOSERVER_PASS=geoserver
 
       - THREDDS_URL=http://thredds:8080/thredds
+      # - NETCDF_DATA_PATH=/path/to/thredds_data
       
       
     container_name: swn_geo_django
@@ -71,13 +72,11 @@ services:
       - GEOSERVER_DATA_DIR=/geoserver_data/data
     ports:
       - 8080:8080
-      # - ${GEOSERVER_PORT}:8080
     depends_on:
       - db
     networks:
       - swn_network
-    # aliases:
-    #   - swn_geoserver
+
 
   # thredds for sharing of netcdf data
   thredds:
@@ -88,18 +87,9 @@ services:
     volumes:
       - ./thredds_tomcat/tomcat_logs:/usr/local/tomcat/logs/
       - ./thredds_tomcat/thredds_logs:/usr/local/tomcat/content/thredds/logs/
-      # - ./thredds_tomcat/users/tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml
       - ./thredds_data/data/tomcat/content/thredds:/usr/local/tomcat/content/thredds
-      # - /path/to/your/data/directory1:/path/to/your/data/directory1
-      # - /path/to/your/data/directory2:/path/to/your/data/directory2
       - ./thredds_data/data:/usr/local/tomcat/content/thredds/public/data
-      # - ./path/to/your/server.xml:/usr/local/tomcat/conf/server.xml
-      # - /path/to/your/web.xml:/usr/local/tomcat/conf/web.xml
-      # - /path/to/your/keystore.jks:/usr/local/tomcat/conf/keystore.jks
-    # command:
-    #   sh -c "mv /temp/catalog.xml /usr/local/tomcat/content/thredds/catalog.xml && \
-    #     mv /temp/threddsConfig.xml /usr/local/tomcat/content/thredds/threddsConfig.xml"
-
+   
     environment:
       - THREDDS_URL=thredds
   
@@ -134,21 +124,6 @@ services:
     networks:
       - swn_network
 
-
 networks:
   swn_network:
-
-  # # Celery
-  # celery:
-  #   #restart: # needs to be changed to always once celery is used
-  #   build:
-  #     context: .
-  #   command: celery -A core worker -l DEBUG
-  #   volumes:
-  #     - .:/django
-  #   container_name: celery_swn
-  #   depends_on:
-  #   - db
-  #   - redis
-  #   - app
 

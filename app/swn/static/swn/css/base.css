@@ -50,6 +50,10 @@ leaflet-control-layers-selector:checked {
   color: var(--bs-primary) !important;
 }
 
+/* TODO delete this */
+.form-check-label {
+  font-size: 1rem !important;
+}
 
 
 

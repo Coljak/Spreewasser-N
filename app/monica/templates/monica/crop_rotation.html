@@ -1,0 +1,28 @@
+<!-- Worksteps will be added here -->
+{% if worksteps %}
+{% for workstep in worksteps %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>{{ workstep.type }}</h3>
+        </div>
+        <div class="card-body">
+            <p>Date: {{ workstep.date }}</p>
+            {% if workstep.type == "Sowing" %}
+                <p>Species: {{ workstep.species }}</p>
+                <p>Cultivar: {{ workstep.cultivar }}</p>
+                <p>Plant Density: {{ workstep.plant_density }}</p>
+            {% elif workstep.type == "Harvest" %}
+                <!-- Add specific details for Harvest if needed -->
+            {% elif workstep.type == "Tillage" %}
+                <p>Tillage Depth: {{ workstep.tillage_depth }}</p>
+            {% elif workstep.type == "OrganicFertilization" %}
+                <p>Amount: {{ workstep.amount }} kg N ha-1</p>
+                <p>Incorporation: {{ workstep.incorporation }}</p>
+            {% elif workstep.type == "MineralFertilization" %}
+                <p>Amount: {{ workstep.amount }} kg N ha-1</p>
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}
+{% endif %}
+{% endblock %}

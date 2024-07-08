@@ -36,6 +36,30 @@ const palette_and_min_max = {
         'style': 'default-scalar/div-RdYlBu-inv',
         'valueRange': '-30, 40',
     },
+    'awd': {
+        'style': 'default-scalar/div-BrBG',
+        'valueRange': '-80, 80',
+    },
+    'awp': {
+        'style': 'default-scalar/seq-Heat-inv',
+        'valueRange': '0, 100',
+    },
+    'awr': {
+        'style': 'default-scalar/div-BrBG',
+        'valueRange': '0, 100',
+    },
+    'dfm10h': {
+        'style': 'default-scalar/div-RdYlGn-inv',
+        'valueRange': '0, 100',
+    },
+    'fwi': {
+        'style': 'default-scalar/div-RdYlBu-inv',
+        'valueRange': '1, 6',
+    },
+    'utci': {
+        'style': 'default-scalar/seq-Heat-inv',
+        'valueRange': '0, 60',
+    },
 };
 
 

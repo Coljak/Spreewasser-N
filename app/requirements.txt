@@ -7,6 +7,7 @@ django-extras==0.3
 django-geoip2-extras==1.1.2
 django-geojson==3.2.1
 django-leaflet==0.28.3
+django-bootstrap-datepicker-plus==5.0.5
 drf-spectacular==0.15.1
 gdal==3.4.1
 pandas==1.5.3

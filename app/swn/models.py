@@ -39,20 +39,6 @@ geo = Geoserver(os.environ.get('GEOSERVER_URL'),
 
 
 
-class WinterSummerCrop(models.Model):
-    name = models.CharField(max_length=30)
-    
-class Crop(models.Model):
-    name = models.CharField(max_length=64)
-    is_winter_crop = models.BooleanField(default=False)
-    species_path = models.CharField(max_length=255, null=True, blank=True)
-    cultivar_path = models.CharField(max_length=255, null=True, blank=True)
-    residue_path = models.CharField(max_length=255, null=True, blank=True)
-    # winter_summer_crop = models.ForeignKey(WinterSummerCrop, null=True, on_delete=models.SET_NULL)
-
-    def __str__(self):
-        return self.name
-
 
 class ProjectRegion(models.Model):
     name = models.CharField(max_length=50)
@@ -101,8 +87,10 @@ class UserField(models.Model):
         # return intersecting_buek_data
 
     def get_weather_data(self):
-        # Get the weather data from the DWD raster/ respectively the point representation in the monica.models.DWDGridToPointIndices class
-        # that intersects with the UserField object's geometry
+        """
+        Get the weather data from the DWD raster/ respectively the point representation in the monica.models.DWDGridToPointIndices class
+        that intersects with the UserField object's geometry
+        """
         print("get_weather_data")
         userfield_geom = self.geom
         # userfield_geom = GEOSGeometry(userfield_geom)
@@ -184,7 +172,7 @@ class UserProject(models.Model):
     name = models.CharField(max_length=255)
     user_field = models.ForeignKey(UserField, on_delete=models.CASCADE)
     soil_profile = models.ForeignKey(SoilProfile, on_delete=models.DO_NOTHING, null=True)
-    crop = models.ForeignKey(Crop, on_delete=models.DO_NOTHING, null=True)
+    crop = models.ForeignKey(monica_models.SpeciesParameters, on_delete=models.DO_NOTHING, null=True)
     comment = models.TextField(null=True, blank=True)
     irrigation_input = models.JSONField(null=True, blank=True)
     irrigation_output = models.JSONField(null=True, blank=True)

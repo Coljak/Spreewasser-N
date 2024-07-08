@@ -4,10 +4,12 @@ from django.contrib.postgres.fields import ArrayField
 from typing import List, Tuple
 import json
 from django.contrib.gis.db.models import functions as gis_functions
+from django.contrib.gis.geos import Point
 # from django.contrib.gis.measure import Distance
 from django.db.models import Q
 from django.contrib.gis.db.models.functions import Distance
 from datetime import datetime
+import pandas as pd
 
 # TODO Questions:
 # - Why are there crop residues for species that have no species parameters?
@@ -24,8 +26,7 @@ class CropParametersExist(models.Model):
     def __str__(self):
         return self.species_name
 
-    
-# TODO get foreign keys of CropSpeciesParameters 
+
 # this is the model for all jsons in monica-parammeters/crops/<crop-name>/.json
 class CultivarParameters(models.Model):
     species_name = models.CharField(max_length=100, blank=True)
@@ -46,6 +47,7 @@ class CultivarParameters(models.Model):
     frost_hardening = models.FloatField()
     heat_sum_irrigation_end = models.FloatField()
     heat_sum_irrigation_start = models.FloatField()
+    is_winter_crop = models.BooleanField(blank=True, null=True, default=False)
     lt50_cultivar = models.FloatField()
     latest_harvest_doy = models.IntegerField()
     low_temperature_exposure = models.FloatField()
@@ -167,12 +169,10 @@ class CultivarParameters(models.Model):
                     'vernalisation_requirement':  data["VernalisationRequirement"],
                 }
             )
-            print("created", created)
-            # Save the instance if it was created or updated
+            
             if created or not species_params._state.adding:
                 species_params.save()
             
-            # TODO for export to .json file: 
             return species_params
 
 # this is the model for all jsons in monica-parammeters/crops/<crop_name>.json
@@ -190,6 +190,7 @@ class SpeciesParameters(models.Model):
     initial_kc_factor = models.FloatField(blank=True, null=True)
     initial_organ_biomass = models.JSONField(blank=True, null=True)
     initial_rooting_depth = models.FloatField(blank=True, null=True)
+    is_perennial_crop = models.BooleanField(blank=True, null=True, default=False)
     limiting_temperature_heat_stress = models.FloatField(blank=True, null=True)
     luxury_n_coeff = models.FloatField(blank=True, null=True)
     max_crop_diameter = models.FloatField(blank=True, null=True)
@@ -609,6 +610,9 @@ class MineralFertiliser(models.Model):
     fertiliser_id = models.CharField(max_length=100, blank=True, null=True)
     type = models.CharField(max_length=100, blank=True, null=True)
 
+    def __str__(self):
+        return self.name
+
     def to_json(self) -> dict:
         return {
             "Carbamid": self.carbamid,
@@ -643,22 +647,21 @@ class MineralFertiliser(models.Model):
         # TODO for export to .json file: 
         return mineral_fertiliser
 
-# TODO GENERAL PARAMETERS to_json() checked
 class UserCropParameters(models.Model):
     canopy_reflection_coefficient = models.FloatField()
     growth_respiration_parameter1 = models.FloatField()
-    growth_respiration_parameter2 = models.FloatField() # TODO integer
+    growth_respiration_parameter2 = models.FloatField()
     growth_respiration_redux = models.FloatField()
     maintenance_respiration_parameter1 = models.FloatField()
-    maintenance_respiration_parameter2 = models.FloatField() # TODO integer
-    max_crop_n_demand = models.FloatField() # TODO integer
+    maintenance_respiration_parameter2 = models.FloatField()
+    max_crop_n_demand = models.FloatField() 
     minimum_available_n = models.FloatField()
     minimum_n_concentration_root = models.FloatField()
     reference_albedo = models.FloatField()
     reference_leaf_area_index = models.FloatField()
-    reference_max_assimilation_rate = models.FloatField() # TODO integer
+    reference_max_assimilation_rate = models.FloatField()
     saturation_beta = models.FloatField()
-    stomata_conductance_alpha = models.FloatField() # TODO integer
+    stomata_conductance_alpha = models.FloatField() 
     tortuosity = models.FloatField()
 
     def to_json(self):
@@ -717,14 +720,14 @@ class UserEnvironmentParameters(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
     albedo = models.FloatField()
     rcp = models.CharField(max_length=10)
-    atmospheric_co2 = models.FloatField() # TODO integer
+    atmospheric_co2 = models.FloatField() 
     atmospheric_co2s = models.JSONField(default=dict)
     yearly_co2_values = models.JSONField(default=dict)
     leaching_depth = models.FloatField()
-    max_groundwater_depth = models.FloatField() # TODO integer
-    min_groundwater_depth = models.FloatField() # TODO integer
-    min_groundwater_depth_month = models.IntegerField() # TODO integer
-    wind_speed_height = models.FloatField() # TODO integer
+    max_groundwater_depth = models.FloatField() 
+    min_groundwater_depth = models.FloatField()
+    min_groundwater_depth_month = models.IntegerField() 
+    wind_speed_height = models.FloatField()
     time_step = models.IntegerField() 
 
     def to_json(self):
@@ -1420,6 +1423,9 @@ class SimulationEnvironment(models.Model):
 class Workstep(models.Model):
     date = models.DateField()
 
+    class Meta: 
+        abstract = True
+
 class WorkstepMineralFertilization(Workstep):
     amount = models.FloatField()
     mineral_fertiliser = models.ForeignKey(MineralFertiliser, on_delete=models.CASCADE)
@@ -1460,13 +1466,14 @@ class WorkstepSowing(Workstep):
     species = models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE)
     cultivar = models.ForeignKey(CultivarParameters, on_delete=models.CASCADE)
     residue_parameters = models.ForeignKey(CropResidueParameters, on_delete=models.CASCADE)
+    
     # plants per m2
     plant_density = models.IntegerField() # TODO whatfor???
 
     def to_json(self):
         return {
-            "is-winter-crop": False, # TODO: where does it come from???
-            "is-perennial-crop": True, #TODO where does it come from???
+            "is-winter-crop": self.cultivar.is_winter_crop, 
+            "is-perennial-crop": self.species.is_perennial_crop, 
             "cropParams": {
                 "species": self.species.to_json(),
                 "cultivar": self.cultivar.to_json(),
@@ -1539,7 +1546,11 @@ class WeatherData(models.Model):
 
 """
 This model is a GIS multipoint of the centroids of the DWD weather grid.
-All gridcells are represented in this table, the column is_valid iholds the Boolean of weather it is a no_data point. 
+All gridcells are represented in this table, the column is_valid holds the Boolean of weather 
+it is a no_data point.
+The nearest climate station refers to those referenced in the klimertrag sowing dates (class SeedHarvestDates).
+ The forecast_lat_idx and forecast_lon_idx are the indices of the DWD forecast grid (5km x 5km) that are closest to the
+grid cell.
 """
 class DWDGridToPointIndices(models.Model):
     point = gis_models.PointField()
@@ -1548,6 +1559,9 @@ class DWDGridToPointIndices(models.Model):
     lat_idx = models.IntegerField()
     lon_idx = models.IntegerField()
     is_valid = models.BooleanField(default=True)
+    nearest_climate_station_for_sowing_dates = models.IntegerField(null=True, blank=True)
+    forecast_lat_idx = models.IntegerField(null=True, blank=True)
+    forecast_lon_idx = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.point} - {self.lat_idx} - {self.lon_idx}"
@@ -1599,9 +1613,94 @@ class DWDGridToPointIndices(models.Model):
                 print("No points found within the buffered geometry")
                 return None
             
-            
-           
+
+class DWDForecastGridToPointIndices(models.Model):
+    point = gis_models.PointField()
+    lat = models.FloatField()
+    lon = models.FloatField()
+    lat_idx = models.IntegerField()
+    lon_idx = models.IntegerField()
+    nearest_climate_station_for_sowing_dates = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.point} - {self.lat_idx} - {self.lon_idx}"
+    
+
+class SeedHarvestclimateStation(models.Model):
+    lat = models.FloatField()
+    lon = models.FloatField()
+    geom = gis_models.PointField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Climate station at {self.lat} - {self.lon}"
+    
+
+# TODO check all crop_txt for the correct cultivar_parameter!! 
+class SeedHarvestDates(models.Model):
+    climate_station = models.ForeignKey(SeedHarvestclimateStation, on_delete=models.CASCADE)
+    name_of_csv = models.CharField(max_length=100, null=True, blank=True)
+    lat = models.FloatField(null=True, blank=True)
+    lon = models.FloatField(null=True, blank=True)
+    crop_txt = models.CharField(max_length=100)
+    cultivar_parameters = models.ForeignKey(CultivarParameters, on_delete=models.CASCADE, null=True, blank=True)
+    avg_sowing_doy = models.IntegerField(null=True, blank=True)
+    no_of_sowing_datasets = models.IntegerField(null=True, blank=True)
+    avg_harvest_doy = models.IntegerField(null=True, blank=True)
+    no_of_harvest_datasets = models.IntegerField(null=True, blank=True)
+    earliest_sowing_doy = models.IntegerField(null=True, blank=True)
+    latest_sowing_doy = models.IntegerField(null=True, blank=True)
+    earliest_harvest_doy = models.IntegerField(null=True, blank=True)
+    latest_harvest_doy = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.crop_txt} - {self.species_parameters_id} - {self.lat} - {self.lon}"
+    
+    @classmethod
+    def load_klimertrag_csv(cls, csv_file_path):
+        filename = csv_file_path.split('/')[-1].split('.')[0]
         
+        data = pd.read_csv(csv_file_path)
+        for index, row in data.iterrows():
+            seed_harvest_dates = cls(
+                climate_station= SeedHarvestclimateStation.objects.get(id=row.get('climate.station', None)),
+                name_of_csv=filename,
+                lat=row.get('lat', None),
+                lon=row.get('long', None),
+                crop_txt=row.get('crop', None),
+                avg_sowing_doy=row.get('avg.sowing.doy', None),
+                no_of_sowing_datasets=row.get('X..values.sowing', None),
+                avg_harvest_doy=row.get('avg.harvest.doy', None),
+                no_of_harvest_datasets=row.get('X..values.harvest', None),
+                earliest_sowing_doy=row.get('earliest.sowing.doy', None),
+                latest_sowing_doy=row.get('latest.sowing.doy', None),
+                earliest_harvest_doy=row.get('earliest.harvest.doy', None),
+                latest_harvest_doy=row.get('latest.harvest.doy', None)
+            )
+            seed_harvest_dates.save()
 
+    
 
+    def __str__(self):
+        return f"Winter Wheat - {self.seed_harvest_dates}"
+
+           
+class DWDGridAsPolygon(models.Model):
+    lat = models.FloatField()
+    lon = models.FloatField()
+    lat_idx = models.IntegerField()
+    lon_idx = models.IntegerField()
+    geom = gis_models.PolygonField()
+
+    def __str__(self):
+        return f"Polygon with centroid lat {self.lat} and longitude {self.lon} at the indeices {self.lat_idx} and {self.lon_idx}."
+    
+class DWDForecastGridAsPolygon(models.Model):
+    lat = models.FloatField()
+    lon = models.FloatField()
+    lat_idx = models.IntegerField()
+    lon_idx = models.IntegerField()
+    geom = gis_models.PolygonField()
+
+    def __str__(self):
+        return f"Polygon with centroid lat {self.lat} and longitude {self.lon} at the indeices {self.lat_idx} and {self.lon_idx}."
 

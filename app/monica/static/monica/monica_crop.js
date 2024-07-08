@@ -25,7 +25,5 @@ document.addEventListener('DOMContentLoaded', function() {
             cultivarParameters.innerHTML = '';
         }
     });
-
-
 });
 

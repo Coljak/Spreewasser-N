@@ -47,18 +47,19 @@ INSTALLED_APPS = [
     'swn',
     'toolbox',
     'monica',
+    'klim4cast',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
     'sass_processor',
-
-    # 3rd party
-    # 'raster',
     'debug_toolbar',
     'leaflet',
     'djgeojson',
+    'django_bootstrap5',
     'crispy_forms',
     'crispy_bootstrap5',
+    'bootstrap_datepicker_plus',
+    # 'django_celery_beat',
     # 'raster',
 ]
 
@@ -142,11 +143,22 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# # Celery
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TIMEZONE = 'UTC'  # Set this to your local timezone if necessary
+
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'de-de'
+LANGUAGE_CODE = 'de' 
+USE_L10N = True  # Enables localized formatting of data
+
 
 USE_TZ = True
 
@@ -159,11 +171,12 @@ USE_I18N = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
-# STATIC_ROOT = Path.joinpath(STATIC_DIR, )
+STATIC_ROOT = 'swn/staticfiles/'
 STATICFILES_DIRS = [
     STATIC_DIR,
     Path.joinpath(BASE_DIR, 'swn/static/'),
-    Path.joinpath(BASE_DIR, 'swn/static/')]
+    Path.joinpath(BASE_DIR, 'monica/static/'),
+    Path.joinpath(BASE_DIR, 'toolbox/static/'),]
 
 # https://pypi.org/project/django-sass-processor/
 STATICFILES_FINDERS = [

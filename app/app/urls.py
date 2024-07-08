@@ -31,6 +31,7 @@ urlpatterns = [
     path('', include('swn.urls')),
     path('', include('toolbox.urls')),
     path('monica/', include('monica.urls')),
+    path('klim4cast/', include('klim4cast.urls')),
     path('admin/', admin.site.urls),
     path('api/schema/',
          SpectacularAPIView.as_view(), name='api-schema'),

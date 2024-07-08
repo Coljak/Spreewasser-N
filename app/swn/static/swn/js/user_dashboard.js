@@ -203,80 +203,80 @@ var projectRegion = new L.GeoJSON.AJAX('load_projectregion/',
   });
 
 var toolboxSinks = new L.GeoJSON.AJAX('toolbox_sinks/',
-{
-  style: function (feature) {
-    return { 
-      fillColor: lightColor,
-      color: infoColor,};
-  },
-  attribution: 'Toolbox Sinks',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.Tiefe);
-  }
-});
+  {
+    style: function (feature) {
+      return { 
+        fillColor: lightColor,
+        color: infoColor,};
+    },
+    attribution: 'Toolbox Sinks',
+    onEachFeature: function (feature, layer) {
+      layer.bindTooltip(feature.properties.Tiefe);
+    }
+  });
 
 var toolboxOutlineInjection = new L.GeoJSON.AJAX('toolbox_outline_injection/',
-{
-  style: function (feature) {
-    return { 
-      fillColor: lightColor,
-      color: infoColor,};
-  },
-  attribution: 'Toolbox Injection',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.name);
-  }
-});
+  {
+    style: function (feature) {
+      return { 
+        fillColor: lightColor,
+        color: infoColor,};
+    },
+    attribution: 'Toolbox Injection',
+    onEachFeature: function (feature, layer) {
+      layer.bindTooltip(feature.properties.name);
+    }
+  });
 
 var toolboxOutlineInjection = new L.GeoJSON.AJAX('toolbox_outline_injection/',
-{
-  style: function (feature) {
-    return { 
-      fillColor: lightColor,
-      color: infoColor,};
-  },
-  attribution: 'Toolbox Injection',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.name);
-  }
-});
+  {
+    style: function (feature) {
+      return { 
+        fillColor: lightColor,
+        color: infoColor,};
+    },
+    attribution: 'Toolbox Injection',
+    onEachFeature: function (feature, layer) {
+      layer.bindTooltip(feature.properties.name);
+    }
+  });
 
 var toolboxOutlineSurfaceWater = new L.GeoJSON.AJAX('load_outline_surface_water/',
-{
-  style: function (feature) {
-    return { 
-      fillColor: lightColor,
-      color: infoColor,};
-  },
-  attribution: 'Toolbox Surface Water',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.name);
-  }
-});
+  {
+    style: function (feature) {
+      return { 
+        fillColor: lightColor,
+        color: infoColor,};
+    },
+    attribution: 'Toolbox Surface Water',
+    onEachFeature: function (feature, layer) {
+      layer.bindTooltip(feature.properties.name);
+    }
+  });
 var toolboxOutlineInfiltration = new L.GeoJSON.AJAX('load_outline_infiltration/',
-{
-  style: function (feature) {
-    return { 
-      fillColor: lightColor,
-      color: infoColor,};
-  },
-  attribution: 'Toolbox Infiltration',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.name);
-  }
-});
+  {
+    style: function (feature) {
+      return { 
+        fillColor: lightColor,
+        color: infoColor,};
+    },
+    attribution: 'Toolbox Infiltration',
+    onEachFeature: function (feature, layer) {
+      layer.bindTooltip(feature.properties.name);
+    }
+  });
 var toolboxOutlineGeste = new L.GeoJSON.AJAX('load_outline_geste/',
-{
-  style: function (feature) {
-    return { 
-      fillColor: lightColor,
-      color: infoColor,};
-  },
-  attribution: 'Toolbox Geste',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.name);
-  }
-});
+  {
+    style: function (feature) {
+      return { 
+        fillColor: lightColor,
+        color: infoColor,};
+    },
+    attribution: 'Toolbox Geste',
+    onEachFeature: function (feature, layer) {
+      layer.bindTooltip(feature.properties.name);
+    }
+  });
 
   // var toolboxOutlineDrainage = new L.GeoJSON.AJAX('load_outline_drainage/',
   // {

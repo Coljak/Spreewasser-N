@@ -37,8 +37,8 @@
       <div class="card mb-3">
         <div id="soilDiv" class="card-body">
           <h5 class="card-title">Soil Data</h5>  
-          <form method="post" id="soilProfileForm">
-            {% csrf_token %}
+          {% comment %} <form method="post" id="soilProfileForm">
+            {% csrf_token %} {% endcomment %}
             <span class="input-group-text mb-2 d-flex align-items-start">
               <div id="div_id_land_usage" class="m-3">
                 <label for="id_land_usage" class="form-label">
@@ -67,26 +67,17 @@
                 <select name="soil_profile" class="form-select" id="id_soil_profile"></select> 
               </div>
               <div id="div_id_horizons" class="m-3 p-2 border rounded " >
-                {% comment %} <label for="id_horizons" class="form-label">
-                  Horizonte
-                <label> {% endcomment %}
-                
-                {% comment %} <button class="btn btn-primary">Profil auswählen</button> {% endcomment %}
+
               </div>
             </span>
             <div>
               <table id="tableHorizons" class="table table-bordered border-4 rounded table-hover table-striped ">
               </table>
             </div>
-          </form> 
+          {% comment %} </form>  {% endcomment %}
         </div>
       </div>
-      <!-- Feldfrucht -->
-      <div class="card mb-3">
-        <div class="card-body">
-          {{ crop_form|crispy }}
-        </div>
-      </div>
+      
       <!-- Species/ Cultivar -->
       <div class="card mb-3">
         <div class="card-body">
@@ -135,7 +126,7 @@
 <script src="{% static 'swn/js/field_projects_edit.js' %}" type="module"></script>
 <script type="text/javascript" src="{% static 'monica/monica_crop.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
-<script type="text/javascript" src="{% static "swn/js/bootstrap-datepicker.min.js" %}"></script>
-<script type="text/javascript" src="{% static "swn/js/bootstrap-datepicker.de.min.js" %}"></script>
+<script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.de.min.js' %}"></script>
 {% endblock %}
 ```

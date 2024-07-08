@@ -66,7 +66,6 @@ class AcknoledgementsView(TemplateView):
 def favicon_view(request):
     return HttpResponse(status=204)
 
-# this renders the example for the NetCDF timelapse from https://github.com/socib/Leaflet.TimeDimension
 # an alternative could be https://github.com/smlum/netcdf-vis
 
 # This view outputs a json file containing a list of jsons of all available datasets on the thredds server
@@ -178,12 +177,6 @@ def get_ncml_capabilities_2(request, name):
     for attr in catalog_dict["netcdf"]["attribute"]:
         
         capabilities['attributes'][attr['@name']] = attr['@value']
-        # if attr['@name'] == 'title':
-        #     capabilities['title'] = attr['@value']
-        # elif attr['@name'] == 'time_coverage_start':
-        #     capabilities['time_coverage_start'] = attr['@value']
-        # elif attr['@name'] == 'time_coverage_end':
-        #     capabilities['time_coverage_end'] = attr['@value']
     capabilities['dimensions'] = {}
     for dim in catalog_dict["netcdf"]["dimension"]:
         
@@ -215,7 +208,7 @@ def timelapse_items(request):
 
     response = requests.get(url)
     catalog_dict = xmltodict.parse(response.content)
-
+    print("\nSWN catalog_dict['catalog']['dataset']['dataset']\n", catalog_dict['catalog']['dataset']['dataset'])
     # thredds content as dataset from list comprehension
     catalog_dict_list = [
         {
@@ -234,7 +227,6 @@ def timelapse_items(request):
     return render(request, 'swn/map_thredds_4.html', {'catalog_json': catalog_dict_list, 'thredds_data': 'thredds_data'})
 
 def timelapse_test_django_passthrough_wms(request, netcdf):
-    # example netcdf from frontend: zalf_pr_amber_2009_v1-0_cf_v4.nc 
 
     print("timelapse_test_django_passthrough_wms", netcdf)
     url = 'http://thredds:8080/thredds/wms/data/DWD_Data/' + netcdf
@@ -406,37 +398,7 @@ def user_dashboard(request):
                 'opacity': 0.5,
                 'zIndex': 5,
                 'bounds': [[47.136744752, 15.57241882], [55.058996788, 5.564783468]],
-            },
-            {
-                'name': 'Dürreindex',
-                'url': 'https://thredds.socib.es/thredds/wms/operational_models/oceanographical/hydrodynamics/wave/model_run_aggregation/ww3_med_iberia_latest.nc',
-                'layers': 'tp',
-                'format': 'image/png',
-                'transparent': True,
-                'opacity': 0.5,
-                'zIndex': 5,
-                'bounds': [[46.89, 15.33], [55.31, 5.41]]
-            },
-            {
-                'name': 'Temperatur',
-                'url': 'https://thredds.socib.es/thredds/wms/operational_models/oceanographical/hydrodynamics/wave/model_run_aggregation/ww3_med_iberia_latest.nc',
-                'layers': 't02',
-                'format': 'image/png',
-                'transparent': True,
-                'opacity': 0.5,
-                'zIndex': 5,
-            },
-            {
-                'name': 'Wind',
-                'url': 'https://thredds.socib.es/thredds/wms/operational_models/oceanographical/hydrodynamics/wave/model_run_aggregation/ww3_med_iberia_latest.nc',
-                'layers': 'wind',
-                'format': 'image/png',
-                'transparent': True,
-                'opacity': 0.5,
-                'zIndex': 5,
-            },
-        ]
-        
+            },]
     }
 
     above_ground_waters = toolbox_models.AboveGroundWaters.objects.all()
@@ -454,10 +416,8 @@ def user_dashboard(request):
 
 
     user_fields = models.UserProject.objects.filter(user_field__user=request.user)
-    # name_form = forms.UserFieldForm(request.POST or None)
-    # projects_json = serialize('json', projects)
-    crop_form = forms.CropForm(request.POST or None)
-    project_form = forms.UserProjectForm()
+
+
     field_name_form = forms.UserFieldForm()
     user_projects = []
 
@@ -492,8 +452,6 @@ def user_dashboard(request):
     data = {
             'user_projects': user_projects, 
             'user_field_form': field_name_form,
-            'crop_form': crop_form, 
-            'project_form': project_form,
             'state_county_district_form': state_county_district_form,
             }
 
@@ -746,172 +704,6 @@ def load_polygon(request, entity, polygon_id):
         }
         return JsonResponse(error_response, status=404)
 
-# generate jsons of all choices in the field-menu page for faster update whithin UI
-# def field_edit(request, id):
-#     print("field_menu id: ", id)
-    
-#     start_time = time.time()
-
-#     crop_form  = forms.CropForm()
-#     crop_cultivar_form = monica_forms.CultivarParametersForm()
-#     user_field = models.UserField.objects.get(id=id)
-#     name = user_field.name
-#     print("field_menu Checkpoint 1: ", (time.time() - start_time))
-#     # retrieving soil data from db:
-#     soil_profile_polygon_ids = user_field.soil_profile_polygon_ids['buek_polygon_ids']
-    
-#     land_usage_choices = {}
-
-#     print("field_menu Checkpoint 2: ", (time.time() - start_time))
-    
-#     soil_data = models.BuekSoilProfileHorizon.objects.select_related('bueksoilprofile').filter(
-#             bueksoilprofile__polygon_id__in=soil_profile_polygon_ids
-#             ).order_by('bueksoilprofile__polygon_id', '-bueksoilprofile__area_percenteage', 'bueksoilprofile__id', 'horizont_nr')
-#     unique_land_usages = soil_data.values_list(
-#         'bueksoilprofile__landusage_corine_code', 'bueksoilprofile__landusage'
-#         ).order_by(
-#             'bueksoilprofile__landusage_corine_code', 'bueksoilprofile__landusage'
-#             ).distinct(
-#                 'bueksoilprofile__landusage_corine_code', 'bueksoilprofile__landusage'
-#                 )
-    
-#     for code, usage in unique_land_usages:
-#         if code != 51:
-#             land_usage_choices[code] = usage
-#     print('land_usage_choices', land_usage_choices)
-#     # Assuming soil_data is the queryset obtained earlier
-#     print("field_menu Checkpoint 2-1: ", (time.time() - start_time))
-    
-#     data_json = {}
-#     # Now, you have sets containing distinct values for each field
-#     for landusage_corine_code in list(land_usage_choices.keys()):
-#         data_json[landusage_corine_code] = {}
-
-
-#     for item in soil_data:
-#         try:
-#             if item.bueksoilprofile.landusage_corine_code != 51:
-            
-#                 if item.bueksoilprofile.system_unit not in data_json[item.bueksoilprofile.landusage_corine_code]:
-#                     data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit] = {
-#                         'area_percentages': {item.bueksoilprofile.area_percenteage},
-#                         'soil_profiles': {item.bueksoilprofile.area_percenteage: {item.bueksoilprofile.id: {'horizons': {}}}}
-#                     }
-#                 else:
-#                     data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['area_percentages'].add(item.bueksoilprofile.area_percenteage)
-#                     if item.bueksoilprofile.area_percenteage not in data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles']:
-#                         data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles'][item.bueksoilprofile.area_percenteage] = {item.bueksoilprofile.id: {'horizons': {}}}
-
-#                     if item.bueksoilprofile.id not in data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles'][item.bueksoilprofile.area_percenteage]:
-#                         data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles'][item.bueksoilprofile.area_percenteage] = {item.bueksoilprofile.id: {'horizons': {}}}
-
-                
-
-#                 if item.bulk_density_class_id is not None:
-#                     # print('horizon.bulk_density_class_id', horizon.bulk_density_class.bulk_density_class)
-#                     bulk_density_class = item.bulk_density_class.bulk_density_class
-#                     bulk_density = item.bulk_density_class.raw_density_g_per_cm3
-#                 else:
-#                     bulk_density_class = 'no data'
-#                     bulk_density = 'no data'
-
-
-#                 if item.humus_class_id is not None:
-#                     humus_class = item.humus_class.humus_class
-#                     humus_corg = item.humus_class.corg
-#                 else:
-#                     humus_class = 'no data'
-#                     humus_corg = 'no data'
-    
-#                 if item.ka5_texture_class_id is not None:
-#                     ka5_texture_class = item.ka5_texture_class.ka5_soiltype
-#                     sand = item.ka5_texture_class.sand
-#                     clay = item.ka5_texture_class.clay
-#                     silt = item.ka5_texture_class.silt
-#                 else:
-#                     ka5_texture_class = 'no data'
-#                     sand = 'no data'
-#                     clay = 'no data'
-#                     silt = 'no data'
-
-#                 if item.ph_class_id is not None:
-#                     ph_class = item.ph_class.ph_class
-#                     ph_lower_value = item.ph_class.ph_lower_value
-#                     ph_upper_value = item.ph_class.ph_upper_value
-#                 else:
-#                     ph_class = 'no data'
-#                     ph_lower_value = 'no data'
-#                     ph_upper_value = 'no data'
-
-#                 data_json[item.bueksoilprofile.landusage_corine_code][item.bueksoilprofile.system_unit]['soil_profiles']\
-#                     [item.bueksoilprofile.area_percenteage][item.bueksoilprofile.id]['horizons'][item.horizont_nr] = {
-#                     'obergrenze_m': item.obergrenze_m,
-#                     'untergrenze_m': item.untergrenze_m,
-#                     'stratigraphie': item.stratigraphie,
-#                     'herkunft': item.herkunft,
-#                     'geogenese': item.geogenese,
-#                     'fraktion': item.fraktion,
-#                     'summe': item.summe,
-#                     'gefuege': item.gefuege,
-#                     'torfarten': item.torfarten,
-#                     'substanzvolumen': item.substanzvolumen,
-#                     'bulk_density_class': bulk_density_class,
-#                     'bulk_density': bulk_density,
-#                     'humus_class': humus_class,
-#                     'humus_corg': humus_corg,
-#                     'ka5_texture_class': ka5_texture_class,
-#                     'sand': sand,
-#                     'clay': clay,
-#                     'silt': silt,
-#                     'ph_class': ph_class,
-#                     'ph_lower_value': ph_lower_value,
-#                     'ph_upper_value': ph_upper_value,                    
-#                 }
-#         except:
-#             print("except block XX")
-           
-#     for landusage_corine_code in data_json:
-#         for system_unit in data_json[landusage_corine_code]:
-#             data_json[landusage_corine_code][system_unit]['area_percentages']  = sorted(list(data_json[landusage_corine_code][system_unit]['area_percentages'] ))
-
-    
-
-#     soil_profile_form = forms.SoilProfileSelectionForm()
-#     soil_profile_form.set_choices(land_usage_choices)
-
-#     today = date.today()
-#     start_date = today.replace(year=(today.year -1))
-#     end_month = (today.month + 6) % 12
-#     end_date = today.replace(month=end_month)
-#     if today.month > 6:
-#         end_date = end_date.replace(year=(today.year+1))
-    
-
-#     date_picker_str = {
-#         'start_date': start_date.strftime('%d/%m/%Y'),
-#         'end_date': end_date.strftime('%d/%m/%Y')
-#     }
-#     print("startEndDate: ", type(date_picker_str["start_date"]))
-
-#     print("field_menu Checkpoint 5: ", (time.time() - start_time))
-#     data_menu = {
-#         'crop_form': crop_form,
-#         'crop_cultivar_form': crop_cultivar_form,
-#         'soil_profile_form': soil_profile_form,
-#         'text': name,
-#         'id': id,
-#         'polygon_ids': soil_profile_polygon_ids,
-#         'system_unit_json': json.dumps(data_json),
-#         'landusage_choices': json.dumps(land_usage_choices),
-#         'date_picker': date_picker_str
-        
-#     }
-#     with open('land_usage_choices.json', 'w') as f:
-#         json.dump(land_usage_choices, f)
-#     end_time = time.time()
-#     elapsed_time = end_time - start_time
-#     print('elapsed_time', elapsed_time, ' seconds')
-#     return render(request, 'swn/field_projects_edit.html', data_menu)
 
 
 def field_edit(request, id):
@@ -919,7 +711,6 @@ def field_edit(request, id):
     
     start_time = time.time()
 
-    crop_form = forms.CropForm()
     crop_cultivar_form = monica_forms.CultivarParametersForm()
     user_field = models.UserField.objects.get(id=id)
     name = user_field.name
@@ -1006,10 +797,12 @@ def field_edit(request, id):
     # Initialize and format date picker strings
     today = date.today()
     start_date = today.replace(year=(today.year - 1))
-    end_month = (today.month + 6) % 12
+    end_month = today.month + 6
     end_date = today.replace(month=end_month)
     if today.month > 6:
         end_date = end_date.replace(year=(today.year + 1))
+        end_month = (today.month + 6) % 12
+    
 
     date_picker_str = {
         'start_date': start_date.strftime('%d/%m/%Y'),
@@ -1021,7 +814,6 @@ def field_edit(request, id):
     print("field_menu Checkpoint 5: ", (time.time() - start_time))
 
     data_menu = {
-        'crop_form': crop_form,
         'crop_cultivar_form': crop_cultivar_form,
         'soil_profile_form': forms.SoilProfileSelectionForm().set_choices(land_usage_choices),
         'text': name,

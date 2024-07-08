@@ -23,9 +23,18 @@ const formatDatePicker = function(startDate, endDate) {
         clearBtn: true, 
         autoclose: true,
     })
+    // Configure the start date picker
+    $('#monicaStartDatePicker').datepicker('setStartDate', '01.01.2007');
+    $('#monicaStartDatePicker').datepicker('setEndDate', endDate);
     $('#monicaStartDatePicker').datepicker('update', startDate);
+
+    // Configure the end date picker
+    $('#monicaEndDatePicker').datepicker('setStartDate', '02.01.2007');
+    $('#monicaEndDatePicker').datepicker('setEndDate', endDate);
     $('#monicaEndDatePicker').datepicker('update', endDate);
-    $('#monicaDatepicker').show()
+
+    // Show the datepicker container
+    $('#monicaDatepicker').show();
 };
 
 

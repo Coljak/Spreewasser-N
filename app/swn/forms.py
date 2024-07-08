@@ -3,7 +3,7 @@ from attr import attr
 from django import forms
 from django.contrib.auth.models import User
 
-from swn.models import Crop, UserProject, UserField, NUTS5000_N1, NUTS5000_N2, NUTS5000_N3, BuekSoilProfile, BuekPolygon, BuekSoilProfileHorizon
+from swn.models import UserProject, UserField, NUTS5000_N1, NUTS5000_N2, NUTS5000_N3, BuekSoilProfile, BuekPolygon, BuekSoilProfileHorizon
 from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
@@ -19,38 +19,8 @@ class RegistrationForm(UserCreationForm):
         fields = ['username', 'email', 'password1', 'password2']
 
 
-class CropForm(forms.ModelForm):
-    Feldfrucht = forms.ModelChoiceField(queryset=Crop.objects.all())
-
-    class Meta:
-        model = Crop
-        fields = ['Feldfrucht']
 
 
-class UserProjectForm(forms.ModelForm):
-    crop_id = forms.ModelChoiceField(queryset=Crop.objects.all())
-    field_id =  forms.ModelChoiceField(queryset=UserField.objects.all())
-    class Meta:
-        model = UserProject
-        
-        fields = [
-            'crop_id',
-            'irrigation_input',
-            'irrigation_output',
-            'field_id',
-            #'date',
-            'comment',
-            
-        ]
-        widgets = {
-            'field_id.name': forms.Select(attrs={
-                'class': 'form-control',
-            }),
-            'crop_id.name': forms.Select(attrs={
-                'class': 'form-control',
-            }),
-            
-        }
 
 
 class UserFieldForm(forms.ModelForm):

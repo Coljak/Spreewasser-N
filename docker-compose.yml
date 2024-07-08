@@ -12,7 +12,8 @@ services:
       - 8000:8000 
     volumes:
       - ./app:/app
-      - ./thredds_data/data:/app/thredds_data
+      - ./app/klim4cast/data/netcdf:/app/klim4cast/data/netcdf
+      # - ./thredds_data/data:/app/thredds_data
     command: 
       sh -c "python3 manage.py wait_for_db &&
       python3 manage.py migrate &&
@@ -87,8 +88,10 @@ services:
     volumes:
       - ./thredds_tomcat/tomcat_logs:/usr/local/tomcat/logs/
       - ./thredds_tomcat/thredds_logs:/usr/local/tomcat/content/thredds/logs/
-      - ./thredds_data/data/tomcat/content/thredds:/usr/local/tomcat/content/thredds
-      - ./thredds_data/data:/usr/local/tomcat/content/thredds/public/data
+      - ./app/klim4cast/data/netcdf:/usr/local/tomcat/content/thredds/public/data/Klim4Cast
+      - ./thredds_data/data/DWD_Data:/usr/local/tomcat/content/thredds/public/data/DWD_Data
+      # - ./thredds_data/data/tomcat/content/thredds:/usr/local/tomcat/content/thredds
+      # - ./thredds_data/data:/usr/local/tomcat/content/thredds/public/data
    
     environment:
       - THREDDS_URL=thredds

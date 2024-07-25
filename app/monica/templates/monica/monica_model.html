@@ -1,0 +1,298 @@
+{% extends 'swn/base.html' %} 
+
+{% load static %}
+{% load django_bootstrap5 %}
+{% load crispy_forms_tags %}
+{% bootstrap_javascript %}
+
+{% block css %} 
+    <link rel="stylesheet" href="{% static 'swn/css/bootstrap-datepicker.standalone.css' %}"/>
+{% endblock css %} 
+
+{% block body_block %}
+
+
+  {% include 'monica/hidden_rotation_forms.html' %}
+
+
+<div class="container py-5">
+    <h1>Monica Forms</h1>
+    
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="monica nav-link" aria-current="page" href="#tabProject">Project</a>
+    </li>
+    <li class="nav-item">
+        <a class="monica nav-link active" aria-current="page" href="#tabGeneralParameters">General Parameters</a>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="monica nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#tabRotation" role="button" aria-expanded="false">Crop Rotation</a>
+        <ul class="dropdown-menu" style="display:none">
+            <li><a class="dropdown-item" href="#tab2">Tab 2</a></li>
+            <li><a class="dropdown-item" href="#tab3">Tab 3</a></li>
+            <li><a class="dropdown-item" href="#tab4">Tab 4</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#tab5">Tab 5</a></li>
+        </ul>
+    </li>
+    <li class="nav-item">
+        <a class="monica nav-link" aria-current="page"  href="#tabSoil">Soil</a>
+    </li>
+    <li class="nav-item">
+        <a class="monica nav-link disabled" aria-disabled="true">Disabled</a>
+    </li>
+  </ul>
+
+  <!-- Tab panes -->
+  <!-- Project-->
+  <div id="tabProject" class="tab-content card mb-3">
+    <div class="card-body">
+      <div class="card mb-3">
+        <div class="card-body">
+      
+          <h5 class="card-title">Project</h5>
+          <input type="text" id="projectName" placeholder="Project Name">
+          <input type="text" id="projectDescription" placeholder="Project Description">
+          <p>Project Description</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- General Parameters -->
+  <div id="tabGeneralParameters" class="tab-content card mb-3 active">
+    <div class="card-body">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Select Coordinates</h5>
+          <p>Enter a valid coordinate for Germany, roughly between 54.92 and 47.27 latitude and 5.87 and 15.04 longitude</p>
+          <form class="coordinateForm">
+          {{ coordinate_form | crispy}}
+          </form>
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Select Dates</h5>
+          <div class="input-daterange input-group" id="monicaDatepicker" style="">
+            <span class="input-group-addon  px-3"> Von </span>
+            <input type="text" id="monicaStartDatePicker" class="input-sm form-control" name="start" />
+            <span class="input-group-addon  px-3"> bis </span>
+            <input type="text" id="monicaEndDatePicker" class="input-sm form-control" name="end" />
+          </div>
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-body">
+          <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedParameters" aria-expanded="false" aria-controls="collapseExample">
+            Advanced Parameters
+          </button>
+          <div class="collapse" id="advancedParameters">
+            <div class="card card-body">
+              <form method="POST" id="simulation-settings-form">
+                {% csrf_token %}
+                {{ simulation_settings_form.no_field_errors }}
+                <div class="form-group">
+                  {{ simulation_settings_form.name.label_tag }}
+                  {{ simulation_settings_form.name }}
+                </div>
+                <div class="form-group">
+                  {{ simulation_settings_form.use_secondary_yields.label_tag }}
+                  {{ simulation_settings_form.use_secondary_yields }}
+                </div>
+                <div class="form-group">
+                  {{ simulation_settings_form.water_deficit_response_on.label_tag }}
+                  {{ simulation_settings_form.water_deficit_response_on }}
+                </div>
+                <div class="form-group">
+                  {{ simulation_settings_form.emergence_moisture_control_on.label_tag }}
+                  {{ simulation_settings_form.emergence_moisture_control_on }}
+                </div>
+                <div class="form-group">
+                  {{ simulation_settings_form.use_n_min_mineral_fertilising_method.label_tag }}
+                  {{ simulation_settings_form.use_n_min_mineral_fertilising_method }}
+                </div>
+                <div class="card mb-3" id="n_min_fertilisation_params">
+                  <div class="card-body">
+                    <h5 class="card-title">Automatic Mineral fertilisation</h5>
+                    <div class="form-group">
+                      {{ simulation_settings_form.n_min_user_params_min.label_tag }}
+                      {{ simulation_settings_form.n_min_user_params_min }}
+                    </div>
+                    <div class="form-group">
+                      {{ simulation_settings_form.n_min_user_params_max.label_tag }}
+                      {{ simulation_settings_form.n_min_user_params_max }}
+                    </div>
+                    <div class="form-group">
+                      {{ simulation_settings_form.n_min_user_params_delay_in_days.label_tag }}
+                      {{ simulation_settings_form.n_min_user_params_delay_in_days }}
+                    </div>
+                    <div class="form-group">
+                      {{ simulation_settings_form.n_min_fertiliser_partition.label_tag }}
+                      {{ simulation_settings_form.n_min_fertiliser_partition }}
+                    </div>
+                    <div class="form-group">
+                      {{ simulation_settings_form.julian_day_automatic_fertilising.label_tag }}
+                      {{ simulation_settings_form.julian_day_automatic_fertilising }}
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  {{ simulation_settings_form.use_automatic_irrigation.label_tag }}
+                  {{ simulation_settings_form.use_automatic_irrigation }}
+                </div>
+                <div class="card mb-3" id="n_min_fertilisation_params">
+                  <div class="card-body">
+                    <h5 class="card-title">Automatic Irrigation</h5>
+                    <div class="form-group">
+                      {{ simulation_settings_form.nitrogen_response_on.label_tag }}
+                      {{ simulation_settings_form.nitrogen_response_on }}
+                    </div>
+                    <div class="form-group">
+                      {{ simulation_settings_form.auto_irrigation_params_nitrate_concentration.label_tag }}
+                      {{ simulation_settings_form.auto_irrigation_params_nitrate_concentration }}
+                    </div>
+                    <div class="form-group">
+                      {{ simulation_settings_form.auto_irrigation_params_sulfate_concentration.label_tag }}
+                      {{ simulation_settings_form.auto_irrigation_params_sulfate_concentration }}
+                    </div>
+                    <div class="form-group">
+                      {{ simulation_settings_form.auto_irrigation_params_amount.label_tag }}
+                      {{ simulation_settings_form.auto_irrigation_params_amount }}
+                    </div>
+                    <div class="form-group">
+                      {{ simulation_settings_form.auto_irrigation_params_threshold.label_tag }}
+                      {{ simulation_settings_form.auto_irrigation_params_threshold }}
+                    </div>
+                  </div>
+                </div>
+                <!--hidden Infos-->
+                <input type="hidden" name="id_simulation_settings" value="{{ simulation_settings_form.instance.id }}">
+                <button type="submit" class="btn btn-primary">Save changes</button>
+                <button type="submit" class="btn btn-primary">Save as new settings</button>
+              </form>
+            </div>
+            
+          </div>
+        </div>
+      </div> 
+    </div> 
+  </div>
+   
+ <!-- Crop Rotation -->
+  <div id="tabRotation" class="tab-content card mb-3">
+    <div class="card-body">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Crop Rotation Length</h5>
+          <p class="card-text">Select the number of years for the crop rotation</p>
+          <form class="rotationLengthForm">
+          <select id="rotationLength">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+          </select>
+        </form>
+        </div>
+      </div>
+      <!--div to attach event bubbling-->
+      <div id="cropRotation"> 
+        <!--Rotation steps are injected here-->
+ 
+      </div>
+      <button id="addRotationButton" class="btn btn-primary">Add Rotation</button>
+    </div>
+  </div> 
+
+  <!-- Soil -->
+  <div id="tabSoil" class="tab-content card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Soil</h5>
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Soil Moisture Parameters</h5>
+          {{ user_soil_moisture_select_form | crispy }}
+          <button class="btn btn-primary modify-parameters soil-moisture-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            Modify Soil Moisture Parameters
+          </button>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Soil Organic Parameters</h5>
+          {{ user_soil_organic_select_form | crispy }}
+          <button class="btn btn-primary modify-parameters soil-organic-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            Modify Soil Organic Parameters
+          </button>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Soil Temperature Parameters</h5>
+          {{ soil_temperature_module_selection_form | crispy }}
+          <button class="btn btn-primary modify-parameters soil-temperature-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            Modify Soil Temperature Parameters
+          </button>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Soil Transport Parameters</h5>
+          {{ user_soil_transport_parameters_selection_form | crispy }}
+          <button class="btn btn-primary modify-parameters soil-transport-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            Modify Soil Transport Parameters
+          </button>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">SoilParameters</h5>
+          {{ soil_moisture_select | crispy }}
+          <button class="btn btn-primary modify-parameters soil-moisture-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            Modify Soil Moisture Parameters
+          </button>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Soil Profile</h5>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <button id="previousButton" class="btn btn-primary mt-3">Previous</button>
+  <button id="nextButton" class="btn btn-primary mt-3">Next</button>
+  
+
+</div>
+
+
+   
+    {% comment %} <a href="{% url 'monica:monica_hohenfinow' %}" class="btn btn-primary">Run Monica Hohenfinow hardcoded</a> {% endcomment %}
+{% endblock %}
+
+{% block javascript %}
+  {% comment %} <script type="text/javascript" src="{% static 'monica/monica_crop.js' %}"></script> {% endcomment %}
+    {% comment %} <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script> {% endcomment %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
+    <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.de.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'monica/monica_model.js' %}" type="module"></script>
+    {% comment %} <script type="text/javascript" src="{% static 'monica/modify_forms_modal.js' %}" type="module"></script> {% endcomment %}
+    {% comment %} <script type="text/javascript" src="{% static 'monica/species_modal.js' %}" type="module"></script> {% endcomment %}
+{% endblock %}

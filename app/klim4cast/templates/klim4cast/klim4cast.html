@@ -24,7 +24,7 @@
                 <div id="timelapseControl" class="col-4">
 
                     <select id='datasetSelector' class="form-select" aria-label="datasetSelector-label">
-                        {% comment %} <option selected>Open this select menu</option> {% endcomment %}
+                        
                         {% for dataset in catalog_json %}
                             <option value="{{ dataset.name }}">{{ dataset.name }}</option>
                             
@@ -39,7 +39,7 @@
                       <span class="input-group-addon  px-3"> bis </span>
                       <input type="text" id="endDatePicker" class="input-sm form-control" name="end" />
                     </div>
-                    <button class="btn btn-primary" id="loadNetCDFButton">Load NetCDF</button>
+                    <button class="btn btn-primary" id="loadNetCDFButton">Load Timeseries</button>
                     
                 </div>
             </div>
@@ -49,6 +49,7 @@
         var netcdfVariableSelector = document.getElementById('netcdfVariableSelector');
         var datasetSelector = document.getElementById('datasetSelector');
         var loadNetCDFButton = document.getElementById('loadNetCDFButton')
+        
 
     </script>
 

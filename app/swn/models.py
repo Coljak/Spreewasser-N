@@ -72,26 +72,25 @@ class UserField(models.Model):
     
     def get_intersecting_soil_data(self):
         userfield_geom = self.geom
-        print( 'userfield_geom ', userfield_geom )
+        print('userfield_geom ', userfield_geom)
         userfield_geom = GEOSGeometry(userfield_geom)
 
         # Filter Buek objects that intersect with the UserField object's geometry
         intersecting_buek_ids = Buek.objects.filter(geom__intersects=userfield_geom).values_list('polygon_id', flat=True)
-        print( 'intersecting_buek_ids ', intersecting_buek_ids )
+        print('intersecting_buek_ids ', intersecting_buek_ids)
         polygon_json = {'buek_polygon_ids': list(intersecting_buek_ids)}
-        
-            
-        print( 'polygon_json ', polygon_json)
-        self.soil_profile_polygon_ids = json.dumps(polygon_json)
-        self.save()
-        # return intersecting_buek_data
 
-    def get_weather_data(self):
+        print('polygon_json ', polygon_json)
+        self.soil_profile_polygon_ids = json.dumps(polygon_json)  # Convert to JSON string
+        self.save()
+
+
+    def get_weather_grid_points(self):
         """
         Get the weather data from the DWD raster/ respectively the point representation in the monica.models.DWDGridToPointIndices class
         that intersects with the UserField object's geometry
         """
-        print("get_weather_data")
+        print("get_weather_grid_points")
         userfield_geom = self.geom
         # userfield_geom = GEOSGeometry(userfield_geom)
         weather_data_indices = monica_models.DWDGridToPointIndices.get_points_within_geom(userfield_geom)
@@ -112,9 +111,9 @@ class UserField(models.Model):
         self.weather_grid_points = json.dumps(weather_indices_json)
         self.save()
         print( 'weather_indices_json ', weather_indices_json)
-        return weather_indices_list
+        return weather_indices_json
     
-    # models.py
+    # # models.py
 
     # TODO celery task UserField.save
     # def save(self, *args, **kwargs):

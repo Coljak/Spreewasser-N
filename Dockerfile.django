@@ -51,9 +51,3 @@ RUN adduser \
         django-user
 
 ENV PATH="/py/bin:$PATH"
-
-
-
-
-# python -m pip install "dask[complete]" 
-# MAYBE pip3 instead of pip

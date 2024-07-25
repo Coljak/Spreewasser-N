@@ -569,7 +569,7 @@ def save_user_field(request):
             instance.save()
             if swn_tool == 'drought':
                 instance.get_intersecting_soil_data()
-                instance.get_weather_data()
+                instance.get_weather_grid_points()
             
             return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id, 'swn_tool': instance.swn_tool})
         
@@ -711,7 +711,7 @@ def field_edit(request, id):
     
     start_time = time.time()
 
-    crop_cultivar_form = monica_forms.CultivarParametersForm()
+    crop_cultivar_form = monica_forms.CultivarAndSpeciesSelectionForm()
     user_field = models.UserField.objects.get(id=id)
     name = user_field.name
     print("field_menu Checkpoint 1: ", (time.time() - start_time))
@@ -798,10 +798,14 @@ def field_edit(request, id):
     today = date.today()
     start_date = today.replace(year=(today.year - 1))
     end_month = today.month + 6
+    
+    if today.month > 6:
+        end_month = (today.month + 6) % 12
+
     end_date = today.replace(month=end_month)
     if today.month > 6:
         end_date = end_date.replace(year=(today.year + 1))
-        end_month = (today.month + 6) % 12
+   
     
 
     date_picker_str = {

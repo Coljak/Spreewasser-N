@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.gis.db import models as gis_models
+from swn.models import User
 from django.contrib.postgres.fields import ArrayField
 from typing import List, Tuple
 import json
@@ -25,7 +26,6 @@ class CropParametersExist(models.Model):
     in_residues = models.BooleanField(default=False)
     def __str__(self):
         return self.species_name
-
 
 # this is the model for all jsons in monica-parammeters/crops/<crop-name>/.json
 class CultivarParameters(models.Model):
@@ -65,6 +65,9 @@ class CultivarParameters(models.Model):
     stage_kc_factor = ArrayField(ArrayField(models.FloatField()))
     stage_temperature_sum = ArrayField(ArrayField(models.FloatField()))
     vernalisation_requirement = ArrayField(models.FloatField())
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
+    
 
     def __str__(self):
         return self.cultivar_name
@@ -223,6 +226,8 @@ class SpeciesParameters(models.Model):
     target_n30 = models.FloatField(blank=True, null=True)
     target_n_sampling_depth = models.FloatField(blank=True, null=True)
     stage_mobil_from_storage_coeff = models.JSONField(blank=True, null=True)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.species_name
@@ -357,6 +362,8 @@ class OrganFromDB(models.Model):
     organ_growth_respiration = models.FloatField(blank=True, null=True)
     is_above_ground = models.BooleanField(blank=True, null=True)
     is_stoarge_organ = models.BooleanField(blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
 
 # crop residues
 class CropResidueParameters(models.Model):
@@ -377,6 +384,8 @@ class CropResidueParameters(models.Model):
     residue_type = models.CharField(max_length=100, blank=True, null=True)
     species_name = models.CharField(max_length=100,blank=True, null=True)
     species_parameters = models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
 
     @classmethod
     def create_or_update_from_json(cls, json_file_path):
@@ -490,6 +499,7 @@ class CropResidueParameters(models.Model):
             "type": self.__class__.__name__
         }
 
+
 class OrganicFertiliser(models.Model):
     aom_dry_matter_content = models.FloatField(blank=True, null=True)
     aom_fast_dec_coeff_standard = models.FloatField(blank=True, null=True)
@@ -505,6 +515,8 @@ class OrganicFertiliser(models.Model):
     part_aom_to_aom_slow = models.FloatField(blank=True, null=True)
     fertiliser_char_id = models.CharField(max_length=100, blank=True, null=True)
     name = models.CharField(max_length=100, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
 
     def __str__(self):
         return self.name
@@ -609,6 +621,8 @@ class MineralFertiliser(models.Model):
     no3 = models.FloatField(blank=True, null=True)
     fertiliser_id = models.CharField(max_length=100, blank=True, null=True)
     type = models.CharField(max_length=100, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
 
     def __str__(self):
         return self.name
@@ -648,6 +662,9 @@ class MineralFertiliser(models.Model):
         return mineral_fertiliser
 
 class UserCropParameters(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=100)
+    default = models.BooleanField(default=False)
     canopy_reflection_coefficient = models.FloatField()
     growth_respiration_parameter1 = models.FloatField()
     growth_respiration_parameter2 = models.FloatField()
@@ -663,6 +680,7 @@ class UserCropParameters(models.Model):
     saturation_beta = models.FloatField()
     stomata_conductance_alpha = models.FloatField() 
     tortuosity = models.FloatField()
+    is_default = models.BooleanField(blank=True, null=True, default=False)
 
     def to_json(self):
         return {
@@ -717,6 +735,9 @@ class UserCropParameters(models.Model):
                 return crop_params
         
 class UserEnvironmentParameters(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=100)
+    default = models.BooleanField(default=False)
     name = models.CharField(max_length=100, null=True, blank=True)
     albedo = models.FloatField()
     rcp = models.CharField(max_length=10)
@@ -729,6 +750,7 @@ class UserEnvironmentParameters(models.Model):
     min_groundwater_depth_month = models.IntegerField() 
     wind_speed_height = models.FloatField()
     time_step = models.IntegerField() 
+    is_default = models.BooleanField(blank=True, null=True, default=False)
 
     def to_json(self):
         return {
@@ -772,7 +794,11 @@ class UserEnvironmentParameters(models.Model):
 
                 return user_params
 
+# modify implemented
 class UserSoilMoistureParameters(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=100)
+    default = models.BooleanField(default=False)
     correction_rain = models.FloatField() # TODO integer
     correction_snow = models.FloatField()
     critical_moisture_depth = models.FloatField()
@@ -797,6 +823,7 @@ class UserSoilMoistureParameters(models.Model):
     surface_roughness = models.FloatField()
     temperature_limit_for_liquid_water = models.FloatField() # TODO integer
     xsa_critical_soil_moisture = models.FloatField()
+    is_default = models.BooleanField(blank=True, null=True, default=False)
 
     def to_json(self):
         return {
@@ -869,7 +896,11 @@ class UserSoilMoistureParameters(models.Model):
 
                 return soil_params
 
+# modify implemented
 class UserSoilOrganicParameters(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=100)
+    default = models.BooleanField(default=False)
     name = models.CharField(max_length=100)
     qten_factor = models.FloatField()
     temp_dec_optimal = models.FloatField()
@@ -951,6 +982,7 @@ class UserSoilOrganicParameters(models.Model):
     ratiodenit = models.FloatField()
     profdenit = models.FloatField()
     vpotdenit = models.FloatField()
+    is_default = models.BooleanField(blank=True, null=True, default=False)
 
     def to_json(self):
         return {
@@ -1301,7 +1333,9 @@ class UserSoilOrganicParameters(models.Model):
             )
             return soil_organic_params
 
+# modify implemented
 class SoilTemperatureModuleParameters(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     base_temperature = models.FloatField()
     initial_surface_temperature = models.FloatField()
     density_air = models.FloatField()
@@ -1315,6 +1349,8 @@ class SoilTemperatureModuleParameters(models.Model):
     n_tau = models.FloatField()
     soil_albedo = models.FloatField()
     soil_moisture = models.FloatField()
+    name = models.CharField(max_length=100)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
 
     def to_json(self):
         return {
@@ -1362,11 +1398,16 @@ class SoilTemperatureModuleParameters(models.Model):
 
             return soil_temp_params
 
+# modify implemented
 class UserSoilTransportParameters(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=100)
+    default = models.BooleanField(default=False)
     ad = models.FloatField()
     diffusion_coefficient_standard = models.FloatField()
     dispersion_length = models.FloatField()
     n_deposition = models.FloatField()
+    is_default = models.BooleanField(blank=True, null=True, default=False)
 
     def to_json(self):
         return {
@@ -1395,6 +1436,60 @@ class UserSoilTransportParameters(models.Model):
                 soil_transport_params.save()
 
             return soil_transport_params
+        
+class UserSimulationSettings(models.Model):
+    """
+    This model is the simj json.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=100)
+    default = models.BooleanField(default=False)
+
+    debug = models.BooleanField(default=True)
+    use_secondary_yields = models.BooleanField(default=False)
+    nitrogen_response_on = models.BooleanField(default=False)
+    water_deficit_response_on = models.BooleanField(default=False)
+    emergence_moisture_control_on = models.BooleanField(default=False)
+    emergence_flooding_control_on = models.BooleanField(default=False)
+    use_n_min_mineral_fertilising_method = models.BooleanField(default=False)
+    n_min_user_params_min = models.FloatField(default=None, null=True, blank=True)
+    n_min_user_params_max = models.FloatField(default=None, null=True, blank=True)
+    n_min_user_params_delay_in_days = models.IntegerField(default=None, null=True, blank=True)
+    n_min_fertiliser_partition = models.ForeignKey(MineralFertiliser, on_delete=models.CASCADE, null=True, blank=True)
+    julian_day_automatic_fertilising = models.IntegerField(default=None, null=True, blank=True)
+    use_automatic_irrigation = models.BooleanField(default=False)
+    auto_irrigation_params_nitrate_concentration = models.FloatField(default=None, null=True, blank=True)
+    auto_irrigation_params_sulfate_concentration = models.FloatField(default=None, null=True, blank=True)
+    auto_irrigation_params_amount = models.FloatField(default=None, null=True, blank=True)
+    auto_irrigation_params_threshold = models.FloatField(default=None, null=True, blank=True)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
+
+    def to_json(self):
+        return {
+            "debug?": self.debug,
+            "UseSecondaryYields": self.use_secondary_yields,
+            "NitrogenResponseOn": self.nitrogen_response_on,
+            "WaterDeficitResponseOn": self.water_deficit_response_on,
+            "EmergenceMoistureControlOn": self.emergence_moisture_control_on,
+            "EmergenceFloodingControlOn": self.emergence_flooding_control_on,
+            "UseNMinMineralFertilisingMethod": self.use_n_min_mineral_fertilising_method,
+            "NMinUserParams": {
+                "min": self.n_min_user_params_min,
+                "max": self.n_min_user_params_max,
+                "delayInDays": self.n_min_user_params_delay_in_days
+            },
+            "NMinFertiliserPartition": self.n_min_fertiliser_partition.to_json(),
+            "JulianDayAutomaticFertilising": self.julian_day_automatic_fertilising,
+            "UseAutomaticIrrigation": self.use_automatic_irrigation,
+            "AutoIrrigationParams": {
+                "irrigationParameters": {
+                    "nitrateConcentration": [self.auto_irrigation_params_nitrate_concentration, "mg dm-3"],
+                    "sulfateConcentration": [self.auto_irrigation_params_sulfate_concentration, "mg dm-3"]
+                },
+                "amount": [self.auto_irrigation_params_amount, "mm"],
+                "threshold": self.auto_irrigation_params_threshold
+            }
+        }
 
 # Simulation related models
 class SimulationEnvironment(models.Model):
@@ -1407,6 +1502,8 @@ class SimulationEnvironment(models.Model):
     general_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE)
     general_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE)
     general_soil_transport = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
 
     def to_json(self):
         return {
@@ -1420,47 +1517,58 @@ class SimulationEnvironment(models.Model):
             "GeneralSoilTransport": self.general_soil_transport.to_json()
         }
 
+
 class Workstep(models.Model):
-    date = models.DateField()
+    date = models.DateField(null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta: 
         abstract = True
+        
+    def to_json(self):
+        return {
+            "date": self.date.strftime('%Y-%m-%d') if self.date else None
+        }
+    
 
 class WorkstepMineralFertilization(Workstep):
     amount = models.FloatField()
     mineral_fertiliser = models.ForeignKey(MineralFertiliser, on_delete=models.CASCADE)
 
     def to_json(self):
-        return {
-            "date": self.date,
+        json_data = super().to_json()
+        json_data.update({
             "type": "MineralFertilization",
             "amount": [self.amount, "kg N ha-1"], # TODO the unit was actually 'kg N' - is it per ha?
             "partition": self.mineral_fertiliser.to_json()
-        }
-    
+        })
+        return json_data
+
 class WorkstepOrganicFertilization(Workstep):
     amount = models.FloatField()
     organic_fertiliser = models.ForeignKey(OrganicFertiliser, on_delete=models.CASCADE)
     incorporation = models.BooleanField()
 
     def to_json(self):
-        return {
-            "date": self.date,
+        json_data = super().to_json()
+        json_data.update({
             "type": "OrganicFertilization",
             "amount": [self.amount, "kg N ha-1"], # TODO the unit was actually 'kg N' - is it per ha?
             "parameters": self.mineral_fertiliser.to_json(),
             "incorporation": self.incorporation
-        }
+        })
+        return json_data
 
 class WorkstepTillage(Workstep):
     tillage_depth = models.FloatField()
 
     def to_json(self):
-        return {
-            "date": self.date,
+        json_data = super().to_json()
+        json_data.update({
             "type": "Tillage",
             "depth": [self.tillage_depth, "m"]
-        }
+        })
+        return json_data
 
 class WorkstepSowing(Workstep):
     species = models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE)
@@ -1468,10 +1576,11 @@ class WorkstepSowing(Workstep):
     residue_parameters = models.ForeignKey(CropResidueParameters, on_delete=models.CASCADE)
     
     # plants per m2
-    plant_density = models.IntegerField() # TODO whatfor???
-
+    plant_density = models.IntegerField() # TODO this is actually a SPECIES parameter!!!
+    
     def to_json(self):
-        return {
+        json_data = super().to_json()
+        json_data.update({
             "is-winter-crop": self.cultivar.is_winter_crop, 
             "is-perennial-crop": self.species.is_perennial_crop, 
             "cropParams": {
@@ -1479,14 +1588,31 @@ class WorkstepSowing(Workstep):
                 "cultivar": self.cultivar.to_json(),
             },
             "residueParams": self.residue_parameters.to_json(),
-        }
-    
+        })
+        return json_data
+
 class WorkstepHarvest(Workstep):
+
     def to_json(self):
-        return {    
-            "date": self.date,
+        json_data = super().to_json()
+        json_data.update({
             "type": "Harvest"
-        }
+        })
+        return json_data
+    
+class WorkstepIrrigation(Workstep):
+    amount = models.FloatField()
+    
+    def to_json(self):
+        json_data = super().to_json()
+        json_data.update({
+            "type": "Irrigation",
+            "amount": [self.amount, "mm"],
+        })
+        return json_data
+    
+# class SetValueWorkstep(Workstep):
+
     
 class Output(models.Model):
     short_name = models.CharField(max_length=100)
@@ -1693,7 +1819,18 @@ class DWDGridAsPolygon(models.Model):
 
     def __str__(self):
         return f"Polygon with centroid lat {self.lat} and longitude {self.lon} at the indeices {self.lat_idx} and {self.lon_idx}."
-    
+
+    @classmethod
+    def get_idx(cls, lat, lon):
+        point = Point(lon, lat)
+
+        try:
+            # Find the polygon containing the point
+            instance = cls.objects.filter(geom__intersects=point).first()
+            return instance.lat_idx, instance.lon_idx
+        except cls.DoesNotExist:
+            return None, None
+
 class DWDForecastGridAsPolygon(models.Model):
     lat = models.FloatField()
     lon = models.FloatField()
@@ -1704,3 +1841,13 @@ class DWDForecastGridAsPolygon(models.Model):
     def __str__(self):
         return f"Polygon with centroid lat {self.lat} and longitude {self.lon} at the indeices {self.lat_idx} and {self.lon_idx}."
 
+    @classmethod
+    def get_idx(cls, lat, lon):
+        point = Point(lon, lat)
+
+        try:
+            # Find the polygon containing the point
+            instance = cls.objects.filter(geom__intersects=point).first()
+            return instance.lat_idx, instance.lon_idx
+        except cls.DoesNotExist:
+            return None, None

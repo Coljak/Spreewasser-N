@@ -427,11 +427,7 @@ const overlayLayers = {
   "sinks": toolboxSinks,
 };
 
-// ------------------- Field Menu Modal -------------------
-function populateFieldMenuModalWithData(data) {
-  // TODO check if it can be deleted
-  document.getElementById("fieldMenuModalTitle").innerText = data.text;
-};
+
 
 
 // ------------------- Sidebar eventlisteners -------------------
@@ -557,6 +553,7 @@ leafletSidebarContent.addEventListener("click", (event) => {
         const listElement = document.getElementById("accordion-"+leafletId);
         listElement.remove(); // removes HTML element from sidebar
         // removes field from db
+        console.log("delete UserField ", userField)
         $.ajax({
           type: "POST",
           url: deleteUrl + userField.id,

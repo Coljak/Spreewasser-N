@@ -8,5 +8,5 @@ from .models import UserField
 def process_user_field(user_field_id):
     user_field = UserField.objects.get(pk=user_field_id)
     user_field.get_intersecting_soil_data()
-    user_field.get_weather_data()
+    user_field.get_weather_grid_points()
     user_field.save()

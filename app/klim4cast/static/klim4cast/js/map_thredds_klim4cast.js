@@ -309,10 +309,7 @@ async function initializeWms(params) {
     const wmsUrl = `/klim4cast/Timelapse/Thredds/wms/${params.netCdf}`;
     
     const colorscaleRange = palette_and_min_max[params.variable].valueRange;
-    const attribution = ncmlMetadata.global_attributes.title;
-    console.log('attribution', attribution, 'colorscaleRange', colorscaleRange, 'layerName', params.variable, 'params.style', params.style);
-
-    
+    const attribution = ncmlMetadata.global_attributes.title;    
     const legendUrl = `${wmsUrl}?request=GetLegendGraphic&PALETTE=default&LAYERS=${params.variable}&transparent=TRUE&&colorscalerange=${colorscaleRange}&numcolorbands=100&styles=${params.style}`;
 
     legendControl = createLegendControl(legendUrl);

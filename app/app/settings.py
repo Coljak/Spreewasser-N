@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'bootstrap_datepicker_plus',
-    # 'django_celery_beat',
+    'django_celery_beat',
     # 'raster',
 ]
 
@@ -143,13 +143,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# # Celery
-# CELERY_BROKER_URL = 'redis://localhost:6379/0'
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-# CELERY_ACCEPT_CONTENT = ['json']
-# CELERY_TASK_SERIALIZER = 'json'
-# CELERY_RESULT_SERIALIZER = 'json'
-# CELERY_TIMEZONE = 'UTC'  # Set this to your local timezone if necessary
+
+
 
 
 
@@ -159,10 +154,10 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'de' 
 USE_L10N = True  # Enables localized formatting of data
 
-
+TIME_ZONE = 'Europe/Berlin'
 USE_TZ = True
 
-TIME_ZONE = 'UTC'
+
 
 USE_I18N = True
 
@@ -223,3 +218,11 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 CRISPY_FAIL_SILENTLY = not DEBUG
+
+# Celery
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Europe/Berlin'

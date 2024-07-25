@@ -48,7 +48,7 @@ ORGAN_SUGAR = 5
 ORGAN_UNDEFINED_ORGAN_ = 6
 
 #------------------------------------------------------------------------------
-
+###### used in swn
 def oid_is_organ(oid):
     return oid["organ"] != ORGAN_UNDEFINED_ORGAN_
 
@@ -75,7 +75,7 @@ def op_to_string(op):
     }.get(op, "undef")
 
 #------------------------------------------------------------------------------
-
+### used in swn
 def organ_to_string(organ):
     return {
         ORGAN_ROOT: "Root",

@@ -620,39 +620,37 @@ def monica_form(request):
         'cultivar_form': cp_form
     }
     return render(request, 'monica/monica_form.html', form)
-
-
     
-def crop_residue_parameters(request, id):
-    residue = get_object_or_404(CropResidueParameters, pk=id)
+# def crop_residue_parameters(request, id):
+#     residue = get_object_or_404(CropResidueParameters, pk=id)
 
-    if request.method == 'POST':
-        form = CropResidueParametersForm(request.POST, instance=residue)
-        if form.is_valid():
-            instance = form.save(commit=False)
-            if 'save_as_new' in request.POST:
-                instance.pk = None 
-            elif 'save' in request.POST and instance.default:
-                return JsonResponse({'success': False, 'errors': 'Cannot modify the default species parameters. Please use save as new.'})
-            instance.save()
-            return JsonResponse({'success': True})
+#     if request.method == 'POST':
+#         form = CropResidueParametersForm(request.POST, instance=residue)
+#         if form.is_valid():
+#             instance = form.save(commit=False)
+#             if 'save_as_new' in request.POST:
+#                 instance.pk = None 
+#             elif 'save' in request.POST and instance.default:
+#                 return JsonResponse({'success': False, 'errors': 'Cannot modify the default species parameters. Please use save as new.'})
+#             instance.save()
+#             return JsonResponse({'success': True})
             
-        else:
-            return JsonResponse({'success': False, 'errors': form.errors})
-    else:
-        form = CropResidueParametersForm(instance=residue)
-        modal_title = 'Modify Crop Residue Parameters'
-        modal_save_button = 'Save Crop Residue Parameters'
-        modal_save_as_button = 'Save as New Crop Residue Parameters'
-        data_action_url = 'crop_residue_parameters/' + str(id) + '/'
-        context = {
-            'form': form,
-            'modal_title': modal_title,
-            'modal_save_button': modal_save_button,
-            'modal_save_as_button': modal_save_as_button,
-            'data_action_url': data_action_url,
-        }
-        return render(request, 'monica/modify_parameters_modal.html', context)
+#         else:
+#             return JsonResponse({'success': False, 'errors': form.errors})
+#     else:
+#         form = CropResidueParametersForm(instance=residue)
+#         modal_title = 'Modify Crop Residue Parameters'
+#         modal_save_button = 'Save Crop Residue Parameters'
+#         modal_save_as_button = 'Save as New Crop Residue Parameters'
+#         data_action_url = 'crop_residue_parameters/' + str(id) + '/'
+#         context = {
+#             'form': form,
+#             'modal_title': modal_title,
+#             'modal_save_button': modal_save_button,
+#             'modal_save_as_button': modal_save_as_button,
+#             'data_action_url': data_action_url,
+#         }
+#         return render(request, 'monica/modify_parameters_modal.html', context)
 
 def get_parameter_options(request, parameter_type):
     if parameter_type == 'soil-moisture-parameters':

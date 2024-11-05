@@ -3,7 +3,8 @@ from attr import attr
 from django import forms
 from django.contrib.auth.models import User
 
-from swn.models import UserProject, UserField, NUTS5000_N1, NUTS5000_N2, NUTS5000_N3, BuekSoilProfile, BuekPolygon, BuekSoilProfileHorizon
+from swn.models import UserProject, UserField, NUTS5000_N1, NUTS5000_N2, NUTS5000_N3
+from buek.models import SoilProfile, BuekPolygon, SoilProfileHorizon
 from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
@@ -79,45 +80,4 @@ class SoilProfileSelectionForm(forms.Form):
     # choices for land usage are set here, all other choices are set in the front end
     def set_choices(self, choices_data):
        self.fields['land_usage'].choices = choices_data
-        # data = {}
-        # for polygon_id in soil_profile_polygon_ids['buek_polygon_ids']:
-        #     soil_data = BuekSoilProfileHorizon.objects.select_related('bueksoilprofile').filter(
-        #         bueksoilprofile__polygon_id=polygon_id
-        #         ).order_by('-bueksoilprofile__area_percenteage', 'bueksoilprofile__id', 'horizont_nr')
-            
-        #     for entry in soil_data:
-        #         bueksoilprofile = entry.bueksoilprofile
-        #         bueksoilprofile_id = bueksoilprofile.id
-        #         landusage_id = bueksoilprofile.landusage
-
-        #         # Create land usage entry if it doesn't exist
-        #         if landusage_id not in data:
-        #             data[landusage_id] = {'landusage_id': landusage_id, 'soil_profiles': {}}
-
-        #         # Create soil profile entry if it doesn't exist
-        #         if bueksoilprofile_id not in data[landusage_id]['soil_profiles']:
-        #             data[landusage_id]['soil_profiles'][bueksoilprofile_id] = {
-        #                 'system_unit': bueksoilprofile.system_unit,
-        #                 'area_percenteage': bueksoilprofile.area_percenteage,
-        #                 'horizons': {}
-        #             }
-
-        #         # Add horizon data to the respective soil profile
-        #         horizon_nr = entry.horizont_nr
-        #         data[landusage_id]['soil_profiles'][bueksoilprofile_id]['horizons'][horizon_nr] = {
-        #             'obergrenze_m': entry.obergrenze_m,
-        #             'untergrenze_m': entry.untergrenze_m,
-        #             'stratigraphie': entry.stratigraphie,
-        #             'herkunft': entry.herkunft,
-        #             'geogenese': entry.geogenese,
-        #             'fraktion': entry.fraktion,
-        #             'summe': entry.summe,
-        #             'gefuege': entry.gefuege,
-        #             'torfarten': entry.torfarten,
-        #             'substanzvolumen': entry.substanzvolumen,
-        #             'bulk_density_class_id': entry.bulk_density_class_id,
-        #             'humus_class_id': entry.humus_class_id,
-        #             'ph_class_id': entry.ph_class_id
-        #         }
-
-        
+       

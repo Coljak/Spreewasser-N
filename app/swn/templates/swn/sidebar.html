@@ -97,6 +97,13 @@
                   
                 </div>
               </li>
+
+              {% for field in state_county_district_form.visible_fields %}
+
+                <li  class="list-group-item">
+                  {{ field }}
+                </li>
+              {% endfor %} 
               <!-- NetCDF animation -->
               <li class="list-group-item drought-overlay-sidebar-item" id="liElementNetCDF">
                 <div class="row">
@@ -172,6 +179,17 @@
                 </div>
               </li>
 
+              <li class="list-group-item toolbox-overlay-sidebar-item d-none">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOutlineRetention" class="form-check-input overlay-switch" id="toolboxOverlayRetentionSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlayRetentionSwitch">
+                      Wasserrückhaltepotentiale
+                    </label>
+                  </div>
+                </div>
+              </li>
+
               {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item d-none">
                 <div class="row">
                   <div class="form-check form-switch col">
@@ -227,12 +245,7 @@
               </li>
 
               
-              {% comment %} {% for field in state_county_district_form.visible_fields %}
-
-                  <li  class="list-group-item">
-                    {{ field }}
-                  </li>
-              {% endfor %} {% endcomment %}
+              
             </ul>
           </div>
         </div>

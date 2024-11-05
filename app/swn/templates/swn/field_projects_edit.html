@@ -6,10 +6,10 @@
 {% block css %} 
   
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.2/Control.FullScreen.min.css"/>
-    <link rel="stylesheet" href="{% static 'swn/css/leaflet.timedimension.control.min.css' %}"/>
+    {% comment %} <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.2/Control.FullScreen.min.css"/>
+    <link rel="stylesheet" href="{% static 'swn/css/leaflet.timedimension.control.min.css' %}"/> {% endcomment %}
     <link rel="stylesheet" href="{% static 'swn/css/bootstrap-datepicker.standalone.css' %}"/>
-    <link rel="stylesheet" href="{% static 'swn/css/leaflet.contextmenu.css' %}"/>
+    {% comment %} <link rel="stylesheet" href="{% static 'swn/css/leaflet.contextmenu.css' %}"/> {% endcomment %}
 
 
 {% endblock css %} 
@@ -113,8 +113,10 @@
         <div class="card-body">
             
           <a class="btn btn-primary" href="{% url 'swn:user_dashboard' %}">Zurück</a>
-          <button type="submit" id="btnMonicaCalculate" class="btn btn-primary mb-2">Berechnen</button>
-          <button type="submit" id="btnMonicaCalculateDB" class="btn btn-primary mb-2">Berechnen aus DB</button>
+          {% comment %} <button type="submit" id="btnMonicaCalculate" class="btn btn-primary mb-2">Berechnen</button> {% endcomment %}
+          <button type="submit" id="btnMonicaCalculateDB" class="btn btn-primary mb-2">
+            Berechnen aus DB
+          </button>
         </div>
       </div>
     </div>

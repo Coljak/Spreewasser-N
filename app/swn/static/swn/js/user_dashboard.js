@@ -22,13 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const csrf = document.getElementsByName("csrfmiddlewaretoken");
-  // Fetch the CSRF token from the server
-  async function getCsrfToken() {
-    const response = await fetch('get-csrf-token/');
-    const data = await response.json();
-    return data.csrfToken;
-  }
 
   let csrfToken = document.cookie
     .split("; ")
@@ -48,11 +41,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // -----------User Field Name Modal -----------------
 
-const projectModal = document.getElementById("projectModal");
-const projectModalTitle = document.getElementById("projectModalTitle");
+// const projectModal = document.getElementById("projectModal");
+// const projectModalTitle = document.getElementById("projectModalTitle");
 const chartCard = document.getElementById("chartCard");
 
-
+// bootstrap colors
 const highlightColor = getComputedStyle(document.body).getPropertyValue('--bs-warning');
 const primaryColor = getComputedStyle(document.body).getPropertyValue('--bs-primary');
 const secondaryColor = getComputedStyle(document.body).getPropertyValue('--bs-secondary');
@@ -166,12 +159,12 @@ $(".leaflet-control-zoom").append(
   '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>'
 );
 
-// search for locations
-const GeocoderControl = new L.Control.geocoder({
-  position: "topright",
-  marker: false,
-});
-map.addControl(GeocoderControl);
+// // search for locations
+// const GeocoderControl = new L.Control.geocoder({
+//   position: "topright",
+//   marker: false,
+// });
+// map.addControl(GeocoderControl);
 
 //add map scale
 const mapScale = new L.control.scale({
@@ -228,18 +221,18 @@ var toolboxOutlineInjection = new L.GeoJSON.AJAX('toolbox_outline_injection/',
     }
   });
 
-var toolboxOutlineInjection = new L.GeoJSON.AJAX('toolbox_outline_injection/',
-  {
-    style: function (feature) {
-      return { 
-        fillColor: lightColor,
-        color: infoColor,};
-    },
-    attribution: 'Toolbox Injection',
-    onEachFeature: function (feature, layer) {
-      layer.bindTooltip(feature.properties.name);
-    }
-  });
+  // var toolboxOutlineRetention = new L.GeoJSON.AJAX('load_outline_water_retention/',
+  //   {
+  //     style: function (feature) {
+  //       return { 
+  //         fillColor: lightColor,
+  //         color: infoColor,};
+  //     },
+  //     attribution: 'Toolbox Geste',
+  //     onEachFeature: function (feature, layer) {
+  //       layer.bindTooltip(feature.properties.name);
+  //     }
+  //   });
 
 var toolboxOutlineSurfaceWater = new L.GeoJSON.AJAX('load_outline_surface_water/',
   {
@@ -277,6 +270,7 @@ var toolboxOutlineGeste = new L.GeoJSON.AJAX('load_outline_geste/',
       layer.bindTooltip(feature.properties.name);
     }
   });
+
 
   // var toolboxOutlineDrainage = new L.GeoJSON.AJAX('load_outline_drainage/',
   // {
@@ -425,6 +419,7 @@ const overlayLayers = {
   "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
   "toolboxOutlineGeste": toolboxOutlineGeste,
   "sinks": toolboxSinks,
+  // "toolboxWaterRetention": toolboxWaterRetention,
 };
 
 
@@ -544,7 +539,9 @@ leafletSidebarContent.addEventListener("click", (event) => {
     const leafletId = clickedElement.getAttribute("leaflet-id");
     console.log("user-field-action clicked", leafletId);
     const userField = userFields[leafletId];
+
     currentUserField = userField;
+
     if (clickedElement.classList.contains("delete")) {
       let confirmDelete = confirm(`Are you sure to delete ` + userField.name + "?");
       if (confirmDelete) {
@@ -583,12 +580,12 @@ leafletSidebarContent.addEventListener("click", (event) => {
         console.log("field-edit clicked", leafletId, userField.id);
     } else if (clickedElement.classList.contains("toolbox-edit")) {
       // TODO the hardcoded modal is triggered from button
-      try{
-        toolboxSinks.remove();
-      }
-      catch(err){console.log(err)};
+        try{
+          toolboxSinks.remove();
+        }
+        catch(err){console.log(err)};
     
-      console.log("toolbox-edit clicked", leafletId, userField.id);
+        console.log("toolbox-edit clicked", leafletId, userField.id);
       var toolboxSinks = new L.GeoJSON.AJAX('toolbox_get_sinks_within/' + userField.id + '/',
       {
         style: function (feature) {
@@ -970,7 +967,6 @@ const addLayerToSidebar = (userField) => {
     class="accordion-header nested user-field-header d-flex align-items-center justify-content-between" 
     id="accordionHeader-${userField.leafletId}" 
     leaflet-id="${userField.leafletId}"
-    
     >
     <span class="form-check form-switch h6">  
       <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" id="fieldSwitch-${userField.leafletId}" checked>
@@ -1028,10 +1024,6 @@ accordionDroughtFields.addEventListener("dblclick", (e) => {
   console.log("listElement", listElement);
   map.fitBounds(listElement.userField.layer.getBounds());
 });
-
-const monicaFieldCalculation = () => {
-  console.log("monicaFieldCalculation");
-};
 
 
 

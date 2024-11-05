@@ -106,7 +106,7 @@ def create_weather_data_json_per_point_and_year(year):
     # # for TESTPURPOSES::
     # lat_lon_mask['lat_idx'] = [200, 201, 202, 203, 204]
     # lat_lon_mask['lon_idx'] = [200, 201, 202, 203, 204]
-    lat_idx_list = lat_lon_mask['lat_idx'][255:355]
+    lat_idx_list = lat_lon_mask['lat_idx'][255:355] # for production [:]
     lon_idx_list = lat_lon_mask['lon_idx'][543:618]
 
     # GET DATA for SWN BOUNDING BOX

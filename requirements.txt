@@ -14,13 +14,13 @@ drf-spectacular==0.15.1
 Fiona==1.9.4.post1
 gdal==3.4.1
 pandas==1.5.3
+geopandas==0.12.2
 psycopg2==2.9.3
 django-crispy-forms==2.0
 crispy-bootstrap5==0.7
 jsonfield==3.1.0
 pytz==2022.2.1
 netCDF4==1.6.3 
-geopandas==0.12.2
 SQLAlchemy==2.0.9
 GeoAlchemy2==0.13.2 
 pycurl==7.45.2 

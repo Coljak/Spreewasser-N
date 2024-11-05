@@ -14,13 +14,16 @@ from django.apps import apps
 
 from .run_consumer_swn import run_consumer
 from .run_producer import run_producer
+from buek.views import get_soil_profile
 from pathlib import Path
 from . import monica_io3_swn
 from .climate_data.lat_lon_mask import lat_lon_mask
+from .monica_events import *
 
 from netCDF4 import Dataset, MFDataset
 import numpy as np
 from datetime import datetime, timedelta
+from dateutil import parser
 from cftime import num2date, date2num, date2index
 
 import pytz
@@ -33,24 +36,40 @@ from . import climate
 from .process_weather_data import *
 from datetime import datetime, timedelta
 
+# layerAggOp
+OP_AVG = 0
+OP_MEDIAN = 1
+OP_SUM = 2
+OP_MIN = 3
+OP_MAX = 4
+OP_FIRST = 5
+OP_LAST = 6
+OP_NONE = 7
+OP_UNDEFINED_OP_ = 8
 
+
+ORGAN_ROOT = 0
+ORGAN_LEAF = 1
+ORGAN_SHOOT = 2
+ORGAN_FRUIT = 3
+ORGAN_STRUCT = 4
+ORGAN_SUGAR = 5
+ORGAN_UNDEFINED_ORGAN_ = 6
 #-------------------------- Monica Interface --------------------------#
-def add_workstep(request):
-    workstep_type = request.GET.get('workstep_type')
-    if workstep_type == 'sowing':
-        return WorkstepSowingForm()
-    elif workstep_type == 'harvest':
-        return WorkstepHarvestForm()
-    elif workstep_type == 'tillage':
-        return WorkstepTillageForm()
-    elif workstep_type == 'mineral_fertilization':
-        return WorkstepMineralFertilizationForm()
-    elif workstep_type == 'organic_fertilization':
-        return WorkstepOrganicFertilizationForm()
-    else:
-        return None
-
-
+# def add_workstep(request):
+#     workstep_type = request.GET.get('workstep_type')
+#     if workstep_type == 'sowing':
+#         return WorkstepSowingForm()
+#     elif workstep_type == 'harvest':
+#         return WorkstepHarvestForm()
+#     elif workstep_type == 'tillage':
+#         return WorkstepTillageForm()
+#     elif workstep_type == 'mineral_fertilisation':
+#         return WorkstepMineralFertilisationForm()
+#     elif workstep_type == 'organic_fertilisation':
+#         return WorkstepOrganicFertilisationForm()
+#     else:
+#         return None
 
 # all relevant climate variables. The key is already the the correct key for  MONICA climate jsons
 CLIMATE_VARIABLES = { 
@@ -97,6 +116,7 @@ def get_lat_lon_as_index(lat, lon):
 def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     """Returns the climate data as json using monica's keys for the given start and end date and the given lat and lon index"""
     print("get_climate_data_as_json", start_date, end_date, lat_idx, lon_idx)
+
     # opening with MFDataset does not work, because time is not an unlimited dimension in the NetCDF files
     start = datetime.now()
     climate_json = { 
@@ -109,13 +129,15 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
         '12': [],
         }
     climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf')
+
     for year in range(start_date.year, end_date.year + 1):
+        print('climate data for loop', year)
         for key, value in CLIMATE_VARIABLES.items():
             
             file_path = f"{climate_data_path}/zalf_{value.lower()}_amber_{year}_v1-0.nc"
             print("filepath: ", file_path,  "getting key:", key)
             nc = Dataset(file_path, 'r')
- 
+            print('climate data check 1')
             start_idx = 0
             end_idx = len(nc['time']) + 1
             if year == start_date.year:
@@ -127,6 +149,7 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
             values = values.tolist()
 
             climate_json[key].extend(values)
+
             nc.close()
 
             print(year, value, key)
@@ -308,7 +331,7 @@ def create_monica_env(
     
     debugMode = True
     
-    soil_horizons = swn_models.BuekSoilProfileHorizon.objects.filter(bueksoilprofile=soil_profile_id, obergrenze_m__gte=0).order_by('horizont_nr')
+    soil_horizons = buek_models.SoilProfileHorizon.objects.filter(soilprofile=soil_profile_id, obergrenze_m__gte=0).order_by('horizont_nr')
     soil_parameters = [horizon.to_json() for horizon in soil_horizons]
     
     siteParameters = {
@@ -350,25 +373,325 @@ def create_monica_env(
         "params": cpp,
         "cropRotation": cropRotation,
         "cropRotations": cropRotations,
-        "events": events,
+        "events": swn_events,
         # "climateData": json.dumps(climate_json)
         "climateData": climate_json
     }
     print("check 4")
 
-    print("check 4b: \n", env)
+    # print("check 4b: \n", env)
 
     return env
 
+
+def validate_soil_profile_parameters(soil_profile_parameters):
+
+    print("Soil profile parameters: ", soil_profile_parameters)
+    soil_error_msg = "so far nothing."
+    for i in range(len(soil_profile_parameters)):
+        print(i)
+    return soil_profile_parameters, soil_error_msg 
+
+def create_monica_env_from_json(json_data):
+    error = []
+   
+   
+    simulation_settings = json_data.get('simulationSettings')
+    if simulation_settings is not None:
+        simj = UserSimulationSettings.objects.get(id=simulation_settings).to_json()
+    else:
+        simj = UserSimulationSettings.objects.get(id=1).to_json() # default
+    # temporary replacements from file crop_site_sim2.json until available from database 
+
+    cropRotation = []
+    rotation = {}
+    for r in json_data['rotation']:
+
+        
+        worksteps = []
+        for k, v in r.items():
+            print("K: ", k)
+            if k == 'sowingWorkstep':
+                for ws in v:
+                    print('ws: ', ws.get('date'))
+                    print('ws keys: ', ws.keys())
+                    workstep = {"date":  ws.get('date'),               # "0000-10-13",
+                            "type": "Sowing",
+                            "crop": {
+                                # "is-winter-crop": True, # TODO is winter-crop is probably not required!!!
+                                "cropParams": {
+                                    "species": {
+                                    "=": m_models.SpeciesParameters.objects.get(id=ws.get('options').get('species')).to_json()
+                                    },
+                                    "cultivar": {
+                                    "=": m_models.CultivarParameters.objects.get(id=ws.get('options').get('cultivar')).to_json()
+                                    }
+                                },
+                                "residueParams": m_models.CropResidueParameters.objects.get(species_parameters=ws.get('options').get('species')).to_json()
+                            }
+                        }
+                 
+                    worksteps.append(workstep)
+            elif k == 'harvestWorkstep':
+                for ws in v:
+                    workstep = {
+                            "type": "Harvest",
+                            "date": ws.get('date')               # "0001-05-21"
+                        }
+                    worksteps.append(workstep)
+            elif k == 'mineralFertilisationWorkstep':
+                for ws in v:
+                    workstep = {
+                            "type": "mineralFertilisation",
+                            "date": ws.get('date'),
+                            'amount'  : ws.get('amount')            # "0001-05-21"
+                        }
+                    worksteps.append(workstep)
+            elif k == 'organicFertilisationWorkstep':
+                for ws in v:
+                    workstep = {
+                            "type": "organicFertilisation",
+                            "date": ws.get('date'),
+                            'amount'  : ws.get('amount')          # "0001-05-21"
+                        }
+                    worksteps.append(workstep)
+            elif k == 'tillageWorkstep':
+                for ws in v:
+                    workstep = {
+                            "type": "tillage",
+                            "date": ws.get('date'),
+                            # 'depth'  : ws.depth            # "0001-05-21"
+                        }
+                    worksteps.append(workstep)
+            elif k == 'irrigationWorkstep':
+                for ws in v:
+                    workstep = {
+                            "type": "Irrigation",
+                            "date": ws.get('date'),
+                            'amount'  : [float(ws.get('options').get('amount')), 'mm']  # "0001-05-21"
+                        }
+                    worksteps.append(workstep)
+            else:
+                print("Workstep not found: ", k)
+        
+        rotation["worksteps"] = worksteps
+
+        cropRotation.append(rotation)
+    print('cropRotation: ', cropRotation)
+    cropRotations = None
+
+      # end of replacement -------------------------------------------
+    
+    debugMode = True
+
+    # soil profile
+    landusage = json_data.get('landusage', 'general')
+
+    soil_profile_parameters = []
+
+    if json_data.get('soil_profile_id', None) is None:
+        lat = json_data.get('latitude')
+        lon = json_data.get('longitude')
+        soil_profile_parameters = get_soil_profile(landusage, lat, lon)['SoilProfileParameters']
+    else:
+        soil_profile_id = json_data.get('soil_profile_id')
+        soil_profile_parameters = buek_models.SoilProfile.objects.get(id=soil_profile_id).get_horizons_json()
+
+    soil_profile_parameters, soil_error_msg = validate_soil_profile_parameters(soil_profile_parameters)
+
+    # TODO: check with Claas what to do; ka5_texture_class is NULL
+    for i in range(len(soil_profile_parameters)):
+        if soil_profile_parameters[i].get('Sand') == []:
+            soil_profile_parameters[i]['Sand'] = [0.56, '%']
+            soil_profile_parameters[i]['Clay'] = [0.04, '%']
+            soil_profile_parameters[i]['KA5TextureClass'] = 'Su4'
+            soil_profile_parameters[i]['SoilRawDensity'] = [1700.0, 'kg m-3']
+            soil_profile_parameters[i]['SoilOrganicCarbon'] = [0.87, '%']
+            #{'Thickness': [0.35, 'm'], 'Sand': [0.56, '%'], 'Clay': [0.04, '%'], 'pH': '', 'KA5TextureClass': 'Su4', 'SoilRawDensity': [1700.0, 'kg m-3'], 'SoilOrganicCarbon': [0.87, '%']}, {'Thickness': [0.1, 'm'], 'Sand': [0.65, '%'], 'Clay': [0.1, '%'], 'pH': '', 'KA5TextureClass': 'Sl3', 'SoilRawDensity': [1700.0, 'kg m-3'], 'SoilOrganicCarbon': [0.0, '%']}
+            # soil_profile_parameters.remove(soil_profile_parameters[i])
+            print(f'Sand and Clay content not found in soil horizon {i+1}. Set to 0.')
+            error.append(f'Sand and Clay content not found in soil horizon {i+1}. Set to 0.')
+        
+    print("Soil profile parameters: ", soil_profile_parameters)
+
+    # TODO site parameters
+    slope = 0
+    height_nn = 0
+    n_deposition = 30
+
+   
+
+    siteParameters = {
+        "Latitude": float(json_data['latitude']),
+        "Slope": slope,
+        "HeightNN": [height_nn, "m"],
+        "NDeposition": [n_deposition,"kg N ha-1 y-1"],
+        "SoilProfileParameters": soil_profile_parameters
+    }
+
+    user_crop_parameters_id = 1
+    user_environment_parameters_id = 1
+    user_soil_moisture_parameters_id = 1
+    user_soil_tempereature_parametes_id = 1
+    user_soil_transport_parameters_id = 1
+    user_soil_organic_parameters_id = 1
+
+    cpp = {
+    "type": "CentralParameterProvider",
+    "userCropParameters": m_models.UserCropParameters.objects.get(id=user_crop_parameters_id).to_json(),
+    "userEnvironmentParameters": m_models.UserEnvironmentParameters.objects.get(id=user_environment_parameters_id).to_json(),
+    "userSoilMoistureParameters": m_models.UserSoilMoistureParameters.objects.get(id=user_soil_moisture_parameters_id).to_json(),
+    "userSoilTemperatureParameters": m_models.SoilTemperatureModuleParameters.objects.get(id=user_soil_tempereature_parametes_id).to_json(),
+    "userSoilTransportParameters": m_models.UserSoilTransportParameters.objects.get(id=user_soil_transport_parameters_id).to_json(),
+    "userSoilOrganicParameters": m_models.UserSoilOrganicParameters.objects.get(id=user_soil_organic_parameters_id).to_json(),
+    "simulationParameters": simj, #UserSimulationSettings.objects.get(id=simulation_settings).to_json()
+    "siteParameters": siteParameters
+    }
+
+     # get climate data from database
+    # print("Lat lon: ", json_data['latitude'], json_data['longitude'])
+    lat_idx, lon_idx = m_models.DWDGridAsPolygon.get_idx(float(json_data['latitude']), float(json_data['longitude']))
+    climate_data = get_climate_data_as_json(parser.parse(json_data['startDate'].split('T')[0]), parser.parse(json_data['endDate'].split('T')[0]), lat_idx, lon_idx)
+
+
+    # print('available_climate_data', available_climate_data)
+    print("check 1")
+    # print("Date type: ", type(json_data['startDate']), json_data['startDate'])
+    start_date = json_data['startDate'].split('T')[0]
+    end_date = json_data['endDate'].split('T')[0]
+    # print("CLIMATE DATA START DATE ", start_date)
+    print("check 2")
+    climate_json = {
+        "type": "DataAccessor",
+        "data": climate_data,
+        "startDate": start_date,
+        "endDate": end_date,
+      }
+    
+      # events define the output.
+    events = [
+        "daily",
+        [
+            "Date",
+            # "ETa/ETc",
+            # "AbBiom",
+            # [
+            # "OrgBiom",
+            # "Leaf"
+            # ],
+            # [
+            # "OrgBiom",
+            # "Fruit"
+            # ],
+            "Yield",
+            "LAI",
+            "Precip",
+            [
+            "Mois",
+            [
+                1,
+                20
+            ]
+            ],
+            [
+            "Mois",
+            [
+                1,
+                10,
+                "AVG"
+            ]
+            ],
+            [
+            "SOC",
+            [
+                1,
+                3
+            ]
+            ],
+            "Tavg",
+            "Globrad"
+        ],
+        "crop",
+        [
+            "CM-count",
+            "Crop",
+            [
+            "Yield",
+            "LAST"
+            ],
+            [
+            "Date|sowing",
+            "FIRST"
+            ],
+            [
+            "Date|harvest",
+            "LAST"
+            ]
+        ],
+        "yearly",
+        [
+            "Year",
+            [
+            "N",
+            [
+                1,
+                3,
+                "AVG"
+            ],
+            "SUM"
+            ],
+            [
+            "RunOff",
+            "SUM"
+            ],
+            [
+            "NLeach",
+            "SUM"
+            ],
+            [
+            "Recharge",
+            "SUM"
+            ]
+        ],
+        "run",
+        [
+            [
+            "Precip",
+            "SUM"
+            ]
+        ]
+    ]
+
+    print("check 3")
+    env = {
+        "type": "Env",
+        "debugMode": debugMode,
+        "params": cpp,
+        "cropRotation": cropRotation,
+        "cropRotations": cropRotations,
+        "events": swn_events,
+        # "climateData": json.dumps(climate_json)
+        "climateData": climate_json
+    }
+    print("check 4")
+
+    # print("check 4b: \n", env)
+    with open('NEW_env_from_db.json', 'w') as _:
+        json.dump(env, _)
+
+    return env
+
+
 # get options for cultivar parameters selectbox in monica_hohenfinow_db.html
+# todo: DELETE THIS FUNCTION used in monica_crop.js!!!
 def get_cultivar_parameters(request, id):       
-    cultivars = m_models.CultivarParameters.objects.filter(species_parameters=id).order_by('cultivar_name')
+    cultivars = m_models.CultivarParameters.objects.filter(species_parameters=id).order_by('name')
     cultivar_list = []
     for cultivar in cultivars:
-        if cultivar.cultivar_name != '':
+        if cultivar.name != '':
             cultivar_list.append({
                 'id': cultivar.id,
-                'name': cultivar.cultivar_name,
+                'name': cultivar.name,
             })
         else:
             cultivar_list.append({
@@ -436,8 +759,9 @@ def monica_calc_w_params_from_db(request):
                     json.dump(env, _)
                     print("check 8")
                 msg = run_consumer()
-                msg = msg_to_json(msg)
                 print("check 9")
+                msg = msg_to_json(msg)
+                print("check 10")
 
                 msgs.append(msg)
 
@@ -450,33 +774,14 @@ def monica_calc_w_params_from_db(request):
             print('Error', e)
             return JsonResponse({'result': 'error', 'msg': 'Invalid request'})
     
-# layerAggOp
-OP_AVG = 0
-OP_MEDIAN = 1
-OP_SUM = 2
-OP_MIN = 3
-OP_MAX = 4
-OP_FIRST = 5
-OP_LAST = 6
-OP_NONE = 7
-OP_UNDEFINED_OP_ = 8
-
-
-ORGAN_ROOT = 0
-ORGAN_LEAF = 1
-ORGAN_SHOOT = 2
-ORGAN_FRUIT = 3
-ORGAN_STRUCT = 4
-ORGAN_SUGAR = 5
-ORGAN_UNDEFINED_ORGAN_ = 6
-
-
 def msg_to_json(msg):
     """
     the json output of Monica is processed in this function so that every output 
     is a flat array with the length of the base array e.g. of dates for each output. 
     This is applied to all outputs such as 'daily', 'monthly, 'crop' etc."""
     # aggregation constants as dictionary from monica_io3.py
+    print("? msg_to_json")
+
     aggregation_constants = {
         0: "AVG",
         1: "MEDIAN",
@@ -500,13 +805,14 @@ def msg_to_json(msg):
     }
 
 
-    print("msg_to_json")
+    # print("msg_to_json")
     processed_msg = {}
     for_chart = {}
     for data_ in msg.get("data", []):
         results = data_.get("results", [])
         orig_spec = data_.get("origSpec", "")
         output_ids = data_.get("outputIds", [])
+        print('origSpec', orig_spec, 'output_ids', output_ids)
 
         orig_spec = orig_spec.replace("\"", "")
         
@@ -598,61 +904,10 @@ def get_site_params_height(polygon):
             # height = np.mean(dem_data)
             # return height
 
-def monica_form(request):
-    cp_form = CultivarAndSpeciesSelectionForm()
-
-    # dates
-    # start and enddate according to the available weather data
-    start_date = "01.01.2007"
-    end_date = "31.12.2023"
-    now = datetime.now()
-    set_start_date = f"{str(now.day)}.{str(now.month)}.{str(now.year - 1)}"
-    print("SetStartDate", set_start_date, type(set_start_date))
-    set_end_date = now.strftime("%d.%m.%Y")
-    
-    form = {
-        'date_picker':{
-            'start_date': start_date,
-        'end_date': end_date,
-        'set_start_date': set_start_date,
-        'set_end_date': set_end_date,
-        },
-        'cultivar_form': cp_form
-    }
-    return render(request, 'monica/monica_form.html', form)
-    
-# def crop_residue_parameters(request, id):
-#     residue = get_object_or_404(CropResidueParameters, pk=id)
-
-#     if request.method == 'POST':
-#         form = CropResidueParametersForm(request.POST, instance=residue)
-#         if form.is_valid():
-#             instance = form.save(commit=False)
-#             if 'save_as_new' in request.POST:
-#                 instance.pk = None 
-#             elif 'save' in request.POST and instance.default:
-#                 return JsonResponse({'success': False, 'errors': 'Cannot modify the default species parameters. Please use save as new.'})
-#             instance.save()
-#             return JsonResponse({'success': True})
-            
-#         else:
-#             return JsonResponse({'success': False, 'errors': form.errors})
-#     else:
-#         form = CropResidueParametersForm(instance=residue)
-#         modal_title = 'Modify Crop Residue Parameters'
-#         modal_save_button = 'Save Crop Residue Parameters'
-#         modal_save_as_button = 'Save as New Crop Residue Parameters'
-#         data_action_url = 'crop_residue_parameters/' + str(id) + '/'
-#         context = {
-#             'form': form,
-#             'modal_title': modal_title,
-#             'modal_save_button': modal_save_button,
-#             'modal_save_as_button': modal_save_as_button,
-#             'data_action_url': data_action_url,
-#         }
-#         return render(request, 'monica/modify_parameters_modal.html', context)
-
-def get_parameter_options(request, parameter_type):
+def get_parameter_options(request, parameter_type, id=None):
+    """
+    Get choices for select box.
+    """
     if parameter_type == 'soil-moisture-parameters':
         options = UserSoilMoistureParameters.objects.values('id', 'name')
     elif parameter_type == 'soil-organic-parameters':
@@ -661,6 +916,23 @@ def get_parameter_options(request, parameter_type):
         options = SoilTemperatureModuleParameters.objects.values('id', 'name')
     elif parameter_type == 'soil-transport-parameters':
         options = UserSoilTransportParameters.objects.values('id', 'name')
+    elif parameter_type == 'species-parameters':
+        options = SpeciesParameters.objects.values('id', 'name')
+    elif parameter_type == 'cultivar-parameters':
+        print("GETTING CULTIVAR PARAMETERS", id)
+        if id is not None:
+            options = CultivarParameters.objects.filter(species_parameters_id=id).values('id', 'name')
+            if options.count() == 0:
+                options = CultivarParameters.objects.values('id', 'name')
+        else:
+            options = CultivarParameters.objects.values('id', 'name')
+    elif parameter_type == 'crop-residue-parameters':
+        if id is not None:
+            options = CropResidueParameters.objects.filter(species_parameters_id=id).values('id', 'name')
+            if options.count() == 0:
+                options = CropResidueParameters.objects.values('id', 'name')
+        else:
+            options = CropResidueParameters.objects.values('id', 'name')
     else:
         options = []
 
@@ -668,36 +940,40 @@ def get_parameter_options(request, parameter_type):
     
 
 def modify_model_parameters(request, model_name, id):
+    """
+    Every Monica Parameter JSON can be modified and saved. This function applies to all parameters, loads the from and saves the data.
+    """
+    # TODO Settings parameters are not yet implemented
     MODEL_FORM_MAPPING = {
-        'species_parameters': {
+        'species-parameters': {
             'model': SpeciesParameters,
             'form': SpeciesParametersForm,
             'modal_title': 'Modify Species Parameters',
             'modal_save_button': 'Save Species Parameters',
             'modal_save_as_button': 'Save as New Species Parameters',
         },
-        'cultivar_parameters': {
+        'cultivar-parameters': {
             'model': CultivarParameters,
             'form': CultivarParametersForm,
             'modal_title': 'Modify Cultivar Parameters',
             'modal_save_button': 'Save Cultivar Parameters',
             'modal_save_as_button': 'Save as New Cultivar Parameters',
         },
-        'crop_residue_parameters': {
+        'crop-residue-parameters': {
             'model': CropResidueParameters,
             'form': CropResidueParametersForm,
             'modal_title': 'Modify Crop Residue Parameters',
             'modal_save_button': 'Save Crop Residue Parameters',
             'modal_save_as_button': 'Save as New Crop Residue Parameters',
         },
-        'organic_fertiliser': {
+        'organic-fertiliser-parameters': {
             'model': OrganicFertiliser,
             'form': OrganicFertiliserForm,
             'modal_title': 'Modify Organic Fertiliser',
             'modal_save_button': 'Save Organic Fertiliser',
             'modal_save_as_button': 'Save as New Organic Fertiliser',
         },
-        'mineral_fertiliser': {
+        'mineral-fertiliser-parameters': {
             'model': MineralFertiliser,
             'form': MineralFertiliserForm,
             'modal_title': 'Modify Mineral Fertiliser',
@@ -782,11 +1058,16 @@ def modify_model_parameters(request, model_name, id):
             'modal_save_button': model_info['modal_save_button'],
             'modal_save_as_button': model_info['modal_save_as_button'],
             'data_action_url': f'{model_name}/{id}/',
+            'is_default': obj.is_default,
         }
         return render(request, 'monica/modify_parameters_modal.html', context)
 
 # @login_required
 def monica_model(request):
+    """
+    Sets up the GUI wirh all forms and data required for the MONICA model.
+    """
+    user = request.user
 
     coordinate_form = CoordinateForm()
    
@@ -794,14 +1075,17 @@ def monica_model(request):
     workstep_sowing_form = WorkstepSowingForm()
     workstep_harvest_form = WorkstepHarvestForm()
     workstep_tillage_form = WorkstepTillageForm()
-    workstep_mineral_fertilization_form = WorkstepMineralFertilizationForm()
-    workstep_organic_fertilization_form = WorkstepOrganicFertilizationForm()
+    workstep_irrigation_form = WorkstepIrrigationForm()
+    workstep_mineral_fertilisation_form = WorkstepMineralFertilisationForm()
+    workstep_organic_fertilisation_form = WorkstepOrganicFertilisationForm()
 
     # species_form = SpeciesParametersForm()  
     # cultivar_form = CultivarParametersForm()
     # residue_form = CropResidueParametersForm()
     
+    # sim_settings_queryset = m_models.UserSimulationSettings.objects.filter(user__in=[user, None])
     sim_settings_instance = m_models.UserSimulationSettings.objects.get(name='default')
+
     simulation_settings_form = UserSimulationSettingsForm(instance=sim_settings_instance)
 
     user_soil_moisture_select_form = UserSoilMoistureInstanceSelectionForm()
@@ -852,8 +1136,9 @@ def monica_model(request):
         'workstep_sowing_form': workstep_sowing_form,
         'workstep_harvest_form': workstep_harvest_form,
         'workstep_tillage_form': workstep_tillage_form,
-        'workstep_mineral_fertilization_form': workstep_mineral_fertilization_form,
-        'workstep_organic_fertilization_form': workstep_organic_fertilization_form,
+        'workstep_mineral_fertilisation_form': workstep_mineral_fertilisation_form,
+        'workstep_organic_fertilisation_form': workstep_organic_fertilisation_form,
+        'workstep_irrigation_form': workstep_irrigation_form,
         # 'species_form': species_form,
         # 'cultivar_form': cultivar_form,
         # 'residue_form': residue_form,
@@ -867,4 +1152,100 @@ def monica_model(request):
     }
     return render(request, 'monica/monica_model.html', context)
 
+def get_soil_parameters(request, lat, lon):
+    
+    soil_profile = get_soil_profile('general', lat, lon)
+    
+    show_original_table = (soil_profile['SoilProfileParameters'] != soil_profile['OriginalSoilProfileParameters'])
+    
+    context = {
+        'modal_title': 'Soil Profile',
+        'soil_profile': soil_profile,
+        'show_original_table': show_original_table,
+        }
+    return render(request, 'monica/soil_profile_modal.html', context)
+
+def save_simulation_settings(request):
+    if request.method == 'POST':
+        form = UserSimulationSettingsForm(request.POST)
+        print('Form valid', form.is_valid())
+        print('POST request: ', request.POST)
+        if form.is_valid():
+            instance = form.save(commit=False)
+
+            if request.POST.get('action') == 'save_as_new':
+                instance.pk = None
+            elif request.POST.get('action') == 'save':
+                instance_id = int(request.POST.get('id_simulation_settings'))
+                print('Instance ID', instance_id, 'action save')
+                org_instance = m_models.UserSimulationSettings.objects.get(id=instance_id)
+                if org_instance.is_default and org_instance.name == 'default':
+                    return JsonResponse({'success': False, 'message': "Cannot modify the default settings. Please 'save as new' and change the name."})
+                elif org_instance.user is None or (org_instance.user.is_superuser and org_instance.user != request.user):
+                    return JsonResponse({'success': False, 'message': "Cannot modify settings created by other users."})
+                elif instance.name == 'default':
+                    return JsonResponse({'success': False, 'message': "Please change the name of the settings!"})
+                else:
+                    instance.pk = instance_id
+            instance.save()
+            return JsonResponse({'success': True, 'message': 'New instance saved.'})
+        else:
+
+            return JsonResponse({'success': False, 'message': form.errors})
+    else:
+        return JsonResponse({'success': False, 'message': 'Invalid request'})
+    
+def run_simulation(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        print("Simulation is starting...\n", data)
+
+        env = create_monica_env_from_json(data)
+
+        # for debugging
+        # with open('./monica/env_from_db_2024-07-11.json', 'r') as _:
+        #     env = json.load(_)
+
+
+        # env['type'] = env_new['type']
+        # env['debugMode'] = env_new['debugMode']
+        # env['cropRotation'] = env_new['cropRotation']
+        # env['events'] = env_new['events']
+        # env['climateData'] = env_new['climateData']
+        # env['params']['type'] = env_new['params']['type']
+        # env['params']['userCropParameters'] = env_new['params']['userCropParameters']
+        # env['params']['userEnvironmentParameters'] = env_new['params']['userEnvironmentParameters']
+        # env['params']['userSoilMoistureParameters'] = env_new['params']['userSoilMoistureParameters']
+        # env['params']['userSoilTemperatureParameters'] = env_new['params']['userSoilTemperatureParameters']
+        # env['params']['userSoilTransportParameters'] = env_new['params']['userSoilTransportParameters']
+        # env['params']['userSoilOrganicParameters'] = env_new['params']['userSoilOrganicParameters']
+        # env['params']['simulationParameters'] = env_new['params']['simulationParameters']
+        # env['params']['siteParameters'] = env_new['params']['siteParameters']
+
+
+
+        context = zmq.Context()
+        socket = context.socket(zmq.PUSH)
+        socket.connect("tcp://swn_monica:6666")
+        print("check 6")
+        # print(env)
+        socket.send_json(env)
+        print("check 7")
+
+
+        file_path = Path(__file__).resolve().parent
+        with open(f'{file_path}/monica_io/env_from_db_2.json', 'w') as _: 
+            json.dump(env, _)
+            print("check 8")
+        msg = run_consumer()
+        print("check 9")
+        msg = msg_to_json(msg)
+        print("check 10")
+        # print(msg)
+        with open(f'{file_path}/monica_io/message_out.json', 'w') as _: 
+            json.dump(msg, _)
+        print("Simulation is done.")
+        return JsonResponse({'success': True, 'message': msg})
+    else:
+        return JsonResponse({'success': False, 'message': 'Simulation not started.'})
 

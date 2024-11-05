@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.gis.db import models as gis_models
 from swn.models import User
+from buek import models as buek_models
 from django.contrib.postgres.fields import ArrayField
 from typing import List, Tuple
 import json
@@ -38,7 +39,7 @@ class CultivarParameters(models.Model):
     crop_height_p1 = models.FloatField()
     crop_height_p2 = models.FloatField()
     crop_specific_max_rooting_depth = models.FloatField()
-    cultivar_name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
     daylength_requirement = ArrayField(ArrayField(models.FloatField()))
     description = models.TextField()
     drought_stress_threshold = ArrayField(models.FloatField())
@@ -70,7 +71,7 @@ class CultivarParameters(models.Model):
     
 
     def __str__(self):
-        return self.cultivar_name
+        return self.name
 
     def to_json(self) -> dict:
         return {
@@ -81,7 +82,7 @@ class CultivarParameters(models.Model):
             "CropHeightP1": self.crop_height_p1,
             "CropHeightP2": self.crop_height_p2,
             "CropSpecificMaxRootingDepth": self.crop_specific_max_rooting_depth,
-            "CultivarName": self.cultivar_name,
+            "CultivarName": self.name,
             "DaylengthRequirement": [self.daylength_requirement, "h"],
             "Description": self.description,
             "DroughtStressThreshold": self.drought_stress_threshold,
@@ -134,7 +135,7 @@ class CultivarParameters(models.Model):
             # Create or update SpeciesParameters object based on JSON data
             species_params, created = cls.objects.update_or_create(
                 # species_name=species_name,
-                cultivar_name=data["CultivarName"],
+                name=data["CultivarName"],
                 defaults={
                     'species_name': species_name,
                     'assimilate_partitioning_coeff':  data["AssimilatePartitioningCoeff"],
@@ -144,7 +145,7 @@ class CultivarParameters(models.Model):
                     'crop_height_p1':  data["CropHeightP1"],
                     'crop_height_p2':  data["CropHeightP2"],
                     'crop_specific_max_rooting_depth':  data["CropSpecificMaxRootingDepth"],
-                    'cultivar_name':  data["CultivarName"], # Name of json!
+                    'name':  data["CultivarName"], # Name of json!
                     'daylength_requirement':  data["DaylengthRequirement"][0],
                     'description':  data["Description"],
                     'drought_stress_threshold':  data["DroughtStressThreshold"],
@@ -367,7 +368,7 @@ class OrganFromDB(models.Model):
 
 # crop residues
 class CropResidueParameters(models.Model):
-    file_name = models.CharField(max_length=100, blank=True, null=True)
+    name = models.CharField(max_length=100, blank=True, null=True)
     aom_dry_matter_content = models.FloatField(blank=True, null=True)
     aom_fast_dec_coeff_standard = models.FloatField(blank=True, null=True)
     aom_nh4_content = models.FloatField(blank=True, null=True)
@@ -391,15 +392,15 @@ class CropResidueParameters(models.Model):
     def create_or_update_from_json(cls, json_file_path):
         with open(json_file_path, 'r') as file:
             data = json.load(file)
-            file_name = json_file_path.split('/')[-1].split('.')[0]
+            name = json_file_path.split('/')[-1].split('.')[0]
             
             # Check if CropParameters with the given file_name exists
-            crop_params = cls.objects.filter(file_name=file_name).first()
+            crop_params = cls.objects.filter(name=name).first()
 
             # Create or update CropParameters object based on JSON data
             crop_residue_params, created = cls.objects.update_or_create(
                 defaults={
-                    'file_name': file_name,
+                    'name': name,
                     'aom_dry_matter_content': data.get('AOM_DryMatterContent')[0],
                     'aom_fast_dec_coeff_standard': data.get('AOM_FastDecCoeffStandard')[0],
                     'aom_nh4_content': data.get('AOM_NH4Content')[0],
@@ -417,7 +418,7 @@ class CropResidueParameters(models.Model):
                     'species': data.get('species'),
                     
                 },
-                file_name=file_name  # Additional filter for update_or_create
+                name=name  # Additional filter for update_or_create
             )
 
             # Save the instance if it was created or updated
@@ -620,7 +621,7 @@ class MineralFertiliser(models.Model):
     nh4 = models.FloatField(blank=True, null=True)
     no3 = models.FloatField(blank=True, null=True)
     fertiliser_id = models.CharField(max_length=100, blank=True, null=True)
-    type = models.CharField(max_length=100, blank=True, null=True)
+    # type = models.CharField(max_length=100, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
@@ -634,7 +635,7 @@ class MineralFertiliser(models.Model):
             "NO3": self.no3,
             "id": self.fertiliser_id,
             "name": self.name,
-            "type": self.type
+            "type": "MineralFertiliserParameters"
         }
     
     @classmethod
@@ -900,7 +901,7 @@ class UserSoilMoistureParameters(models.Model):
 class UserSoilOrganicParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
-    default = models.BooleanField(default=False)
+    # default = models.BooleanField(default=False)
     name = models.CharField(max_length=100)
     qten_factor = models.FloatField()
     temp_dec_optimal = models.FloatField()
@@ -1464,6 +1465,9 @@ class UserSimulationSettings(models.Model):
     auto_irrigation_params_threshold = models.FloatField(default=None, null=True, blank=True)
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
+    def __str__(self):
+        return self.name
+    
     def to_json(self):
         return {
             "debug?": self.debug,
@@ -1474,23 +1478,63 @@ class UserSimulationSettings(models.Model):
             "EmergenceFloodingControlOn": self.emergence_flooding_control_on,
             "UseNMinMineralFertilisingMethod": self.use_n_min_mineral_fertilising_method,
             "NMinUserParams": {
-                "min": self.n_min_user_params_min,
-                "max": self.n_min_user_params_max,
-                "delayInDays": self.n_min_user_params_delay_in_days
+            "min": self.n_min_user_params_min,
+            "max": self.n_min_user_params_max,
+            "delayInDays": self.n_min_user_params_delay_in_days
             },
-            "NMinFertiliserPartition": self.n_min_fertiliser_partition.to_json(),
+            "NMinFertiliserPartition": self.n_min_fertiliser_partition.to_json() if self.n_min_fertiliser_partition else None,
             "JulianDayAutomaticFertilising": self.julian_day_automatic_fertilising,
             "UseAutomaticIrrigation": self.use_automatic_irrigation,
             "AutoIrrigationParams": {
-                "irrigationParameters": {
-                    "nitrateConcentration": [self.auto_irrigation_params_nitrate_concentration, "mg dm-3"],
-                    "sulfateConcentration": [self.auto_irrigation_params_sulfate_concentration, "mg dm-3"]
-                },
-                "amount": [self.auto_irrigation_params_amount, "mm"],
-                "threshold": self.auto_irrigation_params_threshold
+            "irrigationParameters": {
+                "nitrateConcentration": [self.auto_irrigation_params_nitrate_concentration, "mg dm-3"],
+                "sulfateConcentration": [self.auto_irrigation_params_sulfate_concentration, "mg dm-3"]
+            },
+            "amount": [self.auto_irrigation_params_amount, "mm"],
+            "threshold": self.auto_irrigation_params_threshold
             }
         }
 
+class SiteParameters(models.Model):
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    altitude = models.FloatField() # heightNN
+    slope = models.FloatField()
+    n_deposition = models.FloatField()
+    soil_profile = models.ForeignKey(buek_models.SoilProfile, on_delete=models.CASCADE)
+
+    def to_json(self):
+        return {
+            "Latitude": self.latitude,
+            "Slope": self.slope,
+            "HeightNN": [self.altitude, "m"],
+            "NDeposition": [self.n_deposition, "kg N ha-1 y-1"],
+            "SoilProfileParameters": self.soil_profile.get_horizons_json()
+        }
+
+
+class CentralParameterProvider(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    user_crop_parameters = models.ForeignKey(UserCropParameters, on_delete=models.CASCADE)
+    user_environment_parameters = models.ForeignKey(UserEnvironmentParameters, on_delete=models.CASCADE)
+    user_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE)
+    user_soil_transport_parameters = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE)
+    user_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE)
+    simulation_parameters = models.ForeignKey(UserSimulationSettings, on_delete=models.CASCADE)
+    site_parameters = models.ForeignKey(SiteParameters, on_delete=models.CASCADE)
+    def to_json(self):
+        return {
+            "type": self.__class__.__name__,
+            "userCropParameters": self.user_crop_parameters.to_json(),
+            "userEnvironmentParameters": self.user_environment_parameters.to_json(),
+            "userSoilMoistureParameters": self.user_soil_moisture_parameters.to_json(),
+            "userSoilTemperatureParameters": self.user_soil_temperature_parameters.to_json(),
+            "userSoilTransportParameters": self.user_soil_transport_parameters.to_json(),
+            "userSoilOrganicParameters": self.user_soil_organic_parameters.to_json(),
+            "simulationParameters": self.simulation_parameters.to_json(),
+            "siteParameters": self.site_parameters.to_json()
+        }
+    
 # Simulation related models
 class SimulationEnvironment(models.Model):
     type = models.CharField(max_length=100)
@@ -1531,20 +1575,20 @@ class Workstep(models.Model):
         }
     
 
-class WorkstepMineralFertilization(Workstep):
+class WorkstepMineralFertilisation(Workstep):
     amount = models.FloatField()
     mineral_fertiliser = models.ForeignKey(MineralFertiliser, on_delete=models.CASCADE)
 
     def to_json(self):
         json_data = super().to_json()
         json_data.update({
-            "type": "MineralFertilization",
+            "type": "MineralFertilisation",
             "amount": [self.amount, "kg N ha-1"], # TODO the unit was actually 'kg N' - is it per ha?
             "partition": self.mineral_fertiliser.to_json()
         })
         return json_data
 
-class WorkstepOrganicFertilization(Workstep):
+class WorkstepOrganicFertilisation(Workstep):
     amount = models.FloatField()
     organic_fertiliser = models.ForeignKey(OrganicFertiliser, on_delete=models.CASCADE)
     incorporation = models.BooleanField()
@@ -1552,7 +1596,7 @@ class WorkstepOrganicFertilization(Workstep):
     def to_json(self):
         json_data = super().to_json()
         json_data.update({
-            "type": "OrganicFertilization",
+            "type": "OrganicFertilisation",
             "amount": [self.amount, "kg N ha-1"], # TODO the unit was actually 'kg N' - is it per ha?
             "parameters": self.mineral_fertiliser.to_json(),
             "incorporation": self.incorporation
@@ -1567,6 +1611,17 @@ class WorkstepTillage(Workstep):
         json_data.update({
             "type": "Tillage",
             "depth": [self.tillage_depth, "m"]
+        })
+        return json_data
+    
+class WorkstepIrrigation(Workstep):
+    amount = models.IntegerField()
+
+    def to_json(self):
+        json_data = super().to_json()
+        json_data.update({
+            "type": "Irrigation",
+            "amount": [self.amount, "mm"]
         })
         return json_data
 
@@ -1599,19 +1654,6 @@ class WorkstepHarvest(Workstep):
             "type": "Harvest"
         })
         return json_data
-    
-class WorkstepIrrigation(Workstep):
-    amount = models.FloatField()
-    
-    def to_json(self):
-        json_data = super().to_json()
-        json_data.update({
-            "type": "Irrigation",
-            "amount": [self.amount, "mm"],
-        })
-        return json_data
-    
-# class SetValueWorkstep(Workstep):
 
     
 class Output(models.Model):
@@ -1651,8 +1693,7 @@ class Organ(models.Model):
 #         return self.name
 
 
-# wheather data
-
+# TODO: can be deleted, but is used in process_wheather_data
 class WeatherData(models.Model):
     point = gis_models.PointField(blank=True, null=True)
     lat = models.FloatField(blank=True, null=True)
@@ -1689,6 +1730,15 @@ class DWDGridToPointIndices(models.Model):
     forecast_lat_idx = models.IntegerField(null=True, blank=True)
     forecast_lon_idx = models.IntegerField(null=True, blank=True)
 
+    soilprofile_id = models.IntegerField(null=True, blank=True)
+    landcover_code = models.IntegerField(null=True, blank=True)
+    soilprofile_id_21 = models.IntegerField(null=True, blank=True)
+    landcover_code_21 = models.IntegerField(null=True, blank=True)
+    soilprofile_id_23 = models.IntegerField(null=True, blank=True)
+    landcover_code_23 = models.IntegerField(null=True, blank=True)
+    soilprofile_id_31 = models.IntegerField(null=True, blank=True)
+    landcover_code_31 = models.IntegerField(null=True, blank=True)
+
     def __str__(self):
         return f"{self.point} - {self.lat_idx} - {self.lon_idx}"
     
@@ -1698,8 +1748,6 @@ class DWDGridToPointIndices(models.Model):
     def create_instance(self, lat, lat_idx, lon, lon_idx):
         return self.objects.create(point=Point(lat, lon), lat=lat, lat_idx=lat_idx, lon=lon, lon_idx=lon_idx)
     
-    @classmethod
-    def get_points_within_geom(cls, geom):
         """
         Returns all DWDGridToPointIndices instances with points within the given geometry.
         If no points are within the geometry, returns the closest point.
@@ -1816,6 +1864,7 @@ class DWDGridAsPolygon(models.Model):
     lat_idx = models.IntegerField()
     lon_idx = models.IntegerField()
     geom = gis_models.PolygonField()
+    is_valid = models.BooleanField(default=True)
 
     def __str__(self):
         return f"Polygon with centroid lat {self.lat} and longitude {self.lon} at the indeices {self.lat_idx} and {self.lon_idx}."
@@ -1851,3 +1900,37 @@ class DWDForecastGridAsPolygon(models.Model):
             return instance.lat_idx, instance.lon_idx
         except cls.DoesNotExist:
             return None, None
+
+
+
+
+class MonicaEnvironment(models.Model):
+    name = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    debug_mode = models.BooleanField(default=False)
+    params = models.ForeignKey(CentralParameterProvider, on_delete=models.CASCADE, null=True, blank=True)
+    crop_rotation = models.JSONField(null=True, blank=True)
+    crop_rotations = models.JSONField(null=True, blank=True, default=None)
+    events = models.JSONField(null=True, blank=True)
+
+    def to_json(self):
+        return{
+            "type": "Env",
+            "debugMode": self.debug_mode,
+            "params": self.params.to_json(),
+            "cropRotation": self.crop_rotation,
+            "cropRotations": None,
+            "events": self.events
+        }
+        
+
+
+class MonicaSimulation(models.Model): # Project at Point
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    altitude = models.FloatField()
+    slope = models.FloatField()
+    n_deposition = models.FloatField()
+    soil_profile = models.ForeignKey(buek_models.SoilProfile, on_delete=models.CASCADE)

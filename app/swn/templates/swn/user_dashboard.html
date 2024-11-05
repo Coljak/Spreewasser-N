@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="{% static 'leaflet/fullscreen/Control.FullScreen.css' %}" />
   <link rel="stylesheet" href="{% static 'leaflet/markercluster/MarkerCluster.css' %}">
   <link rel="stylesheet" href="{% static 'leaflet/markercluster/MarkerCluster.Default.css' %}">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  {% comment %} <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" /> {% endcomment %}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
   
@@ -52,12 +52,13 @@
       const droughtUrl= "{% static 'data/4326_reprojected_3857.png' %}" 
       const toolboxUrl= "{% static 'data/soil_4326_rendered_image_2.png' %}"
       const toolboxSinksUrl = "{% static 'data/sinks_3857_pink.png' %}"
+      
     
     </script>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="{% static './leaflet/print/leaflet.browser.print.min.js' %}"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    {% comment %} <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script> {% endcomment %}
   
     <script src="{% static 'leaflet/fullscreen/Control.FullScreen.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>

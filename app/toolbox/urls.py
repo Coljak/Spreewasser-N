@@ -18,7 +18,9 @@ urlpatterns = [
     path('login/Dashboard/load_outline_surface_water/', views.load_outline_surface_water, name='load_outline_surface_water'),
     path('login/Dashboard/load_outline_infiltration/', views.load_outline_infiltration, name='load_outline_infiltration'),
     path('login/Dashboard/load_outline_geste/', views.load_outline_geste, name='load_outline_geste'),
+    path('login/Dashboard/load_outline_water_retention/', views.load_outline_water_retention, name='load_outline_water_retention'),
     path('login/Dashboard/toolbox-edit/<int:id>/', views.toolbox_sinks_edit, name='toolbox_project_edit'),
     path('login/Dashboard/toolbox_get_sinks_within/<int:area_id>/', views.toolbox_get_sinks_within, name='toolbox_get_sinks_within'),
+    path('login/Dashboard/sinks_filter/', views.sinks_filter, name='sinks_filter'),
 
     ]

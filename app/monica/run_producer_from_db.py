@@ -22,6 +22,7 @@ import errno
 from datetime import datetime
 from monica import models as monica_models
 from swn import models as swn_models
+from buek import models as buek_models
 
 from django.db.models import Q, F 
 """
@@ -45,13 +46,7 @@ def create_env():
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'debug_out/generated_env_x_TEST.json')) as _:
         env = json.load(_)
 
-    # for el in env["cropRotation"]:
-    #     for ws in el["worksteps"]:
-    #         if ws["type"] == "Sowing":
-    #             obj= monica_models.SpeciesParameters.objects.get(id=29)
-    #             obj_json = obj.to_json()
-    #             ws["crop"]["cropParams"]["species"]["="] = obj_json
-    #             print(ws["crop"]["cropParams"]["species"]["="])
+
     socket.send_json(env)
 
 
@@ -66,14 +61,12 @@ def WriteEnv(filename, env) :
     with open(filename, 'w') as outfile:
         json.dump(env, outfile)
 
-if __name__ == "__main__":
-    run_producer()
 
 def create_site(soil_profile_id=10):
     print("CREATING SITE")
-    soil_profile_horizons = swn_models.BuekSoilProfileHorizon.objects.filter(
+    soil_profile_horizons = buek_models.SoilProfileHorizon.objects.filter(
         Q(obergrenze_m__gte=0, obergrenze_m__lt=2.0) &
-        Q(bueksoilprofile_id=soil_profile_id)
+        Q(soilprofile_id=soil_profile_id)
     ).order_by('horizont_nr')
 
     latitude = 52.8

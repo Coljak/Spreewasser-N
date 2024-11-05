@@ -21,15 +21,13 @@ import requests
 from . import forms
 from monica import forms as monica_forms
 from . import models
+from buek import models as buek_models
 
 from toolbox import models as toolbox_models
 from app.helpers import is_ajax
 import xmltodict
 from datetime import datetime, timedelta
 
-# from django.contrib.auth.forms import UserCreationForm
-# from django.urls import reverse_lazy
-# from django.views import generic
 
 from .utils import get_geolocation
 import random
@@ -40,6 +38,9 @@ import time
 import urllib
 from bs4 import BeautifulSoup
 
+# dev feature displays all bootstrap colors etc.
+def bootstrap(request):
+    return render(request, 'swn/bootstrap_colors.html')
 
 # helper function to convert np arrays of date strings 
 def convert_to_datetime(date_string):
@@ -92,17 +93,7 @@ def thredds_catalog(request):
 
     return render(request, 'swn/thredds_catalog.html', {'catalog_json': catalog_dict_list})
 
-def get_wms_capabilities_json(request, name):
-    url = "http://thredds:8080/thredds/wms/data/DWD_Data/" + name
-    params = {
-        'service': 'WMS',
-        'version': '1.3.0',
-        'request': 'GetCapabilities', 
-    }
-    response = requests.get(url, params=params)
-    response_json = xmltodict.parse(response.content)
-    print('json_response', response_json)
-    return JsonResponse(response_json)
+
 
 def get_wms_capabilities(request, name):
     url = "http://thredds:8080/thredds/wms/data/DWD_Data/" + name
@@ -473,48 +464,6 @@ def load_projectregion(request):
     return JsonResponse(feature)
 
 
-def get_chart(request, field_id, crop_id, soil_id):
-    print('Request:', crop_id)
-    key = ''
-    if crop_id == 0:
-        key = 'winterwheat'
-    elif crop_id == 1:
-        key = 'winterbarley'
-    elif crop_id == 2:
-        key = 'winterrape'
-    elif crop_id == 3:
-        key = 'winterrye'
-    elif crop_id == 4:
-        key = 'potato'
-    elif crop_id == 5:
-        key = 'silage_maize'
-    elif crop_id == 6:
-        key = 'springbarley'
-    print(key)
-
-    # soil_profile = models.BuekSoilProfileHorizon.objects.select_related('bueksoilprofile').filter(
-    #         bueksoilprofile__id=soil_id
-    #         ).order_by('horizont_nr')
-    # key_list = ['winterwheat', 'winterbarley', 'winterrape', 'winterrye', 'potato', 'silage_maize', 'springbarley', ]
-    if is_ajax(request):
-
-        calc = calc_dict[key]
-        # calc = calc_list[rand]
-        response = {
-            'mois_max': max([max(calc['Mois_1']), max(calc['Mois_2']), max(calc['Mois_3'])]),
-            'lai_max': max(calc['LAI']),
-            'Date': calc['Date'],
-            'Mois_1': calc['Mois_1'],
-            'Mois_2': calc['Mois_2'],
-            'Mois_3': calc['Mois_3'],
-            'LAI': calc['LAI'],
-            
-        }
-        print('get_chart Jsonresponse \n', JsonResponse(response))
-
-    return JsonResponse(response)
-
-
 def get_user_fields(request):
     if request.method == "GET":
         print("GET, headers:", request.headers)
@@ -669,11 +618,9 @@ The THREDDS Server is not open for direct access to limit security risks.
 
 #     # return render(request, 'swn/thredds.html', {'thredds_content': soup})
 
-# dev feature displays all bootstrap colors etc.
-def bootstrap(request):
-    return render(request, 'swn/bootstrap_colors.html')
 
-def load_polygon(request, entity, polygon_id):
+
+def load_nuts_polygon(request, entity, polygon_id):
     try:
         # Retrieve the polygon based on the ID
         if entity == 'states':
@@ -705,7 +652,6 @@ def load_polygon(request, entity, polygon_id):
         return JsonResponse(error_response, status=404)
 
 
-
 def field_edit(request, id):
     print("field_menu id: ", id)
     
@@ -714,38 +660,34 @@ def field_edit(request, id):
     crop_cultivar_form = monica_forms.CultivarAndSpeciesSelectionForm()
     user_field = models.UserField.objects.get(id=id)
     name = user_field.name
-    print("field_menu Checkpoint 1: ", (time.time() - start_time))
     
     soil_profile_polygon_ids = user_field.soil_profile_polygon_ids['buek_polygon_ids']
     
-    print("field_menu Checkpoint 2: ", (time.time() - start_time))
+    print("field_menu Checkpoint 2: ", (time.time() - start_time), ' soil_profile_polygon_ids' , soil_profile_polygon_ids)
     
     # Retrieve unique land usage choices
-    unique_land_usages = models.BuekSoilProfile.objects.filter(
+    unique_land_usages = buek_models.SoilProfile.objects.filter(
         polygon_id__in=soil_profile_polygon_ids
     ).values_list('landusage_corine_code', 'landusage').distinct()
-
-    # Filter out certain codes, if needed
+    # Filter out water (code 51)
     land_usage_choices = {code: usage for code, usage in unique_land_usages if code != 51}
-    print('land_usage_choices', land_usage_choices)
-
-    print("field_menu Checkpoint 2-1: ", (time.time() - start_time))
     
     # Initialize data_json with land usage codes
     data_json = {code: {} for code in land_usage_choices.keys()}
-    
-    # Loop through soil data and populate data_json
-    soil_data = models.BuekSoilProfileHorizon.objects.select_related('bueksoilprofile').filter(
-        bueksoilprofile__polygon_id__in=soil_profile_polygon_ids
-    ).order_by('bueksoilprofile__landusage_corine_code', 'bueksoilprofile__system_unit', 'bueksoilprofile__area_percenteage', 'horizont_nr')
 
+    soil_data = buek_models.SoilProfileHorizon.objects.select_related('soilprofile').filter(
+        soilprofile__polygon_id__in=soil_profile_polygon_ids
+        ).order_by('soilprofile__landusage_corine_code', 'soilprofile__system_unit', 'soilprofile__area_percenteage', 'horizont_nr')
+
+    # Loop through soil data and populate data_json
+    
     for item in soil_data:
         try:
-            if item.bueksoilprofile.landusage_corine_code != 51:
-                land_code = item.bueksoilprofile.landusage_corine_code
-                system_unit = item.bueksoilprofile.system_unit
-                area_percentage = item.bueksoilprofile.area_percenteage
-                profile_id = item.bueksoilprofile.id
+            if item.soilprofile.landusage_corine_code != 51:
+                land_code = item.soilprofile.landusage_corine_code
+                system_unit = item.soilprofile.system_unit
+                area_percentage = item.soilprofile.area_percenteage
+                profile_id = item.soilprofile.id
                 horizon_nr = item.horizont_nr
 
                 if system_unit not in data_json[land_code]:
@@ -762,7 +704,6 @@ def field_edit(request, id):
                 if profile_id not in data_json[land_code][system_unit]['soil_profiles'][area_percentage]:
                     data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id] = {'horizons': {}}
 
-                # Populate horizon data
                 data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id]['horizons'][horizon_nr] = {
                     'obergrenze_m': item.obergrenze_m,
                     'untergrenze_m': item.untergrenze_m,
@@ -813,10 +754,6 @@ def field_edit(request, id):
         'end_date': end_date.strftime('%d/%m/%Y')
     }
 
-    print("startEndDate: ", type(date_picker_str["start_date"]))
-
-    print("field_menu Checkpoint 5: ", (time.time() - start_time))
-
     data_menu = {
         'crop_cultivar_form': crop_cultivar_form,
         'soil_profile_form': forms.SoilProfileSelectionForm().set_choices(land_usage_choices),
@@ -828,9 +765,8 @@ def field_edit(request, id):
         'date_picker': date_picker_str
     }
 
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print('elapsed_time', elapsed_time, ' seconds')
+
+    print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
     return render(request, 'swn/field_projects_edit.html', data_menu)
 
 

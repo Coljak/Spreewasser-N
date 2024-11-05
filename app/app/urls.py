@@ -27,12 +27,13 @@ from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
-    # path('', views.IndexView.as_view(), name='index'),
+    path('admin/', admin.site.urls),
     path('', include('swn.urls')),
     path('', include('toolbox.urls')),
     path('monica/', include('monica.urls')),
     path('klim4cast/', include('klim4cast.urls')),
-    path('admin/', admin.site.urls),
+    path('buek/', include('buek.urls')),
+
     path('api/schema/',
          SpectacularAPIView.as_view(), name='api-schema'),
     path(

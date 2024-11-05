@@ -44,10 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'django_extensions',
+
     'swn',
     'toolbox',
     'monica',
     'klim4cast',
+    'buek',
+
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
@@ -56,6 +59,7 @@ INSTALLED_APPS = [
     'leaflet',
     'djgeojson',
     'django_bootstrap5',
+    'django_select2',
     'crispy_forms',
     'crispy_bootstrap5',
     'bootstrap_datepicker_plus',
@@ -157,8 +161,6 @@ USE_L10N = True  # Enables localized formatting of data
 TIME_ZONE = 'Europe/Berlin'
 USE_TZ = True
 
-
-
 USE_I18N = True
 
 
@@ -212,6 +214,14 @@ REST_FRAMEWORK = {
 SERIALIZATION_MODULES = {
     'geojson': 'djgeojson.serializers',
 }
+
+# COOKIES andd SESSIONS
+SESSION_COOKIE_AGE = 1209600 # 2 weeks - is the default
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# # Use secure cookies for better security (if using HTTPS)
+# SESSION_COOKIE_SECURE = True  # Only send the cookie over HTTPS
+# # Use HttpOnly to prevent JavaScript access to the cookie
+# SESSION_COOKIE_HTTPONLY = True  # Prevents JavaScript access to the cookie
 
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'

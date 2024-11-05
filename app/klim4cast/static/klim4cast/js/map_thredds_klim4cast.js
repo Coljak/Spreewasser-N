@@ -109,7 +109,7 @@ const dateFormatter = function(date) {
 const formatDatePicker = function(startDate, endDate) {
     $('.input-daterange').datepicker({
         language: 'de-DE',
-        format: "dd/mm/yyyy",
+        format: "dd.mm.yyyy",
         startDate: startDate,
         endDate: endDate,
         weekStart: 1,
@@ -155,7 +155,7 @@ loadNetCDFButton.addEventListener('click', function() {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // Get the meatdata of the chosen dataset and update the variable selector
+    // Get the metadata of the chosen dataset and update the variable selector
     // datasetSelector.addEventListener('change', (event) => {
         $('.input-daterange').datepicker('destroy');
         netcdfVariableSelector.innerHTML = '';

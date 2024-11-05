@@ -1,0 +1,15 @@
+{% extends "../swn/base.html" %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+
+{% load static %}
+
+{% block body_block %}
+    <div class="container">
+    <form method="GET" action=".">
+        {{ form.as_p }}
+        <button type="submit">Filter</button>
+    </form>
+</div>
+
+{% endblock body_block %}

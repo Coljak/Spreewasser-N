@@ -1,0 +1,116 @@
+<!-- These forms are injected from django and hissen until used-->
+
+{% load crispy_forms_tags %}
+
+<div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="modifyParametersModalLabel" aria-hidden="true">
+  <div class="modal-dialog  modal-lg">
+    <div class="modal-content" id="modalModifyParamsContent">
+      <!-- The content of the modal is injected from views+modify_parameters_modal.html-->
+    </div>
+  </div>
+</div>
+
+<div id="hiddenForms" style="display: none;">
+  <div class="card mb-3" id="sowingWorkstep-template">
+    <div class="card-body">
+      <form class="sowing-form">
+        <h5 class="card-title">Sowing Workstep</h5>
+        {{ workstep_sowing_form.as_p }}
+      </form>
+    </div>
+  </div>
+  <div class="card mb-3" id="harvestWorkstep-template">
+    <div class="card-body">
+      <form class="harvest-form">
+        <h5 class="card-title">Harvest Workstep</h5>
+        {{ workstep_harvest_form.as_p }}
+      </form>
+    </div>
+  </div>
+  <div class="card mb-3" id="tillageWorkstep-template">
+    <div class="card-body">
+      <form class="tillage-form">
+        <h5 class="card-title">Tillage Workstep</h5>
+        {{ workstep_tillage_form.as_p }}
+      </form>
+    </div>
+  </div>
+  <div class="card mb-3" id="mineralFertilisationWorkstep-template">
+    <div class="card-body">
+      <form class="mineral-fertilisation-form">
+        <h5 class="card-title">Mineral Fertilisation Workstep</h5>
+        {{ workstep_mineral_fertilisation_form.as_p }}
+      </form>
+    </div>
+  </div>
+  <div class="card mb-3" id="organicFertilisationWorkstep-template">
+    <div class="card-body">
+      <form class="organic-fertilisation-form">
+        <h5 class="card-title">Organic Fertilisation Workstep</h5>
+        {{ workstep_organic_fertilisation_form.as_p }}
+      </form>
+    </div>
+  </div>
+
+
+
+
+  
+
+  <div id="rotationTemplate">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Sowing Workstep</h5>
+        <form class="sowing-form">
+          {{ workstep_sowing_form.no_field_errors }}
+          <div class="form-group">
+            {{ workstep_sowing_form.date.label_tag }}
+            {{ workstep_sowing_form.date }}
+          </div>
+          <div class="form-group">
+            {{ workstep_sowing_form.species.label_tag }}
+            {{ workstep_sowing_form.species }}
+            <button type="button" class="btn btn-primary modify-parameters species-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+              Modify Species Parameters
+            </button>
+            <div class="advanced">
+              {{ workstep_sowing_form.residue.label_tag }}
+              {{ workstep_sowing_form.residue }}
+              
+              <button type="button" class="btn btn-primary modify-parameters crop-residue-parameters " data-bs-toggle="modal" data-bs-target="#formModal">
+                Modify Species' Residue Parameters
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            {{ workstep_sowing_form.cultivar.label_tag }}
+            {{ workstep_sowing_form.cultivar }}
+            <button type="button" class="btn btn-primary modify-parameters cultivar-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+              Modify Cultivar Parameters
+            </button>
+          </div>    
+        </form>
+      </div>
+    </div>
+    <!-- Harvest -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Harvest Workstep</h5>
+        <form class="workstepSowingForm">
+        {{ workstep_harvest_form|crispy }}
+        </form>
+      </div>
+    </div>
+    <!-- add workstep selector -->
+    <div class="card mb-3 add-workstep advanced">
+      <div class="card-body">
+        <h5 class="card-title">Add Workstep</h5>
+        
+        {{ workstep_selector_form|crispy }}
+        <button class="btn btn-primary add-workstep-button">Add Workstep</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>

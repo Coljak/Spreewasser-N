@@ -8,6 +8,7 @@ from django.contrib.gis.geos import GEOSGeometry
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from datetime import datetime
+from django.db.models import F, Q
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.db.models import PointField
@@ -143,6 +144,19 @@ def load_outline_geste(request):
         }
     return JsonResponse(feature)
 
+def load_outline_water_retention(request):
+    water_retention = models.Wasserrueckhaltepotentiale.objects.all()
+    geometry = GEOSGeometry(water_retention[0].geom)
+    geojson = json.loads(geometry.geojson)
+    feature = {
+            "type": "Feature",
+            "geometry": geojson,
+            "properties": {
+                "name": 'Toolbox Water Retention',
+            }
+        }
+    return JsonResponse(feature)
+
 def toolbox_get_sinks_within(request, area_id):
     user_field = swn_models.UserField.objects.get(id=area_id)
     user_field_geom = GEOSGeometry(user_field.geom)
@@ -160,9 +174,9 @@ def toolbox_get_sinks_within(request, area_id):
             "Fläche": sink.area_sink,
             "Eignung": str(sink.index_sink * 100) + "%",
             "Eignung 2": str(sink.index_si_1 * 100) + "%",
-            "Landnuntzung 1": sink.land_use_1,
-            "Landnuntzung 2": sink.land_use_2,
-            "Landnuntzung 3": sink.land_use_3,
+            "Landnuntzung 1": sink.landuse_1,
+            "Landnuntzung 2": sink.landuse_2,
+            "Landnuntzung 3": sink.landuse_3,
             "Bodenindex": sink.index_soil ,
         }
         features.append(geojson)
@@ -204,16 +218,16 @@ def toolbox_sinks_edit(request, id):
         dict['index_soil'] = obj.index_soil
         # dict['index_sink'] = obj.index_sink
         # dict['index_si_1'] = obj.index_si_1
-        dict['land_use_1'] = obj.land_use_1
-        dict['land_use_2'] = obj.land_use_2
+        dict['land_use_1'] = obj.landuse_1
+        dict['land_use_2'] = obj.landuse_2
         sinks_list.append(dict)
         # print(obj.geom)
     
     sinks_list_json = json.dumps(sinks_list)
     toolbox_edit_data['sinks'] = sinks_list
 
-    distinct_land_use_1 = sinks.values_list('land_use_1', flat=True).distinct()
-    distinct_land_use_2 = sinks.values_list('land_use_2', flat=True).distinct()
+    distinct_land_use_1 = sinks.values_list('landuse_1', flat=True).distinct()
+    distinct_land_use_2 = sinks.values_list('landuse_2', flat=True).distinct()
     depths_sink = sinks.values_list('depth_sink', flat=True).distinct()
     # max_depth_sink = sinks.values_list('depth_sink', flat=True).max()
     areas_sink = sinks.values_list('area_sink', flat=True).distinct()
@@ -234,3 +248,57 @@ def toolbox_sinks_edit(request, id):
     # toolbox_edit_data['max_area_sink'] = max_area_sink
     # print(distinct_land_use_1)
     return render(request, 'toolbox/toolbox_project_edit.html', toolbox_edit_data)
+
+
+
+def sinks_filter(request):
+    form = forms.SinksFilterForm(request.GET or None)
+    sinks_queryset = models.SinksWithLandUseAndSoilPropertiesAsPoints.objects.all()
+
+    if form.is_valid():
+        # Filter based on depth_sink range
+        depth_sink_min = form.cleaned_data.get('depth_sink_min')
+        depth_sink_max = form.cleaned_data.get('depth_sink_max')
+        if depth_sink_min is not None:
+            sinks_queryset = sinks_queryset.filter(depth_sink__gte=depth_sink_min)
+        if depth_sink_max is not None:
+            sinks_queryset = sinks_queryset.filter(depth_sink__lte=depth_sink_max)
+
+        # Filter based on area_sink range
+        area_sink_min = form.cleaned_data.get('area_sink_min')
+        area_sink_max = form.cleaned_data.get('area_sink_max')
+        if area_sink_min is not None:
+            sinks_queryset = sinks_queryset.filter(area_sink__gte=area_sink_min)
+        if area_sink_max is not None:
+            sinks_queryset = sinks_queryset.filter(area_sink__lte=area_sink_max)
+
+        # Filter based on calculated volume (area_sink * depth_sink)
+        volume_min = form.cleaned_data.get('volume_min')
+        volume_max = form.cleaned_data.get('volume_max')
+        if volume_min is not None:
+            sinks_queryset = sinks_queryset.annotate(
+                volume=F('area_sink') * F('depth_sink')
+            ).filter(volume__gte=volume_min)
+
+        if volume_max is not None:
+            sinks_queryset = sinks_queryset.annotate(
+                volume=F('area_sink') * F('depth_sink')
+            ).filter(volume__lte=volume_max)
+
+        # Filter based on land use selection (for values > 0)
+        selected_land_use = form.cleaned_data.get('land_use')
+        if selected_land_use:
+            land_use_filter = Q()
+            for land_use in selected_land_use:
+                land_use_filter |= Q(**{f"{land_use}__gt": 0})
+            sinks_queryset = sinks_queryset.filter(land_use_filter)
+
+
+    context = {
+        'form': form,
+        'sinks_queryset': sinks_queryset,
+    }
+    print(len(sinks_queryset), '/n_______SINKS QUERYSET______')
+    return render(request, 'toolbox/sink_filter.html', context)
+
+

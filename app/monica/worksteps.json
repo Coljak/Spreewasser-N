@@ -1,0 +1,519 @@
+[
+    {'worksteps': [
+            {
+                'date': '2024-10-10T22: 00: 00.000Z', 
+                'type': 'Sowing', 
+                'crop': 
+                {
+                    'cropParams': {
+                        'species': {
+                            '=': {
+                                'SpeciesName': 'cotton', 
+                                'AbovegroundOrgan': [False, True, True, True
+                                ], 'AssimilateReallocation': 0.30000001192092896, 'BaseTemperature': [
+                                    15,
+                                    12,
+                                    12,
+                                    10,
+                                    10,
+                                    10,
+                                    14
+                                ], 'CarboxylationPathway': 1, 'CriticalOxygenContent': [
+                                    0.08,
+                                    0.08,
+                                    0.08,
+                                    0.08,
+                                    0.08,
+                                    0.08,
+                                    0.08
+                                ], 'CuttingDelayDays': 0, 'DefaultRadiationUseEfficiency': 0.5, 'DevelopmentAccelerationByNitrogenStress': 0.0, 'DroughtImpactOnFertilityFactor': 0.0, 'FieldConditionModifier': 1.0, 'InitialKcFactor': 0.4000000059604645, 'InitialOrganBiomass': [
+                                    33,
+                                    33,
+                                    0,
+                                    0
+                                ], 'InitialRootingDepth': 0.10000000149011612, 'LimitingTemperatureHeatStress': 40.0, 'LuxuryNCoeff': 1.0, 'MaxCropDiameter': 0.006000000052154064, 'MaxNUptakeParam': 3.1449999809265137, 'MinimumNConcentration': 0.004999999888241291, 'MinimumTemperatureForAssimilation': 10.0, 'MaximumTemperatureForAssimilation': None, 'MinimumTemperatureRootGrowth': 10.0, 'NConcentrationAbovegroundBiomass': 2.0, 'NConcentrationB0': 0.30000001192092896, 'NConcentrationPN': 1.0, 'NConcentrationRoot': 0.019999999552965164, 'OrganGrowthRespiration': [
+                                    0.01,
+                                    0.03,
+                                    0.015,
+                                    0.01
+                                ], 'OrganMaintenanceRespiration': [
+                                    0.01,
+                                    0.03,
+                                    0.015,
+                                    0.01
+                                ], 'PartBiologicalNFixation': 0.0, 'PlantDensity': 15, 'RootDistributionParam': 0.00278700003400445, 'RootFormFactor': 3.0, 'RootGrowthLag': -30, 'RootPenetrationRate': 0.0024999999441206455, 'SamplingDepth': 0.8999999761581421, 'SpecificRootLength': 300.0, 'StageAfterCut': 0, 'StageAtMaxDiameter': 3, 'StageAtMaxHeight': 4, 'StageMaxRootNConcentration': [
+                                    0.0155,
+                                    0.012,
+                                    0.01,
+                                    0.01,
+                                    0.01,
+                                    0.01,
+                                    0.1
+                                ], 'StorageOrgan': [False, False, False, True
+                                ], 'TargetN30': 0.0, 'TargetNSamplingDepth': 50.0, 'type': 'SpeciesParameters'
+                            }
+                        }, 'cultivar': {'=': {'AssimilatePartitioningCoeff': [
+                                    [
+                                        0.6,
+                                        0.3,
+                                        0.1,
+                                        0.0
+                                    ],
+                                    [
+                                        0.32,
+                                        0.52,
+                                        0.16,
+                                        0.0
+                                    ],
+                                    [
+                                        0.08,
+                                        0.32,
+                                        0.6,
+                                        0.0
+                                    ],
+                                    [
+                                        0.05,
+                                        0.1,
+                                        0.7,
+                                        0.15
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ]
+                                ], 'BaseDaylength': [
+                                    [
+                                        14.0,
+                                        14.0,
+                                        14.0,
+                                        12.0,
+                                        12.0,
+                                        10.0,
+                                        0.0
+                                    ], 'h'
+                                ], 'BeginSensitivePhaseHeatStress': [
+                                    320.0, '°C d'
+                                ], 'CriticalTemperatureHeatStress': [
+                                    31.0, '°C'
+                                ], 'CropHeightP1': 9.0, 'CropHeightP2': 0.3499999940395355, 'CropSpecificMaxRootingDepth': 1.600000023841858, 'CultivarName': 'short', 'DaylengthRequirement': [
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ], 'h'
+                                ], 'Description': '', 'DroughtStressThreshold': [
+                                    0.8,
+                                    0.8,
+                                    0.65,
+                                    0.65,
+                                    0.65,
+                                    0.65,
+                                    0.8
+                                ], 'EndSensitivePhaseHeatStress': [
+                                    420.0, '°C d'
+                                ], 'FrostDehardening': 0.0, 'FrostHardening': 0.0, 'HeatSumIrrigationEnd': 600.0, 'HeatSumIrrigationStart': 100.0, 'LT50cultivar': 0.0, 'LatestHarvestDoy': -1, 'LowTemperatureExposure': 0.0, 'MaxAssimilationRate': 45.0, 'MaxCropHeight': [
+                                    1.0, 'm'
+                                ], 'OptimumTemperature': [
+                                    [
+                                        26.0,
+                                        30.0,
+                                        30.0,
+                                        26.0,
+                                        25.0,
+                                        25.0,
+                                        30.0
+                                    ], '°C'
+                                ], 'OrganIdsForCutting': [], 'OrganIdsForPrimaryYield': [
+                                    {'type': 'YieldComponent', 'organId': 4, 'yieldDryMatter': 0.67, 'yieldPercentage': 0.35
+                                    }
+                                ], 'OrganIdsForSecondaryYield': [], 'OrganSenescenceRate': [
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.05,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.05,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.05,
+                                        0.0,
+                                        0.0
+                                    ]
+                                ], 'Perennial': False, 'ResidueNRatio': 0.800000011920929, 'RespiratoryStress': 0.0, 'SpecificLeafArea': [
+                                    [
+                                        0.00164,
+                                        0.0018,
+                                        0.0015,
+                                        0.001,
+                                        0.001,
+                                        0.00136,
+                                        0.00136
+                                    ], 'ha kg-1'
+                                ], 'StageKcFactor': [
+                                    [
+                                        0.35,
+                                        0.55,
+                                        0.55,
+                                        1.1,
+                                        1.1,
+                                        0.55,
+                                        0.4
+                                    ], '1;0'
+                                ], 'StageTemperatureSum': [
+                                    [
+                                        80.0,
+                                        320.0,
+                                        242.0,
+                                        480.0,
+                                        380.0,
+                                        20.0,
+                                        25.0
+                                    ], '°C d'
+                                ], 'VernalisationRequirement': [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ], 'Type': 'CultivarParameters'
+                            }
+                        }
+                    }, 'residueParams': {'AOM_DryMatterContent': [
+                            1.0, 'kg DM kg FM-1', 'Dry matter content of added organic matter'
+                        ], 'AOM_FastDecCoeffStandard': [
+                            0.05000000074505806, 'd-1', 'Decomposition rate coefficient of fast AOM at standard conditions'
+                        ], 'AOM_NH4Content': [
+                            0.0, 'kg N kg DM-1', 'Ammonium content in added organic matter'
+                        ], 'AOM_NO3Content': [
+                            0.0010000000474974513, 'kg N kg DM-1', 'Nitrate content in added organic matter'
+                        ], 'AOM_SlowDecCoeffStandard': [
+                            0.012000000104308128, 'd-1', 'Decomposition rate coefficient of slow AOM at standard conditions'
+                        ], 'CN_Ratio_AOM_Fast': [
+                            0.0, '25', 'C to N ratio of the rapidly decomposing AOM pool'
+                        ], 'CN_Ratio_AOM_Slow': [
+                            75.0, '', 'C to N ratio of the slowly decomposing AOM pool'
+                        ], 'NConcentration': [
+                            0.005, 'kg N kg DM-1', 'Nitrogen content in added organic matter'
+                        ], 'CorgContent': [
+                            0.46, 'kg C kg DM-1', 'Carbon content in added organic matter'
+                        ], 'PartAOM_Slow_to_SMB_Fast': [
+                            0.5, 'kg kg-1', 'Part of AOM slow consumed by fast soil microbial biomass'
+                        ], 'PartAOM_Slow_to_SMB_Slow': [
+                            0.5, 'kg kg-1', 'Part of AOM slow consumed by slow soil microbial biomass'
+                        ], 'PartAOM_to_AOM_Fast': [
+                            0.33000001311302185, 'kg kg-1', 'Part of AOM that is assigned to the rapidly decomposing pool'
+                        ], 'PartAOM_to_AOM_Slow': [
+                            0.6700000166893005, 'kg kg-1', 'Part of AOM that is assigned to the slowly decomposing pool'
+                        ], 'residueType': '', 'species': 'cotton', 'type': 'CropResidueParameters'
+                    }
+                }
+            },
+            {'type': 'Harvest', 'date': '2024-10-08T22: 00: 00.000Z'
+            }
+        ]
+    },
+    {'worksteps': [
+            {'date': '2024-10-10T22: 00: 00.000Z', 'type': 'Sowing', 'crop': {'cropParams': {'species': {'=': {'SpeciesName': 'cotton', 'AbovegroundOrgan': [False, True, True, True
+                                ], 'AssimilateReallocation': 0.30000001192092896, 'BaseTemperature': [
+                                    15,
+                                    12,
+                                    12,
+                                    10,
+                                    10,
+                                    10,
+                                    14
+                                ], 'CarboxylationPathway': 1, 'CriticalOxygenContent': [
+                                    0.08,
+                                    0.08,
+                                    0.08,
+                                    0.08,
+                                    0.08,
+                                    0.08,
+                                    0.08
+                                ], 'CuttingDelayDays': 0, 'DefaultRadiationUseEfficiency': 0.5, 'DevelopmentAccelerationByNitrogenStress': 0.0, 'DroughtImpactOnFertilityFactor': 0.0, 'FieldConditionModifier': 1.0, 'InitialKcFactor': 0.4000000059604645, 'InitialOrganBiomass': [
+                                    33,
+                                    33,
+                                    0,
+                                    0
+                                ], 'InitialRootingDepth': 0.10000000149011612, 'LimitingTemperatureHeatStress': 40.0, 'LuxuryNCoeff': 1.0, 'MaxCropDiameter': 0.006000000052154064, 'MaxNUptakeParam': 3.1449999809265137, 'MinimumNConcentration': 0.004999999888241291, 'MinimumTemperatureForAssimilation': 10.0, 'MaximumTemperatureForAssimilation': None, 'MinimumTemperatureRootGrowth': 10.0, 'NConcentrationAbovegroundBiomass': 2.0, 'NConcentrationB0': 0.30000001192092896, 'NConcentrationPN': 1.0, 'NConcentrationRoot': 0.019999999552965164, 'OrganGrowthRespiration': [
+                                    0.01,
+                                    0.03,
+                                    0.015,
+                                    0.01
+                                ], 'OrganMaintenanceRespiration': [
+                                    0.01,
+                                    0.03,
+                                    0.015,
+                                    0.01
+                                ], 'PartBiologicalNFixation': 0.0, 'PlantDensity': 15, 'RootDistributionParam': 0.00278700003400445, 'RootFormFactor': 3.0, 'RootGrowthLag': -30, 'RootPenetrationRate': 0.0024999999441206455, 'SamplingDepth': 0.8999999761581421, 'SpecificRootLength': 300.0, 'StageAfterCut': 0, 'StageAtMaxDiameter': 3, 'StageAtMaxHeight': 4, 'StageMaxRootNConcentration': [
+                                    0.0155,
+                                    0.012,
+                                    0.01,
+                                    0.01,
+                                    0.01,
+                                    0.01,
+                                    0.1
+                                ], 'StorageOrgan': [False, False, False, True
+                                ], 'TargetN30': 0.0, 'TargetNSamplingDepth': 50.0, 'type': 'SpeciesParameters'
+                            }
+                        }, 'cultivar': {'=': {'AssimilatePartitioningCoeff': [
+                                    [
+                                        0.6,
+                                        0.3,
+                                        0.1,
+                                        0.0
+                                    ],
+                                    [
+                                        0.32,
+                                        0.52,
+                                        0.16,
+                                        0.0
+                                    ],
+                                    [
+                                        0.08,
+                                        0.32,
+                                        0.6,
+                                        0.0
+                                    ],
+                                    [
+                                        0.05,
+                                        0.1,
+                                        0.7,
+                                        0.15
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ]
+                                ], 'BaseDaylength': [
+                                    [
+                                        14.0,
+                                        14.0,
+                                        14.0,
+                                        12.0,
+                                        12.0,
+                                        10.0,
+                                        0.0
+                                    ], 'h'
+                                ], 'BeginSensitivePhaseHeatStress': [
+                                    320.0, '°C d'
+                                ], 'CriticalTemperatureHeatStress': [
+                                    31.0, '°C'
+                                ], 'CropHeightP1': 9.0, 'CropHeightP2': 0.3499999940395355, 'CropSpecificMaxRootingDepth': 1.600000023841858, 'CultivarName': 'short', 'DaylengthRequirement': [
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ], 'h'
+                                ], 'Description': '', 'DroughtStressThreshold': [
+                                    0.8,
+                                    0.8,
+                                    0.65,
+                                    0.65,
+                                    0.65,
+                                    0.65,
+                                    0.8
+                                ], 'EndSensitivePhaseHeatStress': [
+                                    420.0, '°C d'
+                                ], 'FrostDehardening': 0.0, 'FrostHardening': 0.0, 'HeatSumIrrigationEnd': 600.0, 'HeatSumIrrigationStart': 100.0, 'LT50cultivar': 0.0, 'LatestHarvestDoy': -1, 'LowTemperatureExposure': 0.0, 'MaxAssimilationRate': 45.0, 'MaxCropHeight': [
+                                    1.0, 'm'
+                                ], 'OptimumTemperature': [
+                                    [
+                                        26.0,
+                                        30.0,
+                                        30.0,
+                                        26.0,
+                                        25.0,
+                                        25.0,
+                                        30.0
+                                    ], '°C'
+                                ], 'OrganIdsForCutting': [], 'OrganIdsForPrimaryYield': [
+                                    {'type': 'YieldComponent', 'organId': 4, 'yieldDryMatter': 0.67, 'yieldPercentage': 0.35
+                                    }
+                                ], 'OrganIdsForSecondaryYield': [], 'OrganSenescenceRate': [
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.05,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.05,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.05,
+                                        0.0,
+                                        0.0
+                                    ]
+                                ], 'Perennial': False, 'ResidueNRatio': 0.800000011920929, 'RespiratoryStress': 0.0, 'SpecificLeafArea': [
+                                    [
+                                        0.00164,
+                                        0.0018,
+                                        0.0015,
+                                        0.001,
+                                        0.001,
+                                        0.00136,
+                                        0.00136
+                                    ], 'ha kg-1'
+                                ], 'StageKcFactor': [
+                                    [
+                                        0.35,
+                                        0.55,
+                                        0.55,
+                                        1.1,
+                                        1.1,
+                                        0.55,
+                                        0.4
+                                    ], '1;0'
+                                ], 'StageTemperatureSum': [
+                                    [
+                                        80.0,
+                                        320.0,
+                                        242.0,
+                                        480.0,
+                                        380.0,
+                                        20.0,
+                                        25.0
+                                    ], '°C d'
+                                ], 'VernalisationRequirement': [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ], 'Type': 'CultivarParameters'
+                            }
+                        }
+                    }, 'residueParams': {'AOM_DryMatterContent': [
+                            1.0, 'kg DM kg FM-1', 'Dry matter content of added organic matter'
+                        ], 'AOM_FastDecCoeffStandard': [
+                            0.05000000074505806, 'd-1', 'Decomposition rate coefficient of fast AOM at standard conditions'
+                        ], 'AOM_NH4Content': [
+                            0.0, 'kg N kg DM-1', 'Ammonium content in added organic matter'
+                        ], 'AOM_NO3Content': [
+                            0.0010000000474974513, 'kg N kg DM-1', 'Nitrate content in added organic matter'
+                        ], 'AOM_SlowDecCoeffStandard': [
+                            0.012000000104308128, 'd-1', 'Decomposition rate coefficient of slow AOM at standard conditions'
+                        ], 'CN_Ratio_AOM_Fast': [
+                            0.0, '25', 'C to N ratio of the rapidly decomposing AOM pool'
+                        ], 'CN_Ratio_AOM_Slow': [
+                            75.0, '', 'C to N ratio of the slowly decomposing AOM pool'
+                        ], 'NConcentration': [
+                            0.005, 'kg N kg DM-1', 'Nitrogen content in added organic matter'
+                        ], 'CorgContent': [
+                            0.46, 'kg C kg DM-1', 'Carbon content in added organic matter'
+                        ], 'PartAOM_Slow_to_SMB_Fast': [
+                            0.5, 'kg kg-1', 'Part of AOM slow consumed by fast soil microbial biomass'
+                        ], 'PartAOM_Slow_to_SMB_Slow': [
+                            0.5, 'kg kg-1', 'Part of AOM slow consumed by slow soil microbial biomass'
+                        ], 'PartAOM_to_AOM_Fast': [
+                            0.33000001311302185, 'kg kg-1', 'Part of AOM that is assigned to the rapidly decomposing pool'
+                        ], 'PartAOM_to_AOM_Slow': [
+                            0.6700000166893005, 'kg kg-1', 'Part of AOM that is assigned to the slowly decomposing pool'
+                        ], 'residueType': '', 'species': 'cotton', 'type': 'CropResidueParameters'
+                    }
+                }
+            },
+            {'type': 'Harvest', 'date': '2024-10-08T22: 00: 00.000Z'
+            }
+        ]
+    }
+]

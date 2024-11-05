@@ -7,6 +7,7 @@ var map = L.map('map', {
         titleCancel:"Exit fullscreen mode"
     }
 }).setView([38.8610, 71.2761], 7);
+
 map.zoomControl.setPosition('topright');
 // map.drawControl.setPosition('bottomright')
 

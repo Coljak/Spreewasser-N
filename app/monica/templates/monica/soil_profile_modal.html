@@ -1,0 +1,81 @@
+<!-- This is the modal for all Monica Parameters as Forms -->
+{% load django_bootstrap5 %}
+{% load crispy_forms_tags %}
+
+<div class="modal-header">
+  <h1 class="modal-title fs-5" id="modalLabel">{{ modal_title }}</h1>
+  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="modal-body">
+  <p>
+    <th>Systemeinheit: {{ soil_profile.system_unit }}, Bodensubtyp: {{ soil_profile.legacy_bo_subtyp_txt }}, Bodennutzung: {{ soil_profile.landusage }} </th>
+  </p>
+  <table class="table table-striped table-bordered table-hover">
+    <thead>
+      
+      <tr>
+        <th>Horizont Nr.</th>
+        <th>Schichtdicke</th>
+        <th>Sand</th>
+        <th>Ton</th>
+        <th>pH</th>
+        <th>Textur</th>
+        <th>Trockenrohdichte</th>
+        <th>Organischer Kohlenstoff</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for horizon in soil_profile.SoilProfileParameters %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ horizon.Thickness }}</td>
+        <td>{{ horizon.Sand }}</td>
+        <td>{{ horizon.lay }}</td>
+        <td>{{ horizon.pH }}</td>
+        <td>{{ horizon.KA5TextureClass }}</td>
+        <td>{{ horizon.SoilRawDensity }}</td>
+        <td>{{ horizon.SoilOrganicCarbon }}</td>
+      </tr>
+
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if show_original_table %}
+  <h2>Originaldaten</h2>
+  <table class="table table-striped table-bordered table-hover">
+    <thead>
+      
+      <tr>
+        <th>Horizont Nr.</th>
+        <th>Schichtdicke</th>
+        <th>Sand</th>
+        <th>Ton</th>
+        <th>pH</th>
+        <th>Textur</th>
+        <th>Trockenrohdichte</th>
+        <th>Organischer Kohlenstoff</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for horizon in soil_profile.OriginalSoilProfileParameters %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ horizon.Thickness }}</td>
+        <td>{{ horizon.Sand }}</td>
+        <td>{{ horizon.lay }}</td>
+        <td>{{ horizon.pH }}</td>
+        <td>{{ horizon.KA5TextureClass }}</td>
+        <td>{{ horizon.SoilRawDensity }}</td>
+        <td>{{ horizon.SoilOrganicCarbon }}</td>
+      </tr>
+
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+  </div> 
+</div>
+

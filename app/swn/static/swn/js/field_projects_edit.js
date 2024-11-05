@@ -176,13 +176,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // monica chart
-    const btnMonicaCalculate = document.getElementById("btnMonicaCalculate");
+    // const btnMonicaCalculate = document.getElementById("btnMonicaCalculate");
 
-    btnMonicaCalculate.addEventListener("click", function () {
-        // project = new swnProject();
-        getChart(soilProfileField.value, cropField.value);
-        chartCard.classList.remove("d-none");
-      });
+    // btnMonicaCalculate.addEventListener("click", function () {
+    //     // project = new swnProject();
+    //     getChart(soilProfileField.value, cropField.value);
+    //     chartCard.classList.remove("d-none");
+    //   });
 
     const btnMonicaCalculateDB = document.getElementById("btnMonicaCalculateDB");
 
@@ -190,7 +190,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
 
     btnMonicaCalculateDB.addEventListener("click", function () {
-        chartCard.classList.remove("d-none");
+        btnMonicaCalculateDB.disabled = true;
+        btnMonicaCalculateDB.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>...wird berechnet</span>';
+        
         // project = new swnProject();
         var soilProfileId = soilProfileField.value;
         var speciesId = speciesParameters.value;
@@ -273,7 +275,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 }
             });
+            chartCard.classList.remove("d-none");
             chart.update();
+            btnMonicaCalculateDB.disabled = false;
+            btnMonicaCalculateDB.textContent = "Berechnen";
             console.log("CHART: ", chart);
         }
         

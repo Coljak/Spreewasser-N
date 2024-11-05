@@ -2,22 +2,29 @@ from django import forms
 from .models import *
 from crispy_forms.helper import FormHelper
 from bootstrap_datepicker_plus.widgets import DatePickerInput
+from django.contrib.postgres.fields import JSONField
 
 from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
+from django_select2.forms import Select2Widget
 
 
-class DateInput(forms.DateInput):
-    input_type = 'date'
-    localize = False
-    input_formats=['%d.%m.%Y']
-    format = '%d.%m.%Y'
-
+# Step 1: Define a custom widget
+class JSONTextareaWidget(forms.Textarea):
     def __init__(self, *args, **kwargs):
-        kwargs['format'] = self.format
+        kwargs.setdefault('attrs', {'rows': 1, 'cols': 70})  # Adjust size here
         super().__init__(*args, **kwargs)
+
+# Step 2: Create a custom ModelForm that uses this widget for JSONFields
+class CustomModelForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Apply JSONTextareaWidget to all JSONField fields
+        for field_name, field in self.fields.items():
+            if isinstance(self._meta.model._meta.get_field(field_name), JSONField):
+                self.fields[field_name].widget = JSONTextareaWidget()
 
 class CoordinateForm(forms.Form):
     latitude = forms.FloatField(
@@ -34,49 +41,63 @@ class CoordinateForm(forms.Form):
     )
 
             
-class CultivarParametersForm(forms.ModelForm):
+class CultivarParametersForm(CustomModelForm):
     
     class Meta:
         model = CultivarParameters
-        exclude = ['id', 'user', 'is_default']
+        exclude = ['id', 'user']
 
-class SpeciesParametersForm(forms.ModelForm):
+class CultivarParametersInstanceSelectForm(CustomModelForm):
+    cultivar = forms.ChoiceField(
+        choices=[],
+        label="Cultivar",
+        widget=forms.Select(attrs={'class': 'form-control cultivar-parameters'})
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['cultivar'].choices = [
+            (instance.id, instance.name) for instance in CultivarParameters.objects.all()
+        ]
+
+
+class SpeciesParametersForm(CustomModelForm):
 
     class Meta:
         model = SpeciesParameters
         exclude = ['id', 'user', 'is_default']
 
-class CultivarAndSpeciesSelectionForm(forms.Form):
+class CultivarAndSpeciesSelectionForm(CustomModelForm):
     species_parameters = forms.ModelChoiceField(queryset=SpeciesParameters.objects.all(), label="Feldkultur", empty_label="Select Species")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['cultivar_parameters'] = forms.ModelChoiceField(queryset=CultivarParameters.objects.none(), label="Kultursorte", empty_label="Select Cultivar")
 
-class CropResidueParametersForm(forms.ModelForm):
+class CropResidueParametersForm(CustomModelForm):
         
-        class Meta:
-            model = CropResidueParameters
-            exclude = ['id', 'user', 'is_default']
+    class Meta:
+        model = CropResidueParameters
+        exclude = ['id', 'user', 'is_default']
 
-class OrganicFertiliserForm(forms.ModelForm):
+class OrganicFertiliserForm(CustomModelForm):
     class Meta:
         model = OrganicFertiliser
         exclude = ['id', 'user', 'is_default']
 
-class MineralFertiliserForm(forms.ModelForm):
+class MineralFertiliserForm(CustomModelForm):
     class Meta:
         model = MineralFertiliser
-        exclude = ['id', 'user', 'is_default']
+        exclude = ['id', 'user', 'is_default', 'type']
 
 
-class UserCropParametersForm(forms.ModelForm):
+class UserCropParametersForm(CustomModelForm):
     class Meta:
         model = UserCropParameters
         exclude = ['id', 'user', 'is_default']
 
 
-class UserCropParametersSelectionForm(forms.Form):
+class UserCropParametersSelectionForm(CustomModelForm):
     instance_id = forms.ChoiceField(
         choices=[],
         label="User Crop Parameters",
@@ -131,7 +152,7 @@ class UserSoilMoistureInstanceSelectionForm(forms.Form):
 class UserSoilOrganicParametersForm(forms.ModelForm):
     class Meta:
         model = UserSoilOrganicParameters
-        exclude = ['id', 'user']
+        exclude = ['id', 'user', 'is_default']
         
 class UserSoilOrganicInstanceSelectionForm(forms.Form):
     soil_organic = forms.ChoiceField(
@@ -150,7 +171,7 @@ class UserSoilOrganicInstanceSelectionForm(forms.Form):
 class SoilTemperatureModuleParametersForm(forms.ModelForm):
     class Meta:
         model = SoilTemperatureModuleParameters
-        exclude = ['id', 'user']
+        exclude = ['id', 'user', 'is_default']
 
 class SoilTemperatureModuleInstanceSelectionForm(forms.Form):
     soil_temperature = forms.ChoiceField(
@@ -186,25 +207,28 @@ class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
 
 
 class UserSimulationSettingsForm(forms.ModelForm):
+    
     name = forms.ModelChoiceField(
-        queryset=UserSimulationSettings.objects.all().values_list('name', flat=True),
-        widget=forms.Select,
+        queryset=UserSimulationSettings.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control user-simulation-settings'}),
         required=False,
         label="Simulation Setting",
         empty_label=None
     )
     class Meta:
         model = UserSimulationSettings
-        exclude = ['id', 'user']
-        
-    def __init__(self, *args, **kwargs):
-        super(UserSimulationSettingsForm, self).__init__(*args, **kwargs)
-        # Set the default value to the one named 'default'
-        try:
-            default_setting = UserSimulationSettings.objects.get(default=True)
-            self.fields['name'].initial = default_setting
-        except UserSimulationSettings.DoesNotExist:
-            self.fields['name'].initial = None
+        exclude = ['id', 'user', 'is_default']
+    
+
+   
+    # def __init__(self, *args, **kwargs):
+    #     super(UserSimulationSettingsForm, self).__init__(*args, **kwargs)
+    #     # Set the default value to the one named 'default'
+    #     try:
+    #         default_setting = UserSimulationSettings.objects.get(default=True)
+    #         self.fields['name'].initial = default_setting
+    #     except UserSimulationSettings.DoesNotExist:
+    #         self.fields['name'].initial = None
 
 class UserSimulationSettingsInstanceSelectionForm(forms.Form):
     user_simulation_settings = forms.ChoiceField(
@@ -222,28 +246,48 @@ class UserSimulationSettingsInstanceSelectionForm(forms.Form):
 
 class WorkstepSelectorForm(forms.Form):
     WORKSTEP_CHOICES = (
-        ('workstep-harvest-template', 'Harvest'),
-        ('workstep-mineral-fertilization-template', 'Mineral Fertilization'),
-        ('workstep-organic-fertilization-template', 'Organic Fertilization'),
-        ('workstep-tillage-template', 'Tillage'),
+        ('harvestWorkstep', 'Harvest'),
+        ('mineralFertilisationWorkstep', 'Mineral Fertilisation'),
+        ('organicFertilisationWorkstep', 'Organic Fertilisation'),
+        ('tillageWorkstep', 'Tillage'),
+        ('irrigationWorkstep', 'Irrigation'),
         )
     workstep_type = forms.ChoiceField(
         choices=WORKSTEP_CHOICES, 
         label='Workstep Type', 
-        widget=forms.Select(attrs={'class': 'workstep-type-select'})
+        widget=forms.Select(attrs={
+            'class': 'workstep-type-select'
+            })
         )
 
 class WorkstepSowingForm(forms.ModelForm):
-    date = forms.DateField(widget=DateInput(), input_formats=['%d.%m.%Y'])
+    date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-control datepicker workstep-datepicker',
+            'workstep-type': 'sowingWorkstep'
+            }),  
+        input_formats=['%d.%m.%Y']
+        )
     species = forms.ModelChoiceField(
-        queryset=SpeciesParameters.objects.all(),
+        queryset=SpeciesParameters.objects.all().order_by('species_name'),
           label="Species",
-          widget=forms.Select(attrs={'class': 'form-control, species-selector'}),
+          widget=forms.Select(attrs={
+              'class': 'form-control species-selector select-parameters species-parameters',
+                'workstep-type': 'sowingWorkstep'
+              }),
           )
     cultivar = forms.ModelChoiceField(
         queryset=CultivarParameters.objects.none(),
         label="Cultivar",
-        widget=forms.Select(attrs={'class': 'form-control, cultivar-selector'}),
+        widget=forms.Select(attrs={
+            'class': 'form-control cultivar-selector select-parameters cultivar-parameters',
+            'workstep-type': 'sowingWorkstep'
+            }),
+        )
+    residue = forms.ModelChoiceField(
+        queryset=CropResidueParameters.objects.none(),
+        label="Residue Parameters",
+        widget=forms.Select(attrs={'class': 'form-control crop-residue-selector select-parameters crop-residue-parameters'}),
         )
 
     class Meta:
@@ -263,21 +307,58 @@ class WorkstepSowingForm(forms.ModelForm):
                 pass  # invalid input; ignore and fallback to empty queryset
         elif self.instance.pk:
             self.fields['cultivar'].queryset = self.instance.species.cultivarparameters_set.order_by('species_name')
+            # self.fields['residue'].queryset = self.instance.species.cropresidueparameters_set.order_by('species_name')
 
-class WorkstepMineralFertilizationForm(forms.ModelForm):
-    date = forms.DateField(widget=DateInput(), input_formats=['%d.%m.%Y'])
+
+class WorkstepMineralFertilisationForm(forms.ModelForm):
+    date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-control datepicker workstep-datepicker',
+            'workstep-type': 'mineralFertilisationWorkstep'}),
+        input_formats=['%d.%m.%Y']
+        )
+    amount = forms.FloatField(min_value=0.0, 
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control number-selector mineral-fertiliser-amount select-parameters',
+            'workstep-type': 'mineralFertilisationWorkstep'
+         }))
+    mineral_fertiliser = forms.ModelChoiceField(
+        queryset = MineralFertiliser.objects.all(),
+        label="Mineral Fertiliser",
+        widget=forms.Select(attrs={
+            'class': 'form-control mineral-fertiliser-selector select-parameters mineral-fertiliser-parameters',
+            'workstep-type': 'mineralFertilisationWorkstep'
+            }),
+    )
     class Meta:
-        model = WorkstepMineralFertilization
+        model = WorkstepMineralFertilisation 
         fields = ['date', 'amount', 'mineral_fertiliser']
 
-class WorkstepOrganicFertilizationForm(forms.ModelForm):
-    date = forms.DateField(widget=forms.DateInput(attrs={'class': 'form-control'}), input_formats=['%d.%m.%Y'])
+class WorkstepOrganicFertilisationForm(forms.ModelForm):
+    date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-control datepicker workstep-datepicker',
+            'workstep-type': 'organicFertilisationWorkstep'
+            }),   
+        input_formats=['%d.%m.%Y']
+        )
+    amount = forms.FloatField(min_value=0.0, 
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control number-selector organic-fertiliser-amount select-parameters',
+            'workstep-type': 'organicFertilisationWorkstep'
+        }))
+    organic_fertiliser = forms.ModelChoiceField(
+        queryset = OrganicFertiliser.objects.all(),
+        label="Organic Fertiliser",
+        widget=forms.Select(attrs={
+            'class': 'form-control organic-fertiliser-selector select-parameters organic-fertiliser-parameters',
+            'workstep-type': 'organicFertilisationWorkstep'
+            }),
+    )
+    incorporation = forms.BooleanField()
     class Meta:
-        model = WorkstepOrganicFertilization
+        model = WorkstepOrganicFertilisation   
         fields = ['date', 'amount', 'organic_fertiliser', 'incorporation']
-        widgets = {
-            'date': DateInput(),
-        }
         
 #     def save(self, commit=False):
 #         instance = super().save(commit=False)
@@ -290,12 +371,18 @@ class WorkstepOrganicFertilizationForm(forms.ModelForm):
 #         return instance
 
 class WorkstepTillageForm(forms.ModelForm):
-    date = forms.DateField(widget=forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'dd.mm.yyyy'}), input_formats=['%d.%m.%Y'])
+    date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-control datepicker workstep-datepicker',
+            'workstep-type': 'tillageWorkstep'
+            }),   
+        input_formats=['%d.%m.%Y']
+        )
     class Meta:
         model = WorkstepTillage
         fields = ['date', 'tillage_depth']
         widgets = {
-            'date': DateInput(),
+            'date': forms.DateInput(),
         }
 #     def save(self, commit=False):
 #         instance = super().save(commit=False)
@@ -308,13 +395,22 @@ class WorkstepTillageForm(forms.ModelForm):
 
 
 class WorkstepHarvestForm(forms.ModelForm):
-    date = forms.DateField(widget=forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'dd.mm.yyyy', 'type': 'date'}), input_formats=['%d.%m.%Y'])
+    date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-control datepicker workstep-datepicker',
+            'workstep-type': 'harvestWorkstep'
+            }),  
+        input_formats=['%d.%m.%Y']
+        )
     class Meta:
         model = WorkstepHarvest
         fields = ['date']
         widgets = {
-            'date': DateInput(),
+            'date': forms.DateInput(),
         }
+
+
+        
 
 #     def save(self, commit=False):
 #         instance = super().save(commit=False)
@@ -325,7 +421,24 @@ class WorkstepHarvestForm(forms.ModelForm):
 
 
 
-
+class WorkstepIrrigationForm(forms.ModelForm):
+    date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-control datepicker workstep-datepicker',
+            'workstep-type': 'irrigationWorkstep'
+            }),   
+        input_formats=['%d.%m.%Y']
+        )
+    amount = forms.FloatField(
+        min_value=0.0, 
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control number-selector irrigation-amount select-parameters',
+            'workstep-type': 'irrigationWorkstep'
+            }))
+    class Meta:
+        model = WorkstepIrrigation
+        
+        fields = ['date', 'amount']
 
 
 

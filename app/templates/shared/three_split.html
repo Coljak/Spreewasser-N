@@ -1,0 +1,66 @@
+{% extends "swn/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load leaflet_tags %}
+{% load geojson_tags %}
+
+{% block css %}
+{{ block.super }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+crossorigin=""/>
+<link rel="stylesheet" href="{% static 'shared/three_split.css' %}">
+{% endblock css %}
+
+{% block body_block %}
+<div class="content ">
+  <!-- Main panel container -->
+  <div class="panel-container">
+    <!-- Top panel (contains left and right panels) -->
+    <div class="panel-top panel-inner-container">
+      {% comment %} <div class="panel-inner-container"> {% endcomment %}
+        <div class="panel-left">
+          <div class="card">
+            <div class="card-header text-white bg-primary">Title</div>
+            <div class="card-body card-body-fixed-height">
+              {% block left_panel %}
+              {% endblock left_panel %}
+            </div>
+          </div>
+        </div>
+
+        <div class="vertical-splitter"></div>
+
+        <div class="panel-right">
+          {% block right_panel %}
+          {% endblock right_panel %}
+        </div>
+      {% comment %} </div> {% endcomment %}
+    </div>
+
+    <div class="horizontal-splitter"></div>
+
+    <!-- Bottom panel -->
+    <div class="panel-bottom py-2">
+
+      <div class="card">
+        <div class="card-header text-white bg-primary">Bottom Panel</div>
+        <div class="card-body card-body-fixed-height">
+          {% block bottom_panel %}
+          {% endblock bottom_panel %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock body_block %}
+
+{% block javascript %}
+{{ block.super }}
+
+  <script src="https://rawgit.com/RickStrahl/jquery-resizable/master/src/jquery-resizable.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="text/javascript" src="{% static 'shared/three_split.js' %}"></script>
+{% endblock %}
+
+

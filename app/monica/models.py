@@ -738,7 +738,7 @@ class UserCropParameters(models.Model):
 class UserEnvironmentParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
-    default = models.BooleanField(default=False)
+    default = models.BooleanField(default=False) # user's default
     name = models.CharField(max_length=100, null=True, blank=True)
     albedo = models.FloatField()
     rcp = models.CharField(max_length=10)
@@ -799,7 +799,7 @@ class UserEnvironmentParameters(models.Model):
 class UserSoilMoistureParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
-    default = models.BooleanField(default=False)
+    # default = models.BooleanField(default=False)
     correction_rain = models.FloatField() # TODO integer
     correction_snow = models.FloatField()
     critical_moisture_depth = models.FloatField()
@@ -1403,7 +1403,7 @@ class SoilTemperatureModuleParameters(models.Model):
 class UserSoilTransportParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
-    default = models.BooleanField(default=False)
+    # default = models.BooleanField(default=False)
     ad = models.FloatField()
     diffusion_coefficient_standard = models.FloatField()
     dispersion_length = models.FloatField()

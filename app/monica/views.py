@@ -1042,6 +1042,12 @@ def modify_model_parameters(request, model_name, id):
             instance = form.save(commit=False)
             if 'save_as_new' in request.POST:
                 instance.pk = None 
+                # if not 
+                # instance.name = f'{instance.name} (copy)'
+                # if model_name == 'species-parameters':
+                #     crop_residue_params = CropResidueParameters.objects.get(species_parameters=obj)
+                #     crop_residue_params.pk = None
+
             elif instance.is_default and 'save_as_new' not in request.POST:
                 return JsonResponse({'success': False, 'errors': 'Cannot modify the default species parameters. Please use save as new.'})
             instance.save()

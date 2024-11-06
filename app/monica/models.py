@@ -13,11 +13,6 @@ from django.contrib.gis.db.models.functions import Distance
 from datetime import datetime
 import pandas as pd
 
-# TODO Questions:
-# - Why are there crop residues for species that have no species parameters?
-# - -> select ms.id, ms.species_name, mc.species_name as residue_name from monica_speciesparameters ms 
-# - -> full join monica_cropresidueparameters mc on mc.species_name = ms.species_name
-# - -> order by ms.species_name, mc.species_name 
 
 class CropParametersExist(models.Model):
     species_name = models.CharField(max_length=100, blank=True)
@@ -30,6 +25,7 @@ class CropParametersExist(models.Model):
 
 # this is the model for all jsons in monica-parammeters/crops/<crop-name>/.json
 class CultivarParameters(models.Model):
+    name = models.CharField(max_length=100)
     species_name = models.CharField(max_length=100, blank=True)
     species_parameters = models.ForeignKey('SpeciesParameters', on_delete=models.CASCADE, blank=True, null=True)
     assimilate_partitioning_coeff = ArrayField(ArrayField(models.FloatField()))
@@ -38,8 +34,7 @@ class CultivarParameters(models.Model):
     critical_temperature_heat_stress = models.FloatField()
     crop_height_p1 = models.FloatField()
     crop_height_p2 = models.FloatField()
-    crop_specific_max_rooting_depth = models.FloatField()
-    name = models.CharField(max_length=100)
+    crop_specific_max_rooting_depth = models.FloatField()   
     daylength_requirement = ArrayField(ArrayField(models.FloatField()))
     description = models.TextField()
     drought_stress_threshold = ArrayField(models.FloatField())
@@ -134,7 +129,6 @@ class CultivarParameters(models.Model):
 
             # Create or update SpeciesParameters object based on JSON data
             species_params, created = cls.objects.update_or_create(
-                # species_name=species_name,
                 name=data["CultivarName"],
                 defaults={
                     'species_name': species_name,
@@ -181,6 +175,7 @@ class CultivarParameters(models.Model):
 
 # this is the model for all jsons in monica-parammeters/crops/<crop_name>.json
 class SpeciesParameters(models.Model):
+    name = models.CharField(max_length=100)
     aboveground_organ = models.JSONField(blank=True, null=True)
     assimilate_reallocation = models.FloatField(blank=True, null=True)
     base_temperature = models.JSONField(blank=True, null=True)
@@ -217,7 +212,6 @@ class SpeciesParameters(models.Model):
     root_growth_lag = models.IntegerField(blank=True, null=True)
     root_penetration_rate = models.FloatField(blank=True, null=True)
     sampling_depth = models.FloatField(blank=True, null=True)
-    species_name = models.CharField(max_length=100)
     specific_root_length = models.FloatField(blank=True, null=True)
     stage_after_cut = models.IntegerField(blank=True, null=True)
     stage_at_max_diameter = models.IntegerField(blank=True, null=True)
@@ -231,7 +225,7 @@ class SpeciesParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        return self.species_name
+        return self.name
 
     @classmethod
     def create_or_update_from_json(cls, json_file_path):
@@ -240,7 +234,7 @@ class SpeciesParameters(models.Model):
             if data.get('type') == cls.__class__.__name__:
             # Create or update SpeciesParameters object based on JSON data
                 species_params, created = cls.objects.update_or_create(
-                    species_name=data.get('SpeciesName'),
+                    name=data.get('SpeciesName'),
                     defaults={
                         'aboveground_organ': data.get('AbovegroundOrgan'),
                         'assimilate_reallocation': data.get('AssimilateReallocation'),
@@ -297,7 +291,7 @@ class SpeciesParameters(models.Model):
 
     def to_json(self):
         json_data = {  
-            "SpeciesName": self.species_name,
+            "SpeciesName": self.name,
             "AbovegroundOrgan": self.aboveground_organ,
             "AssimilateReallocation":self.assimilate_reallocation,
             "BaseTemperature":self.base_temperature,
@@ -369,6 +363,8 @@ class OrganFromDB(models.Model):
 # crop residues
 class CropResidueParameters(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True)
+    species_name = models.CharField(max_length=100,blank=True, null=True)
+    species_parameters = models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE, blank=True, null=True)
     aom_dry_matter_content = models.FloatField(blank=True, null=True)
     aom_fast_dec_coeff_standard = models.FloatField(blank=True, null=True)
     aom_nh4_content = models.FloatField(blank=True, null=True)
@@ -383,8 +379,6 @@ class CropResidueParameters(models.Model):
     part_aom_to_aom_fast = models.FloatField(blank=True, null=True)
     part_aom_to_aom_slow = models.FloatField(blank=True, null=True)
     residue_type = models.CharField(max_length=100, blank=True, null=True)
-    species_name = models.CharField(max_length=100,blank=True, null=True)
-    species_parameters = models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
@@ -502,6 +496,7 @@ class CropResidueParameters(models.Model):
 
 
 class OrganicFertiliser(models.Model):
+    name = models.CharField(max_length=100, blank=True, null=True)
     aom_dry_matter_content = models.FloatField(blank=True, null=True)
     aom_fast_dec_coeff_standard = models.FloatField(blank=True, null=True)
     aom_nh4_content = models.FloatField(blank=True, null=True)
@@ -515,7 +510,6 @@ class OrganicFertiliser(models.Model):
     part_aom_to_aom_fast = models.FloatField(blank=True, null=True)
     part_aom_to_aom_slow = models.FloatField(blank=True, null=True)
     fertiliser_char_id = models.CharField(max_length=100, blank=True, null=True)
-    name = models.CharField(max_length=100, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
@@ -665,7 +659,7 @@ class MineralFertiliser(models.Model):
 class UserCropParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
-    default = models.BooleanField(default=False)
+    default = models.BooleanField(default=False) # user's default
     canopy_reflection_coefficient = models.FloatField()
     growth_respiration_parameter1 = models.FloatField()
     growth_respiration_parameter2 = models.FloatField()
@@ -681,7 +675,7 @@ class UserCropParameters(models.Model):
     saturation_beta = models.FloatField()
     stomata_conductance_alpha = models.FloatField() 
     tortuosity = models.FloatField()
-    is_default = models.BooleanField(blank=True, null=True, default=False)
+    is_default = models.BooleanField(blank=True, null=True, default=False) # system's default
 
     def to_json(self):
         return {
@@ -902,7 +896,6 @@ class UserSoilOrganicParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     # default = models.BooleanField(default=False)
-    name = models.CharField(max_length=100)
     qten_factor = models.FloatField()
     temp_dec_optimal = models.FloatField()
     moisture_dec_optimal = models.FloatField()
@@ -1337,6 +1330,7 @@ class UserSoilOrganicParameters(models.Model):
 # modify implemented
 class SoilTemperatureModuleParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=100)
     base_temperature = models.FloatField()
     initial_surface_temperature = models.FloatField()
     density_air = models.FloatField()
@@ -1350,7 +1344,6 @@ class SoilTemperatureModuleParameters(models.Model):
     n_tau = models.FloatField()
     soil_albedo = models.FloatField()
     soil_moisture = models.FloatField()
-    name = models.CharField(max_length=100)
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
     def to_json(self):
@@ -1509,7 +1502,7 @@ class SiteParameters(models.Model):
             "Slope": self.slope,
             "HeightNN": [self.altitude, "m"],
             "NDeposition": [self.n_deposition, "kg N ha-1 y-1"],
-            "SoilProfileParameters": self.soil_profile.get_horizons_json()
+            "SoilProfileParameters": self.soil_profile.get_monica_horizons_json()
         }
 
 
@@ -1537,7 +1530,6 @@ class CentralParameterProvider(models.Model):
     
 # Simulation related models
 class SimulationEnvironment(models.Model):
-    type = models.CharField(max_length=100)
     debug_mode = models.BooleanField(default=True)
     params = models.JSONField()
     crop_rotation = ArrayField(models.BooleanField(), null=True, blank=True) # worksteps

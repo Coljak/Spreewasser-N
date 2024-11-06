@@ -284,6 +284,28 @@
 </div>
 
 
+
+<!-- Name Input Modal for save as action -->
+
+<div id="nameInputModal" class="modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Enter a Name</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="newParameterName" class="form-control" placeholder="Enter name">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="confirmSaveAsNew">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
    
     {% comment %} <a href="{% url 'monica:monica_hohenfinow' %}" class="btn btn-primary">Run Monica Hohenfinow hardcoded</a> {% endcomment %}
 {% endblock %}

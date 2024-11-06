@@ -359,7 +359,12 @@ const bindModalEventListeners = () => {
         });
 
         document.getElementById('saveAsNewModalParameters').addEventListener('click', () => {
-            submitModalForm(modalForm, true);
+
+            const nameInputModal = new bootstrap.Modal(document.getElementById('nameInputModal'));
+            nameInputModal.show();
+
+
+            // submitModalForm(modalForm, true);
         });
     } catch {
         console.log('no modal save buttons found');
@@ -401,6 +406,7 @@ const submitModalForm = (modalForm, isSaveAsNew) => {
         .then(data => {
             if (data.success) {
                 $('#formModal').modal('hide');
+                //TODO: deal with it
                 alert('Form saved successfully!');
                 if (isSaveAsNew) {
                     updateDropdown(actionUrl.split('/')[0], data.new_id);
@@ -585,7 +591,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetClass = event.target.classList[3];
             const value = event.target.closest('.rotation').querySelector('.select-parameters.' + targetClass).value;
             const endpoint = '/monica/model/' + targetClass + '/' + value + '/';
-            fetchModalContent(endpoint);
+            if (value != "") {
+                fetchModalContent(endpoint);
+                $('#formModal').modal('show');
+            } else {
+                event.preventDefault();
+                handleAlerts('warning', 'Please select a parameter to modify');
+            }
         }
         saveToLocalStorage(project);
     });
@@ -606,37 +618,40 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.target.classList.contains('species-parameters')) {
                 console.log('if species-parameters')
                 workstep.options.species = event.target.value;
-                fetch('/monica/model/get_options/cultivar-parameters/' + event.target.value + '/')
-                .then(response => response.json())
-                .then(data => {
-                    cultivarSelector.innerHTML = '';  // Clear current options
-                    data.options.forEach(option => {
-                        const optionElement = document.createElement('option');
-                        optionElement.value = option.id;
-                        optionElement.text = option.name;
-                        cultivarSelector.appendChild(optionElement);
-
-                    
-                    });  
-                    workstep.options.cultivar = cultivarSelector.value
-                    saveToLocalStorage(project);                 
-
-                });
-
-                
-                fetch('/monica/model/get_options/crop-residue-parameters/' + event.target.value + '/')
+                if (event.target.value != "") {
+                    fetch('/monica/model/get_options/cultivar-parameters/' + event.target.value + '/')
                     .then(response => response.json())
                     .then(data => {
-                        residueSelector.innerHTML = '';
+                        cultivarSelector.innerHTML = '';  // Clear current options
                         data.options.forEach(option => {
                             const optionElement = document.createElement('option');
                             optionElement.value = option.id;
                             optionElement.text = option.name;
-                            residueSelector.appendChild(optionElement);
-                        });
-                        workstep.options.cropResidue = residueSelector.value;
-                        saveToLocalStorage(project);
+                            cultivarSelector.appendChild(optionElement);
+
+                        
+                        });  
+                        workstep.options.cultivar = cultivarSelector.value
+                        saveToLocalStorage(project);                 
+
                     });
+                
+
+                
+                    fetch('/monica/model/get_options/crop-residue-parameters/' + event.target.value + '/')
+                        .then(response => response.json())
+                        .then(data => {
+                            residueSelector.innerHTML = '';
+                            data.options.forEach(option => {
+                                const optionElement = document.createElement('option');
+                                optionElement.value = option.id;
+                                optionElement.text = option.name;
+                                residueSelector.appendChild(optionElement);
+                            });
+                            workstep.options.cropResidue = residueSelector.value;
+                            saveToLocalStorage(project);
+                        });
+                    };
                 
             } else if (event.target.classList.contains('cultivar-parameters')) {
                 console.log('cultivar-parameters changed')

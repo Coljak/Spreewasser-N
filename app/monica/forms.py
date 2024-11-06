@@ -45,7 +45,7 @@ class CultivarParametersForm(CustomModelForm):
     
     class Meta:
         model = CultivarParameters
-        exclude = ['id', 'user']
+        exclude = ['id', 'user', 'is_default']
 
 class CultivarParametersInstanceSelectForm(CustomModelForm):
     cultivar = forms.ChoiceField(
@@ -78,7 +78,7 @@ class CropResidueParametersForm(CustomModelForm):
         
     class Meta:
         model = CropResidueParameters
-        exclude = ['id', 'user', 'is_default']
+        exclude = ['id', 'user', 'is_default', 'species_name']
 
 class OrganicFertiliserForm(CustomModelForm):
     class Meta:
@@ -133,6 +133,7 @@ class UserEnvironmentParametersSelectionForm(forms.Form):
 class UserSoilMoistureParametersForm(forms.ModelForm):                
     class Meta:
         model = UserSoilMoistureParameters
+        field_order = ['name']
         exclude = ['id', 'user', 'is_default']
 
 class UserSoilMoistureInstanceSelectionForm(forms.Form):
@@ -152,6 +153,7 @@ class UserSoilMoistureInstanceSelectionForm(forms.Form):
 class UserSoilOrganicParametersForm(forms.ModelForm):
     class Meta:
         model = UserSoilOrganicParameters
+        field_order = ['name']
         exclude = ['id', 'user', 'is_default']
         
 class UserSoilOrganicInstanceSelectionForm(forms.Form):
@@ -171,6 +173,7 @@ class UserSoilOrganicInstanceSelectionForm(forms.Form):
 class SoilTemperatureModuleParametersForm(forms.ModelForm):
     class Meta:
         model = SoilTemperatureModuleParameters
+        field_order = ['name']
         exclude = ['id', 'user', 'is_default']
 
 class SoilTemperatureModuleInstanceSelectionForm(forms.Form):
@@ -190,6 +193,7 @@ class SoilTemperatureModuleInstanceSelectionForm(forms.Form):
 class UserSoilTransportParametersForm(forms.ModelForm):
     class Meta:
         model = UserSoilTransportParameters
+        field_order = ['name']
         exclude = ['id', 'user', 'is_default']
 
 class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
@@ -217,6 +221,7 @@ class UserSimulationSettingsForm(forms.ModelForm):
     )
     class Meta:
         model = UserSimulationSettings
+        field_order = ['name']
         exclude = ['id', 'user', 'is_default']
     
 
@@ -269,7 +274,7 @@ class WorkstepSowingForm(forms.ModelForm):
         input_formats=['%d.%m.%Y']
         )
     species = forms.ModelChoiceField(
-        queryset=SpeciesParameters.objects.all().order_by('species_name'),
+        queryset=SpeciesParameters.objects.all().order_by('name'),
           label="Species",
           widget=forms.Select(attrs={
               'class': 'form-control species-selector select-parameters species-parameters',

@@ -33,6 +33,15 @@ top: calc(var(--avatar-size) / 4); /* 25% of parent */
 /* .leaflet-container a {
 	color: var(--bs-primary) !important;
 	} */
+   /* Add this to your base.css or styles.css */
+#alert-box {
+  position: sticky;
+  top: 0;
+  z-index: 1050; /* Higher than typical content, ensuring it sits above */
+  width: 100%;
+  text-align: center;
+}
+
 
   .leaflet-sidebar {
     z-index: 1000 !important;

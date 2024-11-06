@@ -20,7 +20,7 @@
           {{ workstep_sowing_form.date.label_tag }}
           {{ workstep_sowing_form.date }}
         </div>
-        <div class="form-group">
+        {% comment %} <div class="form-group">
           {{ workstep_sowing_form.species.label_tag }}
           {{ workstep_sowing_form.species }}
           <button type="button" class="btn btn-primary modify-parameters species-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
@@ -41,7 +41,29 @@
           <button type="button" class="btn btn-primary modify-parameters cultivar-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
             Modify Cultivar Parameters
           </button>
-        </div>    
+        </div>     {% endcomment %}
+        <div class="form-group">
+          {{ workstep_sowing_form.species.label_tag }}
+          {{ workstep_sowing_form.species }}
+          <button type="button" class="btn btn-primary modify-parameters species-parameters advanced" data-bs-target="#formModal">
+            Modify Species Parameters
+          </button>
+          <div class="advanced">
+            {{ workstep_sowing_form.residue.label_tag }}
+            {{ workstep_sowing_form.residue }}
+            
+            <button type="button" class="btn btn-primary modify-parameters crop-residue-parameters " data-bs-target="#formModal">
+              Modify Species' Residue Parameters
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          {{ workstep_sowing_form.cultivar.label_tag }}
+          {{ workstep_sowing_form.cultivar }}
+          <button type="button" class="btn btn-primary modify-parameters cultivar-parameters advanced" data-bs-target="#formModal">
+            Modify Cultivar Parameters
+          </button>
+        </div>  
       </form>
     </div>
   </div>

@@ -35,8 +35,16 @@ class MonicaProject {
         this.latitude = null;
         this.startDate = null;
         this.endDate = null;
-        // this.rotation = createArrayProxy([], this);
         this.rotation = [];
+        // settings
+        this.userSimulationSettings = null;
+        this.userEnvironmentParameters = null;
+        this.userCropParameters = null;
+
+        this.userSoilTemperatureParameters = null;
+        this.userSoilTransportParameters = null;
+        this.userSoilOrganicParameters = null;
+        this.userSoilMoistureParameters = null;
     }
 }
 
@@ -185,7 +193,6 @@ const runSimulation = (monicaProject) => {
                         },
                     },
                     responsive: true,
-
                 }
             });
             chartCard.classList.remove("d-none");
@@ -274,10 +281,7 @@ const addWorkstep = (workstepType, rotationIndex, parentDiv, project) => {
             saveToLocalStorage(project);
         } catch {
             ;
-        }
-    
-        
-        
+        }    
     });
 
     $(newForm).find('.workstep-datepicker').on('focusout', function (e) {
@@ -293,20 +297,6 @@ const addWorkstep = (workstepType, rotationIndex, parentDiv, project) => {
             ;
         }
     });
-
-    // $(newForm).find('.delete-workstep').on('click', function (e) {
-    //     const rotationIndex = e.target.closest('.rotation').getAttribute('rotation-index');
-    //     const workstepIndex = e.target.closest('form').getAttribute('workstep-index');
-    //     const workstepType = e.target.closest('form').getAttribute('workstep-type');
-    //     console.log('delete-workstep', rotationIndex, workstepIndex, workstepType);
-    //     project.rotation[rotationIndex][workstepType] = project.rotation[rotationIndex][workstepType].filter(workstep => workstep.workstepIndex != workstepIndex);
-    //     e.target.closest('.card').remove();
-    //     saveToLocalStorage(project);
-    // });
-        
-        
-        
-
 
     const addWorkstepDiv = parentDiv.querySelector('.add-workstep');
     parentDiv.insertBefore(newForm, addWorkstepDiv);
@@ -428,7 +418,7 @@ const submitModalForm = (modalForm, isSaveAsNew, deleteParams) => {
     })
     .then(response => response.json())
     .then(data => {
-        console.log("check 2")
+        console.log("check 2", data)
         if (data.success) {
             $('#formModal').modal('hide');
             //TODO: deal with it
@@ -555,16 +545,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
-    $('#projectName').on('change', function () {
+    $('#tabProject').on('change', function(e) {
+        if (e.target.id  === 'projectName') {
         project.name = $(this).val();
         saveToLocalStorage(project);
-    });
-
-    $('#projectDescription').on('change', function () {
+        } else if (e.target.id === 'projectDescription') {
         project.description = $(this).val();
         saveToLocalStorage(project);
+        } else if (e.target.id ==='id_user_environment') {
+            project.userEnvironmentParameters = $(this).val();
+            saveToLocalStorage(project);
+        } else if (e.target.id === 'id_user_crop_parameters') {
+            project.userCropParameters = $(this).val();
+            saveToLocalStorage(project);
+        } else if (e.target.id === 'id_user_simulation_settings') {
+            project.userSimulationSettings = $(this).val();
+            saveToLocalStorage(project);
+        }
     });
+
+
+
 
     $('#id_longitude').on('change', function () {
         project.longitude = $(this).val();
@@ -776,6 +777,31 @@ document.addEventListener('DOMContentLoaded', () => {
             
             fetchModalContent(params);
         }
+    });
+
+    const projectDiv = document.getElementById('tabProject');
+
+    projectDiv.addEventListener('click', (event) => {
+        if (event.target.classList.contains('modify-parameters')) {
+            const targetClass = event.target.classList[3];
+            const value = $('.form-select.' + targetClass).val();
+            
+            const params = {
+                'parameters': targetClass,
+                'parameters_id': value,
+            }
+            console.log('params', params);
+            fetchModalContent(params);
+        } 
+        // else if (event.target.classList.contains('show-soil-parameters')) {
+        //     const params = {
+        //         'parameters': 'soil-profile',
+        //         'lon': project.longitude,
+        //         'lat': project.latitude
+        //     }
+            
+        //     fetchModalContent(params);
+        // }
     });
 
 

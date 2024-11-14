@@ -87,6 +87,10 @@ class SpeciesParametersForm(ParametersModelForm):
 
 
 class CultivarAndSpeciesSelectionForm(forms.Form):
+    """
+    This is the old selection form used in SWN field edit.
+    Can be deleted once Monica is incorporated into SWN.
+    """
     species_parameters = forms.ModelChoiceField(queryset=SpeciesParameters.objects.all(), label="Feldkultur", empty_label="Select Species")
 
     def __init__(self, *args, **kwargs):
@@ -116,47 +120,55 @@ class UserCropParametersForm(ParametersModelForm):
         exclude = ['id', 'user', 'is_default']
 
 
-class UserCropParametersSelectionForm(forms.ModelForm):
-    instance_id = forms.ChoiceField(
+class UserCropParametersSelectionForm(forms.Form):
+    user_crop_parameters = forms.ChoiceField(
         choices=[],
         label="User Crop Parameters",
-        widget=forms.Select(attrs={'class': 'form-control crop-parameters'})
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['instance_id'].choices = [
-            (instance.id, instance.name) for instance in UserCropParameters.objects.all()
-        ]
-
-
-class UserEnvironmentParametersForm(forms.ModelForm):
-    class Meta:
-        model = UserEnvironmentParameters
-        exclude = ['id', 'user', 'is_default']
-
-
-#TODO implement User Environment
-class UserEnvironmentParametersSelectionForm(forms.Form):
-    instance_id = forms.ChoiceField(
-        choices=[],
-        label="User Environment Settings",
-        widget=forms.Select(attrs={'class': 'form-control environment-parameters'})
+        widget=forms.Select(attrs={'class': 'form-control user-crop-parameters'})
     )
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user is not None:
-            self.fields['instance_id'].choices = [
+            self.fields['user_crop_parameters'].choices = [
+                (instance.id, instance.name) for instance in UserCropParameters.objects.filter(Q(user=user) | Q(user=None))
+            ]
+        else:
+            self.fields['user_crop_parameters'].choices = [
+                (instance.id, instance.name) for instance in UserCropParameters.objects.filter(Q(user=user))
+            ]
+
+
+
+class UserEnvironmentParametersForm(ParametersModelForm):
+    class Meta:
+        model = UserEnvironmentParameters
+        exclude = ['id', 'user', 'is_default']
+
+
+
+
+#TODO implement User Environment
+class UserEnvironmentParametersSelectionForm(forms.Form):
+    user_environment = forms.ChoiceField(
+        choices=[],
+        label="User Environment Settings",
+        widget=forms.Select(attrs={'class': 'form-control user-environment-parameters'})
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields['user_environment'].choices = [
                 (instance.id, instance.name) for instance in UserEnvironmentParameters.objects.filter(Q(user=user) | Q(user=None))
             ]
         else:
-            self.fields['instance_id'].choices = [
+            self.fields['user_environment'].choices = [
                 (instance.id, instance.name) for instance in UserEnvironmentParameters.objects.filter(Q(user=user))
             ]
 
 
-class UserSoilMoistureParametersForm(forms.ModelForm):                
+class UserSoilMoistureParametersForm(ParametersModelForm):                
     class Meta:
         model = UserSoilMoistureParameters
         field_order = ['name']
@@ -273,28 +285,23 @@ class UserSimulationSettingsForm(forms.ModelForm):
         exclude = ['id', 'user', 'is_default']
     
 
-   
-    # def __init__(self, *args, **kwargs):
-    #     super(UserSimulationSettingsForm, self).__init__(*args, **kwargs)
-    #     # Set the default value to the one named 'default'
-    #     try:
-    #         default_setting = UserSimulationSettings.objects.get(default=True)
-    #         self.fields['name'].initial = default_setting
-    #     except UserSimulationSettings.DoesNotExist:
-    #         self.fields['name'].initial = None
-
 class UserSimulationSettingsInstanceSelectionForm(forms.Form):
     user_simulation_settings = forms.ChoiceField(
         choices=[],
         label="User Simulation Settings",
-        widget=forms.Select(attrs={'class': 'form-control simulation-settings'})
+        widget=forms.Select(attrs={'class': 'form-control user-simulation-settings'})
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['user_simulation_settings'].choices = [
-            (instance.id, instance.name) for instance in UserSimulationSettings.objects.all()
-        ]
+        if user is not None:
+            self.fields['user_simulation_settings'].choices = [
+                (instance.id, instance.name) for instance in UserSimulationSettings.objects.filter(Q(user=user) | Q(user=None))
+            ]
+        else:
+            self.fields['user_simulation_settings'].choices = [
+                (instance.id, instance.name) for instance in UserSimulationSettings.objects.filter(Q(user=user))
+            ]
 
 
 class WorkstepSelectorForm(forms.Form):
@@ -354,17 +361,7 @@ class WorkstepSowingForm(forms.ModelForm):
             self.fields['species'].choices = [('', '---------')] + [
                 (instance.id, instance.name) for instance in SpeciesParameters.objects.filter(Q(user=user) | Q(user=None)).order_by('name')
             ]
-            # if 'species' in self.data:
-            #     try:
-            #         species_id = int(self.data.get('species'))
-            #         self.fields['cultivar'].queryset = CultivarParameters.objects.filter(Q(species_parameters_id=species_id) & (Q(user=None) | Q(user=user))).order_by('species_name')
-            #     except (ValueError, TypeError):
-            #         pass  # invalid input; ignore and fallback to empty queryset
-            # elif self.instance.pk:
-            #     self.fields['cultivar'].queryset = self.instance.species.cultivarparameters_set.filter(Q(user=user) | Q(user=None)).order_by('species_name')
-            #     # self.fields['residue'].queryset = self.instance.species.cropresidueparameters_set.order_by('species_name')
-            # else:
-            #     pass
+
 
 class WorkstepMineralFertilisationForm(forms.ModelForm):
     date = forms.DateField(
@@ -415,16 +412,7 @@ class WorkstepOrganicFertilisationForm(forms.ModelForm):
     class Meta:
         model = WorkstepOrganicFertilisation   
         fields = ['date', 'amount', 'organic_fertiliser', 'incorporation']
-        
-#     def save(self, commit=False):
-#         instance = super().save(commit=False)
-#         instance.date = self.cleaned_data['date']
-#         instance.amount = self.cleaned_data['amount']
-#         instance.organic_fertiliser = self.cleaned_data['organic_fertiliser']
-#         instance.incorporation = self.cleaned_data['incorporation']
-#         if commit:
-#             instance.save
-#         return instance
+
 
 class WorkstepTillageForm(forms.ModelForm):
     date = forms.DateField(
@@ -440,14 +428,6 @@ class WorkstepTillageForm(forms.ModelForm):
         widgets = {
             'date': forms.DateInput(),
         }
-#     def save(self, commit=False):
-#         instance = super().save(commit=False)
-#         instance.date = self.cleaned_data['date']
-#         instance.tillage_depth = self.cleaned_data['tillage_depth']
-#         if commit:
-#             instance.save
-#         return instance
-
 
 
 class WorkstepHarvestForm(forms.ModelForm):
@@ -464,17 +444,6 @@ class WorkstepHarvestForm(forms.ModelForm):
         widgets = {
             'date': forms.DateInput(),
         }
-
-
-        
-
-#     def save(self, commit=False):
-#         instance = super().save(commit=False)
-#         instance.date = self.cleaned_data['date']
-#         if commit:
-#             instance.save
-#         return instance
-
 
 
 class WorkstepIrrigationForm(forms.ModelForm):

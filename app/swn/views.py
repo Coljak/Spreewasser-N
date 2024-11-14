@@ -374,6 +374,33 @@ def user_logout(request):
     logout(request)
     return HttpResponseRedirect(reverse('swn:swn_index'))
 
+def three_split(request):
+    user_fields = models.UserProject.objects.filter(user_field__user=request.user)
+
+    user_projects = []
+
+    for user_field in user_fields:
+        if request.user == user_field.field.user:
+            item = {
+                'name': user_field.name,
+                'user_name': user_field.field.user.name,
+                'field': user_field.field.name,
+                'irrigation_input': user_field.irrigation_input,
+                'irrigation_output': user_field.irrigation_output,
+
+                'field_id': user_field.field.id,
+                'monica_calculation': user_field.calculation,
+            }
+            user_projects.append(item)
+
+    state_county_district_form = forms.PolygonSelectionForm(request.POST or None)
+    data = {
+            'user_projects': user_projects, 
+            'user_field_form': forms.UserFieldForm(),
+            'state_county_district_form': state_county_district_form,
+            }
+    return render(request, 'swn/swn_three_split.html', data)
+
 @login_required
 def user_dashboard(request):
 

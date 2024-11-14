@@ -12,7 +12,7 @@ services:
       - 8000:8000 
     volumes:
       - ./app:/app
-      - ./app/klim4cast/data/netcdf:/app/klim4cast/data/netcdf
+      - ./app/klim4cast/data/netcdf:/app/klim4cast/data/netcdf 
       # - ./thredds_data/data:/app/thredds_data
     command: 
       sh -c "python3 manage.py wait_for_db &&
@@ -153,6 +153,7 @@ services:
 
   # redis:
   #   image: redis:latest
+  # TODO Django Celery: https://www.youtube.com/watch?v=PkynrL1aU9o&list=PLOLrQ9Pn6cayGytG1fgUPEsUp3Onol8V7&index=3
 
 networks:
   swn_network:

@@ -46,15 +46,52 @@
   <!-- Project-->
   <div id="tabProject" class="tab-content card mb-3">
     <div class="card-body">
-      <div class="card mb-3">
+
+      <div id="project-info" class="card mb-3">
         <div class="card-body">
       
           <h5 class="card-title">Project</h5>
-          <input type="text" id="projectName" placeholder="Project Name">
-          <input type="text" id="projectDescription" placeholder="Project Description">
-          <p>Project Description</p>
+          <input type="text" id="projectName" placeholder="Project Name"/>
+          <input type="text" id="projectDescription" placeholder="Project Description"/>
+          
         </div>
       </div>
+
+
+      <div class="card mb-3 advanced">
+        <div class="card-body">
+          <h5 class="card-title">User Environment Parameters</h5>
+          {{ user_environment_parameters_select_form | crispy }}
+          <button class="btn btn-primary modify-parameters user-environment-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            Modify Soil Moisture Parameters
+          </button>
+        </div>
+      </div>
+
+
+      <div class="card mb-3 advanced">
+        <div class="card-body">
+          <h5 class="card-title">User Crop Parameters</h5>
+          {{ user_crop_parameters_select_form | crispy }}
+          <button class="btn btn-primary modify-parameters user-crop-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            User Crop Parameters
+          </button>
+        </div>
+      </div>
+
+      <div class="card mb-3 advanced">
+        <div class="card-body">
+          <h5 class="card-title">User Simulation Settings</h5>
+          {{ user_simulation_settings_select_form | crispy }}
+          <button class="btn btn-primary modify-parameters user-simulation-settings " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            User Simulation Settings
+          </button>
+        </div>
+      </div>
+
+
+      
+
     </div>
   </div>
 

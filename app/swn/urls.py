@@ -18,6 +18,7 @@ urlpatterns = [
     #user related paths
     path('sign-up/', views.sign_up, name='sign_up'),
     path('login/Dashboard/', views.user_dashboard, name='user_dashboard'),
+    path('login/three_split/', views.three_split, name='three_split'),
     path('login/Dashboard/get-csrf-token/', views.get_csrf_token, name='get-csrf-token'),
     path('login/Dashboard/save/', views.save_user_field, name='save-user-field'),
     path('login/Dashboard/load/', views.get_user_fields, name='get-user-fields'),

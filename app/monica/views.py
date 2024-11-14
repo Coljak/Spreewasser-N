@@ -397,14 +397,6 @@ def validate_soil_profile_parameters(soil_profile_parameters):
 def create_monica_env_from_json(json_data):
     error = []
    
-   
-    simulation_settings = json_data.get('simulationSettings')
-    if simulation_settings is not None:
-        simj = UserSimulationSettings.objects.get(id=simulation_settings).to_json()
-    else:
-        simj = UserSimulationSettings.objects.get(id=1).to_json() # default
-    # temporary replacements from file crop_site_sim2.json until available from database 
-
     cropRotation = []
     rotation = {}
     for r in json_data['rotation']:
@@ -530,22 +522,58 @@ def create_monica_env_from_json(json_data):
         "NDeposition": [n_deposition,"kg N ha-1 y-1"],
         "SoilProfileParameters": soil_profile_parameters
     }
+    simulation_settings = json_data.get('simulationSettings')
+    if simulation_settings is not None:
+        simj = UserSimulationSettings.objects.get(id=simulation_settings).to_json()
+    else:
+        simj = UserSimulationSettings.objects.get(is_default=True).to_json() 
+        
+    user_crop_parameters_id = json_data.get('userCropParameters')
+    if user_crop_parameters_id is not None:
+        user_crop_parameters = m_models.UserCropParameters.objects.get(id=user_crop_parameters_id).to_json()
+    else:
+        user_crop_parameters = m_models.UserCropParameters.objects.get(is_default=True).to_json()
 
-    user_crop_parameters_id = 1
-    user_environment_parameters_id = 1
-    user_soil_moisture_parameters_id = 1
-    user_soil_tempereature_parametes_id = 1
-    user_soil_transport_parameters_id = 1
-    user_soil_organic_parameters_id = 1
+    user_environment_parameters_id = json_data.get('userEnvironmentParameters')
+    if user_environment_parameters_id is not None:
+        user_environment_parameters = m_models.UserEnvironmentParameters.objects.get(id=user_environment_parameters_id).to_json()
+    else:
+        user_environment_parameters = m_models.UserEnvironmentParameters.objects.get(is_default=True).to_json()
+
+
+    user_soil_moisture_parameters_id = json_data.get('userSoilMoistureParameters')
+    if user_soil_moisture_parameters_id is not None:   
+        user_soil_moisture_parameters = m_models.UserSoilMoistureParameters.objects.get(id=user_soil_moisture_parameters_id).to_json()
+    else:
+        user_soil_moisture_parameters = m_models.UserSoilMoistureParameters.objects.get(is_default=True).to_json()
+
+    user_soil_temperature_parameters_id = json_data.get('userSoilTemperatureParameters')
+    if user_soil_temperature_parameters_id is not None:
+        user_soil_temperature_parameters = m_models.SoilTemperatureModuleParameters.objects.get(id=user_soil_temperature_parameters_id).to_json()
+    else:
+        user_soil_temperature_parameters = m_models.SoilTemperatureModuleParameters.objects.get(is_default=True).to_json()
+
+    user_soil_transport_parameters_id = json_data.get('userSoilTransportParameters')
+    if user_soil_transport_parameters_id is not None:
+        user_soil_transport_parameters = m_models.UserSoilTransportParameters.objects.get(id=user_soil_transport_parameters_id).to_json()
+    else:
+        user_soil_transport_parameters = m_models.UserSoilTransportParameters.objects.get(is_default=True).to_json()
+
+    user_soil_organic_parameters_id = json_data.get('userSoilOrganicParameters')
+    if user_soil_organic_parameters_id is not None:
+        user_soil_organic_parameters = m_models.UserSoilOrganicParameters.objects.get(id=user_soil_organic_parameters_id).to_json()
+    else:
+        user_soil_organic_parameters = m_models.UserSoilOrganicParameters.objects.get(is_default=True).to_json()
+
 
     cpp = {
     "type": "CentralParameterProvider",
-    "userCropParameters": m_models.UserCropParameters.objects.get(id=user_crop_parameters_id).to_json(),
-    "userEnvironmentParameters": m_models.UserEnvironmentParameters.objects.get(id=user_environment_parameters_id).to_json(),
-    "userSoilMoistureParameters": m_models.UserSoilMoistureParameters.objects.get(id=user_soil_moisture_parameters_id).to_json(),
-    "userSoilTemperatureParameters": m_models.SoilTemperatureModuleParameters.objects.get(id=user_soil_tempereature_parametes_id).to_json(),
-    "userSoilTransportParameters": m_models.UserSoilTransportParameters.objects.get(id=user_soil_transport_parameters_id).to_json(),
-    "userSoilOrganicParameters": m_models.UserSoilOrganicParameters.objects.get(id=user_soil_organic_parameters_id).to_json(),
+    "userCropParameters": user_crop_parameters,
+    "userEnvironmentParameters": user_environment_parameters,
+    "userSoilMoistureParameters": user_soil_moisture_parameters,
+    "userSoilTemperatureParameters": user_soil_temperature_parameters,
+    "userSoilTransportParameters": user_soil_transport_parameters,
+    "userSoilOrganicParameters":user_soil_organic_parameters,
     "simulationParameters": simj, #UserSimulationSettings.objects.get(id=simulation_settings).to_json()
     "siteParameters": siteParameters
     }
@@ -945,8 +973,12 @@ def get_parameter_options(request, parameter_type, id=None):
         options = OrganicFertiliser.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     elif parameter_type == 'mineral-fertiliser-parameters':
         options = MineralFertiliser.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
-    
-    
+    elif parameter_type == 'user-crop-parameters':
+        options = UserCropParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
+    elif parameter_type == 'user-environment-parameters':
+        options = UserEnvironmentParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
+    elif parameter_type == 'user-simulation-parameters':
+        options = UserSimulationSettings.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     
     else:
         options = []
@@ -998,19 +1030,26 @@ def modify_model_parameters(request, parameter, id, rotation=None):
             'modal_save_button': 'Save Mineral Fertiliser',
             'modal_save_as_button': 'Save as New Mineral Fertiliser',
         },
-        'user_crop_parameters': {
+        'user-crop-parameters': {
             'model': UserCropParameters,
             'form': UserCropParametersForm,
             'modal_title': 'Modify Crop Parameters',
             'modal_save_button': 'Save Crop Parameters',
             'modal_save_as_button': 'Save as New Crop Parameters',
         },
-        'user_environment_parameters': {
+        'user-environment-parameters': {
             'model': UserEnvironmentParameters,
             'form': UserEnvironmentParametersForm,
             'modal_title': 'Modify Environment Parameters',
             'modal_save_button': 'Save Environment Parameters',
             'modal_save_as_button': 'Save as New Environment Parameters',
+        },
+        'user-simulation-settings': {
+            'model': UserSimulationSettings,
+            'form': UserSimulationSettingsForm,
+            'modal_title': 'Modify Simulation Settings',
+            'modal_save_button': 'Save Simulation Settings',
+            'modal_save_as_button': 'Save as New Simulation Settings',
         },
         'soil-moisture-parameters': {
             'model': UserSoilMoistureParameters,
@@ -1151,14 +1190,21 @@ def monica_model(request):
     # residue_form = CropResidueParametersForm()
     
     # sim_settings_queryset = m_models.UserSimulationSettings.objects.filter(user__in=[user, None])
-    sim_settings_instance = m_models.UserSimulationSettings.objects.get(name='default')
+    user_simulation_settings = m_models.UserSimulationSettings.objects.get(is_default=True)
+    user_simulation_settings_form = UserSimulationSettingsForm(instance=user_simulation_settings)
 
-    simulation_settings_form = UserSimulationSettingsForm(instance=sim_settings_instance)
+    user_simulation_settings_select_form = UserSimulationSettingsInstanceSelectionForm(user=user)
+
+    user_crop_parameters_select_form = UserCropParametersSelectionForm(user=user)
+    user_crop_parameters_form = UserCropParametersForm()
+
+    user_environment_parameters_select_form = UserEnvironmentParametersSelectionForm(user=user)
+    user_environment_parameters_form = UserEnvironmentParametersForm()
 
     user_soil_moisture_select_form = UserSoilMoistureInstanceSelectionForm(user=user)
     user_soil_organic_select_form = UserSoilOrganicInstanceSelectionForm(user=user)
-    soil_temperature_module_selection_form = SoilTemperatureModuleInstanceSelectionForm(user=user)
-    user_soil_transport_parameters_selection_form = UserSoilTransportParametersInstanceSelectionForm(user=user)
+    soil_temperature_module_select_form = SoilTemperatureModuleInstanceSelectionForm(user=user)
+    user_soil_transport_parameters_select_form = UserSoilTransportParametersInstanceSelectionForm(user=user)
 
 
 
@@ -1167,24 +1213,24 @@ def monica_model(request):
     if request.method == 'POST':
         print("Request POST: ", request.POST)
         if 'save_simulation_settings' in request.POST or 'save_as_simulation_settings' in request.POST:
-            simulation_settings_form = UserSimulationSettingsForm(request.POST)
-            if simulation_settings_form.is_valid():
+            user_simulation_settings_form = UserSimulationSettingsForm(request.POST)
+            if user_simulation_settings_form.is_valid():
                 
                 if 'save_simulation_settings' in request.POST:
-                    if sim_settings_instance.name == 'default' and sim_settings_instance.default and sim_settings_instance.user is None:
+                    if user_simulation_settings.name == 'default' and user_simulation_settings.default and user_simulation_settings.user is None:
                         messages.error(request, "Cannot modify the default settings.")
                     else:
                         # Update existing settings
                         simulation_settings_instance = UserSimulationSettings.objects.get(id=request.POST.get('id'))
-                        for field in simulation_settings_form.cleaned_data:
-                            setattr(sim_settings_instance, field, simulation_settings_form.cleaned_data[field])
+                        for field in user_simulation_settings_form.cleaned_data:
+                            setattr(user_simulation_settings, field, user_simulation_settings_form.cleaned_data[field])
                         simulation_settings_instance.save()
                         messages.success(request, "Settings updated successfully.")
                 elif 'save_as_simulation_settings' in request.POST:
                     # Save as new settings
                     new_name = request.POST.get('new_name')
                     if new_name:
-                        new_settings = simulation_settings_form.save(commit=False)
+                        new_settings = user_simulation_settings_form.save(commit=False)
                         new_settings.name = new_name
                         new_settings.user = request.user
                         new_settings.save()
@@ -1197,8 +1243,13 @@ def monica_model(request):
     
     context = {
         'coordinate_form': coordinate_form,
-        #'cultivar_parameters_form': cultivar_parameters_form,
-        'simulation_settings_form': simulation_settings_form,
+        'user_crop_parameters_select_form': user_crop_parameters_select_form,
+        'user_crop_parameters_form': user_crop_parameters_form,
+        'user_simulation_settings_select_form': user_simulation_settings_select_form,
+        'simulation_settings_form': user_simulation_settings_form,
+        'user_environment_parameters_select_form': user_environment_parameters_select_form,
+        'user_environment_parameters_form': user_environment_parameters_form,
+
         'workstep_selector_form': workstep_selector_form,
         'workstep_sowing_form': workstep_sowing_form,
         'workstep_harvest_form': workstep_harvest_form,
@@ -1206,14 +1257,12 @@ def monica_model(request):
         'workstep_mineral_fertilisation_form': workstep_mineral_fertilisation_form,
         'workstep_organic_fertilisation_form': workstep_organic_fertilisation_form,
         'workstep_irrigation_form': workstep_irrigation_form,
-        # 'species_form': species_form,
-        # 'cultivar_form': cultivar_form,
-        # 'residue_form': residue_form,
+
 
         'user_soil_moisture_select_form': user_soil_moisture_select_form,
         'user_soil_organic_select_form': user_soil_organic_select_form,
-        'soil_temperature_module_selection_form': soil_temperature_module_selection_form, 
-        'user_soil_transport_parameters_selection_form': user_soil_transport_parameters_selection_form,
+        'soil_temperature_module_selection_form': soil_temperature_module_select_form, 
+        'user_soil_transport_parameters_selection_form': user_soil_transport_parameters_select_form,
 
 
     }
@@ -1264,6 +1313,7 @@ def save_simulation_settings(request):
     
 def run_simulation(request):
     if request.method == 'POST':
+        # data is the project json
         data = json.loads(request.body)
         print("Simulation is starting...\n", data)
 

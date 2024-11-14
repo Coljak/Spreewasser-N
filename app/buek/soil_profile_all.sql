@@ -47,3 +47,25 @@ ORDER  BY
           [polygon_id],
           [profile_id_in_polygon],
           [horizon_id];
+
+
+
+
+SELECT "monica_speciesparameters"."id", 
+"monica_speciesparameters"."name", 
+"monica_speciesparameters"."aboveground_organ", 
+"monica_speciesparameters"."assimilate_reallocation", 
+"monica_speciesparameters"."base_temperature", 
+"monica_speciesparameters"."carboxylation_pathway", 
+"monica_speciesparameters"."critical_oxygen_content", 
+"monica_speciesparameters"."cutting_delay_days", 
+"monica_speciesparameters"."default_radiation_use_efficiency", 
+"monica_speciesparameters"."development_acceleration_by_nitrogen_stress",
+ "monica_speciesparameters"."drought_impact_on_fertility_factor", "monica_speciesparameters"."field_condition_modifier", "monica_speciesparameters"."initial_kc_factor", "monica_speciesparameters"."initial_organ_biomass", "monica_speciesparameters"."initial_rooting_depth", "monica_speciesparameters"."is_perennial_crop", 
+ "monica_speciesparameters"."limiting_temperature_heat_stress", "monica_speciesparameters"."luxury_n_coeff", "monica_speciesparameters"."max_crop_diameter", "monica_speciesparameters"."max_n_uptake_param", "monica_speciesparameters"."minimum_n_concentration", "monica_speciesparameters"."minimum_temperature_for_assimilation", 
+ "monica_speciesparameters"."optimum_temperature_for_assimilation", "monica_speciesparameters"."maximum_temperature_for_assimilation", "monica_speciesparameters"."minimum_temperature_root_growth", "monica_speciesparameters"."n_concentration_aboveground_biomass", "monica_speciesparameters"."n_concentration_b0", "monica_speciesparameters"."n_concentration_pn", "monica_speciesparameters"."n_concentration_root", "monica_speciesparameters"."organ_growth_respiration", "monica_speciesparameters"."organ_maintenance_respiration",
+  "monica_speciesparameters"."part_biological_n_fixation",
+  "monica_speciesparameters"."plant_density", "monica_speciesparameters"."root_distribution_param", "monica_speciesparameters"."root_form_factor", "monica_speciesparameters"."root_growth_lag", "monica_speciesparameters"."root_penetration_rate", 
+ "monica_speciesparameters"."sampling_depth", "monica_speciesparameters"."specific_root_length", "monica_speciesparameters"."stage_after_cut", "monica_speciesparameters"."stage_at_max_diameter", "monica_speciesparameters"."stage_at_max_height", "monica_speciesparameters"."stage_max_root_n_concentration", "monica_speciesparameters"."storage_organ", "monica_speciesparameters"."target_n30", 
+ "monica_speciesparameters"."target_n_sampling_depth", "monica_speciesparameters"."stage_mobil_from_storage_coeff", "monica_speciesparameters"."is_default", "monica_speciesparameters"."user_id" 
+ FROM "monica_speciesparameters" WHERE "monica_speciesparameters"."user_id" IN (9)

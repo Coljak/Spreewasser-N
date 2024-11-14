@@ -21,6 +21,10 @@
 {% endblock right_panel %}
 
 {% block left_panel %}
+<div class="card">
+    <div class="card-header text-white bg-primary">Title</div>
+    <div class="card-body card-body-fixed-height">
+
     <div id="timelapseControl" class="">
 
         <select id='datasetSelector' class="form-select" aria-label="datasetSelector-label">
@@ -42,6 +46,8 @@
         <button class="btn btn-primary" id="loadNetCDFButton">Load Timeseries</button>
         
     </div>
+</div>
+</div>
     <script>
         var netcdfVariableSelector = document.getElementById('netcdfVariableSelector');
         var datasetSelector = document.getElementById('datasetSelector');

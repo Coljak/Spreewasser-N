@@ -8,7 +8,7 @@
     </div>
 
     <div class="modal-body">
-      <form id="modalForm" method="POST" data-action-url="{{ data_action_url }}">
+      <form id="modalForm" method="POST" parameter-name="{{ parameter_name }}" parameter-id="{{ parameter_id }} {% if rotation_index %}rotation-index={{ rotation_index }}{% endif %}" data-action-url="{{ data_action_url }}">
         {% csrf_token %}
           {{ form | crispy }}
           <div class="modal-footer">
@@ -20,9 +20,13 @@
             {% if is_default %}disabled{% endif %}
             >
             {{ modal_save_button }}
-          </button>
+            </button>
             <button type="button" class="btn btn-primary" id="saveAsNewModalParameters">{{ modal_save_as_button }}</button>
+            </button>
+            <button type="button" class="btn btn-warning" id="deleteParameters"{% if is_default %}disabled{% endif %}>Delete Parameter Set</button>
           </div>
+        
+      </div>
 
       </form>   
     </div>

@@ -9,22 +9,37 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 from django_select2.forms import Select2Widget
+from .widgets import SingleRowTextarea
 
 
-# Step 1: Define a custom widget
-class JSONTextareaWidget(forms.Textarea):
+
+def use_single_row_textarea(field):
+    print("using single fieldform")
+    if isinstance(field.widget, forms.Textarea):
+        field.widget = SingleRowTextarea()
+        print("is textarea fieldform")
+    return field
+
+# Use a base class to apply this callback to all forms
+class ParametersModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('attrs', {'rows': 1, 'cols': 70})  # Adjust size here
         super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            use_single_row_textarea(field)
+
+# class JSONTextareaWidget(forms.Textarea):
+#     def __init__(self, *args, **kwargs):
+#         kwargs.setdefault('attrs', {'rows': 1, 'cols': 70})  # Adjust size here
+#         super().__init__(*args, **kwargs)
 
 # Step 2: Create a custom ModelForm that uses this widget for JSONFields
-class CustomModelForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Apply JSONTextareaWidget to all JSONField fields
-        for field_name, field in self.fields.items():
-            if isinstance(self._meta.model._meta.get_field(field_name), JSONField):
-                self.fields[field_name].widget = JSONTextareaWidget()
+# class CustomModelForm(forms.ModelForm):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         # Apply JSONTextareaWidget to all JSONField fields
+#         for field_name, field in self.fields.items():
+#             if isinstance(self._meta.model._meta.get_field(field_name), JSONField):
+#                 self.fields[field_name].widget = JSONTextareaWidget()
 
 class CoordinateForm(forms.Form):
     latitude = forms.FloatField(
@@ -41,17 +56,18 @@ class CoordinateForm(forms.Form):
     )
 
             
-class CultivarParametersForm(CustomModelForm):
+class CultivarParametersForm(ParametersModelForm):
     
     class Meta:
         model = CultivarParameters
-        exclude = ['id', 'user', 'is_default']
+        exclude = ['id', 'user', 'name', 'is_default']
 
-class CultivarParametersInstanceSelectForm(CustomModelForm):
+
+class CultivarParametersInstanceSelectForm(forms.ModelForm):
     cultivar = forms.ChoiceField(
         choices=[],
         label="Cultivar",
-        widget=forms.Select(attrs={'class': 'form-control cultivar-parameters'})
+        widget=forms.Select(attrs={'class': 'form-control form-select cultivar-parameters'})
     )
 
     def __init__(self, *args, **kwargs):
@@ -61,43 +77,46 @@ class CultivarParametersInstanceSelectForm(CustomModelForm):
         ]
 
 
-class SpeciesParametersForm(CustomModelForm):
+
+class SpeciesParametersForm(ParametersModelForm):
 
     class Meta:
         model = SpeciesParameters
         exclude = ['id', 'user', 'is_default']
 
-class CultivarAndSpeciesSelectionForm(CustomModelForm):
+
+
+class CultivarAndSpeciesSelectionForm(forms.Form):
     species_parameters = forms.ModelChoiceField(queryset=SpeciesParameters.objects.all(), label="Feldkultur", empty_label="Select Species")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['cultivar_parameters'] = forms.ModelChoiceField(queryset=CultivarParameters.objects.none(), label="Kultursorte", empty_label="Select Cultivar")
 
-class CropResidueParametersForm(CustomModelForm):
+class CropResidueParametersForm(ParametersModelForm):
         
     class Meta:
         model = CropResidueParameters
         exclude = ['id', 'user', 'is_default', 'species_name']
 
-class OrganicFertiliserForm(CustomModelForm):
+class OrganicFertiliserForm(ParametersModelForm):
     class Meta:
         model = OrganicFertiliser
         exclude = ['id', 'user', 'is_default']
 
-class MineralFertiliserForm(CustomModelForm):
+class MineralFertiliserForm(ParametersModelForm):
     class Meta:
         model = MineralFertiliser
         exclude = ['id', 'user', 'is_default', 'type']
 
 
-class UserCropParametersForm(CustomModelForm):
+class UserCropParametersForm(ParametersModelForm):
     class Meta:
         model = UserCropParameters
         exclude = ['id', 'user', 'is_default']
 
 
-class UserCropParametersSelectionForm(CustomModelForm):
+class UserCropParametersSelectionForm(forms.ModelForm):
     instance_id = forms.ChoiceField(
         choices=[],
         label="User Crop Parameters",
@@ -116,6 +135,8 @@ class UserEnvironmentParametersForm(forms.ModelForm):
         model = UserEnvironmentParameters
         exclude = ['id', 'user', 'is_default']
 
+
+#TODO implement User Environment
 class UserEnvironmentParametersSelectionForm(forms.Form):
     instance_id = forms.ChoiceField(
         choices=[],
@@ -123,11 +144,16 @@ class UserEnvironmentParametersSelectionForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control environment-parameters'})
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['instance_id'].choices = [
-            (instance.id, instance.name) for instance in UserEnvironmentParameters.objects.all()
-        ]
+        if user is not None:
+            self.fields['instance_id'].choices = [
+                (instance.id, instance.name) for instance in UserEnvironmentParameters.objects.filter(Q(user=user) | Q(user=None))
+            ]
+        else:
+            self.fields['instance_id'].choices = [
+                (instance.id, instance.name) for instance in UserEnvironmentParameters.objects.filter(Q(user=user))
+            ]
 
 
 class UserSoilMoistureParametersForm(forms.ModelForm):                
@@ -143,11 +169,16 @@ class UserSoilMoistureInstanceSelectionForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control soil-moisture-parameters'})
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['soil_moisture'].choices = [
-            (instance.id, instance.name) for instance in UserSoilMoistureParameters.objects.all()
-        ]
+        if user is not None:
+            self.fields['soil_moisture'].choices = [
+                (instance.id, instance.name) for instance in UserSoilMoistureParameters.objects.filter(Q(user=user) | Q(user=None))
+            ]
+        else:
+            self.fields['soil_moisture'].choices = [
+                (instance.id, instance.name) for instance in UserSoilMoistureParameters.objects.filter(Q(user=user))
+            ]
 
 
 class UserSoilOrganicParametersForm(forms.ModelForm):
@@ -163,11 +194,16 @@ class UserSoilOrganicInstanceSelectionForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control soil-organic-parameters'})
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['soil_organic'].choices = [
-            (instance.id, instance.name) for instance in UserSoilOrganicParameters.objects.all()
-        ]
+        if user is not None:
+            self.fields['soil_organic'].choices = [
+                (instance.id, instance.name) for instance in UserSoilOrganicParameters.objects.filter(Q(user=user) | Q(user=None))
+            ]
+        else:
+            self.fields['soil_organic'].choices = [
+                (instance.id, instance.name) for instance in UserSoilOrganicParameters.objects.filter(Q(user=user))
+            ]
 
 
 class SoilTemperatureModuleParametersForm(forms.ModelForm):
@@ -176,6 +212,7 @@ class SoilTemperatureModuleParametersForm(forms.ModelForm):
         field_order = ['name']
         exclude = ['id', 'user', 'is_default']
 
+
 class SoilTemperatureModuleInstanceSelectionForm(forms.Form):
     soil_temperature = forms.ChoiceField(
         choices=[],
@@ -183,11 +220,17 @@ class SoilTemperatureModuleInstanceSelectionForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control soil-temperature-parameters'})
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['soil_temperature'].choices = [
-            (instance.id, instance.name) for instance in SoilTemperatureModuleParameters.objects.all()
-        ]
+
+        if user is not None:
+            self.fields['soil_temperature'].choices = [
+                (instance.id, instance.name) for instance in SoilTemperatureModuleParameters.objects.filter(Q(user=user) | Q(user=None))
+            ]
+        else:
+            self.fields['soil_temperature'].choices = [
+                (instance.id, instance.name) for instance in SoilTemperatureModuleParameters.objects.filter(Q(user=user))
+            ]
 
 
 class UserSoilTransportParametersForm(forms.ModelForm):
@@ -203,11 +246,16 @@ class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control soil-transport-parameters'})
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['soil_transport'].choices = [
-            (instance.id, instance.name) for instance in UserSoilTransportParameters.objects.all()
-        ]
+        if user is not None:
+            self.fields['soil_transport'].choices = [
+                (instance.id, instance.name) for instance in UserSoilTransportParameters.objects.filter(Q(user=user) | Q(user=None))
+            ]
+        else:
+            self.fields['soil_transport'].choices = [
+                (instance.id, instance.name) for instance in UserSoilTransportParameters.objects.filter(Q(user=user))
+            ]
 
 
 class UserSimulationSettingsForm(forms.ModelForm):
@@ -273,47 +321,50 @@ class WorkstepSowingForm(forms.ModelForm):
             }),  
         input_formats=['%d.%m.%Y']
         )
-    species = forms.ModelChoiceField(
-        queryset=SpeciesParameters.objects.all().order_by('name'),
-          label="Species",
-          widget=forms.Select(attrs={
-              'class': 'form-control species-selector select-parameters species-parameters',
-                'workstep-type': 'sowingWorkstep'
-              }),
-          )
+    species = forms.ChoiceField(
+        choices=[],
+        label="Species",
+        widget=forms.Select(attrs={
+            'class': 'form-control form-select species-selector select-parameters species-parameters',
+            'workstep-type': 'sowingWorkstep'
+            }),
+        )
+
     cultivar = forms.ModelChoiceField(
         queryset=CultivarParameters.objects.none(),
         label="Cultivar",
         widget=forms.Select(attrs={
-            'class': 'form-control cultivar-selector select-parameters cultivar-parameters',
+            'class': 'form-control form-select cultivar-selector select-parameters cultivar-parameters',
             'workstep-type': 'sowingWorkstep'
             }),
         )
     residue = forms.ModelChoiceField(
         queryset=CropResidueParameters.objects.none(),
         label="Residue Parameters",
-        widget=forms.Select(attrs={'class': 'form-control crop-residue-selector select-parameters crop-residue-parameters'}),
+        widget=forms.Select(attrs={'class': 'form-control form-select crop-residue-selector select-parameters crop-residue-parameters'}),
         )
 
     class Meta:
         model = WorkstepSowing
         fields = ['species', 'cultivar', 'date', 'plant_density']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.fields['species'].queryset = SpeciesParameters.objects.all()
-        # self.fields['cultivar'].queryset = CultivarParameters.objects.none()
-
-        if 'species' in self.data:
-            try:
-                species_id = int(self.data.get('species'))
-                self.fields['cultivar'].queryset = CultivarParameters.objects.filter(species_parameters_id=species_id).order_by('species_name')
-            except (ValueError, TypeError):
-                pass  # invalid input; ignore and fallback to empty queryset
-        elif self.instance.pk:
-            self.fields['cultivar'].queryset = self.instance.species.cultivarparameters_set.order_by('species_name')
-            # self.fields['residue'].queryset = self.instance.species.cropresidueparameters_set.order_by('species_name')
-
+        if user is not None:
+            self.fields['species'].choices = [('', '---------')] + [
+                (instance.id, instance.name) for instance in SpeciesParameters.objects.filter(Q(user=user) | Q(user=None)).order_by('name')
+            ]
+            # if 'species' in self.data:
+            #     try:
+            #         species_id = int(self.data.get('species'))
+            #         self.fields['cultivar'].queryset = CultivarParameters.objects.filter(Q(species_parameters_id=species_id) & (Q(user=None) | Q(user=user))).order_by('species_name')
+            #     except (ValueError, TypeError):
+            #         pass  # invalid input; ignore and fallback to empty queryset
+            # elif self.instance.pk:
+            #     self.fields['cultivar'].queryset = self.instance.species.cultivarparameters_set.filter(Q(user=user) | Q(user=None)).order_by('species_name')
+            #     # self.fields['residue'].queryset = self.instance.species.cropresidueparameters_set.order_by('species_name')
+            # else:
+            #     pass
 
 class WorkstepMineralFertilisationForm(forms.ModelForm):
     date = forms.DateField(

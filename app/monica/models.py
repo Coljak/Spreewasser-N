@@ -28,16 +28,20 @@ class CultivarParameters(models.Model):
     name = models.CharField(max_length=100)
     species_name = models.CharField(max_length=100, blank=True)
     species_parameters = models.ForeignKey('SpeciesParameters', on_delete=models.CASCADE, blank=True, null=True)
-    assimilate_partitioning_coeff = ArrayField(ArrayField(models.FloatField()))
-    base_daylength = ArrayField(ArrayField(models.FloatField()))
+    # assimilate_partitioning_coeff_a = ArrayField(ArrayField(models.FloatField()))
+    # base_daylength_a = ArrayField(ArrayField(models.FloatField()))
+    assimilate_partitioning_coeff = models.JSONField(blank=True, null=True)
+    base_daylength = models.JSONField(blank=True, null=True)    
     begin_sensitive_phase_heat_stress = models.FloatField()
     critical_temperature_heat_stress = models.FloatField()
     crop_height_p1 = models.FloatField()
     crop_height_p2 = models.FloatField()
     crop_specific_max_rooting_depth = models.FloatField()   
-    daylength_requirement = ArrayField(ArrayField(models.FloatField()))
+    # daylength_requirement_a = ArrayField(ArrayField(models.FloatField()))
+    daylength_requirement = models.JSONField(blank=True, null=True)
     description = models.TextField()
-    drought_stress_threshold = ArrayField(models.FloatField())
+    # drought_stress_threshold_a = ArrayField(models.FloatField())
+    drought_stress_threshold = models.JSONField(blank=True, null=True)
     end_sensitive_phase_heat_stress = models.FloatField()
     frost_dehardening = models.FloatField()
     frost_hardening = models.FloatField()
@@ -49,18 +53,27 @@ class CultivarParameters(models.Model):
     low_temperature_exposure = models.FloatField()
     max_assimilation_rate = models.FloatField()
     max_crop_height = models.FloatField()
-    optimum_temperature = ArrayField(ArrayField(models.FloatField()))
-    organ_ids_for_cutting = ArrayField(models.JSONField(), default=list)
-    organ_ids_for_primary_yield = ArrayField(models.JSONField())
-    organ_ids_for_secondary_yield = ArrayField(models.JSONField())
-    organ_senescence_rate = ArrayField(ArrayField(models.FloatField()))
+    # optimum_temperature_a = ArrayField(ArrayField(models.FloatField()))
+    # organ_ids_for_cutting_a = ArrayField(models.JSONField(), default=list)
+    # organ_ids_for_primary_yield_a = ArrayField(models.JSONField())
+    # organ_ids_for_secondary_yield_a = ArrayField(models.JSONField())
+    # organ_senescence_rate_a = ArrayField(ArrayField(models.FloatField()))
+    optimum_temperature = models.JSONField(blank=True, null=True)
+    organ_ids_for_cutting = models.JSONField(blank=True, null=True)
+    organ_ids_for_primary_yield = models.JSONField(blank=True, null=True)
+    organ_ids_for_secondary_yield = models.JSONField(blank=True, null=True)
+    organ_senescence_rate = models.JSONField(blank=True, null=True)
     perennial = models.BooleanField()
     residue_n_ratio = models.FloatField()
     respiratory_stress = models.FloatField()
-    specific_leaf_area = ArrayField(ArrayField(models.FloatField()))
-    stage_kc_factor = ArrayField(ArrayField(models.FloatField()))
-    stage_temperature_sum = ArrayField(ArrayField(models.FloatField()))
-    vernalisation_requirement = ArrayField(models.FloatField())
+    # specific_leaf_area_a = ArrayField(ArrayField(models.FloatField()))
+    # stage_kc_factor_a = ArrayField(ArrayField(models.FloatField()))
+    # stage_temperature_sum_a = ArrayField(ArrayField(models.FloatField()))
+    # vernalisation_requirement_a = ArrayField(models.FloatField())
+    specific_leaf_area = models.JSONField(blank=True, null=True)
+    stage_kc_factor = models.JSONField(blank=True, null=True)
+    stage_temperature_sum = models.JSONField(blank=True, null=True)
+    vernalisation_requirement = models.JSONField(blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     is_default = models.BooleanField(blank=True, null=True, default=False)
     
@@ -70,6 +83,7 @@ class CultivarParameters(models.Model):
 
     def to_json(self) -> dict:
         return {
+            "species_name": self.species_name,
             "AssimilatePartitioningCoeff": self.assimilate_partitioning_coeff,
             "BaseDaylength": [self.base_daylength, "h"],
             "BeginSensitivePhaseHeatStress": [self.begin_sensitive_phase_heat_stress, "°C d"],
@@ -122,6 +136,8 @@ class CultivarParameters(models.Model):
             data = json.load(file)
 
             cultivar_parameter_name = json_file_path.split('/')[-1].split('.')[0]
+            if cultivar_parameter_name == '':
+                cultivar_parameter_name = json_file_path.split('/')[-2]
             species_name = json_file_path.split('/')[-2]
             print('cultivar_parameter_name', cultivar_parameter_name)
             print('species_name', species_name)

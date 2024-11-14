@@ -12,6 +12,8 @@ from django.contrib import messages
 from django.template.loader import render_to_string
 from django.apps import apps
 
+from django.db.models import Q
+
 from .run_consumer_swn import run_consumer
 from .run_producer import run_producer
 from buek.views import get_soil_profile
@@ -908,38 +910,54 @@ def get_parameter_options(request, parameter_type, id=None):
     """
     Get choices for select box.
     """
+    user = request.user.id
+    print("GET PARAMETER OPTIONS: ", parameter_type, id,)
     if parameter_type == 'soil-moisture-parameters':
-        options = UserSoilMoistureParameters.objects.values('id', 'name')
+        options = UserSoilMoistureParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     elif parameter_type == 'soil-organic-parameters':
-        options = UserSoilOrganicParameters.objects.values('id', 'name')
+        options = UserSoilOrganicParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     elif parameter_type == 'soil-temperature-parameters':
-        options = SoilTemperatureModuleParameters.objects.values('id', 'name')
+        options = SoilTemperatureModuleParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     elif parameter_type == 'soil-transport-parameters':
-        options = UserSoilTransportParameters.objects.values('id', 'name')
+        options = UserSoilTransportParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
+        # options = UserSoilTransportParameters.objects.values('id', 'name')
     elif parameter_type == 'species-parameters':
-        options = SpeciesParameters.objects.values('id', 'name')
+        options = SpeciesParameters.objects.filter(Q(user=None) | Q(user=user)).values('id','name')
+        # options = SpeciesParameters.objects.values('id', 'name')
     elif parameter_type == 'cultivar-parameters':
         print("GETTING CULTIVAR PARAMETERS", id)
         if id is not None:
-            options = CultivarParameters.objects.filter(species_parameters_id=id).values('id', 'name')
+            # options = CultivarParameters.objects.filter(Q(user=None) | Q(user=user_id)).values('id','name')
+            # TODO most of this is probably obsolete- no species --> no cultivar
+            options = CultivarParameters.objects.filter(Q(species_parameters_id=id) & (Q(user=None) | Q(user=user))).values('id', 'name')
             if options.count() == 0:
-                options = CultivarParameters.objects.values('id', 'name')
+                options = CultivarParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
         else:
-            options = CultivarParameters.objects.values('id', 'name')
+            options = CultivarParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     elif parameter_type == 'crop-residue-parameters':
         if id is not None:
-            options = CropResidueParameters.objects.filter(species_parameters_id=id).values('id', 'name')
+            options = CropResidueParameters.objects.filter(Q(species_parameters_id=id) & (Q(user=None) | Q(user=user))).values('id', 'name')
             if options.count() == 0:
-                options = CropResidueParameters.objects.values('id', 'name')
+                options = CropResidueParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
         else:
-            options = CropResidueParameters.objects.values('id', 'name')
+            options = CropResidueParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
+    elif parameter_type == 'organic-fertiliser-parameters':
+        options = OrganicFertiliser.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
+    elif parameter_type == 'mineral-fertiliser-parameters':
+        options = MineralFertiliser.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
+    
+    
+    
     else:
         options = []
 
     return JsonResponse({'options': list(options)})
     
 
-def modify_model_parameters(request, model_name, id):
+def modify_model_parameters(request, parameter, id, rotation=None):
+
+    print('rotation: ', rotation)
+
     """
     Every Monica Parameter JSON can be modified and saved. This function applies to all parameters, loads the from and saves the data.
     """
@@ -1024,49 +1042,92 @@ def modify_model_parameters(request, model_name, id):
         }
     }
 
-    if model_name not in MODEL_FORM_MAPPING:
+    user = request.user
+
+    
+
+    if parameter not in MODEL_FORM_MAPPING:
         return JsonResponse({'success': False, 'errors': 'Invalid model name'})
     
-    model_info = MODEL_FORM_MAPPING[model_name]
+    model_info = MODEL_FORM_MAPPING[parameter]
     model_class = model_info['model']
     form_class = model_info['form']
 
-    if model_name == 'crop_residue_parameters':
+    # TODO  check this part: why should this only apply to residue and not also to cultivar? What if request.POST
+    if parameter == 'crop_residue_parameters':
         obj = get_object_or_404(model_class, species_parameters=id)
     else:
         obj = get_object_or_404(model_class, pk=id)
 
+
     if request.method == 'POST':
+        print("Request POST: ", request.POST)
         form = form_class(request.POST, instance=obj)
         if form.is_valid():
             instance = form.save(commit=False)
-            if 'save_as_new' in request.POST:
-                instance.pk = None 
-                # if not 
-                # instance.name = f'{instance.name} (copy)'
-                # if model_name == 'species-parameters':
-                #     crop_residue_params = CropResidueParameters.objects.get(species_parameters=obj)
-                #     crop_residue_params.pk = None
+            if request.POST.get('save_as_new'):
+                print("save as new is True")
+                
+                if instance.name == '':
+                    base_name = f'{parameter} (copy)'
+                else:
+                    base_name = instance.name
 
-            elif instance.is_default and 'save_as_new' not in request.POST:
-                return JsonResponse({'success': False, 'errors': 'Cannot modify the default species parameters. Please use save as new.'})
-            instance.save()
-            print("New primary key? :", instance.pk)
-            return JsonResponse({'success': True, 'new_id': instance.pk})
+                # Check if the name already exists;
+                # Q is necesssary to allow for the OR condition/ the query for None
+                existing_names = list(model_class.objects.filter(Q(user=None) | Q(user=user)).values_list('name', flat=True))
+                print("existing names: ", existing_names)
+
+                new_name = base_name
+                while new_name in existing_names:
+                    new_name = f'{base_name} (copy)'
+                    
+                instance.name = new_name  
+
+                instance.is_default = False
+                instance.pk = None
+                instance.user = request.user 
+            
+                instance.save()
+                return JsonResponse({'success': True, 'message': 'New instance created.',  'new_id': instance.pk})
+
+            elif request.POST.get('delete_params') and instance.is_default is False:
+                print("DELETE")
+                instance.delete()
+                return JsonResponse({'success': True, 'message': 'Instance deleted.'})
+            else:
+                print("SAVE")
+                if instance.is_default:
+                    return JsonResponse({'success': False, 'errors': 'Cannot modify the default species parameters. Please use save as new.'})
+                instance.save()
+                return JsonResponse({'success': True, 'message': 'Parameters saved successfully.', 'new_id': instance.pk})
+
+
             
         else:
             return JsonResponse({'success': False, 'errors': form.errors})
     else:
+
+
         form = form_class(instance=obj)
+        data_action_url = f'{parameter}/{id}/'
+        if rotation is not None:
+            print('if rotation')
+            data_action_url = f'{data_action_url}{rotation}/'
+        print("Data action URL: ", data_action_url)
         context = {
             'form': form,
             'modal_title': model_info['modal_title'],
             'modal_save_button': model_info['modal_save_button'],
             'modal_save_as_button': model_info['modal_save_as_button'],
-            'data_action_url': f'{model_name}/{id}/',
+            'parameter_name': parameter,
+            'parameter_id': id,
+            'data_action_url': data_action_url,
+            'rotation_index': rotation,
             'is_default': obj.is_default,
         }
         return render(request, 'monica/modify_parameters_modal.html', context)
+    
 
 # @login_required
 def monica_model(request):
@@ -1078,7 +1139,7 @@ def monica_model(request):
     coordinate_form = CoordinateForm()
    
     workstep_selector_form =  WorkstepSelectorForm()
-    workstep_sowing_form = WorkstepSowingForm()
+    workstep_sowing_form = WorkstepSowingForm(user=user)
     workstep_harvest_form = WorkstepHarvestForm()
     workstep_tillage_form = WorkstepTillageForm()
     workstep_irrigation_form = WorkstepIrrigationForm()
@@ -1094,10 +1155,10 @@ def monica_model(request):
 
     simulation_settings_form = UserSimulationSettingsForm(instance=sim_settings_instance)
 
-    user_soil_moisture_select_form = UserSoilMoistureInstanceSelectionForm()
-    user_soil_organic_select_form = UserSoilOrganicInstanceSelectionForm()
-    soil_temperature_module_selection_form = SoilTemperatureModuleInstanceSelectionForm()
-    user_soil_transport_parameters_selection_form = UserSoilTransportParametersInstanceSelectionForm()
+    user_soil_moisture_select_form = UserSoilMoistureInstanceSelectionForm(user=user)
+    user_soil_organic_select_form = UserSoilOrganicInstanceSelectionForm(user=user)
+    soil_temperature_module_selection_form = SoilTemperatureModuleInstanceSelectionForm(user=user)
+    user_soil_transport_parameters_selection_form = UserSoilTransportParametersInstanceSelectionForm(user=user)
 
 
 

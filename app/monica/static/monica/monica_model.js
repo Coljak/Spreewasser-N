@@ -26,44 +26,6 @@ const saveToLocalStorage = (project) => {
     localStorage.setItem('project', JSON.stringify(project));
 };
 
-
-
-
-// // Proxy creation functions
-// const createArrayProxy = (array, project) => {
-//     return new Proxy(array, {
-//         set: (target, property, value) => {
-//             console.log('createArrayProxy set called:', target, property, value);
-//             if (typeof value === 'object' && value !== null) {
-//                 value = createProxy(value, project);
-//             }
-//             target[property] = value;
-//             saveToLocalStorage(project);
-//             return true;
-//         }
-//     });
-// };
-
-// const createProxy = (object, project) => {
-//     if (Array.isArray(object)) {
-//         return createArrayProxy(object, project);
-//     }
-//     return new Proxy(object, {
-//         set: (target, property, value) => {
-//             console.log('createProxy set called:', target, property, value);
-//             if (value instanceof Date) {
-//                 target[property] = value;
-//             } else if (typeof value === 'object' && value !== null) {
-//                 value = createProxy(value, project);
-//             } else {
-//                 target[property] = value;
-//             }           
-//             saveToLocalStorage(project);
-//             return true;
-//         }
-//     });
-// };
-
 // Classes
 class MonicaProject {
     constructor() {
@@ -118,20 +80,6 @@ const setLanguage =  (language_code)=>{
         autoclose: true
     })
 };
-
-
-const calculateDaysInRotation = function() {
-    var startDate = $('#monicaStartDatePicker').datepicker('getDate');
-    var endDate = $('#monicaEndDatePicker').datepicker('getDate');
-    var daysInRotation = (endDate - startDate) / (1000 * 60 * 60 * 24);
-    var yearsInRotation = Math.ceil(daysInRotation / 365);
-    return [daysInRotation, yearsInRotation];
-}
-
-var daysInRotation = 0;
-
-
-
 
 function submitSimulationSettingsForm(action) {
     // Save the simulation settings from General Parameters tab
@@ -303,6 +251,10 @@ const addWorkstep = (workstepType, rotationIndex, parentDiv, project) => {
         element.setAttribute('workstep-index', workstepIndex);
         element.setAttribute('workstep-type', workstepType);
     });
+    newForm.querySelector('form').setAttribute('workstep-type', workstepType);
+    newForm.querySelector('form').setAttribute('workstep-index', workstepIndex);
+    newForm.querySelector('form').setAttribute('rotation-index', rotationIndex);
+
 
     $(newForm).find('.datepicker').datepicker({
         language: 'de-DE',
@@ -323,7 +275,7 @@ const addWorkstep = (workstepType, rotationIndex, parentDiv, project) => {
         } catch {
             ;
         }
-        
+    
         
         
     });
@@ -340,11 +292,21 @@ const addWorkstep = (workstepType, rotationIndex, parentDiv, project) => {
         } catch {
             ;
         }
-        
-        
-        
-        
     });
+
+    // $(newForm).find('.delete-workstep').on('click', function (e) {
+    //     const rotationIndex = e.target.closest('.rotation').getAttribute('rotation-index');
+    //     const workstepIndex = e.target.closest('form').getAttribute('workstep-index');
+    //     const workstepType = e.target.closest('form').getAttribute('workstep-type');
+    //     console.log('delete-workstep', rotationIndex, workstepIndex, workstepType);
+    //     project.rotation[rotationIndex][workstepType] = project.rotation[rotationIndex][workstepType].filter(workstep => workstep.workstepIndex != workstepIndex);
+    //     e.target.closest('.card').remove();
+    //     saveToLocalStorage(project);
+    // });
+        
+        
+        
+
 
     const addWorkstepDiv = parentDiv.querySelector('.add-workstep');
     parentDiv.insertBefore(newForm, addWorkstepDiv);
@@ -352,30 +314,84 @@ const addWorkstep = (workstepType, rotationIndex, parentDiv, project) => {
 };
 
 const bindModalEventListeners = () => {
+
     try {
         const modalForm = document.getElementById('modalForm');
-        document.getElementById('saveModalParameters').addEventListener('click', () => {
-            submitModalForm(modalForm, false);
+        console.log('modalForm', modalForm);
+        modalForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+        });
+        
+        document.getElementById('saveModalParameters').addEventListener('click', async () => {
+            console.log("bindModalEventListeners saveModalParameters clicked");
+            // change the selected Option's text in case the name was changed in the modal
+            const modalData = new FormData(modalForm);
+            // in case the name was changed in the modal, change the selected option's text
+            const parameterName = modalForm.getAttribute('parameter-name');
+            const selectedOption = $('.select.form-select.' + parameterName).find('option:selected');
+            selectedOption.text(modalData.get('name'));
+            const isSaveAsNew = false
+            const deleteParams = false
+
+            const modalClose = await submitModalForm(modalForm, isSaveAsNew, deleteParams);
+            console.log('modalClose', modalClose);
+            if (modalClose) {
+                
+                $('#formModal').modal('hide');
+            }
         });
 
         document.getElementById('saveAsNewModalParameters').addEventListener('click', () => {
+            console.log("bindModalEventListeners saveAsNewModalParameters clicked");
+            const modalForm = document.getElementById('modalForm');
+            console.log('modalForm', modalForm);
+            const isSaveAsNew = true
+            const deleteParams = false
 
-            const nameInputModal = new bootstrap.Modal(document.getElementById('nameInputModal'));
-            nameInputModal.show();
+            const modalClose = submitModalForm(modalForm, isSaveAsNew, deleteParams);
+            console.log('modalClose', modalClose);
+            if (modalClose) {
+                $('#formModal').modal('hide');
+            }
+        });
 
-
-            // submitModalForm(modalForm, true);
+        document.getElementById('deleteParameters').addEventListener('click', () => {
+            console.log("bindModalEventListeners deleteParameters clicked");
+            const modalForm = document.getElementById('modalForm');
+            const isSaveAsNew = false
+            const deleteParams = true
+            const modalClose = submitModalForm(modalForm, isSaveAsNew, deleteParams);
+            console.log('modalClose', modalClose);
+            if (modalClose) {
+                $('#formModal').modal('hide');
+            }
         });
     } catch {
         console.log('no modal save buttons found');
     }
+    // try {
+    //     document.getElementById('id_species_parameters').addEventListener('change', (event) => {
+    //         const speciesId = event.target.value;
+    //         const parameterType = event.target.closest('#modalForm')
+    //     });
+    // } catch {;}
 };
 
-const updateDropdown = (parameterType, newId) => {
+const updateDropdown = (actionUrl, newId) => {
+    const parameterType = actionUrl.split('/')[0];
+    const rotationIndex = actionUrl.split('/')[2];
     fetch('get_options/' + parameterType + '/')
         .then(response => response.json())
         .then(data => {
-            const select = document.querySelector('.form-select.' + parameterType);
+            console.log('updateDropdown', data);
+            var select = document.querySelector('.form-select.' + parameterType); 
+            if (rotationIndex != '') {
+                const rotationDiv = document.querySelector(`div[rotation-index='${rotationIndex}']`);
+                console.log('rotationDiv', `div[rotation-index='${rotationIndex}']`);
+                select = rotationDiv.querySelector('.select-parameters.' + parameterType);
+                console.log('select: ', select)
+                console.log('updateDropdown IF');
+            } 
             select.innerHTML = '';
             data.options.forEach(option => {
                 const optionElement = document.createElement('option');
@@ -383,17 +399,25 @@ const updateDropdown = (parameterType, newId) => {
                 optionElement.text = option.name;
                 select.appendChild(optionElement);
             });
-            select.value = newId;
+            if (newId != '') {
+                select.value = newId
+            }
         })
         .catch(error => console.log('Error in updateDropdown', error));
 };
 
-const submitModalForm = (modalForm, isSaveAsNew) => {
+const submitModalForm = (modalForm, isSaveAsNew, deleteParams) => {
     const actionUrl = modalForm.getAttribute('data-action-url');
     const formData = new FormData(modalForm);
     if (isSaveAsNew) {
-        formData.append('save_as_new', true);
-    }
+        formData.append('save_as_new', isSaveAsNew);
+        console.log("check 1a")
+    } else if (deleteParams) {
+        formData.append('delete_params', deleteParams)
+        console.log("check 1b")
+    } 
+
+    
 
     fetch(actionUrl, {
         method: 'POST',
@@ -402,27 +426,52 @@ const submitModalForm = (modalForm, isSaveAsNew) => {
             'X-CSRFToken': formData.get('csrfmiddlewaretoken')
         }
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                $('#formModal').modal('hide');
-                //TODO: deal with it
-                alert('Form saved successfully!');
-                if (isSaveAsNew) {
-                    updateDropdown(actionUrl.split('/')[0], data.new_id);
-                }
-            } else {
-                alert('Error saving form: ' + data.errors);
+    .then(response => response.json())
+    .then(data => {
+        console.log("check 2")
+        if (data.success) {
+            $('#formModal').modal('hide');
+            //TODO: deal with it
+            handleAlerts('success', data.message);
+            if (isSaveAsNew) {
+                var urlParts = actionUrl.split('/');
+                
+                console.log("check 3", actionUrl.split('/'))
+                console.log("updateDropdown saveAsNew", actionUrl.split('/')[0], data.new_id);
+                updateDropdown(actionUrl, data.new_id);
+            } else if (deleteParams) {
+                console.log("check 4")
+                console.log("updateDropdown deleteParams", actionUrl.split('/')[0], '');
+                updateDropdown(actionUrl, '');
             }
-        })
-        .catch(error => console.error('Error:', error));
+            return true;
+        } else {
+            alert('Error saving form: ' + data.errors);
+            return false;
+        }
+    })
+    .catch(error => console.error('Error:', error));
 };
 
-const fetchModalContent = (url) => {
+const fetchModalContent = (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    // var urlNew = `/monica/model/${params.parameters}/?${queryString}`;
+    var url = '/monica/model/' + params.parameters + '/' 
+    if (params.parameters_id) {
+        url += params.parameters_id + '/';
+    };
+    if (params.rotation_index) {
+        url += params.rotation_index + '/';
+    };
+    if (params.lon) {
+        url += params.lat + '/';
+        url += params.lon + '/';
+    };
+
     fetch(url)
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error('Network response was not ok', response.text());
             }
             return response.text();
         })
@@ -463,24 +512,36 @@ const validateProject = (project) => {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
+    let project = new MonicaProject();
+
     setLanguage('de-DE');
     $('#monicaStartDatePicker').datepicker({
         startDate: startDate,
         endDate: endDate,
     });
+    
     $('#monicaStartDatePicker').datepicker('update', setStartDate);
     $('#monicaEndDatePicker').datepicker('update', setEndDate);
 
+    const calculateDaysInRotation = function() {
+        var startDate = project.startDate;
+        var endDate = project.endDate;  
+        // var startDate = $('#monicaStartDatePicker').datepicker('getDate');
+        // var endDate = $('#monicaEndDatePicker').datepicker('getDate');
+        var daysInRotation = (endDate - startDate) / (1000 * 60 * 60 * 24);
+        var yearsInRotation = Math.ceil(daysInRotation / 365);
+        return [daysInRotation, yearsInRotation];
+    }
 
-    let project = new MonicaProject();
     project.startDate = $('#monicaStartDatePicker').datepicker('getUTCDate');
     project.endDate = $('#monicaEndDatePicker').datepicker('getUTCDate');
     project.latitude = $('#id_latitude').val();
     project.longitude = $('#id_longitude').val();
+
     saveToLocalStorage(project);
-    // project = createProxy(project, project);
-    // project = loadProject(project);
+
     $('#toggle-mode').on('click', () => {
+        // toggle from advanced to simple mode
         $('.advanced').each(function () {
             $(this).toggle();
             $('#toggle-mode').text($(this).is(':visible') ? 'Switch to Simple Mode' : 'Switch to Advanced Mode');
@@ -493,8 +554,6 @@ document.addEventListener('DOMContentLoaded', () => {
             saveToLocalStorage(project);
         }
     });
-
-
 
 
     $('#projectName').on('change', function () {
@@ -583,23 +642,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target.classList.contains('add-workstep-button')) {
             const workstepType = event.target.closest('.rotation').querySelector('.workstep-type-select').value;
             addWorkstep(workstepType, rotationIndex, event.target.closest('.rotation').querySelector('.card-body'), project);
+            saveToLocalStorage(project);
         } else if (event.target.classList.contains('delete-rotation-button')) {
             console.log('IMPLEMENT delete rotation');
         } else if (event.target.classList.contains('delete-workstep-button')) {
-            console.log('IMPLEMENT delete workstep');
+            const workstepIndex = event.target.closest('form').getAttribute('workstep-index');
+            const workstepType = event.target.closest('form').getAttribute('workstep-type');
+            console.log('delete-workstep', rotationIndex, workstepIndex, workstepType);
+            project.rotation[rotationIndex][workstepType] = project.rotation[rotationIndex][workstepType].filter(workstep => workstep.workstepIndex != workstepIndex);
+            event.target.closest('.card').remove();
+            saveToLocalStorage(project);
+
         } else if (event.target.classList.contains('modify-parameters')) {
+            console.log('modify-parameters clicked');
             const targetClass = event.target.classList[3];
             const value = event.target.closest('.rotation').querySelector('.select-parameters.' + targetClass).value;
-            const endpoint = '/monica/model/' + targetClass + '/' + value + '/';
+            const params = {
+                'parameters': targetClass,
+                'parameters_id': value,
+                'rotation_index': rotationIndex
+            }
+            // const endpoint = '/monica/model/' + targetClass + '/' + value + '/' + rotationIndex + '/';
             if (value != "") {
-                fetchModalContent(endpoint);
+                fetchModalContent(params);
                 $('#formModal').modal('show');
             } else {
                 event.preventDefault();
                 handleAlerts('warning', 'Please select a parameter to modify');
             }
         }
-        saveToLocalStorage(project);
+        
     });
 
     cropRotationDiv.addEventListener('change', (event) => {
@@ -610,7 +682,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const workstepType = event.target.getAttribute('workstep-type');
             var workstep = project.rotation[rotationIndex][workstepType].find(workstep => workstep.workstepIndex == workstepIndex);
         
-            console.log('if select-parameters')
             const cultivarSelector = event.target.closest('.rotation').querySelector('.select-parameters.cultivar-parameters');
             const residueSelector = event.target.closest('.rotation').querySelector('.select-parameters.crop-residue-parameters');
                 
@@ -632,7 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         });  
                         workstep.options.cultivar = cultivarSelector.value
-                        saveToLocalStorage(project);                 
+                        // saveToLocalStorage(project);                 
 
                     });
                 
@@ -649,49 +720,39 @@ document.addEventListener('DOMContentLoaded', () => {
                                 residueSelector.appendChild(optionElement);
                             });
                             workstep.options.cropResidue = residueSelector.value;
-                            saveToLocalStorage(project);
+                            // saveToLocalStorage(project);
                         });
                     };
                 
             } else if (event.target.classList.contains('cultivar-parameters')) {
-                console.log('cultivar-parameters changed')
                 workstep.options.cultivar = event.target.value;
                 // saveToLocalStorage(project);
             } else if (event.target.classList.contains('crop-residue-parameters')) {
-                console.log('crop-residue-parameters changed')
                 workstep.options.cropResidue = event.target.value;
                 // saveToLocalStorage(project);
             } else if (event.target.classList.contains('organic-fertiliser-parameters')) {
-                console.log('organic-fertiliser-parameters changed')
                 workstep.options.organicFertiliser = event.target.value;
                 // saveToLocalStorage(project);
            
             } else if (event.target.classList.contains('mineral-fertiliser-parameters')) {
-                console.log('mineral-fertiliser-parameters changed')
                 workstep.options.mineralFertiliser = event.target.value;
                 // saveToLocalStorage(project);
-            
             } else if (event.target.classList.contains('organic-fertiliser-amount')) {
-                console.log('organic-fertiliser-amount changed')
                 workstep.options.amount = event.target.value;
                 // saveToLocalStorage(project);
             } else if (event.target.classList.contains('mineral-fertiliser-amount')) {
-                console.log('mineral-fertiliser-amount changed')
                 workstep.options.amount = event.target.value;
                 // saveToLocalStorage(project);
             } else if (event.target.classList.contains('irrigation-amount')) {
-                console.log('irrigation-parameters changed')
                 workstep.options.amount = event.target.value;
                 // saveToLocalStorage(project);   
             } else {
                 ;
             }
-            
             console.log('Project parameters-select ', project)
             saveToLocalStorage(project);
             }
             
-        
     });
 
     const soilDiv = document.getElementById('tabSoil');
@@ -700,15 +761,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target.classList.contains('modify-parameters')) {
             const targetClass = event.target.classList[3];
             const value = $('.form-select.' + targetClass).val();
-            const endpoint = '/monica/model/' + targetClass + '/' + value + '/';
-            fetchModalContent(endpoint);
+            
+            const params = {
+                'parameters': targetClass,
+                'parameters_id': value,
+            }
+            fetchModalContent(params);
         } else if (event.target.classList.contains('show-soil-parameters')) {
-            const lon = project.longitude;
-            const lat = project.latitude;
-            const endpoint = '/monica/model/soil-profile/' + [lat, lon].join('/') + '/';
-            fetchModalContent(endpoint);
+            const params = {
+                'parameters': 'soil-profile',
+                'lon': project.longitude,
+                'lat': project.latitude
+            }
+            
+            fetchModalContent(params);
         }
     });
+
 
     $('.nav-link.monica').on('click', function (e) {
         e.preventDefault();
@@ -759,7 +828,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     tabs[1].click();
-    addRotation(project);
     addRotation(project);
 });
 

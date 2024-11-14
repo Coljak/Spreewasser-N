@@ -86,7 +86,7 @@ class Command(BaseCommand):
                     download_directory(sftp, remote_dir, local_dir)
                     self.stdout.write("Data downloaded from CheckGlobe FTP ...")
                     data_dir = os.path.join(local_dir, 'Data')
-                    netcdf_dir = '/app/thredds_data/data/Klim4Cast'
+                    # netcdf_dir = '/app/thredds_data/data/Klim4Cast'
                     process_tifs(data_dir, netcdf_dir)
                     self.stdout.write("NetCDF file created ...")
                 except Exception as e:

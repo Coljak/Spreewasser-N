@@ -17,7 +17,7 @@
 
 
 <div class="container py-5">  
-    <h1>Monica Forms</h1>
+    <h1>Monica</h1>
     
   <ul class="nav nav-tabs">
     <li class="nav-item">
@@ -63,7 +63,7 @@
           <h5 class="card-title">User Environment Parameters</h5>
           {{ user_environment_parameters_select_form | crispy }}
           <button class="btn btn-primary modify-parameters user-environment-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-            Modify Soil Moisture Parameters
+            Modify User Environment Parameters
           </button>
         </div>
       </div>
@@ -74,7 +74,7 @@
           <h5 class="card-title">User Crop Parameters</h5>
           {{ user_crop_parameters_select_form | crispy }}
           <button class="btn btn-primary modify-parameters user-crop-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-            User Crop Parameters
+            Modify User Crop Parameters
           </button>
         </div>
       </div>
@@ -84,7 +84,7 @@
           <h5 class="card-title">User Simulation Settings</h5>
           {{ user_simulation_settings_select_form | crispy }}
           <button class="btn btn-primary modify-parameters user-simulation-settings " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-            User Simulation Settings
+            Modify User Simulation Settings
           </button>
         </div>
       </div>
@@ -119,7 +119,8 @@
           </div>
         </div>
       </div>
-      <div class="card mb-3 advanced">
+
+      {% comment %} <div class="card mb-3 advanced">
         <div class="card-body">
           <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedParameters" aria-expanded="false" aria-controls="collapseExample">
             Advanced Simulation Settings
@@ -221,7 +222,7 @@
             
           </div>
         </div>
-      </div> 
+      </div>  {% endcomment %}
     </div> 
   </div>
    

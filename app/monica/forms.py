@@ -152,7 +152,7 @@ class UserEnvironmentParametersForm(ParametersModelForm):
 class UserEnvironmentParametersSelectionForm(forms.Form):
     user_environment = forms.ChoiceField(
         choices=[],
-        label="User Environment Settings",
+        label="User Environment Parameters",
         widget=forms.Select(attrs={'class': 'form-control user-environment-parameters'})
     )
 

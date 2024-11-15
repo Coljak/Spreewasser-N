@@ -187,7 +187,8 @@ MEDIA_ROOT = MEDIA_DIR
 MEDIA_URL = 'media/'
 
 LOGIN_URL = 'login/'
-LOGIN_REDIRECT_URL = 'Dashboard/'
+# LOGIN_REDIRECT_URL = 'Dashboard/'
+LOGIN_REDIRECT_URL = '/monica/model/'
 LOGOUT_REDIRECT_URL = '/'
 
 # for Debug Toolbar, the internal IPS are necessary

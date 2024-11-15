@@ -304,7 +304,8 @@ def sign_up(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('swn:user_dashboard')
+            # return redirect('swn:user_dashboard')
+            return redirect('monica:monica_model')
     else:
         form = forms.RegistrationForm()
 
@@ -338,36 +339,37 @@ def register(request):
                    # 'pk': user.id,
                    'registered': registered})
 
-def user_login(request):
-    print("USER_LOGIN")
-    if request.method == "POST":
-        username = request.POST.get('name')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        user = authenticate(email=email, name=username, password=password)
-        # if '@' in username:
-        #     email = username
-        #     user = authenticate(email=email, password=password)
-        # else:
-        #     user = authenticate(name=username, password=password)
-        #user = authenticate(email=email, password=password)
-        if user:
-            if user.is_active:
+# def user_login(request):
+#     print("USER_LOGIN")
+#     if request.method == "POST":
+#         username = request.POST.get('name')
+#         email = request.POST.get('email')
+#         password = request.POST.get('password')
+#         user = authenticate(email=email, name=username, password=password)
+#         # if '@' in username:
+#         #     email = username
+#         #     user = authenticate(email=email, password=password)
+#         # else:
+#         #     user = authenticate(name=username, password=password)
+#         #user = authenticate(email=email, password=password)
+#         if user:
+#             if user.is_active:
 
-                login(request, user)
-                initial = user.username
-                return HttpResponseRedirect(reverse('swn:user_dashboard'))
+#                 login(request, user)
+#                 initial = user.username
+#                 return HttpResponseRedirect(reverse('monica:monica_model'))
+#                 # return HttpResponseRedirect(reverse('swn:user_dashboard'))
 
-            else:
-                return HttpResponse("Account is not active!")
+#             else:
+#                 return HttpResponse("Account is not active!")
             
-        # TODO make this go to handle alerts
-        else:
-            return JsonResponse({'alert': "the login failed"})
+#         # TODO make this go to handle alerts
+#         else:
+#             return JsonResponse({'alert': "the login failed"})
 
-    else:
-        login_form = forms.LoginForm()
-        return render(request, 'swn/login.html', {'login_form': login_form})
+#     else:
+#         login_form = forms.LoginForm()
+#         return render(request, 'swn/login.html', {'login_form': login_form})
 
 @login_required
 def user_logout(request):

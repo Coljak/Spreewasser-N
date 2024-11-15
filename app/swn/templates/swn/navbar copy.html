@@ -3,12 +3,7 @@
   <nav class="navbar navbar-expand-md navbar-light bg-white shadow navbar-fixed-top pt-3 mb-0">
     <div class="container">
       <ul class="nav navbar-nav flex-row flex-wrap">
-        {% comment %} <li class="mb-1"><a  class="nav-brand mb-2" href="{% url 'swn:swn_index' %}"><img src="{% static 'img/SpreeWasser-Logo.png' %}" height="60px" alt="SWN-Logo"/></a></li> {% endcomment %}
-        <li class="mb-1"><a  class="nav-brand mb-2" href="{% url 'swn:swn_index' %}"><img src="{% static 'img/zalf.jpeg' %}" height="60px" alt="SWN-Logo"/></a></li>
-        
-        {% comment %} <li><a  class="nav-brand" href="https://www.zalf.de" target="_blank"><img src="{% static 'img/zalf.jpeg' %}" height="60px" alt="SWN-Logo"/></a></li>  {% endcomment %}
-      
-        
+        <li class="mb-1"><a  class="nav-brand mb-2" href="{% url 'swn:swn_index' %}"><img src="{% static 'img/SpreeWasser-Logo.png' %}" height="60px" alt="SWN-Logo"/></a></li>
         {% if user.is_superuser %}
           <li><a  class="nav-link" href="{% url 'admin:index' %}">ADMIN</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'swn:bootstrap' %}">Bootstrap</a></li>
@@ -49,9 +44,9 @@
         <li><a  class="nav-link" href="{% url 'swn:sign_up' %}">Anmelden</a></li>
         {% endif %} 
   
-        {% comment %} <li><a  class="nav-brand" href="https://www.zalf.de" target="_blank"><img src="{% static 'img/zalf.jpeg' %}" height="60px" alt="SWN-Logo"/></a></li>  {% endcomment %}
+        <li><a  class="nav-brand" href="https://www.zalf.de" target="_blank"><img src="{% static 'img/zalf.jpeg' %}" height="60px" alt="SWN-Logo"/></a></li> 
       
-        {% comment %} <li><a  class="nav-brand px-3" href="https://www.bmbf-wax.de/" target="_blank"><img src="{% static 'img/wax-300x126.png' %}" height="60px" alt="SWN-Logo"/></a></li> {% endcomment %}
+        <li><a  class="nav-brand px-3" href="https://www.bmbf-wax.de/" target="_blank"><img src="{% static 'img/wax-300x126.png' %}" height="60px" alt="SWN-Logo"/></a></li>
         
       </ul>
     </div>

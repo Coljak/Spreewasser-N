@@ -397,7 +397,7 @@ def validate_soil_profile_parameters(soil_profile_parameters):
 def create_monica_env_from_json(json_data):
     error = []
    
-    cropRotation = []
+     cropRotation = []
     rotation = {}
     for r in json_data['rotation']:
 
@@ -468,6 +468,7 @@ def create_monica_env_from_json(json_data):
             else:
                 print("Workstep not found: ", k)
         
+        worksteps = sorted(worksteps, key=lambda x: x['date'])
         rotation["worksteps"] = worksteps
 
         cropRotation.append(rotation)

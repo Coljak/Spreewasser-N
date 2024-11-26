@@ -14,7 +14,9 @@ from .widgets import SingleRowTextarea
 
 
 def use_single_row_textarea(field):
-    print("using single fieldform")
+    """
+    The textbox is 10 lines high by default. This function changes it to a single row.
+    """
     if isinstance(field.widget, forms.Textarea):
         field.widget = SingleRowTextarea()
         print("is textarea fieldform")
@@ -315,7 +317,7 @@ class WorkstepSelectorForm(forms.Form):
     workstep_type = forms.ChoiceField(
         choices=WORKSTEP_CHOICES, 
         label='Workstep Type', 
-        widget=forms.Select(attrs={
+        widget=forms.Select(attrs={'id': '',
             'class': 'workstep-type-select'
             })
         )

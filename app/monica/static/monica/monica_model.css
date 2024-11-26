@@ -1,3 +1,8 @@
 .advanced {
     display: none;
   }
+
+  .card.rotation > .card-body {
+    border: 2px solid var(--bs-primary);
+    border-radius: 5px;
+  }

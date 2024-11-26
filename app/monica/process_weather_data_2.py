@@ -1,4 +1,5 @@
 """
+NETCDFs are processed in this code to create JSON files for each point in the bounding box.
 In this code, the paths are set to those of the local repository and not those of the docker container.
 This is to maximise CPU availability.
 """

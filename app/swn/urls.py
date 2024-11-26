@@ -25,6 +25,7 @@ urlpatterns = [
     path('login/Dashboard/update/', views.update_user_field, name='update-user-fields'),
     path('login/Dashboard/delete/<int:id>', views.delete_user_field, name='delete-user-field'),
     path('login/Dashboard/field-edit/<int:id>/', views.field_edit, name='field_edit'),
+    path('login/Dashboard/field-projects-menu/<int:id>/', views.get_field_project, name='field_projects_menu'),
     # path('login/Dashboard/field-edit/<int:field_id>/chartdata/<int:crop_id>/<int:soil_id>/', views.get_chart, name='chart-api'),
     
     # Impressum and Acknoledgements

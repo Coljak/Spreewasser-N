@@ -1,0 +1,149 @@
+
+<!-- Sidebar -->
+    <div class="sidebar-content">
+      <div class="sidebar-pane active" id="droughtWarning">
+        <h2 class="sidebar-header" id="sidebarToolsHeader"> Dürrefrühwarnsystem</h2>
+        <!-- accordion items of layer pane -->
+        <div class="accordion accordion-flush" id="droughtAccordion">
+          <!-- Baselayer accordion items -->
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button
+                class="accordion-button"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#baseLayerCollapse"
+                aria-expanded="true"
+                aria-controls="baseLayerCollapse"
+              >
+                Baselayers
+              </button>
+            </h2>
+            <!-- Baselayer collapse -->
+            <div
+              id="baseLayerCollapse"
+              class="accordion-collapse collapse show"
+              
+            >
+              <ul class="list-group sidebar-list base-layer-control-list" id="baseLayerList">
+                <!-- leaflet layer control items are inserted here-->
+              </ul>
+                
+            </div>
+          </div> 
+          <!-- overlay accordion items -->
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#overlayAccordion"
+                aria-expanded="false"
+                aria-controls="overlayAccordion"
+              >
+                Overlays
+              </button>
+            </h2>
+            <div
+              id="overlayAccordion"
+              class="accordion-collapse collapse"
+              
+              >
+              <ul class="list-group sidebar-list" id="overlayList">
+                <!-- project region -->
+                <li class="list-group-item">
+                  <div class="row">
+                    <div class="form-check form-switch col">
+                      <input type="checkbox" data-layer="projectRegion" class="form-check-input overlay-switch" id="projectRegionSwitch"/>
+                      <label class="form-check-label" for="projectRegionSwitch">
+                        Spreewasser:N Projektgebiet
+                      </label>
+                    </div>
+                    
+                  </div>
+                </li>
+
+                {% for field in state_county_district_form.visible_fields %}
+
+                  <li  class="list-group-item">
+                    {{ field }}
+                  </li>
+                {% endfor %} 
+                <!-- NetCDF animation -->
+                <li class="list-group-item drought-overlay-sidebar-item" id="liElementNetCDF">
+                  <div class="row">
+                    <div class="form-check form-switch col">
+                      <input type="checkbox" data-layer="animation" class="form-check-input overlay-switch" id="animationSwitch" />
+                      <label class="form-check-label" for="animationSwitch">
+                        Konzeptanimation
+                      </label>
+                    </div>
+
+                    <div class="range col-5">
+                      <input type="range" class="form-range layer-opacity" data-layer="animation" min="0.0" max="1.0" step="0.1" id="animationOpacity" disabled/>
+                    </div>
+                  </div>
+                </li>
+
+                <!-- digital elevation model -->
+                <li class="list-group-item drought-overlay-sidebar-item" id='liElementDem'>
+                  <div class="row">
+                    <div class="form-check form-switch col">
+                      <input type="checkbox" data-layer="demOverlay" class="form-check-input overlay-switch" id="DEMSwitch"  />
+                      <label class="form-check-label" for="DEMSwitch">Höhenmodell</label>
+                    </div>
+                    <div class="range col-5">
+                      <input
+                        type="range"
+                        class="form-range layer-opacity"
+                        data-layer="demOverlay"
+                        min="0.0"
+                        max="1.0"
+                        step="0.1"
+                        id="demOverlayOpacity"
+                        disabled
+                      />
+                    </div>
+                  </div>
+                </li>
+
+                <!-- drought index -->
+                <li class="list-group-item drought-overlay-sidebar-item" id="liElementDroughtIndex">
+                  <div class="row">
+                    <div class="form-check form-switch col">
+                      <input type="checkbox" class="form-check-input overlay-switch" data-layer="droughtOverlay" id="droughtSwitch" >
+                      <label class="form-check-label" for="droughtSwitch">Dürreindex</label>
+                    </div>
+                    <div class="range col-5">
+                      <input type="range" class="form-range layer-opacity" data-layer="droughtOverlay" min="0.0" max="1.0" step="0.1" id="droughtOverlayOpacity" disabled />
+                    </div>
+                  </div>
+                </li>
+
+                
+
+                
+                
+              </ul>
+            </div>
+          </div>
+
+          <!-- drought warning userfields -->
+          <div class="accordion-item" id="accordionDroughtFields">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#userFieldsAccordion" aria-expanded="false" aria-controls="userFieldsAccordion">
+                Benutzerfelder
+              </button>
+            </h2>
+            <div id="userFieldsAccordion" class="accordion-collapse collapse" >
+                <!-- userFields -->
+              
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+

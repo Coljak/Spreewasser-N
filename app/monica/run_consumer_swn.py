@@ -72,6 +72,7 @@ def run_consumer(path_to_output_dir = None, leave_after_finished_run = True, ser
                 leave = True
 
         # return leave
+        print("leaving process", leave)
         return leave
 
     while not leave:

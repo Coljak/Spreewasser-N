@@ -204,35 +204,35 @@ order by id, layer_depth"""
 def get_soil_profile_group(con, profile_group_id=None, only_raw_data=True, no_units=False):
     """return soil profile groups from the database connection for given profile group id"""
     query = f"""select 
-polygon_id,
-profile_id_in_polygon,
-range_percentage_of_area,
-avg_range_percentage_of_area,
-layer_depth, 
-soil_organic_carbon, 
-soil_organic_matter, 
-bulk_density, 
-raw_density,
-sand, 
-clay, 
-silt,
-ph, 
-KA5_texture_class,
-permanent_wilting_point,
-field_capacity,
-saturation,
-soil_water_conductivity_coefficient,
-sceleton,
-soil_ammonium,
-soil_nitrate,
-c_n,
-initial_soil_moisture,
-layer_description,
-is_in_groundwater,
-is_impenetrable
-from soil_profile_all
-{" where polygon_id = ? " if profile_group_id else " "} 
-order by polygon_id, profile_id_in_polygon, layer_depth"""
+        polygon_id,
+        profile_id_in_polygon,
+        range_percentage_of_area,
+        avg_range_percentage_of_area,
+        layer_depth, 
+        soil_organic_carbon, 
+        soil_organic_matter, 
+        bulk_density, 
+        raw_density,
+        sand, 
+        clay, 
+        silt,
+        ph, 
+        KA5_texture_class,
+        permanent_wilting_point,
+        field_capacity,
+        saturation,
+        soil_water_conductivity_coefficient,
+        sceleton,
+        soil_ammonium,
+        soil_nitrate,
+        c_n,
+        initial_soil_moisture,
+        layer_description,
+        is_in_groundwater,
+        is_impenetrable
+        from soil_profile_all
+        {" where polygon_id = ? " if profile_group_id else " "} 
+        order by polygon_id, profile_id_in_polygon, layer_depth"""
 
     con.row_factory = sqlite3.Row
     rows = con.cursor().execute(query, (profile_group_id,)) if profile_group_id else con.cursor().execute(query)

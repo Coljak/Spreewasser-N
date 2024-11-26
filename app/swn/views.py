@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 #from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.serializers import serialize
-
+from django.db.models import Q
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.gdal import DataSource
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
@@ -20,6 +20,7 @@ import numpy as np
 import requests
 from . import forms
 from monica import forms as monica_forms
+from monica import models as monica_models
 from . import models
 from buek import models as buek_models
 
@@ -374,8 +375,11 @@ def user_logout(request):
     logout(request)
     return HttpResponseRedirect(reverse('swn:swn_index'))
 
+
+
 def three_split(request):
-    user_fields = models.UserProject.objects.filter(user_field__user=request.user)
+    user = request.user
+    user_fields = models.UserProject.objects.filter(user_field__user=request.user.id)
 
     user_projects = []
 
@@ -394,10 +398,71 @@ def three_split(request):
             user_projects.append(item)
 
     state_county_district_form = forms.PolygonSelectionForm(request.POST or None)
+    
+    projectregion = models.ProjectRegion.objects.first()
+    geojson = json.loads(projectregion.geom.geojson) 
+    feature = {
+            "type": "Feature",
+            "geometry": geojson,
+            "properties": {
+                "name": 'Spreewasser:N Projektregion',
+            }
+        }
+    
+    # MONICA forms etc (from Monica.views)
+    coordinate_form = monica_forms.CoordinateForm()
+   
+    workstep_selector_form =  monica_forms.WorkstepSelectorForm()
+    workstep_sowing_form = monica_forms.WorkstepSowingForm(user=user)
+    workstep_harvest_form = monica_forms.WorkstepHarvestForm()
+    workstep_tillage_form = monica_forms.WorkstepTillageForm()
+    workstep_irrigation_form = monica_forms.WorkstepIrrigationForm()
+    workstep_mineral_fertilisation_form = monica_forms.WorkstepMineralFertilisationForm()
+    workstep_organic_fertilisation_form = monica_forms.WorkstepOrganicFertilisationForm()
+    user_simulation_settings = monica_models.UserSimulationSettings.objects.get(is_default=True)
+    user_simulation_settings_form = monica_forms.UserSimulationSettingsForm(instance=user_simulation_settings)
+
+    user_simulation_settings_select_form = monica_forms.UserSimulationSettingsInstanceSelectionForm(user=user)
+
+    user_crop_parameters_select_form = monica_forms.UserCropParametersSelectionForm(user=user)
+    user_crop_parameters_form = monica_forms.UserCropParametersForm()
+
+    user_environment_parameters_select_form = monica_forms.UserEnvironmentParametersSelectionForm(user=user)
+    user_environment_parameters_form = monica_forms.UserEnvironmentParametersForm()
+
+    user_soil_moisture_select_form = monica_forms.UserSoilMoistureInstanceSelectionForm(user=user)
+    user_soil_organic_select_form = monica_forms.UserSoilOrganicInstanceSelectionForm(user=user)
+    soil_temperature_module_select_form = monica_forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
+    user_soil_transport_parameters_select_form = monica_forms.UserSoilTransportParametersInstanceSelectionForm(user=user)
+
+
+
+
     data = {
             'user_projects': user_projects, 
             'user_field_form': forms.UserFieldForm(),
             'state_county_district_form': state_county_district_form,
+            'project_region': feature,
+            #MONICA FORMS
+            'coordinate_form': coordinate_form,
+            'user_crop_parameters_select_form': user_crop_parameters_select_form,
+            'user_crop_parameters_form': user_crop_parameters_form,
+            'user_simulation_settings_select_form': user_simulation_settings_select_form,
+            'simulation_settings_form': user_simulation_settings_form,
+            'user_environment_parameters_select_form': user_environment_parameters_select_form,
+            'user_environment_parameters_form': user_environment_parameters_form,
+
+            'workstep_selector_form': workstep_selector_form,
+            'workstep_sowing_form': workstep_sowing_form,
+            'workstep_harvest_form': workstep_harvest_form,
+            'workstep_tillage_form': workstep_tillage_form,
+            'workstep_mineral_fertilisation_form': workstep_mineral_fertilisation_form,
+            'workstep_organic_fertilisation_form': workstep_organic_fertilisation_form,
+            'workstep_irrigation_form': workstep_irrigation_form,
+            'user_soil_moisture_select_form': user_soil_moisture_select_form,
+            'user_soil_organic_select_form': user_soil_organic_select_form,
+            'soil_temperature_module_selection_form': soil_temperature_module_select_form, 
+            'user_soil_transport_parameters_selection_form': user_soil_transport_parameters_select_form,
             }
     return render(request, 'swn/swn_three_split.html', data)
 
@@ -440,18 +505,17 @@ def user_dashboard(request):
     user_projects = []
 
     for user_field in user_fields:
-        if request.user == user_field.field.user:
-            item = {
-                'name': user_field.name,
-                'user_name': user_field.field.user.name,
-                'field': user_field.field.name,
-                'irrigation_input': user_field.irrigation_input,
-                'irrigation_output': user_field.irrigation_output,
+        item = {
+            'name': user_field.name,
+            'user_name': user_field.field.user.name,
+            'field': user_field.field.name,
+            'irrigation_input': user_field.irrigation_input,
+            'irrigation_output': user_field.irrigation_output,
 
-                'field_id': user_field.field.id,
-                'monica_calculation': user_field.calculation,
-            }
-            user_projects.append(item)
+            'field_id': user_field.field.id,
+            'monica_calculation': user_field.calculation,
+        }
+        user_projects.append(item)
 
 
 
@@ -478,9 +542,8 @@ def user_dashboard(request):
 
 
 def load_projectregion(request):
-    projectregion = models.ProjectRegion.objects.all()
-    geometry = GEOSGeometry(projectregion[0].geom)
-    geojson = json.loads(geometry.geojson)
+    projectregion = models.ProjectRegion.objects.first()
+    geojson = json.loads(projectregion.geom.geojson) 
     feature = {
             "type": "Feature",
             "geometry": geojson,
@@ -567,6 +630,12 @@ def delete_user_field(request, id):
         
         return JsonResponse({})
     return redirect('swn:user_dashboard')
+
+@login_required
+def get_field_project(request, id):
+    user_projects = models.UserProject.objects.filter(Q(user_field_id=id) & Q(user_field_user=request.user))
+    
+    return JsonResponse({'user_project': list(user_projects.values())})
 
 
 """
@@ -797,3 +866,8 @@ def field_edit(request, id):
     return render(request, 'swn/field_projects_edit.html', data_menu)
 
 
+def sidebar_working(request):
+    return render(request, 'swn/sidebar_copied_working.html')
+
+def sidebar_not_working(request):
+    return render(request, 'swn/sidebar_copied_not_working.html')

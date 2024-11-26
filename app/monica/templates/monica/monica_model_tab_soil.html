@@ -1,0 +1,57 @@
+{% load crispy_forms_tags %}
+
+<!-- Soil -->
+<div id="tabSoil" class="tab-content card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Soil</h5>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Soil Profile</h5>
+          <button class="btn btn-primary show-soil-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            Show Soil Profile
+          </button>
+        </div>
+      </div>
+
+      <div class="card mb-3 advanced">
+        <div class="card-body">
+          <h5 class="card-title">Soil Moisture Parameters</h5>
+          {{ user_soil_moisture_select_form | crispy }}
+          <button class="btn btn-primary modify-parameters soil-moisture-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            Modify Soil Moisture Parameters
+          </button>
+        </div>
+      </div>
+
+      <div class="card mb-3 advanced">
+        <div class="card-body">
+          <h5 class="card-title">Soil Organic Parameters</h5>
+          {{ user_soil_organic_select_form | crispy }}
+          <button class="btn btn-primary modify-parameters soil-organic-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            Modify Soil Organic Parameters
+          </button>
+        </div>
+      </div>
+
+      <div class="card mb-3 advanced">
+        <div class="card-body">
+          <h5 class="card-title">Soil Temperature Parameters</h5>
+          {{ soil_temperature_module_selection_form | crispy }}
+          <button class="btn btn-primary modify-parameters soil-temperature-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            Modify Soil Temperature Parameters
+          </button>
+        </div>
+      </div>
+
+      <div class="card mb-3 advanced">
+        <div class="card-body">
+          <h5 class="card-title">Soil Transport Parameters</h5>
+          {{ user_soil_transport_parameters_selection_form | crispy }}
+          <button class="btn btn-primary modify-parameters soil-transport-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+            Modify Soil Transport Parameters
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>

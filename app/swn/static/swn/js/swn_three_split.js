@@ -1,27 +1,4 @@
-// import { endpoint, chartDiv, crop, getChart } from "./chart_page.js";
-// import { btnSaveUserFieldDismiss, btnSaveUserFieldAndCalc } from "./modal_user_field_name.js";
-
 document.addEventListener("DOMContentLoaded", () => {
-
-  /// helper functions
-  const typeOfLayer = (layer) => {
-    if (layer instanceof L.Marker) {
-      return "Marker";
-    } else if (layer instanceof L.Circle) {
-      return "Circle";
-    } else if (layer instanceof L.Polyline) {
-      return "Polyline";
-    } else if (layer instanceof L.Polygon) {
-      return "Polygon";
-    } else if (layer instanceof L.Rectangle) {
-      return "Rectangle";
-    } else if (layer instanceof L.GeoJSON) {
-      return "GeoJSON";
-    } else {
-      return "Unknown";
-    }
-  };
-
 
   let csrfToken = document.cookie
     .split("; ")
@@ -41,9 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // -----------User Field Name Modal -----------------
 
-// const projectModal = document.getElementById("projectModal");
-// const projectModalTitle = document.getElementById("projectModalTitle");
-const chartCard = document.getElementById("chartCard");
 
 // bootstrap colors
 const highlightColor = getComputedStyle(document.body).getPropertyValue('--bs-warning');
@@ -54,32 +28,17 @@ const infoColor = getComputedStyle(document.body).getPropertyValue('--bs-info');
 const lightColor = getComputedStyle(document.body).getPropertyValue('--bs-light');
 
 var currentUserField;
-var currentProject;
+
 
 // ------------------- Alert Box -------------------
 // alert bar at the top of the main container
 // https://getbootstrap.com/docs/5.2/components/alerts/#examples
 // types can be: primary, secondary, success, danger, warning, info, light, dark
 
-const alertBox = document.getElementById("alert-box");
-
-const handleAlerts = (type, msg) => {
-  alertBox.innerHTML = `
-      <div class="alert alert-${type} alert-dismissible " role="alert">
-          ${msg}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-      </div>`;
-  alertBox.classList.remove("d-none");
-  setTimeout(() => {
-    alertBox.classList.add("d-none");
-  }, 2000);
-};
 
 
 // -------------MAP --------------------------------------
 
-// Boolean to inhibit map interactions for overlaying modals etc.
-let isMapInteractionEnabled = true;
 
 const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const osmAttrib =
@@ -105,27 +64,19 @@ const demBounds = [
   [47.136744752, 15.57241882],
   [55.058996788, 5.564783468],
 ];
-
 const droughtBounds = [
   [46.89, 15.33],
   [55.31, 5.41],
 ];
-
-const toolboxBounds = [
-  [51.9015194452089901, 14.5048979594768852],
-  [52.7436194452089921, 13.4503979594768843]
-];
-const sinksBounds = [[51.903417526,14.473467455],[52.742055454,13.500732582]]
-
-const toolboxOverlaySoil = L.imageOverlay(toolboxUrl, toolboxBounds, { opacity: 1.0 });
-const toolboxOverlaySinks = L.imageOverlay(toolboxSinksUrl, sinksBounds, { opacity: 1.0 });
-
 const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
 const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5 });
-var videoUrl = 'https://www.mapbox.com/bites/00188/patricia_nasa.webm',
-    videoBounds = droughtBounds;
+const projectRegion = new L.geoJSON(project_region, {
+  attribution: 'Project Region',
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.name);
+  }
+});
 
-const animation = L.videoOverlay(videoUrl, videoBounds, {opacity: 0.0});
 
 // basemaps
 const baseMaps = {
@@ -138,33 +89,12 @@ const baseMaps = {
 // opens at Müncheberg by default
 const map = new L.Map("map", {
   layers: [osm],
-  
   center: new L.LatLng(52.338145830363914, 13.85877631507592),
   zoom: 8,
   zoomSnap: 0.25,
   wheelPxPerZoomLevel: 500,
 });
 
-// Leaflet Control top-right
-// https://github.com/brunob/leaflet.fullscreen
-const fullScreenControl = new L.Control.FullScreen({
-  position: "topright",
-});
-map.addControl(fullScreenControl);
-
-animation.addTo(map);
-
-// added back-to-home bullseyer button to zoom controls
-$(".leaflet-control-zoom").append(
-  '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>'
-);
-
-// // search for locations
-// const GeocoderControl = new L.Control.geocoder({
-//   position: "topright",
-//   marker: false,
-// });
-// map.addControl(GeocoderControl);
 
 //add map scale
 const mapScale = new L.control.scale({
@@ -173,148 +103,25 @@ const mapScale = new L.control.scale({
 
 
 // handles clicks on a userField layer in the map
-var droughtFeatureGroup = new L.FeatureGroup();
-var toolboxFeatureGroup = new L.FeatureGroup();
-// the default app is drought.
-var currentFeatureGroup = droughtFeatureGroup;
-
-map.addLayer(currentFeatureGroup);
-
-// All Overays are stored in Variables
-
-var projectRegion = new L.GeoJSON.AJAX('load_projectregion/',
-  {
-    style: function (feature) {
-      return { 
-        fillColor: lightColor,
-        color: infoColor,};
-    },
-    attribution: 'Project Region',
-    onEachFeature: function (feature, layer) {
-      layer.bindTooltip(feature.properties.name);
-    }
-  });
-
-var toolboxSinks = new L.GeoJSON.AJAX('toolbox_sinks/',
-  {
-    style: function (feature) {
-      return { 
-        fillColor: lightColor,
-        color: infoColor,};
-    },
-    attribution: 'Toolbox Sinks',
-    onEachFeature: function (feature, layer) {
-      layer.bindTooltip(feature.properties.Tiefe);
-    }
-  });
-
-var toolboxOutlineInjection = new L.GeoJSON.AJAX('toolbox_outline_injection/',
-  {
-    style: function (feature) {
-      return { 
-        fillColor: lightColor,
-        color: infoColor,};
-    },
-    attribution: 'Toolbox Injection',
-    onEachFeature: function (feature, layer) {
-      layer.bindTooltip(feature.properties.name);
-    }
-  });
-
-  // var toolboxOutlineRetention = new L.GeoJSON.AJAX('load_outline_water_retention/',
-  //   {
-  //     style: function (feature) {
-  //       return { 
-  //         fillColor: lightColor,
-  //         color: infoColor,};
-  //     },
-  //     attribution: 'Toolbox Geste',
-  //     onEachFeature: function (feature, layer) {
-  //       layer.bindTooltip(feature.properties.name);
-  //     }
-  //   });
-
-var toolboxOutlineSurfaceWater = new L.GeoJSON.AJAX('load_outline_surface_water/',
-  {
-    style: function (feature) {
-      return { 
-        fillColor: lightColor,
-        color: infoColor,};
-    },
-    attribution: 'Toolbox Surface Water',
-    onEachFeature: function (feature, layer) {
-      layer.bindTooltip(feature.properties.name);
-    }
-  });
-var toolboxOutlineInfiltration = new L.GeoJSON.AJAX('load_outline_infiltration/',
-  {
-    style: function (feature) {
-      return { 
-        fillColor: lightColor,
-        color: infoColor,};
-    },
-    attribution: 'Toolbox Infiltration',
-    onEachFeature: function (feature, layer) {
-      layer.bindTooltip(feature.properties.name);
-    }
-  });
-var toolboxOutlineGeste = new L.GeoJSON.AJAX('load_outline_geste/',
-  {
-    style: function (feature) {
-      return { 
-        fillColor: lightColor,
-        color: infoColor,};
-    },
-    attribution: 'Toolbox Geste',
-    onEachFeature: function (feature, layer) {
-      layer.bindTooltip(feature.properties.name);
-    }
-  });
+var featureGroup = new L.FeatureGroup()
+map.addLayer(featureGroup);
 
 
-  // var toolboxOutlineDrainage = new L.GeoJSON.AJAX('load_outline_drainage/',
-  // {
-  //   style: function (feature) {
-  //     return { 
-  //       fillColor: lightColor,
-  //       color: infoColor,};
-  //   },
-  //   attribution: 'Toolbox Dränung',
-  //   onEachFeature: function (feature, layer) {
-  //     layer.bindTooltip(feature.properties.name);
-  //   }
-  // });
+featureGroup.bringToFront();
 
-  
-
-  currentFeatureGroup.bringToFront();
-
-droughtFeatureGroup.on("click", function (event) {
-  
-  // const leafletId = droughtFeutureGroup.getLayerId(layer);
+featureGroup.on("click", function (event) {
   let leafletId = Object.keys(event.layer._eventParents)[0];
-  
   highlightLayer(leafletId);
   console.log("droughtFeutureGroup click event: highlight ", leafletId, event.layer);
-  // highlightPolygon(event.layer)
-});
-
-toolboxFeatureGroup.on("click", function (event) {
-  const layer = event.layer;
-  
-  // const leafletId = toolboxFeutureGroup.getLayerId(layer);
-  let leafletId = Object.keys(event.layer._eventParents)[0];
-  
-  highlightLayer(leafletId);
-  console.log("toolboxFeutureGroup click event: highlight ", leafletId, event.layer);
   // highlightPolygon(event.layer)
 });
 
 // highlight layer and li element on click in the sidebar
 
 function highlightLayer(id) {
+  console.log("HIGHLIGHT");
   // remove highlight from all layers
-  currentFeatureGroup.eachLayer(function (layer) {
+  featureGroup.eachLayer(function (layer) {
     const key = Object.keys(layer._layers)[0];
     const value = layer._layers[key];
     value._path.classList.remove("highlight");
@@ -322,43 +129,31 @@ function highlightLayer(id) {
   // deselect layer/ header: remove highlight class from  header
   if ($(`#accordionHeader-${id}`).hasClass("highlight")) {
     $(`#accordionHeader-${id}`).removeClass("highlight");
-    console.log("highlightLayer has class highlight");
+
     
-    let key = Object.keys(currentFeatureGroup._layers[id]._layers)[0]
+    let key = Object.keys(featureGroup._layers[id]._layers)[0]
     console.log("Key: ", key, "id: ", id)
-     currentFeatureGroup._layers[id]._layers[key]._path.classList.remove('highlight');
+     featureGroup._layers[id]._layers[key]._path.classList.remove('highlight');
   } else { // select layer/ header: 
-    
-    console.log("highlightLayer does not have class highlight")
-    switch (swnTool) {
-      case 'drought': {
-        const accordionDroughtHeaders = document.querySelectorAll('#accordionDroughtFields .accordion-header');
-        accordionDroughtHeaders.forEach(header => {
-          header.classList.remove('highlight')
-        });
-      };
-      case 'toolbox': {
-        const accordionToolboxHeaders = document.querySelectorAll('#accordionToolboxFields .accordion-header');
-        accordionToolboxHeaders.forEach(header => {
-          header.classList.remove('highlight')
-        });
-        };
-      };
-      //add highlight class to header
+
+      const accordionDroughtHeaders = document.querySelectorAll('#accordionDroughtFields .accordion-header');
+      accordionDroughtHeaders.forEach(header => {
+        header.classList.remove('highlight')
+      });
+
     $(`#accordionHeader-${id}`).addClass("highlight")
-    console.log('currentFeatureGroup', currentFeatureGroup)
     // add highlight class to leaflet layer
-    let key = Object.keys(currentFeatureGroup._layers[id]._layers)[0]
-    currentFeatureGroup._layers[id]._layers[key]._path.classList.add('highlight');
+    let key = Object.keys(featureGroup._layers[id]._layers)[0]
+    featureGroup._layers[id]._layers[key]._path.classList.add('highlight');
   };
-  };
+};
       
   
 // Draw functionality
 var drawControl = new L.Control.Draw({
   position: "topright",
   edit: {
-    featureGroup: currentFeatureGroup,
+    featureGroup: featureGroup,
   },
   draw: {
     circlemarker: false,
@@ -376,50 +171,34 @@ var drawControl = new L.Control.Draw({
 map.addControl(drawControl);
 
 // zoom to user's layers via chrosshair
+// added back-to-home bullseyer button to zoom controls
+$(".leaflet-control-zoom").append(
+  '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>'
+);
 const chrosshair = document.getElementsByClassName("leaflet-control-home")[0];
 
 chrosshair.addEventListener("click", () => {
   try {
-    var bounds = currentFeatureGroup.getBounds();
+    var bounds = featureGroup.getBounds();
     map.fitBounds(bounds);
   } catch {
     return;
   }
 });
 
-//--------------------SIDEBAR---------------------------------
 
-
-
-const sidebarLeft = L.control
-  .sidebar("sidebar", {
-    autopan: true,
-    container: 'sidebar',
-    closeButton: true,
-    position: "left",
-  })
-  .addTo(map);
 
 //-------------------- Baselayers ------------------------------
-const leafletSidebarContent = document.querySelector(".leaflet-sidebar-content");
+const leafletSidebarContent = document.querySelector(".sidebar-content");
 
-// const toolboxBaseLayerCollapse = document.getElementById("toolboxBaseLayerCollapse");
 const baseLayerCollapse = document.getElementById("baseLayerCollapse")
 const baseLayerCollapses = [baseLayerCollapse];
 
 const overlayLayers = {
   "droughtOverlay": droughtOverlay,
   "demOverlay": demOverlay,
-  "animation": animation,
   "projectRegion": projectRegion,
-  "toolboxOverlaySoil": toolboxOverlaySoil,
-  "toolboxOverlaySinks": toolboxOverlaySinks,
-  "toolboxOutlineInjection": toolboxOutlineInjection,
-  "toolboxOutlineSurfaceWater": toolboxOutlineSurfaceWater,
-  "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
-  "toolboxOutlineGeste": toolboxOutlineGeste,
-  "sinks": toolboxSinks,
-  // "toolboxWaterRetention": toolboxWaterRetention,
+
 };
 
 
@@ -428,99 +207,24 @@ const overlayLayers = {
 // ------------------- Sidebar eventlisteners -------------------
 
 // -------------------Sidebar new----------------
-const sidebarTabToolbox = document.getElementById("sidebarTabToolbox");
-const sidebarTabDrought = document.getElementById("sidebarTabDrought");
+
 
 // switch between SWN Toolbox and drought warning
 const listElementDem = document.getElementById("liElementDem")
 const listElementDroughtIndex = document.getElementById("liElementDroughtIndex")
 const listElementNetCDF = document.getElementById("liElementNetCDF")
 const droughtSidebarLiElements = document.querySelectorAll(".drought-overlay-sidebar-item")
-const toolboxSidebarLiElements = document.querySelectorAll(".toolbox-overlay-sidebar-item")
+
 
 var accordionDroughtFields = document.getElementById("accordionDroughtFields")
-var accordionToolboxFields = document.getElementById("accordionToolboxFields")
+
 
 var userFieldsAccordion = document.getElementById("userFieldsAccordion");
-var toolboxFieldsAccordion = document.getElementById("toolboxFieldsAccordion");
 
-const sidebarToolsHeader = document.getElementById("sidebarToolsHeader");
+
+
 let swnTool = 'drought'
 
-function changeTab(swnTool) {
-  console.log('changeTabFunction', swnTool)
-  switch (swnTool) {
-    case 'drought':
-      sidebarToolsHeader.innerText = "Dürrefrühwarnsystem";
-      // overlays
-      droughtSidebarLiElements.forEach(element => {
-        element.classList.remove("d-none");
-      });
-      toolboxSidebarLiElements.forEach(element => {
-        element.classList.add("d-none");
-      });
-      
-      accordionDroughtFields.classList.remove("d-none");
-      accordionToolboxFields.classList.add("d-none");
-
-      console.log("Case drought", sidebarToolsHeader.innerText );
-
-      toolboxFeatureGroup.remove();
-      droughtFeatureGroup.addTo(map);
-      currentFeatureGroup = droughtFeatureGroup;
-
-      break;
-    case 'toolbox':
-      sidebarToolsHeader.innerText = "Speicher Toolbox";
-      
-      // overlays
-      toolboxSidebarLiElements.forEach(element => {
-        element.classList.remove("d-none");
-      });
-      droughtSidebarLiElements.forEach(element => {
-        element.classList.add("d-none");
-      });
-
-
-      accordionDroughtFields.classList.add("d-none");
-      accordionToolboxFields.classList.remove("d-none");
- 
-      droughtFeatureGroup.remove();
-      toolboxFeatureGroup.addTo(map);
-      currentFeatureGroup = toolboxFeatureGroup;
-      
-      console.log("Case toolbox")
-      break;
-  }
-  console.log("CurrentFeatureGroup", currentFeatureGroup)
-};
-
-// Click of drought and toolbox icon of the sidebar
-const sidebarTabListDrought = document.getElementById("sidebarTabListDrought");
-const sidebarTabListToolbox = document.getElementById("sidebarTabListToolbox");
-
-sidebarTabDrought.addEventListener("click", () => {
-  sidebarTabListToolbox.classList.remove("active");
-  if (sidebarTabListDrought.classList.contains('active')) {
-    console.log('Drought contains active')
-    if (swnTool === 'toolbox') {
-      swnTool = 'drought'
-      changeTab( swnTool);
-    }    
-  } 
-});
-
-sidebarTabToolbox.addEventListener("click", () => {
-  sidebarTabListDrought.classList.remove("active");
-  if (sidebarTabListToolbox.classList.contains('active')) {
-    console.log('Toolbox contains active')
-    // sidebarToolsHeader.innerText = "Toolbox";
-    if (swnTool === 'drought') {
-      swnTool = 'toolbox'
-      changeTab(swnTool);
-    }
-  }
-});
 
 
 $(function () {
@@ -571,71 +275,10 @@ leafletSidebarContent.addEventListener("click", (event) => {
           fieldMenuModal.show();
       // $('#fieldMenuModal').modal('show');
       // console.log("field-menu clicked", leafletId);
-    } else if (clickedElement.classList.contains("toolbox-menu")) {
-      // TODO the hardcoded # fieldMenuModal is triggered from button
-        const fieldMenuModal = new bootstrap.Modal(document.getElementById('toolboxMenuModal'));
-          fieldMenuModal.show();
     } else if (clickedElement.classList.contains("field-edit")) {
         // TODO the hardcoded modal is triggered from button
         console.log("field-edit clicked", leafletId, userField.id);
-    } else if (clickedElement.classList.contains("toolbox-edit")) {
-      // TODO the hardcoded modal is triggered from button
-        try{
-          toolboxSinks.remove();
-        }
-        catch(err){console.log(err)};
-    
-        console.log("toolbox-edit clicked", leafletId, userField.id);
-      var toolboxSinks = new L.GeoJSON.AJAX('toolbox_get_sinks_within/' + userField.id + '/',
-      {
-        style: function (feature) {
-          return { 
-            fillColor: lightColor,
-            color: infoColor,};
-        },
-        attribution: 'Toolbox Sinks',
-        onEachFeature: function (feature, layer) {
-          var tooltipContent = '';
-          for (var key in feature.properties) {
-              tooltipContent += key + ': ' + feature.properties[key] + '<br>';
-          }
-          layer.bindTooltip(tooltipContent);
-      }
-      });
-      
-      currentFeatureGroup.addLayer(toolboxSinks);
-      // toolboxSinks.addTo(map);
-
-      // fetch('toolbox_get_sinks_within/' + userField.id)
-      // .then(response => response.json())
-      // .then(data => {
-      //   console.log("fetch toolbox_edit", data);
-      //   // Parse the GeoJSON FeatureCollection
-      //   var pointFeatureGroup = L.featureGroup();
-      //   // Iterate over each feature in the FeatureCollection
-      //   data.features.forEach(function(feature) {
-      //       // Extract coordinates
-      //       var coordinates = feature.coordinates;
-            
-      //       // Extract properties
-      //       var properties = feature.properties;
-            
-      //       // Create a Leaflet marker at the coordinates
-      //       var marker = L.marker([coordinates[1], coordinates[0]]);
-            
-      //       // Bind a popup displaying the properties
-      //       var popupContent = "<b>Properties:</b><br>";
-      //       for (var key in properties) {
-      //           popupContent += key + ": " + properties[key] + "<br>";
-      //       }
-      //       marker.bindPopup(popupContent);      
-      //       // Add the marker to the feature group
-      //       marker.addTo(pointFeatureGroup);
-      //   });
-      //   // Add the feature group to the Leaflet map
-      //   pointFeatureGroup.addTo(map);
-      // })
-     } else { console.log("else in eventlistener") }
+    } else { console.log("else in eventlistener") }
     }
   });
 
@@ -646,9 +289,7 @@ leafletSidebarContent.addEventListener("change", (event) => {
   if (switchInput.classList.contains("basemap-switch")) {
     changeBasemap(switchInput);
   } else if (switchInput.classList.contains("layer-switch")) {
-
     const layerId = switchInput.getAttribute("data-layer");
-
     if (switchInput.checked) {
       // Add the layer
       map.addLayer(overlayLayers[layerId]);
@@ -711,8 +352,7 @@ let switchGroupId = 1;
 
 function createBaseLayerSwitchGroup() {
   let initialBasemapChecked = false; 
-  const baseLayerControlList = document.createElement("ul");
-  baseLayerControlList.classList.add("list-group", "sidebar-list", "base-layer-control-list");
+  const baseLayerControlList = document.getElementById("baseLayerList");
   // Loop through the baseMaps and create the control switches
   for (const [basemapName, basemapLayer] of Object.entries(baseMaps)) {
     const li = document.createElement("li");
@@ -758,15 +398,11 @@ var userFields = {};
 
 
 // User Field Name Modal
-const userFieldNameModalElement = document.getElementById("userFieldNameModal");
-const btnUserFieldSave = document.getElementById("btnUserFieldSave");
-// const btnUserFieldSaveAndCalc = document.getElementById("btnUserFieldSaveAndCalc");
-const btnUserFieldDismiss = document.getElementById("btnUserFieldDismiss");
-const fieldNameInput = document.getElementById("fieldNameInput");
 
-const loadUrl = "load/";
-const saveUrl = "save/";
-const deleteUrl = "delete/";
+
+const loadUrl = "/login/Dashboard/load/";
+const saveUrl = "/login/Dashboard/save/";
+const deleteUrl = "/login/Dashboard/delete/";
 
 
 class UserField {
@@ -805,7 +441,6 @@ function saveUserField(userField) {
       name: userField.name,
       swnTool: userField.swnTool,
     };
-    
     fetch(saveUrl, {
       method: "POST",
       credentials: "same-origin",
@@ -839,43 +474,55 @@ const getData = async function () {
       // "X-CSRFToken": getCookie("csrftoken"),
     },
   })
-    .then(response => response.json())
-    .then(data => {
-      // clear all userFields from map and sidebar
-      $("#display-data").empty();
-      const userFieldsDb = data.user_fields;
-      userFieldsDb.forEach((el) => {
-        var layer = L.geoJSON(el.geom_json);
-        layer.bindTooltip(el.name);
-        console.log("detData, element: ", el);
-        const userField = new UserField(
-          el.name,
-          layer,
-          el.swn_tool,
-          el.id         
-        );
-        const leafletId = 0;
-        // Add the layer to the droughtFeutureGroup layer group
-        switch (el.swn_tool) {
-          case 'drought': {
-            droughtFeatureGroup.addLayer(userField.layer);
-            userField.leafletId  = droughtFeatureGroup.getLayerId(userField.layer);
-            break;
-          }
-          case 'toolbox': {
-            toolboxFeatureGroup.addLayer(userField.layer);
-            userField.leafletId  = toolboxFeatureGroup.getLayerId(userField.layer);
-          }
-        };
-        // Store the userField object using the layer's leafletId
-        
-        // userField.leafletId = leafletId;
-        userFields[userField.leafletId ] = userField;
+  .then(response => response.json())
+  .then(data => {
+    // clear all userFields from map and sidebar
+    $("#display-data").empty();
+    const userFieldsDb = data.user_fields;
+    userFieldsDb.forEach((el) => {
+      var layer = L.geoJSON(el.geom_json);
+      layer.bindTooltip(el.name);
+      console.log("getData, element: ", el);
+      const userField = new UserField(
+        el.name,
+        layer,
+        el.swn_tool,
+        el.id         
+      );
+      // Add the layer to the droughtFeutureGroup layer group
+      if (el.swn_tool === 'drought') {
+          featureGroup.addLayer(userField.layer);
+          userField.leafletId  = featureGroup.getLayerId(userField.layer);
+          userFields[userField.leafletId ] = userField;
 
-        addLayerToSidebar(userField);
+          addLayerToSidebar(userField);
+        }
+      
+      // Store the userField object using the layer's leafletId
+      
+      // userField.leafletId = leafletId;
+
     });
-})};
+  });
+};
 
+
+// Modal Userfield Name 
+const btnUserFieldSave = document.getElementById("btnUserFieldSave");
+const btnUserFieldDismiss = document.getElementById("btnUserFieldDismiss");
+const fieldNameInput = document.getElementById("fieldNameInput");
+
+btnUserFieldSave.addEventListener("click", (event) => {
+  event.preventDefault();
+  handleSaveUserField();
+});
+
+
+btnUserFieldDismiss.addEventListener("click", (event) => {
+  const userField = currentUserField;
+  featureGroup.removeLayer(userField.layer);
+  currentUserField = null;
+});
 
 // function connected to the "Save" and "SaveAndCalc" button in the modal
 function handleSaveUserField() {
@@ -909,39 +556,22 @@ function handleSaveUserField() {
   }
 }
 
-// Modal Userfield Name 
-btnUserFieldSave.addEventListener("click", (event) => {
-  event.preventDefault();
-  handleSaveUserField();
-});
 
-// btnUserFieldSaveAndCalc.addEventListener("click", (event) => {
-//   event.preventDefault();
-//   handleSaveUserField();
-//   // Additional actions after saving and calculating
-//   console.log("Save and calculation complete. Additional actions here.");
-// });
-
-btnUserFieldDismiss.addEventListener("click", (event) => {
-  const userField = currentUserField;
-  droughtFeatureGroup.removeLayer(userField.layer);
-  currentUserField = null;
-});
 
 // EventListener for the draw event 
 map.on("draw:created", function (event) {
-  if (isMapInteractionEnabled) {
-    let layer = event.layer;
-    const layer2 = L.geoJSON(layer.toGeoJSON().geometry);
-    currentFeatureGroup.addLayer(layer2);
 
-    let userField = new UserField("", layer, swnTool);
-    console.log("draw:created userField", userField);
-    userField.leafletId = layer2._leaflet_id;
-    currentUserField = userField;
-    // Show the modal to enter the userField name. After the name is entered, the userField is saved in the DB
-    $('#userFieldNameModal').modal('show'); 
-  }
+  let layer = event.layer;
+  const layer2 = L.geoJSON(layer.toGeoJSON().geometry);
+  featureGroup.addLayer(layer2);
+
+  let userField = new UserField("", layer, swnTool);
+  console.log("draw:created userField", userField);
+  userField.leafletId = layer2._leaflet_id;
+  currentUserField = userField;
+  // Show the modal to enter the userField name. After the name is entered, the userField is saved in the DB
+  $('#userFieldNameModal').modal('show'); 
+
 });
 
 
@@ -949,12 +579,7 @@ map.on("draw:created", function (event) {
 // A list element is created and the corresponding userField object is attached to the li element in the sidebar
 const addLayerToSidebar = (userField) => {
   var menuType = '';
-  if (userField.swnTool === 'drought') {
-    menuType = 'field-edit';
-  } else if (userField.swnTool === 'toolbox') {
-    menuType = 'toolbox-edit';
-  };
-  // const menuType = 'field-menu';
+
   // new Accordion UserField style
   const accordion = document.createElement("div");
   accordion.setAttribute("class", "accordion-item");
@@ -976,20 +601,20 @@ const addLayerToSidebar = (userField) => {
         </button>
       <span class="column col-4 field-btns-col">
         <form id="deleteAndCalcForm-${userField.leafletId}">
-          <a href="${menuType}/${userField.id}" type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action" leaflet-id="${userField.leafletId}">
+          <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}">
             <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}"></i></span>
-          </a>
-    
-          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action ${menuType}" leaflet-id="${userField.leafletId}">
-            <span><i class="bi bi-list user-field-action ${menuType}" leaflet-id="${userField.leafletId}"></i></span>
           </button>
-          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}">
+    
+          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}">
+            <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}"></i></span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete " leaflet-id="${userField.leafletId}">
             <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}"></i></span>
           </button>
         </form>
       </span>  
   </div>
-  <div id="accordionField-${userField.leafletId}" class="accordion-collapse collapse" data-bs-parent="#accordion-${userField.leafletId}">
+  <div id="accordionField-${userField.leafletId}" class="accordion-collapse collapse">
     <div class="accordion-body">
       <ul class="list-group" id="projectList-${userField.leafletId}">
         <li>some item 1</li>
@@ -1002,13 +627,9 @@ const addLayerToSidebar = (userField) => {
   // adding the UserField to the HTML-list element
   accordion.userField = userField;
 
-  if (userField.swnTool === 'drought') {
-    console.log('AddLayerToSidebar drought')
-    userFieldsAccordion.appendChild(accordion);
-  } else if (userField.swnTool === 'toolbox') {
-    console.log('AddLayerToSidebar toolbox')
-    toolboxFieldsAccordion.appendChild(accordion);
-  } else { console.log('else in addLayerToSidebar') };
+  
+  userFieldsAccordion.appendChild(accordion);
+  
 };
 
 var highlight = {
@@ -1020,30 +641,30 @@ var highlight = {
 // Sidebar
 // zoom to layer on dbclick in sidebar
 accordionDroughtFields.addEventListener("dblclick", (e) => {
-  const listElement = e.target.closest("div");
+  const listElement = e.target.closest(".accordion-item");
   console.log("listElement", listElement);
   map.fitBounds(listElement.userField.layer.getBounds());
 });
 
 
 
-$("#projectModal").on("hide.bs.modal", function (e) {
-  if (!chartCard.classList.contains("d-none")) {
-    chartCard.classList.add("d-none");
-  }
-});
+// $("#projectModal").on("hide.bs.modal", function (e) {
+//   if (!chartCard.classList.contains("d-none")) {
+//     chartCard.classList.add("d-none");
+//   }
+// });
 
-$(document).ready(function () {
-  $("#chartModal").on("show.bs.modal", function () {
-    var chartModal = $("#chartModal");
+// $(document).ready(function () {
+//   $("#chartModal").on("show.bs.modal", function () {
+//     var chartModal = $("#chartModal");
 
-    $(".modal-container").html(this);
-    $("#map-container").hide();
-  }),
-    $("#chartModal").on("hide.bs.modal", function () {
-      $("#map-container").show();
-    });
-});
+//     $(".modal-container").html(this);
+//     $("#map-container").hide();
+//   }),
+//     $("#chartModal").on("hide.bs.modal", function () {
+//       $("#map-container").show();
+//     });
+// });
 
 // state county district selection
 

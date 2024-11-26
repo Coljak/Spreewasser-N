@@ -1,7 +1,4 @@
-from . import models as m_models
-from swn import models as swn_models
-from django.forms import modelformset_factory
-from .forms import *
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
@@ -9,34 +6,37 @@ from django.contrib.gis.geos import Polygon
 from django.contrib.gis.db.models.functions import Transform
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.template.loader import render_to_string
 from django.apps import apps
 
 from django.db.models import Q
 
 from .run_consumer_swn import run_consumer
-from .run_producer import run_producer
+from . import models as m_models
+from . import monica_io3_swn
+from swn import models as swn_models
+from .forms import *
 from buek.views import get_soil_profile
 from pathlib import Path
-from . import monica_io3_swn
+
 from .climate_data.lat_lon_mask import lat_lon_mask
 from .monica_events import *
 
 from netCDF4 import Dataset, MFDataset
 import numpy as np
-from datetime import datetime, timedelta
 from dateutil import parser
 from cftime import num2date, date2num, date2index
 
-import pytz
+
 import json
 import zmq
 import csv
-import bisect
+
 # create a new monica env
 from . import climate
 from .process_weather_data import *
 from datetime import datetime, timedelta
+
+
 
 # layerAggOp
 OP_AVG = 0
@@ -407,67 +407,77 @@ def create_monica_env_from_json(json_data):
             print("K: ", k)
             if k == 'sowingWorkstep':
                 for ws in v:
-                    print('ws: ', ws.get('date'))
-                    print('ws keys: ', ws.keys())
-                    workstep = {"date":  ws.get('date'),               # "0000-10-13",
-                            "type": "Sowing",
-                            "crop": {
-                                # "is-winter-crop": True, # TODO is winter-crop is probably not required!!!
-                                "cropParams": {
-                                    "species": {
-                                    "=": m_models.SpeciesParameters.objects.get(id=ws.get('options').get('species')).to_json()
+                    if ws.get('options').get('species') is None:
+                        error.append('Species not selected')
+                    if ws.get('date') is None:
+                        error.append('Sowing date not selected')
+                    else:
+                        workstep = {"date":  ws.get('date'),               # "0000-10-13",
+                                "type": "Sowing",
+                                "crop": {
+                                    # "is-winter-crop": True, # TODO is winter-crop is probably not required!!!
+                                    "cropParams": {
+                                        "species": {
+                                        "=": m_models.SpeciesParameters.objects.get(id=ws.get('options').get('species')).to_json()
+                                        },
+                                        "cultivar": {
+                                        "=": m_models.CultivarParameters.objects.get(id=ws.get('options').get('cultivar')).to_json()
+                                        }
                                     },
-                                    "cultivar": {
-                                    "=": m_models.CultivarParameters.objects.get(id=ws.get('options').get('cultivar')).to_json()
-                                    }
-                                },
-                                "residueParams": m_models.CropResidueParameters.objects.get(species_parameters=ws.get('options').get('species')).to_json()
+                                    "residueParams": m_models.CropResidueParameters.objects.get(id=ws.get('options').get('cropResidue')).to_json()
+                                }
                             }
-                        }
-                 
-                    worksteps.append(workstep)
+                    
+                        worksteps.append(workstep)
             elif k == 'harvestWorkstep':
                 for ws in v:
                     workstep = {
                             "type": "Harvest",
-                            "date": ws.get('date')               # "0001-05-21"
+                            "date": ws.get('date', None)               # "0001-05-21"
                         }
-                    worksteps.append(workstep)
+                    if workstep['date'] is not None:
+                        worksteps.append(workstep)
             elif k == 'mineralFertilisationWorkstep':
                 for ws in v:
                     workstep = {
                             "type": "mineralFertilisation",
-                            "date": ws.get('date'),
-                            'amount'  : ws.get('amount')            # "0001-05-21"
+                            "date": ws.get('date', None),
+                            'amount'  : ws.get('amount', 0)            # "0001-05-21"
                         }
-                    worksteps.append(workstep)
+                    if workstep['date'] is not None:
+                        worksteps.append(workstep)
+                    
             elif k == 'organicFertilisationWorkstep':
                 for ws in v:
                     workstep = {
                             "type": "organicFertilisation",
-                            "date": ws.get('date'),
-                            'amount'  : ws.get('amount')          # "0001-05-21"
+                            "date": ws.get('date', None),
+                            'amount'  : ws.get('amount', 0)          # "0001-05-21"
                         }
-                    worksteps.append(workstep)
+                    if workstep['date'] is not None:
+                        worksteps.append(workstep)
             elif k == 'tillageWorkstep':
                 for ws in v:
                     workstep = {
                             "type": "tillage",
-                            "date": ws.get('date'),
+                            "date": ws.get('date', None),
                             # 'depth'  : ws.depth            # "0001-05-21"
                         }
-                    worksteps.append(workstep)
+                    if workstep['date'] is not None:
+                        worksteps.append(workstep)
             elif k == 'irrigationWorkstep':
                 for ws in v:
                     workstep = {
                             "type": "Irrigation",
-                            "date": ws.get('date'),
-                            'amount'  : [float(ws.get('options').get('amount')), 'mm']  # "0001-05-21"
+                            "date": ws.get('date', None),
+                            'amount'  : [float(ws.get('options').get('amount', 0)), 'mm']  # "0001-05-21"
                         }
-                    worksteps.append(workstep)
+                    if workstep['date'] is not None:
+                        worksteps.append(workstep)
             else:
                 print("Workstep not found: ", k)
-        
+
+        worksteps = sorted(worksteps, key=lambda x: x['date'])
         rotation["worksteps"] = worksteps
 
         cropRotation.append(rotation)
@@ -714,25 +724,25 @@ def create_monica_env_from_json(json_data):
 
 # get options for cultivar parameters selectbox in monica_hohenfinow_db.html
 # todo: DELETE THIS FUNCTION used in monica_crop.js!!!
-def get_cultivar_parameters(request, id):       
-    cultivars = m_models.CultivarParameters.objects.filter(species_parameters=id).order_by('name')
-    cultivar_list = []
-    for cultivar in cultivars:
-        if cultivar.name != '':
-            cultivar_list.append({
-                'id': cultivar.id,
-                'name': cultivar.name,
-            })
-        else:
-            cultivar_list.append({
-                'id': cultivar.id,
-                'name': 'default',
-            })
+# def get_cultivar_parameters(request, id):       
+#     cultivars = m_models.CultivarParameters.objects.filter(species_parameters=id).order_by('name')
+#     cultivar_list = []
+#     for cultivar in cultivars:
+#         if cultivar.name != '':
+#             cultivar_list.append({
+#                 'id': cultivar.id,
+#                 'name': cultivar.name,
+#             })
+#         else:
+#             cultivar_list.append({
+#                 'id': cultivar.id,
+#                 'name': 'default',
+#             })
 
-    # selected species plant density
-    species = m_models.SpeciesParameters.objects.get(id=id)
+#     # selected species plant density
+#     species = m_models.SpeciesParameters.objects.get(id=id)
     
-    return JsonResponse({'cultivars': cultivar_list, 'plant_density': species.plant_density})
+#     return JsonResponse({'cultivars': cultivar_list, 'plant_density': species.plant_density})
 
 def monica_calc_w_params_from_db(request):
     start_time = datetime.now()
@@ -808,10 +818,9 @@ def msg_to_json(msg):
     """
     the json output of Monica is processed in this function so that every output 
     is a flat array with the length of the base array e.g. of dates for each output. 
-    This is applied to all outputs such as 'daily', 'monthly, 'crop' etc."""
+    This is applied to all outputs such as 'daily', 'monthly, 'crop' etc.
+    """
     # aggregation constants as dictionary from monica_io3.py
-    print("? msg_to_json")
-
     aggregation_constants = {
         0: "AVG",
         1: "MEDIAN",
@@ -853,7 +862,7 @@ def msg_to_json(msg):
                 output_id["jsonInput"] = json.loads(output_id["jsonInput"])
             except:
                 pass
-            
+            # soil has layers, yield, LAI etc does not have layers
             if output_id["fromLayer"] == output_id["toLayer"] == -1:
                 output_id["result_dict"] = {}
                 name = output_id["name"]
@@ -888,6 +897,9 @@ def msg_to_json(msg):
     return for_chart
 
 def export_monica_result_to_csv(msg):
+    """
+    The csv export is the same as in the MONICA repository.
+    """
 
     file_path = Path(__file__).resolve().parent
     
@@ -1093,7 +1105,7 @@ def modify_model_parameters(request, parameter, id, rotation=None):
     form_class = model_info['form']
 
     # TODO  check this part: why should this only apply to residue and not also to cultivar? What if request.POST
-    if parameter == 'crop_residue_parameters':
+    if parameter == 'crop-residue-parameters':
         obj = get_object_or_404(model_class, species_parameters=id)
     else:
         obj = get_object_or_404(model_class, pk=id)
@@ -1104,7 +1116,7 @@ def modify_model_parameters(request, parameter, id, rotation=None):
         form = form_class(request.POST, instance=obj)
         if form.is_valid():
             instance = form.save(commit=False)
-            if request.POST.get('save_as_new'):
+            if request.POST.get('modal_action') == 'save_as_new':
                 print("save as new is True")
                 
                 if instance.name == '':
@@ -1119,7 +1131,8 @@ def modify_model_parameters(request, parameter, id, rotation=None):
 
                 new_name = base_name
                 while new_name in existing_names:
-                    new_name = f'{base_name} (copy)'
+                    new_name = f'{new_name} (copy)'
+                    
                     
                 instance.name = new_name  
 
@@ -1130,17 +1143,18 @@ def modify_model_parameters(request, parameter, id, rotation=None):
                 instance.save()
                 return JsonResponse({'success': True, 'message': 'New instance created.',  'new_id': instance.pk})
 
-            elif request.POST.get('delete_params') and instance.is_default is False:
+            elif request.POST.get('modal_action') == 'delete' and instance.is_default is False:
                 print("DELETE")
                 instance.delete()
                 return JsonResponse({'success': True, 'message': 'Instance deleted.'})
-            else:
+            elif request.POST.get('modal_action') == 'save':
                 print("SAVE")
                 if instance.is_default:
                     return JsonResponse({'success': False, 'errors': 'Cannot modify the default species parameters. Please use save as new.'})
                 instance.save()
                 return JsonResponse({'success': True, 'message': 'Parameters saved successfully.', 'new_id': instance.pk})
-
+            else:
+                print("WARNING: Something is wrong with modal action!!")
 
             
         else:
@@ -1353,16 +1367,16 @@ def run_simulation(request):
         file_path = Path(__file__).resolve().parent
         with open(f'{file_path}/monica_io/env_from_db_2.json', 'w') as _: 
             json.dump(env, _)
-            print("check 8")
+            print("check 8: environment saved")
         msg = run_consumer()
-        print("check 9")
-        msg = msg_to_json(msg)
-        print("check 10")
+        print("check 9: consumer run")
+        json_msg = msg_to_json(msg)
+        print("check 10: ")
         # print(msg)
         with open(f'{file_path}/monica_io/message_out.json', 'w') as _: 
             json.dump(msg, _)
         print("Simulation is done.")
-        return JsonResponse({'success': True, 'message': msg})
+        return JsonResponse({'success': True, 'message': json_msg})
     else:
         return JsonResponse({'success': False, 'message': 'Simulation not started.'})
 

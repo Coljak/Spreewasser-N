@@ -42,6 +42,7 @@ geo = Geoserver(os.environ.get('GEOSERVER_URL'),
 class ProjectRegion(models.Model):
     name = models.CharField(max_length=50)
     geom = gis_models.MultiPolygonField(null=True, srid=4326)
+    geo_json = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.name

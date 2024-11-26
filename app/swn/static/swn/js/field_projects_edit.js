@@ -1,4 +1,4 @@
-import { endpoint, chartDiv, crop, getChart } from "./chart_page.js";
+// import { endpoint, chartDiv, crop, getChart } from "./chart_page.js";
 
 // Function to retrieve the CSRF token from the cookies
 function getCSRFToken() {

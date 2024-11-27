@@ -22,6 +22,10 @@ from .climate_data.lat_lon_mask import lat_lon_mask
 from .monica_events import *
 
 from netCDF4 import Dataset, MFDataset
+import xarray as xr
+import numpy as np
+import dask.array as da
+import os
 import numpy as np
 from dateutil import parser
 from cftime import num2date, date2num, date2index
@@ -32,11 +36,20 @@ import zmq
 import csv
 
 # create a new monica env
-from . import climate
+# from ...xx_obsolete import climate
 from .process_weather_data import *
 from datetime import datetime, timedelta
 
 
+def load_weatherdata():
+    ls = os.listdir('monica/climate_netcdf/')
+    for l in ls:
+        if l.split('.')[-1] != 'nc':
+            ls.remove(l)
+
+    path_list = ['monica/climate_netcdf/' + l for l in ls]
+    weather_data = xr.open_mfdataset(path_list, combine='by_coords', chunks={'time': 365, 'lat': 100, 'lon': 100})
+    return weather_data
 
 # layerAggOp
 OP_AVG = 0
@@ -713,36 +726,12 @@ def create_monica_env_from_json(json_data):
         # "climateData": json.dumps(climate_json)
         "climateData": climate_json
     }
-    print("check 4")
+    print("check 4 create_monica_env_from_json done")
 
-    # print("check 4b: \n", env)
-    with open('NEW_env_from_db.json', 'w') as _:
-        json.dump(env, _)
 
     return env
 
 
-# get options for cultivar parameters selectbox in monica_hohenfinow_db.html
-# todo: DELETE THIS FUNCTION used in monica_crop.js!!!
-# def get_cultivar_parameters(request, id):       
-#     cultivars = m_models.CultivarParameters.objects.filter(species_parameters=id).order_by('name')
-#     cultivar_list = []
-#     for cultivar in cultivars:
-#         if cultivar.name != '':
-#             cultivar_list.append({
-#                 'id': cultivar.id,
-#                 'name': cultivar.name,
-#             })
-#         else:
-#             cultivar_list.append({
-#                 'id': cultivar.id,
-#                 'name': 'default',
-#             })
-
-#     # selected species plant density
-#     species = m_models.SpeciesParameters.objects.get(id=id)
-    
-#     return JsonResponse({'cultivars': cultivar_list, 'plant_density': species.plant_density})
 
 def monica_calc_w_params_from_db(request):
     start_time = datetime.now()
@@ -948,7 +937,7 @@ def get_site_params_height(polygon):
 
 def get_parameter_options(request, parameter_type, id=None):
     """
-    Get choices for select box.
+    Get choices for select boxes.
     """
     user = request.user.id
     print("GET PARAMETER OPTIONS: ", parameter_type, id,)
@@ -965,7 +954,6 @@ def get_parameter_options(request, parameter_type, id=None):
         options = SpeciesParameters.objects.filter(Q(user=None) | Q(user=user)).values('id','name')
         # options = SpeciesParameters.objects.values('id', 'name')
     elif parameter_type == 'cultivar-parameters':
-        print("GETTING CULTIVAR PARAMETERS", id)
         if id is not None:
             # options = CultivarParameters.objects.filter(Q(user=None) | Q(user=user_id)).values('id','name')
             # TODO most of this is probably obsolete- no species --> no cultivar
@@ -989,7 +977,7 @@ def get_parameter_options(request, parameter_type, id=None):
         options = UserCropParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     elif parameter_type == 'user-environment-parameters':
         options = UserEnvironmentParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
-    elif parameter_type == 'user-simulation-parameters':
+    elif parameter_type == 'user-simulation-settings':
         options = UserSimulationSettings.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     
     else:
@@ -997,13 +985,11 @@ def get_parameter_options(request, parameter_type, id=None):
 
     return JsonResponse({'options': list(options)})
     
-
 def modify_model_parameters(request, parameter, id, rotation=None):
 
-    print('rotation: ', rotation)
-
     """
-    Every Monica Parameter JSON can be modified and saved. This function applies to all parameters, loads the from and saves the data.
+    Every Monica Parameter JSON can be modified and saved. 
+    This function applies to all parameters, loads the from and saves the data.
     """
     # TODO Settings parameters are not yet implemented
     MODEL_FORM_MAPPING = {
@@ -1181,11 +1167,11 @@ def modify_model_parameters(request, parameter, id, rotation=None):
         }
         return render(request, 'monica/modify_parameters_modal.html', context)
     
-
 # @login_required
 def monica_model(request):
     """
-    Sets up the GUI wirh all forms and data required for the MONICA model.
+    Sets up the GUI with all forms and data required for the MONICA model.
+    This view is used for the MONICA page and also the SpreeWasser:N page.
     """
     user = request.user
 
@@ -1283,7 +1269,10 @@ def monica_model(request):
     return render(request, 'monica/monica_model.html', context)
 
 def get_soil_parameters(request, lat, lon):
-    
+    """
+    The view returns two profiles in cases where the profile has to be completed.
+    It is used in the soil tab of MONICA/swn-Monica.
+    """
     soil_profile = get_soil_profile('general', lat, lon)
     
     show_original_table = (soil_profile['SoilProfileParameters'] != soil_profile['OriginalSoilProfileParameters'])

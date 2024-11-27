@@ -91,6 +91,7 @@ ipython_config.py
 
 # Security
 klim4cast_server_settings.py
+dwd_server.py
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is

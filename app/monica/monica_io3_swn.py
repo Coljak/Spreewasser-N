@@ -18,11 +18,11 @@ from pathlib import Path
 import sys
 import time
 
-PATH_TO_SOIL_IO3 = Path(os.path.realpath(__file__)).parent.parent.parent.parent / "util/soil"
+# PATH_TO_SOIL_IO3 = Path(os.path.realpath(__file__)).parent.parent.parent.parent / "util/soil"
 
-if str(PATH_TO_SOIL_IO3) not in sys.path:
-    sys.path.insert(1, str(PATH_TO_SOIL_IO3))
-from . import soil_io3
+# if str(PATH_TO_SOIL_IO3) not in sys.path:
+#     sys.path.insert(1, str(PATH_TO_SOIL_IO3))
+# from . import soil_io3
 
 #------------------------------------------------------------------------------
 
@@ -305,126 +305,126 @@ def find_and_replace_references(root, j):
 
 #------------------------------------------------------------------------------
 
-def supported_patterns():
+# def supported_patterns():
 
-    def ref(root, j):
-        if CACHE_REFS and "cache" not in ref.__dict__:
-            ref.cache = {}
+#     def ref(root, j):
+#         if CACHE_REFS and "cache" not in ref.__dict__:
+#             ref.cache = {}
 
-        if len(j) == 3 \
-         and is_string_type(j[1]) \
-         and is_string_type(j[2]):
+#         if len(j) == 3 \
+#          and is_string_type(j[1]) \
+#          and is_string_type(j[2]):
 
-            key1 = j[1]
-            key2 = j[2]
+#             key1 = j[1]
+#             key2 = j[2]
 
-            if CACHE_REFS and (key1, key2) in ref.cache:
-                return ref.cache[(key1, key2)]
+#             if CACHE_REFS and (key1, key2) in ref.cache:
+#                 return ref.cache[(key1, key2)]
 
-            res = find_and_replace_references(root, root[key1][key2])
+#             res = find_and_replace_references(root, root[key1][key2])
             
-            if CACHE_REFS:
-                ref.cache[(key1, key2)] = res
-            return res
+#             if CACHE_REFS:
+#                 ref.cache[(key1, key2)] = res
+#             return res
 
-        return {"result": j,
-                "errors": ["Couldn't resolve reference: " + json.dumps(j) + "!"],
-                "success" : False}
+#         return {"result": j,
+#                 "errors": ["Couldn't resolve reference: " + json.dumps(j) + "!"],
+#                 "success" : False}
 
    
 
-    def from_file(root, j__):
-        "include from file"
-        if len(j__) == 2 and is_string_type(j__[1]):
+#     def from_file(root, j__):
+#         "include from file"
+#         if len(j__) == 2 and is_string_type(j__[1]):
 
-            # base_path = default_value(root, "include-file-base-path", ".")
-            base_path = os.path.dirname(os.path.abspath(__file__))
+#             # base_path = default_value(root, "include-file-base-path", ".")
+#             base_path = os.path.dirname(os.path.abspath(__file__))
             
-            path_to_file = j__[1]
-            if not is_absolute_path(path_to_file):
-                path_to_file = base_path + "/_hohenfinow/monica-parameters/" + path_to_file
+#             path_to_file = j__[1]
+#             if not is_absolute_path(path_to_file):
+#                 path_to_file = base_path + "/_hohenfinow/monica-parameters/" + path_to_file
             
-            print("path_to_file: ", path_to_file)
+#             print("path_to_file: ", path_to_file)
 
-            jo_ = read_and_parse_json_file(path_to_file)
-            if jo_["success"] and not isinstance(jo_["result"], type(None)):
-                return {"result": jo_["result"], "errors": [], "success": True}
+#             jo_ = read_and_parse_json_file(path_to_file)
+#             if jo_["success"] and not isinstance(jo_["result"], type(None)):
+#                 return {"result": jo_["result"], "errors": [], "success": True}
 
-            return {"result": j__,
-                    "errors": ["Couldn't include file with path: '" + path_to_file + "'!"],
-                    "success": False}
+#             return {"result": j__,
+#                     "errors": ["Couldn't include file with path: '" + path_to_file + "'!"],
+#                     "success": False}
 
-        return {"result": j__,
-                "errors": ["Couldn't include file with function: " + json.dumps(j__) + "!"],
-                "success": False}
+#         return {"result": j__,
+#                 "errors": ["Couldn't include file with function: " + json.dumps(j__) + "!"],
+#                 "success": False}
 
-    def humus_to_corg(_, j__):
-        "convert humus level to corg"
-        if len(j__) == 2 \
-            and isinstance(j__[1], int):
-            return {"result": soil_io3.humus_class_to_corg(j__[1]), "errors": [], "success": True}
-        return {"result": j__,
-                "errors": ["Couldn't convert humus level to corg: " + json.dumps(j__) + "!"],
-                "success": False}
+#     def humus_to_corg(_, j__):
+#         "convert humus level to corg"
+#         if len(j__) == 2 \
+#             and isinstance(j__[1], int):
+#             return {"result": soil_io3.humus_class_to_corg(j__[1]), "errors": [], "success": True}
+#         return {"result": j__,
+#                 "errors": ["Couldn't convert humus level to corg: " + json.dumps(j__) + "!"],
+#                 "success": False}
 
-    def ld_to_trd(_, j__):
-        if len(j__) == 3 \
-            and isinstance(j__[1], int) \
-            and isinstance(j__[2], float):
-            return {"result": soil_io3.bulk_density_class_to_raw_density(j__[1], j__[2]), "errors": [], "success": True}
-        return {"result": j__,
-                "errors": ["Couldn't convert bulk density class to raw density using function: " + json.dumps(j__) + "!"],
-                "success": False}
+#     def ld_to_trd(_, j__):
+#         if len(j__) == 3 \
+#             and isinstance(j__[1], int) \
+#             and isinstance(j__[2], float):
+#             return {"result": soil_io3.bulk_density_class_to_raw_density(j__[1], j__[2]), "errors": [], "success": True}
+#         return {"result": j__,
+#                 "errors": ["Couldn't convert bulk density class to raw density using function: " + json.dumps(j__) + "!"],
+#                 "success": False}
 
-    def ka5_to_clay(_, j__):
-        if len(j__) == 2 and is_string_type(j__[1]):
-            return {"result": soil_io3.ka5_texture_to_clay(j__[1]), "errors": [], "success": True}
-        return {"result": j__,
-                "errors": ["Couldn't get soil clay content from KA5 soil class: " + json.dumps(j__) + "!"],
-                "success": False}
+#     def ka5_to_clay(_, j__):
+#         if len(j__) == 2 and is_string_type(j__[1]):
+#             return {"result": soil_io3.ka5_texture_to_clay(j__[1]), "errors": [], "success": True}
+#         return {"result": j__,
+#                 "errors": ["Couldn't get soil clay content from KA5 soil class: " + json.dumps(j__) + "!"],
+#                 "success": False}
 
-    def ka5_to_sand(_, j__):
-        if len(j__) == 2 and is_string_type(j__[1]):
-            return {"result": soil_io3.ka5_texture_to_sand(j__[1]), "errors": [], "success": True}
-        return {"result": j__,
-                "errors": ["Couldn't get soil sand content from KA5 soil class: " + json.dumps(j__) + "!"],
-                "success": False}
+#     def ka5_to_sand(_, j__):
+#         if len(j__) == 2 and is_string_type(j__[1]):
+#             return {"result": soil_io3.ka5_texture_to_sand(j__[1]), "errors": [], "success": True}
+#         return {"result": j__,
+#                 "errors": ["Couldn't get soil sand content from KA5 soil class: " + json.dumps(j__) + "!"],
+#                 "success": False}
 
-    def sand_clay_to_lambda(_, j__):
-        if len(j__) == 3 \
-            and isinstance(j__[1], float) \
-            and isinstance(j__[2], float):
-            return {"result": soil_io3.sand_and_clay_to_lambda(j__[1], j__[2]), "errors": [], "success": True}
-        return {"result": j__,
-                "errors": ["Couldn't get lambda value from soil sand and clay content: " + json.dumps(j__) + "!"],
-                "success": False}
+#     def sand_clay_to_lambda(_, j__):
+#         if len(j__) == 3 \
+#             and isinstance(j__[1], float) \
+#             and isinstance(j__[2], float):
+#             return {"result": soil_io3.sand_and_clay_to_lambda(j__[1], j__[2]), "errors": [], "success": True}
+#         return {"result": j__,
+#                 "errors": ["Couldn't get lambda value from soil sand and clay content: " + json.dumps(j__) + "!"],
+#                 "success": False}
 
-    def percent(_, j__):
-        if len(j__) == 2 and isinstance(j__[1], float):
-            return {"result": j__[1] / 100.0, "errors": [], "success": True}
-        return {"result": j__,
-                "errors": ["Couldn't convert percent to decimal percent value: " + json.dumps(j__) + "!"],
-                "success": False}
+#     def percent(_, j__):
+#         if len(j__) == 2 and isinstance(j__[1], float):
+#             return {"result": j__[1] / 100.0, "errors": [], "success": True}
+#         return {"result": j__,
+#                 "errors": ["Couldn't convert percent to decimal percent value: " + json.dumps(j__) + "!"],
+#                 "success": False}
 
-    if "m" not in supported_patterns.__dict__:
-        supported_patterns.m = {
-            #"include-from-db": fromDb
-            "include-from-file": from_file,
-            "ref": ref,
-            "humus_st2corg": humus_to_corg,
-            "humus-class->corg": humus_to_corg,
-            "ld_eff2trd": ld_to_trd,
-            "bulk-density-class->raw-density": ld_to_trd,
-            "KA5TextureClass2clay": ka5_to_clay,
-            "KA5-texture-class->clay": ka5_to_clay,
-            "KA5TextureClass2sand": ka5_to_sand,
-            "KA5-texture-class->sand": ka5_to_sand,
-            "sandAndClay2lambda": sand_clay_to_lambda,
-            "sand-and-clay->lambda": sand_clay_to_lambda,
-            "%": percent
-        }
+#     if "m" not in supported_patterns.__dict__:
+#         supported_patterns.m = {
+#             #"include-from-db": fromDb
+#             "include-from-file": from_file,
+#             "ref": ref,
+#             "humus_st2corg": humus_to_corg,
+#             "humus-class->corg": humus_to_corg,
+#             "ld_eff2trd": ld_to_trd,
+#             "bulk-density-class->raw-density": ld_to_trd,
+#             "KA5TextureClass2clay": ka5_to_clay,
+#             "KA5-texture-class->clay": ka5_to_clay,
+#             "KA5TextureClass2sand": ka5_to_sand,
+#             "KA5-texture-class->sand": ka5_to_sand,
+#             "sandAndClay2lambda": sand_clay_to_lambda,
+#             "sand-and-clay->lambda": sand_clay_to_lambda,
+#             "%": percent
+#         }
 
-    return supported_patterns.m
+#     return supported_patterns.m
 
 #------------------------------------------------------------------------------
 
@@ -448,70 +448,70 @@ crop_site_sim = {
         "climate": "" #climate_csv
     }
 """
-def create_env_json_from_json_config(crop_site_sim):
-    "create the json version of the env from the json config files"
-    for k, j in crop_site_sim.items():
-        if j is None:
-            return None
+# def create_env_json_from_json_config(crop_site_sim):
+#     "create the json version of the env from the json config files"
+#     for k, j in crop_site_sim.items():
+#         if j is None:
+#             return None
 
-    path_to_parameters = crop_site_sim["sim"]["include-file-base-path"]
+#     path_to_parameters = crop_site_sim["sim"]["include-file-base-path"]
 
-    def add_base_path(j, base_path):
-        "add include file base path if not there"
-        if not "include-file-base-path" in j:
-            j["include-file-base-path"] = base_path
+#     def add_base_path(j, base_path):
+#         "add include file base path if not there"
+#         if not "include-file-base-path" in j:
+#             j["include-file-base-path"] = base_path
 
-    crop_site_sim2 = {}
-    #collect all errors in all files and don't stop as early as possible
-    errors = set()
-    for k, j in crop_site_sim.items():
-        if k == "climate":
-            continue
+#     crop_site_sim2 = {}
+#     #collect all errors in all files and don't stop as early as possible
+#     errors = set()
+#     for k, j in crop_site_sim.items():
+#         if k == "climate":
+#             continue
 
-        add_base_path(j, path_to_parameters)
-        res = find_and_replace_references(j, j)
-        if res["success"]:
-            crop_site_sim2[k] = res["result"]
-        else:
-            errors.update(res["errors"])
+#         add_base_path(j, path_to_parameters)
+#         res = find_and_replace_references(j, j)
+#         if res["success"]:
+#             crop_site_sim2[k] = res["result"]
+#         else:
+#             errors.update(res["errors"])
 
-    if len(errors) > 0:
-        for err in errors:
-            print(err)
-        return None
+#     if len(errors) > 0:
+#         for err in errors:
+#             print(err)
+#         return None
 
-    cropj = crop_site_sim2["crop"]
-    sitej = crop_site_sim2["site"]
-    simj = crop_site_sim2["sim"]
+#     cropj = crop_site_sim2["crop"]
+#     sitej = crop_site_sim2["site"]
+#     simj = crop_site_sim2["sim"]
 
-    env = {}
-    env["type"] = "Env"
+#     env = {}
+#     env["type"] = "Env"
 
-    #store debug mode in env, take from sim.json, but prefer params map
-    env["debugMode"] = simj["debug?"]
+#     #store debug mode in env, take from sim.json, but prefer params map
+#     env["debugMode"] = simj["debug?"]
 
-    cpp = {
-        "type": "CentralParameterProvider",
-        "userCropParameters": cropj["CropParameters"],
-        "userEnvironmentParameters": sitej["EnvironmentParameters"],
-        "userSoilMoistureParameters": sitej["SoilMoistureParameters"],
-        "userSoilTemperatureParameters": sitej["SoilTemperatureParameters"],
-        "userSoilTransportParameters": sitej["SoilTransportParameters"],
-        "userSoilOrganicParameters": sitej["SoilOrganicParameters"],
-        "simulationParameters": simj,
-        "siteParameters": sitej["SiteParameters"]
-    }
+#     cpp = {
+#         "type": "CentralParameterProvider",
+#         "userCropParameters": cropj["CropParameters"],
+#         "userEnvironmentParameters": sitej["EnvironmentParameters"],
+#         "userSoilMoistureParameters": sitej["SoilMoistureParameters"],
+#         "userSoilTemperatureParameters": sitej["SoilTemperatureParameters"],
+#         "userSoilTransportParameters": sitej["SoilTransportParameters"],
+#         "userSoilOrganicParameters": sitej["SoilOrganicParameters"],
+#         "simulationParameters": simj,
+#         "siteParameters": sitej["SiteParameters"]
+#     }
 
-    env["params"] = cpp
-    env["cropRotation"] = cropj.get("cropRotation", None)
-    env["cropRotations"] = cropj.get("cropRotations", None)
-    env["events"] = simj["output"]["events"]
+#     env["params"] = cpp
+#     env["cropRotation"] = cropj.get("cropRotation", None)
+#     env["cropRotations"] = cropj.get("cropRotations", None)
+#     env["events"] = simj["output"]["events"]
 
-    env["pathToClimateCSV"] = simj["climate.csv"]
-    env["csvViaHeaderOptions"] = simj["climate.csv-options"]
-    env["csvViaHeaderOptions"]["latitude"] = sitej["SiteParameters"]["Latitude"]
+#     env["pathToClimateCSV"] = simj["climate.csv"]
+#     env["csvViaHeaderOptions"] = simj["climate.csv-options"]
+#     env["csvViaHeaderOptions"]["latitude"] = sitej["SiteParameters"]["Latitude"]
 
-    env["climateCSV"] = crop_site_sim["climate"] if "climate" in crop_site_sim else ""
+#     env["climateCSV"] = crop_site_sim["climate"] if "climate" in crop_site_sim else ""
 
-    return env
+#     return env
     

@@ -8,4 +8,4 @@ One forecast link is this: Uncaught TypeError: document.getElementById(...) is n
    Thredds catalog:
    https://esgf.dwd.de/thredds/catalog/catalog.html
 
-"""
+"""/home/colja/01_Code/01_SWN/Spreewasser-N/thredds_data/data/DWD_Data/zalf_hurs_amber_2008_v1-0_cf_v6.nc

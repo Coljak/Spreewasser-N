@@ -64,7 +64,7 @@
 
 {% block javascript %}
   <script>
-    const saveSimulationSettingsUrl = "{% url 'monica:save_simulation_settings' %}";
+    {% comment %} const saveSimulationSettingsUrl = "{% url 'monica:save_simulation_settings' %}"; {% endcomment %}
     const runSimulationUrl = "{% url 'monica:run_simulation' %}";
   </script>
 

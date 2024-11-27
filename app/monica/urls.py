@@ -19,7 +19,7 @@ urlpatterns = [
     # path('model/<str:parameter>/', views.modify_model_parameters, name='modify_model_parameters'),
     path('model/get_options/<str:parameter_type>/', views.get_parameter_options, name='get_parameter_options'),
     path('model/get_options/<str:parameter_type>/<int:id>/', views.get_parameter_options, name='get_parameter_options'),
-    path('model/save_simulation_settings/', views.save_simulation_settings, name='save_simulation_settings'),
+    # path('model/save_simulation_settings/', views.save_simulation_settings, name='save_simulation_settings'),
     
     path('run-simulation/', views.run_simulation, name='run_simulation'),
 ]

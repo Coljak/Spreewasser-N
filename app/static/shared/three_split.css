@@ -35,6 +35,7 @@
     flex: 1 1 auto;
     height: 30%; /* Resizable */
     min-height: 100px;
+    overflow: auto;
   }
 
   .horizontal-splitter {

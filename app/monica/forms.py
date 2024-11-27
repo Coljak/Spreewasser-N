@@ -274,13 +274,6 @@ class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
 
 class UserSimulationSettingsForm(forms.ModelForm):
     
-    name = forms.ModelChoiceField(
-        queryset=UserSimulationSettings.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-control user-simulation-settings'}),
-        required=False,
-        label="Simulation Setting",
-        empty_label=None
-    )
     class Meta:
         model = UserSimulationSettings
         field_order = ['name']

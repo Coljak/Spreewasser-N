@@ -72,9 +72,9 @@ class Workstep {
 
 // Date Picker
 var startDate = '01.01.2007';
-var setStartDate = '01.01.2021';
-var setEndDate = '31.12.2023';
-var endDate = '31.12.2023';
+var setStartDate = '01.01.2024';
+var setEndDate = '26.11.2024';
+var endDate = '26.11.2024';
 
 const setLanguage =  (language_code)=>{
     $('.datepicker').datepicker({
@@ -113,31 +113,32 @@ const runSimulation = (monicaProject) => {
                 type: 'line',
                 data: {
                     labels: dailyData.Date,
-                    datasets: [{
-                            yAxisID: 'y',
-                            label: 'Bodenfeuchte 1',
-                            data: dailyData.Mois_1,
-                            borderColor: '#aa8800',
-                            borderWidth: 2,
-                        },
-                        {
-                            yAxisID: 'y',
-                            label: 'Bodenfeuchte 2',
-                            data: dailyData.Mois_2,
-                            borderColor: '#ccaa00',
-                            borderWidth: 2,
-                        },
-                        {
-                            yAxisID: 'y',
-                            label: 'Bodenfeuchte 3',
-                            data: dailyData.Mois_3,
-                            borderColor: '#ffcc00',
-                            borderWidth: 2,
-                        },
+                    datasets: [
+                        // {
+                        //     yAxisID: 'y',
+                        //     label: 'Bodenfeuchte 1',
+                        //     data: dailyData.Mois_1,
+                        //     borderColor: '#aa8800',
+                        //     borderWidth: 2,
+                        // },
+                        // {
+                        //     yAxisID: 'y',
+                        //     label: 'Bodenfeuchte 2',
+                        //     data: dailyData.Mois_2,
+                        //     borderColor: '#ccaa00',
+                        //     borderWidth: 2,
+                        // },
+                        // {
+                        //     yAxisID: 'y',
+                        //     label: 'Bodenfeuchte 3',
+                        //     data: dailyData.Mois_3,
+                        //     borderColor: '#ffcc00',
+                        //     borderWidth: 2,
+                        // },
                         {
                             yAxisID: 'y1',
-                            label: 'LAI',
-                            data: dailyData.LAI,
+                            label: 'Yield',
+                            data: dailyData.Yield,
                             borderWidth: 2,
                             borderColor: '#00cc22',
                         },

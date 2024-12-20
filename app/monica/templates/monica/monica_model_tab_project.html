@@ -12,10 +12,10 @@
         {% if project_select_form.fields.monica_project.choices %}
           <div>
               {{ project_select_form | crispy }}
-              <button class="btn btn-primary monica-project load-project" type="button" data-bs-toggle="modal" data-bs-target="#monicaProjectModal">
+              <button class="btn btn-primary monica-project load-project" type="button">
                   Load Project
               </button>
-              <button class="btn btn-primary monica-project delete-project" type="button" data-bs-toggle="modal" data-bs-target="#monicaProjectModal">
+              <button class="btn btn-primary monica-project delete-project" type="button">
                 Delete Project
             </button>
 
@@ -82,6 +82,33 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button id="saveProjectButton" type="button" class="btn btn-primary">Save</button>
+      </div>
+    
+    </div>
+  </div>
+</div>
+
+
+<div id="deleteProjectModal" class="modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">delete modal title</h5>
+      </div>
+      
+      <div class="modal-body">
+        <p>If you delete this project, all calculation and stored settings are also deleted.
+          If you have used settings from this project in another project, that will remain unaffected.
+        </p>
+        <form id="projectModalForm">
+          {% csrf_token %}
+          <input type="hidden" name="project" id="delete_project_id">
+        </form>
+       
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" id="btnConfirmDeleteProject" class="btn btn-warning">Confirm delete</button>
       </div>
     
     </div>

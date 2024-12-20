@@ -683,35 +683,34 @@ def get_parameter_options(request, parameter_type, id=None):
         options = UserEnvironmentParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     elif parameter_type == 'user-simulation-settings':
         options = UserSimulationSettings.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
-    
+    elif parameter_type == 'monica-project':
+        options = MonicaProject.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     else:
         options = []
 
     return JsonResponse({'options': list(options)})
 
-def get_monica_project(request, id):
-    """
-    Get a Monica Project from the database.
-    """
-    if id == "new":
-        monica_project = MonicaProject()
-        monica_project.save()
-    else:
-        id = int(id)
-        user = request.user
-        monica_project = get_object_or_404(MonicaProject, pk=id)
-
-        monica_calculations = models.MonicaCalculation.objects.filter(monica_project=monica_project)
-
-    return JsonResponse({'monica_project': monica_project, 'monica_calculations': monica_calculations})
- 
 def load_monica_project(request, id):
 
     context = {}
-    monica_project = get_object_or_404(MonicaProject, pk=id)
-    print("Monica Project: ", monica_project)
-    return render(request, 'monica/monica_model_project_modal.html', context)
+    project = MonicaProject.objects.get(pk=id)
+    print("Monica Project: ", project)
+    if not project:
+        return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
+    else:
+        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project.to_json()})
 
+
+def delete_monica_project(request, id):
+    print("DELETE MONICA PROJECT")
+    if request.method == 'DELETE':
+        try:
+            project = MonicaProject.objects.get(pk=id)
+            project.delete()
+            return JsonResponse({'message': {'success': True, 'message': f'Project {project.name} deleted'}})
+        except:
+            return JsonResponse({'message': {'success': False, 'message': 'Project not found'}})
+    
 def save_monica_site(request):
     """
     Save a site to the database.
@@ -739,7 +738,7 @@ def create_monica_project(request):
 
     project = utils.save_project(request, project_class=MonicaProject)
 
-    return JsonResponse({'message': {'success': True, 'message': f'Project {project.name} saved'}, 'project_id': project.id})
+    return JsonResponse({'message': {'success': True, 'message': f'Project {project.name} saved'}, 'project_id': project.id, 'project_name': project.name})
         # else:
     # except:
     #     return JsonResponse({'message': {'success': False, 'message': form.errors}})

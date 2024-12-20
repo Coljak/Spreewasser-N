@@ -2021,6 +2021,17 @@ class ModelSetup(models.Model):
     def __str__(self):
         return self.name
     
+    def to_json(self):
+        return {
+            "userCropParametersId": self.user_crop_parameters.id,
+            "userEnvironmentParametersId": self.user_environment_parameters.id,
+            "userSoilMoistureParametersId": self.user_soil_moisture_parameters.id,
+            "userSoilTemperatureParametersId": self.user_soil_temperature_parameters.id,
+            "userSoilTransportParametersId": self.user_soil_transport_parameters.id,
+            "userSoilOrganicParametersId": self.user_soil_organic_parameters.id,
+            "simulationParametersId": self.simulation_parameters.id
+        }
+    
 class MonicaSite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=255)
@@ -2052,6 +2063,15 @@ class MonicaProject(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def to_json(self):
+        return {
+            "name": self.name,
+            "startDate": self.start_date,
+            "description": self.description,
+            "modelSetupId": self.monica_model_setup.id,
+            "modelSetup": self.monica_model_setup.to_json()
+        }
 
 class MonicaCalculation(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
@@ -2064,6 +2084,7 @@ class MonicaCalculation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     forecast_start_date = models.DateField(null=True, blank=True) # the date from which on the wheather data is a forecast
     result = models.JSONField(null=True, blank=True)
+    
 
     def save(self, *args, **kwargs):
         # Automatically set start_date to the project's start_date

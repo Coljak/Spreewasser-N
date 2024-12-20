@@ -196,7 +196,8 @@ thredds_tomcat/
 app/buek_data/
 netcdf_data/
 klim4cast/data/
-
+temp/
+monica-parameters/
 # data files
 *.nc
 *.tif

@@ -915,22 +915,18 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(data => {
                 console.log('loadProjectFromDB', data);
-                project = loadProject(data.project);
+                if (data.message.success) {
+                    handleAlerts(data.message)
+                    project = loadProject(data.project)
+                } else {
+                    handleAlerts(data.message)
+                };
                 // saveToLocalStorage(project);
             })
             .catch(error => console.error('Error:', error));
     };
 
-    const createProject = () => {
-        fetch('/monica/create-project/')
-            .then(response => response.json())
-            .then(data => {
-                console.log('createProject', data);
-                // project = loadProject(data.project);
-                // saveToLocalStorage(project);
-            })
-            .catch(error => console.error('Error:', error));
-    };
+
 
     $('#tabProject').on('click', (event) => {
         if (event.target.classList.contains('modify-parameters')) {
@@ -943,15 +939,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 fetchModalContent(params);          
         } else if (event.target.classList.contains('monica-project')) {
+            const projectId = $('#id_monica_project').val(); 
+            const selecteprojectName = $('#id_monica_project option:selected').text()
             if (event.target.classList.contains('load-project')) {
                 console.log('LOAD PROJECT')
-                loadProjectFromDB(value);
+                loadProjectFromDB(projectId);
             }else if (event.target.classList.contains('new-project')) {
                 console.log('NEW PROJECT')
-
+                projectModalForm.reset();
                 $('#monicaProjectModal').modal('show');
+            } else if (event.target.classList.contains('delete-project')) {
+                console.log('delete project')
+                
+                const modal = new bootstrap.Modal(document.getElementById('deleteProjectModal'), {});
+                $('#deleteProjectModal').find('.modal-title').text('Delete project ' + selecteprojectName + '?');
+                $('#delete_project_id').val(projectId);
+                modal.show();
             }
         }
+    });
+
+    $('#btnConfirmDeleteProject').on('click', () => {
+        const projectId = $('#delete_project_id').val();
+        console.log('Delete confirmed')
+        fetch('/monica/delete-project/' + projectId + '/',
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    }
+                }
+            )
+            .then(response => response.json())
+            .then(data => {
+                console.log('deleteProject', data);
+                if (data.message.success) {
+                    handleAlerts(data.message);
+                    updateDropdown('monica-project', '', '');
+                } else {
+                    handleAlerts(data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+            $('#deleteProjectModal').modal('hide');
     });
     const projectModalForm = document.getElementById('projectModalForm');
     // project modal
@@ -997,7 +1028,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('data', data);
             if (data.message.success) {
                 project.id = data.project_id;
+                $('#project-info').find('.card-title').text('Project '+ data.project_name);
+                updateDropdown('monica-project','', data.project_id)
                 handleAlerts(data.message);
+                
+                projectModalForm.reset();
                 
                 $('#monicaProjectModal').modal('hide');
                 saveToLocalStorage(project);

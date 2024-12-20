@@ -27,6 +27,7 @@ def save_project(request, project_class=MonicaProject, additional_fields=None):
             return name
         
         project = project_class()
+        # modify project
         if project_id:
             project = project_class.objects.get(id=project_id)
             if user != project.user:
@@ -35,7 +36,7 @@ def save_project(request, project_class=MonicaProject, additional_fields=None):
                 project.name = verify_unique_name(data.get('name'))
 
             # TODO  add additional fields of medel setup
-
+        # save new project
         else:
             project.name = verify_unique_name(data.get('name'))
             project.user = user

@@ -11,7 +11,6 @@ from . import models
 app_name = 'toolbox'
 
 urlpatterns = [
-    path('startpage/', views.toolbox_start, name='toolbox_start'),
     path('dashboard/', views.toolbox_dashboard, name='toolbox_dashboard'),
     path('login/Dashboard/toolbox_sinks/', views.load_toolbox_sinks, name='load_toolbox_sinks'),
     path('login/Dashboard/toolbox_outline_injection/', views.load_outline_injection, name='load_outline_injection'),
@@ -22,5 +21,8 @@ urlpatterns = [
     path('login/Dashboard/toolbox-edit/<int:id>/', views.toolbox_sinks_edit, name='toolbox_project_edit'),
     path('login/Dashboard/toolbox_get_sinks_within/<int:area_id>/', views.toolbox_get_sinks_within, name='toolbox_get_sinks_within'),
     path('login/Dashboard/sinks_filter/', views.sinks_filter, name='sinks_filter'),
+    path('toolbox/', views.three_split, name='three_split'),
+    path('toolbox/load/', views.get_user_fields, name='load_user_fields'),
+    path('toolbox/save/', views.save_user_field, name='save_user_field'),
 
     ]

@@ -26,8 +26,8 @@ urlpatterns = [
     path('login/Dashboard/delete/<int:id>', views.delete_user_field, name='delete-user-field'),
     path('login/Dashboard/field-edit/<int:id>/', views.field_edit, name='field_edit'),
     path('login/Dashboard/field-projects-menu/<int:id>/', views.get_field_project, name='field_projects_menu'),
+    path('login/Dashboard/get_lat_lon/<int:user_field_id>/', views.get_centroid, name='get_centroid'),
     # path('login/Dashboard/field-edit/<int:field_id>/chartdata/<int:crop_id>/<int:soil_id>/', views.get_chart, name='chart-api'),
-    
     # Impressum and Acknoledgements
     path('Impressum-Information/', views.ImpressumView.as_view(), name='impressum_information'),
     path('acknoledgements/', views.AcknoledgementsView.as_view(), name='acknoledgements'),
@@ -48,6 +48,8 @@ urlpatterns = [
     # path('Thredds/wms/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     path('bootstrap/', views.bootstrap, name='bootstrap'),
     path('login/Dashboard/load_projectregion/', views.load_projectregion, name='load_projectregion'),
-    path('login/Dashboard/load_polygon/<str:entity>/<int:polygon_id>/', views.load_nuts_polygon, name='load_polygon'),
+    path('login/Dashboard/load_polygon/', views.load_nuts_polygon, name='load_nuts_polygon'),
+    path('login/Dashboard/load_polygon/<str:entity>/<int:polygon_id>/', views.load_nuts_polygon, name='load_nuts_polygon_entity'),
+    path('login/three_split/save-project/', views.save_project, name='save_project'),
     ]
 

@@ -29,7 +29,7 @@ def run_consumer(path_to_output_dir = None, leave_after_finished_run = True, ser
         "leave_after_finished_run": leave_after_finished_run
     }
 
-    print("consumer config:", config)
+    # print("consumer config:", config)
 
     context = zmq.Context()
     if config["shared_id"]:

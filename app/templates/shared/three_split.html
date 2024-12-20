@@ -34,14 +34,13 @@ crossorigin=""/> {% endcomment %}
       {% comment %} </div> {% endcomment %}
     </div>
 
-    <div class="horizontal-splitter"></div>
+    <div id="horizontalSplitter" class="horizontal-splitter"></div>
 
     <!-- Bottom panel -->
-    <div class="panel-bottom py-2">
-
-      {% comment %} <div class="card">
-        <div class="card-header text-white bg-primary">Bottom Panel</div>
-        <div class="card-body card-body-fixed-height"> {% endcomment %}
+    <div class="panel-bottom py-2" id="bottomPanel">
+      <button class="btn btn-outline-secondary btn-sm float-end" id="toggleBottomFullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
+      
+      {% comment %} <i class="bi bi-fullscreen-exit hidden"></i> {% endcomment %}
           {% block bottom_panel %}
           {% endblock bottom_panel %}
         {% comment %} </div>

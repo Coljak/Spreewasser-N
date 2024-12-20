@@ -9,18 +9,20 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'swn:bootstrap' %}">Bootstrap</a></li>
         {% endif %}
         {% if user.is_authenticated  %}    
-        <li class="nav-item"><a class="nav-link" href="{% url 'swn:user_dashboard' %}">Spreewasser:N Tools</a></li>
+        {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:user_dashboard' %}">Spreewasser:N Tools</a></li> {% endcomment %}
         {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:toolbox_dashboard' %}">Toolbox</a></li> {% endcomment %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'swn:three_split' %}">SWN</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:three_split' %}">Toolbox</a></li>
         {% endif %}
         
         
-        <li class="nav-item"><a class="nav-link" href="{% url 'swn:timelapse-page' %}">Timelapse</a></li>
+        {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:timelapse-page' %}">Timelapse</a></li> {% endcomment %}
         <li class="nav-item"><a class="nav-link" href="{% url 'klim4cast:timelapse-page' %}">Klim4Cast</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:thredds-catalog' %}">Thredds catalog</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'monica:monica_model' %}">Monica</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:acknoledgements' %}">Acknoledgements</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:impressum_information' %}">Impressum</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'swn:three_split' %}">SWN Threesplit</a></li>
+
         {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:multiselect' %}">Multiselect</a></li> {% endcomment %}
       </ul>
           {% comment %} <li>

@@ -12,5 +12,14 @@
       resizeWidth: false
     });
 
+    $('#toggleBottomFullscreen').on('click', function () {
+      $('.panel-bottom').css('height', '100');
+      // $('#reopenBottomPanelButton').removeClass('d-none');
+    });
+  
+    $('#reopenBottomPanelButton').on('click', function () {
+      $('.panel-bottom').css('height', '30%').removeClass('d-none');
+      $('#reopenBottomPanelButton').addClass('d-none');
+    });
 
   });

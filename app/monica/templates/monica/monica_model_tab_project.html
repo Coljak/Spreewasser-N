@@ -1,47 +1,89 @@
 {% load crispy_forms_tags %}
 
 <div id="tabProject" class="tab-content card mb-3">
-    <div class="card-body">
+  <div class="card-body">
 
-      <div id="project-info" class="card mb-3">
-        <div class="card-body">
-          <h5 class="card-title">Project</h5>
-          <input type="text" id="projectName" placeholder="Project Name"/>
-          <input type="text" id="projectDescription" placeholder="Project Description"/>
-          
-        </div>
-      </div>
+    <div id="project-info" class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Project</h5>
+        <input type="text" id="projectName" placeholder="Project Name"/>
+        <input type="text" id="projectDescription" placeholder="Project Description"/>
+        
+        {% if project_select_form.fields.monica_project.choices %}
+          <div>
+              {{ project_select_form | crispy }}
+              <button class="btn btn-primary monica-project load-project" type="button" data-bs-toggle="modal" data-bs-target="#monicaProjectModal">
+                  Load Project
+              </button>
+              <button class="btn btn-primary monica-project delete-project" type="button" data-bs-toggle="modal" data-bs-target="#monicaProjectModal">
+                Delete Project
+            </button>
 
-
-      <div class="card mb-3 advanced">
-        <div class="card-body">
-          <h5 class="card-title">User Environment Parameters</h5>
-          {{ user_environment_parameters_select_form | crispy }}
-          <button class="btn btn-primary modify-parameters user-environment-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-            Modify User Environment Parameters
+        {% endif %}
+          <button id="createProjectButton" class="btn btn-primary monica-project new-project" type="button">
+            + Create New Project
           </button>
         </div>
+        
       </div>
+    </div>
 
 
-      <div class="card mb-3 advanced">
-        <div class="card-body">
-          <h5 class="card-title">User Crop Parameters</h5>
-          {{ user_crop_parameters_select_form | crispy }}
-          <button class="btn btn-primary modify-parameters user-crop-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-            Modify User Crop Parameters
-          </button>
-        </div>
+    <div class="card mb-3 advanced">
+      <div class="card-body">
+        <h5 class="card-title">User Environment Parameters</h5>
+        {{ user_environment_parameters_select_form | crispy }}
+        <button class="btn btn-primary modify-parameters user-environment-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+          Modify User Environment Parameters
+        </button>
       </div>
+    </div>
 
-      <div class="card mb-3 advanced">
-        <div class="card-body">
-          <h5 class="card-title">User Simulation Settings</h5>
-          {{ user_simulation_settings_select_form | crispy }}
-          <button class="btn btn-primary modify-parameters user-simulation-settings " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-            Modify User Simulation Settings
-          </button>
-        </div>
+
+    <div class="card mb-3 advanced">
+      <div class="card-body">
+        <h5 class="card-title">User Crop Parameters</h5>
+        {{ user_crop_parameters_select_form | crispy }}
+        <button class="btn btn-primary modify-parameters user-crop-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+          Modify User Crop Parameters
+        </button>
+      </div>
+    </div>
+
+    <div class="card mb-3 advanced">
+      <div class="card-body">
+        <h5 class="card-title">User Simulation Settings</h5>
+        {{ user_simulation_settings_select_form | crispy }}
+        <button class="btn btn-primary modify-parameters user-simulation-settings " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
+          Modify User Simulation Settings
+        </button>
       </div>
     </div>
   </div>
+</div>
+
+
+<div id="monicaProjectModal" class="modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ project_modal_title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body">
+        <form id="projectModalForm">
+        {% csrf_token %}
+        <input type="hidden" name="userField" id="userField">
+        {{ project_form | crispy }}
+        </form>
+       
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button id="saveProjectButton" type="button" class="btn btn-primary">Save</button>
+      </div>
+    
+    </div>
+  </div>
+</div>

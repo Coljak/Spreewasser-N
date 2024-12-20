@@ -1,6 +1,7 @@
 from django import forms
 from .models import *
 from crispy_forms.helper import FormHelper
+from django.db.models import Q
 from bootstrap_datepicker_plus.widgets import DatePickerInput
 from django.contrib.postgres.fields import JSONField
 
@@ -10,6 +11,8 @@ from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 from django_select2.forms import Select2Widget
 from .widgets import SingleRowTextarea
+from django.utils.translation import gettext_lazy as _
+from utils.widgets import UnitInputWrapper
 
 
 
@@ -22,26 +25,59 @@ def use_single_row_textarea(field):
         print("is textarea fieldform")
     return field
 
+
+class MonicaProjectForm(forms.Form):
+    project_id = forms.IntegerField(
+        widget=forms.HiddenInput(),
+        required=False
+    )
+    name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_project_name'}),
+        label='Project Name',
+        required=True
+    )
+    start_date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'id': 'id_project_start_date',
+            'class': 'form-control datepicker project-start-datepicker',
+            }),   
+        input_formats=['%d.%m.%Y'],
+        initial = '01.01.' + str(datetime.now().year -1)
+    )
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'id': 'id_project_description'}),
+        label='Description',
+        required=False
+    )
+    monica_model_setup = forms.ChoiceField(
+        widget=forms.Select(attrs={'class': 'form-control model-setup-select', 'id': 'id_project_model_setup'}),
+        label='Model Setup from other Project',
+    )
+
+    class Meta:
+        model = MonicaProject
+        exclude = ['id', 'user']
+
+    def __init__(self, *args, user=9, **kwargs):
+        # user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            print("user is not none")
+            monica_projects = MonicaProject.objects.filter(Q(user=user))
+            mp = [( monica_project.monica_model_setup.id, monica_project.name) for monica_project in monica_projects]
+            default_setup = ModelSetup.objects.filter(is_default=True)[0]
+            setup_choices = [(default_setup.id, default_setup.name)] + mp
+            print(setup_choices, mp)
+
+            self.fields['monica_model_setup'].choices = setup_choices
+
+
 # Use a base class to apply this callback to all forms
 class ParametersModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             use_single_row_textarea(field)
-
-# class JSONTextareaWidget(forms.Textarea):
-#     def __init__(self, *args, **kwargs):
-#         kwargs.setdefault('attrs', {'rows': 1, 'cols': 70})  # Adjust size here
-#         super().__init__(*args, **kwargs)
-
-# Step 2: Create a custom ModelForm that uses this widget for JSONFields
-# class CustomModelForm(forms.ModelForm):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         # Apply JSONTextareaWidget to all JSONField fields
-#         for field_name, field in self.fields.items():
-#             if isinstance(self._meta.model._meta.get_field(field_name), JSONField):
-#                 self.fields[field_name].widget = JSONTextareaWidget()
 
 class CoordinateForm(forms.Form):
     latitude = forms.FloatField(
@@ -63,7 +99,6 @@ class CultivarParametersForm(ParametersModelForm):
     class Meta:
         model = CultivarParameters
         exclude = ['id', 'user', 'name', 'is_default']
-
 
 class CultivarParametersInstanceSelectForm(forms.ModelForm):
     cultivar = forms.ChoiceField(
@@ -148,6 +183,20 @@ class UserEnvironmentParametersForm(ParametersModelForm):
         exclude = ['id', 'user', 'is_default']
 
 
+class MonicaProjectSelectionForm(forms.Form):
+    monica_project = forms.ChoiceField(
+        choices=[],
+        label="Monica Project",
+        widget=forms.Select(attrs={'class': 'form-control monica-project'})
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['monica_project'].choices = [
+            (instance.id, instance.name) for instance in MonicaProject.objects.filter(Q(user=user))
+        ]
+        
 
 
 #TODO implement User Environment
@@ -225,6 +274,29 @@ class SoilTemperatureModuleParametersForm(forms.ModelForm):
         model = SoilTemperatureModuleParameters
         field_order = ['name']
         exclude = ['id', 'user', 'is_default']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+        # Map field names to units
+        units = {
+            "base_temperature": "°C",
+            "initial_surface_temperature": "°C",
+            "density_air": "kg/m³",
+            "specific_heat_capacity_air": "J/(kg·K)",
+            "density_humus": "kg/m³",
+            "specific_heat_capacity_humus": "J/(kg·K)",
+            "density_water": "kg/m³",
+            "specific_heat_capacity_water": "J/(kg·K)",
+            "quartz_raw_density": "kg/m³",
+            "specific_heat_capacity_quartz": "J/(kg·K)",
+        }
+
+        for field_name, unit in units.items():
+            if field_name in self.fields:
+                original_widget = self.fields[field_name].widget
+                self.fields[field_name].widget = UnitInputWrapper(widget=original_widget, unit=unit)
+
 
 
 class SoilTemperatureModuleInstanceSelectionForm(forms.Form):
@@ -310,7 +382,7 @@ class WorkstepSelectorForm(forms.Form):
     workstep_type = forms.ChoiceField(
         choices=WORKSTEP_CHOICES, 
         label='Workstep Type', 
-        widget=forms.Select(attrs={'id': '',
+        widget=forms.Select(attrs={'id':'id-workstep-select',
             'class': 'workstep-type-select'
             })
         )

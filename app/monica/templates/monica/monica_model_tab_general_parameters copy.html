@@ -1,0 +1,33 @@
+{% load crispy_forms_tags %}
+
+<!-- General Parameters -->
+<div id="tabGeneralParameters" class="tab-content card mb-3 active">
+  <div class="card-body">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Select Coordinates</h5>
+        <p>Enter a valid coordinate for Germany, roughly between 54.92 and 47.27 latitude and 5.87 and 15.04 longitude</p>
+        <form class="coordinateForm">
+          {{ coordinate_form | crispy}}
+        </form>
+      </div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">"Today's" date</h5>
+        <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
+      </div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Select Dates</h5>
+        <div class="input-daterange input-group" id="monicaDatepicker" style="">
+          <span class="input-group-addon  px-3"> Von </span>
+          <input type="text" id="monicaStartDatePicker" class="input-sm form-control datepicker" name="start" />
+          <span class="input-group-addon  px-3"> bis </span>
+          <input type="text" id="monicaEndDatePicker" class="input-sm form-control datepicker" name="end" />
+        </div>
+      </div>
+    </div>
+  </div> 
+</div>

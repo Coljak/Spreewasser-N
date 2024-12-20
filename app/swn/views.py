@@ -8,7 +8,6 @@ from importlib.util import spec_from_file_location
 from django.contrib.auth import authenticate, login, logout
 #from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.core.serializers import serialize
 from django.db.models import Q
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.gdal import DataSource
@@ -19,9 +18,12 @@ from django.conf import settings
 import numpy as np
 import requests
 from . import forms
+from . import models
+from monica import utils as monica_utils
+
 from monica import forms as monica_forms
 from monica import models as monica_models
-from . import models
+
 from buek import models as buek_models
 
 from toolbox import models as toolbox_models
@@ -378,24 +380,25 @@ def user_logout(request):
 
 
 def three_split(request):
+    print("Request.user", request.user)
     user = request.user
-    user_fields = models.UserProject.objects.filter(user_field__user=request.user.id)
+    user_fields = models.UserField.objects.filter(user=request.user.id)
 
-    user_projects = []
+    # user_projects = []
 
-    for user_field in user_fields:
-        if request.user == user_field.field.user:
-            item = {
-                'name': user_field.name,
-                'user_name': user_field.field.user.name,
-                'field': user_field.field.name,
-                'irrigation_input': user_field.irrigation_input,
-                'irrigation_output': user_field.irrigation_output,
+    # for user_field in user_fields:
+    #     if request.user == user_field.user:
+    #         item = {
+    #             'name': user_field.name,
+    #             # 'user_name': user_field.field.user.name,
+    #             # 'field': user_field.field.name,
+    #             # 'irrigation_input': user_field.irrigation_input,
+    #             # 'irrigation_output': user_field.irrigation_output,
 
-                'field_id': user_field.field.id,
-                'monica_calculation': user_field.calculation,
-            }
-            user_projects.append(item)
+    #             'field_id': user_field.id,
+    #             # 'monica_calculation': user_field.calculation,
+    #         }
+    #         user_projects.append(item)
 
     state_county_district_form = forms.PolygonSelectionForm(request.POST or None)
     
@@ -410,6 +413,13 @@ def three_split(request):
         }
     
     # MONICA forms etc (from Monica.views)
+    # coordinate_form = monica_forms.CoordinateForm()
+    user_field_selector_form = forms.UserFieldSelectorForm(user=user)
+
+    project_select_form = monica_forms.MonicaProjectSelectionForm(user=user)
+    project_form = forms.SwnProjectForm(user=user)
+    project_modal_title = 'Create new project'
+
     coordinate_form = monica_forms.CoordinateForm()
    
     workstep_selector_form =  monica_forms.WorkstepSelectorForm()
@@ -419,6 +429,7 @@ def three_split(request):
     workstep_irrigation_form = monica_forms.WorkstepIrrigationForm()
     workstep_mineral_fertilisation_form = monica_forms.WorkstepMineralFertilisationForm()
     workstep_organic_fertilisation_form = monica_forms.WorkstepOrganicFertilisationForm()
+
     user_simulation_settings = monica_models.UserSimulationSettings.objects.get(is_default=True)
     user_simulation_settings_form = monica_forms.UserSimulationSettingsForm(instance=user_simulation_settings)
 
@@ -428,10 +439,11 @@ def three_split(request):
     user_crop_parameters_form = monica_forms.UserCropParametersForm()
 
     user_environment_parameters_select_form = monica_forms.UserEnvironmentParametersSelectionForm(user=user)
-    user_environment_parameters_form = monica_forms.UserEnvironmentParametersForm()
+    # user_environment_parameters_form = monica_forms.UserEnvironmentParametersForm(user=user)
 
     user_soil_moisture_select_form = monica_forms.UserSoilMoistureInstanceSelectionForm(user=user)
     user_soil_organic_select_form = monica_forms.UserSoilOrganicInstanceSelectionForm(user=user)
+
     soil_temperature_module_select_form = monica_forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
     user_soil_transport_parameters_select_form = monica_forms.UserSoilTransportParametersInstanceSelectionForm(user=user)
 
@@ -439,18 +451,22 @@ def three_split(request):
 
 
     data = {
-            'user_projects': user_projects, 
+            # 'user_fields': user_projects, 
             'user_field_form': forms.UserFieldForm(),
             'state_county_district_form': state_county_district_form,
             'project_region': feature,
             #MONICA FORMS
+            'project_select_form': project_select_form,
+            'project_form': project_form,
+            'project_modal_title': project_modal_title,
             'coordinate_form': coordinate_form,
+            'user_field_selector_form': user_field_selector_form,
             'user_crop_parameters_select_form': user_crop_parameters_select_form,
             'user_crop_parameters_form': user_crop_parameters_form,
             'user_simulation_settings_select_form': user_simulation_settings_select_form,
             'simulation_settings_form': user_simulation_settings_form,
             'user_environment_parameters_select_form': user_environment_parameters_select_form,
-            'user_environment_parameters_form': user_environment_parameters_form,
+            # 'user_environment_parameters_form': user_environment_parameters_form,
 
             'workstep_selector_form': workstep_selector_form,
             'workstep_sowing_form': workstep_sowing_form,
@@ -468,6 +484,7 @@ def three_split(request):
 
 @login_required
 def user_dashboard(request):
+    user = request.user
 
     drought_vars = {
         'header': 'Dürrevorhersage',
@@ -498,7 +515,7 @@ def user_dashboard(request):
     }
 
 
-    user_fields = models.UserProject.objects.filter(user_field__user=request.user)
+    user_fields = models.UserProject.objects.all()
 
 
     field_name_form = forms.UserFieldForm()
@@ -507,13 +524,13 @@ def user_dashboard(request):
     for user_field in user_fields:
         item = {
             'name': user_field.name,
-            'user_name': user_field.field.user.name,
-            'field': user_field.field.name,
-            'irrigation_input': user_field.irrigation_input,
-            'irrigation_output': user_field.irrigation_output,
+            # 'user_name': user_field.field.user.name,
+            # 'field': user_field.field.name,
+            # 'irrigation_input': user_field.irrigation_input,
+            # 'irrigation_output': user_field.irrigation_output,
 
-            'field_id': user_field.field.id,
-            'monica_calculation': user_field.calculation,
+            # 'field_id': user_field.field.id,
+            # 'monica_calculation': user_field.calculation,
         }
         user_projects.append(item)
 
@@ -556,20 +573,11 @@ def load_projectregion(request):
 
 def get_user_fields(request):
     if request.method == "GET":
-        print("GET, headers:", request.headers)
-        print("GET, body:", request.body)
-        user_projects = models.UserProject.objects.filter(user_field__user=request.user)
-        user_fields = models.UserField.objects.filter(user=request.user)
-    else:
-        user_projects = models.UserProject.objects.filter(
-            field__user=request.user)
+
+        # user_projects = models.UserProject.objects.filter(user_field__user=request.user)
         user_fields = models.UserField.objects.filter(user=request.user)
 
-        # Toolbox Projects
-        toolbox_projects = toolbox_models.UserProject.objects.filter(user=request.user)
-        print('toolbox_projects', toolbox_projects)
-
-    return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json', 'swn_tool')), 'user_projects': list(user_projects.values())})
+    return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json'))})
 
 @login_required
 def update_user_field(request, pk):
@@ -579,14 +587,14 @@ def update_user_field(request, pk):
         obj.name = request.POST.get('name')
         obj.geom_json = request.POST.get('geomJson')
         obj.geom = request.POST.get('geom')
-        obj.swn_tool = request.POST.get('swnTool')
+
 
         obj.save()
         return JsonResponse({
             'fieldName': obj.name,
             'geom': obj.geom,
         })
-    return redirect('swn:user_dashboard')
+    return redirect('swn:three_split')
 
 @login_required
 @csrf_protect
@@ -600,20 +608,19 @@ def save_user_field(request):
         else:
             body = json.loads(request.body)
             name = body['name']
-            swn_tool = body['swnTool']
             geom = json.loads(body['geom'])
             geos = GEOSGeometry(body['geom'], srid=4326)
             user = request.user
-            instance = models.UserField(name=name, swn_tool=swn_tool, geom_json=geom, geom=geos, user=user)
+            instance = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
             instance.save()
-            if swn_tool == 'drought':
-                instance.get_intersecting_soil_data()
-                instance.get_weather_grid_points()
+
+            instance.get_intersecting_soil_data()
+            instance.get_weather_grid_points()
             
-            return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id, 'swn_tool': instance.swn_tool})
+            return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
         
     else:
-        return HttpResponseRedirect('swn:user_dashboard')
+        return HttpResponseRedirect('swn:three_split')
 
 @login_required
 @csrf_protect
@@ -748,6 +755,8 @@ def load_nuts_polygon(request, entity, polygon_id):
         return JsonResponse(error_response, status=404)
 
 
+
+# TODO delete this function
 def field_edit(request, id):
     print("field_menu id: ", id)
     
@@ -871,3 +880,49 @@ def sidebar_working(request):
 
 def sidebar_not_working(request):
     return render(request, 'swn/sidebar_copied_not_working.html')
+
+def get_centroid(request, user_field_id):
+    lon, lat = models.UserField.objects.get(id=user_field_id).get_centroid()
+
+    return JsonResponse({'lon': lon, 'lat': lat})
+
+
+def save_project(request):
+    
+    if request.method == 'POST':
+        project = monica_utils.save_project(request, project_class=models.SwnProject)
+        # data = json.loads(request.body)
+        # print(data)
+        # project = request.POST.get('swnMonicaProject')
+        # print('save project', data.get('swnMonicaProject'))
+
+        # project_data = data.get('swnMonicaProject')
+
+        # user_calculation = models.UserCalculation(
+        #     project_name=project_data.get('name'),
+        #     user_field=project_data.get('user_field'),
+        #     soil_profile=project_data.get('soil_profile'),
+        #     comment=project_data.get('comment', ''),
+        #     calculation_start_date=project_data.get('calculation_start_date'),
+        #     calculation_end_date=project_data.get('calculation_end_date'),
+        #     rotation=project_data.get('rotation', None),
+        #     calculation=project_data.get('calculation', None),
+        #     user=request.user,
+        # )
+        # user_calculation.save()     
+
+
+        
+        # project = models.SwnProject(
+        #     name = project_data.get('name'),
+        #     user = request.user,
+        #     creation_date = datetime.now(),
+        #     last_modified = datetime.now(),
+        #     description = project_data.get('description', ''), 
+
+        # )
+        # project.save()
+
+
+        return JsonResponse({'message': {'success': True, 'message': 'Project saved!'}})
+    return JsonResponse({'message': {'success': False, 'message': 'Form is not valid'}})

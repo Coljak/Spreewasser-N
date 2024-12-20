@@ -21,10 +21,11 @@ swn_events = [
             [
                 1,
                 3
-            ]
+            ]            
             ],
             "Tavg",
-            "Globrad"
+            "Globrad",
+            "Stage"
         ],
         "crop",
         [

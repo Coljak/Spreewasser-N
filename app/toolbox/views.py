@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from . import models
 from swn import models as swn_models
+from swn import forms as swn_forms
+
 from . import forms
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -12,9 +14,45 @@ from django.db.models import F, Q
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.db.models import PointField
+from django.db import connection
 # Create your views here.
-def toolbox_start(request):
-    return render(request, 'toolbox/toolbox_start.html')
+
+def three_split(request):
+    user_fields = models.UserField.objects.filter(user=request.user)
+    outline_injection = json.loads(GEOSGeometry(models.OutlineInjection.objects.all()[0].geom).geojson)
+    outline_infiltration = json.loads(GEOSGeometry(models.OutlineInfiltration.objects.all()[0].geom).geojson)
+    outline_surface_water = json.loads(GEOSGeometry(models.OutlineSurfaceWater.objects.all()[0].geom).geojson)
+    outline_geste = json.loads(GEOSGeometry(models.OutlineGeste.objects.all()[0].geom).geojson)
+
+    projectregion = swn_models.ProjectRegion.objects.first()
+    geojson = json.loads(projectregion.geom.geojson) 
+    pr_feature = {
+            "type": "Feature",
+            "geometry": geojson,
+            "properties": {
+                "name": 'Spreewasser:N Projektregion',
+            }
+        }
+    
+    # NUTS Region selector
+    state_county_district_form = swn_forms.PolygonSelectionForm()
+
+
+    data = {
+        'sidebar_header': 'Toolbox',
+        'user_projects': user_fields,
+        # 'toolbox_form': toolbox_form,
+        'state_county_district_form': state_county_district_form,
+        'outline_injection': outline_injection,
+        'outline_infiltration': outline_infiltration,
+        'outline_surface_water': outline_surface_water,
+        'outline_geste': outline_geste,
+        'project_region': pr_feature,
+    }
+
+    return render(request, 'toolbox/toolbox_three_split.html', data)
+
+
 
 
 
@@ -31,7 +69,7 @@ def toolbox_dashboard(request):
     outline_surface_water = json.loads(GEOSGeometry(models.OutlineSurfaceWater.objects.all()[0].geom).geojson)
     outline_geste = json.loads(GEOSGeometry(models.OutlineGeste.objects.all()[0].geom).geojson)
 
-    # projectregion = models.ProjectRegion.objects.all()
+    projectregion = swn_models.ProjectRegion.objects.all()
     # geometry = GEOSGeometry(projectregion[0].geom)
     # geojson = json.loads(geometry.geojson)
 
@@ -42,22 +80,48 @@ def toolbox_dashboard(request):
         'outline_injection': outline_injection,
         'outline_infiltration': outline_infiltration,
         'outline_surface_water': outline_surface_water,
-        'outline_geste': outline_geste
+        'outline_geste': outline_geste,
+        'project_region': projectregion,
     }
-    # user_projects = []
 
-    # for user_project in user_projects:
-    #     if request.user == user_project.user:
-    #         item = {
-    #             'name': user_project.name,
-    #             'user_name': user_project.user.name,
-    #             'description': user_project.description,
-    #         }
-    #         user_projects.append(item)
+    user_fields = models.UserField.objects.get(user=request.user)
+   
+
+    for user_field in user_fields:
+        item = {
+            'name': user_field.name,
+            'user_name': user_field.user.name,
+            'description': user_field.description,
+        }
+        user_projects.append(item)
 
 
 
     return JsonResponse(data)
+
+@login_required
+def load_user_fields(request):
+    user_fields = models.UserField.objects.filter(user=request.user)
+    return JsonResponse(list(user_fields.values()), safe=False)
+
+def get_user_fields(request):
+    if request.method == "GET":
+        print("GET, headers:", request.headers)
+        print("GET, body:", request.body)
+        user_projects = models.UserProject.objects.filter(user_field__user=request.user)
+        user_fields = models.UserField.objects.filter(user=request.user)
+
+    return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json')), 'user_projects': list(user_projects.values())})
+
+@login_required
+def save_user_field(request):
+    if request.method == 'POST':
+        body = json.loads(request.body)
+        user_field = models.UserField.objects.create(body.get('name'), body.get('description'), body.get('geom'), request.user)
+        
+        user_fields = models.UserField.objects.filter(user=request.user)
+        return JsonResponse(list(user_fields.values()), safe=False)
+        return JsonResponse({'name': 'FIX THIS VIEW'}, safe=False)
 
 
 def load_toolbox_sinks(request):
@@ -300,5 +364,73 @@ def sinks_filter(request):
     }
     print(len(sinks_queryset), '/n_______SINKS QUERYSET______')
     return render(request, 'toolbox/sink_filter.html', context)
+
+
+# TODO import DEM to get the Elevation Profile
+def elevation_profile(request):
+    line_wkt = request.GET.get('line')  # Must be a LINESTRING in WKT
+    query = """
+        SELECT ST_Value(dem.rast, geom.geom) AS elevation, 
+               ST_X(geom.geom) AS lon, 
+               ST_Y(geom.geom) AS lat
+        FROM dem, 
+             (SELECT (ST_DumpPoints(ST_LineFromText(%s, 4326))).geom) AS geom
+        WHERE ST_Intersects(dem.rast, geom.geom);
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(query, [line_wkt])
+        data = cursor.fetchall()
+    
+    response = [{'lon': row[1], 'lat': row[2], 'elevation': row[0]} for row in data]
+    return JsonResponse(response, safe=False)
+
+
+
+#TODO Pegelstände
+"""
+Hallo Colja,
+
+aus Pegelonline kannst Du viele Pegel abfragen:
+
+R
+
+library(httr)
+
+library(jsonlite)
+
+url <- https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json
+
+response <- GET(url)
+
+data <- fromJSON(content(response, as = "text"))
+
+ 
+
+Das Pegelportal betrifft nur die Wassertraßen:
+
+R
+
+library(httr)
+
+library(jsonlite)
+
+url <- https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/KOBLENZ/W/currentmeasurement.json
+
+response <- GET(url)
+
+data <- fromJSON(content(response, "text"))
+
+ 
+
+Vielleicht kannst Du auch die Auskunftsplattform Wasser Brandenburg   https://www.metaver.de/trefferanzeige?docuuid=E09AE237-7061-4AD3-AE5A-9D010CF2D231#detail_links
+
+nutzen.
+
+ 
+
+Atom-Feed Brandenburg bietet nur statische Geodaten, z. B. hier die Pegelmessstellen: https://metaver.de/search/dls/?serviceId=8CC3E5BE-76AE-4E3A-9456-B8388591170A&datasetId=E28E0202-C62D-46EB-BA13-9CC407FEA2CE
+Viele Grüße
+Jörg
+"""
 
 

@@ -17,6 +17,7 @@
             {{ form.use_secondary_yields |as_crispy_field }}
             {{ form.water_deficit_response_on |as_crispy_field }}
             {{ form.emergence_moisture_control_on |as_crispy_field }}
+            {{ form.nitrogen_response_on | as_crispy_field }}
             {{ form.use_n_min_mineral_fertilising_method |as_crispy_field }}
           </div>
           <div class="card mb-3" id="n_min_fertilisation_params" style="display: none;">
@@ -38,7 +39,7 @@
             <div class="card-body">
               <h5 class="card-title">Automatic Irrigation</h5>
               <div class="form-group">
-                {{ form.nitrogen_response_on | as_crispy_field }}
+                
                 {{ form.auto_irrigation_params_nitrate_concentration |as_crispy_field }}
                 {{ form.auto_irrigation_params_sulfate_concentration |as_crispy_field }}
                 {{ form.auto_irrigation_params_amount |as_crispy_field }}

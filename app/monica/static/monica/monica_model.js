@@ -1,10 +1,16 @@
 // Utility functions
 const alertBox = document.getElementById('alert-box');
 
-const handleAlerts = (type, msg) => {
+const handleAlerts = (message) => {
+    console.log('handleAlerts', message);
+    if (message.success == true) {
+        var type = 'success';
+    } else if (message.success == false) {
+        var type = 'warning';
+    } else {;};
     alertBox.innerHTML = `
             <div class="alert alert-${type} alert-dismissible " role="alert">
-                    ${msg}
+                    ${message.message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
             </div>`;
     alertBox.classList.remove('d-none');
@@ -29,10 +35,12 @@ const saveToLocalStorage = (project) => {
 // Classes
 class MonicaProject {
     constructor() {
+        this.id = null;
         this.name = null;
         this.description = null;
         this.longitude = null;
         this.latitude = null;
+        this.userField = null;
         this.startDate = null;
         this.endDate = null;
         this.rotation = [];
@@ -45,6 +53,34 @@ class MonicaProject {
         this.userSoilTransportParameters = null;
         this.userSoilOrganicParameters = null;
         this.userSoilMoistureParameters = null;
+
+        // this.soilProfileId = null;
+    }
+};
+
+class MonicaCalculation {
+    constructor(project) {
+        this.project = project;
+        this.startDate = null;
+        this.endDate = null;
+        this.creationDate = null;
+        this.name = null;
+        this.description = null;
+        this.daily = {
+            Date: [],
+            Precip: [],
+            Irrig: [],
+            Stage: [],
+            Yield: [],
+            LAI: [],
+            Mois_1: [],
+            Mois_2: [],
+            Mois_3: [],
+            SOC_1: [],
+            SOC_2: [],
+            SOC_3: [],
+        };
+        
     }
 }
 
@@ -84,8 +120,10 @@ const setLanguage =  (language_code)=>{
 };
 
 
-const runSimulation = (monicaProject) => {
-    
+
+
+
+const runSimulation = (monicaProject) => {   
     fetch(runSimulationUrl, {
         method: 'POST',
         body: JSON.stringify(monicaProject),
@@ -96,71 +134,162 @@ const runSimulation = (monicaProject) => {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('data', data.success);
-        if (data.success) {
-            console.log('SUCCESS')
+        console.log('data', data.message.success);
+        if (data.message.success) {
+            console.log('SUCCESS', data.message)
             $('#runSimulationButton').prop('disabled', true);
             $('#runSimulationButton').text('...Simulation running');
             // Remove 'active' class from all nav links
             $('.nav-link.monica').removeClass('active');
 
             $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
-            const dailyData = data.message.daily;
+            var colors = [
+                'rgba(255, 200, 0, 0.7)', 
+                'rgba(0, 150, 200, 0.7)', 
+                'rgba(0, 200, 255, 0.7)', 
+                'rgba(0, 255, 200, 0.7)',
+                'rgba(0, 255, 100, 0.7)']
+
+            var resultOutput = {
+                'yield': true,
+                'irrigation': true,
+                'organ': false,
+                'mois_1': false,
+                'mois_2': false,
+                'mois_3': false,
+                'soc_1': false,
+                'soc_2': false,
+                'soc_3': false,
+                'lai': false,
+
+            }
+
+            var dates = data.message.message[0].daily.Date;
+            var datasets = [
+            {
+                type: 'bar',  // Specifies the type as bar for precipitation
+                yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
+                label: 'Precipitation',
+                data: data.message.message[0].daily.Precip,
+                backgroundColor: 'rgba(0, 0, 255, 0.5)',  // Semi-transparent blue
+                borderColor: 'rgba(0, 0, 255, 0.7)',
+                borderWidth: 1,
+            },
+        ];
+            for (let i = 0; i < data.message.message.length; i++) {
+                console.log(i);
+                var msg = data.message.message[i].daily
+                
+                if (resultOutput.yield) {
+                    datasets.push({
+                        yAxisID: 'y2',
+                        label: `Yield_${i}`,
+                        data: msg.Yield,
+                        borderWidth: 2,
+                        borderColor: colors[i],
+                    });
+                };
+
+                if (resultOutput.irrigation){
+                    datasets.push({
+                        type: 'bar',  // Specifies the type as bar for precipitation
+                        yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
+                        label: `Irrigation_${i}`,
+                        data: msg.Irrig,
+                        backgroundColor: colors[i],  // Semi-transparent blue
+                        borderColor: colors[i],
+                        borderWidth: 1,
+                    });
+                };
+
+                if (resultOutput.organ) {
+                    datasets.push({
+                        type: 'bar',  // Specifies the type as bar for precipitation
+                        yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
+                        label: `Stage_${i}`,
+                        data: msg.Stage,
+                        backgroundColor: colors[i],  // Semi-transparent blue
+                        borderColor: colors[i],
+                        borderWidth: 1,
+                    });
+                };
+                if (resultOutput.mois_1) {
+                    datasets.push({
+                        yAxisID: 'y3',
+                        label: `Moisture 0-10cm ${i}`,
+                        data: msg.Mois_1,
+                        borderWidth: 2,
+                        borderColor: colors[i],
+                    });
+                };
+                if (resultOutput.mois_2) {
+                    datasets.push({
+                        yAxisID: 'y3',
+                        label: `Moisture 0-10cm ${i}`,
+                        data: msg.Mois_1,
+                        borderWidth: 2,
+                        borderColor: colors[i],
+                    });
+                };
+                if (resultOutput.mois_3) {
+                    datasets.push({
+                        yAxisID: 'y3',
+                        label: `Moisture 20-30cm ${i}`,
+                        data: msg.Mois_3,
+                        borderWidth: 2,
+                        borderColor: colors[i],
+                    });
+                };
+                if (resultOutput.soc_1) {
+                    datasets.push({
+                        yAxisID: 'y4',
+                        label: `SOC 0-10cm ${i}`,
+                        data: msg.Mois_1,
+                        borderWidth: 2,
+                        borderColor: colors[i],
+                    });
+                };
+                if (resultOutput.soc_2) {
+                    datasets.push({
+                        yAxisID: 'y4',
+                        label: `SOC 10-20cm ${i}`,
+                        data: msg.Mois_1,
+                        borderWidth: 2,
+                        borderColor: colors[i],
+                    });
+                };
+                if (resultOutput.soc_3) {
+                    datasets.push({
+                        yAxisID: 'y4',
+                        label: `SOC 20-30cm ${i}`,
+                        data: msg.Mois_3,
+                        borderWidth: 2,
+                        borderColor: colors[i],
+                    });
+                };
+                if (resultOutput.lai) {
+                    datasets.push({
+                        yAxisID: 'y5',
+                        label: `LAI ${i}`,
+                        data: msg.LAI,
+                        borderWidth: 2,
+                        borderColor: colors[i],
+                    });
+                };
+
+            };
+            console.log("Datasets", datasets)
+            
+            // const dailyData = data.message.daily;
+            // const dates = dailyData.Date;
             chartDiv2.innerHTML = '<canvas id="Chart"></canvas>'
             const ctx = document.getElementById('Chart')
-            console.log('CHART data: ', dailyData.Precip)
+            // console.log('CHART data: ', dailyData.PrecipdailyData)
             const chart = new Chart(ctx, {
-                type: 'line',
+                type: "line",
                 data: {
-                    labels: dailyData.Date,
-                    datasets: [
-                        // {
-                        //     yAxisID: 'y',
-                        //     label: 'Bodenfeuchte 1',
-                        //     data: dailyData.Mois_1,
-                        //     borderColor: '#aa8800',
-                        //     borderWidth: 2,
-                        // },
-                        // {
-                        //     yAxisID: 'y',
-                        //     label: 'Bodenfeuchte 2',
-                        //     data: dailyData.Mois_2,
-                        //     borderColor: '#ccaa00',
-                        //     borderWidth: 2,
-                        // },
-                        // {
-                        //     yAxisID: 'y',
-                        //     label: 'Bodenfeuchte 3',
-                        //     data: dailyData.Mois_3,
-                        //     borderColor: '#ffcc00',
-                        //     borderWidth: 2,
-                        // },
-                        {
-                            yAxisID: 'y1',
-                            label: 'Yield',
-                            data: dailyData.Yield,
-                            borderWidth: 2,
-                            borderColor: '#00cc22',
-                        },
-                        {
-                            type: 'bar',  // Specifies the type as bar for precipitation
-                            yAxisID: 'y2',  // Optional: Add a separate y-axis if needed
-                            label: 'Precipitation',
-                            data: dailyData.Precip,
-                            backgroundColor: 'rgba(0, 0, 255, 0.5)',  // Semi-transparent blue
-                            borderColor: 'rgba(0, 0, 255, 0.7)',
-                            borderWidth: 1,
-                        },
-                        {
-                            type: 'bar',  // Specifies the type as bar for precipitation
-                            yAxisID: 'y2',  // Optional: Add a separate y-axis if needed
-                            label: 'Irrigation',
-                            data: dailyData.Irrig,
-                            backgroundColor: 'rgba(0, 100, 255, 0.5)',  // Semi-transparent blue
-                            borderColor: 'rgba(0, 100, 255, 0.7)',
-                            borderWidth: 1,
-                        }
-                    ],
+                    labels: dates,
+                    datasets: datasets,
                 },
                 options: {
                     elements: {
@@ -171,6 +300,9 @@ const runSimulation = (monicaProject) => {
                     responsive: true,
                 }
             });
+
+
+
             chartCard.classList.remove('d-none');
             chart.update();
             $('#runSimulationButton').prop('disabled', false);
@@ -201,14 +333,21 @@ const addRotation = (project) => {
     const rotationIndex = project.rotation.length;
     project.rotation.push(new Rotation(rotationIndex, project));
 
-    const rotationTemplate = document.getElementById('rotationTemplate').innerHTML;
+    const rotationTemplate = document.getElementById('rotationTemplate').cloneNode(true);
     const newRotation = document.createElement('div');
     newRotation.classList.add('card', 'mb-3', 'rotation');
     newRotation.setAttribute('rotation-index', rotationIndex);
 
     const cardBody = document.createElement('div');
     cardBody.classList.add('card-body');
-    cardBody.innerHTML = `<h5 class="card-title">Rotation ${rotationIndex + 1}</h5>` + rotationTemplate;
+
+    var newId = 'id_workstep_type_' + rotationIndex;
+    var workstepSelector = rotationTemplate.querySelector('.workstep-type-select')
+    rotationTemplate.querySelector(`label[for="${workstepSelector.id}"]`).htmlFor = newId;
+    workstepSelector.setAttribute('id', newId);
+    workstepSelector.setAttribute('name', newId);
+
+    cardBody.innerHTML = `<h5 class="card-title">Rotation ${rotationIndex + 1}</h5>` + rotationTemplate.innerHTML;
 
     newRotation.appendChild(cardBody);
     addWorkstep('sowingWorkstep', rotationIndex, cardBody, project);
@@ -228,11 +367,13 @@ const addWorkstep = (workstepType, rotationIndex, parentDiv, project) => {
     newForm.removeAttribute('id');
 
     newForm.querySelectorAll('*[id]').forEach(element => {
+       
         const newId = `${element.id}_${workstepType}_${rotationIndex}_${workstepIndex}`;
         newForm.querySelector(`label[for="${element.id}"]`).htmlFor = newId;
         element.id = newId;
         element.setAttribute('workstep-index', workstepIndex);
         element.setAttribute('workstep-type', workstepType);
+        
     });
     newForm.querySelector('form').setAttribute('workstep-type', workstepType);
     newForm.querySelector('form').setAttribute('workstep-index', workstepIndex);
@@ -274,11 +415,14 @@ const addWorkstep = (workstepType, rotationIndex, parentDiv, project) => {
         }
     });
 
+
+
     const addWorkstepDiv = parentDiv.querySelector('.add-workstep');
     parentDiv.insertBefore(newForm, addWorkstepDiv);
     saveToLocalStorage(project);
 };
 
+// Parameters Modal
 const bindModalEventListeners = () => {
 
     try {
@@ -394,10 +538,10 @@ const submitModalForm = (modalForm, modalAction) => {
     .then(response => response.json())
     .then(data => {
         console.log("check 2", data)
-        if (data.success) {
+        if (data.message.success) {
             $('#formModal').modal('hide');
             //TODO: deal with it
-            handleAlerts('success', data.message);
+            handleAlerts(data.message);
             const parameterType = actionUrl.split('/')[0];
             const rotationIndex = actionUrl.split('/')[2];
             if (modalAction === 'save_as_new') {
@@ -455,22 +599,22 @@ const validateProject = (project) => {
     // } else 
     if (project.longitude === null || project.latitude === null) {
         valid = false;
-        handleAlerts('warning', 'Please provide a valid location');
+        handleAlerts({'success': false, 'message': 'Please provide a valid location'});
     } else if (project.startDate === null || project.endDate === null) {
         valid = false;
-        handleAlerts('warning', 'Please provide a valid date range');
+        handleAlerts({'success': false, 'message': 'Please provide a valid date range'});
     } else if (project.rotation.length === 0) {
         valid = false;
-        handleAlerts('warning', 'Please provide a crop rotation');
+        handleAlerts({'success': false, 'message': 'Please provide a crop rotation'});
     } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => sowingWorkstep.date == null))) {
         valid = false;
-        handleAlerts('warning', 'Please provide a sowing date for each crop');
+        handleAlerts({'success': false, 'message': 'Please provide a sowing date for each crop'});
     } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => new Date(sowingWorkstep.date) < new Date(project.startDate) || new Date(sowingWorkstep.date) > new Date(project.endDate)))) {
         valid = false;
-        handleAlerts('warning', 'Please provide a sowing date for each crop that is within your selected timeframe');
+        handleAlerts({'success': false, 'message': 'Please provide a sowing date for each crop that is within your selected timeframe'});
     } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => sowingWorkstep.options.species == null))) {
         valid = false;
-        handleAlerts('warning', 'Please provide a crop for each sowing workstep!');
+        handleAlerts({'success': false, 'message': 'Please provide a crop for each sowing workstep!'});
     }
     return valid;
 };
@@ -478,6 +622,11 @@ const validateProject = (project) => {
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     let project = new MonicaProject();
+    if (window.location.href.split('/').includes('monica')) {
+        project.swn_forecast = false;
+    } else {
+        project.swn_forecast = true;
+    };
 
     setLanguage('de-DE');
     $('#monicaStartDatePicker').datepicker({
@@ -502,6 +651,18 @@ document.addEventListener('DOMContentLoaded', () => {
     project.endDate = $('#monicaEndDatePicker').datepicker('getUTCDate');
     project.latitude = $('#id_latitude').val();
     project.longitude = $('#id_longitude').val();
+    project.userSimulationSettings = $('#id_user_simulation_settings').val();
+    project.userEnvironmentParameters = $('#id_user_environment').val();
+    project.userCropParameters = $('#id_user_crop_parameters').val();
+    project.userSoilTemperatureParameters = $('#id_soil_temperature').val();
+    project.userSoilTransportParameters = $('#id_soil_transport').val();
+    project.userSoilOrganicParameters = $('#id_soil_organic').val();
+    project.userSoilMoistureParameters = $('#id_soil_moisture').val();
+    project.todaysDate = $('#todaysDatePicker').datepicker('getUTCDate');
+    project.name = $('#projectName').val();
+    project.description = $('#projectDescription').val();
+    project.userField = $('#userFieldSelect').val();
+
 
     saveToLocalStorage(project);
 
@@ -516,10 +677,16 @@ document.addEventListener('DOMContentLoaded', () => {
         $(target).show();
     });
 
+    //TODO: remove this!!!
+    $('#todaysDatePicker').on('changeDate', function () {
+        project.todaysDate = $(this).datepicker('getUTCDate');
+        saveToLocalStorage(project);
+        
+    });
 
 
     var advancedMode = false;
-
+    $('.advanced').hide();
     $('#toggle-advanced-mode').on('click', function () {
         // Toggle the advancedMode variable
         advancedMode = !advancedMode;
@@ -534,6 +701,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } 
         console.log('Advanced mode:', advancedMode); // Log the current mode
     });
+
+
 
 
     // TAB GENERAL EVENT LISTENERS
@@ -562,6 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
     // TAB CROP ROTATION EVENT LISTENERS
     $('#addRotationButton').on('click', () => {
         addRotation(project);
@@ -572,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
             project.rotation.pop();
             $('#cropRotation').children().last().remove();
         } else {
-            handleAlerts('warning', 'You cannot have less than 1 rotation');
+            handleAlerts({'success': false, 'message': 'You cannot have less than 1 rotation'});
         }
     });
 
@@ -612,7 +782,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } else {
                 event.preventDefault();
-                handleAlerts('warning', 'Please select a parameter to modify');
+                handleAlerts({'success': false, 'message': 'Please select a parameter to modify'});
             }
         }
         
@@ -702,19 +872,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //TAB SOIL EVENT LISTENERS
     $('#id_soil_moisture').on('change', function () {
-        project.soilMoistureParameters = $(this).val();
+        project.userSoilMoistureParameters = $(this).val();
         saveToLocalStorage(project);
     });
     $('#id_soil_organic').on('change', function () {
-        project.soilOrganicParameters = $(this).val();
+        project.userSoilOrganicParameters = $(this).val();
         saveToLocalStorage(project);
     });
     $('#id_soil_temperature').on('change', function () {
-        project.soilTemperatureParameters = $(this).val();
+        project.userSoilTemperatureParameters = $(this).val();
         saveToLocalStorage(project);
     });
-    $('#id_soil_temperature').on('change', function () {
-        project.soilTemperatureParameters = $(this).val();
+    $('#id_soil_transport').on('change', function () {
+        project.userSoilTransportParametersoilTransportParameters = $(this).val();
         saveToLocalStorage(project);
     });
 
@@ -740,18 +910,102 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // TAB PROJECT EVENT LISTENERS
+    const loadProjectFromDB = (project_id) => {
+        fetch('/monica/load-project/' + project_id + '/')
+            .then(response => response.json())
+            .then(data => {
+                console.log('loadProjectFromDB', data);
+                project = loadProject(data.project);
+                // saveToLocalStorage(project);
+            })
+            .catch(error => console.error('Error:', error));
+    };
+
+    const createProject = () => {
+        fetch('/monica/create-project/')
+            .then(response => response.json())
+            .then(data => {
+                console.log('createProject', data);
+                // project = loadProject(data.project);
+                // saveToLocalStorage(project);
+            })
+            .catch(error => console.error('Error:', error));
+    };
 
     $('#tabProject').on('click', (event) => {
         if (event.target.classList.contains('modify-parameters')) {
             const targetClass = event.target.classList[3];
             const value = $('.form-select.' + targetClass).val();
             
-            const params = {
-                'parameters': targetClass,
-                'parameters_id': value,
+                const params = {
+                    'parameters': targetClass,
+                    'parameters_id': value,
+                }
+                fetchModalContent(params);          
+        } else if (event.target.classList.contains('monica-project')) {
+            if (event.target.classList.contains('load-project')) {
+                console.log('LOAD PROJECT')
+                loadProjectFromDB(value);
+            }else if (event.target.classList.contains('new-project')) {
+                console.log('NEW PROJECT')
+
+                $('#monicaProjectModal').modal('show');
             }
-            fetchModalContent(params);
-        } 
+        }
+    });
+    const projectModalForm = document.getElementById('projectModalForm');
+    // project modal
+    $('#saveProjectButton').on('click', () => {
+        console.log('saveProjectButton clicked');
+        // const formData = new FormData(projectModalForm);
+
+        // in case it is a SWN project, longitude and latidude are provided from user field centroid
+        try {
+            project.longitude = $('#id_longitude').val();
+            project.latitude = $('#id_latitude').val();
+        }
+        catch {
+            ;
+        }
+
+        try {
+            project.userField = $('#userFieldSelect').val();
+        } catch {
+            ;
+        }
+
+        project.name = $('#id_project_name').val();
+        project.description = $('#id_project_description').val();
+        project.startDate = $('#id_project_start_date').datepicker('getUTCDate');
+        project.modelSetup = $('#id_project_model_setup').val();
+
+
+        saveToLocalStorage(project);
+        console.log('project', project);
+        // this works for monica and swn
+        var saveUrl = 'save-project/';
+       fetch(saveUrl, {
+            method: 'POST',
+            body: JSON.stringify(project),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('data', data);
+            if (data.message.success) {
+                project.id = data.project_id;
+                handleAlerts(data.message);
+                
+                $('#monicaProjectModal').modal('hide');
+                saveToLocalStorage(project);
+            } else {
+                handleAlerts(data.message);
+            }
+            
+        })
     });
 
     $('#projectName').on('change', function () {
@@ -806,8 +1060,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     $('#runSimulationButton').on('click', () => {
-        project.longitude = $('#id_longitude').val();
-        project.latitude = $('#id_latitude').val();
+        console.log('runSimulationButton clicked');
+        try {
+            project.longitude = $('#id_longitude').val();
+            project.latitude = $('#id_latitude').val();
+        } catch { 
+            try { 
+                project.userField = $('#userFieldSelect').val();
+            } catch {;}
+   
+        }
+
         project.startDate = $('#monicaStartDatePicker').datepicker('getUTCDate');
         project.endDate = $('#monicaEndDatePicker').datepicker('getUTCDate');
         project.userCropParameters = $('#id_user_crop_parameters').val();
@@ -817,6 +1080,7 @@ document.addEventListener('DOMContentLoaded', () => {
         project.userSoilTransportParameters = $('#id_soil_transport').val();
         project.userSoilOrganicParameters = $('#id_soil_organic').val();
         project.userSoilMoistureParameters = $('#id_soil_moisture').val();
+        project.todaysDate = $('#todaysDatePicker').datepicker('getUTCDate');
 
         if (validateProject(project)) {
             runSimulation(project);

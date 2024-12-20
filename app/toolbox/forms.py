@@ -16,21 +16,21 @@ SINK_EXTREMES = SinksWithLandUseAndSoilProperties.objects.aggregate(
     area_sink_max=Max('area_sink'),
 )
 
-class UserProjectForm(forms.ModelForm):
-    class Meta:
-        model = UserProject
-        fields = [
-            'name',
-            'description',
-        ]
-        widgets = {
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-            }),
-            'description': forms.TextInput(attrs={
-                'class': 'form-control',
-            }),
-        }
+# class UserProjectForm(forms.ModelForm):
+#     class Meta:
+#         model = UserProject
+#         fields = [
+#             'name',
+#             'comment',
+#         ]
+#         widgets = {
+#             'name': forms.TextInput(attrs={
+#                 'class': 'form-control',
+#             }),
+#             'comment': forms.TextInput(attrs={
+#                 'class': 'form-control',
+#             }),
+#         }
 
 class SinksFilterForm(forms.Form):
     depth_sink_min = forms.FloatField(required=False, label="Min Depth Sink", min_value=SINK_EXTREMES['depth_sink_min'], max_value=SINK_EXTREMES['depth_sink_max'], initial=SINK_EXTREMES['depth_sink_min'])

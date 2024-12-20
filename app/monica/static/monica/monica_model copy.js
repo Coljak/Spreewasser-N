@@ -1,10 +1,15 @@
 // Utility functions
 const alertBox = document.getElementById("alert-box");
 
-    const handleAlerts = (type, msg) => {
+    const handleAlerts = (message) => {
+        if (message.success == true) {
+            var type = 'success';
+        } else if (message.success == false) {
+            var type = 'warning';
+        } else {;}
         alertBox.innerHTML = `
                 <div class="alert alert-${type} alert-dismissible " role="alert">
-                        ${msg}
+                        ${message.message}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                 </div>`;
         alertBox.classList.remove("d-none");
@@ -106,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
             .then(response => response.json())
             .then(data => {
-                handleAlerts(data.success ? 'success' : 'warning', data.message);
+                handleAlerts(data.message);
                 console.log('data', data);
             })
             .catch(error => console.error('Error:', error));
@@ -204,7 +209,7 @@ const runSimulation = (monicaProject) => {
             $('#runSimulationButton').text("Run Simulation");
             console.log("CHART: ", chart);
         } else {
-            handleAlerts('warning', data.message);
+            handleAlerts(data.message);
         }    
     })
     .then(() => {
@@ -434,7 +439,7 @@ const submitModalForm = (modalForm, isSaveAsNew, deleteParams) => {
         if (data.success) {
             $('#formModal').modal('hide');
             //TODO: deal with it
-            handleAlerts('success', data.message);
+            handleAlerts(data.message);
             if (isSaveAsNew) {
                 var urlParts = actionUrl.split('/');
                 

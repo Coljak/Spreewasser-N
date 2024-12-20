@@ -1,6 +1,7 @@
 {% extends 'shared/three_split.html' %} 
 {% load component_tags %}
 {% load static %} 
+{% load crispy_forms_tags %}
 {% load leaflet_tags %} 
 {% load geojson_tags %} 
 {% block css %} 
@@ -55,21 +56,48 @@
         <li>
             <button id="toggle-advanced-mode" class="btn btn-primary simple" type="button">
                 Switch to Advanced Mode
-              </button>
+            </button>
         </li>
-      </ul>
+    </ul>
 
     <!-- ende navigation -->
-    {% render_tab_project user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
-    {% render_tab_general_parameters coordinate_form %}
+    {% render_tab_project project_form user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
+
+
+    <!-- General Parameters -->
+    <div id="tabGeneralParameters" class="tab-content card mb-3 active">
+        <div class="card-body">
+            <div class="card mb-3">
+                <div class="card-body">
+                    {{ user_field_selector_form |crispy }}
+                </div>
+            </div>
+        
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">"Today's" date</h5>
+                    <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
+                </div>
+            </div>
+            
+            {% render_tab_general_parameters coordinate_form %}  
+        </div>  
+    </div>
+
+
     {% render_tab_crop_rotation %}
     {% render_tab_soil user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
     {% render_tab_result %}
     <button id="previousButton" class="btn btn-primary mt-3">Previous</button>
     <button id="nextButton" class="btn btn-primary mt-3">Next</button>
-    <button id="runSimulationButton" class="btn btn-primary mt-3">Run Simutation</button>
+    <button id="runSimulationButton" class="btn btn-primary mt-3">Run Simulation</button>
 
-    </div>
+
+    <button id="monica-project-save" class="btn btn-primary mt-3 ">Save Project</button>
+    <button id="monica-project-save-as" class="btn btn-primary mt-3 ">Save Project as</button>
+
+
+</div>
 {% endblock bottom_panel %}
 
 
@@ -78,11 +106,13 @@
 {% block javascript %}
     {{ block.super }}
     <script>
-        const demUrl= "{% static 'data/dem_3857.png' %}"
-        const droughtUrl= "{% static 'data/4326_reprojected_3857.png' %}"     
-        const project_region = {{ project_region|safe }}          
-        {% comment %} const saveSimulationSettingsUrl = "{% url 'monica:save_simulation_settings' %}"; {% endcomment %}
+        const demUrl = "{% static 'data/dem_3857.png' %}";
+        const droughtUrl = "{% static 'data/4326_reprojected_3857.png' %}" ;   
+        const project_region = {{ project_region|safe }} ;
         const runSimulationUrl = "{% url 'monica:run_simulation' %}";
+        const loadNutsUrl = "{% url 'swn:load_nuts_polygon' %}";
+        const saveProjectUrl = "{% url 'swn:save_project' %}";
+        {% comment %} const userFields = {{ user_fields|safe }} ;  {% endcomment %}
           
     </script>
     
@@ -93,9 +123,6 @@
     <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.de.min.js' %}"></script> 
     <script type="text/javascript" src="{% static 'swn/js/leaflet.contextmenu.js' %}"></script> 
-    {% comment %} <script src="https://unpkg.com/chroma-js"></script>
-    <script src="https://unpkg.com/georaster"></script>
-    <script src="https://unpkg.com/proj4"></script> {% endcomment %}
     {% comment %} <script src="{% static 'leaflet/georaster/georaster-layer-for-leaflet.min.js' %}"></script> {% endcomment %}
     {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" defer></script>{% endcomment %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
@@ -104,7 +131,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
     
     <script type="text/javascript" src="{% static 'swn/src/virtual-select.js' %}"></script> 
-    <script src="{% static 'swn/js/swn_three_split.js' %}" type="module"></script>
-    <script src="{% static 'monica/monica_model.js' %}"></script>
+    <script src="{% static 'swn/js/swn_three_split.js' %}" defer></script>
+    <script src="{% static 'monica/monica_model.js' %}" defer></script>
 {% endblock %}
 

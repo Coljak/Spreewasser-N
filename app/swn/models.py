@@ -48,7 +48,7 @@ class ProjectRegion(models.Model):
         return self.name
 
 class UserField(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="drought_userfields")
     name = models.CharField(max_length=255)
     creation_date = models.DateField(auto_now_add=True, blank=True, null=True)
     swn_tool = models.CharField(max_length=16, null=True, blank=True)
@@ -60,7 +60,7 @@ class UserField(models.Model):
     soil_profiles = models.ManyToManyField(
         'SoilProfile',
         through='SoilProfileUserField',
-        related_name='user_fields',
+        related_name='drought_userfields',
         blank=True,
     )
     
@@ -126,6 +126,17 @@ class UserField(models.Model):
         print( 'weather_indices_json ', weather_indices_json)
         return weather_indices_json
     
+    def get_centroid(self):
+        """
+        Get the centroid of the UserField object's geometry
+        """
+        userfield_geom = self.geom
+        userfield_geom = GEOSGeometry(userfield_geom)
+        centroid = userfield_geom.centroid
+        lat = centroid.y
+        lon = centroid.x
+        return lon, lat
+    
     # # models.py
 
     # TODO celery task UserField.save
@@ -180,21 +191,39 @@ class SoilProfileUserField(models.Model):
     def __str__(self):
         return self.name
 
-class UserProject(models.Model):    
-    name = models.CharField(max_length=255)
+class UserCalculation(monica_models.ModelSetup):    
+    project_name = models.CharField(max_length=255)
     user_field = models.ForeignKey(UserField, on_delete=models.CASCADE)
     soil_profile = models.ForeignKey(SoilProfile, on_delete=models.DO_NOTHING, null=True)
-    crop = models.ForeignKey(monica_models.SpeciesParameters, on_delete=models.DO_NOTHING, null=True)
     comment = models.TextField(null=True, blank=True)
-    irrigation_input = models.JSONField(null=True, blank=True)
-    irrigation_output = models.JSONField(null=True, blank=True)
     calculation_start_date = models.DateField(null=True, blank=True)
     calculation_end_date = models.DateField(null=True, blank=True)
+    rotation = models.JSONField(null=True, blank=True)
     calculation = models.JSONField(null=True, blank=True)
     creation_date = models.DateField(auto_now_add=True, blank=True)
+    # updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
+
+class UserProject(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    creation_date = models.DateField(auto_now_add=True, blank=True)
+    last_modified = models.DateField(auto_now=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    user_calculations = models.ManyToManyField(UserCalculation, related_name='user_projects', blank=True)
+
+    def __str__(self):
+        return self.name
+    
+class SwnProject(monica_models.MonicaProject):
+    user_field = models.ForeignKey(UserField, on_delete=models.CASCADE)
+    # lats and lons for the whole area
+
+    def __str__(self):
+        return self.name
+
 
 # Counties, States, Countries
 # Countries
@@ -248,177 +277,3 @@ class NUTS5000_N3(models.Model):
 
     def __str__(self):
         return self.nuts_name
-
-# ----------BUEK 200 data ------------------------------------------------
-
-
-    
-# class BuekCapillaryRise(models.Model):
-#     soil_type = models.CharField(max_length=255, null=True, blank=True)
-#     ka5textureclass_id = models.IntegerField(null=True, blank=True)
-#     distance = models.IntegerField(null=True, blank=True)
-#     capillary_rate = models.FloatField(null=True, blank=True)
-    
-# class BuekBulkDensityClass(models.Model):
-#     bulk_density_class = models.CharField(null=True, blank=True)
-#     raw_density_g_per_cm3 = models.FloatField(null=True, blank=True)
-
-#     def __str__(self):
-#         return self.bulk_density_class
-
-# class BuekKa5TextureClass(models.Model):
-#     ka5_soiltype = models.CharField(max_length=255, null=True, blank=True)
-#     sand = models.FloatField(null=True, blank=True)
-#     clay = models.FloatField(null=True, blank=True)
-#     silt = models.FloatField(null=True, blank=True)
-
-#     def __str__(self):
-#         return self.ka5_soiltype
-    
-# class BuekHumusClass(models.Model):
-#     humus_class = models.CharField(max_length=255, null=True, blank=True)
-#     corg = models.FloatField(null=True, blank=True)
-#     description = models.CharField(max_length=255, null=True, blank=True)
-
-#     def __str__(self):
-#         return self.humus_class
-    
-# class BuekPHClass(models.Model):
-#     ph_class = models.CharField(max_length=255, null=True, blank=True)
-#     ph_lower_value = models.FloatField(null=True, blank=True)
-#     ph_upper_value = models.FloatField(null=True, blank=True)
-#     description = models.CharField(max_length=255, null=True, blank=True)
-
-#     def __str__(self):
-#         return self.ph_class
-
-
-# class BuekPolygon(models.Model):
-#     polygon_id = models.BigIntegerField(primary_key=True)
-#     bgl = models.CharField(max_length=80, null=True, blank=True)
-#     symbol = models.CharField(max_length=80, null=True, blank=True)
-#     legende = models.CharField(max_length=200, null=True, blank=True)
-#     def __str__(self):    
-#         return 'Polygon ' + str(self.polygon_id)
-   
-# class Buek(models.Model):  
-#     id = models.AutoField(primary_key=True)
-#     polygon = models.ForeignKey(BuekPolygon, on_delete=models.CASCADE, null=True, blank=True)
-#     hinweis = models.CharField(max_length=91, null=True, blank=True)
-#     shape_area = models.FloatField()
-#     shape_leng = models.FloatField()
-#     geom = gis_models.MultiPolygonField(srid=4326)
-
-#     def __str__(self):
-#         return '  Polygon_id ' + str(self.polygon_id)
-    
-# class CorineLandCover2018(models.Model):
-#     '''
-#     CLC 5 classes.
-#     '''
-#     label_level_1 = models.CharField(max_length=255, null=True, blank=True)
-#     label_level_2 = models.CharField(max_length=255, null=True, blank=True)
-#     label_level_3 = models.CharField(max_length=255, null=True, blank=True)
-#     label_de = models.CharField(max_length=255, null=True, blank=True)
-#     corine_landcover_code = models.IntegerField(null=True, blank=True)
-
-#     def __str__(self):
-#         return self.label + ' ' + str(self.code_18)
-
-# class BuekSoilProfile(models.Model):
-#     polygon = models.ForeignKey(BuekPolygon, on_delete=models.CASCADE, null=True, blank=True)
-#     legacy_gen_id = models.IntegerField(null=True, blank=True)
-#     system_unit = models.CharField(max_length=255, null=True, blank=True)
-#     legacy_bodsysteinh = models.CharField(max_length=255, null=True, blank=True)
-#     legacy_bodtyp = models.CharField(max_length=255, null=True, blank=True)
-#     legacy_bo_subtyp = models.CharField(max_length=255, null=True, blank=True)
-#     legacy_bo_subtyp_txt = models.CharField(max_length=255, null=True, blank=True)
-#     area_percenteage = models.IntegerField(null=True, blank=True)
-#     landusage = models.CharField(max_length=255, null=True, blank=True)
-#     corine_landcover_2018 = models.ForeignKey(CorineLandCover2018, on_delete=models.CASCADE, null=True, blank=True)
-#     landusage_corine_code = models.IntegerField(null=True, blank=True)
-#     soil_profile_no = models.IntegerField(null=True, blank=True)
-
-#     def __str__(self):
-#         return 'soil_profile ' + str(self.polygon.polygon_id) 
-                                                                 
-# class BuekSoilProfileHorizon(models.Model):
-#     bueksoilprofile = models.ForeignKey(BuekSoilProfile, on_delete=models.CASCADE, null=True, blank=True)
-#     horizont_nr = models.IntegerField(null=True, blank=True)
-#     symbol = models.CharField(max_length=255, null=True, blank=True)
-#     obergrenze_m = models.FloatField(null=True, blank=True)
-#     untergrenze_m = models.FloatField(null=True, blank=True)
-#     stratigraphie = models.CharField(max_length=255, null=True, blank=True)
-#     herkunft = models.CharField(max_length=255, null=True, blank=True)
-#     geogenese = models.CharField(max_length=255, null=True, blank=True)
-#     fraktion = models.CharField(max_length=255, null=True, blank=True)
-#     summe = models.FloatField(null=True, blank=True)
-#     # bodenart = models.CharField(max_length=255, null=True, blank=True)
-#     # humus = models.CharField(max_length=255, null=True, blank=True)
-#     # carbonatgehalt = models.CharField(null=True, blank=True)
-#     gefuege = models.CharField(max_length=255, null=True, blank=True)
-#     # trockenrohdichte = models.CharField(max_length=255, null=True, blank=True)
-#     torfarten = models.CharField(max_length=255, null=True, blank=True)
-#     # zersetzungsstufe = models.CharField(max_length=255, null=True, blank=True)
-#     substanzvolumen = models.CharField(max_length=255, null=True, blank=True)
-#     # bodenaciditaet = models.CharField(max_length=255, null=True, blank=True)
-#     bulk_density_class = models.ForeignKey(BuekBulkDensityClass, on_delete=models.CASCADE, null=True, blank=True)
-#     ka5_texture_class = models.ForeignKey(BuekKa5TextureClass, on_delete=models.CASCADE, null=True, blank=True)
-#     humus_class = models.ForeignKey(BuekHumusClass, on_delete=models.CASCADE, null=True, blank=True)
-#     ph_class = models.ForeignKey(BuekPHClass, on_delete=models.CASCADE, null=True, blank=True)
-
-#     def __str__(self):
-#         return super().__str__() + ' soilprofile_id: ' + str(self.bueksoilprofile_id) + ' horizont_nr: ' + str(self.horizont_nr)
-#     # TODO pH value is a range - how to use it
-#     # TODO Sceleton fraction 0-1, soil stone content
-#     def to_json(self):
-#         monica_json = {
-#             'Thickness': [(self.untergrenze_m - self.obergrenze_m), "m"],
-#             'Sand': [self.ka5_texture_class.sand, "%"],
-#             'Clay': [self.ka5_texture_class.clay, "%"],
-#             'pH': (self.ph_class.ph_lower_value + self.ph_class.ph_upper_value) / 2,
-#             # 'Sceleton': soil stone content, a fraction between 0 and 1
-#             # 'Lambda': soil water conductivity coefficient
-#             # 'FieldCapacity':  	field capacity
-#             # 'PoreVolume': 	m3 m-3 (fraction [0-1]) 	saturation
-#             # 'PermanentWiltingPoint': 	m3 m-3 (fraction [0-1]) 	permanent wilting point
-#             'KA5TextureClass': self.ka5_texture_class.ka5_soiltype,
-#             # 'SoilAmmonium': [self.soil_ammonium, "mg kg-1"],
-#             # 'SoilNitrate': 	kg NO3-N m-3 	initial soil nitrate content
-#             # 'CN': 		soil C/N ratio
-#             'SoilRawDensity': [self.bulk_density_class.raw_density_g_per_cm3 * 1000, "kg m-3"],
-#             #  OR SoilBulkDensity 	kg m-3 	soil bulk density
-#             'SoilOrganicCarbon': [self.humus_class.corg, "%"],
-#             # TODO wiki: SoilOrganicCarbon 	% [0-100] ([kg C kg-1] * 100)  a percentage between 0 and 100 BUT it seems to be a percenteage
-#             # OR 'SoilOrganicMatter': 	kg OM kg-1 (fraction [0-1]) 	soil organic matter
-#             # 'SoilMoisturePercentFC': % [0-100] 	initial soil moisture in percent of field capacity
-#         }
-#         soil_raw_density = []
-#         if self.bulk_density_class.raw_density_g_per_cm3:
-#             monica_json['SoilRawDensity'] = [self.bulk_density_class.raw_density_g_per_cm3 * 1000, "kg m-3"]
-#         else:
-#             monica_json['SoilBulkDensity'] = []   
-#         return monica_json
-
-# class BuekCLCData(models.Model):
-#     """
-#     This data applies to the Vector as well as the Raster files of the BUEK 200/CLC 2018 dataset.
-#     It contains a reference to the original BGR Buek 200 (tkle_nr) that is equivalent to the polygon_id in the BuekPolygon model.
-#     Though in this dataset the polygon_id references not necessarily the original Buek Polygon,
-#     but the tkle_nr of the polygon of the assigned the soil data.
-#     """
-#     tkle_nr = models.IntegerField(null=True, blank=True)
-#     polygon = models.ForeignKey(BuekPolygon, on_delete=models.CASCADE, null=True, blank=True)
-#     water = models.BooleanField(default=False)
-#     soilprofile = models.ForeignKey(BuekSoilProfile, on_delete=models.CASCADE, null=True, blank=True)
-#     bias_21_soilprofile = models.ForeignKey(BuekSoilProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='bias_21_soilprofile')
-#     bias_23_soilprofile = models.ForeignKey(BuekSoilProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='bias_23_soilprofile')
-#     bias_31_soilprofile = models.ForeignKey(BuekSoilProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='bias_31_soilprofile')
-#     corine_landcover_code = models.ForeignKey(CorineLandCover2018, on_delete=models.CASCADE, null=True, blank=True)
-#     clc_code = models.IntegerField(null=True, blank=True)
-#     label = models.CharField(max_length=255, null=True, blank=True)
-#     label_de = models.CharField(max_length=255, null=True, blank=True)
-#     def __str__(self):
-#         return 'Polygon ' + str(self.polygon_id) + ' CLC2018 ' + str(self.corine_landcover_code.code) + str(self.corine_landcover_code.label)
-
-    

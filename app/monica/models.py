@@ -12,7 +12,11 @@ from django.db.models import Q
 from django.contrib.gis.db.models.functions import Distance
 from datetime import datetime
 import pandas as pd
-
+from buek import models as buek_models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 
 class CropParametersExist(models.Model):
     species_name = models.CharField(max_length=100, blank=True)
@@ -1502,6 +1506,11 @@ class UserSimulationSettings(models.Model):
             "threshold": self.auto_irrigation_params_threshold
             }
         }
+    
+
+    
+
+
 
 class SiteParameters(models.Model):
     latitude = models.FloatField()
@@ -1519,7 +1528,6 @@ class SiteParameters(models.Model):
             "NDeposition": [self.n_deposition, "kg N ha-1 y-1"],
             "SoilProfileParameters": self.soil_profile.get_monica_horizons_json()
         }
-
 
 class CentralParameterProvider(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
@@ -1931,13 +1939,140 @@ class MonicaEnvironment(models.Model):
             "cropRotations": None,
             "events": self.events
         }
+    
+class UserSoilProfile(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+
         
+# TODO implement the input option for soil
+class SoilLayer(models.Model):
+    user_soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE)
+    horizon_no = models.IntegerField()
+    thickness = models.FloatField() # in meters
+    sand = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil sand content as fraction
+    clay = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil clay content as fraction
+    silt = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil silt content as fraction
+    ph = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(14)]) # pH value
+    sceleton = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil stone content as fraction
+    lambda_s = models.FloatField() # soil ater conductivity coefficient
+    field_capacity = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil field capacity
+    pore_volume = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil pore volume, saturation
+    permanent_wilting_point = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil permanent wilting point
+    ka5_texture_class = models.ForeignKey(buek_models.Ka5TextureClass, on_delete=models.CASCADE)
+    ammonium = models.FloatField() # kg NH4-N m-3 intitial soil ammonium content
+    nitrate = models.FloatField() # kg NO3-N m-3 intitial soil nitrate content
+    c_n = models.FloatField() # kg kg-1 soil carbon nitrogen ratio
+    raw_density = models.FloatField(null=True) # kg m-3 soil raw density
+    bulk_density = models.FloatField(null=True) # kg m-3 soil bulk density
+    organic_carbon = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)], null=True) # kg kg-1 soil organic carbon content
+    organic_matter = models.FloatField(null=True) # kg kg-1 soil organic matter content
+    soil_moisture = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil moisture content
+
+    def to_json(self):
+        if self.sand is None:
+            self.sand = 100 - self.clay - self.silt
+        if self.clay is None:
+            self.clay = 100 - self.sand - self.silt
+        # if percentages are defined as 0-100 or 0-1 is not consistet in Monica
+        return {
+            "Thickness": self.thickness,
+            "Sand": self.sand / 100,
+            "Clay": self.clay / 100,
+            "pH": self.ph,
+            "Sceleton": self.sceleton / 100,
+            "Lambda": self.lambda_s,
+            "FieldCapacity": self.field_capacity / 100,
+            "PoreVolume": self.pore_volume / 100,
+            "PermanentWiltingPoint": self.permanent_wilting_point / 100,
+            "KA5TextureClass": self.ka5_texture_class.name,
+            "SoilAmmonium": self.ammonium,
+            "SoilNitrate": self.nitrate,
+            "CN": self.c_n,
+            "SoilRawDensity": self.raw_density,
+            "SoilBulkDensity": self.bulk_density,
+            "SoilOrganicCarbon": self.organic_carbon,
+            "SoilOrganicMatter": self.organic_matter,
+            "SoilMoisturePercentFC": self.soil_moisture
+        }
 
 
-class MonicaSimulation(models.Model): # Project at Point
+
+
+
+class ModelSetup(models.Model):
+    """
+    The model setup stores all parameters, that make up a model except the location data and dates.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
+    name = models.CharField(max_length=100)
+    #soil_profile = models.ForeignKey(buek_models.SoilProfile, on_delete=models.CASCADE)
+    # CentralParameterProvider
+    user_crop_parameters = models.ForeignKey(UserCropParameters, on_delete=models.CASCADE)
+    user_environment_parameters = models.ForeignKey(UserEnvironmentParameters, on_delete=models.CASCADE)
+    user_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE)
+    user_soil_transport_parameters = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE)
+    user_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE)
+    user_soil_temperature_parameters = models.ForeignKey(SoilTemperatureModuleParameters, on_delete=models.CASCADE)
+    simulation_parameters = models.ForeignKey(UserSimulationSettings, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return self.name
+    
+class MonicaSite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=255)
     latitude = models.FloatField()
     longitude = models.FloatField()
     altitude = models.FloatField()
     slope = models.FloatField()
     n_deposition = models.FloatField()
-    soil_profile = models.ForeignKey(buek_models.SoilProfile, on_delete=models.CASCADE)
+    # soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    soil_profile_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True) # identifies the class (buek.models.SoilProfile or UserSoilProfile)
+    soil_profile_object_id = models.PositiveIntegerField(null=True, blank=True) # id of object
+    soil_profile = GenericForeignKey('soil_profile_content_type', 'soil_profile_object_id')
+
+
+    def __str__(self):
+        return self.name
+    
+class MonicaProject(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=255)
+    start_date = models.DateField()
+    description = models.TextField(null=True, blank=True)
+    monica_model_setup = models.ForeignKey(ModelSetup, on_delete=models.CASCADE, null=True, blank=True)
+    creation_date = models.DateTimeField(null=True, blank=True)
+    last_modified = models.DateTimeField(auto_now=True, blank=True)
+    
+
+    def __str__(self):
+        return self.name
+
+class MonicaCalculation(models.Model):
+    name = models.CharField(max_length=255, blank=True, null=True)
+    description = models.TextField(null=True, blank=True)
+   
+    monica_site = models.ForeignKey(MonicaSite, on_delete=models.CASCADE)
+    monica_project = models.ForeignKey(MonicaProject, on_delete=models.CASCADE)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    forecast_start_date = models.DateField(null=True, blank=True) # the date from which on the wheather data is a forecast
+    result = models.JSONField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        # Automatically set start_date to the project's start_date
+        if not self.start_date:
+            self.start_date = self.monica_project.start_date
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.start_date and self.start_date != self.monica_project.start_date:
+            raise ValidationError({
+                'start_date': f"Start date must match the project's start date: {self.monica_project.start_date}"
+            })

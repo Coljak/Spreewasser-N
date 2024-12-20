@@ -1,0 +1,97 @@
+{% extends 'shared/three_split.html' %} 
+{% load component_tags %}
+{% load static %} 
+{% load crispy_forms_tags %}
+{% load leaflet_tags %} 
+{% load geojson_tags %} 
+{% block css %} 
+{{ block.super }}
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css" />
+    <link rel="stylesheet" href="{% static 'swn/css/leaflet.contextmenu.css' %}"/>
+    {% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/> {% endcomment %}
+    <!-- virtual-select is for the multiple select boxes -->
+    <link rel="stylesheet" href="{% static 'swn/src/virtual-select.min.css' %}" />
+    {% comment %} <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.min.css' %}" /> {% endcomment %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+    <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
+
+{% endblock css %} 
+
+
+{% block right_panel %}
+        <div id="map" style="height: 100%; width: 100%"></div>
+{% endblock right_panel %}
+
+
+
+
+{% block left_panel %}
+    {% include 'toolbox/sidebar.html' %}
+    {% include 'swn/modal_field_name.html' %}
+    {% include 'swn/modal_field_menu.html' %}
+{% endblock left_panel %}
+
+{% block bottom_panel %}
+<div class="overflow-auto" >
+    {% include 'monica/hidden_rotation_forms.html' %}
+<!-- navigation in monica -->
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="toolbox nav-link" aria-current="page" href="#tabToolboxProject">Project</a>
+        </li>
+        <li class="nav-item">
+            <a class="toolbox nav-link active" aria-current="page" href="#tabInjection">Versickerung</a>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="toolbox nav-link" aria-current="page" href="#tabDrainage" >Dränung</a>
+        </li>
+
+        <li class="nav-item">
+            <a id="toolboxResultTab" class="toolbox nav-link disabled" aria-disabled="true" href="#tabToolboxResult">Result</a>
+        </li>
+        <li>
+            <button id="toggle-advanced-mode" class="btn btn-primary simple" type="button">
+                Switch to Advanced Mode
+            </button>
+        </li>
+    </ul>
+
+
+
+
+</div>
+{% endblock bottom_panel %}
+
+
+
+
+{% block javascript %}
+    {{ block.super }}
+    <script>
+        const loadNutsUrl = "{% url 'swn:load_nuts_polygon' %}";
+        const project_region = {{ project_region|safe }}                    
+    </script>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js"></script> {% endcomment %}
+    {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js"></script>{% endcomment %}
+    <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.de.min.js' %}"></script> 
+    <script type="text/javascript" src="{% static 'swn/js/leaflet.contextmenu.js' %}"></script> 
+    {% comment %} <script src="https://unpkg.com/chroma-js"></script>
+    <script src="https://unpkg.com/georaster"></script>
+    <script src="https://unpkg.com/proj4"></script> {% endcomment %}
+    {% comment %} <script src="{% static 'leaflet/georaster/georaster-layer-for-leaflet.min.js' %}"></script> {% endcomment %}
+    {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" defer></script>{% endcomment %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+    {% comment %} <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script> {% endcomment %}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
+    
+    <script type="text/javascript" src="{% static 'swn/src/virtual-select.js' %}"></script> 
+    <script type="text/javascript" src="{% static 'toolbox/toolbox_three_split.js' %}" ></script>
+{% endblock %}
+

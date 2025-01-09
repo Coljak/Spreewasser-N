@@ -3,9 +3,9 @@ import os
 from celery import Celery
 from django.conf import settings
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'klim4cast.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 
-app = Celery('klim4cast')
+app = Celery('app')
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.

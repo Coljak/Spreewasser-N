@@ -25,12 +25,12 @@
 
   .panel-top {
     flex: 0 0 auto;
-    height: 70%; /* Initially 70% but resizable */
-    min-height: 200px;
+    height: 70%; 
+    /* min-height: 200px; */
     display: flex;
     flex-direction: row;
     overflow: hidden;
-    transition: height 0.5s ease;
+    /* transition: height .5s ease; */
   }
 
   .panel-bottom {
@@ -38,13 +38,24 @@
     height: 50%; /* Resizable */
     min-height: 100px;
     overflow: auto;
-    transition: height 0.5s ease;
+    /* transition: height 0.5s ease; */
   }
 
   .horizontal-splitter {
     height: 2px;
     background-color: var(--bs-light);
     cursor: row-resize;
+  }
+
+  .corner-splitter {
+    /* position: absolute; */
+    width: 10px;
+    height: 1px;
+    background-color: magenta;
+    cursor: nesw-resize;
+    z-index: 10;
+    bottom: 0;
+    /*left: calc(50% - 2px);  Adjust to align with the splitters */
   }
 
   /* Vertical resizable panel */
@@ -58,7 +69,6 @@
 
   .panel-right {
     flex: 1 1 auto;
-    padding: 5px;
     min-height: 400px;
     display: flex;
     flex-direction: column;
@@ -81,3 +91,5 @@
     flex: 1 1 auto;
     overflow-y: auto; /* Add scrolling to the table when necessary */
   }
+
+

@@ -8,22 +8,22 @@
 
   }
 
-
+/* 
   #map {
     position: relative;
     height: inherit;
     min-height: 400px;
     width: inherit;
-  }
+  } */
 
-  #map-container { 
+  /* #map-container { 
    
     padding: 70px;
     height: 70vh;   
-} 
+}  */
 
   
-  @media (min-width: 768px) {
+  /* @media (min-width: 768px) {
     .sidebar-left {
       left: 15px;
       top: 15px;
@@ -34,7 +34,7 @@
   
   .django-leaflet-raw-textarea {
     width: 100%;
-  }
+  } */
   
   .leaflet-container {
     box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
@@ -83,8 +83,10 @@
   }
 
   .sidebar-header {
-    /* padding: 1rem 0rem 3rem 2rem; */
-    background-color: var(--bs-primary);
+
+    /* background-color: var(--bs-primary); */
+    border: var(--bs-prinary) 2px solid;
+    border-radius: 5;
     
   }
 

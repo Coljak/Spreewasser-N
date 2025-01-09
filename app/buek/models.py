@@ -117,30 +117,66 @@ class SoilProfile(models.Model):
     def __str__(self):
         return 'soil_profile ' + str(self.polygon.polygon_id) 
     
-    def get_horizons(self):
+    def get_all_horizons(self):
         return SoilProfileHorizon.objects.filter(soilprofile=self).order_by('horizont_nr')
     
+    def get_all_horizons_json(self):
+        hors = SoilProfileHorizon.objects.filter(soilprofile=self).order_by('horizont_nr')
+        return [horizon.to_json() for horizon in hors]
+    
+    # def get_monica_horizons_json(self):
+    #     # TODO this is working but could use refactoring
+    #     """
+    #     Invalid horizons are filled with the information of the next valid horizon.
+    #     """
+    #     horizons = list(SoilProfileHorizon.objects.filter(soilprofile=self, obergrenze_m__gte=0).order_by('horizont_nr'))
+    #     adjusted_horizons = [{i: horizons[i].to_json()} for i in range(len(horizons))]
+    #     msg = None
+    #     hors = []
+    #     valid_horizon = False
+    #     for i in range(len(horizons)):
+    #         if horizons[i].ka5_texture_class:
+    #             valid_horizon = True
+    #         elif not horizons[i].ka5_texture_class:
+    #             if not valid_horizon:
+    #                 if i < len(horizons) - 1:
+    #                     horizons[i+1].obergrenze_m = horizons[i].obergrenze_m
+    #                     msg = "Warning: Profile modified due to lacking ka5 texture class"
+    #                 else:
+    #                     msg  = "Error: No valid horizon found"
+    #                     return None, msg
+                    
+    #             else:
+    #                 horizons[i-1].untergrenze_m = horizons[i].untergrenze_m
+    #                 msg = "Warning: Profile modified due to lacking ka5 texture class"
+               
+    #     for i in range(len(horizons)):
+    #         if horizons[i].ka5_texture_class:
+    #             hors.append(horizons[i].to_json())
+        
+
+    #     return hors, msg
+
     def get_monica_horizons_json(self):
+        # TODO this is working but could use refactoring
+        """
+        Invalid horizons are filled with the information of the next valid horizon.
+        """
         horizons = list(SoilProfileHorizon.objects.filter(soilprofile=self, obergrenze_m__gte=0).order_by('horizont_nr'))
         adjusted_horizons = [{i: horizons[i].to_json()} for i in range(len(horizons))]
         msg = None
         hors = []
-        valid_horizon = False
+        # valid_horizon = False
         for i in range(len(horizons)):
-            if horizons[i].ka5_texture_class:
-                valid_horizon = True
-            elif not horizons[i].ka5_texture_class:
-                if not valid_horizon:
-                    if i < len(horizons) - 1:
-                        horizons[i+1].obergrenze_m = horizons[i].obergrenze_m
-                        msg = "Warning: Profile modified due to lacking ka5 texture class"
-                    else:
-                        msg  = "Error: No valid horizon found"
-                        return None, msg
+
+            if not horizons[i].ka5_texture_class:
+                if i < len(horizons) - 1:
+                    horizons[i+1].obergrenze_m = horizons[i].obergrenze_m
+                    msg = "Warning: Profile modified due to lacking ka5 texture class"
                     
                 else:
                     horizons[i-1].untergrenze_m = horizons[i].untergrenze_m
-                    msg = "Warning: Profile modified due to lacking ka5 texture class"
+                    msg = "Warning: Last horizon modified due to lacking ka5 texture class"
                
         for i in range(len(horizons)):
             if horizons[i].ka5_texture_class:

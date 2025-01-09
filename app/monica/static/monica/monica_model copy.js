@@ -139,7 +139,7 @@ const runSimulation = (monicaProject) => {
 
             $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
             const dailyData = data.message.daily;
-            chartDiv2.innerHTML = '<canvas id="Chart"></canvas>'
+            chartDiv.innerHTML = '<canvas id="Chart"></canvas>'
             const ctx = document.getElementById("Chart")
             console.log("CHART data: ", dailyData.Precip)
             const chart = new Chart(ctx, {

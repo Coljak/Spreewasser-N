@@ -93,6 +93,8 @@ ipython_config.py
 klim4cast_server_settings.py
 dwd_server.py
 
+#data
+
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
 #   intended to run in multiple environments; otherwise, check them in:
@@ -178,6 +180,9 @@ geoserver/
 
 # Django stuff
 migrations/
+
+#sass
+.sass-cache/
 
 
 # local files and folders for data import 

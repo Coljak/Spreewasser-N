@@ -1945,6 +1945,16 @@ class UserSoilProfile(models.Model):
     description = models.TextField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
+    def __str__(self):
+        return self.name
+    
+    def to_json(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            # "horizons": [horizon.to_json() for horizon in self.soillayer_set.all()]
+        }
+
         
 # TODO implement the input option for soil
 class SoilLayer(models.Model):
@@ -2045,18 +2055,31 @@ class MonicaSite(models.Model):
 
     soil_profile_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True) # identifies the class (buek.models.SoilProfile or UserSoilProfile)
     soil_profile_object_id = models.PositiveIntegerField(null=True, blank=True) # id of object
-    soil_profile = GenericForeignKey('soil_profile_content_type', 'soil_profile_object_id')
+    soil_profile = GenericForeignKey('soil_profile_content_type', 'soil_profile_object_id') # The actual foreign key, composed of the two entries above
 
 
     def __str__(self):
         return self.name
     
+    def to_json(self):
+        return {
+            "name": self.name,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "altitude": self.altitude,
+            "slope": self.slope,
+            "nDeposition": self.n_deposition,
+            "soilProfile": self.soil_profile.to_json()
+        }
+
+
 class MonicaProject(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=255)
     start_date = models.DateField()
     description = models.TextField(null=True, blank=True)
     monica_model_setup = models.ForeignKey(ModelSetup, on_delete=models.CASCADE, null=True, blank=True)
+    monica_site = models.ForeignKey(MonicaSite, on_delete=models.CASCADE, null=True, blank=True)
     creation_date = models.DateTimeField(null=True, blank=True)
     last_modified = models.DateTimeField(auto_now=True, blank=True)
     
@@ -2070,7 +2093,9 @@ class MonicaProject(models.Model):
             "startDate": self.start_date,
             "description": self.description,
             "modelSetupId": self.monica_model_setup.id,
-            "modelSetup": self.monica_model_setup.to_json()
+            "modelSetup": self.monica_model_setup.to_json(),
+            "siteId": self.monica_site.id,
+            "site": self.monica_site.to_json()
         }
 
 class MonicaCalculation(models.Model):

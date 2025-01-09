@@ -339,7 +339,7 @@ def create_monica_env_from_json(json_data):
         "NDeposition": [n_deposition,"kg N ha-1 y-1"],
         "SoilProfileParameters": soil_profile_parameters
     }
-    simulation_settings = json_data.get('simulationSettings')
+    simulation_settings = json_data.get('userSimulationSettings')
     if simulation_settings is not None:
         simj = UserSimulationSettings.objects.get(id=simulation_settings).to_json()
     else:
@@ -522,7 +522,7 @@ def create_monica_env_from_json(json_data):
         # "climateData": json.dumps(climate_json)
         "climateData": climate_json
     }
-    # print("check 4 create_monica_env_from_json done")
+
 
 
     return env
@@ -1041,6 +1041,8 @@ def get_soil_parameters(request, lat, lon):
         'soil_profile': soil_profile,
         'show_original_table': show_original_table,
         }
+    
+    print("Soil Profile: ", soil_profile)
     return render(request, 'monica/soil_profile_modal.html', context)
 
     

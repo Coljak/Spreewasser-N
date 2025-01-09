@@ -39,7 +39,7 @@ from .data import calc_list, calc_dict
 from datetime import date
 import time
 import urllib
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 
 # dev feature displays all bootstrap colors etc.
 def bootstrap(request):
@@ -307,7 +307,7 @@ def sign_up(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('swn:user_dashboard')
+            return redirect('swn:swn_user_dashboard')
     else:
         form = forms.RegistrationForm()
 
@@ -359,7 +359,7 @@ def user_login(request):
 
                 login(request, user)
                 initial = user.username
-                return HttpResponseRedirect(reverse('swn:user_dashboard'))
+                return HttpResponseRedirect(reverse('swn:swn_user_dashboard'))
 
             else:
                 return HttpResponse("Account is not active!")
@@ -594,7 +594,7 @@ def update_user_field(request, pk):
             'fieldName': obj.name,
             'geom': obj.geom,
         })
-    return redirect('swn:three_split')
+    return redirect('swn:swn_user_dashboard')
 
 @login_required
 @csrf_protect
@@ -620,7 +620,7 @@ def save_user_field(request):
             return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
         
     else:
-        return HttpResponseRedirect('swn:three_split')
+        return HttpResponseRedirect('swn:swn_user_dashboard')
 
 @login_required
 @csrf_protect
@@ -636,7 +636,7 @@ def delete_user_field(request, id):
         user_field.delete()
         
         return JsonResponse({})
-    return redirect('swn:user_dashboard')
+    return redirect('swn:swn_user_dashboard')
 
 @login_required
 def get_field_project(request, id):

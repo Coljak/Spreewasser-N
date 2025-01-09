@@ -16,9 +16,8 @@ EXPOSE 8000
 
 # Install Node.js
 RUN apt-get update -qq && apt-get install -y -qq \
-    ca-certificates curl gnupg wget
-
-RUN apt-get update && apt-get upgrade -y
+    ca-certificates curl gnupg wget && \
+    && pip install --upgrade pip 
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -E -
 RUN apt-get install -y -qq nodejs
 RUN apt-get clean && \
@@ -27,7 +26,7 @@ RUN apt-get clean && \
 
 # Continue with the rest of your Dockerfile
 RUN apt-get install -y -qq \
-    git less nano curl \
+    git less nano \
     build-essential \
     python3.10 python3.10-dev python3.10-venv gettext \
     gdal-bin binutils libproj-dev libgdal-dev \

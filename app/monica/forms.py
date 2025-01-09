@@ -2,7 +2,7 @@ from django import forms
 from .models import *
 from crispy_forms.helper import FormHelper
 from django.db.models import Q
-from bootstrap_datepicker_plus.widgets import DatePickerInput
+# from bootstrap_datepicker_plus.widgets import DatePickerInput
 from django.contrib.postgres.fields import JSONField
 
 from django.core import validators
@@ -361,15 +361,21 @@ class UserSimulationSettingsInstanceSelectionForm(forms.Form):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Populate choices based on user
         if user is not None:
-            self.fields['user_simulation_settings'].choices = [
-                (instance.id, instance.name) for instance in UserSimulationSettings.objects.filter(Q(user=user) | Q(user=None))
-            ]
+            instances = UserSimulationSettings.objects.filter(Q(user=user) | Q(user=None))
         else:
-            self.fields['user_simulation_settings'].choices = [
-                (instance.id, instance.name) for instance in UserSimulationSettings.objects.filter(Q(user=user))
-            ]
-
+            instances = UserSimulationSettings.objects.filter(Q(user=user))
+        
+        self.fields['user_simulation_settings'].choices = [
+            (instance.id, instance.name) for instance in instances
+        ]
+        # TODO when Project load at page load is implemented, this is obsolete
+        # Set the default choice to 'default' if it exists
+        default_instance = instances.filter(name='default').first()
+        if default_instance:
+            self.initial['user_simulation_settings'] = default_instance.id
 
 class WorkstepSelectorForm(forms.Form):
     WORKSTEP_CHOICES = (
@@ -428,6 +434,8 @@ class WorkstepSowingForm(forms.ModelForm):
             self.fields['species'].choices = [('', '---------')] + [
                 (instance.id, instance.name) for instance in SpeciesParameters.objects.filter(Q(user=user) | Q(user=None)).order_by('name')
             ]
+
+        
 
 
 class WorkstepMineralFertilisationForm(forms.ModelForm):

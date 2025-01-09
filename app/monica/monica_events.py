@@ -1,27 +1,41 @@
 swn_events = [
         "daily",
-        ["Date", "Yield","LAI", "Precip", "Irrig", 
-         [
-            "Mois",
+        [
+            "Date", 
+            "Yield",
+            "LAI", 
+            "Precip", 
+            "Irrig", 
+            "AbBiom",
             [
-                1,
-                3
-            ]
+                "OrgBiom",
+                "Leaf"
             ],
             [
-            "Mois",
-            [
-                1,
-                3,
-                "AVG"
-            ]
+                "OrgBiom",
+                "Fruit"
             ],
             [
-            "SOC",
+                "Mois",
+                [
+                    1,
+                    3
+                ]
+            ],
             [
-                1,
-                3
-            ]            
+                "Mois",
+                [
+                    1,
+                    3,
+                    "AVG"
+                ]
+            ],
+            [
+                "SOC",
+                [
+                    1,
+                    3
+                ]            
             ],
             "Tavg",
             "Globrad",

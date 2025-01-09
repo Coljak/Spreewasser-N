@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem('project.userField', userField);
 
     if (userField != null) {
-        fetch('/login/Dashboard/get_lat_lon/' + userField + '/')
+        fetch('/drought/get_lat_lon/' + userField + '/')
       .then((response) => response.json())
       .then((data) => {
         console.log('data', data);
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   
-  $('#userFieldSelect').trigger('change');
+  // $('#userFieldSelect').trigger('change');
 
   function modifyStorageProject(key, value) {
     var project = JSON.parse(localStorage.getItem('project'));
@@ -431,9 +431,9 @@ var userFields = {};
 // User Field Name Modal
 
 
-const loadUrl = "/login/Dashboard/load/";
-const saveUrl = "/login/Dashboard/save/";
-const deleteUrl = "/login/Dashboard/delete/";
+const loadUrl = "/drought/load/";
+const saveUrl = "/drought/save/";
+const deleteUrl = "/drought/delete/";
 
 
 class UserField {

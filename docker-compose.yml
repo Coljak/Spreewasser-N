@@ -1,6 +1,14 @@
-# version: "3.8"
+version: '3.8'
 
 services:
+  redis:
+    image: redis:latest
+    container_name: swn_redis
+    ports: 
+      - 6379:6379
+    networks:
+      - swn_network
+
   app:
     build: 
       context: .
@@ -90,8 +98,7 @@ services:
       - ./thredds_tomcat/thredds_logs:/usr/local/tomcat/content/thredds/logs/
       - ./app/klim4cast/data/netcdf:/usr/local/tomcat/content/thredds/public/data/Klim4Cast
       - ./thredds_data/data/DWD_Data:/usr/local/tomcat/content/thredds/public/data/DWD_Data
-      # - ./thredds_data/data/tomcat/content/thredds:/usr/local/tomcat/content/thredds
-      # - ./thredds_data/data:/usr/local/tomcat/content/thredds/public/data
+
    
     environment:
       - THREDDS_URL=thredds
@@ -127,34 +134,49 @@ services:
     networks:
       - swn_network
 
-  # celery-worker:
-  #   build: .
-  #   command: celery -A klim4cast worker --loglevel=info
-  #   volumes:
-  #     - .:/app
-  #   depends_on:
-  #     - db
-  #     - redis
-  #   environment:
-  #     - CELERY_BROKER_URL=redis://redis:6379/0
-  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
-
-  # celery-beat:
-  #   build: .
-  #   command: celery -A klim4cast beat --loglevel=info
-  #   volumes:
-  #     - .:/app
-  #   depends_on:
-  #     - db
-  #     - redis
-  #   environment:
-  #     - CELERY_BROKER_URL=redis://redis:6379/0
-  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
-
   # redis:
   #   image: redis:latest
-  # TODO Django Celery: https://www.youtube.com/watch?v=PkynrL1aU9o&list=PLOLrQ9Pn6cayGytG1fgUPEsUp3Onol8V7&index=3
+  #   container_name: swn_redis
+  #   ports: 
+  #     - 6379:6379
+  #   networks:
+  #     - swn_network
+  #   command: sh -c "apt-get update && apt-get install -y redis-tools && redis-server"
 
+  # celery-worker:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.django
+  #   command: celery -A app worker --loglevel=info
+  #   volumes:
+  #     - ./app:/app
+  #   depends_on:
+  #     - redis
+  #     - db
+  #   environment:
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
+  #   networks:
+  #     - swn_network
+
+  # celery-beat:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.django
+  #   command: celery -A app beat --loglevel=info
+  #   volumes:
+  #     - ./app:/app
+  #   depends_on:
+  #     - redis
+  #     - db
+  #   environment:
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
+  #   networks:
+  #     - swn_network
+
+
+  # TODO Django Celery: https://www.youtube.com/watch?v=CWF-pTr1p68&list=PLOLrQ9Pn6cayGytG1fgUPEsUp3Onol8V7&index=5
 networks:
   swn_network:
 

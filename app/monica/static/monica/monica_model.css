@@ -6,3 +6,8 @@
     border: 2px solid var(--bs-primary);
     border-radius: 5px;
   }
+
+  #chartDiv {
+    max-height: 50%;
+    /* height: 400px; */
+  }

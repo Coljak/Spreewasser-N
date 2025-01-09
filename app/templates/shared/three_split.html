@@ -6,10 +6,9 @@
 
 {% block css %}
 {{ block.super }}
-{% comment %} <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-crossorigin=""/> {% endcomment %}
+
 <link rel="stylesheet" href="{% static 'shared/three_split.css' %}">
+<link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
 {% endblock css %}
 
 {% block body_block %}
@@ -30,10 +29,11 @@ crossorigin=""/> {% endcomment %}
         <div class="panel-right">
           {% block right_panel %}
           {% endblock right_panel %}
+          <div id="cornerSplitter" class="corner-splitter"></div>
         </div>
       {% comment %} </div> {% endcomment %}
     </div>
-
+    
     <div id="horizontalSplitter" class="horizontal-splitter"></div>
 
     <!-- Bottom panel -->

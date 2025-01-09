@@ -62,7 +62,7 @@ INSTALLED_APPS = [
     'django_select2',
     'crispy_forms',
     'crispy_bootstrap5',
-    'bootstrap_datepicker_plus',
+    # 'bootstrap_datepicker_plus',
     'django_celery_beat',
     # 'raster',
 ]
@@ -168,7 +168,7 @@ USE_I18N = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = 'swn/staticfiles/'
+STATIC_ROOT = 'staticfiles/'
 STATICFILES_DIRS = [
     STATIC_DIR,
     Path.joinpath(BASE_DIR, 'swn/static/'),
@@ -187,7 +187,7 @@ MEDIA_ROOT = MEDIA_DIR
 MEDIA_URL = 'media/'
 
 LOGIN_URL = 'login/'
-LOGIN_REDIRECT_URL = 'Dashboard/'
+LOGIN_REDIRECT_URL = '/drought/'
 LOGOUT_REDIRECT_URL = '/'
 
 # for Debug Toolbar, the internal IPS are necessary
@@ -230,8 +230,8 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 CRISPY_FAIL_SILENTLY = not DEBUG
 
 # Celery
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

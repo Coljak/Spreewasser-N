@@ -70,6 +70,7 @@ class MonicaCalculation {
             Date: [],
             Precip: [],
             Irrig: [],
+            AbBiom: [],
             Stage: [],
             Yield: [],
             LAI: [],
@@ -151,18 +152,21 @@ const runSimulation = (monicaProject) => {
                 'rgba(0, 255, 100, 0.7)']
 
             var resultOutput = {
-                'yield': true,
-                'irrigation': true,
+               
+                'Yield': true,
+                'Irrig': true,
                 'organ': false,
-                'mois_1': false,
-                'mois_2': false,
-                'mois_3': false,
-                'soc_1': false,
-                'soc_2': false,
-                'soc_3': false,
-                'lai': false,
+                'AbBiom': true,
+                'Mois_1': false,
+                'Mois_2': false,
+                'Mois_3': false,
+                'SOC_1': false,
+                'SOC_2': false,
+                'SOC_3': false,
+                'LAI': true,
 
             }
+
 
             var dates = data.message.message[0].daily.Date;
             var datasets = [
@@ -180,17 +184,28 @@ const runSimulation = (monicaProject) => {
                 console.log(i);
                 var msg = data.message.message[i].daily
                 
-                if (resultOutput.yield) {
+                if (resultOutput.Yield) {
                     datasets.push({
                         yAxisID: 'y2',
                         label: `Yield_${i}`,
                         data: msg.Yield,
                         borderWidth: 2,
                         borderColor: colors[i],
+                        pointHitRadius: 10,
+                    });
+                };
+                if (resultOutput.AbBiom) {
+                    datasets.push({
+                        yAxisID: 'y2',
+                        label: `Biomass_${i}`,
+                        data: msg.AbBiom,
+                        borderWidth: 2,
+                        borderColor: colors[i],
+                        pointHitRadius: 10,
                     });
                 };
 
-                if (resultOutput.irrigation){
+                if (resultOutput.Irrig){
                     datasets.push({
                         type: 'bar',  // Specifies the type as bar for precipitation
                         yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
@@ -199,6 +214,7 @@ const runSimulation = (monicaProject) => {
                         backgroundColor: colors[i],  // Semi-transparent blue
                         borderColor: colors[i],
                         borderWidth: 1,
+                        pointHitRadius: 10,
                     });
                 };
 
@@ -211,78 +227,91 @@ const runSimulation = (monicaProject) => {
                         backgroundColor: colors[i],  // Semi-transparent blue
                         borderColor: colors[i],
                         borderWidth: 1,
+                        pointHitRadius: 10,
                     });
                 };
-                if (resultOutput.mois_1) {
+                if (resultOutput.Mois_1) {
                     datasets.push({
                         yAxisID: 'y3',
                         label: `Moisture 0-10cm ${i}`,
                         data: msg.Mois_1,
                         borderWidth: 2,
                         borderColor: colors[i],
+                        pointHitRadius: 10,
                     });
                 };
-                if (resultOutput.mois_2) {
+                if (resultOutput.Mois_2) {
                     datasets.push({
                         yAxisID: 'y3',
                         label: `Moisture 0-10cm ${i}`,
                         data: msg.Mois_1,
                         borderWidth: 2,
                         borderColor: colors[i],
+                        pointHitRadius: 10,
                     });
                 };
-                if (resultOutput.mois_3) {
+                if (resultOutput.Mois_3) {
                     datasets.push({
                         yAxisID: 'y3',
                         label: `Moisture 20-30cm ${i}`,
                         data: msg.Mois_3,
                         borderWidth: 2,
                         borderColor: colors[i],
+                        pointHitRadius: 10,
                     });
                 };
-                if (resultOutput.soc_1) {
+                if (resultOutput.SOC_1) {
                     datasets.push({
                         yAxisID: 'y4',
                         label: `SOC 0-10cm ${i}`,
                         data: msg.Mois_1,
                         borderWidth: 2,
                         borderColor: colors[i],
+                        pointHitRadius: 10,
                     });
                 };
-                if (resultOutput.soc_2) {
+                if (resultOutput.SOC_2) {
                     datasets.push({
                         yAxisID: 'y4',
                         label: `SOC 10-20cm ${i}`,
-                        data: msg.Mois_1,
+                        data: msg.SOC_2,
                         borderWidth: 2,
                         borderColor: colors[i],
+                        pointHitRadius: 10,
                     });
                 };
-                if (resultOutput.soc_3) {
+                if (resultOutput.SOC_3) {
                     datasets.push({
                         yAxisID: 'y4',
                         label: `SOC 20-30cm ${i}`,
-                        data: msg.Mois_3,
+                        data: msg.SOC_3,
                         borderWidth: 2,
                         borderColor: colors[i],
+                        pointHitRadius: 10,
                     });
                 };
-                if (resultOutput.lai) {
+                if (resultOutput.LAI) {
                     datasets.push({
                         yAxisID: 'y5',
                         label: `LAI ${i}`,
                         data: msg.LAI,
                         borderWidth: 2,
                         borderColor: colors[i],
+                        pointHitRadius: 10,
+                        pointHoverRadius: 10,
+                        pointHoverBackgroundColor: 'rgba(0, 0, 0, 0)',
+                        pointHoverBorderColor: 'rgba(0, 0, 0, 0)',
                     });
                 };
 
             };
             console.log("Datasets", datasets)
+
+
             
             // const dailyData = data.message.daily;
             // const dates = dailyData.Date;
-            chartDiv2.innerHTML = '<canvas id="Chart"></canvas>'
+            chartDiv.innerHTML = '<canvas id="Chart" height="80"></canvas>'
             const ctx = document.getElementById('Chart')
             // console.log('CHART data: ', dailyData.PrecipdailyData)
             const chart = new Chart(ctx, {
@@ -301,10 +330,31 @@ const runSimulation = (monicaProject) => {
                 }
             });
 
-
-
-            chartCard.classList.remove('d-none');
+            // chartCard.classList.remove('d-none');
             chart.update();
+            const createToggleButton = (label, datasetKey) => {
+                const button = document.createElement('button');
+                button.textContent = label;
+                button.classList.add('btn', 'btn-secondary', 'm-1');
+                button.onclick = () => {
+                    const dataset = chart.data.datasets.find(ds => ds.label.includes(datasetKey));
+                    if (dataset) {
+                        dataset.hidden = !dataset.hidden;
+                        chart.update();
+                    }
+                };
+                return button;
+            };
+            
+            const buttonContainer = document.createElement('div');
+            Object.keys(resultOutput).forEach(key => {
+                const button = createToggleButton(`Toggle ${key}`, key);
+                buttonContainer.appendChild(button);
+            });
+            
+            document.querySelector('#chartDiv').prepend(buttonContainer);
+
+
             $('#runSimulationButton').prop('disabled', false);
             $('#runSimulationButton').text('Run Simulation');
             console.log('CHART: ', chart);
@@ -958,6 +1008,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
 
     $('#btnConfirmDeleteProject').on('click', () => {
         const projectId = $('#delete_project_id').val();

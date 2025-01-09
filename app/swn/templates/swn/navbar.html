@@ -11,19 +11,16 @@
         {% if user.is_authenticated  %}    
         {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:user_dashboard' %}">Spreewasser:N Tools</a></li> {% endcomment %}
         {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:toolbox_dashboard' %}">Toolbox</a></li> {% endcomment %}
-        <li class="nav-item"><a class="nav-link" href="{% url 'swn:three_split' %}">SWN</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'swn:swn_user_dashboard' %}">SWN</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:three_split' %}">Toolbox</a></li>
         {% endif %}
-        
-        
-        {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:timelapse-page' %}">Timelapse</a></li> {% endcomment %}
+
         <li class="nav-item"><a class="nav-link" href="{% url 'klim4cast:timelapse-page' %}">Klim4Cast</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:thredds-catalog' %}">Thredds catalog</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'monica:monica_model' %}">Monica</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:acknoledgements' %}">Acknoledgements</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:impressum_information' %}">Impressum</a></li>
 
-        {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:multiselect' %}">Multiselect</a></li> {% endcomment %}
       </ul>
           {% comment %} <li>
           <form class="navbar-form" role="search"><i class="fa-solid fa-magnifying-glass"></i>search here...</form>

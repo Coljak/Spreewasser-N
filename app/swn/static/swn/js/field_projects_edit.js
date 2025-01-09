@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const btnMonicaCalculateDB = document.getElementById("btnMonicaCalculateDB");
 
-    const chartDiv2 = document.getElementById("chartDiv2")
+    const chartDiv = document.getElementById("chartDiv")
     
 
     btnMonicaCalculateDB.addEventListener("click", function () {
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 }
             });
-            chartCard.classList.remove("d-none");
+            // chartCard.classList.remove("d-none");
             chart.update();
             btnMonicaCalculateDB.disabled = false;
             btnMonicaCalculateDB.textContent = "Berechnen";

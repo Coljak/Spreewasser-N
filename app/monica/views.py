@@ -15,9 +15,10 @@ from . import monica_io3_swn
 from swn import models as swn_models
 from .forms import *
 from buek.views import get_soil_profile
+from buek import models as buek_models
 from .climate_data.lat_lon_mask import lat_lon_mask
 from .monica_events import *
-from . import utils
+from .utils import save_monica_project
 
 from pathlib import Path
 from netCDF4 import Dataset, MFDataset
@@ -296,34 +297,21 @@ def create_monica_env_from_json(json_data):
     debugMode = True
 
     # soil profile
+    # TODO implement landusage!!
     landusage = json_data.get('landusage', 'general')
 
     soil_profile_parameters = []
     
-    if json_data.get('soil_profile_id', None) is None:
+    # the corrected soil profile is retrieved either from location or the MonicaProject
+    if json_data.get('soilProfileId', None) is None:
         lat = json_data.get('latitude')
         lon = json_data.get('longitude')
         soil_profile_parameters = get_soil_profile(landusage, lat, lon)['SoilProfileParameters']
     else:
-        soil_profile_id = json_data.get('soil_profile_id')
+        soil_profile_id = json_data.get('soilProfileId')
         soil_profile_parameters = buek_models.SoilProfile.objects.get(id=soil_profile_id).get_horizons_json()
 
-    # soil_profile_parameters, soil_error_msg = validate_soil_profile_parameters(soil_profile_parameters)
 
-    # TODO: check with Claas what to do; ka5_texture_class is NULL
-    for i in range(len(soil_profile_parameters)):
-        if soil_profile_parameters[i].get('Sand') == []:
-            soil_profile_parameters[i]['Sand'] = [0.56, '%']
-            soil_profile_parameters[i]['Clay'] = [0.04, '%']
-            soil_profile_parameters[i]['KA5TextureClass'] = 'Su4'
-            soil_profile_parameters[i]['SoilRawDensity'] = [1700.0, 'kg m-3']
-            soil_profile_parameters[i]['SoilOrganicCarbon'] = [0.87, '%']
-            #{'Thickness': [0.35, 'm'], 'Sand': [0.56, '%'], 'Clay': [0.04, '%'], 'pH': '', 'KA5TextureClass': 'Su4', 'SoilRawDensity': [1700.0, 'kg m-3'], 'SoilOrganicCarbon': [0.87, '%']}, {'Thickness': [0.1, 'm'], 'Sand': [0.65, '%'], 'Clay': [0.1, '%'], 'pH': '', 'KA5TextureClass': 'Sl3', 'SoilRawDensity': [1700.0, 'kg m-3'], 'SoilOrganicCarbon': [0.0, '%']}
-            # soil_profile_parameters.remove(soil_profile_parameters[i])
-            print(f'Sand and Clay content not found in soil horizon {i+1}. Set to 0.')
-            error.append(f'Sand and Clay content not found in soil horizon {i+1}. Set to 0.')
-        
-    # print("Soil profile parameters: ", soil_profile_parameters)
 
     # TODO site parameters
     slope = 0
@@ -736,7 +724,7 @@ def save_monica_site(request):
 def create_monica_project(request):
     print("CREATE MONICA PROJECT\n", request.POST)
 
-    project = utils.save_project(request, project_class=MonicaProject)
+    project = save_monica_project.save_project(request, project_class=MonicaProject)
 
     return JsonResponse({'message': {'success': True, 'message': f'Project {project.name} saved'}, 'project_id': project.id, 'project_name': project.name})
         # else:
@@ -1044,6 +1032,114 @@ def get_soil_parameters(request, lat, lon):
     
     print("Soil Profile: ", soil_profile)
     return render(request, 'monica/soil_profile_modal.html', context)
+
+
+def soil_profiles_from_polygon_ids(soil_profile_polygon_ids):
+    """
+    Get soil profiles from polygon ids.
+    """
+    unique_land_usages = buek_models.SoilProfile.objects.filter(
+        polygon_id__in=soil_profile_polygon_ids
+    ).values_list('landusage_corine_code', 'landusage').distinct()
+    # Filter out water (code 51)
+    land_usage_choices = {code: usage for code, usage in unique_land_usages if code != 51}
+    
+    # Initialize data_json with land usage codes
+    data_json = {code: {} for code in land_usage_choices.keys()}
+
+    soil_data = buek_models.SoilProfileHorizon.objects.select_related('soilprofile').filter(
+        soilprofile__polygon_id__in=soil_profile_polygon_ids
+        ).order_by('soilprofile__landusage_corine_code', 'soilprofile__system_unit', 'soilprofile__area_percentage', 'horizont_nr')
+
+    # Loop through soil data and populate data_json
+    
+    for item in soil_data:
+        try:
+            if item.soilprofile.landusage_corine_code != 51:
+                land_code = item.soilprofile.landusage_corine_code
+                system_unit = item.soilprofile.system_unit
+                area_percentage = item.soilprofile.area_percentage
+                profile_id = item.soilprofile.id
+                horizon_nr = item.horizont_nr
+
+                if system_unit not in data_json[land_code]:
+                    data_json[land_code][system_unit] = {
+                        'area_percentages': set(),
+                        'soil_profiles': {}
+                    }
+
+                data_json[land_code][system_unit]['area_percentages'].add(area_percentage)
+
+                if area_percentage not in data_json[land_code][system_unit]['soil_profiles']:
+                    data_json[land_code][system_unit]['soil_profiles'][area_percentage] = {}
+
+                if profile_id not in data_json[land_code][system_unit]['soil_profiles'][area_percentage]:
+                    data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id] = {'horizons': {}}
+
+                data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id]['horizons'][horizon_nr] = {
+                    'obergrenze_m': item.obergrenze_m,
+                    'untergrenze_m': item.untergrenze_m,
+                    'stratigraphie': item.stratigraphie,
+                    'herkunft': item.herkunft,
+                    'geogenese': item.geogenese,
+                    # 'fraktion': item.fraktion,
+                    'summe': item.summe,
+                    # 'gefuege': item.gefuege,
+                    # 'torfarten': item.torfarten,
+                    # 'substanzvolumen': item.substanzvolumen,
+                    'bulk_density_class': item.bulk_density_class.bulk_density_class if item.bulk_density_class_id is not None else 'no data',
+                    'bulk_density': item.bulk_density_class.raw_density_g_per_cm3 if item.bulk_density_class_id is not None else 'no data',
+                    'humus_class': item.humus_class.humus_class if item.humus_class_id is not None else 'no data',
+                    'humus_corg': item.humus_class.corg if item.humus_class_id is not None else 'no data',
+                    'ka5_texture_class': item.ka5_texture_class.ka5_soiltype if item.ka5_texture_class_id is not None else 'no data',
+                    'sand': item.ka5_texture_class.sand if item.ka5_texture_class_id is not None else 'no data',
+                    'clay': item.ka5_texture_class.clay if item.ka5_texture_class_id is not None else 'no data',
+                    'silt': item.ka5_texture_class.silt if item.ka5_texture_class_id is not None else 'no data',
+                    'ph_class': item.ph_class.ph_class if item.ph_class_id is not None else 'no data',
+                    'ph_lower_value': item.ph_class.ph_lower_value if item.ph_class_id is not None else 'no data',
+                    'ph_upper_value': item.ph_class.ph_upper_value if item.ph_class_id is not None else 'no data',                    
+                }
+        except Exception as e:
+            print("Exception occurred:", e)
+           
+    # Sort area percentages
+    for land_code in data_json:
+        for system_unit in data_json[land_code]:
+            data_json[land_code][system_unit]['area_percentages'] = sorted(list(data_json[land_code][system_unit]['area_percentages']))
+
+    data_menu = {
+        # 'soil_profile_form': forms.SoilProfileSelectionForm().set_choices(land_usage_choices),
+        'text': 'name',
+        'id': 1,
+        'polygon_ids': soil_profile_polygon_ids,
+        'system_unit_json': json.dumps(data_json),
+        'landusage_choices': json.dumps(land_usage_choices),
+    }
+    
+    return data_menu
+
+
+def manual_soil_selection(request, lat, lon):
+    print("manual soil selection ", lat, lon)
+    
+
+    start_time = time.time()
+
+    polygon_ids = [buek_models.Buek200.get_polygon_id_by_lat_lon(float(lat), float(lon))]
+    # user_field = models.UserField.objects.get(id=user_field_id)
+    # name = user_field.name
+    # soil_profile_polygon_ids = user_field.soil_profile_polygon_ids['buek_polygon_ids']
+    
+    # Retrieve unique land usage choices
+    
+    data_menu = soil_profiles_from_polygon_ids(polygon_ids)
+    data_menu['id'] = 1
+    data_menu['text'] = 'name'
+
+    print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
+    # return render(request, 'monica/modal_manual_soil_selection.html', data_menu)
+    return JsonResponse(data_menu)
+
 
     
 def create_irrigation_envs(envs, data):

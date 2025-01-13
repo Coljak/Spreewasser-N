@@ -17,6 +17,9 @@ urlpatterns = [
     path('save-project/', views.create_monica_project, name='create_monica_project'),
     path('delete-project/<int:id>/', views.delete_monica_project, name='delete_monica_project'),
     path('model/soil-profile/<str:lat>/<str:lon>/', views.get_soil_parameters, name='get_soil_parameters'),
+    path('model/soil-profile/<str:lat>/<str:lon>/<int:id>/', views.get_soil_parameters, name='get_soil_parameters'),
+    path('model/select-soil-profile/<str:lat>/<str:lon>/', views.manual_soil_selection, name='manual-soil-selection'),
+    
     path('model/<str:parameter>/<int:id>/<int:rotation>/', views.modify_model_parameters, name='modify_model_parameters'),
     path('model/<str:parameter>/<int:id>/', views.modify_model_parameters, name='modify_model_parameters'),
     # path('model/<str:parameter>/', views.modify_model_parameters, name='modify_model_parameters'),

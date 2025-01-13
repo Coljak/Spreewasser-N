@@ -506,6 +506,7 @@ class WorkstepTillageForm(forms.ModelForm):
 
 
 class WorkstepHarvestForm(forms.ModelForm):
+    
     date = forms.DateField(
         widget=forms.DateInput(attrs={
             'class': 'form-control datepicker workstep-datepicker',

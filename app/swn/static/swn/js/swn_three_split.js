@@ -836,14 +836,6 @@ function saveProject(saveMode) {
           console.log('data', data);
           handleAlerts(data.message);
         });
-      
-    // } catch { error => console.log('error', error)}
-
-
-  // } catch (error) {
-  // }
-    
-  
 };
 
 

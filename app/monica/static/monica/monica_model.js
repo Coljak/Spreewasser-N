@@ -473,8 +473,8 @@ const addWorkstep = (workstepType, rotationIndex, parentDiv, project) => {
 };
 
 // Parameters Modal
-const bindModalEventListeners = () => {
-
+const bindModalEventListeners = (parameters) => {
+    console.log('bindModalEventListeners', parameters);
     try {
         const modalForm = document.getElementById('modalForm');
         console.log('modalForm', modalForm);
@@ -526,20 +526,23 @@ const bindModalEventListeners = () => {
     } catch {
         console.log('no modal save buttons found');
     }
+    if (parameters === 'user-simulation-settings') {
+     
 
-    try {
-            // extra event listeners for the simulation settings modal
-            $('#id_use_automatic_irrigation').on('change', function (event) {
-                $('#automatic_irrigation_params').toggle(event.target.checked);
-            });
+        try {
+                // extra event listeners for the simulation settings modal
+                $('#id_use_automatic_irrigation').on('change', function (event) {
+                    $('#automatic_irrigation_params').toggle(event.target.checked);
+                });
 
-            $('#id_use_n_min_mineral_fertilising_method').on('change', function (event) {
-                $('#n_min_fertilisation_params').toggle(event.target.checked);
-            });
-    } catch {
-        // the modal is not a simulation settings modal
-        ;
-    };
+                $('#id_use_n_min_mineral_fertilising_method').on('change', function (event) {
+                    $('#n_min_fertilisation_params').toggle(event.target.checked);
+                });
+        } catch {
+            // the modal is not a simulation settings modal
+            ;
+        };
+    } 
 
 };
 
@@ -612,34 +615,190 @@ const submitModalForm = (modalForm, modalAction) => {
     .catch(error => console.error('Error:', error));
 };
 
-const fetchModalContent = (params) => {
-    const queryString = new URLSearchParams(params).toString();
-    // var urlNew = `/monica/model/${params.parameters}/?${queryString}`;
-    var url = '/monica/model/' + params.parameters + '/' 
-    if (params.parameters_id) {
-        url += params.parameters_id + '/';
-    };
-    if (params.rotation_index) {
-        url += params.rotation_index + '/';
-    };
-    if (params.lon) {
-        url += params.lat + '/';
-        url += params.lon + '/';
-    };
+// TODO refactor initiaizeSoilModal
+// TODO implement getSoilProfiles for swn - all poygon ids
+var initiaizeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
+    // console.log('userFieldId', userFieldId);
+    const landUsageField = document.getElementById('id_land_usage');
+    const soilProfileField = document.getElementById('id_soil_profile');
+    const horizonsField = document.getElementById('div_id_horizons');
+    const areaPercenteageField = document.getElementById('id_area_percentage');
+    const systemUnitField = document.getElementById('id_system_unit');
+    // const profileText = document.getElementById('id_profile');
+    const table = document.getElementById('tableHorizons');
 
-    fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok', response.text());
-            }
-            return response.text();
-        })
-        .then(data => {
-            document.getElementById('modalModifyParamsContent').innerHTML = data;
-            bindModalEventListeners();
-        })
-        .catch(error => console.error('Error:', error));
+    var selectedSoilProfile = 0;
+
+    soilProfileField.addEventListener('change', function() {
+        
+        const selectedLandUsage = landUsageField.value;
+        const selectedSystemUnit = systemUnitField.value;
+        const selectedAreaPercenteage = areaPercenteageField.value;
+        selectedSoilProfile = soilProfileField.value;
+        
+        
+        const horizons = systemUnitJson[selectedLandUsage][selectedSystemUnit]['soil_profiles'][selectedAreaPercenteage][selectedSoilProfile]['horizons'];
+        horizonsField.innerHTML = '<p class="text-start">Landuse: ' + selectedLandUsage + '</br>System unit: ' + selectedSystemUnit + '</br>Area percentage: ' + selectedAreaPercenteage + '</br>Soil profile: ' + selectedSoilProfile + '</p>';
+        table.innerHTML = '';
+        const headerRow = table.insertRow();
+        headerRow.classList.add("table-dark")
+        const headerCell = headerRow.insertCell();
+        
+        headerCell.textContent = 'Horizonte';
+        for (let horizon in horizons) {
+            const headerCellHorizon = headerRow.insertCell();
+            headerCellHorizon.textContent = horizon;
+            
+        }
+        for (let key in horizons[1]) {
+            const dataRow = table.insertRow();
+            const dataRowHeaderCell  = dataRow.insertCell();
+            dataRowHeaderCell.classList.add("table-dark")
+            for (let horizon in horizons) {
+                dataRowHeaderCell.textContent = key;
+                const dataRowDataCell  = dataRow.insertCell();
+                let value = horizons[horizon][key];
+                if (typeof(value) === 'number') {
+                    
+                    value = value.toFixed(2);
+                }
+                dataRowDataCell.textContent = value;   
+            } 
+        }
+    });
+
+    // Populate soil profile and area percenteage when land usage changes
+    areaPercenteageField.addEventListener('change', function() {
+        console.log('areaPercenteageField change event')
+        const selectedLandUsage = landUsageField.value;
+        const selectedSystemUnit = systemUnitField.value;
+        const selectedAreaPercenteage = areaPercenteageField.value;
+
+        const selectableSoilProfiles =  systemUnitJson[selectedLandUsage][selectedSystemUnit]['soil_profiles'][selectedAreaPercenteage];
+        console.log('selectableSoilProfiles', selectableSoilProfiles);
+
+        const profileOptions = new Object();
+        let profileNo = 1;
+        for (let soilprofile_id in selectableSoilProfiles) {
+            
+            profileOptions[soilprofile_id] = 'Profil ' + profileNo;
+            profileNo++;
+        };
+        console.log('profileOptions', profileOptions);
+        soilProfileField.innerHTML = '';
+        for (const key in profileOptions) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.text = profileOptions[key];
+            soilProfileField.appendChild(option);
+        };
+        soilProfileField.dispatchEvent(new Event('change'));
+    
+    });
+
+    systemUnitField.addEventListener('change', function() {
+        console.log('systemUnitField change event');
+        const selectedLandUsage = landUsageField.value;
+        const selectedSystemUnit = systemUnitField.value;
+        console.log('selectedSystemUnit', selectedSystemUnit);
+        console.log('selectedLandUsage', selectedLandUsage);
+        const selectableAreaPercentages =  systemUnitJson[selectedLandUsage][selectedSystemUnit]['area_percentages'].reverse();
+        console.log('selectableAreaPercentages', selectableAreaPercentages);
+        areaPercenteageField.innerHTML = '';
+        selectableAreaPercentages.forEach(item => {
+            areaPercenteageField.appendChild(new Option(item));
+        });
+        areaPercenteageField.dispatchEvent(new Event('change'));
+    });
+
+    landUsageField.addEventListener('change', function(){
+        console.log('landUsageField change event')
+        const selectedLandUsage = landUsageField.value;
+        
+        const selectableSystemUnits =  new Array()
+        for (let [key, value] of Object.entries(systemUnitJson[selectedLandUsage])){
+            if (!selectableSystemUnits.includes(key)){
+                selectableSystemUnits.push(key);
+            }}
+            selectableSystemUnits.sort();
+        systemUnitField.innerHTML = '';
+        selectableSystemUnits.forEach(item => {
+            systemUnitField.appendChild(new Option(item));
+        });
+        // trigger change event to update system unit
+        systemUnitField.dispatchEvent(new Event('change'));
+        console.log('selectableSystemUnits', selectableSystemUnits.sort());
+    });
+
+    for (const key in landusageChoices) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.text = landusageChoices[key];
+        landUsageField.appendChild(option);
+    }
+    
+    landUsageField.dispatchEvent(new Event('change'));
+
+    const btnSelectSoilProfile = document.getElementById("btnSelectSoilProfile");
+    btnSelectSoilProfile.addEventListener("click", function () {      
+        project.soilProfileId = soilProfileField.value;
+        console.log('project.soilProfileId', project.soilProfileId);
+        saveToLocalStorage(project);
+    });
+
 };
+
+
+const fetchModalContent = (params) => {
+    try {
+
+        let url = '/monica/model/' + params.parameters + '/';
+        if (params.parameters_id) {
+            url += params.parameters_id + '/';
+        }
+        if (params.rotation_index) {
+            url += params.rotation_index + '/';
+        }
+        if (params.lon) {
+            url += params.lat + '/' + params.lon + '/';
+        }
+
+        // Fetch the content
+   
+
+        if (params.parameters === 'select-soil-profile') {
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                console.log('fetchModalContent', data);
+                const modal = $('#modalManualSoilSelection');
+                const polygonIds = data.polygon_ids;
+                const systemUnitJson = JSON.parse(data.system_unit_json);
+                const landUsageChoices = JSON.parse(data.landusage_choices);
+                initiaizeSoilModal(polygonIds, null, systemUnitJson, landUsageChoices);
+                $('#modalManualSoilSelection').modal('show');
+ 
+            })
+        } else {
+            fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok', response.text());
+                }
+                return response.text();
+            })
+            .then(data => {
+                document.getElementById('modalModifyParamsContent').innerHTML = data;
+                bindModalEventListeners();
+            })
+            .catch(error => console.error('Error:', error));
+        }   
+    } catch (error) {
+        console.error('Error:', error);
+    }
+
+};
+
 
 const validateProject = (project) => {
     var valid = true;
@@ -668,10 +827,10 @@ const validateProject = (project) => {
     }
     return valid;
 };
-
+var project = new MonicaProject();
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    let project = new MonicaProject();
+    
     if (window.location.href.split('/').includes('monica')) {
         project.swn_forecast = false;
     } else {
@@ -951,6 +1110,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (event.target.classList.contains('show-soil-parameters')) {
             const params = {
                 'parameters': 'soil-profile',
+                'lon': project.longitude,
+                'lat': project.latitude
+            }
+            
+            fetchModalContent(params);
+        } else if (event.target.classList.contains('manually-select-soil-parameters')) {
+            const params = {
+                'parameters': 'select-soil-profile',
                 'lon': project.longitude,
                 'lat': project.latitude
             }

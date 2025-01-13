@@ -75,15 +75,6 @@ def get_buek_data_from_point(request, lat, lon):
 
 
 
-def get_monica_soil_profile_parameters(soilprofile_id):
-    """
-    This function retrieves the soil profile parameters for a soilprofile_id.
-    The returned soil profile Json is the input for the MONICA model.
-    """
-    soil_data = SoilProfile.objects.get(pk=soilprofile_id).get_horizons_json()
-    return soil_data
-
-
 def get_soil_profile(profile_type, lat, lon):
     """
     This function returns all references to soilprofiles in one point.
@@ -163,7 +154,7 @@ def get_profiles_from_point_buek200(request, lat, lon):
 
 
 def get_soil_data_by_polygon_id(polygon_id):
-    soil_data = SoilProfileHorizon.objects.select_related('soilprofile').filter(soilprofile__polygon_id=polygon_id).order_by('soilprofile__area_percenteage', 'obergrenze_m')
+    soil_data = SoilProfileHorizon.objects.select_related('soilprofile').filter(soilprofile__polygon_id=polygon_id).order_by('soilprofile__area_percentage', 'obergrenze_m')
 
     return soil_data
 

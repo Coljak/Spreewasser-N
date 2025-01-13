@@ -19,10 +19,11 @@ import numpy as np
 import requests
 from . import forms
 from . import models
-from monica import utils as monica_utils
+from monica.utils import save_monica_project as monica_utils
 
 from monica import forms as monica_forms
 from monica import models as monica_models
+from monica import views as monica_views
 
 from buek import models as buek_models
 
@@ -482,80 +483,80 @@ def three_split(request):
             }
     return render(request, 'swn/swn_three_split.html', data)
 
-@login_required
-def user_dashboard(request):
-    user = request.user
+# @login_required
+# def user_dashboard(request):
+#     user = request.user
 
-    drought_vars = {
-        'header': 'Dürrevorhersage',
-        'overlays': [
-            {
-                'name': 'Digitales Höhenmodell',
-                'url': 'https://thredds.socib.es/thredds/wms/operational_models/oceanographical/hydrodynamics/wave/model_run_aggregation/ww3_med_iberia_latest.nc',
-                'layers': 'hs',
-                'format': 'image/png',
-                'transparent': True,
-                'opacity': 0.5,
-                'zIndex': 5,
-                'bounds': [[47.136744752, 15.57241882], [55.058996788, 5.564783468]],
-            },]
-    }
+#     drought_vars = {
+#         'header': 'Dürrevorhersage',
+#         'overlays': [
+#             {
+#                 'name': 'Digitales Höhenmodell',
+#                 'url': 'https://thredds.socib.es/thredds/wms/operational_models/oceanographical/hydrodynamics/wave/model_run_aggregation/ww3_med_iberia_latest.nc',
+#                 'layers': 'hs',
+#                 'format': 'image/png',
+#                 'transparent': True,
+#                 'opacity': 0.5,
+#                 'zIndex': 5,
+#                 'bounds': [[47.136744752, 15.57241882], [55.058996788, 5.564783468]],
+#             },]
+#     }
 
-    above_ground_waters = toolbox_models.AboveGroundWaters.objects.all()
-    below_ground_waters = toolbox_models.BelowGroundWaters.objects.all()
+#     above_ground_waters = toolbox_models.AboveGroundWaters.objects.all()
+#     below_ground_waters = toolbox_models.BelowGroundWaters.objects.all()
 
-    toolbox_vars = {
-        'header': 'Toolbox ',
-        'overlays': [
-            {
-                'name': 'Digitales Höhenmodell',
+#     toolbox_vars = {
+#         'header': 'Toolbox ',
+#         'overlays': [
+#             {
+#                 'name': 'Digitales Höhenmodell',
 
-            }
-        ]
-    }
-
-
-    user_fields = models.UserProject.objects.all()
+#             }
+#         ]
+#     }
 
 
-    field_name_form = forms.UserFieldForm()
-    user_projects = []
-
-    for user_field in user_fields:
-        item = {
-            'name': user_field.name,
-            # 'user_name': user_field.field.user.name,
-            # 'field': user_field.field.name,
-            # 'irrigation_input': user_field.irrigation_input,
-            # 'irrigation_output': user_field.irrigation_output,
-
-            # 'field_id': user_field.field.id,
-            # 'monica_calculation': user_field.calculation,
-        }
-        user_projects.append(item)
+#     user_fields = models.UserProject.objects.all()
 
 
+#     field_name_form = forms.UserFieldForm()
+#     user_projects = []
 
-    # state, county and district choices
+#     for user_field in user_fields:
+#         item = {
+#             'name': user_field.name,
+#             # 'user_name': user_field.field.user.name,
+#             # 'field': user_field.field.name,
+#             # 'irrigation_input': user_field.irrigation_input,
+#             # 'irrigation_output': user_field.irrigation_output,
 
-    state_county_district_form = forms.PolygonSelectionForm(request.POST or None)
+#             # 'field_id': user_field.field.id,
+#             # 'monica_calculation': user_field.calculation,
+#         }
+#         user_projects.append(item)
 
-    if state_county_district_form.is_valid():
-        selected_states = state_county_district_form.cleaned_data['states']
-        selected_counties = state_county_district_form.cleaned_data['counties']
-        selected_districts = state_county_district_form.cleaned_data['districts']
+
+
+#     # state, county and district choices
+
+#     state_county_district_form = forms.PolygonSelectionForm(request.POST or None)
+
+#     if state_county_district_form.is_valid():
+#         selected_states = state_county_district_form.cleaned_data['states']
+#         selected_counties = state_county_district_form.cleaned_data['counties']
+#         selected_districts = state_county_district_form.cleaned_data['districts']
         
-        # Process the selected polygons and pass the data to the map template
+#         # Process the selected polygons and pass the data to the map template
 
 
-    data = {
-            'user_projects': user_projects, 
-            'user_field_form': field_name_form,
-            'state_county_district_form': state_county_district_form,
-            }
+#     data = {
+#             'user_projects': user_projects, 
+#             'user_field_form': field_name_form,
+#             'state_county_district_form': state_county_district_form,
+#             }
 
 
-    return render(request, 'swn/user_dashboard.html', data)
+#     return render(request, 'swn/user_dashboard.html', data)
 
 
 def load_projectregion(request):
@@ -756,123 +757,139 @@ def load_nuts_polygon(request, entity, polygon_id):
 
 
 
-# TODO delete this function
-def field_edit(request, id):
+# # TODO delete this function
+# def field_edit(request, id):
+#     print("field_menu id: ", id)
+    
+#     start_time = time.time()
+
+#     crop_cultivar_form = monica_forms.CultivarAndSpeciesSelectionForm()
+#     user_field = models.UserField.objects.get(id=id)
+#     name = user_field.name
+    
+#     soil_profile_polygon_ids = user_field.soil_profile_polygon_ids['buek_polygon_ids']
+    
+#     print("field_menu Checkpoint 2: ", (time.time() - start_time), ' soil_profile_polygon_ids' , soil_profile_polygon_ids)
+    
+#     # Retrieve unique land usage choices
+#     unique_land_usages = buek_models.SoilProfile.objects.filter(
+#         polygon_id__in=soil_profile_polygon_ids
+#     ).values_list('landusage_corine_code', 'landusage').distinct()
+#     # Filter out water (code 51)
+#     land_usage_choices = {code: usage for code, usage in unique_land_usages if code != 51}
+    
+#     # Initialize data_json with land usage codes
+#     data_json = {code: {} for code in land_usage_choices.keys()}
+
+#     soil_data = buek_models.SoilProfileHorizon.objects.select_related('soilprofile').filter(
+#         soilprofile__polygon_id__in=soil_profile_polygon_ids
+#         ).order_by('soilprofile__landusage_corine_code', 'soilprofile__system_unit', 'soilprofile__area_percentage', 'horizont_nr')
+
+#     # Loop through soil data and populate data_json
+    
+#     for item in soil_data:
+#         try:
+#             if item.soilprofile.landusage_corine_code != 51:
+#                 land_code = item.soilprofile.landusage_corine_code
+#                 system_unit = item.soilprofile.system_unit
+#                 area_percentage = item.soilprofile.area_percentage
+#                 profile_id = item.soilprofile.id
+#                 horizon_nr = item.horizont_nr
+
+#                 if system_unit not in data_json[land_code]:
+#                     data_json[land_code][system_unit] = {
+#                         'area_percentages': set(),
+#                         'soil_profiles': {}
+#                     }
+
+#                 data_json[land_code][system_unit]['area_percentages'].add(area_percentage)
+
+#                 if area_percentage not in data_json[land_code][system_unit]['soil_profiles']:
+#                     data_json[land_code][system_unit]['soil_profiles'][area_percentage] = {}
+
+#                 if profile_id not in data_json[land_code][system_unit]['soil_profiles'][area_percentage]:
+#                     data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id] = {'horizons': {}}
+
+#                 data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id]['horizons'][horizon_nr] = {
+#                     'obergrenze_m': item.obergrenze_m,
+#                     'untergrenze_m': item.untergrenze_m,
+#                     'stratigraphie': item.stratigraphie,
+#                     'herkunft': item.herkunft,
+#                     'geogenese': item.geogenese,
+#                     'fraktion': item.fraktion,
+#                     'summe': item.summe,
+#                     'gefuege': item.gefuege,
+#                     'torfarten': item.torfarten,
+#                     'substanzvolumen': item.substanzvolumen,
+#                     'bulk_density_class': item.bulk_density_class.bulk_density_class if item.bulk_density_class_id is not None else 'no data',
+#                     'bulk_density': item.bulk_density_class.raw_density_g_per_cm3 if item.bulk_density_class_id is not None else 'no data',
+#                     'humus_class': item.humus_class.humus_class if item.humus_class_id is not None else 'no data',
+#                     'humus_corg': item.humus_class.corg if item.humus_class_id is not None else 'no data',
+#                     'ka5_texture_class': item.ka5_texture_class.ka5_soiltype if item.ka5_texture_class_id is not None else 'no data',
+#                     'sand': item.ka5_texture_class.sand if item.ka5_texture_class_id is not None else 'no data',
+#                     'clay': item.ka5_texture_class.clay if item.ka5_texture_class_id is not None else 'no data',
+#                     'silt': item.ka5_texture_class.silt if item.ka5_texture_class_id is not None else 'no data',
+#                     'ph_class': item.ph_class.ph_class if item.ph_class_id is not None else 'no data',
+#                     'ph_lower_value': item.ph_class.ph_lower_value if item.ph_class_id is not None else 'no data',
+#                     'ph_upper_value': item.ph_class.ph_upper_value if item.ph_class_id is not None else 'no data',                    
+#                 }
+#         except Exception as e:
+#             print("Exception occurred:", e)
+           
+#     # Sort area percentages
+#     for land_code in data_json:
+#         for system_unit in data_json[land_code]:
+#             data_json[land_code][system_unit]['area_percentages'] = sorted(list(data_json[land_code][system_unit]['area_percentages']))
+
+#     # Initialize and format date picker strings
+#     today = date.today()
+#     start_date = today.replace(year=(today.year - 1))
+#     end_month = today.month + 6
+    
+#     if today.month > 6:
+#         end_month = (today.month + 6) % 12
+
+#     end_date = today.replace(month=end_month)
+#     if today.month > 6:
+#         end_date = end_date.replace(year=(today.year + 1))
+   
+    
+
+#     date_picker_str = {
+#         'start_date': start_date.strftime('%d/%m/%Y'),
+#         'end_date': end_date.strftime('%d/%m/%Y')
+#     }
+
+#     data_menu = {
+#         'crop_cultivar_form': crop_cultivar_form,
+#         'soil_profile_form': forms.SoilProfileSelectionForm().set_choices(land_usage_choices),
+#         'text': name,
+#         'id': id,
+#         'polygon_ids': soil_profile_polygon_ids,
+#         'system_unit_json': json.dumps(data_json),
+#         'landusage_choices': json.dumps(land_usage_choices),
+#         'date_picker': date_picker_str
+#     }
+
+
+#     print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
+#     return render(request, 'swn/field_projects_edit.html', data_menu)
+
+def manual_soil_selection(request, user_field_id):
     print("field_menu id: ", id)
     
     start_time = time.time()
 
-    crop_cultivar_form = monica_forms.CultivarAndSpeciesSelectionForm()
-    user_field = models.UserField.objects.get(id=id)
-    name = user_field.name
-    
+    user_field = models.UserField.objects.get(id=user_field_id)
     soil_profile_polygon_ids = user_field.soil_profile_polygon_ids['buek_polygon_ids']
-    
-    print("field_menu Checkpoint 2: ", (time.time() - start_time), ' soil_profile_polygon_ids' , soil_profile_polygon_ids)
-    
-    # Retrieve unique land usage choices
-    unique_land_usages = buek_models.SoilProfile.objects.filter(
-        polygon_id__in=soil_profile_polygon_ids
-    ).values_list('landusage_corine_code', 'landusage').distinct()
-    # Filter out water (code 51)
-    land_usage_choices = {code: usage for code, usage in unique_land_usages if code != 51}
-    
-    # Initialize data_json with land usage codes
-    data_json = {code: {} for code in land_usage_choices.keys()}
 
-    soil_data = buek_models.SoilProfileHorizon.objects.select_related('soilprofile').filter(
-        soilprofile__polygon_id__in=soil_profile_polygon_ids
-        ).order_by('soilprofile__landusage_corine_code', 'soilprofile__system_unit', 'soilprofile__area_percenteage', 'horizont_nr')
-
-    # Loop through soil data and populate data_json
-    
-    for item in soil_data:
-        try:
-            if item.soilprofile.landusage_corine_code != 51:
-                land_code = item.soilprofile.landusage_corine_code
-                system_unit = item.soilprofile.system_unit
-                area_percentage = item.soilprofile.area_percenteage
-                profile_id = item.soilprofile.id
-                horizon_nr = item.horizont_nr
-
-                if system_unit not in data_json[land_code]:
-                    data_json[land_code][system_unit] = {
-                        'area_percentages': set(),
-                        'soil_profiles': {}
-                    }
-
-                data_json[land_code][system_unit]['area_percentages'].add(area_percentage)
-
-                if area_percentage not in data_json[land_code][system_unit]['soil_profiles']:
-                    data_json[land_code][system_unit]['soil_profiles'][area_percentage] = {}
-
-                if profile_id not in data_json[land_code][system_unit]['soil_profiles'][area_percentage]:
-                    data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id] = {'horizons': {}}
-
-                data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id]['horizons'][horizon_nr] = {
-                    'obergrenze_m': item.obergrenze_m,
-                    'untergrenze_m': item.untergrenze_m,
-                    'stratigraphie': item.stratigraphie,
-                    'herkunft': item.herkunft,
-                    'geogenese': item.geogenese,
-                    'fraktion': item.fraktion,
-                    'summe': item.summe,
-                    'gefuege': item.gefuege,
-                    'torfarten': item.torfarten,
-                    'substanzvolumen': item.substanzvolumen,
-                    'bulk_density_class': item.bulk_density_class.bulk_density_class if item.bulk_density_class_id is not None else 'no data',
-                    'bulk_density': item.bulk_density_class.raw_density_g_per_cm3 if item.bulk_density_class_id is not None else 'no data',
-                    'humus_class': item.humus_class.humus_class if item.humus_class_id is not None else 'no data',
-                    'humus_corg': item.humus_class.corg if item.humus_class_id is not None else 'no data',
-                    'ka5_texture_class': item.ka5_texture_class.ka5_soiltype if item.ka5_texture_class_id is not None else 'no data',
-                    'sand': item.ka5_texture_class.sand if item.ka5_texture_class_id is not None else 'no data',
-                    'clay': item.ka5_texture_class.clay if item.ka5_texture_class_id is not None else 'no data',
-                    'silt': item.ka5_texture_class.silt if item.ka5_texture_class_id is not None else 'no data',
-                    'ph_class': item.ph_class.ph_class if item.ph_class_id is not None else 'no data',
-                    'ph_lower_value': item.ph_class.ph_lower_value if item.ph_class_id is not None else 'no data',
-                    'ph_upper_value': item.ph_class.ph_upper_value if item.ph_class_id is not None else 'no data',                    
-                }
-        except Exception as e:
-            print("Exception occurred:", e)
-           
-    # Sort area percentages
-    for land_code in data_json:
-        for system_unit in data_json[land_code]:
-            data_json[land_code][system_unit]['area_percentages'] = sorted(list(data_json[land_code][system_unit]['area_percentages']))
-
-    # Initialize and format date picker strings
-    today = date.today()
-    start_date = today.replace(year=(today.year - 1))
-    end_month = today.month + 6
-    
-    if today.month > 6:
-        end_month = (today.month + 6) % 12
-
-    end_date = today.replace(month=end_month)
-    if today.month > 6:
-        end_date = end_date.replace(year=(today.year + 1))
-   
-    
-
-    date_picker_str = {
-        'start_date': start_date.strftime('%d/%m/%Y'),
-        'end_date': end_date.strftime('%d/%m/%Y')
-    }
-
-    data_menu = {
-        'crop_cultivar_form': crop_cultivar_form,
-        'soil_profile_form': forms.SoilProfileSelectionForm().set_choices(land_usage_choices),
-        'text': name,
-        'id': id,
-        'polygon_ids': soil_profile_polygon_ids,
-        'system_unit_json': json.dumps(data_json),
-        'landusage_choices': json.dumps(land_usage_choices),
-        'date_picker': date_picker_str
-    }
-
+    name = user_field.name
+    data_menu = monica_views.soil_profiles_from_polygon_ids(user_field.soil_profile_polygon_ids['buek_polygon_ids'])
+    data_menu['text'] = name
+    data_menu['id'] = user_field.id
 
     print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
-    return render(request, 'swn/field_projects_edit.html', data_menu)
+    return render(request, 'monica/modal_manual_soil_selection.html', data_menu)
 
 
 def sidebar_working(request):

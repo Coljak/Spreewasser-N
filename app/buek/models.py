@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.geos import Point
 
 
 
@@ -29,7 +30,12 @@ class Ka5TextureClass(models.Model):
 # Create your models here.
 class CapillaryRise(models.Model):
     soil_type = models.CharField(max_length=255, null=True, blank=True)
-    ka5textureclass_id = models.IntegerField(null=True, blank=True)
+    ka5textureclass = models.ForeignKey(
+        'Ka5TextureClass', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
     distance = models.IntegerField(null=True, blank=True)
     capillary_rate = models.FloatField(null=True, blank=True)
 
@@ -82,11 +88,17 @@ class Buek200(models.Model):
 
     def __str__(self):
         return '  Polygon_id ' + str(self.polygon_id)
+    @classmethod
+    def get_polygon_id_by_lat_lon(cls, lat, lon):
+        """
+        Returns the polygon_id of the Buek200 polygon that contains the given lat and lon.
+        """
+        return cls.objects.filter(geom__contains=Point(lon, lat)).first().polygon_id
 
     
 class CorineLandCover2018(models.Model):
     '''
-    CLC 5 classes.
+    CLC 5 classes. For simplicity not completely normalized.
     '''
     label_level_1 = models.CharField(max_length=255, null=True, blank=True)
     label_level_2 = models.CharField(max_length=255, null=True, blank=True)
@@ -95,7 +107,7 @@ class CorineLandCover2018(models.Model):
     corine_landcover_code = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return self.label + ' ' + str(self.code_18)
+        return str(self.corine_landcover_code)
     
     class Meta:
         db_table = 'buek_corine_land_cover_2018'
@@ -108,7 +120,7 @@ class SoilProfile(models.Model):
     legacy_bodtyp = models.CharField(max_length=255, null=True, blank=True)
     legacy_bo_subtyp = models.CharField(max_length=255, null=True, blank=True)
     legacy_bo_subtyp_txt = models.CharField(max_length=255, null=True, blank=True)
-    area_percenteage = models.IntegerField(null=True, blank=True)
+    area_percentage = models.IntegerField(null=True, blank=True)
     landusage = models.CharField(max_length=255, null=True, blank=True)
     corine_landcover_2018 = models.ForeignKey(CorineLandCover2018, on_delete=models.CASCADE, null=True, blank=True)
     landusage_corine_code = models.IntegerField(null=True, blank=True)
@@ -124,41 +136,9 @@ class SoilProfile(models.Model):
         hors = SoilProfileHorizon.objects.filter(soilprofile=self).order_by('horizont_nr')
         return [horizon.to_json() for horizon in hors]
     
-    # def get_monica_horizons_json(self):
-    #     # TODO this is working but could use refactoring
-    #     """
-    #     Invalid horizons are filled with the information of the next valid horizon.
-    #     """
-    #     horizons = list(SoilProfileHorizon.objects.filter(soilprofile=self, obergrenze_m__gte=0).order_by('horizont_nr'))
-    #     adjusted_horizons = [{i: horizons[i].to_json()} for i in range(len(horizons))]
-    #     msg = None
-    #     hors = []
-    #     valid_horizon = False
-    #     for i in range(len(horizons)):
-    #         if horizons[i].ka5_texture_class:
-    #             valid_horizon = True
-    #         elif not horizons[i].ka5_texture_class:
-    #             if not valid_horizon:
-    #                 if i < len(horizons) - 1:
-    #                     horizons[i+1].obergrenze_m = horizons[i].obergrenze_m
-    #                     msg = "Warning: Profile modified due to lacking ka5 texture class"
-    #                 else:
-    #                     msg  = "Error: No valid horizon found"
-    #                     return None, msg
-                    
-    #             else:
-    #                 horizons[i-1].untergrenze_m = horizons[i].untergrenze_m
-    #                 msg = "Warning: Profile modified due to lacking ka5 texture class"
-               
-    #     for i in range(len(horizons)):
-    #         if horizons[i].ka5_texture_class:
-    #             hors.append(horizons[i].to_json())
-        
-
-    #     return hors, msg
 
     def get_monica_horizons_json(self):
-        # TODO this is working but could use refactoring
+        # TODO this is working but could use refactoring: the msg is not used
         """
         Invalid horizons are filled with the information of the next valid horizon.
         """

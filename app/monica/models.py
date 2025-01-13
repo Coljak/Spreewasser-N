@@ -1513,6 +1513,8 @@ class UserSimulationSettings(models.Model):
 
 
 class SiteParameters(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=100, blank=True, null=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
     altitude = models.FloatField() # heightNN
@@ -1529,55 +1531,73 @@ class SiteParameters(models.Model):
             "SoilProfileParameters": self.soil_profile.get_monica_horizons_json()
         }
 
-class CentralParameterProvider(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    user_crop_parameters = models.ForeignKey(UserCropParameters, on_delete=models.CASCADE)
-    user_environment_parameters = models.ForeignKey(UserEnvironmentParameters, on_delete=models.CASCADE)
-    user_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE)
-    user_soil_transport_parameters = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE)
-    user_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE)
-    simulation_parameters = models.ForeignKey(UserSimulationSettings, on_delete=models.CASCADE)
-    site_parameters = models.ForeignKey(SiteParameters, on_delete=models.CASCADE)
-    def to_json(self):
-        return {
-            "type": self.__class__.__name__,
-            "userCropParameters": self.user_crop_parameters.to_json(),
-            "userEnvironmentParameters": self.user_environment_parameters.to_json(),
-            "userSoilMoistureParameters": self.user_soil_moisture_parameters.to_json(),
-            "userSoilTemperatureParameters": self.user_soil_temperature_parameters.to_json(),
-            "userSoilTransportParameters": self.user_soil_transport_parameters.to_json(),
-            "userSoilOrganicParameters": self.user_soil_organic_parameters.to_json(),
-            "simulationParameters": self.simulation_parameters.to_json(),
-            "siteParameters": self.site_parameters.to_json()
-        }
+# class CentralParameterProvider(models.Model):
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+#     user_crop_parameters = models.ForeignKey(UserCropParameters, on_delete=models.CASCADE)
+#     user_environment_parameters = models.ForeignKey(UserEnvironmentParameters, on_delete=models.CASCADE)
+#     user_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE)
+#     user_soil_transport_parameters = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE)
+#     user_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE)
+#     simulation_parameters = models.ForeignKey(UserSimulationSettings, on_delete=models.CASCADE)
+#     site_parameters = models.ForeignKey(SiteParameters, on_delete=models.CASCADE)
+#     def to_json(self):
+#         return {
+#             "type": self.__class__.__name__,
+#             "userCropParameters": self.user_crop_parameters.to_json(),
+#             "userEnvironmentParameters": self.user_environment_parameters.to_json(),
+#             "userSoilMoistureParameters": self.user_soil_moisture_parameters.to_json(),
+#             "userSoilTemperatureParameters": self.user_soil_temperature_parameters.to_json(),
+#             "userSoilTransportParameters": self.user_soil_transport_parameters.to_json(),
+#             "userSoilOrganicParameters": self.user_soil_organic_parameters.to_json(),
+#             "simulationParameters": self.simulation_parameters.to_json(),
+#             "siteParameters": self.site_parameters.to_json()
+#         }
     
 # Simulation related models
-class SimulationEnvironment(models.Model):
-    debug_mode = models.BooleanField(default=True)
-    params = models.JSONField()
-    crop_rotation = ArrayField(models.BooleanField(), null=True, blank=True) # worksteps
+# class SimulationEnvironment(models.Model):
+#     debug_mode = models.BooleanField(default=True)
+#     params = models.JSONField()
+#     crop_rotation = ArrayField(models.BooleanField(), null=True, blank=True) # worksteps
 
-    user_environment_parameters = models.ForeignKey(UserEnvironmentParameters, on_delete=models.CASCADE)
-    general_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE)
-    general_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE)
-    general_soil_transport = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    is_default = models.BooleanField(blank=True, null=True, default=False)
+#     user_environment_parameters = models.ForeignKey(UserEnvironmentParameters, on_delete=models.CASCADE)
+#     general_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE)
+#     general_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE)
+#     general_soil_transport = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE)
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+#     is_default = models.BooleanField(blank=True, null=True, default=False)
 
-    def to_json(self):
-        return {
-            "type": "Env",
-            "debugMode": self.debug_mode,
-            "params": self.params,
-            "cropRotation": self.crop_rotation.to_json(),
-            "UserEnvironmentParameters": self.user_environment_parameters.to_json(),
-            "GeneralSoilMoistureParameters": self.general_soil_moisture_parameters.to_json(),
-            "GeneralSoilOrganicParameters": self.general_soil_organic_parameters.to_json(),
-            "GeneralSoilTransport": self.general_soil_transport.to_json()
-        }
+#     def to_json(self):
+#         return {
+#             "type": "Env",
+#             "debugMode": self.debug_mode,
+#             "params": self.params,
+#             "cropRotation": self.crop_rotation.to_json(),
+#             "UserEnvironmentParameters": self.user_environment_parameters.to_json(),
+#             "GeneralSoilMoistureParameters": self.general_soil_moisture_parameters.to_json(),
+#             "GeneralSoilOrganicParameters": self.general_soil_organic_parameters.to_json(),
+#             "GeneralSoilTransport": self.general_soil_transport.to_json()
+#         }
+class CropRotation(models.Model):
+    name = models.CharField(max_length=255, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+class Rotation(models.Model):
+    name = models.CharField(max_length=255, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    crop_rotation = models.ForeignKey(CropRotation, on_delete=models.CASCADE, related_name='rotations')
+    order = models.PositiveIntegerField()  # To maintain the order of rotations in a CropRotation
+    # start_date = models.DateField(null=True, blank=True)
+    # end_date = models.DateField(null=True, blank=True)  # Set to the date of the last workstep (Harvest)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order']  # Ensures rotations are retrieved in order
 
 class Workstep(models.Model):
+    # rotation = models.ForeignKey(Rotation, on_delete=models.CASCADE, related_name='worksteps')
     date = models.DateField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
@@ -1591,6 +1611,11 @@ class Workstep(models.Model):
     
 
 class WorkstepMineralFertilisation(Workstep):
+    rotation = models.ForeignKey(
+        Rotation,
+        on_delete=models.CASCADE,
+        related_name='workstep_mineral_fertilisation'
+    )
     amount = models.FloatField()
     mineral_fertiliser = models.ForeignKey(MineralFertiliser, on_delete=models.CASCADE)
 
@@ -1604,6 +1629,11 @@ class WorkstepMineralFertilisation(Workstep):
         return json_data
 
 class WorkstepOrganicFertilisation(Workstep):
+    rotation = models.ForeignKey(
+        Rotation,
+        on_delete=models.CASCADE,
+        related_name='workstep_organic_fertilisation'
+    )
     amount = models.FloatField()
     organic_fertiliser = models.ForeignKey(OrganicFertiliser, on_delete=models.CASCADE)
     incorporation = models.BooleanField()
@@ -1619,6 +1649,11 @@ class WorkstepOrganicFertilisation(Workstep):
         return json_data
 
 class WorkstepTillage(Workstep):
+    rotation = models.ForeignKey(
+        Rotation,
+        on_delete=models.CASCADE,
+        related_name='workstep_tillage'
+    )
     tillage_depth = models.FloatField()
 
     def to_json(self):
@@ -1630,6 +1665,11 @@ class WorkstepTillage(Workstep):
         return json_data
     
 class WorkstepIrrigation(Workstep):
+    rotation = models.ForeignKey(
+        Rotation,
+        on_delete=models.CASCADE,
+        related_name='workstep_irrigation'
+    )
     amount = models.IntegerField()
 
     def to_json(self):
@@ -1641,6 +1681,11 @@ class WorkstepIrrigation(Workstep):
         return json_data
 
 class WorkstepSowing(Workstep):
+    rotation = models.ForeignKey(
+        Rotation,
+        on_delete=models.CASCADE,
+        related_name='workstep_sowing'
+    )
     species = models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE)
     cultivar = models.ForeignKey(CultivarParameters, on_delete=models.CASCADE)
     residue_parameters = models.ForeignKey(CropResidueParameters, on_delete=models.CASCADE)
@@ -1662,6 +1707,11 @@ class WorkstepSowing(Workstep):
         return json_data
 
 class WorkstepHarvest(Workstep):
+    rotation = models.ForeignKey(
+        Rotation,
+        on_delete=models.CASCADE,
+        related_name='workstep_harvest'
+    )
 
     def to_json(self):
         json_data = super().to_json()
@@ -1669,6 +1719,9 @@ class WorkstepHarvest(Workstep):
             "type": "Harvest"
         })
         return json_data
+    
+
+
 
     
 class Output(models.Model):
@@ -1688,6 +1741,7 @@ class OutputAggregation(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
 
+# TODO Get Organ and OrganDb right
 class Organ(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
@@ -1919,26 +1973,26 @@ class DWDForecastGridAsPolygon(models.Model):
 
 
 
-class MonicaEnvironment(models.Model):
-    name = models.CharField(max_length=255, null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    debug_mode = models.BooleanField(default=False)
-    params = models.ForeignKey(CentralParameterProvider, on_delete=models.CASCADE, null=True, blank=True)
-    crop_rotation = models.JSONField(null=True, blank=True)
-    crop_rotations = models.JSONField(null=True, blank=True, default=None)
-    events = models.JSONField(null=True, blank=True)
+# class MonicaEnvironment(models.Model):
+#     name = models.CharField(max_length=255, null=True, blank=True)
+#     description = models.TextField(null=True, blank=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+#     debug_mode = models.BooleanField(default=False)
+#     params = models.ForeignKey(CentralParameterProvider, on_delete=models.CASCADE, null=True, blank=True)
+#     crop_rotation = models.JSONField(null=True, blank=True)
+#     crop_rotations = models.JSONField(null=True, blank=True, default=None)
+#     events = models.JSONField(null=True, blank=True)
 
-    def to_json(self):
-        return{
-            "type": "Env",
-            "debugMode": self.debug_mode,
-            "params": self.params.to_json(),
-            "cropRotation": self.crop_rotation,
-            "cropRotations": None,
-            "events": self.events
-        }
+#     def to_json(self):
+#         return{
+#             "type": "Env",
+#             "debugMode": self.debug_mode,
+#             "params": self.params.to_json(),
+#             "cropRotation": self.crop_rotation,
+#             "cropRotations": None,
+#             "events": self.events
+#         }
     
 class UserSoilProfile(models.Model):
     name = models.CharField(max_length=100)

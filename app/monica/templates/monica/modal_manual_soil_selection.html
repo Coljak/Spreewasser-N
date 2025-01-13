@@ -1,0 +1,103 @@
+
+<div id="modalManualSoilSelection" class="modal fade" tabindex="-1" aria-modal="true" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog  modal-lg" role="document">
+    <div class="modal-content">
+      
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="modalLabel">ID:{{ id }} Feld: {{ text }}</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+
+
+
+        <div class="row">
+          <div class="card mb-3">
+            <div id="soilDiv" class="card-body">
+              <h5 class="card-title">Bük200 Bodendaten in Feld: {{ text }}</h5>  
+              <span class="input-group-text mb-2 d-flex align-items-start">
+                <div id="div_id_land_usage" class="m-3">
+                  <label for="id_land_usage" class="form-label">
+                    Flächennutzungsart
+                  <label>
+                  <select name="land_usage" class="form-select" id="id_land_usage"></select>
+                </div>
+                <div id="div_id_area_percentage" class="m-3">
+                  <label for="id_area_percentage" class="form-label">
+                    Anteil des Bodenprofils in %
+                  <label>
+                  <select name="area_percentage" class="form-select" id="id_area_percentage"></select> 
+                </div>
+              </span>
+              <span class="input-group-text mb-2 d-flex align-items-start">
+                <div id="div_id_system_unit" class="m-3">
+                  <label for="id_system_unit" class="form-label">
+                    Systemeinheit
+                  <label>
+                  <select name="system_unit" class="form-select" id="id_system_unit"></select> 
+                </div>
+              </span>
+              <span class="input-group-text mb-2 d-flex align-items-start">
+                <div id="div_id_soil_profile" class="m-3">
+                  <label for="id_soil_profile" class="form-label">
+                    Bodenprofil
+                  <label>
+                  <select name="soil_profile" class="form-select" id="id_soil_profile"></select> 
+                </div>
+                <div id="div_id_horizons" class="m-3 p-2 border rounded " >
+
+                </div>
+              </span>
+              <div>
+                <table id="tableHorizons" class="table table-bordered border-4 rounded table-hover table-striped ">
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="row">
+          <div class="card mb-3">
+            <div class="card-body">
+                
+              {% comment %} <a class="btn btn-primary" href="{% url 'swn:user_dashboard' %}">Zurück</a> {% endcomment %}
+              {% comment %} <button type="submit" id="btnMonicaCalculate" class="btn btn-primary mb-2">Berechnen</button> {% endcomment %}
+              <button type="button" id="btnSelectSoilProfile" class="btn btn-primary">
+                Profil auswählen
+              </button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>  
+</div> 
+
+
+
+
+
+<div id="testMod" class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modal title</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Modal body text goes here.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Save changes</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% comment %} <script src="{% static 'swn/js/manual_soil_selection.js' %}" type="module"></script> {% endcomment %}

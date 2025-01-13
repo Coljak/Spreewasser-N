@@ -3,26 +3,92 @@ from leaflet.admin import LeafletGeoAdmin, ModelAdmin
 from . import models
 
 
-admin.site.register(models.CropParametersExist, admin.ModelAdmin)
-admin.site.register(models.SpeciesParameters, admin.ModelAdmin)
-admin.site.register(models.CultivarParameters, admin.ModelAdmin)
-admin.site.register(models.CropResidueParameters, admin.ModelAdmin)
-admin.site.register(models.OrganFromDB, admin.ModelAdmin)
-admin.site.register(models.OrganicFertiliser, admin.ModelAdmin)
-admin.site.register(models.MineralFertiliser, admin.ModelAdmin)
-admin.site.register(models.UserCropParameters, admin.ModelAdmin)
-admin.site.register(models.UserEnvironmentParameters, admin.ModelAdmin)
-admin.site.register(models.UserSoilMoistureParameters, admin.ModelAdmin)
-admin.site.register(models.UserSoilOrganicParameters, admin.ModelAdmin)
-admin.site.register(models.SoilTemperatureModuleParameters, admin.ModelAdmin)
-admin.site.register(models.SimulationEnvironment, admin.ModelAdmin)
-admin.site.register(models.DWDGridToPointIndices, LeafletGeoAdmin)
+class BaseUserAdmin(admin.ModelAdmin):
+    """Base admin class for shared logic and methods."""
+    
+    def get_user_name(self, obj):
+        return obj.user.name if obj.user else "No User Assigned"
+    get_user_name.short_description = 'User Name' 
+
+
+
+class MonicaProjectAdmin(BaseUserAdmin):
+    list_display = ('id', 'name', 'user', 'creation_date', 'last_modified', 'monica_model_setup',  'monica_site')
+    list_filter = ('user', 'creation_date', 'last_modified')
+    readonly_fields = ('creation_date', 'last_modified')
+
+
+class CropParametersExistAdmin(admin.ModelAdmin):
+    list_display = ('id', 'species_name', 'in_species', 'in_cultivar', 'in_residues')
+
+
+class UserParametersAdmin(BaseUserAdmin):
+    list_display = ('id','user', 'is_default')
+    list_filter = ('user', 'is_default')
+
+class UserParametersNameAdmin(BaseUserAdmin):
+    list_display = ('id', 'name', 'user', 'is_default') 
+    list_filter = ('user', 'is_default')
+
+class UserSoilTransportParametersAdmin(BaseUserAdmin):
+    list_display = ('id', 'name', 'user', 'is_default')
+    list_filter = ('user', 'is_default')
+
+
+class OrganFromDBAdmin(BaseUserAdmin):
+    list_display = ('id', 'species_name', 'get_organ_name', 'user', 'is_default')
+    list_filter = ('user', 'is_default')
+
+    def get_organ_name(self, obj):
+        return obj.organ.name if obj.organ else "No Organ Assigned"
+    get_organ_name.short_description = 'Organ Name' 
+
+
+class MonicaSiteAdmin(BaseUserAdmin):
+    list_display = ('id', 'name', 'user', 'latitude', 'longitude')
+
+class SiteParametersAdmin(BaseUserAdmin):
+    list_display = ('id', 'name', 'user', 'latitude', 'longitude')
+    list_filter = ('user')
+ 
+
+
+admin.site.register(models.CropParametersExist, CropParametersExistAdmin)
+admin.site.register(models.SpeciesParameters, UserParametersNameAdmin)
+admin.site.register(models.CultivarParameters, UserParametersNameAdmin)
+admin.site.register(models.CropResidueParameters, UserParametersNameAdmin)
+admin.site.register(models.OrganFromDB, OrganFromDBAdmin)
+admin.site.register(models.Organ, admin.ModelAdmin)
+admin.site.register(models.OrganicFertiliser, UserParametersNameAdmin)
+admin.site.register(models.MineralFertiliser, UserParametersNameAdmin)
+admin.site.register(models.UserCropParameters, UserParametersNameAdmin)
+admin.site.register(models.UserEnvironmentParameters, UserParametersNameAdmin)
+admin.site.register(models.UserSimulationSettings, UserParametersNameAdmin)
+admin.site.register(models.UserSoilMoistureParameters, UserParametersNameAdmin)
+admin.site.register(models.UserSoilOrganicParameters, UserParametersNameAdmin)
+admin.site.register(models.SoilTemperatureModuleParameters, UserParametersNameAdmin)
+# admin.site.register(models.SimulationEnvironment, UserParametersAdmin)
+admin.site.register(models.UserSoilTransportParameters, UserSoilTransportParametersAdmin)
+admin.site.register(models.SiteParameters, admin.ModelAdmin)
+
+
+# admin.site.register(models.MonicaEnvironment, admin.ModelAdmin)
+# admin.site.register(models.CentralParameterProvider, admin.ModelAdmin)
+
 # admin.site.register(models.DigitalElevationModel, admin.ModelAdmin)
 admin.site.register(models.UserSoilProfile, admin.ModelAdmin)
 # admin.site.register(models.SoilProfileLayer, admin.ModelAdmin)
-admin.site.register(models.MonicaSite, admin.ModelAdmin)
 
+admin.site.register(models.WorkstepMineralFertilisation, BaseUserAdmin)
+admin.site.register(models.WorkstepOrganicFertilisation, admin.ModelAdmin)
+admin.site.register(models.WorkstepTillage, admin.ModelAdmin)
+admin.site.register(models.WorkstepIrrigation, admin.ModelAdmin)
+admin.site.register(models.WorkstepSowing, admin.ModelAdmin)
+admin.site.register(models.WorkstepHarvest, admin.ModelAdmin)
 
-"""
-([{'Thickness': [0.15, 'm'], 'Sand': [0.34, '%'], 'Clay': [0.21, '%'], 'pH': 6.45, 'KA5TextureClass': 'Ls2', 'SoilRawDensity': [1500.0, 'kg m-3'], 'SoilOrganicCarbon': [5.75, '%']}, {'Thickness': [0.15, 'm'], 'Sand': [0.34, '%'], 'Clay': [0.21, '%'], 'pH': 6.45, 'KA5TextureClass': 'Ls2', 'SoilRawDensity': [1500.0, 'kg m-3'], 'SoilOrganicCarbon': [3.49, '%']}, {'Thickness': [0.4, 'm'], 'Sand': [0.3, '%'], 'Clay': [0.3, '%'], 'pH': 7.55, 'KA5TextureClass': 'Lt2', 'SoilRawDensity': [1900.0, 'kg m-3'], 'SoilOrganicCarbon': [0.29, '%']}, {'Thickness': [1.3, 'm'], 'Sand': [0.93, '%'], 'Clay': [0.02, '%'], 'pH': 7.55, 'KA5TextureClass': 'Ss', 'SoilRawDensity': [1700.0, 'kg m-3'], 'SoilOrganicCarbon': [0.0, '%']}], None)
-"""
+admin.site.register(models.MonicaSite, MonicaSiteAdmin)
+admin.site.register(models.MonicaProject, MonicaProjectAdmin)
+admin.site.register(models.Rotation, admin.ModelAdmin)
+admin.site.register(models.CropRotation, admin.ModelAdmin)
+
+admin.site.register(models.DWDGridToPointIndices, LeafletGeoAdmin)

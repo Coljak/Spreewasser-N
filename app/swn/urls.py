@@ -24,9 +24,11 @@ urlpatterns = [
     path('drought/load/', views.get_user_fields, name='get-user-fields'),
     path('drought/update/', views.update_user_field, name='update-user-fields'),
     path('drought/delete/<int:id>', views.delete_user_field, name='delete-user-field'),
-    path('drought/field-edit/<int:id>/', views.field_edit, name='field_edit'),
+   
+    # path('drought/field-edit/<int:id>/', views.field_edit, name='field_edit'),
     path('drought/field-projects-menu/<int:id>/', views.get_field_project, name='field_projects_menu'),
     path('drought/get_lat_lon/<int:user_field_id>/', views.get_centroid, name='get_centroid'),
+    path('drought/manual-soil-selection/<int:user_field_id>/', views.manual_soil_selection, name='manual_soil_selection'),
     # path('login/Dashboard/field-edit/<int:field_id>/chartdata/<int:crop_id>/<int:soil_id>/', views.get_chart, name='chart-api'),
     # Impressum and Acknoledgements
     path('Impressum-Information/', views.ImpressumView.as_view(), name='impressum_information'),

@@ -102,7 +102,7 @@ class SwnProjectForm(monica_forms.MonicaProjectForm):
 # TODO this is probably obsolete
 class SoilProfileSelectionForm(forms.Form):
     land_usage = forms.ChoiceField(label='Land Usage', choices=[])
-    area_percenteage = forms.ChoiceField(label='Area Percentage', choices=[])
+    area_percentage = forms.ChoiceField(label='Area Percentage', choices=[])
     system_unit = forms.ChoiceField(label='System Unit', choices=[])
     soil_profile = forms.ChoiceField(label='Soil Profile', choices=[])
     horizons = forms.CharField(label='Horizons', widget=forms.Textarea, required=False)

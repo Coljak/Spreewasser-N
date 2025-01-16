@@ -19,7 +19,7 @@ def klim4cast_timelapse_items(request):
     if isinstance(catalog_dict['catalog']['dataset']['dataset'], list):
         catalog_dict_list = [
             {
-                "name": dataset['@name'],
+                "name": dataset['@name'].split('.nc')[0],
                 "urlPath": dataset['@urlPath'],
                 "size": f"{dataset['dataSize']['#text']} {dataset['dataSize']['@units']}",
                 "date_modified": (
@@ -48,7 +48,7 @@ def klim4cast_timelapse_items(request):
 
 
 def get_ncml_metadata(request, name):
-    url = "http://thredds:8080/thredds/ncml/data/Klim4Cast/" + name
+    url = "http://thredds:8080/thredds/ncml/data/Klim4Cast/" + name + '.nc'
     nc_dict = {}
     ncml = requests.get(url)
     ncml_data = xmltodict.parse(ncml.text)
@@ -104,7 +104,7 @@ def timelapse_django_passthrough_wms(request, netcdf):
     """
     Incoming requests are passed through to the Thredds server.
     """
-
+    netcdf += '.nc'
     print("klim4cast.views.timelapse_django_passthrough_wms", netcdf)
     url = 'http://thredds:8080/thredds/wms/data/Klim4Cast/' + netcdf
     

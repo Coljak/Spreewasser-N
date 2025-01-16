@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-
-
+  $('#coordinateFormCard').hide();
+  
   let csrfToken = document.cookie
     .split("; ")
     .find(row => row.startsWith("csrftoken="))

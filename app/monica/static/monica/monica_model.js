@@ -109,8 +109,8 @@ class Workstep {
 
 // Date Picker
 var startDate = '01.01.2007';
-var setStartDate = '01.01.2024';
-var setEndDate = '26.11.2024';
+var setStartDate = '01.02.2024';
+var setEndDate = '01.08.2024';
 var endDate = '26.11.2024';
 
 const setLanguage =  (language_code)=>{
@@ -153,17 +153,17 @@ const runSimulation = (monicaProject) => {
 
             var resultOutput = {
                
-                'Yield': true,
+                'Yield': false,
                 'Irrig': true,
                 'organ': false,
                 'AbBiom': true,
-                'Mois_1': false,
-                'Mois_2': false,
-                'Mois_3': false,
+                'Mois_1': true,
+                'Mois_2': true,
+                'Mois_3': true,
                 'SOC_1': false,
                 'SOC_2': false,
                 'SOC_3': false,
-                'LAI': true,
+                'LAI': false,
 
             }
 
@@ -311,7 +311,8 @@ const runSimulation = (monicaProject) => {
             
             // const dailyData = data.message.daily;
             // const dates = dailyData.Date;
-            chartDiv.innerHTML = '<canvas id="Chart" height="80"></canvas>'
+            // chartDiv.innerHTML = '<canvas id="Chart" height="100"></canvas>'
+            chartDiv.innerHTML = '<canvas id="Chart"></canvas>'
             const ctx = document.getElementById('Chart')
             // console.log('CHART data: ', dailyData.PrecipdailyData)
             const chart = new Chart(ctx, {
@@ -327,32 +328,43 @@ const runSimulation = (monicaProject) => {
                         },
                     },
                     responsive: true,
-                }
+                    plugins: {
+                        // title: {
+                        //     display: true,
+                        //     text: 'Custom Chart Title'
+                        // },
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                },
+               
             });
 
             // chartCard.classList.remove('d-none');
             chart.update();
-            const createToggleButton = (label, datasetKey) => {
-                const button = document.createElement('button');
-                button.textContent = label;
-                button.classList.add('btn', 'btn-secondary', 'm-1');
-                button.onclick = () => {
-                    const dataset = chart.data.datasets.find(ds => ds.label.includes(datasetKey));
-                    if (dataset) {
-                        dataset.hidden = !dataset.hidden;
-                        chart.update();
-                    }
-                };
-                return button;
-            };
             
-            const buttonContainer = document.createElement('div');
-            Object.keys(resultOutput).forEach(key => {
-                const button = createToggleButton(`Toggle ${key}`, key);
-                buttonContainer.appendChild(button);
-            });
+            // const createToggleButton = (label, datasetKey) => {
+            //     const button = document.createElement('button');
+            //     button.textContent = label;
+            //     button.classList.add('btn', 'btn-secondary', 'm-1');
+            //     button.onclick = () => {
+            //         const dataset = chart.data.datasets.find(ds => ds.label.includes(datasetKey));
+            //         if (dataset) {
+            //             dataset.hidden = !dataset.hidden;
+            //             chart.update();
+            //         }
+            //     };
+            //     return button;
+            // };
             
-            document.querySelector('#chartDiv').prepend(buttonContainer);
+            // const buttonContainer = document.createElement('div');
+            // Object.keys(resultOutput).forEach(key => {
+            //     const button = createToggleButton(`Toggle ${key}`, key);
+            //     buttonContainer.appendChild(button);
+            // });
+            
+            // document.querySelector('#chartDiv').prepend(buttonContainer);
 
 
             $('#runSimulationButton').prop('disabled', false);
@@ -789,7 +801,7 @@ const fetchModalContent = (params) => {
             })
             .then(data => {
                 document.getElementById('modalModifyParamsContent').innerHTML = data;
-                bindModalEventListeners();
+                bindModalEventListeners(params.parameters);
             })
             .catch(error => console.error('Error:', error));
         }   
@@ -845,6 +857,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     $('#monicaStartDatePicker').datepicker('update', setStartDate);
     $('#monicaEndDatePicker').datepicker('update', setEndDate);
+    $('#todaysDatePicker').datepicker('update', new Date('2024-05-15'));
 
     const calculateDaysInRotation = function() {
         var startDate = project.startDate;

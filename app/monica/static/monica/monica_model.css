@@ -8,6 +8,6 @@
   }
 
   #chartDiv {
-    max-height: 50%;
-    /* height: 400px; */
+    /* max-height: 50%; */
+    height: 30%;
   }

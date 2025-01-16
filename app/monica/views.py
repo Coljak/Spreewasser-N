@@ -195,6 +195,7 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
 
             print(year, value, key)
     print('Time elapsed in get_climate_data_as_json: ', datetime.now() - start)
+    climate_json['8'] = [x / 100 for x in climate_json['8']]
     return climate_json
 
 ### MONICA VIEWS ###
@@ -1023,6 +1024,20 @@ def get_soil_parameters(request, lat, lon):
     soil_profile = get_soil_profile('general', lat, lon)
     
     show_original_table = (soil_profile['SoilProfileParameters'] != soil_profile['OriginalSoilProfileParameters'])
+
+    for hor in soil_profile['SoilProfileParameters']:
+        i = 0
+        for key, value in hor.items():
+            if isinstance(value, list):
+                # print(type(value), ''.join(str(value)))
+                hor[key] = ''.join(map(str, value))
+                
+        i += 1
+    for hor in soil_profile['OriginalSoilProfileParameters']:
+        for key, value in hor.items():
+            if isinstance(value, list):
+                hor[key] = ''.join(map(str, value))
+    # soil_profile = 
     
     context = {
         'modal_title': 'Soil Profile',
@@ -1147,7 +1162,9 @@ def create_irrigation_envs(envs, data):
     This function creates a new environment for each irrigation event.
     """
     today = datetime.strptime(data.get('todaysDate').split('T')[0], '%Y-%m-%d')
-    for days, amount in [(3, 10.0), (3, 20.0), (6, 10.0), (6, 20.0), (9, 30.0)]:
+    # irrigations = [(3, 10.0), (3, 20.0), (6, 10.0), (6, 20.0), (9, 30.0)]
+    irrigations = [ (6, 10.0), (6, 20.0), (9, 30.0)]
+    for days, amount in irrigations:
         date = copy.deepcopy(today)
         env2 = copy.deepcopy(envs[0])
         worksteps = env2['cropRotation'][-1].get('worksteps')
@@ -1161,6 +1178,26 @@ def create_irrigation_envs(envs, data):
         worksteps.sort(key=lambda x: x['date'])
         env2['cropRotation'][-1]['worksteps'] = worksteps
         envs.append(env2)
+    return envs
+
+def create_irrigation_envs2(envs, data):
+    """
+    This function creates a new environment for each irrigation event.
+    """
+    today = datetime.strptime(data.get('todaysDate').split('T')[0], '%Y-%m-%d')
+
+
+    simulation_settings = [
+        # UserSimulationSettings.objects.get(id=30).to_json(),
+        UserSimulationSettings.objects.get(id=31).to_json(),
+        UserSimulationSettings.objects.get(id=32).to_json()
+    ]
+    for sim in simulation_settings:
+        sim["AutoIrrigationParams"]["startDate"] = today.strftime('%Y-%m-%d')
+        env2 = copy.deepcopy(envs[0])
+        env2["params"]["simulationParameters"] = sim
+        envs.append(env2)
+
     return envs
 
 
@@ -1239,7 +1276,7 @@ def run_simulation(request):
         envs = [env]
         
         if data.get('swn_forecast', False):
-            envs = create_irrigation_envs(envs, data)
+            envs = create_irrigation_envs2(envs, data)
         
   
         json_msgs = []

@@ -71,7 +71,7 @@
                   </li>
                 {% endfor %} 
                 <!-- NetCDF animation -->
-                <li class="list-group-item drought-overlay-sidebar-item" id="liElementNetCDF">
+                {% comment %} <li class="list-group-item drought-overlay-sidebar-item" id="liElementNetCDF">
                   <div class="row">
                     <div class="form-check form-switch col">
                       <input type="checkbox" data-layer="animation" class="form-check-input overlay-switch" id="animationSwitch" />
@@ -84,7 +84,7 @@
                       <input type="range" class="form-range layer-opacity" data-layer="animation" min="0.0" max="1.0" step="0.1" id="animationOpacity" disabled/>
                     </div>
                   </div>
-                </li>
+                </li> {% endcomment %}
 
                 <!-- digital elevation model -->
                 <li class="list-group-item drought-overlay-sidebar-item" id='liElementDem'>

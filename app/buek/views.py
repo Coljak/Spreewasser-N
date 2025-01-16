@@ -19,11 +19,12 @@ def test_split(request):
 def api_schema(request):
     # this is a list of API routes in the buek app
     routes = [
-        {'GET': '/buek/api/original_soil_data/<lat>/<lon>/', 'description': 'Get the original BUEK200 data for a given latitude and longitude'},
         {'GET': '/buek/api/soil_data/<lat>/<lon>/', 'description': 'Get the soil data for a given latitude and longitude'},
         {'GET': '/buek/api/soil_profile/agriculture/<lat>/<lon>/', 'description': 'Get the soil data for a given latitude and longitude. If available, an agricultural soil profile is prvided.'},
         {'GET': '/buek/api/soil_profile/forest/<lat>/<lon>/', 'description': 'Get the soil data for a given latitude and longitude. If available, a forest soil profile is prvided.'},
         {'GET': '/buek/api/soil_profile/grassland/<lat>/<lon>/', 'description': 'Get the soil data for a given latitude and longitude. If available, a grassland soil profile is prvided.'},
+        {'GET': '/buek/api/soil_profile/grassland/<lat>/<lon>/', 'description': 'Get the soil data for a given latitude and longitude. If available, a grassland soil profile is prvided.'},
+        {'GET': '/buek/api/original_buek200/<lat>/<lon>/', 'description': 'Get the original Buek200 soil profiles for a given latitude and longitude.'},
     ]
     return Response(routes)
 

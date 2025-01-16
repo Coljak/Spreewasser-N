@@ -143,7 +143,7 @@ class SoilProfile(models.Model):
         Invalid horizons are filled with the information of the next valid horizon.
         """
         horizons = list(SoilProfileHorizon.objects.filter(soilprofile=self, obergrenze_m__gte=0).order_by('horizont_nr'))
-        adjusted_horizons = [{i: horizons[i].to_json()} for i in range(len(horizons))]
+       
         msg = None
         hors = []
         # valid_horizon = False
@@ -161,7 +161,6 @@ class SoilProfile(models.Model):
         for i in range(len(horizons)):
             if horizons[i].ka5_texture_class:
                 hors.append(horizons[i].to_json())
-        
 
         return hors, msg
     
@@ -173,6 +172,7 @@ class SoilProfile(models.Model):
 
     class Meta:
         db_table = 'buek_soil_profile'
+        
                                                                  
 class SoilProfileHorizon(models.Model):
     soilprofile = models.ForeignKey(SoilProfile, on_delete=models.CASCADE, null=True, blank=True)
@@ -207,8 +207,8 @@ class SoilProfileHorizon(models.Model):
         # TODO: can Monica actually handle the NULL values as '' or []?
         monica_json = {
             'Thickness': [round((self.untergrenze_m - self.obergrenze_m), 2), "m"],
-            'Sand': [round(self.ka5_texture_class.sand, 2), "%"] if self.ka5_texture_class else [],
-            'Clay': [round(self.ka5_texture_class.clay, 2), "%"] if self.ka5_texture_class else [],
+            'Sand': [round(self.ka5_texture_class.sand, 2) * 100, "%"] if self.ka5_texture_class else [],
+            'Clay': [round(self.ka5_texture_class.clay, 2) * 100, "%"] if self.ka5_texture_class else [],
             'pH': round(((self.ph_class.ph_lower_value + self.ph_class.ph_upper_value) / 2), 2) if self.ph_class else '',
             # 'Sceleton': soil stone content, a fraction between 0 and 1
             # 'Lambda': soil water conductivity coefficient

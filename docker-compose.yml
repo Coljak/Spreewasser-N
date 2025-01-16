@@ -115,7 +115,8 @@ services:
 
   # MONICA
   monica:
-    image: zalfrpm/monica-cluster:3.6.10.soil_organic_fixed
+    # image: zalfrpm/monica-cluster:3.6.10.soil_organic_fixed
+    image: zalfrpm/monica-cluster:3.6.33.auto_irrig_start_date
     
     container_name: swn_monica
     # volumes:

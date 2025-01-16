@@ -1498,14 +1498,16 @@ class UserSimulationSettings(models.Model):
             "JulianDayAutomaticFertilising": self.julian_day_automatic_fertilising,
             "UseAutomaticIrrigation": self.use_automatic_irrigation,
             "AutoIrrigationParams": {
-            "irrigationParameters": {
-                "nitrateConcentration": [self.auto_irrigation_params_nitrate_concentration, "mg dm-3"],
-                "sulfateConcentration": [self.auto_irrigation_params_sulfate_concentration, "mg dm-3"]
-            },
-            "amount": [self.auto_irrigation_params_amount, "mm"],
-            "threshold": self.auto_irrigation_params_threshold
+                "irrigationParameters": {
+                    "nitrateConcentration": [self.auto_irrigation_params_nitrate_concentration, "mg dm-3"],
+                    "sulfateConcentration": [self.auto_irrigation_params_sulfate_concentration, "mg dm-3"],
+                
+                },
+                "amount": [self.auto_irrigation_params_amount, "mm"],
+                "threshold": self.auto_irrigation_params_threshold,
             }
         }
+        	
     
 
     

@@ -38,11 +38,11 @@
         <select id='netcdfVariableSelector' class="form-select" aria-label="netcdfVariableSelector-label"></select>
 
             
-        <div class="input-daterange input-group" id="datepicker" style="display: none">
+        {% comment %} <div class="input-daterange input-group" id="datepicker" style="display: none">
             <input type="text" id="startDatePicker" class="input-sm form-control" name="start" />
             <span class="input-group-addon  px-3"> bis </span>
             <input type="text" id="endDatePicker" class="input-sm form-control" name="end" />
-        </div>
+        </div> {% endcomment %}
         <button class="btn btn-primary" id="loadNetCDFButton">Load Timeseries</button>
         
     </div>

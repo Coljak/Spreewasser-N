@@ -203,6 +203,8 @@ netcdf_data/
 klim4cast/data/
 temp/
 monica-parameters/
+app/monica/monica-parameters/
+
 # data files
 *.nc
 *.tif

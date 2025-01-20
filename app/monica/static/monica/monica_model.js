@@ -32,31 +32,71 @@ const saveToLocalStorage = (project) => {
     localStorage.setItem('project', JSON.stringify(project));
 };
 
-// Classes
+// // Classes
+// class MonicaProject {
+//     constructor(project) {
+//         this.id = project.id;
+//         this.name = project.name;
+//         this.description = project.description;
+//         this.longitude = project.longitude;
+//         this.latitude = project.latitude;
+//         this.userField = project.userField;
+//         this.startDate = project.startDate;
+//         this.endDate = null;
+//         this.rotation = project.rotation;
+//         // settings
+//         this.userSimulationSettings = project.userSimulationSettings;
+//         this.userEnvironmentParameters = project.userEnvironmentParameters;
+//         this.userCropParameters = project.userCropParameters;
+
+//         this.userSoilTemperatureParameters = project.userSoilTemperatureParameters;
+//         this.userSoilTransportParameters = project.userSoilTransportParameters;
+//         this.userSoilOrganicParameters = project.userSoilOrganicParameters;
+//         this.userSoilMoistureParameters = project.userSoilMoistureParameters;
+
+//         // this.soilProfileId = null;
+//     }
+// };
 class MonicaProject {
-    constructor() {
-        this.id = null;
-        this.name = null;
-        this.description = null;
-        this.longitude = null;
-        this.latitude = null;
-        this.userField = null;
-        this.startDate = null;
-        this.endDate = null;
-        this.rotation = [];
-        // settings
-        this.userSimulationSettings = null;
-        this.userEnvironmentParameters = null;
-        this.userCropParameters = null;
+    constructor(project = {}) {
+        this.id = project.id || null;
+        this.name = project.name || '';
+        this.description = project.description || '';
+        this.longitude = project.longitude || 10.0;
+        this.latitude = project.latitude || 52.0;
+        this.userField = project.userField || null;
+        this.startDate = project.startDate || '2024-01-01';
+        this.endDate = project.endDate || '2024-12-31';
+        this.rotation = project.rotation || [];
 
-        this.userSoilTemperatureParameters = null;
-        this.userSoilTransportParameters = null;
-        this.userSoilOrganicParameters = null;
-        this.userSoilMoistureParameters = null;
+        this.modelSetupId = project.modelSetupId || 1;
+        
+        // Settings
+        this.userSimulationSettings = project.userSimulationSettings || 1;
+        this.userEnvironmentParameters = project.userEnvironmentParameters || 1;
+        this.userCropParameters = project.userCropParameters || 1;
 
-        // this.soilProfileId = null;
+        this.userSoilTemperatureParameters = project.userSoilTemperatureParameters || 1;
+        this.userSoilTransportParameters = project.userSoilTransportParameters || 1;
+        this.userSoilOrganicParameters = project.userSoilOrganicParameters || 1;
+        this.userSoilMoistureParameters = project.userSoilMoistureParameters || 1;
+
+        // Additional properties can be added here as needed
+        // this.soilProfileId = project.soilProfileId || null;
     }
-};
+
+    // Static method to create a MonicaProject from JSON
+    static fromJson(json) {
+        return new MonicaProject(json);
+    }
+
+    // Convert instance to JSON for storage or API submission
+    toJson() {
+        return JSON.stringify(this);
+    }
+}
+
+
 
 class MonicaCalculation {
     constructor(project) {
@@ -559,8 +599,16 @@ const bindModalEventListeners = (parameters) => {
 };
 
 const updateDropdown = (parameterType,rotationIndex, newId) => {
+    console.log('updateDropdown', parameterType, rotationIndex, newId);
+    let baseUrl = '/monica/get_options/';
+    // in save project differs in monica and swn, therefore:
+    if (parameterType === 'monica-project') {
+        console.log('updateDropdown saveProject');
+        baseUrl = 'get_options/';
+    }
+    console.log('updateDropdown baseUrl', baseUrl);
 
-    fetch('/monica/model/get_options/' + parameterType + '/')
+    fetch(baseUrl + parameterType + '/')
         .then(response => response.json())
         .then(data => {
             console.log('updateDropdown', data);
@@ -588,7 +636,7 @@ const updateDropdown = (parameterType,rotationIndex, newId) => {
 
 const submitModalForm = (modalForm, modalAction) => {
     const actionUrl =  modalForm.getAttribute('data-action-url');
-    const absoluteUrl = '/monica/model/' + actionUrl;
+    const absoluteUrl = '/monica/' + actionUrl;
     const formData = new FormData(modalForm);
     formData.append('modal_action', modalAction);
 

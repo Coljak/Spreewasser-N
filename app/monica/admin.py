@@ -69,7 +69,7 @@ admin.site.register(models.UserSoilOrganicParameters, UserParametersNameAdmin)
 admin.site.register(models.SoilTemperatureModuleParameters, UserParametersNameAdmin)
 # admin.site.register(models.SimulationEnvironment, UserParametersAdmin)
 admin.site.register(models.UserSoilTransportParameters, UserSoilTransportParametersAdmin)
-admin.site.register(models.SiteParameters, admin.ModelAdmin)
+# admin.site.register(models.SiteParameters, admin.ModelAdmin)
 
 
 # admin.site.register(models.MonicaEnvironment, admin.ModelAdmin)

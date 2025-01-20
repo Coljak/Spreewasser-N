@@ -57,11 +57,6 @@ class CultivarParameters(models.Model):
     low_temperature_exposure = models.FloatField()
     max_assimilation_rate = models.FloatField()
     max_crop_height = models.FloatField()
-    # optimum_temperature_a = ArrayField(ArrayField(models.FloatField()))
-    # organ_ids_for_cutting_a = ArrayField(models.JSONField(), default=list)
-    # organ_ids_for_primary_yield_a = ArrayField(models.JSONField())
-    # organ_ids_for_secondary_yield_a = ArrayField(models.JSONField())
-    # organ_senescence_rate_a = ArrayField(ArrayField(models.FloatField()))
     optimum_temperature = models.JSONField(blank=True, null=True)
     organ_ids_for_cutting = models.JSONField(blank=True, null=True)
     organ_ids_for_primary_yield = models.JSONField(blank=True, null=True)
@@ -70,10 +65,6 @@ class CultivarParameters(models.Model):
     perennial = models.BooleanField()
     residue_n_ratio = models.FloatField()
     respiratory_stress = models.FloatField()
-    # specific_leaf_area_a = ArrayField(ArrayField(models.FloatField()))
-    # stage_kc_factor_a = ArrayField(ArrayField(models.FloatField()))
-    # stage_temperature_sum_a = ArrayField(ArrayField(models.FloatField()))
-    # vernalisation_requirement_a = ArrayField(models.FloatField())
     specific_leaf_area = models.JSONField(blank=True, null=True)
     stage_kc_factor = models.JSONField(blank=True, null=True)
     stage_temperature_sum = models.JSONField(blank=True, null=True)
@@ -1500,85 +1491,33 @@ class UserSimulationSettings(models.Model):
             "AutoIrrigationParams": {
                 "irrigationParameters": {
                     "nitrateConcentration": [self.auto_irrigation_params_nitrate_concentration, "mg dm-3"],
-                    "sulfateConcentration": [self.auto_irrigation_params_sulfate_concentration, "mg dm-3"],
-                
+                    "sulfateConcentration": [self.auto_irrigation_params_sulfate_concentration, "mg dm-3"],               
                 },
                 "amount": [self.auto_irrigation_params_amount, "mm"],
                 "threshold": self.auto_irrigation_params_threshold,
             }
         }
         	
-    
 
-    
-
-
-
-class SiteParameters(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    name = models.CharField(max_length=100, blank=True, null=True)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    altitude = models.FloatField() # heightNN
-    slope = models.FloatField()
-    n_deposition = models.FloatField()
-    soil_profile = models.ForeignKey(buek_models.SoilProfile, on_delete=models.CASCADE)
-
-    def to_json(self):
-        return {
-            "Latitude": self.latitude,
-            "Slope": self.slope,
-            "HeightNN": [self.altitude, "m"],
-            "NDeposition": [self.n_deposition, "kg N ha-1 y-1"],
-            "SoilProfileParameters": self.soil_profile.get_monica_horizons_json()
-        }
-
-# class CentralParameterProvider(models.Model):
+# class SiteParameters(models.Model):
 #     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-#     user_crop_parameters = models.ForeignKey(UserCropParameters, on_delete=models.CASCADE)
-#     user_environment_parameters = models.ForeignKey(UserEnvironmentParameters, on_delete=models.CASCADE)
-#     user_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE)
-#     user_soil_transport_parameters = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE)
-#     user_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE)
-#     simulation_parameters = models.ForeignKey(UserSimulationSettings, on_delete=models.CASCADE)
-#     site_parameters = models.ForeignKey(SiteParameters, on_delete=models.CASCADE)
-#     def to_json(self):
-#         return {
-#             "type": self.__class__.__name__,
-#             "userCropParameters": self.user_crop_parameters.to_json(),
-#             "userEnvironmentParameters": self.user_environment_parameters.to_json(),
-#             "userSoilMoistureParameters": self.user_soil_moisture_parameters.to_json(),
-#             "userSoilTemperatureParameters": self.user_soil_temperature_parameters.to_json(),
-#             "userSoilTransportParameters": self.user_soil_transport_parameters.to_json(),
-#             "userSoilOrganicParameters": self.user_soil_organic_parameters.to_json(),
-#             "simulationParameters": self.simulation_parameters.to_json(),
-#             "siteParameters": self.site_parameters.to_json()
-#         }
-    
-# Simulation related models
-# class SimulationEnvironment(models.Model):
-#     debug_mode = models.BooleanField(default=True)
-#     params = models.JSONField()
-#     crop_rotation = ArrayField(models.BooleanField(), null=True, blank=True) # worksteps
-
-#     user_environment_parameters = models.ForeignKey(UserEnvironmentParameters, on_delete=models.CASCADE)
-#     general_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE)
-#     general_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE)
-#     general_soil_transport = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE)
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-#     is_default = models.BooleanField(blank=True, null=True, default=False)
+#     name = models.CharField(max_length=100, blank=True, null=True)
+#     latitude = models.FloatField()
+#     longitude = models.FloatField()
+#     altitude = models.FloatField() # heightNN
+#     slope = models.FloatField()
+#     n_deposition = models.FloatField()
+#     soil_profile = models.ForeignKey(buek_models.SoilProfile, on_delete=models.CASCADE)
 
 #     def to_json(self):
 #         return {
-#             "type": "Env",
-#             "debugMode": self.debug_mode,
-#             "params": self.params,
-#             "cropRotation": self.crop_rotation.to_json(),
-#             "UserEnvironmentParameters": self.user_environment_parameters.to_json(),
-#             "GeneralSoilMoistureParameters": self.general_soil_moisture_parameters.to_json(),
-#             "GeneralSoilOrganicParameters": self.general_soil_organic_parameters.to_json(),
-#             "GeneralSoilTransport": self.general_soil_transport.to_json()
+#             "Latitude": self.latitude,
+#             "Slope": self.slope,
+#             "HeightNN": [self.altitude, "m"],
+#             "NDeposition": [self.n_deposition, "kg N ha-1 y-1"],
+#             "SoilProfileParameters": self.soil_profile.get_monica_horizons_json()
 #         }
+
 class CropRotation(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -1721,11 +1660,9 @@ class WorkstepHarvest(Workstep):
             "type": "Harvest"
         })
         return json_data
-    
 
 
 
-    
 class Output(models.Model):
     short_name = models.CharField(max_length=100)
     to_layers = models.BooleanField(default=False)
@@ -1818,6 +1755,8 @@ class DWDGridToPointIndices(models.Model):
     
     def create_instance(self, lat, lat_idx, lon, lon_idx):
         return self.objects.create(point=Point(lat, lon), lat=lat, lat_idx=lat_idx, lon=lon, lon_idx=lon_idx)
+    
+        #TODO code unreacheable - what was it for?
     
         """
         Returns all DWDGridToPointIndices instances with points within the given geometry.
@@ -1973,29 +1912,6 @@ class DWDForecastGridAsPolygon(models.Model):
             return None, None
 
 
-
-
-# class MonicaEnvironment(models.Model):
-#     name = models.CharField(max_length=255, null=True, blank=True)
-#     description = models.TextField(null=True, blank=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-#     debug_mode = models.BooleanField(default=False)
-#     params = models.ForeignKey(CentralParameterProvider, on_delete=models.CASCADE, null=True, blank=True)
-#     crop_rotation = models.JSONField(null=True, blank=True)
-#     crop_rotations = models.JSONField(null=True, blank=True, default=None)
-#     events = models.JSONField(null=True, blank=True)
-
-#     def to_json(self):
-#         return{
-#             "type": "Env",
-#             "debugMode": self.debug_mode,
-#             "params": self.params.to_json(),
-#             "cropRotation": self.crop_rotation,
-#             "cropRotations": None,
-#             "events": self.events
-#         }
-    
 class UserSoilProfile(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
@@ -2083,6 +1999,7 @@ class ModelSetup(models.Model):
     user_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE)
     user_soil_temperature_parameters = models.ForeignKey(SoilTemperatureModuleParameters, on_delete=models.CASCADE)
     simulation_parameters = models.ForeignKey(UserSimulationSettings, on_delete=models.CASCADE)
+    crop_rotation = models.JSONField(null=True, blank=True)
     
     def __str__(self):
         return self.name
@@ -2095,17 +2012,18 @@ class ModelSetup(models.Model):
             "userSoilTemperatureParametersId": self.user_soil_temperature_parameters.id,
             "userSoilTransportParametersId": self.user_soil_transport_parameters.id,
             "userSoilOrganicParametersId": self.user_soil_organic_parameters.id,
-            "simulationParametersId": self.simulation_parameters.id
+            "simulationParametersId": self.simulation_parameters.id,
+            "rotation": self.crop_rotation
         }
     
 class MonicaSite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    name = models.CharField(max_length=255)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    altitude = models.FloatField()
-    slope = models.FloatField()
-    n_deposition = models.FloatField()
+    name = models.CharField(max_length=255, null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    altitude = models.FloatField(null=True, blank=True)
+    slope = models.FloatField(null=True, blank=True)
+    n_deposition = models.FloatField(null=True, blank=True)
     # soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
@@ -2115,11 +2033,14 @@ class MonicaSite(models.Model):
 
 
     def __str__(self):
-        return self.name
+        if self.name is not None:
+            return self.name
+        else:
+            return f"Site without a name id {self.id}"
     
     def to_json(self):
         return {
-            "name": self.name,
+            "site_name": self.name,
             "latitude": self.latitude,
             "longitude": self.longitude,
             "altitude": self.altitude,
@@ -2158,7 +2079,7 @@ class MonicaCalculation(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(null=True, blank=True)
    
-    monica_site = models.ForeignKey(MonicaSite, on_delete=models.CASCADE)
+    # monica_site = models.ForeignKey(MonicaSite, on_delete=models.CASCADE)
     monica_project = models.ForeignKey(MonicaProject, on_delete=models.CASCADE)
     start_date = models.DateField()
     end_date = models.DateField()

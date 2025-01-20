@@ -943,3 +943,13 @@ def save_project(request):
 
         return JsonResponse({'message': {'success': True, 'message': 'Project saved!'}})
     return JsonResponse({'message': {'success': False, 'message': 'Form is not valid'}})
+
+def load_swn_project(request):
+    pass
+
+
+def save_swn_project(request):
+    pass
+
+def get_parameter_options(request):
+    pass

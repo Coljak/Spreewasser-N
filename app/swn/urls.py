@@ -24,7 +24,12 @@ urlpatterns = [
     path('drought/load/', views.get_user_fields, name='get-user-fields'),
     path('drought/update/', views.update_user_field, name='update-user-fields'),
     path('drought/delete/<int:id>', views.delete_user_field, name='delete-user-field'),
-   
+    # path('drought/create-project/', views.create_project, name='create-project'),
+    path('drought/save-project/', views.save_swn_project, name='save-project'),
+    path('drought/save-project/<int:project_id>/', views.save_swn_project, name='save-project'),
+    path('drought/load-project/<int:id>/', views.load_swn_project, name='load-project'),
+    path('drought/get_options/<str:parameter_type>/', views.get_parameter_options, name='get_parameter_options'),
+    path('drought/get_options/<str:parameter_type>/<int:id>/', views.get_parameter_options, name='get_parameter_options'),
     # path('drought/field-edit/<int:id>/', views.field_edit, name='field_edit'),
     path('drought/field-projects-menu/<int:id>/', views.get_field_project, name='field_projects_menu'),
     path('drought/get_lat_lon/<int:user_field_id>/', views.get_centroid, name='get_centroid'),
@@ -52,6 +57,6 @@ urlpatterns = [
     path('drought/load_projectregion/', views.load_projectregion, name='load_projectregion'),
     path('drought/load_polygon/', views.load_nuts_polygon, name='load_nuts_polygon'),
     path('drought/load_polygon/<str:entity>/<int:polygon_id>/', views.load_nuts_polygon, name='load_nuts_polygon_entity'),
-    path('login/three_split/save-project/', views.save_project, name='save_project'),
+    # path('login/three_split/save-project/', views.save_project, name='save_project'),
     ]
 

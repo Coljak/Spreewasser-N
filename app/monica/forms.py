@@ -58,7 +58,7 @@ class MonicaProjectForm(forms.Form):
         model = MonicaProject
         exclude = ['id', 'user']
 
-    def __init__(self, *args, user=9, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         # user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user is not None:

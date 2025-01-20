@@ -309,6 +309,7 @@ def create_monica_env_from_json(json_data):
         lon = json_data.get('longitude')
         soil_profile_parameters = get_soil_profile(landusage, lat, lon)['SoilProfileParameters']
     else:
+        # TODO specify SoilProfile content Type!
         soil_profile_id = json_data.get('soilProfileId')
         soil_profile_parameters = buek_models.SoilProfile.objects.get(id=soil_profile_id).get_horizons_json()
 
@@ -328,44 +329,44 @@ def create_monica_env_from_json(json_data):
         "NDeposition": [n_deposition,"kg N ha-1 y-1"],
         "SoilProfileParameters": soil_profile_parameters
     }
-    simulation_settings = json_data.get('userSimulationSettings')
+    simulation_settings = json_data.get('userSimulationSettingsId')
     if simulation_settings is not None:
         simj = UserSimulationSettings.objects.get(id=simulation_settings).to_json()
     else:
         simj = UserSimulationSettings.objects.get(is_default=True).to_json() 
         
-    user_crop_parameters_id = json_data.get('userCropParameters')
+    user_crop_parameters_id = json_data.get('userCropParametersId')
     if user_crop_parameters_id is not None:
         user_crop_parameters = m_models.UserCropParameters.objects.get(id=user_crop_parameters_id).to_json()
     else:
         user_crop_parameters = m_models.UserCropParameters.objects.get(is_default=True).to_json()
 
-    user_environment_parameters_id = json_data.get('userEnvironmentParameters')
+    user_environment_parameters_id = json_data.get('userEnvironmentParametersId')
     if user_environment_parameters_id is not None:
         user_environment_parameters = m_models.UserEnvironmentParameters.objects.get(id=user_environment_parameters_id).to_json()
     else:
         user_environment_parameters = m_models.UserEnvironmentParameters.objects.get(is_default=True).to_json()
 
 
-    user_soil_moisture_parameters_id = json_data.get('userSoilMoistureParameters')
+    user_soil_moisture_parameters_id = json_data.get('userSoilMoistureParametersId')
     if user_soil_moisture_parameters_id is not None:   
         user_soil_moisture_parameters = m_models.UserSoilMoistureParameters.objects.get(id=user_soil_moisture_parameters_id).to_json()
     else:
         user_soil_moisture_parameters = m_models.UserSoilMoistureParameters.objects.get(is_default=True).to_json()
 
-    user_soil_temperature_parameters_id = json_data.get('userSoilTemperatureParameters')
+    user_soil_temperature_parameters_id = json_data.get('userSoilTemperatureParametersId')
     if user_soil_temperature_parameters_id is not None:
         user_soil_temperature_parameters = m_models.SoilTemperatureModuleParameters.objects.get(id=user_soil_temperature_parameters_id).to_json()
     else:
         user_soil_temperature_parameters = m_models.SoilTemperatureModuleParameters.objects.get(is_default=True).to_json()
 
-    user_soil_transport_parameters_id = json_data.get('userSoilTransportParameters')
+    user_soil_transport_parameters_id = json_data.get('userSoilTransportParametersId')
     if user_soil_transport_parameters_id is not None:
         user_soil_transport_parameters = m_models.UserSoilTransportParameters.objects.get(id=user_soil_transport_parameters_id).to_json()
     else:
         user_soil_transport_parameters = m_models.UserSoilTransportParameters.objects.get(is_default=True).to_json()
 
-    user_soil_organic_parameters_id = json_data.get('userSoilOrganicParameters')
+    user_soil_organic_parameters_id = json_data.get('userSoilOrganicParametersId')
     if user_soil_organic_parameters_id is not None:
         user_soil_organic_parameters = m_models.UserSoilOrganicParameters.objects.get(id=user_soil_organic_parameters_id).to_json()
     else:

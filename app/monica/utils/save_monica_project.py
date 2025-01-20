@@ -119,25 +119,25 @@ def save_project(request, project_class=MonicaProject, project_id=None, addition
             monica_model_setup = ModelSetup.objects.get(id=data.get('modelSetupId'))
             monica_model_setup.name = data.get('modelSetupName', '')
 
-            user_crop_parameters = UserCropParameters.objects.get(pk=data.get('userCropParameters'))
+            user_crop_parameters = UserCropParameters.objects.get(pk=data.get('userCropParametersId'))
             monica_model_setup.user_crop_parameters = user_crop_parameters
 
-            user_environment_parameters = UserEnvironmentParameters.objects.get(pk=data.get('userEnvironmentParameters'))
+            user_environment_parameters = UserEnvironmentParameters.objects.get(pk=data.get('userEnvironmentParametersId'))
             monica_model_setup.user_environment_parameters = user_environment_parameters
 
-            user_soil_moisture_parameters = UserSoilMoistureParameters.objects.get(pk=data.get('userSoilMoistureParameters'))
+            user_soil_moisture_parameters = UserSoilMoistureParameters.objects.get(pk=data.get('userSoilMoistureParametersId'))
             monica_model_setup.user_soil_moisture_parameters = user_soil_moisture_parameters
 
-            user_soil_transport_parameters = UserSoilTransportParameters.objects.get(pk=data.get('userSoilTransportParameters'))
+            user_soil_transport_parameters = UserSoilTransportParameters.objects.get(pk=data.get('userSoilTransportParametersId'))
             monica_model_setup.user_soil_transport_parameters = user_soil_transport_parameters
 
-            user_soil_organic_parameters = UserSoilOrganicParameters.objects.get(pk=data.get('userSoilOrganicParameters'))
+            user_soil_organic_parameters = UserSoilOrganicParameters.objects.get(pk=data.get('userSoilOrganicParametersId'))
             monica_model_setup.user_soil_organic_parameters = user_soil_organic_parameters
             
-            user_soil_temperature_parameters = SoilTemperatureModuleParameters.objects.get(pk=data.get('userSoilTemperatureParameters'))
+            user_soil_temperature_parameters = SoilTemperatureModuleParameters.objects.get(pk=data.get('userSoilTemperatureParametersId'))
             monica_model_setup.user_soil_temperature_parameters = user_soil_temperature_parameters
 
-            simulation_parameters = UserSimulationSettings.objects.get(pk=data.get('userSimulationSettings'))
+            simulation_parameters = UserSimulationSettings.objects.get(pk=data.get('userSimulationSettingsId'))
             monica_model_setup.simulation_parameters = simulation_parameters
 
             monica_model_setup.crop_rotation = data.get('rotation')

@@ -944,12 +944,38 @@ def save_project(request):
         return JsonResponse({'message': {'success': True, 'message': 'Project saved!'}})
     return JsonResponse({'message': {'success': False, 'message': 'Form is not valid'}})
 
-def load_swn_project(request):
-    pass
+def load_swn_project(request, id):
+    try:
+        project = models.SwnProject.objects.get(pk=id)
+        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project.to_json()})
+    except:
+            return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
+    
 
+def save_swn_project(request, project_id=None):
+    print("CREATE SWN PROJECT\n", request.POST)
 
-def save_swn_project(request):
-    pass
+    project = save_monica_project.save_project(request, project_class=models.SwnProject, project_id=project_id, additional_fields=True)
 
-def get_parameter_options(request):
-    pass
+    return JsonResponse({
+        'message': {
+            'success': True, 
+            'message': f'Project {project.name} saved'
+            }, 
+            'project_id': project.id, 
+            'project_name': project.name
+            })
+
+def get_parameter_options(request, parameter_type, id=None):
+    """
+    Get choices for select boxes- those that occur ONLY in SWN.
+    """
+    user = request.user.id
+    print("GET PARAMETER OPTIONS from SWN: ", parameter_type, id,)
+
+    if parameter_type == 'monica-project':
+         options = models.SwnProject.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
+    else:
+        options = []
+
+    return JsonResponse({'options': list(options)})

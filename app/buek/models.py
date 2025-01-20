@@ -127,7 +127,7 @@ class SoilProfile(models.Model):
     soil_profile_no = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return 'soil_profile ' + str(self.polygon.polygon_id) 
+        return 'soil_profile ' + str(self.id) 
     
     def get_all_horizons(self):
         return SoilProfileHorizon.objects.filter(soilprofile=self).order_by('horizont_nr')

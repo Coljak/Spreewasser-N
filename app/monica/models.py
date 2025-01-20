@@ -1998,7 +1998,7 @@ class ModelSetup(models.Model):
     user_soil_transport_parameters = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE)
     user_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE)
     user_soil_temperature_parameters = models.ForeignKey(SoilTemperatureModuleParameters, on_delete=models.CASCADE)
-    simulation_parameters = models.ForeignKey(UserSimulationSettings, on_delete=models.CASCADE)
+    user_simulation_settings = models.ForeignKey(UserSimulationSettings, on_delete=models.CASCADE)
     crop_rotation = models.JSONField(null=True, blank=True)
     
     def __str__(self):
@@ -2012,7 +2012,7 @@ class ModelSetup(models.Model):
             "userSoilTemperatureParametersId": self.user_soil_temperature_parameters.id,
             "userSoilTransportParametersId": self.user_soil_transport_parameters.id,
             "userSoilOrganicParametersId": self.user_soil_organic_parameters.id,
-            "simulationParametersId": self.simulation_parameters.id,
+            "userSimulationSettingsId": self.user_simulation_settings.id, #simulationParametersId
             "rotation": self.crop_rotation
         }
     
@@ -2046,7 +2046,8 @@ class MonicaSite(models.Model):
             "altitude": self.altitude,
             "slope": self.slope,
             "nDeposition": self.n_deposition,
-            "soilProfile": self.soil_profile.to_json()
+            "soilProfileType": self.soil_profile_content_type.model,
+            "soilProfileId": self.soil_profile_object_id
         }
 
 
@@ -2064,16 +2065,53 @@ class MonicaProject(models.Model):
     def __str__(self):
         return self.name
     
+    # def to_json(self):
+    #     return {
+    #         "name": self.name,
+    #         "startDate": self.start_date,
+    #         "description": self.description,
+    #         "modelSetupId": self.monica_model_setup.id,
+    #         "modelSetup": self.monica_model_setup.to_json(),
+    #         "siteId": self.monica_site.id,
+    #         "site": self.monica_site.to_json()
+    #     }
+
     def to_json(self):
-        return {
+        # Start with the project fields
+        project_data = {
             "name": self.name,
             "startDate": self.start_date,
             "description": self.description,
-            "modelSetupId": self.monica_model_setup.id,
-            "modelSetup": self.monica_model_setup.to_json(),
-            "siteId": self.monica_site.id,
-            "site": self.monica_site.to_json()
         }
+        
+        # Add ModelSetup fields (flattened)
+        if self.monica_model_setup:
+            project_data.update({
+                "modelSetupId": self.monica_model_setup.id,
+                "userCropParametersId": self.monica_model_setup.user_crop_parameters.id,
+                "userEnvironmentParametersId": self.monica_model_setup.user_environment_parameters.id,
+                "userSoilMoistureParametersId": self.monica_model_setup.user_soil_moisture_parameters.id,
+                "userSoilTemperatureParametersId": self.monica_model_setup.user_soil_temperature_parameters.id,
+                "userSoilTransportParametersId": self.monica_model_setup.user_soil_transport_parameters.id,
+                "userSoilOrganicParametersId": self.monica_model_setup.user_soil_organic_parameters.id,
+                "userSimulationSettingsId": self.monica_model_setup.user_simulation_settings.id, #simulationParametersId
+                "rotation": self.monica_model_setup.crop_rotation
+            })
+        
+        # Add MonicaSite fields (flattened)
+        if self.monica_site:
+            project_data.update({
+                "site_name": self.monica_site.name,
+                "latitude": self.monica_site.latitude,
+                "longitude": self.monica_site.longitude,
+                "altitude": self.monica_site.altitude,
+                "slope": self.monica_site.slope,
+                "nDeposition": self.monica_site.n_deposition,
+                "soilProfileType": self.monica_site.soil_profile_content_type.model,
+                "soilProfileId": self.monica_site.soil_profile_object_id
+            })
+        
+        return project_data
 
 class MonicaCalculation(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
@@ -2099,3 +2137,13 @@ class MonicaCalculation(models.Model):
             raise ValidationError({
                 'start_date': f"Start date must match the project's start date: {self.monica_project.start_date}"
             })
+        
+    def to_json(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "startDate": self.start_date,
+            "endDate": self.end_date,
+            "forecastStartDate": self.forecast_start_date,
+            "result": self.result
+        }

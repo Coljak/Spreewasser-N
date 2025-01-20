@@ -32,57 +32,69 @@ const saveToLocalStorage = (project) => {
     localStorage.setItem('project', JSON.stringify(project));
 };
 
-// // Classes
+
 // class MonicaProject {
-//     constructor(project) {
-//         this.id = project.id;
-//         this.name = project.name;
-//         this.description = project.description;
-//         this.longitude = project.longitude;
-//         this.latitude = project.latitude;
-//         this.userField = project.userField;
-//         this.startDate = project.startDate;
-//         this.endDate = null;
-//         this.rotation = project.rotation;
-//         // settings
-//         this.userSimulationSettings = project.userSimulationSettings;
-//         this.userEnvironmentParameters = project.userEnvironmentParameters;
-//         this.userCropParameters = project.userCropParameters;
+//     constructor(project = {}) {
+//         this.id = project.id || null;
+//         this.name = project.name || '';
+//         this.startDate = project.startDate || '2024-01-01';
+//         this.endDate = project.endDate || '2024-12-31';
+//         this.description = project.description || '';
+//         this.longitude = project.longitude || 10.0;
+//         this.latitude = project.latitude || 52.0;
+//         this.userField = project.userField || null;
 
-//         this.userSoilTemperatureParameters = project.userSoilTemperatureParameters;
-//         this.userSoilTransportParameters = project.userSoilTransportParameters;
-//         this.userSoilOrganicParameters = project.userSoilOrganicParameters;
-//         this.userSoilMoistureParameters = project.userSoilMoistureParameters;
+//         this.rotation = project.rotation || [];
+//         // ModelSetup
+//         this.modelSetupId = project.modelSetupId || 1;
+//         this.userEnvironmentParametersId = project.userEnvironmentParametersId || 1;
+//         this.userSoilMoistureParametersId = project.userSoilMoistureParametersId || 1;
+//         this.userSoilTemperatureParametersId = project.userSoilTemperatureParametersId || 1;
+//         this.userSoilTransportParametersId = project.userSoilTransportParametersId || 1;
+//         this.userCropParametersId = project.userCropParametersId || 1;
+//         this.userSoilOrganicParametersId = project.userSoilOrganicParametersId || 1;
+//         this.userSimulationSettingsId = project.userSimulationSettingsId || 1;
 
-//         // this.soilProfileId = null;
+//         // Additional properties can be added here as needed
+//         // this.soilProfileId = project.soilProfileId || null;
 //     }
-// };
+
+//     // Static method to create a MonicaProject from JSON
+//     static fromJson(json) {
+//         return new MonicaProject(json);
+//     }
+
+//     // Convert instance to JSON for storage or API submission
+//     toJson() {
+//         return JSON.stringify(this);
+//     }
+// }
+
 class MonicaProject {
     constructor(project = {}) {
-        this.id = project.id || null;
-        this.name = project.name || '';
-        this.description = project.description || '';
-        this.longitude = project.longitude || 10.0;
-        this.latitude = project.latitude || 52.0;
-        this.userField = project.userField || null;
-        this.startDate = project.startDate || '2024-01-01';
-        this.endDate = project.endDate || '2024-12-31';
-        this.rotation = project.rotation || [];
+        this.id = project.id !== undefined ? project.id : null;
+        this.name = project.name !== undefined ? project.name : '';
+        this.startDate = project.startDate !== undefined ? project.startDate : '2024-01-01';
+        this.endDate = project.endDate !== undefined ? project.endDate : '2024-12-31';
+        this.description = project.description !== undefined ? project.description : '';
+        this.longitude = project.longitude !== undefined ? project.longitude : 10.0;
+        this.latitude = project.latitude !== undefined ? project.latitude : 52.0;
+        this.userField = project.userField !== undefined ? project.userField : null;
 
-        this.modelSetupId = project.modelSetupId || 1;
+        this.rotation = Array.isArray(project.rotation) ? project.rotation : [];
         
-        // Settings
-        this.userSimulationSettings = project.userSimulationSettings || 1;
-        this.userEnvironmentParameters = project.userEnvironmentParameters || 1;
-        this.userCropParameters = project.userCropParameters || 1;
-
-        this.userSoilTemperatureParameters = project.userSoilTemperatureParameters || 1;
-        this.userSoilTransportParameters = project.userSoilTransportParameters || 1;
-        this.userSoilOrganicParameters = project.userSoilOrganicParameters || 1;
-        this.userSoilMoistureParameters = project.userSoilMoistureParameters || 1;
-
-        // Additional properties can be added here as needed
-        // this.soilProfileId = project.soilProfileId || null;
+        // ModelSetup
+        this.modelSetupId = project.modelSetupId !== undefined ? project.modelSetupId : 1;
+        this.userEnvironmentParametersId = project.userEnvironmentParametersId !== undefined ? project.userEnvironmentParametersId : 1;
+        this.userSoilMoistureParametersId = project.userSoilMoistureParametersId !== undefined ? project.userSoilMoistureParametersId : 1;
+        this.userSoilTemperatureParametersId = project.userSoilTemperatureParametersId !== undefined ? project.userSoilTemperatureParametersId : 1;
+        this.userSoilTransportParametersId = project.userSoilTransportParametersId !== undefined ? project.userSoilTransportParametersId : 1;
+        this.userCropParametersId = project.userCropParametersId !== undefined ? project.userCropParametersId : 1;
+        this.userSoilOrganicParametersId = project.userSoilOrganicParametersId !== undefined ? project.userSoilOrganicParametersId : 1;
+        this.userSimulationSettingsId = project.userSimulationSettingsId !== undefined ? project.userSimulationSettingsId : 1;
+        this.soilProfileType = project.soilProfileType !== undefined ? project.soilProfileType : 'soilprofile';
+        this.soilProfileId = project.soilProfileId !== undefined ? project.soilProfileId : null;
+    
     }
 
     // Static method to create a MonicaProject from JSON
@@ -95,7 +107,6 @@ class MonicaProject {
         return JSON.stringify(this);
     }
 }
-
 
 
 class MonicaCalculation {
@@ -421,14 +432,25 @@ const runSimulation = (monicaProject) => {
 
 const loadProject = (project) => {
     console.log('loadProject', project);
-    $('#projectName').val(project.name);
-    $('#projectDescription').val(project.description);
-    $('#id_longitude').val(project.longitude);
-    $('#id_latitude').val(project.latitude);
-    $('#monicaStartDatePicker').datepicker('update', project.startDate);
-    $('#monicaEndDatePicker').datepicker('update', project.endDate);
-    console.log('project in loadProject', project);
-    return project;
+    const newProject = new MonicaProject(project);
+    console.log('loadProject', newProject);
+    let startDate = new Date(newProject.startDate);
+    $('#projectName').val(newProject.name);
+    $('#projectDescription').val(newProject.description);
+    $('#id_longitude').val(newProject.longitude);
+    $('#id_latitude').val(newProject.latitude);
+    $('#monicaStartDatePicker').datepicker('update', newProject.startDate);
+    // TODO check if this is necessary/ what to do with it
+    $('#monicaEndDatePicker').datepicker('update', newProject.endDate);
+    $('#id_user_environment').val(Number(newProject.userEnvironmentParametersId));
+    $('#id_user_crop_parameters').val(Number(newProject.userCropParametersId));
+    $('#id_user_simulation_settings').val(newProject.userSimulationSettingsId);
+    $('#id_user_soil_moisture_parameters').val(newProject.userSoilMoistureParametersId);
+    $('#id_user_soil_organic_parameters').val(newProject.userSoilOrganicParametersId);
+    $('#id_user_soil_temperature_parameters').val(newProject.userSoilTemperatureParametersId);
+    $('#id_user_soil_transport_parameters').val(newProject.userSoilTransportParametersId);
+
+    // return project;
 };
 
 const addRotation = (project) => {
@@ -812,7 +834,7 @@ var initiaizeSoilModal = function (polygonIds, userFieldId, systemUnitJson, land
 const fetchModalContent = (params) => {
     try {
 
-        let url = '/monica/model/' + params.parameters + '/';
+        let url = '/monica/' + params.parameters + '/';
         if (params.parameters_id) {
             url += params.parameters_id + '/';
         }
@@ -917,17 +939,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return [daysInRotation, yearsInRotation];
     };
 
+    // TODO delete this
+
     project.startDate = $('#monicaStartDatePicker').datepicker('getUTCDate');
     project.endDate = $('#monicaEndDatePicker').datepicker('getUTCDate');
     project.latitude = $('#id_latitude').val();
     project.longitude = $('#id_longitude').val();
-    project.userSimulationSettings = $('#id_user_simulation_settings').val();
-    project.userEnvironmentParameters = $('#id_user_environment').val();
-    project.userCropParameters = $('#id_user_crop_parameters').val();
-    project.userSoilTemperatureParameters = $('#id_soil_temperature').val();
-    project.userSoilTransportParameters = $('#id_soil_transport').val();
-    project.userSoilOrganicParameters = $('#id_soil_organic').val();
-    project.userSoilMoistureParameters = $('#id_soil_moisture').val();
+    project.userSimulationSettingsId = $('#id_user_simulation_settings').val();
+    project.userEnvironmentParametersId = $('#id_user_environment').val();
+    project.userCropParametersId = $('#id_user_crop_parameters').val();
+    project.userSoilTemperatureParametersId = $('#id_soil_temperature').val();
+    project.userSoilTransportParametersId = $('#id_soil_transport').val();
+    project.userSoilOrganicParametersId = $('#id_soil_organic').val();
+    project.userSoilMoistureParametersId = $('#id_soil_moisture').val();
     project.todaysDate = $('#todaysDatePicker').datepicker('getUTCDate');
     project.name = $('#projectName').val();
     project.description = $('#projectDescription').val();
@@ -1045,7 +1069,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'parameters_id': value,
                 'rotation_index': rotationIndex
             }
-            // const endpoint = '/monica/model/' + targetClass + '/' + value + '/' + rotationIndex + '/';
+            // const endpoint = '/monica/' + targetClass + '/' + value + '/' + rotationIndex + '/';
             if (value != '') {
                 fetchModalContent(params);
                 $('#formModal').modal('show');
@@ -1074,7 +1098,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('if species-parameters')
                 workstep.options.species = event.target.value;
                 if (event.target.value != '') {
-                    fetch('/monica/model/get_options/cultivar-parameters/' + event.target.value + '/')
+                    fetch('/monica/get_options/cultivar-parameters/' + event.target.value + '/')
                     .then(response => response.json())
                     .then(data => {
                         cultivarSelector.innerHTML = '';  // Clear current options
@@ -1093,7 +1117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
 
                 
-                    fetch('/monica/model/get_options/crop-residue-parameters/' + event.target.value + '/')
+                    fetch('/monica/get_options/crop-residue-parameters/' + event.target.value + '/')
                         .then(response => response.json())
                         .then(data => {
                             residueSelector.innerHTML = '';
@@ -1189,7 +1213,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // TAB PROJECT EVENT LISTENERS
     const loadProjectFromDB = (project_id) => {
-        fetch('/monica/load-project/' + project_id + '/')
+        fetch('load-project/' + project_id + '/')
             .then(response => response.json())
             .then(data => {
                 console.log('loadProjectFromDB', data);
@@ -1331,15 +1355,15 @@ document.addEventListener('DOMContentLoaded', () => {
         saveToLocalStorage(project);
     });
     $('#id_user_environment').on('change', function () {
-        project.userEnvironmentParameters = $(this).val();
+        project.userEnvironmentParametersId = $(this).val();
         saveToLocalStorage(project);
     });
     $('#id_user_crop_parameters').on('change', function () {
-        project.userCropParameters = $(this).val();
+        project.userCropParametersId = $(this).val();
         saveToLocalStorage(project);
     });
     $('#id_user_simulation_settings').on('change', function () {
-        project.userSimulationSettings = $(this).val();
+        project.userSimulationSettingsId = $(this).val();
         saveToLocalStorage(project);
     });
 
@@ -1385,15 +1409,16 @@ document.addEventListener('DOMContentLoaded', () => {
    
         }
 
+        // TODO delete this
         project.startDate = $('#monicaStartDatePicker').datepicker('getUTCDate');
         project.endDate = $('#monicaEndDatePicker').datepicker('getUTCDate');
-        project.userCropParameters = $('#id_user_crop_parameters').val();
-        project.userEnvironmentParameters = $('#id_user_environment').val();
-        project.userSimulationSettings = $('#id_user_simulation_settings').val();
-        project.userSoilTemperatureParameters = $('#id_soil_temperature').val();
-        project.userSoilTransportParameters = $('#id_soil_transport').val();
-        project.userSoilOrganicParameters = $('#id_soil_organic').val();
-        project.userSoilMoistureParameters = $('#id_soil_moisture').val();
+        project.userCropParametersId = $('#id_user_crop_parameters').val();
+        project.userEnvironmentParametersId = $('#id_user_environment').val();
+        project.userSimulationSettingsId = $('#id_user_simulation_settings').val();
+        project.userSoilTemperatureParametersId = $('#id_soil_temperature').val();
+        project.userSoilTransportParametersId = $('#id_soil_transport').val();
+        project.userSoilOrganicParametersId = $('#id_soil_organic').val();
+        project.userSoilMoistureParametersId = $('#id_soil_moisture').val();
         project.todaysDate = $('#todaysDatePicker').datepicker('getUTCDate');
 
         if (validateProject(project)) {

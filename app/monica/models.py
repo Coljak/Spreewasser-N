@@ -2006,6 +2006,7 @@ class ModelSetup(models.Model):
     
     def to_json(self):
         return {
+            "modelSetupId": self.id,
             "userCropParametersId": self.user_crop_parameters.id,
             "userEnvironmentParametersId": self.user_environment_parameters.id,
             "userSoilMoistureParametersId": self.user_soil_moisture_parameters.id,
@@ -2039,15 +2040,20 @@ class MonicaSite(models.Model):
             return f"Site without a name id {self.id}"
     
     def to_json(self):
+        soil_profile_type = None
+        if self.soil_profile_content_type:
+            soil_profile_type = self.soil_profile_content_type.model
+
         return {
-            "site_name": self.name,
-            "latitude": self.latitude,
-            "longitude": self.longitude,
-            "altitude": self.altitude,
-            "slope": self.slope,
-            "nDeposition": self.n_deposition,
-            "soilProfileType": self.soil_profile_content_type.model,
-            "soilProfileId": self.soil_profile_object_id
+            "site_name": self.name or None,
+            "latitude": self.latitude or None,
+            "longitude": self.longitude or None,
+            "altitude": self.altitude or None,
+            "slope": self.slope or None,
+            "nDeposition": self.n_deposition or None,
+            # "soilProfileType": self.soil_profile_content_type.model if self.soil_profile_content_type else None,
+            "soilProfileType": soil_profile_type,
+            "soilProfileId": self.soil_profile_object_id or None
         }
 
 
@@ -2065,16 +2071,6 @@ class MonicaProject(models.Model):
     def __str__(self):
         return self.name
     
-    # def to_json(self):
-    #     return {
-    #         "name": self.name,
-    #         "startDate": self.start_date,
-    #         "description": self.description,
-    #         "modelSetupId": self.monica_model_setup.id,
-    #         "modelSetup": self.monica_model_setup.to_json(),
-    #         "siteId": self.monica_site.id,
-    #         "site": self.monica_site.to_json()
-    #     }
 
     def to_json(self):
         # Start with the project fields
@@ -2086,30 +2082,14 @@ class MonicaProject(models.Model):
         
         # Add ModelSetup fields (flattened)
         if self.monica_model_setup:
-            project_data.update({
-                "modelSetupId": self.monica_model_setup.id,
-                "userCropParametersId": self.monica_model_setup.user_crop_parameters.id,
-                "userEnvironmentParametersId": self.monica_model_setup.user_environment_parameters.id,
-                "userSoilMoistureParametersId": self.monica_model_setup.user_soil_moisture_parameters.id,
-                "userSoilTemperatureParametersId": self.monica_model_setup.user_soil_temperature_parameters.id,
-                "userSoilTransportParametersId": self.monica_model_setup.user_soil_transport_parameters.id,
-                "userSoilOrganicParametersId": self.monica_model_setup.user_soil_organic_parameters.id,
-                "userSimulationSettingsId": self.monica_model_setup.user_simulation_settings.id, #simulationParametersId
-                "rotation": self.monica_model_setup.crop_rotation
-            })
+            model_setup = self.monica_model_setup.to_json()
+            project_data.update(model_setup)
         
         # Add MonicaSite fields (flattened)
         if self.monica_site:
-            project_data.update({
-                "site_name": self.monica_site.name,
-                "latitude": self.monica_site.latitude,
-                "longitude": self.monica_site.longitude,
-                "altitude": self.monica_site.altitude,
-                "slope": self.monica_site.slope,
-                "nDeposition": self.monica_site.n_deposition,
-                "soilProfileType": self.monica_site.soil_profile_content_type.model,
-                "soilProfileId": self.monica_site.soil_profile_object_id
-            })
+            project_data.update(
+                self.monica_site.to_json()
+            )
         
         return project_data
 

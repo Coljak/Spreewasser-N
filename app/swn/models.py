@@ -48,7 +48,7 @@ class ProjectRegion(models.Model):
         return self.name
 
 class UserField(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="drought_userfields")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
     creation_date = models.DateField(auto_now_add=True, blank=True, null=True)
     swn_tool = models.CharField(max_length=16, null=True, blank=True)
@@ -56,14 +56,7 @@ class UserField(models.Model):
     comment = models.TextField(null=True, blank=True)
     geom = gis_models.GeometryField(null=True, srid=4326)
     soil_profile_polygon_ids = models.JSONField(null=True, blank=True)
-    # TODO check if that is correct or even needed: it is probably BuekSoilProfie and not SoilProfile
-    # soil_profiles = models.ManyToManyField(
-    #     'SoilProfile',
-    #     through='SoilProfileUserField',
-    #     related_name='drought_userfields',
-    #     blank=True,
-    # )
-    
+
     weather_grid_points = models.JSONField(null=True, blank=True)
     
 
@@ -137,74 +130,7 @@ class UserField(models.Model):
         lon = centroid.x
         return lon, lat
     
-    # # models.py
-
-    # TODO celery task UserField.save
-    # def save(self, *args, **kwargs):
-    #     from .tasks import process_user_field
-    #     super(UserField, self).save(*args, **kwargs) 
-
-    #     # After saving, trigger the Celery task asynchronously
-    #     process_user_field.delay(self.pk)
-
-        
-# # TODO this table is empty-- canlikely be deleted
-# class SoilProfile(models.Model):
-#     name = models.CharField(max_length=255, null=True, blank=True)
-#     horizon_id = models.IntegerField(null=True, blank=True)
-#     layer_depth = models.IntegerField(null=True, blank=True)
-#     bulk_density = models.IntegerField(null=True, blank=True)
-#     raw_density = models.IntegerField(null=True, blank=True)
-#     soil_organic_carbon = models.FloatField(null=True, blank=True)
-#     soil_organic_matter = models.IntegerField(null=True, blank=True)
-#     ph = models.IntegerField(null=True, blank=True)
-#     ka5_texture_class = models.CharField(max_length=56, null=True, blank=True)
-#     sand = models.IntegerField(null=True, blank=True)
-#     clay = models.IntegerField(null=True, blank=True)
-#     silt = models.IntegerField(null=True, blank=True)
-#     permanent_wilting_point = models.IntegerField(null=True, blank=True)
-#     field_capacity = models.IntegerField(null=True, blank=True)
-#     saturation = models.IntegerField(null=True, blank=True)
-#     soil_water_conductivity_coefficient = models.IntegerField(null=True, blank=True)
-#     sceleton = models.IntegerField(null=True, blank=True)
-#     soil_ammonium = models.IntegerField(null=True, blank=True)
-#     soil_nitrate = models.IntegerField(null=True, blank=True)
-#     c_n = models.IntegerField(null=True, blank=True)
-#     initial_soil_moisture = models.IntegerField(null=True, blank=True)
-#     layer_description = models.CharField(max_length=56, null=True, blank=True)
-#     is_in_groundwater = models.IntegerField(null=True, blank=True)
-#     is_impenetrable = models.IntegerField(null=True, blank=True)
-#     comment = models.TextField(null=True, blank=True)
-#     creation_date = models.DateField(auto_now_add=True, blank=True)
-
-#     def __str__(self):
-#         return self.name
-
-    
-# class SoilProfileUserField(models.Model):
-#     user_field = models.ForeignKey(UserField, on_delete=models.CASCADE)
-#     soil_profile = models.ForeignKey(SoilProfile, on_delete=models.CASCADE)
-#     horizon_id = models.IntegerField(null=True, blank=True)
-#     comment = models.TextField(null=True, blank=True)
-#     creation_date = models.DateField(auto_now_add=True, blank=True)
-
-#     def __str__(self):
-#         return self.name
-
-# class UserCalculation(monica_models.ModelSetup):    
-#     project_name = models.CharField(max_length=255)
-#     user_field = models.ForeignKey(UserField, on_delete=models.CASCADE)
-#     soil_profile = models.ForeignKey(SoilProfile, on_delete=models.DO_NOTHING, null=True)
-#     comment = models.TextField(null=True, blank=True)
-#     calculation_start_date = models.DateField(null=True, blank=True)
-#     calculation_end_date = models.DateField(null=True, blank=True)
-#     rotation = models.JSONField(null=True, blank=True)
-#     calculation = models.JSONField(null=True, blank=True)
-#     creation_date = models.DateField(auto_now_add=True, blank=True)
-#     # updated = models.DateTimeField(auto_now=True)
-
-#     def __str__(self):
-#         return self.name
+ 
 
 class UserProject(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -218,7 +144,7 @@ class UserProject(models.Model):
         return self.name
     
 class SwnProject(monica_models.MonicaProject):
-    user_field = models.ForeignKey(UserField, on_delete=models.CASCADE)
+    user_field = models.ForeignKey(UserField, on_delete=models.CASCADE, related_name='swn_projects')
     # lats and lons for the whole area
 
     def __str__(self):

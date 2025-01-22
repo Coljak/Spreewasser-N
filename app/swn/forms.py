@@ -51,7 +51,18 @@ class UserFieldSelectorForm(forms.Form):
                 (field.id, field.name) for field in UserField.objects.filter(Q(user=user)).order_by('name')
                 ]
 
+class SwnProjectSelectionForm(forms.Form):
+    monica_project = forms.ChoiceField(
+        choices=[],
+        label="Swn Project",
+        widget=forms.Select(attrs={'class': 'form-control monica-project'})
+    )
 
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['monica_project'].choices = [
+            (instance.id, instance.name) for instance in SwnProject.objects.filter(Q(user=user))
+        ]
 
 # Selection of state, county and district
 

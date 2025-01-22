@@ -195,6 +195,8 @@ const runSimulation = (monicaProject) => {
             $('.nav-link.monica').removeClass('active');
 
             $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
+            
+            
             var colors = [
                 'rgba(255, 200, 0, 0.7)', 
                 'rgba(0, 150, 200, 0.7)', 
@@ -450,7 +452,7 @@ const loadProject = (project) => {
     $('#id_user_soil_temperature_parameters').val(newProject.userSoilTemperatureParametersId);
     $('#id_user_soil_transport_parameters').val(newProject.userSoilTransportParametersId);
 
-    // return project;
+    return newProject;
 };
 
 const addRotation = (project) => {
@@ -1220,6 +1222,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.message.success) {
                     handleAlerts(data.message)
                     project = loadProject(data.project)
+                    saveToLocalStorage(project);
                 } else {
                     handleAlerts(data.message)
                 };

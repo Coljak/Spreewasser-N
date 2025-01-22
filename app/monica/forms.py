@@ -1,5 +1,6 @@
 from django import forms
 from .models import *
+from swn.models import SwnProject
 from crispy_forms.helper import FormHelper
 from django.db.models import Q
 # from bootstrap_datepicker_plus.widgets import DatePickerInput
@@ -192,11 +193,10 @@ class MonicaProjectSelectionForm(forms.Form):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.fields['monica_project'].choices = [
             (instance.id, instance.name) for instance in MonicaProject.objects.filter(Q(user=user))
         ]
-        
+      
 
 
 #TODO implement User Environment

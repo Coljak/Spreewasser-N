@@ -917,20 +917,7 @@ def modify_model_parameters(request, parameter, id, rotation=None):
         }
         return render(request, 'monica/modify_parameters_modal.html', context)
     
-# @login_required
-def monica_model(request):
-    """
-    Sets up the GUI with all forms and data required for the MONICA model.
-    This view is used for the MONICA page and also the SpreeWasser:N page.
-    """
-    user = request.user
-
-    project_select_form = MonicaProjectSelectionForm(user=user)
-    project_form = MonicaProjectForm(user=user)
-    project_modal_title = 'Create new project'
-
-    coordinate_form = CoordinateForm()
-   
+def get_monica_forms(user):
     workstep_selector_form =  WorkstepSelectorForm()
     workstep_sowing_form = WorkstepSowingForm(user=user)
     workstep_harvest_form = WorkstepHarvestForm()
@@ -938,68 +925,7 @@ def monica_model(request):
     workstep_irrigation_form = WorkstepIrrigationForm()
     workstep_mineral_fertilisation_form = WorkstepMineralFertilisationForm()
     workstep_organic_fertilisation_form = WorkstepOrganicFertilisationForm()
-
-    # sim_settings_queryset = m_models.UserSimulationSettings.objects.filter(user__in=[user, None])
-    user_simulation_settings = m_models.UserSimulationSettings.objects.get(is_default=True)
-    user_simulation_settings_form = UserSimulationSettingsForm(instance=user_simulation_settings)
-
-    user_simulation_settings_select_form = UserSimulationSettingsInstanceSelectionForm(user=user)
-
-    user_crop_parameters_select_form = UserCropParametersSelectionForm(user=user)
-    user_crop_parameters_form = UserCropParametersForm()
-
-    user_environment_parameters_select_form = UserEnvironmentParametersSelectionForm(user=user)
-    user_environment_parameters_form = UserEnvironmentParametersForm()
-
-    user_soil_moisture_select_form = UserSoilMoistureInstanceSelectionForm(user=user)
-    user_soil_organic_select_form = UserSoilOrganicInstanceSelectionForm(user=user)
-    soil_temperature_module_select_form = SoilTemperatureModuleInstanceSelectionForm(user=user)
-    user_soil_transport_parameters_select_form = UserSoilTransportParametersInstanceSelectionForm(user=user)
-
-    # TODO delete this part
-    ## POST LOGIC
-    if request.method == 'POST':
-        print("Request POST: ", request.POST)
-        if 'save_simulation_settings' in request.POST or 'save_as_simulation_settings' in request.POST:
-            user_simulation_settings_form = UserSimulationSettingsForm(request.POST)
-            if user_simulation_settings_form.is_valid():
-                
-                if 'save_simulation_settings' in request.POST:
-                    if user_simulation_settings.name == 'default' and user_simulation_settings.default and user_simulation_settings.user is None:
-                        messages.error(request, "Cannot modify the default settings.")
-                    else:
-                        # Update existing settings
-                        simulation_settings_instance = UserSimulationSettings.objects.get(id=request.POST.get('id'))
-                        for field in user_simulation_settings_form.cleaned_data:
-                            setattr(user_simulation_settings, field, user_simulation_settings_form.cleaned_data[field])
-                        simulation_settings_instance.save()
-                        messages.success(request, "Settings updated successfully.")
-                elif 'save_as_simulation_settings' in request.POST:
-                    # Save as new settings
-                    new_name = request.POST.get('new_name')
-                    if new_name:
-                        new_settings = user_simulation_settings_form.save(commit=False)
-                        new_settings.name = new_name
-                        new_settings.user = request.user
-                        new_settings.save()
-                        messages.success(request, "Settings saved as new successfully.")
-                    else:
-                        messages.error(request, "Please provide a new name for the settings.")
-            else:
-                messages.error(request, "There was an error with the form.")
-
-    context = {
-        'project_select_form': project_select_form,
-        'project_form': project_form,
-        'project_modal_title': project_modal_title,
-        'coordinate_form': coordinate_form,
-        'user_crop_parameters_select_form': user_crop_parameters_select_form,
-        'user_crop_parameters_form': user_crop_parameters_form,
-        'user_simulation_settings_select_form': user_simulation_settings_select_form,
-        'simulation_settings_form': user_simulation_settings_form,
-        'user_environment_parameters_select_form': user_environment_parameters_select_form,
-        'user_environment_parameters_form': user_environment_parameters_form,
-
+    monica_forms = {
         'workstep_selector_form': workstep_selector_form,
         'workstep_sowing_form': workstep_sowing_form,
         'workstep_harvest_form': workstep_harvest_form,
@@ -1008,12 +934,62 @@ def monica_model(request):
         'workstep_organic_fertilisation_form': workstep_organic_fertilisation_form,
         'workstep_irrigation_form': workstep_irrigation_form,
 
+    }
+    return monica_forms
+    
+@login_required
+def monica_model(request):
+    """
+    Sets up the GUI with all forms and data required for the MONICA model.
+    This view is used for the MONICA page and also the SpreeWasser:N page.
+    """
+    user = request.user
+    print("monica views request.user", user)
+    context = get_monica_forms(user)
+
+    project_select_form = MonicaProjectSelectionForm(user=user)
+    project_form = MonicaProjectForm(user=user)
+    project_modal_title = 'Create new project'
+
+    coordinate_form = CoordinateForm()
+   
+
+
+    # sim_settings_queryset = m_models.UserSimulationSettings.objects.filter(user__in=[user, None])
+    # user_simulation_settings = m_models.UserSimulationSettings.objects.get(is_default=True)
+    # user_simulation_settings_form = UserSimulationSettingsForm(instance=user_simulation_settings)
+
+    user_simulation_settings_select_form = UserSimulationSettingsInstanceSelectionForm(user=user)
+
+    user_crop_parameters_select_form = UserCropParametersSelectionForm(user=user)
+    # user_crop_parameters_form = UserCropParametersForm()
+
+    user_environment_parameters_select_form = UserEnvironmentParametersSelectionForm(user=user)
+    # user_environment_parameters_form = UserEnvironmentParametersForm()
+
+    user_soil_moisture_select_form = UserSoilMoistureInstanceSelectionForm(user=user)
+    user_soil_organic_select_form = UserSoilOrganicInstanceSelectionForm(user=user)
+    soil_temperature_module_select_form = SoilTemperatureModuleInstanceSelectionForm(user=user)
+    user_soil_transport_parameters_select_form = UserSoilTransportParametersInstanceSelectionForm(user=user)
+
+
+    data = {
+        'project_select_form': project_select_form,
+        'project_form': project_form,
+        'project_modal_title': project_modal_title,
+        'coordinate_form': coordinate_form,
+        'user_crop_parameters_select_form': user_crop_parameters_select_form,
+        # 'user_crop_parameters_form': user_crop_parameters_form,
+        'user_simulation_settings_select_form': user_simulation_settings_select_form,
+        # 'simulation_settings_form': user_simulation_settings_form,
+        'user_environment_parameters_select_form': user_environment_parameters_select_form,
 
         'user_soil_moisture_select_form': user_soil_moisture_select_form,
         'user_soil_organic_select_form': user_soil_organic_select_form,
         'soil_temperature_module_selection_form': soil_temperature_module_select_form, 
         'user_soil_transport_parameters_selection_form': user_soil_transport_parameters_select_form,
     }
+    context.update(data)
     return render(request, 'monica/monica_model.html', context)
 
 

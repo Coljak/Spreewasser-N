@@ -4,13 +4,13 @@ from multiprocessing import managers
 from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
-from importlib.util import spec_from_file_location
 from django.contrib.auth import authenticate, login, logout
 #from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.gdal import DataSource
+from django.forms.models import model_to_dict
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render
@@ -19,14 +19,13 @@ import numpy as np
 import requests
 from . import forms
 from . import models
-from monica.utils import save_monica_project as monica_utils
+from monica.utils import save_monica_project
 
 from monica import forms as monica_forms
 from monica import models as monica_models
 from monica import views as monica_views
 
 from buek import models as buek_models
-
 from toolbox import models as toolbox_models
 from app.helpers import is_ajax
 import xmltodict
@@ -384,22 +383,8 @@ def three_split(request):
     print("Request.user", request.user)
     user = request.user
     user_fields = models.UserField.objects.filter(user=request.user.id)
+    context = monica_views.get_monica_forms(user)
 
-    # user_projects = []
-
-    # for user_field in user_fields:
-    #     if request.user == user_field.user:
-    #         item = {
-    #             'name': user_field.name,
-    #             # 'user_name': user_field.field.user.name,
-    #             # 'field': user_field.field.name,
-    #             # 'irrigation_input': user_field.irrigation_input,
-    #             # 'irrigation_output': user_field.irrigation_output,
-
-    #             'field_id': user_field.id,
-    #             # 'monica_calculation': user_field.calculation,
-    #         }
-    #         user_projects.append(item)
 
     state_county_district_form = forms.PolygonSelectionForm(request.POST or None)
     
@@ -417,34 +402,26 @@ def three_split(request):
     # coordinate_form = monica_forms.CoordinateForm()
     user_field_selector_form = forms.UserFieldSelectorForm(user=user)
 
-    project_select_form = monica_forms.MonicaProjectSelectionForm(user=user)
+    project_select_form = forms.SwnProjectSelectionForm(user=user)
     project_form = forms.SwnProjectForm(user=user)
     project_modal_title = 'Create new project'
 
     coordinate_form = monica_forms.CoordinateForm()
    
-    workstep_selector_form =  monica_forms.WorkstepSelectorForm()
-    workstep_sowing_form = monica_forms.WorkstepSowingForm(user=user)
-    workstep_harvest_form = monica_forms.WorkstepHarvestForm()
-    workstep_tillage_form = monica_forms.WorkstepTillageForm()
-    workstep_irrigation_form = monica_forms.WorkstepIrrigationForm()
-    workstep_mineral_fertilisation_form = monica_forms.WorkstepMineralFertilisationForm()
-    workstep_organic_fertilisation_form = monica_forms.WorkstepOrganicFertilisationForm()
 
-    user_simulation_settings = monica_models.UserSimulationSettings.objects.get(is_default=True)
-    user_simulation_settings_form = monica_forms.UserSimulationSettingsForm(instance=user_simulation_settings)
+    # user_simulation_settings = monica_models.UserSimulationSettings.objects.get(is_default=True)
+    # user_simulation_settings_form = monica_forms.UserSimulationSettingsForm(instance=user_simulation_settings)
 
     user_simulation_settings_select_form = monica_forms.UserSimulationSettingsInstanceSelectionForm(user=user)
 
     user_crop_parameters_select_form = monica_forms.UserCropParametersSelectionForm(user=user)
-    user_crop_parameters_form = monica_forms.UserCropParametersForm()
+    # user_crop_parameters_form = monica_forms.UserCropParametersForm()
 
     user_environment_parameters_select_form = monica_forms.UserEnvironmentParametersSelectionForm(user=user)
     # user_environment_parameters_form = monica_forms.UserEnvironmentParametersForm(user=user)
 
     user_soil_moisture_select_form = monica_forms.UserSoilMoistureInstanceSelectionForm(user=user)
     user_soil_organic_select_form = monica_forms.UserSoilOrganicInstanceSelectionForm(user=user)
-
     soil_temperature_module_select_form = monica_forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
     user_soil_transport_parameters_select_form = monica_forms.UserSoilTransportParametersInstanceSelectionForm(user=user)
 
@@ -463,100 +440,20 @@ def three_split(request):
             'coordinate_form': coordinate_form,
             'user_field_selector_form': user_field_selector_form,
             'user_crop_parameters_select_form': user_crop_parameters_select_form,
-            'user_crop_parameters_form': user_crop_parameters_form,
+            # 'user_crop_parameters_form': user_crop_parameters_form,
             'user_simulation_settings_select_form': user_simulation_settings_select_form,
-            'simulation_settings_form': user_simulation_settings_form,
+            # 'simulation_settings_form': user_simulation_settings_form,
             'user_environment_parameters_select_form': user_environment_parameters_select_form,
             # 'user_environment_parameters_form': user_environment_parameters_form,
 
-            'workstep_selector_form': workstep_selector_form,
-            'workstep_sowing_form': workstep_sowing_form,
-            'workstep_harvest_form': workstep_harvest_form,
-            'workstep_tillage_form': workstep_tillage_form,
-            'workstep_mineral_fertilisation_form': workstep_mineral_fertilisation_form,
-            'workstep_organic_fertilisation_form': workstep_organic_fertilisation_form,
-            'workstep_irrigation_form': workstep_irrigation_form,
             'user_soil_moisture_select_form': user_soil_moisture_select_form,
             'user_soil_organic_select_form': user_soil_organic_select_form,
             'soil_temperature_module_selection_form': soil_temperature_module_select_form, 
             'user_soil_transport_parameters_selection_form': user_soil_transport_parameters_select_form,
             }
-    return render(request, 'swn/swn_three_split.html', data)
-
-# @login_required
-# def user_dashboard(request):
-#     user = request.user
-
-#     drought_vars = {
-#         'header': 'Dürrevorhersage',
-#         'overlays': [
-#             {
-#                 'name': 'Digitales Höhenmodell',
-#                 'url': 'https://thredds.socib.es/thredds/wms/operational_models/oceanographical/hydrodynamics/wave/model_run_aggregation/ww3_med_iberia_latest.nc',
-#                 'layers': 'hs',
-#                 'format': 'image/png',
-#                 'transparent': True,
-#                 'opacity': 0.5,
-#                 'zIndex': 5,
-#                 'bounds': [[47.136744752, 15.57241882], [55.058996788, 5.564783468]],
-#             },]
-#     }
-
-#     above_ground_waters = toolbox_models.AboveGroundWaters.objects.all()
-#     below_ground_waters = toolbox_models.BelowGroundWaters.objects.all()
-
-#     toolbox_vars = {
-#         'header': 'Toolbox ',
-#         'overlays': [
-#             {
-#                 'name': 'Digitales Höhenmodell',
-
-#             }
-#         ]
-#     }
-
-
-#     user_fields = models.UserProject.objects.all()
-
-
-#     field_name_form = forms.UserFieldForm()
-#     user_projects = []
-
-#     for user_field in user_fields:
-#         item = {
-#             'name': user_field.name,
-#             # 'user_name': user_field.field.user.name,
-#             # 'field': user_field.field.name,
-#             # 'irrigation_input': user_field.irrigation_input,
-#             # 'irrigation_output': user_field.irrigation_output,
-
-#             # 'field_id': user_field.field.id,
-#             # 'monica_calculation': user_field.calculation,
-#         }
-#         user_projects.append(item)
-
-
-
-#     # state, county and district choices
-
-#     state_county_district_form = forms.PolygonSelectionForm(request.POST or None)
-
-#     if state_county_district_form.is_valid():
-#         selected_states = state_county_district_form.cleaned_data['states']
-#         selected_counties = state_county_district_form.cleaned_data['counties']
-#         selected_districts = state_county_district_form.cleaned_data['districts']
-        
-#         # Process the selected polygons and pass the data to the map template
-
-
-#     data = {
-#             'user_projects': user_projects, 
-#             'user_field_form': field_name_form,
-#             'state_county_district_form': state_county_district_form,
-#             }
-
-
-#     return render(request, 'swn/user_dashboard.html', data)
+    
+    context.update(data)
+    return render(request, 'swn/swn_three_split.html', context)
 
 
 def load_projectregion(request):
@@ -572,13 +469,28 @@ def load_projectregion(request):
     return JsonResponse(feature)
 
 
+# def get_user_fields(request):
+#     if request.method == "GET":
+
+#         # user_projects = models.UserProject.objects.filter(user_field__user=request.user)
+#         user_fields = models.UserField.objects.filter(user=request.user)
+#         user_projects = models.UserProject.objects.filter(user=request.user)
+
+#     return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json'))})
+
 def get_user_fields(request):
     if request.method == "GET":
 
         # user_projects = models.UserProject.objects.filter(user_field__user=request.user)
         user_fields = models.UserField.objects.filter(user=request.user)
-
-    return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json'))})
+        user_projects = models.SwnProject.objects.filter(user=request.user)
+        ufs = []
+        for user_field in user_fields:
+            uf = model_to_dict(user_field, fields=['id', 'user', 'name', 'geom_json'])
+            uf['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
+            ufs.append(uf)
+        print('user_fields:', ufs)
+    return JsonResponse({'user_fields': ufs})
 
 @login_required
 def update_user_field(request, pk):
@@ -646,84 +558,6 @@ def get_field_project(request, id):
     return JsonResponse({'user_project': list(user_projects.values())})
 
 
-"""
-This is for an overview, what is on the thredds server. It cannot yet be used to access the data.
-TODO: make it possible to access the data by accessing the xmls on the server,extracting necessary information.
-The THREDDS Server is not open for direct access to limit security risks.
-"""  
-
-# def thredds_wms_view(request, **args):
-#     print("\nNew call of thredds_wms_view \n")
-#     thredds_catalog_url = 'http://thredds:8080/thredds/'
-#     print("args: ", args)
-
-#     if args == {}:
-#             thredds_catalog_url = thredds_catalog_url + 'catalog/catalog.html'
-#     elif args['thredds_link'].split('/')[-1].split('.')[-1] not in ('html', 'nc', 'ncd', 'ncml', 'xml'):
-#         return HttpResponse()
-#     elif args['thredds_link'] == 'catalog.html' or args['thredds_link'] == 'enhancedCatalog.html':
-#         thredds_catalog_url = thredds_catalog_url  + 'catalog/' + args['thredds_link']
-#     elif args['thredds_link'].split('/')[-1] == 'catalog.html':
-#         thredds_catalog_url = thredds_catalog_url  + args['thredds_link']
-#     else:
-#         thredds_catalog_url = thredds_catalog_url + args['thredds_link']
-#     print("THREDDS URL: ", thredds_catalog_url)
-
-    
-#     if request.GET:
-#         thredds_catalog_url = thredds_catalog_url + '?'
-#         for key, value in request.GET.items():
-#             print("GET parameter - key: ", key, "value: ", value)
-
-#             print("Get request: ", args['thredds_link'])
-            
-                
-#             thredds_catalog_url = thredds_catalog_url  + key +'='+ value
-
-#     try:
-#         print('REQUEST: ', request, '\nURL: ', thredds_catalog_url)
-#         response = requests.get(thredds_catalog_url)
-#         # print('response: \n', response.text)
-#         response.raise_for_status()  # Raise an exception for HTTP errors
-#         thredds_content = response.text
-#         # print("thredds_content: ", thredds_content)
-
-#         # Parse the HTML content
-#         soup = BeautifulSoup(thredds_content, 'html.parser')
-#         # Replace <img> tags with Bootstrap folder icons
-#         i_tag = soup.new_tag('i', **{'class': 'bi bi-folder'})
-#         a_tag = soup.new_tag('a', **{'href': 'catalog.html'})
-#         for img in soup.find_all('img', alt='Folder'):
-#             img.replace_with(i_tag)
-#         try:
-#             print("trying...")
-#             buttons = soup.find_all('a', href='http://thredds/catalog/catalog.html')
-#             for button in buttons:
-#                 print("button: ", button)
-#                 button['href'] = 'catalog/catalog.html'
-#             print("replaced")
-#         except:
-#             print("except")
-#             pass
-#         # Find the div element with id "footer"
-#         footer_div = soup.find('div', id='footer')
-#         header_div = soup.find('div', id='header')
-#         # Delete all parent divs of the footer_div
-#         footer_div.decompose()
-#         header_div.decompose()
-#         div = soup.find('div', class_='container')
-#         print('catalog\n\n', div)
-#         return render(request, 'swn/thredds.html', {'thredds_content': str(div)})
-
-
-#     except requests.RequestException as e:
-#         # Handle request exception, e.g., log the error
-#         thredds_content = f"Error: {e}"
-
-#     # return render(request, 'swn/thredds.html', {'thredds_content': soup})
-
-
-
 def load_nuts_polygon(request, entity, polygon_id):
     try:
         # Retrieve the polygon based on the ID
@@ -756,125 +590,6 @@ def load_nuts_polygon(request, entity, polygon_id):
         return JsonResponse(error_response, status=404)
 
 
-
-# # TODO delete this function
-# def field_edit(request, id):
-#     print("field_menu id: ", id)
-    
-#     start_time = time.time()
-
-#     crop_cultivar_form = monica_forms.CultivarAndSpeciesSelectionForm()
-#     user_field = models.UserField.objects.get(id=id)
-#     name = user_field.name
-    
-#     soil_profile_polygon_ids = user_field.soil_profile_polygon_ids['buek_polygon_ids']
-    
-#     print("field_menu Checkpoint 2: ", (time.time() - start_time), ' soil_profile_polygon_ids' , soil_profile_polygon_ids)
-    
-#     # Retrieve unique land usage choices
-#     unique_land_usages = buek_models.SoilProfile.objects.filter(
-#         polygon_id__in=soil_profile_polygon_ids
-#     ).values_list('landusage_corine_code', 'landusage').distinct()
-#     # Filter out water (code 51)
-#     land_usage_choices = {code: usage for code, usage in unique_land_usages if code != 51}
-    
-#     # Initialize data_json with land usage codes
-#     data_json = {code: {} for code in land_usage_choices.keys()}
-
-#     soil_data = buek_models.SoilProfileHorizon.objects.select_related('soilprofile').filter(
-#         soilprofile__polygon_id__in=soil_profile_polygon_ids
-#         ).order_by('soilprofile__landusage_corine_code', 'soilprofile__system_unit', 'soilprofile__area_percentage', 'horizont_nr')
-
-#     # Loop through soil data and populate data_json
-    
-#     for item in soil_data:
-#         try:
-#             if item.soilprofile.landusage_corine_code != 51:
-#                 land_code = item.soilprofile.landusage_corine_code
-#                 system_unit = item.soilprofile.system_unit
-#                 area_percentage = item.soilprofile.area_percentage
-#                 profile_id = item.soilprofile.id
-#                 horizon_nr = item.horizont_nr
-
-#                 if system_unit not in data_json[land_code]:
-#                     data_json[land_code][system_unit] = {
-#                         'area_percentages': set(),
-#                         'soil_profiles': {}
-#                     }
-
-#                 data_json[land_code][system_unit]['area_percentages'].add(area_percentage)
-
-#                 if area_percentage not in data_json[land_code][system_unit]['soil_profiles']:
-#                     data_json[land_code][system_unit]['soil_profiles'][area_percentage] = {}
-
-#                 if profile_id not in data_json[land_code][system_unit]['soil_profiles'][area_percentage]:
-#                     data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id] = {'horizons': {}}
-
-#                 data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id]['horizons'][horizon_nr] = {
-#                     'obergrenze_m': item.obergrenze_m,
-#                     'untergrenze_m': item.untergrenze_m,
-#                     'stratigraphie': item.stratigraphie,
-#                     'herkunft': item.herkunft,
-#                     'geogenese': item.geogenese,
-#                     'fraktion': item.fraktion,
-#                     'summe': item.summe,
-#                     'gefuege': item.gefuege,
-#                     'torfarten': item.torfarten,
-#                     'substanzvolumen': item.substanzvolumen,
-#                     'bulk_density_class': item.bulk_density_class.bulk_density_class if item.bulk_density_class_id is not None else 'no data',
-#                     'bulk_density': item.bulk_density_class.raw_density_g_per_cm3 if item.bulk_density_class_id is not None else 'no data',
-#                     'humus_class': item.humus_class.humus_class if item.humus_class_id is not None else 'no data',
-#                     'humus_corg': item.humus_class.corg if item.humus_class_id is not None else 'no data',
-#                     'ka5_texture_class': item.ka5_texture_class.ka5_soiltype if item.ka5_texture_class_id is not None else 'no data',
-#                     'sand': item.ka5_texture_class.sand if item.ka5_texture_class_id is not None else 'no data',
-#                     'clay': item.ka5_texture_class.clay if item.ka5_texture_class_id is not None else 'no data',
-#                     'silt': item.ka5_texture_class.silt if item.ka5_texture_class_id is not None else 'no data',
-#                     'ph_class': item.ph_class.ph_class if item.ph_class_id is not None else 'no data',
-#                     'ph_lower_value': item.ph_class.ph_lower_value if item.ph_class_id is not None else 'no data',
-#                     'ph_upper_value': item.ph_class.ph_upper_value if item.ph_class_id is not None else 'no data',                    
-#                 }
-#         except Exception as e:
-#             print("Exception occurred:", e)
-           
-#     # Sort area percentages
-#     for land_code in data_json:
-#         for system_unit in data_json[land_code]:
-#             data_json[land_code][system_unit]['area_percentages'] = sorted(list(data_json[land_code][system_unit]['area_percentages']))
-
-#     # Initialize and format date picker strings
-#     today = date.today()
-#     start_date = today.replace(year=(today.year - 1))
-#     end_month = today.month + 6
-    
-#     if today.month > 6:
-#         end_month = (today.month + 6) % 12
-
-#     end_date = today.replace(month=end_month)
-#     if today.month > 6:
-#         end_date = end_date.replace(year=(today.year + 1))
-   
-    
-
-#     date_picker_str = {
-#         'start_date': start_date.strftime('%d/%m/%Y'),
-#         'end_date': end_date.strftime('%d/%m/%Y')
-#     }
-
-#     data_menu = {
-#         'crop_cultivar_form': crop_cultivar_form,
-#         'soil_profile_form': forms.SoilProfileSelectionForm().set_choices(land_usage_choices),
-#         'text': name,
-#         'id': id,
-#         'polygon_ids': soil_profile_polygon_ids,
-#         'system_unit_json': json.dumps(data_json),
-#         'landusage_choices': json.dumps(land_usage_choices),
-#         'date_picker': date_picker_str
-#     }
-
-
-#     print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
-#     return render(request, 'swn/field_projects_edit.html', data_menu)
-
 def manual_soil_selection(request, user_field_id):
     print("field_menu id: ", id)
     
@@ -904,45 +619,6 @@ def get_centroid(request, user_field_id):
     return JsonResponse({'lon': lon, 'lat': lat})
 
 
-def save_project(request):
-    
-    if request.method == 'POST':
-        project = monica_utils.save_project(request, project_class=models.SwnProject)
-        # data = json.loads(request.body)
-        # print(data)
-        # project = request.POST.get('swnMonicaProject')
-        # print('save project', data.get('swnMonicaProject'))
-
-        # project_data = data.get('swnMonicaProject')
-
-        # user_calculation = models.UserCalculation(
-        #     project_name=project_data.get('name'),
-        #     user_field=project_data.get('user_field'),
-        #     soil_profile=project_data.get('soil_profile'),
-        #     comment=project_data.get('comment', ''),
-        #     calculation_start_date=project_data.get('calculation_start_date'),
-        #     calculation_end_date=project_data.get('calculation_end_date'),
-        #     rotation=project_data.get('rotation', None),
-        #     calculation=project_data.get('calculation', None),
-        #     user=request.user,
-        # )
-        # user_calculation.save()     
-
-
-        
-        # project = models.SwnProject(
-        #     name = project_data.get('name'),
-        #     user = request.user,
-        #     creation_date = datetime.now(),
-        #     last_modified = datetime.now(),
-        #     description = project_data.get('description', ''), 
-
-        # )
-        # project.save()
-
-
-        return JsonResponse({'message': {'success': True, 'message': 'Project saved!'}})
-    return JsonResponse({'message': {'success': False, 'message': 'Form is not valid'}})
 
 def load_swn_project(request, id):
     try:
@@ -979,3 +655,4 @@ def get_parameter_options(request, parameter_type, id=None):
         options = []
 
     return JsonResponse({'options': list(options)})
+

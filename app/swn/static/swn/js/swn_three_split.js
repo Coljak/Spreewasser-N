@@ -16,9 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return csrfToken;
   };
 
-  // longitude and latitude of the project region;
-  // $('#coordinateFormCard').hide();
-
+  // TODO userfield highlight
   $('#userFieldSelect').on('change', function () {
     // get centroid of the userfield
     console.log('userFieldSelect change event');
@@ -35,14 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   });
-  
-  // $('#userFieldSelect').trigger('change');
-
-  function modifyStorageProject(key, value) {
-    var project = JSON.parse(localStorage.getItem('project'));
-    project[key] = value;
-    localStorage.setItem('project', JSON.stringify(project));
-  };
 
 
 
@@ -437,10 +427,11 @@ const deleteUrl = "/drought/delete/";
 
 
 class UserField {
-  constructor(name, layer, id=null) {
+  constructor(name, layer, id=null, userProjects=[]) {
     this.name = name;
     this.layer = layer;
     this.id = id;
+    this.userProjects = userProjects;
   }
   hideLayer() {
     map.removeLayer(this.layer);
@@ -517,58 +508,22 @@ const getData = async function () {
       const userField = new UserField(
         el.name,
         layer,
-        // el.swn_tool,
-        el.id         
+        el.id,
+        el.user_projects    
       );
       // Add the layer to the droughtFeutureGroup layer group
-
         featureGroup.addLayer(userField.layer);
         userField.leafletId  = featureGroup.getLayerId(userField.layer);
         userFields[userField.leafletId ] = userField;
 
         addLayerToSidebar(userField);
         console.log("getData, userFields: ", userFields);
-      
-      // Store the userField object using the layer's leafletId
-      
-      // userField.leafletId = leafletId;
 
     });
   });
 };
 
-// function getData = async function(userFields) {
 
-//   console.log("getData", userFields)
-//     // clear all userFields from map and sidebar
-//     $("#display-data").empty();
-//     // const userFieldsDb = data.user_fields;
-//     userFields.forEach((el) => {
-//       var layer = L.geoJSON(el.geom_json);
-//       layer.bindTooltip(el.name);
-//       console.log("getData, element: ", el);
-//       const userField = new UserField(
-//         el.name,
-//         layer,
-//         // el.swn_tool,
-//         el.id         
-//       );
-//       // Add the layer to the droughtFeutureGroup layer group
-
-//         featureGroup.addLayer(userField.layer);
-//         userField.leafletId  = featureGroup.getLayerId(userField.layer);
-//         userFields[userField.leafletId ] = userField;
-
-//         addLayerToSidebar(userField);
-        
-      
-//       // Store the userField object using the layer's leafletId
-      
-//       // userField.leafletId = leafletId;
-
-//     });
-
-// };
 
 
 // Modal Userfield Name 
@@ -649,42 +604,69 @@ const addLayerToSidebar = (userField) => {
   accordion.setAttribute("user-field-id", userField.id);
  
 
-  accordion.innerHTML = ` 
-    <div 
+  let projectListHTML = "";
+  // Check if there are related projects
+  if (userField.userProjects && userField.userProjects.length > 0) {
+    projectListHTML = userField.userProjects
+      .map(
+        (project) => `
+          <li class="list-group-item">
+            <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="${project.id}" data-user-field-id="${userField.id}">
+              Open Project: ${project.name}
+            </button>
+          </li>
+        `
+      )
+      .join("");
+  } 
+    // Create project button
+    projectListHTML += `
+      <li class="list-group-item">
+        No related projects. 
+        <button type="button" class="btn btn-success btn-sm create-project" data-user-field-id="${userField.id}">
+          Create Project
+        </button>
+      </li>
+    `;
+
+
+
+
+// Now generate the full HTML for the accordion
+accordion.innerHTML = `
+  <div 
     class="accordion-header nested user-field-header d-flex align-items-center justify-content-between" 
     id="accordionHeader-${userField.leafletId}" 
     leaflet-id="${userField.leafletId}"
-    >
+  >
     <span class="form-check form-switch h6">  
-      <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" "user-field-id"=${userField.id}  id="fieldSwitch-${userField.leafletId}" checked>
+      <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="fieldSwitch-${userField.leafletId}" checked>
     </span>
-    <button class="accordion-button nested btn collapsed user-field-btn" type="button" leaflet-id="${userField.leafletId}" "user-field-id"=${userField.id} id="accordionButton-${userField.leafletId}" data-bs-toggle="collapse" data-bs-target="#accordionField-${userField.leafletId}" aria-expanded="false" aria-controls="accordionField-${userField.leafletId}"> 
-        ${userField.name}
+    <button class="accordion-button nested btn collapsed user-field-btn" type="button" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="accordionButton-${userField.leafletId}" data-bs-toggle="collapse" data-bs-target="#accordionField-${userField.leafletId}" aria-expanded="false" aria-controls="accordionField-${userField.leafletId}"> 
+      ${userField.name}
+    </button>
+    <span class="column col-4 field-btns-col">
+      <form id="deleteAndCalcForm-${userField.leafletId}">
+        <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
+          <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
         </button>
-      <span class="column col-4 field-btns-col">
-        <form id="deleteAndCalcForm-${userField.leafletId}">
-          <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" "user-field-id"=${userField.id}>
-            <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}" "user-field-id"=${userField.id}></i></span>
-          </button>
-    
-          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}"  "user-field-id"=${userField.id}>
-            <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" "user-field-id"=${userField.id}></i></span>
-          </button>
-          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete " leaflet-id="${userField.leafletId}" "user-field-id"=${userField.id}>
-            <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" "user-field-id"=${userField.id}></i></span>
-          </button>
-        </form>
-      </span>  
+        <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
+          <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
+          <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+        </button>
+      </form>
+    </span>  
   </div>
   <div id="accordionField-${userField.leafletId}" class="accordion-collapse collapse">
     <div class="accordion-body">
       <ul class="list-group" id="projectList-${userField.leafletId}">
-        <li>some item 1</li>
-        <li>some item 2</li>
-      <ul>
+        ${projectListHTML}
+      </ul>
     </div>
   </div>
-  `;
+`;
 
   // adding the UserField to the HTML-list element
   accordion.userField = userField;

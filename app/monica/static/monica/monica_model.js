@@ -80,7 +80,7 @@ class MonicaProject {
         this.longitude = project.longitude !== undefined ? project.longitude : 10.0;
         this.latitude = project.latitude !== undefined ? project.latitude : 52.0;
         this.userField = project.userField !== undefined ? project.userField : null;
-
+        this.swnForecast = project.swnForecast !== undefined ? project.swnForecast : false;
         this.rotation = Array.isArray(project.rotation) ? project.rotation : [];
         
         // ModelSetup
@@ -393,32 +393,8 @@ const runSimulation = (monicaProject) => {
                 },
                
             });
-
-            // chartCard.classList.remove('d-none');
             chart.update();
             
-            // const createToggleButton = (label, datasetKey) => {
-            //     const button = document.createElement('button');
-            //     button.textContent = label;
-            //     button.classList.add('btn', 'btn-secondary', 'm-1');
-            //     button.onclick = () => {
-            //         const dataset = chart.data.datasets.find(ds => ds.label.includes(datasetKey));
-            //         if (dataset) {
-            //             dataset.hidden = !dataset.hidden;
-            //             chart.update();
-            //         }
-            //     };
-            //     return button;
-            // };
-            
-            // const buttonContainer = document.createElement('div');
-            // Object.keys(resultOutput).forEach(key => {
-            //     const button = createToggleButton(`Toggle ${key}`, key);
-            //     buttonContainer.appendChild(button);
-            // });
-            
-            // document.querySelector('#chartDiv').prepend(buttonContainer);
-
 
             $('#runSimulationButton').prop('disabled', false);
             $('#runSimulationButton').text('Run Simulation');
@@ -441,6 +417,7 @@ const loadProject = (project) => {
     $('#projectDescription').val(newProject.description);
     $('#id_longitude').val(newProject.longitude);
     $('#id_latitude').val(newProject.latitude);
+    $('userFieldSelect').val(newProject.userField);
     $('#monicaStartDatePicker').datepicker('update', newProject.startDate);
     // TODO check if this is necessary/ what to do with it
     $('#monicaEndDatePicker').datepicker('update', newProject.endDate);
@@ -639,10 +616,7 @@ const updateDropdown = (parameterType,rotationIndex, newId) => {
             var select = document.querySelector('.form-select.' + parameterType); 
             if (rotationIndex != '') {
                 const rotationDiv = document.querySelector(`div[rotation-index='${rotationIndex}']`);
-                console.log('rotationDiv', `div[rotation-index='${rotationIndex}']`);
                 select = rotationDiv.querySelector('.select-parameters.' + parameterType);
-                console.log('select: ', select)
-                console.log('updateDropdown IF');
             } 
             select.innerHTML = '';
             data.options.forEach(option => {
@@ -916,9 +890,9 @@ var project = new MonicaProject();
 document.addEventListener('DOMContentLoaded', () => {
     
     if (window.location.href.split('/').includes('monica')) {
-        project.swn_forecast = false;
+        project.swnForecast = false;
     } else {
-        project.swn_forecast = true;
+        project.swnForecast = true;
     };
 
     setLanguage('de-DE');
@@ -1407,7 +1381,8 @@ document.addEventListener('DOMContentLoaded', () => {
             project.latitude = $('#id_latitude').val();
         } catch { 
             try { 
-                project.userField = $('#userFieldSelect').val();
+                // project.userField = $('#userFieldSelect').val();
+                console.log("No userField selected!")
             } catch {;}
    
         }

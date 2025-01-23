@@ -56,6 +56,8 @@ class UserField(models.Model):
     comment = models.TextField(null=True, blank=True)
     geom = gis_models.GeometryField(null=True, srid=4326)
     soil_profile_polygon_ids = models.JSONField(null=True, blank=True)
+    centroid_lat = models.FloatField(null=True, blank=True)
+    centroid_lon = models.FloatField(null=True, blank=True)
 
     weather_grid_points = models.JSONField(null=True, blank=True)
     
@@ -114,7 +116,7 @@ class UserField(models.Model):
             }
             weather_indices_list.append(dict)
         weather_indices_json = {'weather_indices': weather_indices_list}
-        self.weather_grid_points = json.dumps(weather_indices_json)
+        self.weather_grid_points = weather_indices_json
         self.save()
         print( 'weather_indices_json ', weather_indices_json)
         return weather_indices_json
@@ -128,6 +130,9 @@ class UserField(models.Model):
         centroid = userfield_geom.centroid
         lat = centroid.y
         lon = centroid.x
+        self.centroid_lat = lat
+        self.centroid_lon = lon
+        self.save()
         return lon, lat
     
  

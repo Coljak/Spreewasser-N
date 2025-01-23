@@ -31,75 +31,79 @@
     {% include 'swn/sidebar_new.html' %}
     {% include 'swn/modal_field_name.html' %}
     {% include 'swn/modal_field_menu.html' %}
-    {% include 'monica/modal_manual_soil_selection.html' %}
+    
 
 {% endblock left_panel %}
 
 {% block bottom_panel %}
-<div class="overflow-auto" >
-    {% include 'monica/hidden_rotation_forms.html' %}
-<!-- navigation in monica -->
-    <ul class="nav nav-tabs">
-        <li class="nav-item">
-            <a class="monica nav-link" aria-current="page" href="#tabProject">Project</a>
-        </li>
-        <li class="nav-item">
-            <a class="monica nav-link active" aria-current="page" href="#tabGeneralParameters">General Parameters</a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="monica nav-link" aria-current="page" href="#tabRotation" >Crop Rotation</a>
-        </li>
-        <li class="nav-item">
-            <a class="monica nav-link" aria-current="page" href="#tabSoil">Soil</a>
-        </li>
-        <li class="nav-item">
-            <a id="resultTab" class="monica nav-link disabled" aria-disabled="true" href="#tabResult">Result</a>
-        </li>
-        <li>
-            <button id="toggle-advanced-mode" class="btn btn-primary simple" type="button">
-                Switch to Advanced Mode
-            </button>
-        </li>
-    </ul>
-
-    <!-- ende navigation -->
-    {% render_tab_project project_form user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
-
-
-    <!-- General Parameters -->
-    <div id="tabGeneralParameters" class="tab-content card mb-3 active">
-        <div class="card-body">
-            <div class="card mb-3">
-                <div class="card-body">
-                    {{ user_field_selector_form |crispy }}
-                </div>
-            </div>
-        
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">"Today's" date</h5>
-                    <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
-                </div>
-            </div>
-            
-            {% render_tab_general_parameters coordinate_form %}  
-        </div>  
+    {% include 'monica/modal_manual_soil_selection.html' %}
+    <div id="swn_title" class="card-header">
+        <h3>SWN - Monica Interface</h3>
     </div>
+    <div class="overflow-auto" >
+        {% include 'monica/hidden_rotation_forms.html' %}
+    <!-- navigation in monica -->
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="monica nav-link" aria-current="page" href="#tabProject">Project</a>
+            </li>
+            <li class="nav-item">
+                <a class="monica nav-link active" aria-current="page" href="#tabGeneralParameters">General Parameters</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="monica nav-link" aria-current="page" href="#tabRotation" >Crop Rotation</a>
+            </li>
+            <li class="nav-item">
+                <a class="monica nav-link" aria-current="page" href="#tabSoil">Soil</a>
+            </li>
+            <li class="nav-item">
+                <a id="resultTab" class="monica nav-link disabled" aria-disabled="true" href="#tabResult">Result</a>
+            </li>
+            <li>
+                <button id="toggle-advanced-mode" class="btn btn-primary simple" type="button">
+                    Switch to Advanced Mode
+                </button>
+            </li>
+        </ul>
+
+        <!-- ende navigation -->
+        {% render_tab_project project_form user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
 
 
-    {% render_tab_crop_rotation %}
-    {% render_tab_soil user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
-    {% render_tab_result %}
-    <button id="previousButton" class="btn btn-primary mt-3">Previous</button>
-    <button id="nextButton" class="btn btn-primary mt-3">Next</button>
-    <button id="runSimulationButton" class="btn btn-primary mt-3">Run Simulation</button>
+        <!-- General Parameters -->
+        <div id="tabGeneralParameters" class="tab-content card mb-3 active">
+            <div class="card-body">
+                {% comment %} <div class="card mb-3">
+                    <div class="card-body">
+                        {{ user_field_selector_form |crispy }}
+                    </div>
+                </div> {% endcomment %}
+            
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">"Today's" date</h5>
+                        <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
+                    </div>
+                </div>
+                
+                {% render_tab_general_parameters coordinate_form %}  
+            </div>  
+        </div>
 
 
-    <button id="monica-project-save" class="btn btn-primary mt-3 ">Save Project</button>
-    <button id="monica-project-save-as" class="btn btn-primary mt-3 ">Save Project as</button>
+        {% render_tab_crop_rotation %}
+        {% render_tab_soil user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
+        {% render_tab_result %}
+        <button id="previousButton" class="btn btn-primary mt-3">Previous</button>
+        <button id="nextButton" class="btn btn-primary mt-3">Next</button>
+        <button id="runSimulationButton" class="btn btn-primary mt-3">Run Simulation</button>
 
 
-</div>
+        <button id="monica-project-save" class="btn btn-primary mt-3 ">Save Project</button>
+        <button id="monica-project-save-as" class="btn btn-primary mt-3 ">Save Project as</button>
+
+
+    </div>
 {% endblock bottom_panel %}
 
 

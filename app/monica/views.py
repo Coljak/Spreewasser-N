@@ -1252,7 +1252,7 @@ def run_simulation(request):
         # # split function here --> if swn, then create irrigation
         envs = [env]
         
-        if data.get('swn_forecast', False):
+        if data.get('swnForecast', False):
             envs = create_irrigation_envs2(envs, data)
         
   

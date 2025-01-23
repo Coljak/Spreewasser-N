@@ -400,7 +400,7 @@ def three_split(request):
     
     # MONICA forms etc (from Monica.views)
     # coordinate_form = monica_forms.CoordinateForm()
-    user_field_selector_form = forms.UserFieldSelectorForm(user=user)
+    # user_field_selector_form = forms.UserFieldSelectorForm(user=user)
 
     project_select_form = forms.SwnProjectSelectionForm(user=user)
     project_form = forms.SwnProjectForm(user=user)
@@ -438,7 +438,7 @@ def three_split(request):
             'project_form': project_form,
             'project_modal_title': project_modal_title,
             'coordinate_form': coordinate_form,
-            'user_field_selector_form': user_field_selector_form,
+            # 'user_field_selector_form': user_field_selector_form,
             'user_crop_parameters_select_form': user_crop_parameters_select_form,
             # 'user_crop_parameters_form': user_crop_parameters_form,
             'user_simulation_settings_select_form': user_simulation_settings_select_form,
@@ -525,8 +525,9 @@ def save_user_field(request):
             geos = GEOSGeometry(body['geom'], srid=4326)
             user = request.user
             instance = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
+            # TODO this should rather be a save method of UserField
             instance.save()
-
+            instance.get_centroid()
             instance.get_intersecting_soil_data()
             instance.get_weather_grid_points()
             
@@ -613,10 +614,10 @@ def sidebar_working(request):
 def sidebar_not_working(request):
     return render(request, 'swn/sidebar_copied_not_working.html')
 
-def get_centroid(request, user_field_id):
-    lon, lat = models.UserField.objects.get(id=user_field_id).get_centroid()
+# def get_centroid(request, user_field_id):
+#     lon, lat = models.UserField.objects.get(id=user_field_id).get_centroid()
 
-    return JsonResponse({'lon': lon, 'lat': lat})
+#     return JsonResponse({'lon': lon, 'lat': lat})
 
 
 
@@ -656,3 +657,6 @@ def get_parameter_options(request, parameter_type, id=None):
 
     return JsonResponse({'options': list(options)})
 
+
+def leaflet(request):
+    return render(request, 'swn/leaflet_test.html')

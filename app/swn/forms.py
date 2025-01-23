@@ -35,21 +35,21 @@ class UserFieldForm(forms.ModelForm):
         }
 
 
-class UserFieldSelectorForm(forms.Form):
-    name = forms.ChoiceField(
-        label='Feld',
-        choices=[],
-        widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'field-dropdown'}),
-    ) 
+# class UserFieldSelectorForm(forms.Form):
+#     name = forms.ChoiceField(
+#         label='Feld',
+#         choices=[],
+#         widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'field-dropdown'}),
+#     ) 
 
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        # if user is not None:
-            # Dynamically set the queryset for the 'name' field
-        if user is not None:
-            self.fields['name'].choices = [
-                (field.id, field.name) for field in UserField.objects.filter(Q(user=user)).order_by('name')
-                ]
+#     def __init__(self, *args, user=None, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         # if user is not None:
+#             # Dynamically set the queryset for the 'name' field
+#         if user is not None:
+#             self.fields['name'].choices = [
+#                 (field.id, field.name) for field in UserField.objects.filter(Q(user=user)).order_by('name')
+#                 ]
 
 class SwnProjectSelectionForm(forms.Form):
     monica_project = forms.ChoiceField(

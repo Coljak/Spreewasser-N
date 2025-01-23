@@ -1,3 +1,5 @@
+
+
 document.addEventListener("DOMContentLoaded", () => {
   $('#coordinateFormCard').hide();
   
@@ -34,29 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-
-
-
 // -----------User Field Name Modal -----------------
-
-
-// bootstrap colors
-const highlightColor = getComputedStyle(document.body).getPropertyValue('--bs-warning');
-const primaryColor = getComputedStyle(document.body).getPropertyValue('--bs-primary');
-const secondaryColor = getComputedStyle(document.body).getPropertyValue('--bs-secondary');
-const successColor = getComputedStyle(document.body).getPropertyValue('--bs-success');
-const infoColor = getComputedStyle(document.body).getPropertyValue('--bs-info');
-const lightColor = getComputedStyle(document.body).getPropertyValue('--bs-light');
-
-var currentUserField;
-
-
-// ------------------- Alert Box -------------------
-// alert bar at the top of the main container
-// https://getbootstrap.com/docs/5.2/components/alerts/#examples
-// types can be: primary, secondary, success, danger, warning, info, light, dark
-
-
 
 // -------------MAP --------------------------------------
 
@@ -105,6 +85,13 @@ const baseMaps = {
   Satellit: satellite,
   Topomap: topo,
 };
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+  } else {
+    x.innerHTML = "Geolocation is not supported by this browser.";
+  }
+}
 
 //Map with open street map,opentopo-map and arcgis satellite map
 // opens at Müncheberg by default
@@ -187,7 +174,6 @@ var drawControl = new L.Control.Draw({
       showArea: true,
     },
   },
- 
 });
 map.addControl(drawControl);
 
@@ -213,7 +199,6 @@ chrosshair.addEventListener("click", () => {
 const leafletSidebarContent = document.querySelector(".sidebar-content");
 
 const baseLayerCollapse = document.getElementById("baseLayerCollapse")
-const baseLayerCollapses = [baseLayerCollapse];
 
 const overlayLayers = {
   "droughtOverlay": droughtOverlay,
@@ -223,28 +208,13 @@ const overlayLayers = {
 };
 
 
-
-
 // ------------------- Sidebar eventlisteners -------------------
 
 // -------------------Sidebar new----------------
 
 
-// switch between SWN Toolbox and drought warning
-const listElementDem = document.getElementById("liElementDem")
-const listElementDroughtIndex = document.getElementById("liElementDroughtIndex")
-const listElementNetCDF = document.getElementById("liElementNetCDF")
-const droughtSidebarLiElements = document.querySelectorAll(".drought-overlay-sidebar-item")
-
-
 var accordionUserFields = document.getElementById("accordionUserFields")
-
-
 var userFieldsAccordion = document.getElementById("userFieldsAccordion");
-
-
-
-
 
 $(function () {
   $('[data-toggle="tooltip"]').tooltip();
@@ -262,8 +232,6 @@ leafletSidebarContent.addEventListener("click", (event) => {
     const leafletId = clickedElement.getAttribute("leaflet-id");
     console.log("user-field-action clicked", leafletId);
     const userField = userFields[leafletId];
-
-    currentUserField = userField;
 
     if (clickedElement.classList.contains("delete")) {
       let confirmDelete = confirm(`Are you sure to delete ` + userField.name + "?");
@@ -292,12 +260,12 @@ leafletSidebarContent.addEventListener("click", (event) => {
       // TODO the hardcoded # fieldMenuModal is triggered from button
         const fieldMenuModal = new bootstrap.Modal(document.getElementById('fieldMenuModal'));
           fieldMenuModal.show();
-      // $('#fieldMenuModal').modal('show');
-      // console.log("field-menu clicked", leafletId);
+
     } else if (clickedElement.classList.contains("field-edit")) {
         // TODO the hardcoded modal is triggered from button
         console.log("field-edit clicked", leafletId, userField.id);
-        $('#monicaProjectModal form')
+        // select the userField in the modal
+        $('#userFieldSelect').val(userField.id);
         $('#monicaProjectModal').modal('show');
     } else { console.log("else in eventlistener") }
     }
@@ -421,9 +389,9 @@ var userFields = {};
 // User Field Name Modal
 
 
-const loadUrl = "/drought/load/";
-const saveUrl = "/drought/save/";
-const deleteUrl = "/drought/delete/";
+const loadUrl = "/drought/load-user-field/";
+const saveUrl = "/drought/save-user-field/";
+const deleteUrl = "/drought/delete-user-field/";
 
 
 class UserField {
@@ -455,12 +423,12 @@ class DroughtProject {
 
 
 // Save a newly created userField in DB
-function saveUserField(userField) {
+function saveUserField(name, geomJson) {
   return new Promise((resolve, reject) => {
     const requestData = {
       csrfmiddlewaretoken: csrfToken,
-      geom: JSON.stringify(userField.layer.toGeoJSON().geometry),
-      name: userField.name,
+      geom: JSON.stringify(geomJson.geometry),
+      name: name,
       // swnTool: userField.swnTool,
     };
     fetch(saveUrl, {
@@ -475,7 +443,7 @@ function saveUserField(userField) {
     .then(response => response.json())
     .then(data => {
       // received data is the id of the saved userField
-      resolve(data.id); 
+      resolve(data); 
     })
     .catch(error => {
       console.log(data)
@@ -518,12 +486,9 @@ const getData = async function () {
 
         addLayerToSidebar(userField);
         console.log("getData, userFields: ", userFields);
-
     });
   });
 };
-
-
 
 
 // Modal Userfield Name 
@@ -531,65 +496,84 @@ const btnUserFieldSave = document.getElementById("btnUserFieldSave");
 const btnUserFieldDismiss = document.getElementById("btnUserFieldDismiss");
 const fieldNameInput = document.getElementById("fieldNameInput");
 
-btnUserFieldSave.addEventListener("click", (event) => {
-  event.preventDefault();
-  handleSaveUserField();
-});
 
+function dismissPolygon(layer, modalInstance) {
+  modalInstance.hide();
+  // temporary layer is removed from the map
+  featureGroup.removeLayer(layer);
+}
 
-btnUserFieldDismiss.addEventListener("click", (event) => {
-  const userField = currentUserField;
-  featureGroup.removeLayer(userField.layer);
-  currentUserField = null;
-});
+function updateFieldSelectorOption(userField) {
+  const fieldSelector = document.getElementById("userFieldSelect");
+  const option = document.createElement("option");
+  option.value = userField.id;
+  option.text = userField.name;
+  fieldSelector.add(option);
+}
 
 // function connected to the "Save" and "SaveAndCalc" button in the modal
-function handleSaveUserField() {
-  const userField = currentUserField; 
+function handleSaveUserField(layer, bootstrapModal) {
   
-  console.log("handleSaveUserField", typeof userField, userField);
   const fieldName = fieldNameInput.value;
   if (fieldName !== "") {
     if (Object.values(userFields).some((proj) => proj.name === fieldName)) {
       alert(`Please change the name since "${fieldName}" already exists.`);
     } else {
-      userField.name = fieldName;
-      saveUserField(userField)
-        .then((id) => {
-          userField.id = id;
+      var geomJson = layer.toGeoJSON();
+
+      // userField.name = fieldName;
+      saveUserField(fieldName, geomJson)
+        .then((data) => {
+          console.log("Data: ", data);
+          var layerGeoJson = L.geoJSON(data.geom_json);
+          const userField = new UserField(
+            data.name,
+            layerGeoJson,
+            data.id,  
+          );
+          
+          featureGroup.addLayer(userField.layer);
+          // temporary layer is removed from the map
+          featureGroup.removeLayer(layer);
+          userField.leafletId  = featureGroup.getLayerId(userField.layer);
           userFields[userField.leafletId] = userField;
           addLayerToSidebar(userField);
           highlightLayer(userField.leafletId)
+          updateFieldSelectorOption(userField);
         })
         .catch((error) => {
           console.log("Error: ", error);
         });
-      // hide modal
-      $('#userFieldNameModal').modal('hide');
-      
       // reset name input field
       fieldNameInput.value = '';
     }
   } else {
     alert("This field cannot be empty. Please enter a name!");
   }
+  bootstrapModal.hide();
 }
 
+function openUserFieldNameModal(layer) {
+  // Set the modal content (e.g., name input)
+  const modal = document.querySelector('#userFieldNameModal');
+  const nameInput = modal.querySelector('#fieldNameInput');
+  nameInput.value = ''; // Reset input
 
+  const bootstrapModal = new bootstrap.Modal(modal);
+  bootstrapModal.show();
 
-// EventListener for the draw event 
+  // Add event listeners for the save and dismiss actions
+  modal.querySelector('#btnUserFieldSave').onclick = () => handleSaveUserField(layer, bootstrapModal);
+  modal.querySelector('#btnUserFieldDismiss').onclick = () => dismissPolygon(layer, bootstrapModal);
+  modal.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModal);
+}
+
 map.on("draw:created", function (event) {
-
   let layer = event.layer;
-  const layer2 = L.geoJSON(layer.toGeoJSON().geometry);
-  featureGroup.addLayer(layer2);
+  // is added to the map only for display
+  featureGroup.addLayer(layer);
 
-  let userField = new UserField("", layer);
-  console.log("draw:created userField", userField);
-  userField.leafletId = layer2._leaflet_id;
-  currentUserField = userField;
-  // Show the modal to enter the userField name. After the name is entered, the userField is saved in the DB
-  $('#userFieldNameModal').modal('show'); 
+  openUserFieldNameModal(layer);
 });
 
 // A list element is created and the corresponding userField object is attached to the li element in the sidebar
@@ -632,47 +616,46 @@ const addLayerToSidebar = (userField) => {
 
 
 
-// Now generate the full HTML for the accordion
-accordion.innerHTML = `
-  <div 
-    class="accordion-header nested user-field-header d-flex align-items-center justify-content-between" 
-    id="accordionHeader-${userField.leafletId}" 
-    leaflet-id="${userField.leafletId}"
-  >
-    <span class="form-check form-switch h6">  
-      <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="fieldSwitch-${userField.leafletId}" checked>
-    </span>
-    <button class="accordion-button nested btn collapsed user-field-btn" type="button" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="accordionButton-${userField.leafletId}" data-bs-toggle="collapse" data-bs-target="#accordionField-${userField.leafletId}" aria-expanded="false" aria-controls="accordionField-${userField.leafletId}"> 
-      ${userField.name}
-    </button>
-    <span class="column col-4 field-btns-col">
-      <form id="deleteAndCalcForm-${userField.leafletId}">
-        <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
-          <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
-        </button>
-        <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
-          <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
-        </button>
-        <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
-          <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
-        </button>
-      </form>
-    </span>  
-  </div>
-  <div id="accordionField-${userField.leafletId}" class="accordion-collapse collapse">
-    <div class="accordion-body">
-      <ul class="list-group" id="projectList-${userField.leafletId}">
-        ${projectListHTML}
-      </ul>
+  // Generate the full HTML for the accordion
+  accordion.innerHTML = `
+    <div 
+      class="accordion-header nested user-field-header d-flex align-items-center justify-content-between" 
+      id="accordionHeader-${userField.leafletId}" 
+      leaflet-id="${userField.leafletId}"
+    >
+      <span class="form-check form-switch h6">  
+        <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="fieldSwitch-${userField.leafletId}" checked>
+      </span>
+      <button class="accordion-button nested btn collapsed user-field-btn" type="button" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="accordionButton-${userField.leafletId}" data-bs-toggle="collapse" data-bs-target="#accordionField-${userField.leafletId}" aria-expanded="false" aria-controls="accordionField-${userField.leafletId}"> 
+        ${userField.name}
+      </button>
+      <span class="column col-4 field-btns-col">
+        <form id="deleteAndCalcForm-${userField.leafletId}">
+          <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
+            <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
+            <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
+            <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+          </button>
+        </form>
+      </span>  
     </div>
-  </div>
-`;
+    <div id="accordionField-${userField.leafletId}" class="accordion-collapse collapse">
+      <div class="accordion-body">
+        <ul class="list-group" id="projectList-${userField.leafletId}">
+          ${projectListHTML}
+        </ul>
+      </div>
+    </div>
+  `;
 
   // adding the UserField to the HTML-list element
-  accordion.userField = userField;
+  // accordion.userField = userField;
 
   userFieldsAccordion.appendChild(accordion);
-  
 };
 
 
@@ -690,7 +673,6 @@ var stateCountyDistrictLayer = L.layerGroup().addTo(map);
 
 stateCountyDistrictLayer.on("click", function (event) {
   console.log("stateCountyDistrictLayer click event: ", event);
-  // highlightPolygon(event.layer);
 });
 
 // Handle dropdown menu change event
@@ -744,35 +726,14 @@ administrativeAreaDiv.forEach(function (areaDropdown) {
             color = 'green';
         }
         var geojsonLayer = new L.GeoJSON.AJAX(url, {
-            style: function (feature) {
-                return { color: color };
+            style: {
+                color: color 
             },
             onEachFeature: function (feature, layer) {
                 layer.bindTooltip(`${feature.properties.nuts_name}`);
-                  // {
-              //   <div>
-              //   <strong>${feature.properties.nuts_name}!!</strong><br>
-              //   <button class="btn save-user-field-btn">Save as User Field</button>
-              //     </div>
-              // `, { 
-                // direction: 'top',
-                // permanent: false, // Tooltip is shown on hover
-                // // sticky: true,     // Tooltip stays open near the cursor
-                // className: 'custom-tooltip' // Optional custom CSS class
-              // }
-            // );
-            //   layer.on('tooltipopen', function (e) {
-            //     var saveButton = this._tooltip._contentNode.querySelector('.save-user-field-btn');
-            //     var feature = e.target.feature;
-            //     saveButton.addEventListener('click', function (e, feature) {
-            //       var userField = new UserField(feature.properties.nuts_name, layer);
-
-            //       console.log(`Save as User Field button clicked for feature ID: ${featureId}`, saveButton, featureId);
-                  
- 
-
-            //   });
-            // });
+                layer.setStyle({
+                  fill: false, 
+                });
         }
       });
         console.log("geojsonLayer", geojsonLayer)
@@ -790,14 +751,12 @@ document.getElementById('monica-project-save').addEventListener('click', functio
 
 document.getElementById('monica-project-save-as').addEventListener('click', function () {
   saveProject('save-as');
-}
-);
+});
 
 function saveProject(saveMode) {
   var swnMonicaProject = JSON.parse(localStorage.getItem('project'));
   console.log('swnMonicaProject', swnMonicaProject);
   // try {
-
       swnMonicaProject.updated = Date.now();
       handleAlerts({'success': true, 'message': 'Project save trying'});
 
@@ -820,8 +779,5 @@ function saveProject(saveMode) {
         });
 };
 
-
-
-console.log("userFields before getData", userFields);
 getData();
 });

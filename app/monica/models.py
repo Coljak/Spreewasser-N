@@ -663,8 +663,7 @@ class MineralFertiliser(models.Model):
         # Save the instance if it was created or updated
         if created or not mineral_fertiliser._state.adding:
             mineral_fertiliser.save()
-        
-        # TODO for export to .json file: 
+         
         return mineral_fertiliser
 
 class UserCropParameters(models.Model):
@@ -1699,24 +1698,6 @@ class Organ(models.Model):
 
 #     def __str__(self):
 #         return self.name
-
-
-# TODO: can be deleted, but is used in process_wheather_data
-class WeatherData(models.Model):
-    point = gis_models.PointField(blank=True, null=True)
-    lat = models.FloatField(blank=True, null=True)
-    lon = models.FloatField(blank=True, null=True)
-    date = models.DateField()
-    tas = models.FloatField()
-    tasmin = models.FloatField()
-    tasmax = models.FloatField()
-    sfcwind = models.FloatField()
-    rsds = models.FloatField()
-    pr = models.FloatField()
-    hurs = models.FloatField()
-
-    def __str__(self):
-        return f"{self.date} - {self.point}"
 
 
 """

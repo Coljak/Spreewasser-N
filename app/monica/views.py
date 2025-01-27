@@ -35,7 +35,7 @@ import csv
 import copy
 # create a new monica env
 # from ...xx_obsolete import climate
-from .process_weather_data import *
+# from .process_weather_data import *
 from datetime import datetime, timedelta
 from dask.diagnostics import ProgressBar
 import dask
@@ -724,15 +724,13 @@ def save_monica_site(request):
         
 
 def create_monica_project(request):
-    print("CREATE MONICA PROJECT\n", request.POST)
-
+    """
+    This function refers to save_monica_project.save_project and where it project to the database.
+    The save_project function also handles SwnProjects for DRY reasons.
+    """
     project = save_monica_project.save_project(request, project_class=MonicaProject)
 
     return JsonResponse({'message': {'success': True, 'message': f'Project {project.name} saved'}, 'project_id': project.id, 'project_name': project.name})
-        # else:
-    # except:
-    #     return JsonResponse({'message': {'success': False, 'message': form.errors}})
-
 
     
 def modify_model_parameters(request, parameter, id, rotation=None):

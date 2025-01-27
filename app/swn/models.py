@@ -80,7 +80,6 @@ class UserField(models.Model):
         self.save()
 
     def get_intersecting_soil_data_raster(self):
-        #TODO: today
         userfield_geom = self.geom
         print('userfield_geom ', userfield_geom)
         userfield_geom = GEOSGeometry(userfield_geom)

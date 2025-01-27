@@ -1,4 +1,4 @@
-// import { endpoint, chartDiv, crop, getChart } from "./chart_page.js";
+// this is the script for the manual selection of a soil profile from the Buek. It is not for the creation of a soil profile
 
 // Function to retrieve the CSRF token from the cookies
 function getCSRFToken() {

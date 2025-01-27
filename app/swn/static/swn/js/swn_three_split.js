@@ -242,19 +242,19 @@ leafletSidebarContent.addEventListener("click", (event) => {
         listElement.remove(); // removes HTML element from sidebar
         // removes field from db
         console.log("delete UserField ", userField)
-        $.ajax({
-          type: "POST",
-          url: deleteUrl + userField.id,
-          data: {
-            csrfmiddlewaretoken: csrfToken,
-          },
-          success: function (response) {
+        fetch(deleteUrl + userField.id, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken,
+          }}).then(response => response.json())
+          .then(data => {
+            handleAlerts(data.message);
             console.log("Delete Success");
-          },
-          error: function (response) {
+          })
+          .catch(error => {
             console.log(error);
-          },
-        });
+          });
       }
     } else if (clickedElement.classList.contains("field-menu")) {
       // TODO the hardcoded # fieldMenuModal is triggered from button

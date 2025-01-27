@@ -22,7 +22,7 @@ urlpatterns = [
     path('drought/get-csrf-token/', views.get_csrf_token, name='get-csrf-token'),
     path('drought/save-user-field/', views.save_user_field, name='save-user-field'),
     path('drought/load-user-field/', views.get_user_fields, name='get-user-fields'),
-    path('drought/update-user-field/', views.update_user_field, name='update-user-fields'),
+    path('drought/update-user-field/', views.update_user_field, name='update-user-field'),
     path('drought/delete-user-field/<int:id>', views.delete_user_field, name='delete-user-field'),
     # path('drought/create-project/', views.create_project, name='create-project'),
     path('drought/save-project/', views.save_swn_project, name='save-project'),
@@ -45,7 +45,7 @@ urlpatterns = [
     path('Thredds/get_wms_capabilities/<str:name>', views.get_wms_capabilities, name='get-wms-capabilities'),
     path('Thredds/wms/<str:netcdf>', views.timelapse_test_django_passthrough_wms, name='timelapse-test-passthrough-wms'),
     path('Thredds/catalog/', views.thredds_catalog, name='thredds-catalog'),
-    path('Thredds/wms/timeseries/', views.get_timeseries_data, name='get-timeseries-data'),
+    # path('Thredds/wms/timeseries/', views.get_timeseries_data, name='get-timeseries-data'),
     ## --the folloeing URLs are  renderings of the thredds Gui using  scraping --##
     # path('Thredds/catalog/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     # path('Thredds/dodsC/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
@@ -54,10 +54,8 @@ urlpatterns = [
     # path('Thredds/wcs/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     # path('Thredds/wms/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     path('bootstrap/', views.bootstrap, name='bootstrap'),
-    path('drought/load_projectregion/', views.load_projectregion, name='load_projectregion'),
     path('drought/load_polygon/', views.load_nuts_polygon, name='load_nuts_polygon'),
     path('drought/load_polygon/<str:entity>/<int:polygon_id>/', views.load_nuts_polygon, name='load_nuts_polygon_entity'),
     # path('login/three_split/save-project/', views.save_project, name='save_project'),
-    path('drought/leaflet/', views.leaflet, name='leaflet'),
     ]
 

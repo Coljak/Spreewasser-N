@@ -70,8 +70,6 @@ class AcknoledgementsView(TemplateView):
 def favicon_view(request):
     return HttpResponse(status=204)
 
-# an alternative could be https://github.com/smlum/netcdf-vis
-
 # This view outputs a json file containing a list of jsons of all available datasets on the thredds server
 def thredds_catalog(request):
     url = 'http://thredds:8080/thredds/catalog/data/DWD_Data/catalog.xml'
@@ -239,68 +237,6 @@ def timelapse_test_django_passthrough_wms(request, netcdf):
         # Handle request exception, e.g., log the error
         return HttpResponse(f"Error: {e}", content_type='text/plain')
 
-
-def get_timeseries_data(request):
-    start = datetime.now()
-    params = request.GET.dict()
-
-    p = {
-        'layers': 'hurs',
-        'start_time': '2011-01-01',
-        'end_time': '2011-12-04',
-        'lat_lon': '50.986099,11.975098',
-    }
-    lat = p['lat_lon'].split(',')[0]
-    lon = p['lat_lon'].split(',')[1]
-    lat_2 = float(lat) + 0.1
-    lon_2 = float(lon) + 0.1
-    bbox = f'{lat},{lon},{lat_2},{lon_2}'
-
-    params = {
-        'version': '1.3.0',
-        'request':'GetTimeseries',
-        'layers': p['layers'],
-        'styles': 'default',
-        'crs': 'EPSG:4326',
-        'BBOX': bbox,
-        'WIDTH': '1',
-        'HEIGHT': '1',
-        # 'format': 'image/png',
-        'info_format': 'text/json',
-        'query_layers': p['layers'],
-        'TIME': p['start_time'] + '/' + p['end_time'],
-        'i': 0,
-        'j': 0
-    }
-    netcdf = 'zalf_hurs_amber_2011_v1-0_cf_v6.nc'
-    url = 'http://thredds:8080/thredds/wms/data/DWD_Data/' + netcdf
-    response = requests.get(url, params=params)
-    layer = p['layers']
-    response_json = response.json()
-    # the loop is a little one second faster than the conversion to a numpy array
-    formatted_dates = [datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%d-%m-%Y') for date_string in response_json['domain']['axes']['t']['values']]
-
-    # dates = np.array(response_json['domain']['axes']['t']['values']),
-    # # Vectorize the conversion function
-    # convert_to_datetime_vec = np.vectorize(convert_to_datetime)
-
-
-    # # Convert the date strings to datetime objects and format them as dd-mm-yyyy
-    # formatted_dates = convert_to_datetime_vec(dates)
-    values = response_json['ranges'][layer]['values']
-    chart_data = {
-                'Date': formatted_dates,
-                layer: values, 
-                'max': max([max(values)]),     
-            }
-    print('chart_data', chart_data)
-
-    response.raise_for_status()
-    end = datetime.now()
-    print('Time to get timeseries data:', end - start)
-    return JsonResponse(chart_data)
-
-
 def sign_up(request):
     if request.method == 'POST':
         form = forms.RegistrationForm(request.POST)
@@ -313,64 +249,6 @@ def sign_up(request):
 
     return render(request, 'registration/sign_up.html', {'form': form})
 
-def register(request):
-
-    registered = False
-
-    if request.method == "POST":
-        
-        user_form = forms.UserForm(data=request.POST)
-        # profile_form = UserProfileInfoForm(data=request.POST)
-
-        if user_form.is_valid():  # and profile_form.is_valid():
-          
-            user = user_form.save()
-            user.set_password(user.password)
-            user.save()
-            registered = True
-            return redirect('swn:user_login')
-        else:
-            print("userForm NOT valid")
-            print(user_form.errors)
-
-    else:
-        user_form = forms.UserForm()
-
-    return render(request, 'swn/registration.html',
-                  {'user_form': user_form,
-                   # 'pk': user.id,
-                   'registered': registered})
-
-def user_login(request):
-    print("USER_LOGIN")
-    if request.method == "POST":
-        username = request.POST.get('name')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        user = authenticate(email=email, name=username, password=password)
-        # if '@' in username:
-        #     email = username
-        #     user = authenticate(email=email, password=password)
-        # else:
-        #     user = authenticate(name=username, password=password)
-        #user = authenticate(email=email, password=password)
-        if user:
-            if user.is_active:
-
-                login(request, user)
-                initial = user.username
-                return HttpResponseRedirect(reverse('swn:swn_user_dashboard'))
-
-            else:
-                return HttpResponse("Account is not active!")
-            
-        # TODO make this go to handle alerts
-        else:
-            return JsonResponse({'alert': "the login failed"})
-
-    else:
-        login_form = forms.LoginForm()
-        return render(request, 'swn/login.html', {'login_form': login_form})
 
 @login_required
 def user_logout(request):
@@ -397,10 +275,6 @@ def three_split(request):
                 "name": 'Spreewasser:N Projektregion',
             }
         }
-    
-    # MONICA forms etc (from Monica.views)
-    # coordinate_form = monica_forms.CoordinateForm()
-    # user_field_selector_form = forms.UserFieldSelectorForm(user=user)
 
     project_select_form = forms.SwnProjectSelectionForm(user=user)
     project_form = forms.SwnProjectForm(user=user)
@@ -408,10 +282,6 @@ def three_split(request):
 
     coordinate_form = monica_forms.CoordinateForm()
    
-
-    # user_simulation_settings = monica_models.UserSimulationSettings.objects.get(is_default=True)
-    # user_simulation_settings_form = monica_forms.UserSimulationSettingsForm(instance=user_simulation_settings)
-
     user_simulation_settings_select_form = monica_forms.UserSimulationSettingsInstanceSelectionForm(user=user)
 
     user_crop_parameters_select_form = monica_forms.UserCropParametersSelectionForm(user=user)
@@ -425,9 +295,6 @@ def three_split(request):
     soil_temperature_module_select_form = monica_forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
     user_soil_transport_parameters_select_form = monica_forms.UserSoilTransportParametersInstanceSelectionForm(user=user)
 
-
-
-
     data = {
             # 'user_fields': user_projects, 
             'user_field_form': forms.UserFieldForm(),
@@ -438,14 +305,9 @@ def three_split(request):
             'project_form': project_form,
             'project_modal_title': project_modal_title,
             'coordinate_form': coordinate_form,
-            # 'user_field_selector_form': user_field_selector_form,
             'user_crop_parameters_select_form': user_crop_parameters_select_form,
-            # 'user_crop_parameters_form': user_crop_parameters_form,
             'user_simulation_settings_select_form': user_simulation_settings_select_form,
-            # 'simulation_settings_form': user_simulation_settings_form,
             'user_environment_parameters_select_form': user_environment_parameters_select_form,
-            # 'user_environment_parameters_form': user_environment_parameters_form,
-
             'user_soil_moisture_select_form': user_soil_moisture_select_form,
             'user_soil_organic_select_form': user_soil_organic_select_form,
             'soil_temperature_module_selection_form': soil_temperature_module_select_form, 
@@ -456,27 +318,6 @@ def three_split(request):
     return render(request, 'swn/swn_three_split.html', context)
 
 
-def load_projectregion(request):
-    projectregion = models.ProjectRegion.objects.first()
-    geojson = json.loads(projectregion.geom.geojson) 
-    feature = {
-            "type": "Feature",
-            "geometry": geojson,
-            "properties": {
-                "name": 'Spreewasser:N Projektregion',
-            }
-        }
-    return JsonResponse(feature)
-
-
-# def get_user_fields(request):
-#     if request.method == "GET":
-
-#         # user_projects = models.UserProject.objects.filter(user_field__user=request.user)
-#         user_fields = models.UserField.objects.filter(user=request.user)
-#         user_projects = models.UserProject.objects.filter(user=request.user)
-
-#     return JsonResponse({'user_fields': list(user_fields.values('id', 'user', 'name', 'geom_json'))})
 
 def get_user_fields(request):
     if request.method == "GET":
@@ -494,8 +335,12 @@ def get_user_fields(request):
 
 @login_required
 def update_user_field(request, pk):
+    """
+    Currently not in use!
+    """
     obj = models.UserField.objects.get(pk=pk)
-    if is_ajax(request):
+
+    if request.POST and request.user.is_authenticated:
 
         obj.name = request.POST.get('name')
         obj.geom_json = request.POST.get('geomJson')
@@ -535,22 +380,27 @@ def save_user_field(request):
         
     else:
         return HttpResponseRedirect('swn:swn_user_dashboard')
+    
 
 @login_required
 @csrf_protect
-# @action_permission
 def delete_user_field(request, id):
-    print("request in views:", request.user)
-    if is_ajax(request):
-        print("Save IS AJAX")
-        form = forms.UserFieldForm(request.POST or None)
-        name = request.POST.get('id')
-        user_id = request.user.id
-        user_field = models.UserField.objects.get(id=id, user_id = user_id)
-        user_field.delete()
-        
-        return JsonResponse({})
-    return redirect('swn:swn_user_dashboard')
+    if request.method == 'POST' and request.user.is_authenticated:
+        try:
+            user_field = models.UserField.objects.get(id=id)
+
+            if user_field.user == request.user:
+                user_field.delete()
+                return JsonResponse({'message': {'success': True, 'message': 'Field deleted'}})
+            else:
+                return JsonResponse({'message': {'success': False, 'message': 'You do not have permission to delete this field'}}, status=403)
+
+        except models.UserField.DoesNotExist:
+            return JsonResponse({'message': {'success': False, 'message': 'Field not found'}}, status=404)
+    else:
+        return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}}, status=400)
+
+
 
 @login_required
 def get_field_project(request, id):
@@ -560,35 +410,35 @@ def get_field_project(request, id):
 
 
 def load_nuts_polygon(request, entity, polygon_id):
-    try:
-        # Retrieve the polygon based on the ID
-        if entity == 'states':
-            polygon = models.NUTS5000_N1.objects.get(id=polygon_id)
-        elif entity == 'districts':
-            polygon = models.NUTS5000_N2.objects.get(id=polygon_id)
-        elif entity == 'counties':
-            polygon = models.NUTS5000_N3.objects.get(id=polygon_id)
-        
-        # Generate the GeoJSON representation of the polygon
-        geometry = GEOSGeometry(polygon.geom)
-        geojson = json.loads(geometry.geojson)
+    if request.method == 'GET':
+        try:
+            # Retrieve the polygon based on the ID
+            if entity == 'states':
+                polygon = models.NUTS5000_N1.objects.get(id=polygon_id)
+            elif entity == 'districts':
+                polygon = models.NUTS5000_N2.objects.get(id=polygon_id)
+            elif entity == 'counties':
+                polygon = models.NUTS5000_N3.objects.get(id=polygon_id)
+            
+            # Generate the GeoJSON representation of the polygon
+            geometry = GEOSGeometry(polygon.geom)
+            geojson = json.loads(geometry.geojson)
 
-        feature = {
-            "type": "Feature",
-            "geometry": geojson,
-            "properties": {
-                "nuts_name": polygon.nuts_name,
-                
+            feature = {
+                "type": "Feature",
+                "geometry": geojson,
+                "properties": {
+                    "nuts_name": polygon.nuts_name,
+                }
             }
-        }
-        print('GeoJSON:', feature)
-        return JsonResponse(feature)
-    except:
-        # Return an error response if the polygon is not found
-        error_response = {
-            "error": "Polygon not found."
-        }
-        return JsonResponse(error_response, status=404)
+            print('GeoJSON:', feature)
+            return JsonResponse(feature)
+        except:
+            # Return an error response if the polygon is not found
+            error_response = {
+                "error": "Polygon not found."
+            }
+            return JsonResponse(error_response, status=404)
 
 
 def manual_soil_selection(request, user_field_id):
@@ -606,18 +456,6 @@ def manual_soil_selection(request, user_field_id):
 
     print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
     return render(request, 'monica/modal_manual_soil_selection.html', data_menu)
-
-
-def sidebar_working(request):
-    return render(request, 'swn/sidebar_copied_working.html')
-
-def sidebar_not_working(request):
-    return render(request, 'swn/sidebar_copied_not_working.html')
-
-# def get_centroid(request, user_field_id):
-#     lon, lat = models.UserField.objects.get(id=user_field_id).get_centroid()
-
-#     return JsonResponse({'lon': lon, 'lat': lat})
 
 
 
@@ -646,6 +484,7 @@ def save_swn_project(request, project_id=None):
 def get_parameter_options(request, parameter_type, id=None):
     """
     Get choices for select boxes- those that occur ONLY in SWN.
+    For all others there is a function get_parameter_options in monica.views.
     """
     user = request.user.id
     print("GET PARAMETER OPTIONS from SWN: ", parameter_type, id,)
@@ -657,6 +496,3 @@ def get_parameter_options(request, parameter_type, id=None):
 
     return JsonResponse({'options': list(options)})
 
-
-def leaflet(request):
-    return render(request, 'swn/leaflet_test.html')

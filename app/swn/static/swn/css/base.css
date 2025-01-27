@@ -45,26 +45,5 @@ top: calc(var(--avatar-size) / 4); /* 25% of parent */
 }
 
 
-  .leaflet-sidebar {
-    z-index: 1000 !important;
-  }
-
-  .leaflet-sidebar-tabs>li.active,
-  .leaflet-sidebar-tabs>ul>li.active {
-    background-color: var(--bs-primary) !important;
-}
-
-leaflet-control-layers-selector:checked {
-  background-color: brown;
-  color: brown;
-
-  color: var(--bs-primary) !important;
-}
-
-/* TODO delete this */
-.form-check-label {
-  font-size: 1rem !important;
-}
-
 
 

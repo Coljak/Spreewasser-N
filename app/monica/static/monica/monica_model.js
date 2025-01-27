@@ -675,7 +675,7 @@ const submitModalForm = (modalForm, modalAction) => {
 
 // TODO refactor initiaizeSoilModal
 // TODO implement getSoilProfiles for swn - all poygon ids
-var initiaizeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
+var initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
     // console.log('userFieldId', userFieldId);
     const landUsageField = document.getElementById('id_land_usage');
     const soilProfileField = document.getElementById('id_soil_profile');

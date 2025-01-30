@@ -1,5 +1,23 @@
 
 
+import { MonicaProject } from '/static/monica/monica_model.js';
+import { getGeolocation } from '/static/shared/utils.js';
+import { handleAlerts } from '/static/swn/js/base.js';
+
+
+
+getGeolocation()
+    .then((position) => {
+        console.log("Position:", position);
+        $('#id_latitude').val(position.latitude);
+        $('#id_longitude').val(position.longitude);
+    })
+    .catch((error) => {
+        console.error(error.message);
+        handleAlerts({ success: false, message: error.message });
+    });
+
+
 document.addEventListener("DOMContentLoaded", () => {
   $('#coordinateFormCard').hide();
   
@@ -20,11 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // TODO userfield highlight
   $('#userFieldSelect').on('change', function () {
+    const project = MonicaProject.loadFromLocalStorage();
     // get centroid of the userfield
     console.log('userFieldSelect change event');
     var userField = $(this).val();
-    localStorage.setItem('project.userField', userField);
-
+    project.userField = userField;
+    // TODO using the userFields's centroid
     if (userField != null) {
         fetch('/drought/get_lat_lon/' + userField + '/')
       .then((response) => response.json())
@@ -72,12 +91,11 @@ const droughtBounds = [
 const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
 const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5 });
 const projectRegion = new L.geoJSON(project_region, {
-  attribution: 'Project Region',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.name);
+    attribution: 'Project Region',
+    onEachFeature: function (feature, layer) {
+      layer.bindTooltip(feature.properties.name);
   }
 });
-
 
 // basemaps
 const baseMaps = {
@@ -85,13 +103,9 @@ const baseMaps = {
   Satellit: satellite,
   Topomap: topo,
 };
-function getLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(showPosition);
-  } else {
-    x.innerHTML = "Geolocation is not supported by this browser.";
-  }
-}
+
+
+
 
 //Map with open street map,opentopo-map and arcgis satellite map
 // opens at Müncheberg by default
@@ -556,8 +570,8 @@ function handleSaveUserField(layer, bootstrapModal) {
 function openUserFieldNameModal(layer) {
   // Set the modal content (e.g., name input)
   const modal = document.querySelector('#userFieldNameModal');
-  const nameInput = modal.querySelector('#fieldNameInput');
-  nameInput.value = ''; // Reset input
+  // const nameInput = modal.querySelector('#fieldNameInput');
+  // nameInput.value = ''; // Reset input
 
   const bootstrapModal = new bootstrap.Modal(modal);
   bootstrapModal.show();

@@ -70,10 +70,12 @@ export class MonicaProject {
         this.userField = project.userField ?? null;
         this.swnForecast = project.swnForecast ?? false;
 
-        // Ensure rotation always has at least one Rotation
-        this.rotation = {
-            rotationIndex: 0,
-            project.rotation?.map(r => new Rotation(r.rotationIndex, r)) ?? [new Rotation(0)]
+        if (Array.isArray(project.rotation) && project.rotation.length > 0) {
+            console.log('MonicaProject constructor project.rotation', project.rotation);
+            this.rotation = project.rotation.map(rotation => new Rotation(rotation.rotationIndex, rotation));
+        } else {
+            this.rotation = [];  // Initialize empty array
+            this.addRotation();  // Call addRotation() if no rotation exists
         }
 
         // Model setup
@@ -120,7 +122,7 @@ export class MonicaProject {
 
         console.log('addRotation 1', this.rotation);
         const rotationIndex = this.rotation.length;
-        console.log('addRotation 2 rotationIndex', rotationIndex);
+        console.log('addRotation rotationIndex', rotationIndex);
         const rotation = new Rotation(rotationIndex);
         console.log('addRotation 3 rotation', rotation);
 
@@ -150,8 +152,12 @@ class Rotation {
         this.workstepIndex = existingRotation.workstepIndex ?? 2; // 2 because of the sowing and harvestWorksteps
 
         // Initialize worksteps, ensuring defaults if none exist
-        this.sowingWorkstep = existingRotation.sowingWorkstep ?? [new Workstep('sowingWorkstep', null, 1, {})];
-        this.harvestWorkstep = existingRotation.harvestWorkstep ?? [new Workstep('harvestWorkstep', null, 2, {})];
+        this.sowingWorkstep = existingRotation.sowingWorkstep ?? [new Workstep('sowingWorkstep', null, 0, {
+            "species":null,
+            "cultivar": null,
+            "cropResidue": null
+            })];
+        this.harvestWorkstep = existingRotation.harvestWorkstep ?? [new Workstep('harvestWorkstep', null, 1, {})];
         this.tillageWorkstep = existingRotation.tillageWorkstep ?? [];
         this.mineralFertilisationWorkstep = existingRotation.mineralFertilisationWorkstep ?? [];
         this.organicFertilisationWorkstep = existingRotation.organicFertilisationWorkstep ?? [];
@@ -563,15 +569,15 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, parentDiv)
 
 };
 
-const addWorkstep = (workstepType, rotationIndex) => {
-    const project = MonicaProject.loadFromLocalStorage();
-    project.rotation[rotationIndex].workstepIndex += 1;
-    const workstepIndex = project.rotation[rotationIndex].workstepIndex;
-    const workstep = new Workstep(workstepType, null, workstepIndex, {});
-    project.rotation[rotationIndex][workstepType].push(workstep);
-    addWorkstepToGui(workstepType, rotationIndex, workstepIndex, document.querySelector(`div[rotation-index='${rotationIndex}']`));
-    project.saveToLocalStorage();
-};
+// const addWorkstep = (workstepType, rotationIndex) => {
+//     const project = MonicaProject.loadFromLocalStorage();
+//     project.rotation[rotationIndex].workstepIndex += 1;
+//     const workstepIndex = project.rotation[rotationIndex].workstepIndex;
+//     const workstep = new Workstep(workstepType, null, workstepIndex, {});
+//     project.rotation[rotationIndex][workstepType].push(workstep);
+//     addWorkstepToGui(workstepType, rotationIndex, workstepIndex, document.querySelector(`div[rotation-index='${rotationIndex}']`));
+//     project.saveToLocalStorage();
+// };
 
 // Parameters Modal
 const bindModalEventListeners = (parameters) => {
@@ -977,7 +983,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //TODO: remove this!!!
     $('#todaysDatePicker').on('changeDate', function () {
+        console.log()
         const project = MonicaProject.loadFromLocalStorage();
+        console.log("EvenLister todaysDatePicker changeDate", project)
         project.todaysDate = $(this).datepicker('getUTCDate');
         project.saveToLocalStorage();
         
@@ -987,6 +995,7 @@ document.addEventListener('DOMContentLoaded', () => {
     var advancedMode = false;
     $('.advanced').hide();
     $('#toggle-advanced-mode').on('click', function () {
+        console.log()
         // Toggle the advancedMode variable
         advancedMode = !advancedMode;
     
@@ -1006,25 +1015,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // TAB GENERAL EVENT LISTENERS
     $('#id_longitude').on('change', function () {
+        console.log()
         const project = MonicaProject.loadFromLocalStorage();
+        console.log("EvenLister id_longitude change", project)
         project.longitude = $(this).val();
         project.saveToLocalStorage();
     });
 
     $('#id_latitude').on('change', function () {
+        console.log()
         const project = MonicaProject.loadFromLocalStorage();
+        console.log("EvenLister id_latitude change", project)
         project.latitude = $(this).val();
         project.saveToLocalStorage();    
     });
 
     $('#monicaStartDatePicker').on('changeDate', function () {
+        console.log()
         const project = MonicaProject.loadFromLocalStorage();
+        console.log("EvenLister monicaStartDatePicker changeDate", project)
         project.startDate = $(this).datepicker('getUTCDate');
         project.saveToLocalStorage();      
     });
 
     $('#monicaEndDatePicker').on('changeDate', function () {
+        console.log()
         const project = MonicaProject.loadFromLocalStorage();
+        console.log("EvenLister monicaEndDatePicker changeDate", project)
         project.endDate = $(this).datepicker('getUTCDate');
         project.saveToLocalStorage();       
     });
@@ -1032,12 +1049,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // TAB CROP ROTATION EVENT LISTENERS
     $('#addRotationButton').on('click', () => {
         
+        
         const project = MonicaProject.loadFromLocalStorage();
-        console.log("1108", project)
+
+        console.log("'#addRotationButton').on('click') before", project)
+        
         project.addRotation();
+        console.log("'#addRotationButton').on('click') after", project)
         // const rotationIndex = project.rotation.length;
         
-        addRotationToGui(project, project.rotation.rotationIndex);
+        addRotationToGui(project, project.rotation.length - 1);
         project.saveToLocalStorage();
     });
 
@@ -1055,6 +1076,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#cropRotation').on('click', (event) => {
         const rotationIndex = event.target.closest('.rotation').getAttribute('rotation-index');
         const project = MonicaProject.loadFromLocalStorage();
+        console.log("EvenLister cropRotation click", project)
         if (event.target.classList.contains('add-workstep-button')) {
             
             const workstepType = event.target.closest('.rotation').querySelector('.workstep-type-select').value;
@@ -1066,6 +1088,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('IMPLEMENT delete rotation');
             project.saveToLocalStorage();
         } else if (event.target.classList.contains('delete-workstep-button')) {
+            
             const workstepIndex = event.target.closest('form').getAttribute('workstep-index');
             const workstepType = event.target.closest('form').getAttribute('workstep-type');
             console.log('delete-workstep', rotationIndex, workstepIndex, workstepType);
@@ -1097,8 +1120,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     $('#cropRotation').on('change', (event) => {
+        console.log("EvenLister cropRotation change")
         const rotationIndex = event.target.closest('.rotation').getAttribute('rotation-index');
         const project = MonicaProject.loadFromLocalStorage();
+
+        console.log("EvenLister cropRotation change", project)
         
         if (event.target.classList.contains('select-parameters')) {
             const workstepIndex = event.target.getAttribute('workstep-index');
@@ -1111,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
             
             if (event.target.classList.contains('species-parameters')) {
-                console.log('if species-parameters')
+                console.log('if species-parameters', workstep)
                 workstep.options.species = event.target.value;
                 if (event.target.value != '') {
                     fetch('/monica/get_options/cultivar-parameters/' + event.target.value + '/')
@@ -1225,6 +1251,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // TAB PROJECT EVENT LISTENERS
     const loadProjectFromDB = (project_id) => {
+        console.log('loadProjectFromDB', project_id);
         fetch('load-project/' + project_id + '/')
             .then(response => response.json())
             .then(data => {

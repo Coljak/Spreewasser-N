@@ -153,6 +153,11 @@ class SwnProject(monica_models.MonicaProject):
 
     def __str__(self):
         return self.name
+    
+    def to_json(self):
+        project_data = super().to_json() 
+        project_data['userField'] = self.user_field.id  
+        return project_data
 
 
 # Counties, States, Countries

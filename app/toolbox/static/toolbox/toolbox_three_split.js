@@ -473,7 +473,7 @@ const getData = async function () {
     userFieldsDb.forEach((el) => {
       var layer = L.geoJSON(el.geom_json);
       layer.bindTooltip(el.name);
-      console.log("getData, element: ", el);
+      // console.log("getData, element: ", el);
       const userField = new UserField(
         el.name,
         layer,
@@ -687,42 +687,6 @@ var selectedAdminAreas = {
   counties: [],
   districts: [],
 };
-// administrativeAreaDiv.forEach(function (areaDropdown) {
-//   areaDropdown.addEventListener('change', function (event) {
-//     stateCountyDistrictLayer.clearLayers();
-//     var name = areaDropdown.getAttribute("name");
-//     var selectedOptions = areaDropdown.value;
-//     selectedAdminAreas[name] = selectedOptions;
-//     console.log("event fired", selectedAdminAreas);
-
-//     for (let key in selectedAdminAreas) {
-//       if (selectedAdminAreas[key].length > 0) {
-//         selectedAdminAreas[key].forEach(function (polygon) {
-//           var url = loadNutsUrl + key + '/' + polygon + '/';
-//         console.log("URL", url)
-//         var color = '';
-//         if (key == 'states') {
-//             color = 'purple';
-//         } else if (key == 'counties') {
-//             color = 'blue';
-//         } else if (key == 'districts') {
-//             color = 'green';
-//         }
-//         var geojsonLayer = new L.GeoJSON.AJAX(url, {
-//             style: function (feature) {
-//                 return { color: color };
-//             },
-//             onEachFeature: function (feature, layer) {
-//                 layer.bindTooltip(feature.properties.nuts_name);
-//             }
-//         });
-//         console.log("geojsonLayer", geojsonLayer)
-//         geojsonLayer.addTo(stateCountyDistrictLayer);
-//         });
-//       }
-//   };
-// });
-// });
 
 getData();
 

@@ -153,56 +153,100 @@ def load_netcdf_to_memory():
 #     return climate_json
 
 
-# used
+# # used
+# def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
+#     """Returns the climate data as json using monica's keys for the given start and end date and the given lat and lon index"""
+#     print("get_climate_data_as_json", start_date, end_date, lat_idx, lon_idx)
+
+#     # opening with MFDataset does not work, because time is not an unlimited dimension in the NetCDF files
+#     start = datetime.now()
+#     climate_json = { 
+#         '3': [],
+#         '4': [],
+#         '5': [],
+#         '6': [],
+#         '8': [],
+#         '9': [],
+#         '12': [],
+#         }
+#     climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf')
+
+#     for year in range(start_date.year, end_date.year + 1):
+#         print('climate data for loop', year)
+#         for key, value in CLIMATE_VARIABLES.items():
+            
+#             file_path = f"{climate_data_path}/zalf_{value.lower()}_amber_{year}_v1-0.nc"
+#             print("filepath: ", file_path,  "getting key:", key)
+#             nc = Dataset(file_path, 'r')
+#             # print('climate data check 1')
+#             start_idx = 0
+#             end_idx = len(nc['time']) + 1
+#             if year == start_date.year:
+#                 start_idx = date2index(start_date, nc['time'])
+#             if year == end_date.year:
+#                 end_idx = date2index(end_date, nc['time']) +1
+
+#             values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx]
+#             values = values.tolist()
+
+#             climate_json[key].extend(values)
+
+#             nc.close()
+
+#             print(year, value, key)
+#     print('Time elapsed in get_climate_data_as_json: ', datetime.now() - start)
+#     climate_json['8'] = [x / 100 for x in climate_json['8']]
+#     return climate_json
+
+from netCDF4 import Dataset, date2index
+from pathlib import Path
+from datetime import datetime
+
 def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
-    """Returns the climate data as json using monica's keys for the given start and end date and the given lat and lon index"""
+    """Returns climate data as JSON using Monica's keys for the given start and end date and lat/lon index."""
     print("get_climate_data_as_json", start_date, end_date, lat_idx, lon_idx)
 
-    # opening with MFDataset does not work, because time is not an unlimited dimension in the NetCDF files
     start = datetime.now()
-    climate_json = { 
-        '3': [],
-        '4': [],
-        '5': [],
-        '6': [],
-        '8': [],
-        '9': [],
-        '12': [],
-        }
+    climate_json = { '3': [], '4': [], '5': [], '6': [], '8': [], '9': [], '12': [] }
     climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf')
 
     for year in range(start_date.year, end_date.year + 1):
         print('climate data for loop', year)
         for key, value in CLIMATE_VARIABLES.items():
-            
             file_path = f"{climate_data_path}/zalf_{value.lower()}_amber_{year}_v1-0.nc"
-            print("filepath: ", file_path,  "getting key:", key)
-            nc = Dataset(file_path, 'r')
-            # print('climate data check 1')
-            start_idx = 0
-            end_idx = len(nc['time']) + 1
-            if year == start_date.year:
-                start_idx = date2index(start_date, nc['time'])
-            if year == end_date.year:
-                end_idx = date2index(end_date, nc['time']) +1
+            print("filepath:", file_path, "getting key:", key)
 
-            values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx]
-            values = values.tolist()
+            try:
+                # Use 'with' to ensure proper closure
+                with Dataset(file_path, 'r') as nc:
+                    start_idx = 0
+                    end_idx = len(nc['time']) + 1
+                    
+                    if year == start_date.year:
+                        start_idx = date2index(start_date, nc['time'])
+                    if year == end_date.year:
+                        end_idx = date2index(end_date, nc['time']) + 1
+                    
+                    values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx].tolist()
+                    climate_json[key].extend(values)
+                    
+                print(year, value, key)
 
-            climate_json[key].extend(values)
+            except Exception as e:
+                print(f"⚠️ Error reading {file_path}: {e}")
 
-            nc.close()
-
-            print(year, value, key)
-    print('Time elapsed in get_climate_data_as_json: ', datetime.now() - start)
+    print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
     climate_json['8'] = [x / 100 for x in climate_json['8']]
+    # climate_json['8'] = np.array(climate_json['8']) / 100
     return climate_json
+
 
 ### MONICA VIEWS ###
 
 
 
 def create_monica_env_from_json(json_data):
+    print("create_monica_env_from_json",json_data)
     error = []
    
     cropRotation = []
@@ -283,7 +327,8 @@ def create_monica_env_from_json(json_data):
                     if workstep['date'] is not None:
                         worksteps.append(workstep)
             else:
-                print("Workstep not found: ", k)
+                if k not in ('rotationIndex', 'workstepIndex'):
+                    print("Workstep not found: ", k)
 
         worksteps = sorted(worksteps, key=lambda x: x['date'])
         rotation["worksteps"] = worksteps
@@ -723,14 +768,22 @@ def save_monica_site(request):
             return JsonResponse({'success': False, 'message': form.errors})
         
 
-def create_monica_project(request):
+        
+
+def save_monica_project(request):
     """
     This function refers to save_monica_project.save_project and where it project to the database.
     The save_project function also handles SwnProjects for DRY reasons.
     """
-    project = save_monica_project.save_project(request, project_class=MonicaProject)
 
-    return JsonResponse({'message': {'success': True, 'message': f'Project {project.name} saved'}, 'project_id': project.id, 'project_name': project.name})
+    if request.method == 'POST':
+        user = request.user
+        
+        project_data = json.loads(request.body)
+        project = save_monica_project.save_project(project_data, user, project_class=models.MonicaProject)
+    
+
+        return JsonResponse({'message': {'success': True, 'message': f'Project {project.name} saved'}, 'project_id': project.id, 'project_name': project.name})
 
     
 def modify_model_parameters(request, parameter, id, rotation=None):
@@ -1132,28 +1185,7 @@ def manual_soil_selection(request, lat, lon):
 
 
     
-def create_irrigation_envs(envs, data):
-    """
-    This function creates a new environment for each irrigation event.
-    """
-    today = datetime.strptime(data.get('todaysDate').split('T')[0], '%Y-%m-%d')
-    # irrigations = [(3, 10.0), (3, 20.0), (6, 10.0), (6, 20.0), (9, 30.0)]
-    irrigations = [ (6, 10.0), (6, 20.0), (9, 30.0)]
-    for days, amount in irrigations:
-        date = copy.deepcopy(today)
-        env2 = copy.deepcopy(envs[0])
-        worksteps = env2['cropRotation'][-1].get('worksteps')
-        while date <= datetime.strptime(data.get('endDate').split('T')[0], '%Y-%m-%d'):
-            date += timedelta(days=days)
-            worksteps.append({
-                "type": "Irrigation",
-                "date": date.strftime('%Y-%m-%d'),
-                "amount": [amount, 'mm']
-            })
-        worksteps.sort(key=lambda x: x['date'])
-        env2['cropRotation'][-1]['worksteps'] = worksteps
-        envs.append(env2)
-    return envs
+
 
 def create_irrigation_envs2(envs, data):
     """
@@ -1176,59 +1208,37 @@ def create_irrigation_envs2(envs, data):
     return envs
 
 
-def save_project(data, user):
-    project_saved = False
-    if data.get('project_id') is not None:
-        project_id = data.get('project_id')
-        project = MonicaProject.objects.get(id=project_id)
-    else:
-        project = MonicaProject()
-    project.name = data.get('name')
-    project.description = data.get('description')
-    project.start_date = data.get('startDate')
-    project.save()
-    # model setup
-    if data.get('monica_model_setup') is not None:
-        model_setup_id = data.get('monica_model_setup')
-        model_setup = models.ModelSetup.objects.get(id=model_setup_id)
-    else:
-        model_setup = models.ModelSetup()
-        model_setup.user = user
-        model_setup.is_default = False
-        model_setup.name = data.get('model_setup_name')
-        model_setup.user_crop_parameters = models.UserCropParameters.objects.get(pk=int(data.get('userCropParamters')))
-        model_setup.user_environment_parameters = models.UserEnvironmentParameters.objects.get(pk=int(data.get('userEnvironmentParameters')))
-        model_setup.user_soil_moisture_parameters = models.UserSoilMoistureParameters.objects.get(pk= int(data.get('userSoilMoistureParameters')))
-        model_setup.user_soil_transport_parameters = models.UserSoilTransportParameters.objects.get(pk= int(data.get('userSoilTransportParameters')))
-        model_setup.user_soil_organic_parameters = models.UserSoilOrganicParameters.objects.get(pk= int(data.get('userSoilOrganicParameters')))
-        model_setup.user_soil_temperature_parameters = models.SoilTemperatureModuleParameters.objects.get(pk= int(data.get('userSoilTemperatureModuleParameters')))
-        model_setup.simulation_parameters = models.UserSimulationSettings.objects.get(pk= int(data.get('userSimulationSettings')))
-        
-        model_setup.save()
 
-    # no if for calculation - they cannot be changed TODO deleted maybe?
-    calculation = models.MonicaCalculation()
-    calculation.name = data.get('calculation_name')
-    calculation.description = data.get('calculation_description')    
-    # site data
-    if data.get('site_id') is not None:
-        site_id = data.get('site_id')
-        site = models.MonicaSite.objects.get(id=site_id)
-    else:
-        site = models.MonicaSite()
-        site.user = user
-        site.name = data.get('field_name', None)
-        site.latitude = data.get('latitude', None)
-        site.longitude = data.get('longitude', None)
-        # TODO implement following params
-        site.altitude = data.get('altitude', 100)
-        site.slope = data.get('slope', 0)
-        site.n_deposition = data.get('n_deposition', 11)
-        #TODO implement soil 
-        site.save()
+def run_monica_simulation(envs):
+    print("running simulation")
+    json_msgs = []
+    i = 0
+    for e in envs:
+        i += 1
+        context = zmq.Context()
+        socket = context.socket(zmq.PUSH)
+        socket.connect("tcp://swn_monica:6666")
+        print("check 6")
+        # print(env)
+        socket.send_json(e)
+        file_path = Path(__file__).resolve().parent
+        with open(f'{file_path}/monica_io/env_{str(i)}.json', 'w') as _: 
+            json.dump(e, _)
+        print("check 7")
+        msg = run_consumer()
+        print("check 9: consumer run")
+        json_msg = msg_to_json(msg)
+        json_msgs.append(json_msg)
+        print("check 10: ")
+        # print(msg)
+        with open(f'{file_path}/monica_io/message_out_{str(i)}.json', 'w') as _: 
+            json.dump(msg, _)
+        with open(f'{file_path}/monica_io/json_message_out_{str(i)}.json', 'w') as _: 
+            json.dump(json_msg, _)
+
     
-
-    return project_saved
+    return json_msgs
+    
 
 def run_simulation(request):
     user = request.user
@@ -1239,7 +1249,8 @@ def run_simulation(request):
         data = json.loads(request.body)
         print("Saving Project\n", data)
         try:
-            save_project(data, user)
+            
+            project = save_monica_project.save_project(request, project_class=MonicaProject)
         except:
             pass
 
@@ -1252,36 +1263,11 @@ def run_simulation(request):
         
         if data.get('swnForecast', False):
             envs = create_irrigation_envs2(envs, data)
-        
-  
-        json_msgs = []
-        i = 0
-        for e in envs:
-            i += 1
-            context = zmq.Context()
-            socket = context.socket(zmq.PUSH)
-            socket.connect("tcp://swn_monica:6666")
-            # print("check 6")
-            # print(env)
-            socket.send_json(e)
-            file_path = Path(__file__).resolve().parent
-            with open(f'{file_path}/monica_io/env_{str(i)}.json', 'w') as _: 
-                json.dump(e, _)
-            msg = run_consumer()
-            # print("check 9: consumer run")
-            json_msg = msg_to_json(msg)
-            json_msgs.append(json_msg)
-            # print("check 10: ")
-            # print(msg)
-            with open(f'{file_path}/monica_io/message_out_{str(i)}.json', 'w') as _: 
-                json.dump(msg, _)
-            with open(f'{file_path}/monica_io/json_message_out_{str(i)}.json', 'w') as _: 
-                json.dump(json_msg, _)
 
-        time_el = datetime.now() - start
-        # print("Simulation is done.", len(envs), len(json_msgs), 'time elapsed: ', time_el)
-        print("Simulation is done.", 'time elapsed: ', time_el)
+        json_msgs = run_monica_simulation(envs)
         return JsonResponse({'message': {'success': True, 'message': json_msgs}})
     else:
         return JsonResponse({'message': {'success': False, 'message': 'Simulation not started.'}})
+        
+
 

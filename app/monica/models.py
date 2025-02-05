@@ -1998,6 +1998,7 @@ class ModelSetup(models.Model):
             "rotation": self.crop_rotation
         }
     
+    
 class MonicaSite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=255, null=True, blank=True)
@@ -2056,6 +2057,7 @@ class MonicaProject(models.Model):
     def to_json(self):
         # Start with the project fields
         project_data = {
+            "id": self.id,
             "name": self.name,
             "startDate": self.start_date,
             "description": self.description,

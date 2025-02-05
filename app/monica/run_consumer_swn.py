@@ -20,7 +20,7 @@ import zmq
 
 def run_consumer(path_to_output_dir = None, leave_after_finished_run = True, server = {"server": None, "port": None}, shared_id = None):
     "collect data from workers"
-
+    print("c: entering run_consumer()")
     config = {
         "port": "7777",
         "server": "swn_monica", 
@@ -77,8 +77,10 @@ def run_consumer(path_to_output_dir = None, leave_after_finished_run = True, ser
 
     while not leave:
         try:
+            print("trying to leave")
             msg = socket.recv_json()
             leave = process_message(msg)
+            print("leave", leave)
         except:
             continue
 

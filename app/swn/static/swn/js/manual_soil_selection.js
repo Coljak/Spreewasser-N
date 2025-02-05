@@ -11,7 +11,7 @@ function getCSRFToken() {
 
 
 
-var initiaizeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
+var initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
     // console.log('userFieldId', userFieldId);
     // select boxes for soil profile
     const landUsageField = document.getElementById('id_land_usage');

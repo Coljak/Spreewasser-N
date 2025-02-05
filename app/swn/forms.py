@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 
 from swn.models import *
 from buek.models import SoilProfile, BuekPolygon, SoilProfileHorizon
+from monica.models import MonicaProject, ModelSetup
 from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
@@ -35,21 +36,6 @@ class UserFieldForm(forms.ModelForm):
         }
 
 
-# class UserFieldSelectorForm(forms.Form):
-#     name = forms.ChoiceField(
-#         label='Feld',
-#         choices=[],
-#         widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'field-dropdown'}),
-#     ) 
-
-#     def __init__(self, *args, user=None, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         # if user is not None:
-#             # Dynamically set the queryset for the 'name' field
-#         if user is not None:
-#             self.fields['name'].choices = [
-#                 (field.id, field.name) for field in UserField.objects.filter(Q(user=user)).order_by('name')
-#                 ]
 
 class SwnProjectSelectionForm(forms.Form):
     monica_project = forms.ChoiceField(
@@ -106,8 +92,21 @@ class SwnProjectForm(monica_forms.MonicaProjectForm):
     user_field = forms.ModelChoiceField(
         queryset=UserField.objects.all(),
         label='Field',
-        widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'field-dropdown'}),
+        widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'user-field-dropdown'}),
     )
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields['user_field'].choices = [
+                (instance.id, instance.name) for instance in UserField.objects.filter(Q(user=user)).order_by('name')
+            ]
+            monica_projects = MonicaProject.objects.filter(Q(user=user))
+            mp = [( monica_project.monica_model_setup.id, monica_project.name) for monica_project in monica_projects]
+            default_setup = ModelSetup.objects.filter(is_default=True)[0]
+            setup_choices = [(default_setup.id, default_setup.name)] + mp
+            print(setup_choices, mp)
+
+            self.fields['monica_model_setup'].choices = setup_choices
 
 
 # TODO this is probably obsolete

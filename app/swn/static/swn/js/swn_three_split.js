@@ -41,19 +41,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const project = MonicaProject.loadFromLocalStorage();
     // get centroid of the userfield
     console.log('userFieldSelect change event');
-    var userField = $(this).val();
-    project.userField = userField;
+    var userFieldId = $(this).val();
+    let leafletId = getLeafletIdByUserFieldId(userFieldId);
+    highlightLayer(leafletId);
+    project.userField = userFieldId;
+    project.saveToLocalStorage();
     // TODO using the userFields's centroid
-    if (userField != null) {
-        fetch('/drought/get_lat_lon/' + userField + '/')
-      .then((response) => response.json())
-      .then((data) => {
-        console.log('data', data);
-        $('#id_latitude').val(data.lat);
-        $('#id_longitude').val(data.lon);
-      });
-    }
+    // if (userFieldId != null) {
+    //     fetch('/drought/get_lat_lon/' + userFieldId + '/')
+    //   .then((response) => response.json())
+    //   .then((data) => {
+    //     console.log('data', data);
+    //     $('#id_latitude').val(data.lat);
+    //     $('#id_longitude').val(data.lon);
+    //   });
+    // }
   });
+
+    $('#todaysDatePicker').on('changeDate', function () {
+        console.log()
+        const project = MonicaProject.loadFromLocalStorage();
+        console.log("EvenLister todaysDatePicker changeDate", project)
+        project.todaysDate = $(this).datepicker('getUTCDate');
+        project.saveToLocalStorage();
+        
+    });
 
 // -----------User Field Name Modal -----------------
 
@@ -141,7 +153,7 @@ featureGroup.on("click", function (event) {
 // highlight layer and li element on click in the sidebar
 
 function highlightLayer(id) {
-  console.log("HIGHLIGHT");
+  console.log("HIGHLIGHT", id);
   // remove highlight from all layers
   featureGroup.eachLayer(function (layer) {
     const key = Object.keys(layer._layers)[0];
@@ -169,7 +181,14 @@ function highlightLayer(id) {
     featureGroup._layers[id]._layers[key]._path.classList.add('highlight');
   };
 };
+
+
       
+function getLeafletIdByUserFieldId(id) {
+  const entry = Object.values(userFields).find(field => field.id == id);
+  console.log("getLeafletIdByUserFieldId", id, entry, userFields);
+  return entry ? entry.leafletId : null;
+}
   
 // Draw functionality
 var drawControl = new L.Control.Draw({
@@ -486,7 +505,7 @@ const getData = async function () {
     userFieldsDb.forEach((el) => {
       var layer = L.geoJSON(el.geom_json);
       layer.bindTooltip(el.name);
-      console.log("getData, element: ", el);
+      // console.log("getData, element: ", el);
       const userField = new UserField(
         el.name,
         layer,
@@ -499,7 +518,7 @@ const getData = async function () {
         userFields[userField.leafletId ] = userField;
 
         addLayerToSidebar(userField);
-        console.log("getData, userFields: ", userFields);
+        // console.log("getData, userFields: ", userFields);
     });
   });
 };
@@ -724,7 +743,6 @@ administrativeAreaDiv.forEach(function (areaDropdown) {
     var name = areaDropdown.getAttribute("name");
     var selectedOptions = areaDropdown.value;
     selectedAdminAreas[name] = selectedOptions;
-    console.log("event fired", selectedAdminAreas);
 
     for (let key in selectedAdminAreas) {
       if (selectedAdminAreas[key].length > 0) {
@@ -760,19 +778,19 @@ administrativeAreaDiv.forEach(function (areaDropdown) {
 });
 
 document.getElementById('monica-project-save').addEventListener('click', function () {
-  saveProject('save');
+
+  saveProject();
 });
 
-document.getElementById('monica-project-save-as').addEventListener('click', function () {
-  saveProject('save-as');
-});
 
-function saveProject(saveMode) {
-  var swnMonicaProject = JSON.parse(localStorage.getItem('project'));
-  console.log('swnMonicaProject', swnMonicaProject);
+
+function saveProject() {
+  // var swnMonicaProject = JSON.parse(localStorage.getItem('project'));
+  const project = MonicaProject.loadFromLocalStorage();
+  // console.log('swnMonicaProject', swnMonicaProject);
   // try {
-      swnMonicaProject.updated = Date.now();
-      handleAlerts({'success': true, 'message': 'Project save trying'});
+      project.updated = Date.now();
+      // handleAlerts({'success': true, 'message': 'Project save trying'});
 
       fetch(saveProjectUrl, {
         method: 'POST',
@@ -780,11 +798,7 @@ function saveProject(saveMode) {
           'Content-Type': 'application/json',
           'X-CSRFToken': csrfToken,
         },
-        body: JSON.stringify({
-          csrfmiddlewaretoken: csrfToken,
-          swnMonicaProject: swnMonicaProject,
-          saveMode: saveMode,
-        }),
+        body: JSON.stringify(project)
       })
         .then(response => response.json())
         .then(data => {

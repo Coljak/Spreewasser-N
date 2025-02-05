@@ -100,7 +100,7 @@
 
 
         <button id="monica-project-save" class="btn btn-primary mt-3 ">Save Project</button>
-        <button id="monica-project-save-as" class="btn btn-primary mt-3 ">Save Project as</button>
+        
 
 
     </div>
@@ -115,7 +115,7 @@
         const demUrl = "{% static 'data/dem_3857.png' %}";
         const droughtUrl = "{% static 'data/4326_reprojected_3857.png' %}" ;   
         const project_region = {{ project_region|safe }} ;
-        const runSimulationUrl = "{% url 'monica:run_simulation' %}";
+        const runSimulationUrl = "{% url 'swn:run_simulation' %}";
         const loadNutsUrl = "{% url 'swn:load_nuts_polygon' %}";
         const saveProjectUrl = "{% url 'swn:save-project' %}";
 

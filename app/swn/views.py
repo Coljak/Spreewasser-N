@@ -30,7 +30,7 @@ from toolbox import models as toolbox_models
 from app.helpers import is_ajax
 import xmltodict
 from datetime import datetime, timedelta
-
+import copy
 
 from .utils import get_geolocation
 import random
@@ -330,7 +330,7 @@ def get_user_fields(request):
             uf = model_to_dict(user_field, fields=['id', 'user', 'name', 'geom_json'])
             uf['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
             ufs.append(uf)
-        print('user_fields:', ufs)
+        # print('user_fields:', ufs)
     return JsonResponse({'user_fields': ufs})
 
 @login_required
@@ -458,7 +458,6 @@ def manual_soil_selection(request, user_field_id):
     return render(request, 'monica/modal_manual_soil_selection.html', data_menu)
 
 
-
 def load_swn_project(request, id):
     try:
         project = models.SwnProject.objects.get(pk=id)
@@ -469,17 +468,95 @@ def load_swn_project(request, id):
 
 def save_swn_project(request, project_id=None):
     print("CREATE SWN PROJECT\n", request.POST)
+    if request.method == 'POST':
+        user = request.user
+        
+        project_data = json.loads(request.body)
+        project = save_monica_project.save_project(project_data, user, project_class=models.SwnProject)
 
-    project = save_monica_project.save_project(request, project_class=models.SwnProject, project_id=project_id, additional_fields=True)
-
-    return JsonResponse({
-        'message': {
-            'success': True, 
-            'message': f'Project {project.name} saved'
-            }, 
-            'project_id': project.id, 
-            'project_name': project.name
+        return JsonResponse({
+            'message': {
+                'success': True, 
+                'message': f'Project {project.name} saved'
+                }, 
+                'project_id': project.id, 
+                'project_name': project.name
+                })
+    
+def create_regular_irrigation_envs(envs, data):
+    """
+    This function creates a new environment for each irrigation event.
+    Irrigations sets the interval in days and amount of irrigation in millimeters.
+    """
+    today = datetime.strptime(data.get('todaysDate').split('T')[0], '%Y-%m-%d')
+    # irrigations = [(3, 10.0), (3, 20.0), (6, 10.0), (6, 20.0), (9, 30.0)]
+    irrigations = [ (6, 10.0), (6, 20.0), (9, 30.0)]
+    for days, amount in irrigations:
+        date = copy.deepcopy(today)
+        env2 = copy.deepcopy(envs[0])
+        worksteps = env2['cropRotation'][-1].get('worksteps')
+        while date <= datetime.strptime(data.get('endDate').split('T')[0], '%Y-%m-%d'):
+            date += timedelta(days=days)
+            worksteps.append({
+                "type": "Irrigation",
+                "date": date.strftime('%Y-%m-%d'),
+                "amount": [amount, 'mm']
             })
+        worksteps.sort(key=lambda x: x['date'])
+        env2['cropRotation'][-1]['worksteps'] = worksteps
+        envs.append(env2)
+    return envs
+
+def create_automatic_irrigation_envs(envs, data):
+    """
+    This function creates a new environment for each automatic irrigation event.
+    """
+    # today = datetime.strptime(data.get('todaysDate').split('T')[0], '%Y-%m-%d')
+    today = data.get('todaysDate').split('T')[0]
+    print("CREATING EXTRA ENV", today)
+
+    simulation_settings = [
+        # UserSimulationSettings.objects.get(id=30).to_json(),
+        monica_models.UserSimulationSettings.objects.get(id=31).to_json(),
+        monica_models.UserSimulationSettings.objects.get(id=32).to_json()
+    ]
+    for sim in simulation_settings:
+        # sim["AutoIrrigationParams"]["startDate"] = today.strftime('%Y-%m-%d')
+        sim["AutoIrrigationParams"]["startDate"] = today
+        env2 = copy.deepcopy(envs[0])
+        env2["params"]["simulationParameters"] = sim
+        envs.append(env2)
+
+    return envs
+    
+def run_simulation(request):
+    # TODO projectId!!!!
+    user = request.user
+
+    if request.method == 'POST':
+        # data is the project json
+        data = json.loads(request.body)
+        print("Saving Project\n", data)
+        try:
+            if data.get('id'):
+                project = save_monica_project.save_project(data, user,  project_class=models.SwnProject)
+        except:
+            pass
+
+        print("Simulation is starting...\n")
+        
+        
+        env = monica_views.create_monica_env_from_json(data)
+        # # split function here --> if swn, then create irrigation
+        envs = [env]
+        
+        
+        envs = create_automatic_irrigation_envs(envs, data)
+        json_msgs = monica_views.run_monica_simulation(envs)
+        
+        return JsonResponse({'message': {'success': True, 'message': json_msgs}})
+    else:
+        return JsonResponse({'message': {'success': False, 'message': 'Simulation not started.'}})
 
 def get_parameter_options(request, parameter_type, id=None):
     """
@@ -495,4 +572,5 @@ def get_parameter_options(request, parameter_type, id=None):
         options = []
 
     return JsonResponse({'options': list(options)})
+
 

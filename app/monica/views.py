@@ -277,7 +277,7 @@ def create_monica_env_from_json(json_data):
                                         "=": m_models.CultivarParameters.objects.get(id=ws.get('options').get('cultivar')).to_json()
                                         }
                                     },
-                                    "residueParams": m_models.CropResidueParameters.objects.get(id=ws.get('options').get('cropResidue')).to_json()
+                                    "residueParams": m_models.CropResidueParameters.objects.get(id=ws.get('options').get('residue')).to_json()
                                 }
                             }
                     

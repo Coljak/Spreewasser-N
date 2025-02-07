@@ -438,8 +438,9 @@ const runSimulation = (monicaProject) => {
 let isLoading = false;
 const loadProjectToGui = (project) => {
     isLoading = true;
+    document.querySelector('#cropRotation').innerHTML = '';
     console.log('loadProject', project);
-    let startDate = new Date(project.startDate);
+    
     $('#projectName').val(project.name);
     $('#projectDescription').val(project.description);
     $('#id_longitude').val(project.longitude);
@@ -463,7 +464,7 @@ const loadProjectToGui = (project) => {
 
 // creates the rotation divs and adds the worksteps from the project
 const addRotationToGui = (rotationIndex, rotation=null) => {
-    // check if rotation already exists
+    // check if rotation already exists in the Gui
     let exists = false;
     $('#cropRotation').children().each(function() {
         
@@ -490,28 +491,29 @@ const addRotationToGui = (rotationIndex, rotation=null) => {
 
         newRotation.appendChild(cardBody);
         $('#cropRotation').append(newRotation);
-        if(!rotation){
-            addWorkstepToGui('sowingWorkstep', rotationIndex, 0);
-            addWorkstepToGui('harvestWorkstep', rotationIndex, 1);
-        } else {
-            Object.entries(rotation).forEach(([workstepType, value]) => {
-                if (workstepType !== 'rotationIndex' && workstepType !== 'workstepIndex') {
-                    if (value.length > 0) {
-                        value.forEach(workstep => {
-                            addWorkstepToGui(workstepType, rotationIndex, workstep.workstepIndex, workstep=workstep);
+        // if(!rotation){
+        //     addWorkstepToGui('sowingWorkstep', rotationIndex, 0);
+        //     addWorkstepToGui('harvestWorkstep', rotationIndex, 1);
+        // } 
+        // else {
+        //     Object.entries(rotation).forEach(([workstepType, value]) => {
+        //         if (workstepType !== 'rotationIndex' && workstepType !== 'workstepIndex') {
+        //             if (value.length > 0) {
+        //                 value.forEach(workstep => {
+        //                     addWorkstepToGui(workstepType, rotationIndex, workstep.workstepIndex, workstep=workstep);
                             
-                        });
-                    }
-                }
-            });    
-        }
+        //                 });
+        //             }
+        //         }
+        //     });    
+        // }
     };
 
     if (rotation) {
-        const rotationIndex = rotation.rotationIndex;
-        Object.entries(rotation).forEach(([workstepType, value]) => {
-            console.log('workstepType', workstepType, 'value', value);
+        // const rotationIndex = rotation.rotationIndex;
+        Object.entries(rotation).forEach(([workstepType, value]) => { 
             if (workstepType !== 'rotationIndex' && workstepType !== 'workstepIndex') {
+                console.log('AddRotationToGui workstepType', workstepType, 'value', value);
                 if (value.length > 0) {
                     value.forEach(workstep => { 
                         let form = document.querySelector(`form[rotation-index="${rotationIndex}"][workstep-index="${workstep.workstepIndex}"]`);
@@ -529,7 +531,7 @@ const addRotationToGui = (rotationIndex, rotation=null) => {
 
 
 const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=null) => {
-    
+    console.log("addWorkstepToGui", workstepType, rotationIndex, workstepIndex, workstep);
     // load and modify the according workstep template
     const formTemplate = document.getElementById(workstepType + '-template');
     const newForm = formTemplate.cloneNode(true);
@@ -559,83 +561,91 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
     // TODO test which one is better
     // 
     
-
     const parentDiv = document.querySelector(`div[rotation-index='${rotationIndex}']`); 
     const cardBody = parentDiv ? parentDiv.querySelector(`:scope > .card-body`) : null;
     const addWorkstepDiv = cardBody.querySelector('.add-workstep');
     cardBody.insertBefore(newForm, addWorkstepDiv);
+
+
+    
 //--------------------------------------------------
-    const datepickerInput = newForm.querySelector('.workstep-datepicker'); // Ensure correct selection
-    if (datepickerInput) {
-        $(datepickerInput).datepicker('update', new Date(workstep.date));
-    } else {
-        console.error("Datepicker input not found inside the form.");
-    }
+    if (workstep) {
+        console.log('IN addRotationToGui, if (rotation) workstep', workstepType);
+        const datepickerInput = newForm.querySelector('.workstep-datepicker'); // Ensure correct selection
+        if (datepickerInput) {
+            $(datepickerInput).datepicker('update', new Date(workstep.date));
+        } else {
+            console.error("Datepicker input not found inside the form.");
+        }
 
-    if (workstepType === 'sowingWorkstep') {
-        console.log('workstepType', workstepType);
-        const speciesSelector = newForm.querySelector(`select[name="species"]`);
-        const cultivarSelector = newForm.querySelector(`select[name="cultivar"]`);
-        const residueSelector = newForm.querySelector(`select[name="residue"]`);
-        if (speciesSelector) {
-            // Watch when the species dropdown gets its options
-            observeDropdown(`#${speciesSelector.id}`, (dropdown) => {
-                dropdown.value = workstep.options.species;  
-                
-                fetch('/monica/get_options/cultivar-parameters/' + workstep.options.species + '/')
-                    .then(response => response.json())
-                    .then(data => {
-                        cultivarSelector.innerHTML = '';  
-                        data.options.forEach(option => {
-                            const optionElement = document.createElement('option');
-                            optionElement.value = option.id;
-                            optionElement.text = option.name;
-                            cultivarSelector.appendChild(optionElement);                     
-                        }); 
-                    })
-                    .then(() => {
-                        cultivarSelector.value = workstep.options.cultivar;  
-                    });
-
-
-                    // TODO these fetches may be duplicates
-                    fetch('/monica/get_options/crop-residue-parameters/' + workstep.options.species + '/')
+        if (workstepType === 'sowingWorkstep') {
+            console.log('workstepType', workstepType);
+            const speciesSelector = newForm.querySelector(`select[name="species"]`);
+            const cultivarSelector = newForm.querySelector(`select[name="cultivar"]`);
+            const residueSelector = newForm.querySelector(`select[name="residue"]`);
+            if (speciesSelector) {
+                // Watch when the species dropdown gets its options
+                observeDropdown(`#${speciesSelector.id}`, (dropdown) => {
+                    dropdown.value = workstep.options.species;  
+                    
+                    fetch('/monica/get_options/cultivar-parameters/' + workstep.options.species + '/')
                         .then(response => response.json())
                         .then(data => {
-                            residueSelector.innerHTML = '';
+                            cultivarSelector.innerHTML = '';  
                             data.options.forEach(option => {
                                 const optionElement = document.createElement('option');
                                 optionElement.value = option.id;
                                 optionElement.text = option.name;
-                                residueSelector.appendChild(optionElement);
-                            });
+                                cultivarSelector.appendChild(optionElement);                     
+                            }); 
                         })
                         .then(() => {
-                            residueSelector.value = workstep.options.residue; 
+                            cultivarSelector.value = workstep.options.cultivar;  
                         });
+
+
+                        // TODO these fetches may be duplicates
+                        fetch('/monica/get_options/crop-residue-parameters/' + workstep.options.species + '/')
+                            .then(response => response.json())
+                            .then(data => {
+                                residueSelector.innerHTML = '';
+                                data.options.forEach(option => {
+                                    const optionElement = document.createElement('option');
+                                    optionElement.value = option.id;
+                                    optionElement.text = option.name;
+                                    residueSelector.appendChild(optionElement);
+                                });
+                            })
+                            .then(() => {
+                                residueSelector.value = workstep.options.residue; 
+                            });
+                    
+                });
                 
-            });
-            
-        } else {
-            console.error("Input not found with name:", key);
-        }
-        
-
-    } else {    
-        for (const [key, value] of Object.entries(workstep.options)) {
-            console.log('IN addRotationToGui, if (rotation) key', key, 'value', value);
-            const input = newForm.querySelector(`select[name=${key}], input[name=${key}]`);
-
-            if (input) {
-                input.value = value;
             } else {
                 console.error("Input not found with name:", key);
             }
-        };
+            
+
+        } else {    
+            for (const [key, value] of Object.entries(workstep.options)) {
+                console.log('IN addRotationToGui, if (rotation) key', key, 'value', value);
+                const input = newForm.querySelector(`select[name=${key}], input[name=${key}]`);
+
+                if (input) {
+                    if (input.type ==="checkbox") {
+                        input.checked = value;
+                    } else {
+                        input.value = value;
+                    }
+                } else {
+                    console.error("Input not found with name:", key);
+                }
+            };
+        }
     }
 //-------------------------------------------
-
-    return newForm;
+return newForm;
 
 };
 
@@ -1209,15 +1219,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 var workstep = project.rotation[rotationIndex][workstepType].find(workstep => workstep.workstepIndex == workstepIndex);
                 
                 console.log('if workstep...4:', rotationIndex, workstepIndex, workstepType, name);
-                
-            
-                const cultivarSelector = event.target.closest('.rotation').querySelector('.select-parameters.cultivar-parameters');
-                const residueSelector = event.target.closest('.rotation').querySelector('.select-parameters.crop-residue-parameters');
-                    
-                
+
                 if (event.target.classList.contains('species-parameters')) {
                     console.log('if species-parameters', workstep)
                     workstep.options.species = event.target.value;
+                    const cultivarSelector = event.target.closest('.rotation').querySelector('.select-parameters.cultivar-parameters');
+                    const residueSelector = event.target.closest('.rotation').querySelector('.select-parameters.crop-residue-parameters');
                     if (event.target.value != '') {
                         fetch('/monica/get_options/cultivar-parameters/' + event.target.value + '/')
                         .then(response => response.json())
@@ -1229,10 +1236,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 optionElement.text = option.name;
                                 cultivarSelector.appendChild(optionElement);                     
                             });  
-                            console.log('cultivarSelector', cultivarSelector.value)
-                            console.log('workstep.options.cultivar', workstep.options.cultivar)
-                            workstep.options['cultivar'] = cultivarSelector.value        
-                            project.saveToLocalStorage();
+                            if (!isLoading) {  
+                                console.log('cultivarSelector', cultivarSelector.value)
+                                console.log('workstep.options.cultivar', workstep.options.cultivar)
+                                workstep.options['cultivar'] = cultivarSelector.value    
+                             
+                                project.saveToLocalStorage();
+                            }
                         });
                     
 
@@ -1247,8 +1257,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     optionElement.text = option.name;
                                     residueSelector.appendChild(optionElement);
                                 });
-                                workstep.options['residue'] = residueSelector.value;
-                                project.saveToLocalStorage();
+                                if (!isLoading) {  
+                                    workstep.options['residue'] = residueSelector.value;
+                                    project.saveToLocalStorage();
+                                }
                             });
                     };
                
@@ -1267,8 +1279,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }else {
                     if (!isLoading) {
-                    workstep.options[name] = event.target.value;
-                    project.saveToLocalStorage();
+                        workstep.options[name] = event.target.value;
+                        project.saveToLocalStorage();
                     }
                 };
         }

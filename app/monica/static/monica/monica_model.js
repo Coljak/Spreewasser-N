@@ -97,6 +97,7 @@ export class MonicaProject {
 
     // Save project to localStorage
     saveToLocalStorage() {
+        console.log('saveToLocalStorage', this.toJson());
         localStorage.setItem('monica_project', this.toJson());
     }
 
@@ -137,7 +138,7 @@ export class MonicaProject {
 class Rotation {
     constructor(rotationIndex, existingRotation = {}) {
         this.rotationIndex = rotationIndex;
-        this.workstepIndex = existingRotation.workstepIndex ?? 2; // 2 because of the sowing and harvestWorksteps
+        this.workstepIndex = existingRotation.workstepIndex ?? 1; // 2 because of the sowing and harvestWorksteps
 
         // Initialize worksteps, ensuring defaults if none exist
         this.sowingWorkstep = existingRotation.sowingWorkstep ?? [new Workstep('sowingWorkstep', null, 0, {
@@ -179,6 +180,7 @@ const setLanguage =  (language_code)=>{
     })
 };
 
+// function to check when the update of a dropdown menu is finished
 const observeDropdown = (selector, callback) => {
     const dropdown = document.querySelector(selector);
     if (!dropdown) 
@@ -433,8 +435,9 @@ const runSimulation = (monicaProject) => {
     });
 };
 
+let isLoading = false;
 const loadProjectToGui = (project) => {
-
+    isLoading = true;
     console.log('loadProject', project);
     let startDate = new Date(project.startDate);
     $('#projectName').val(project.name);
@@ -455,9 +458,10 @@ const loadProjectToGui = (project) => {
     project.rotation.forEach(rotation => {
         addRotationToGui(rotation.rotationIndex, rotation);
     });
-    
+    isLoading = false;
 };
 
+// creates the rotation divs and adds the worksteps from the project
 const addRotationToGui = (rotationIndex, rotation=null) => {
     // check if rotation already exists
     let exists = false;
@@ -506,92 +510,17 @@ const addRotationToGui = (rotationIndex, rotation=null) => {
     if (rotation) {
         const rotationIndex = rotation.rotationIndex;
         Object.entries(rotation).forEach(([workstepType, value]) => {
-            
-        if (workstepType !== 'rotationIndex' && workstepType !== 'workstepIndex') {
-            if (value.length > 0) {
-                value.forEach(workstep => { 
-                    let form = document.querySelector(`form[rotation-index="${rotationIndex}"][workstep-index="${workstep.workstepIndex}"]`);
-                        console.log('try', form);
-                        
-                    if (!form) {
-                        form = addWorkstepToGui(workstepType, rotationIndex, workstep.workstepIndex, workstep=workstep)     
-                    }
-                
-                    console.log('form', form);
-
-                    const datepickerInput = form.querySelector('.workstep-datepicker'); // Ensure correct selection
-                    if (datepickerInput) {
-                        $(datepickerInput).datepicker('update', new Date(workstep.date));
-                    } else {
-                        console.error("Datepicker input not found inside the form.");
-                    }
-
-                    if (workstepType === 'sowingWorkstep') {
-                        console.log('workstepType', workstepType);
-                        const speciesSelector = form.querySelector(`select[name="species"]`);
-                        const cultivarSelector = form.querySelector(`select[name="cultivar"]`);
-                        const residueSelector = form.querySelector(`select[name="residue"]`);
-                        console.log('input', speciesSelector.id);
-                        if (speciesSelector) {
-                            console.log('if input true');
-                                // Usage: Watch when the species dropdown gets its options
-                            observeDropdown(`#${speciesSelector.id}`, (dropdown) => {
-                                dropdown.value = workstep.options.species;  // Set value once options are ready
-                                
-                                fetch('/monica/get_options/cultivar-parameters/' + workstep.options.species + '/')
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        cultivarSelector.innerHTML = '';  // Clear current options
-                                        data.options.forEach(option => {
-                                            const optionElement = document.createElement('option');
-                                            optionElement.value = option.id;
-                                            optionElement.text = option.name;
-                                            cultivarSelector.appendChild(optionElement);                     
-                                        }); 
-                                    })
-                                    .then(() => {
-                                        cultivarSelector.value = workstep.options.cultivar;  // Set value once options are ready
-                                    });
-        
-
-                                    // TODO these fetches may be duplicates
-                                    fetch('/monica/get_options/crop-residue-parameters/' + workstep.options.species + '/')
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            residueSelector.innerHTML = '';
-                                            data.options.forEach(option => {
-                                                const optionElement = document.createElement('option');
-                                                optionElement.value = option.id;
-                                                optionElement.text = option.name;
-                                                residueSelector.appendChild(optionElement);
-                                            });
-                                        })
-                                        .then(() => {
-                                            residueSelector.value = workstep.options.residue;  // Set value once options are ready
-                                        });
-                                
-                            });
-                            
-                        } else {
-                            console.error("Input not found with name:", key);
+            console.log('workstepType', workstepType, 'value', value);
+            if (workstepType !== 'rotationIndex' && workstepType !== 'workstepIndex') {
+                if (value.length > 0) {
+                    value.forEach(workstep => { 
+                        let form = document.querySelector(`form[rotation-index="${rotationIndex}"][workstep-index="${workstep.workstepIndex}"]`);
+                        if (!form) {
+                            form = addWorkstepToGui(workstepType, rotationIndex, workstep.workstepIndex, workstep=workstep)     
                         }
-                        
-
-                    } else {    
-                        for (const [key, value] of Object.entries(workstep.options)) {
-                            const input = form.querySelector(`select[name=${key}], input[name=${key}]`);
-
-                            if (input) {
-                                input.value = value;
-                            } else {
-                                console.error("Input not found with name:", key);
-                            }
-                        };
-                    }
-
-                }) ;
+                    }) ;
+                };
             };
-        };
         });              
     };
 };
@@ -600,7 +529,8 @@ const addRotationToGui = (rotationIndex, rotation=null) => {
 
 
 const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=null) => {
-    console.log("workstep: ", workstep);
+    
+    // load and modify the according workstep template
     const formTemplate = document.getElementById(workstepType + '-template');
     const newForm = formTemplate.cloneNode(true);
     newForm.removeAttribute('id');
@@ -618,7 +548,7 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
     newForm.querySelector('form').setAttribute('workstep-index', workstepIndex);
     newForm.querySelector('form').setAttribute('rotation-index', rotationIndex);
 
-
+    // add and initialize the datepicker
     $(newForm).find('.datepicker').datepicker({
         language: 'de-DE',
         format: "dd.mm.yyyy",
@@ -630,10 +560,81 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
     // 
     
 
-    const parentDiv2 = document.querySelector(`div[rotation-index='${rotationIndex}']`); 
-    const cardBody = parentDiv2 ? parentDiv2.querySelector(`:scope > .card-body`) : null;
+    const parentDiv = document.querySelector(`div[rotation-index='${rotationIndex}']`); 
+    const cardBody = parentDiv ? parentDiv.querySelector(`:scope > .card-body`) : null;
     const addWorkstepDiv = cardBody.querySelector('.add-workstep');
     cardBody.insertBefore(newForm, addWorkstepDiv);
+//--------------------------------------------------
+    const datepickerInput = newForm.querySelector('.workstep-datepicker'); // Ensure correct selection
+    if (datepickerInput) {
+        $(datepickerInput).datepicker('update', new Date(workstep.date));
+    } else {
+        console.error("Datepicker input not found inside the form.");
+    }
+
+    if (workstepType === 'sowingWorkstep') {
+        console.log('workstepType', workstepType);
+        const speciesSelector = newForm.querySelector(`select[name="species"]`);
+        const cultivarSelector = newForm.querySelector(`select[name="cultivar"]`);
+        const residueSelector = newForm.querySelector(`select[name="residue"]`);
+        if (speciesSelector) {
+            // Watch when the species dropdown gets its options
+            observeDropdown(`#${speciesSelector.id}`, (dropdown) => {
+                dropdown.value = workstep.options.species;  
+                
+                fetch('/monica/get_options/cultivar-parameters/' + workstep.options.species + '/')
+                    .then(response => response.json())
+                    .then(data => {
+                        cultivarSelector.innerHTML = '';  
+                        data.options.forEach(option => {
+                            const optionElement = document.createElement('option');
+                            optionElement.value = option.id;
+                            optionElement.text = option.name;
+                            cultivarSelector.appendChild(optionElement);                     
+                        }); 
+                    })
+                    .then(() => {
+                        cultivarSelector.value = workstep.options.cultivar;  
+                    });
+
+
+                    // TODO these fetches may be duplicates
+                    fetch('/monica/get_options/crop-residue-parameters/' + workstep.options.species + '/')
+                        .then(response => response.json())
+                        .then(data => {
+                            residueSelector.innerHTML = '';
+                            data.options.forEach(option => {
+                                const optionElement = document.createElement('option');
+                                optionElement.value = option.id;
+                                optionElement.text = option.name;
+                                residueSelector.appendChild(optionElement);
+                            });
+                        })
+                        .then(() => {
+                            residueSelector.value = workstep.options.residue; 
+                        });
+                
+            });
+            
+        } else {
+            console.error("Input not found with name:", key);
+        }
+        
+
+    } else {    
+        for (const [key, value] of Object.entries(workstep.options)) {
+            console.log('IN addRotationToGui, if (rotation) key', key, 'value', value);
+            const input = newForm.querySelector(`select[name=${key}], input[name=${key}]`);
+
+            if (input) {
+                input.value = value;
+            } else {
+                console.error("Input not found with name:", key);
+            }
+        };
+    }
+//-------------------------------------------
+
     return newForm;
 
 };
@@ -645,7 +646,6 @@ const bindModalEventListeners = (parameters) => {
     console.log('bindModalEventListeners', parameters);
     try {
         const modalForm = document.getElementById('modalForm');
-        console.log('modalForm', modalForm);
         modalForm.addEventListener('submit', (event) => {
             event.preventDefault();
         });
@@ -661,7 +661,6 @@ const bindModalEventListeners = (parameters) => {
             const modalAction = 'save'
 
             const modalClose = await submitModalForm(modalForm, modalAction);
-            console.log('modalClose', modalClose);
             if (modalClose) {
                 
                 $('#formModal').modal('hide');
@@ -675,7 +674,6 @@ const bindModalEventListeners = (parameters) => {
             const modalAction = 'save_as_new'
 
             const modalClose = submitModalForm(modalForm, modalAction);
-            console.log('modalClose', modalClose);
             if (modalClose) {
                 $('#formModal').modal('hide');
             }
@@ -686,7 +684,6 @@ const bindModalEventListeners = (parameters) => {
             const modalForm = document.getElementById('modalForm');
             const modalAction = 'delete'
             const modalClose = submitModalForm(modalForm, modalAction);
-            console.log('modalClose', modalClose);
             if (modalClose) {
                 $('#formModal').modal('hide');
             }
@@ -761,7 +758,6 @@ const submitModalForm = (modalForm, modalAction) => {
     })
     .then(response => response.json())
     .then(data => {
-        console.log("check 2", data)
         if (data.message.success) {
             $('#formModal').modal('hide');
             //TODO: deal with it
@@ -789,7 +785,7 @@ const submitModalForm = (modalForm, modalAction) => {
 // TODO refactor initiaizeSoilModal
 // TODO implement getSoilProfiles for swn - all poygon ids
 var initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
-    // console.log('userFieldId', userFieldId);
+    console.log('initializeSoilModal',   systemUnitJson, landusageChoices);
     const landUsageField = document.getElementById('id_land_usage');
     const soilProfileField = document.getElementById('id_soil_profile');
     const horizonsField = document.getElementById('div_id_horizons');
@@ -975,7 +971,7 @@ const fetchModalContent = (params) => {
 
 const validateProject = (project) => {
     var valid = true;
-    console.log("VALIDATION", project)
+    console.log("validateProject", project)
     // if (project.name === null) {
     //     valid = false;
     //     handleAlerts('warning', 'Please provide a project name');
@@ -1066,16 +1062,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //TODO: remove this!!!
     $('#todaysDatePicker').on('changeDate', function () {
-        const project = MonicaProject.loadFromLocalStorage();
-        project.todaysDate = $(this).datepicker('getUTCDate');
-        project.saveToLocalStorage();
-        
+        if (!isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.todaysDate = $(this).datepicker('getUTCDate');
+            project.saveToLocalStorage();
+        }
     });
 
     $('#todaysDatePicker').on('focusout', function () {
-        const project = MonicaProject.loadFromLocalStorage();
-        project.todaysDate = $(this).datepicker('getUTCDate');
-        project.saveToLocalStorage();
+        if (!isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.todaysDate = $(this).datepicker('getUTCDate');
+            project.saveToLocalStorage();
+        }
         
     });
 
@@ -1083,7 +1082,6 @@ document.addEventListener('DOMContentLoaded', () => {
     var advancedMode = false;
     $('.advanced').hide();
     $('#toggle-advanced-mode').on('click', function () {
-        console.log()
         // Toggle the advancedMode variable
         advancedMode = !advancedMode;
     
@@ -1103,23 +1101,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // TAB GENERAL EVENT LISTENERS
     document.getElementById('tabGeneralParameters').addEventListener('change', function (event) {
-        console.log("generalTab change event")
-        let name = event.target.getAttribute('name');
-        
-        const project = MonicaProject.loadFromLocalStorage();
-        project[name] = event.target.value;
-        project.saveToLocalStorage();
-        
+        if (!isLoading) {
+            console.log("generalTab change event")
+            let name = event.target.getAttribute('name');
+            
+            const project = MonicaProject.loadFromLocalStorage();
+            project[name] = event.target.value;
+            project.saveToLocalStorage();
+        }
     });
 
     $('#tabGeneralParameters').on('changeDate', function (event) {
-        const input = $(event.target);
-       
-        const project = MonicaProject.loadFromLocalStorage();
-        let name = input.attr('name');
-        console.log('name', name)
-        project[name] = input.datepicker('getUTCDate').toISOString().split('T')[0];
-        project.saveToLocalStorage();
+        if (!isLoading) {
+            const input = $(event.target);
+        
+            const project = MonicaProject.loadFromLocalStorage();
+            let name = input.attr('name');
+            console.log('name', name)
+            project[name] = input.datepicker('getUTCDate').toISOString().split('T')[0];
+            project.saveToLocalStorage();
+        }
     });
         
   
@@ -1178,7 +1179,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 'parameters_id': value,
                 'rotation_index': rotationIndex
             }
-            // const endpoint = '/monica/' + targetClass + '/' + value + '/' + rotationIndex + '/';
             if (value != '') {
                 fetchModalContent(params);
                 $('#formModal').modal('show');
@@ -1193,6 +1193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     $('#cropRotation').on('change', (event) => {
+        
         console.log("EvenLister cropRotation change")
         const rotationIndex = event.target.closest('.rotation').getAttribute('rotation-index');
         
@@ -1203,7 +1204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         
         if (workstepIndex && workstepType && rotationIndex && name) {
-            // if (event.target.classList.contains('select-parameters')) {
+            console.log('if workstep...:', rotationIndex, workstepIndex, workstepType, name);
                 const project = MonicaProject.loadFromLocalStorage();
                 var workstep = project.rotation[rotationIndex][workstepType].find(workstep => workstep.workstepIndex == workstepIndex);
                 
@@ -1252,15 +1253,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                
                 } else if (event.target.type === 'checkbox') {
-                    workstep.options[name] = event.target.checked;
-                    project.saveToLocalStorage();
+                    if (!isLoading) {
+                        workstep.options[name] = event.target.checked;
+                        project.saveToLocalStorage();
+                    }
                 } else if (event.target.classList.contains('workstep-datepicker')) {
-                    console.log(event.target.id)
-                    workstep.date = $(`#${event.target.id}`).datepicker('getUTCDate').toISOString().split('T')[0];
-                    project.saveToLocalStorage();
+                    if (!isLoading) {
+                        console.log(event.target.id)
+                        console.log($(`#${event.target.id}`).datepicker('getUTCDate').toISOString().split('T')[0])
+                        console.log('workstep', workstep)
+                        workstep.date = $(`#${event.target.id}`).datepicker('getUTCDate').toISOString().split('T')[0];
+                        project.saveToLocalStorage();
+                    }
                 }else {
+                    if (!isLoading) {
                     workstep.options[name] = event.target.value;
                     project.saveToLocalStorage();
+                    }
                 };
         }
            
@@ -1274,24 +1283,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //TAB SOIL EVENT LISTENERS
     $('#id_soil_moisture').on('change', function () {
-        const project = MonicaProject.loadFromLocalStorage();
-        project.userSoilMoistureParametersId = $(this).val();
-        project.saveToLocalStorage();
+        if (!isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.userSoilMoistureParametersId = $(this).val();
+            project.saveToLocalStorage();
+        }
     });
     $('#id_soil_organic').on('change', function () {
-        const project = MonicaProject.loadFromLocalStorage();
-        project.userSoilOrganicParametersId = $(this).val();
-        project.saveToLocalStorage();
+        if (!isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.userSoilOrganicParametersId = $(this).val();
+            project.saveToLocalStorage();
+        }
     });
     $('#id_soil_temperature').on('change', function () {
-        const project = MonicaProject.loadFromLocalStorage();
-        project.userSoilTemperatureParametersId = $(this).val();
-        project.saveToLocalStorage();
+        if (!isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.userSoilTemperatureParametersId = $(this).val();
+            project.saveToLocalStorage();
+        }
     });
     $('#id_soil_transport').on('change', function () {
-        const project = MonicaProject.loadFromLocalStorage();
-        project.userSoilTransportParametersId = $(this).val();
-        project.saveToLocalStorage();
+        if (!isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.userSoilTransportParametersId = $(this).val();
+            project.saveToLocalStorage();
+        }
     });
 
     $('#tabSoil').on('click', (event) => {
@@ -1337,7 +1354,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     project.saveToLocalStorage();
                 };
                 handleAlerts(data.message)
-
             })
             .catch(error => console.error('Error:', error));
     };
@@ -1405,7 +1421,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // project modal save project
     $('#saveProjectButton').on('click', () => {
         console.log('saveProjectButton clicked');
-        // const formData = new FormData(projectModalForm);
         // TODO test if this is obsolete ----
         // in case it is a SWN project, longitude and latidude are provided from user field centroid
         const project = new MonicaProject();
@@ -1434,7 +1449,7 @@ document.addEventListener('DOMContentLoaded', () => {
         project.modelSetup = $('#id_project_model_setup').val();
 
         project.saveToLocalStorage();
-        // obsolete ??? --------
+        // TODO: obsolete ??? --------
 
         // this works for monica and swn
         var saveUrl = 'save-project/';
@@ -1467,29 +1482,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     $('#projectName').on('change', function () {
-        const project = MonicaProject.loadFromLocalStorage();
-        project.name = $(this).val();
-        project.saveToLocalStorage();
+        if (!isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.name = $(this).val();
+            project.saveToLocalStorage();
+        }
     });
     $('#projectDescription').on('change', function () {
-        const project = MonicaProject.loadFromLocalStorage();
-        project.description = $(this).val();
-        project.saveToLocalStorage();
+        if (!isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.description = $(this).val();
+            project.saveToLocalStorage();
+        }
     });
     $('#id_user_environment').on('change', function () {
-        const project = MonicaProject.loadFromLocalStorage();
-        project.userEnvironmentParametersId = $(this).val();
-        project.saveToLocalStorage();
+        if (!isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.userEnvironmentParametersId = $(this).val();
+            project.saveToLocalStorage();
+        }
     });
     $('#id_user_crop_parameters').on('change', function () {
-        const project = MonicaProject.loadFromLocalStorage();
-        project.userCropParametersId = $(this).val();
-        project.saveToLocalStorage();
+        if (!isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.userCropParametersId = $(this).val();
+            project.saveToLocalStorage();
+        }
     });
     $('#id_user_simulation_settings').on('change', function () {
-        const project = MonicaProject.loadFromLocalStorage();
-        project.userSimulationSettingsId = $(this).val();
-        project.saveToLocalStorage();
+        if (!isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.userSimulationSettingsId = $(this).val();
+            project.saveToLocalStorage();
+        }
     });
 
 

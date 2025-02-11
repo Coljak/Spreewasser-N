@@ -119,6 +119,8 @@
         const loadNutsUrl = "{% url 'swn:load_nuts_polygon' %}";
         const saveProjectUrl = "{% url 'swn:save-project' %}";
 
+        const defaultProject = {{ default_project|safe }};
+
         {% comment %} const userFields = {{ user_fields|safe }} ;  {% endcomment %}
           
     </script>

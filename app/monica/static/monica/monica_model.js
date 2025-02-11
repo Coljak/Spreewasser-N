@@ -97,7 +97,7 @@ export class MonicaProject {
 
     // Save project to localStorage
     saveToLocalStorage() {
-        console.log('saveToLocalStorage', this.toJson());
+        console.log('saveToLocalStorage');
         localStorage.setItem('monica_project', this.toJson());
     }
 
@@ -142,7 +142,7 @@ class Rotation {
 
         // Initialize worksteps, ensuring defaults if none exist
         this.sowingWorkstep = existingRotation.sowingWorkstep ?? [new Workstep('sowingWorkstep', null, 0, {
-            "species":null,
+            "species":'',
             "cultivar": null,
             "residue": null
             })];
@@ -491,43 +491,35 @@ const addRotationToGui = (rotationIndex, rotation=null) => {
 
         newRotation.appendChild(cardBody);
         $('#cropRotation').append(newRotation);
-        // if(!rotation){
-        //     addWorkstepToGui('sowingWorkstep', rotationIndex, 0);
-        //     addWorkstepToGui('harvestWorkstep', rotationIndex, 1);
-        // } 
-        // else {
-        //     Object.entries(rotation).forEach(([workstepType, value]) => {
-        //         if (workstepType !== 'rotationIndex' && workstepType !== 'workstepIndex') {
-        //             if (value.length > 0) {
-        //                 value.forEach(workstep => {
-        //                     addWorkstepToGui(workstepType, rotationIndex, workstep.workstepIndex, workstep=workstep);
-                            
-        //                 });
-        //             }
-        //         }
-        //     });    
-        // }
+
     };
 
     if (rotation) {
         // const rotationIndex = rotation.rotationIndex;
-        Object.entries(rotation).forEach(([workstepType, value]) => { 
+        Object.entries(rotation).forEach(([workstepType, worksteps]) => { 
+            // rotationIndex and workstepIndex is at the same level in the rotation as the workstepTypes
             if (workstepType !== 'rotationIndex' && workstepType !== 'workstepIndex') {
-                console.log('AddRotationToGui workstepType', workstepType, 'value', value);
-                if (value.length > 0) {
-                    value.forEach(workstep => { 
-                        let form = document.querySelector(`form[rotation-index="${rotationIndex}"][workstep-index="${workstep.workstepIndex}"]`);
-                        if (!form) {
-                            form = addWorkstepToGui(workstepType, rotationIndex, workstep.workstepIndex, workstep=workstep)     
-                        }
+                console.log('AddRotationToGui workstepType', workstepType, 'worksteps', worksteps);
+                if (worksteps.length > 0) {
+                    worksteps.forEach(workstep => { 
+                        addWorkstepToGui(workstepType, rotationIndex, workstep.workstepIndex, workstep=workstep)     
+
                     }) ;
                 };
             };
         });              
     };
 };
+const populateDropdown = (data, dropdown) => {
+    dropdown.innerHTML = '';
+    data.options.forEach(option => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option.id;
+        optionElement.text = option.name;
+        dropdown.appendChild(optionElement);
+    });       
+};
 
-         
 
 
 const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=null) => {
@@ -583,7 +575,7 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
             const speciesSelector = newForm.querySelector(`select[name="species"]`);
             const cultivarSelector = newForm.querySelector(`select[name="cultivar"]`);
             const residueSelector = newForm.querySelector(`select[name="residue"]`);
-            if (speciesSelector) {
+            if (speciesSelector && speciesSelector.value) {
                 // Watch when the species dropdown gets its options
                 observeDropdown(`#${speciesSelector.id}`, (dropdown) => {
                     dropdown.value = workstep.options.species;  
@@ -591,45 +583,29 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
                     fetch('/monica/get_options/cultivar-parameters/' + workstep.options.species + '/')
                         .then(response => response.json())
                         .then(data => {
-                            cultivarSelector.innerHTML = '';  
-                            data.options.forEach(option => {
-                                const optionElement = document.createElement('option');
-                                optionElement.value = option.id;
-                                optionElement.text = option.name;
-                                cultivarSelector.appendChild(optionElement);                     
-                            }); 
+                            populateDropdown(data, cultivarSelector);
                         })
                         .then(() => {
                             cultivarSelector.value = workstep.options.cultivar;  
                         });
 
 
-                        // TODO these fetches may be duplicates
-                        fetch('/monica/get_options/crop-residue-parameters/' + workstep.options.species + '/')
-                            .then(response => response.json())
-                            .then(data => {
-                                residueSelector.innerHTML = '';
-                                data.options.forEach(option => {
-                                    const optionElement = document.createElement('option');
-                                    optionElement.value = option.id;
-                                    optionElement.text = option.name;
-                                    residueSelector.appendChild(optionElement);
-                                });
-                            })
-                            .then(() => {
-                                residueSelector.value = workstep.options.residue; 
-                            });
-                    
+                    // TODO these fetches may be duplicates
+                    fetch('/monica/get_options/crop-residue-parameters/' + workstep.options.species + '/')
+                        .then(response => response.json())
+                        .then(data => {
+                        populateDropdown(data, residueSelector);
+                        })
+                        .then(() => {
+                            residueSelector.value = workstep.options.residue; 
+                        });
                 });
                 
-            } else {
-                console.error("Input not found with name:", key);
-            }
+            } 
             
 
         } else {    
             for (const [key, value] of Object.entries(workstep.options)) {
-                console.log('IN addRotationToGui, if (rotation) key', key, 'value', value);
                 const input = newForm.querySelector(`select[name=${key}], input[name=${key}]`);
 
                 if (input) {
@@ -644,8 +620,6 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
             };
         }
     }
-//-------------------------------------------
-return newForm;
 
 };
 
@@ -728,26 +702,23 @@ const updateDropdown = (parameterType, rotationIndex, newId) => {
         baseUrl = 'get_options/';
     }
     console.log('updateDropdown baseUrl', baseUrl);
-
+    var select = document.querySelector('.form-select.' + parameterType); 
     fetch(baseUrl + parameterType + '/')
         .then(response => response.json())
         .then(data => {
             console.log('updateDropdown', data);
-            var select = document.querySelector('.form-select.' + parameterType); 
+            
             if (rotationIndex != '') {
                 const rotationDiv = document.querySelector(`div[rotation-index='${rotationIndex}']`);
                 select = rotationDiv.querySelector('.select-parameters.' + parameterType);
             } 
-            select.innerHTML = '';
-            data.options.forEach(option => {
-                const optionElement = document.createElement('option');
-                optionElement.value = option.id;
-                optionElement.text = option.name;
-                select.appendChild(optionElement);
-            });
+            populateDropdown(data, select);
+        })
+        .then(() => {
             if (newId != '') {
                 select.value = newId
             }
+            $(select).trigger('change');
         })
         .catch(error => console.log('Error in updateDropdown', error));
 };
@@ -757,7 +728,6 @@ const submitModalForm = (modalForm, modalAction) => {
     const absoluteUrl = '/monica/' + actionUrl;
     const formData = new FormData(modalForm);
     formData.append('modal_action', modalAction);
-
 
     fetch(absoluteUrl, {
         method: 'POST',
@@ -775,12 +745,8 @@ const submitModalForm = (modalForm, modalAction) => {
             const parameterType = actionUrl.split('/')[0];
             const rotationIndex = actionUrl.split('/')[2];
             if (modalAction === 'save_as_new') {
-                var urlParts = actionUrl.split('/');
-                console.log("updateDropdown saveAsNew", actionUrl.split('/')[0], data.new_id);
-
                 updateDropdown(parameterType, rotationIndex, data.new_id);
             } else if (modalAction === 'delete') {
-                console.log("updateDropdown deleteParams", actionUrl.split('/')[0], '');
                 updateDropdown(parameterType, rotationIndex, '');
             }
             return true;
@@ -794,17 +760,16 @@ const submitModalForm = (modalForm, modalAction) => {
 
 // TODO refactor initiaizeSoilModal
 // TODO implement getSoilProfiles for swn - all poygon ids
-var initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
+const initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
     console.log('initializeSoilModal',   systemUnitJson, landusageChoices);
     const landUsageField = document.getElementById('id_land_usage');
     const soilProfileField = document.getElementById('id_soil_profile');
     const horizonsField = document.getElementById('div_id_horizons');
     const areaPercenteageField = document.getElementById('id_area_percentage');
     const systemUnitField = document.getElementById('id_system_unit');
-    // const profileText = document.getElementById('id_profile');
     const table = document.getElementById('tableHorizons');
 
-    var selectedSoilProfile = 0;
+    let selectedSoilProfile = 0;
 
     soilProfileField.addEventListener('change', function() {
         
@@ -825,7 +790,6 @@ var initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, lan
         for (let horizon in horizons) {
             const headerCellHorizon = headerRow.insertCell();
             headerCellHorizon.textContent = horizon;
-            
         }
         for (let key in horizons[1]) {
             const dataRow = table.insertRow();
@@ -836,7 +800,6 @@ var initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, lan
                 const dataRowDataCell  = dataRow.insertCell();
                 let value = horizons[horizon][key];
                 if (typeof(value) === 'number') {
-                    
                     value = value.toFixed(2);
                 }
                 dataRowDataCell.textContent = value;   
@@ -861,7 +824,7 @@ var initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, lan
             profileOptions[soilprofile_id] = 'Profil ' + profileNo;
             profileNo++;
         };
-        console.log('profileOptions', profileOptions);
+        // console.log('profileOptions', profileOptions);
         soilProfileField.innerHTML = '';
         for (const key in profileOptions) {
             const option = document.createElement('option');
@@ -877,10 +840,7 @@ var initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, lan
         console.log('systemUnitField change event');
         const selectedLandUsage = landUsageField.value;
         const selectedSystemUnit = systemUnitField.value;
-        console.log('selectedSystemUnit', selectedSystemUnit);
-        console.log('selectedLandUsage', selectedLandUsage);
         const selectableAreaPercentages =  systemUnitJson[selectedLandUsage][selectedSystemUnit]['area_percentages'].reverse();
-        console.log('selectableAreaPercentages', selectableAreaPercentages);
         areaPercenteageField.innerHTML = '';
         selectableAreaPercentages.forEach(item => {
             areaPercenteageField.appendChild(new Option(item));
@@ -904,7 +864,7 @@ var initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, lan
         });
         // trigger change event to update system unit
         systemUnitField.dispatchEvent(new Event('change'));
-        console.log('selectableSystemUnits', selectableSystemUnits.sort());
+        // console.log('selectableSystemUnits', selectableSystemUnits.sort());
     });
 
     for (const key in landusageChoices) {
@@ -921,14 +881,15 @@ var initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, lan
         const project = MonicaProject.loadFromLocalStorage();
         
         project.soilProfileId = soilProfileField.value;
-        console.log('project.soilProfileId', project.soilProfileId);
+        // console.log('project.soilProfileId', project.soilProfileId);
         project.saveToLocalStorage();
     });
 
 };
 
 
-const fetchModalContent = (params) => {
+const createModal = (params) => {
+    console.log('create modal', params);
     try {
 
         let url = '/monica/' + params.parameters + '/';
@@ -949,7 +910,7 @@ const fetchModalContent = (params) => {
             fetch(url)
             .then(response => response.json())
             .then(data => {
-                console.log('fetchModalContent', data);
+                console.log('createModal select-soil-profile', data);
                 const modal = $('#modalManualSoilSelection');
                 const polygonIds = data.polygon_ids;
                 const systemUnitJson = JSON.parse(data.system_unit_json);
@@ -975,7 +936,6 @@ const fetchModalContent = (params) => {
     } catch (error) {
         console.error('Error:', error);
     }
-
 };
 
 
@@ -1138,8 +1098,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // TAB CROP ROTATION EVENT LISTENERS
     $('#addRotationButton').on('click', () => {
         const project = MonicaProject.loadFromLocalStorage();
-        project.addRotation();        
-        addRotationToGui(project.rotation.length - 1);
+        const rotationIndex = project.rotation.length;
+        project.addRotation();    
+         
+        addRotationToGui(rotationIndex, project.rotation[rotationIndex]);
         project.saveToLocalStorage();
     });
 
@@ -1147,6 +1109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const project = MonicaProject.loadFromLocalStorage();
         if (project.rotation.length > 1) {
             project.rotation.pop();
+            project.saveToLocalStorage();
             $('#cropRotation').children().last().remove();
         } else {
             handleAlerts({'success': false, 'message': 'You cannot have less than 1 rotation'});
@@ -1190,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'rotation_index': rotationIndex
             }
             if (value != '') {
-                fetchModalContent(params);
+                createModal(params);
                 $('#formModal').modal('show');
 
             } else {
@@ -1226,21 +1189,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     const cultivarSelector = event.target.closest('.rotation').querySelector('.select-parameters.cultivar-parameters');
                     const residueSelector = event.target.closest('.rotation').querySelector('.select-parameters.crop-residue-parameters');
                     if (event.target.value != '') {
+                        console.log("species-parameters != ''", event.target.value)
+                        // fetchAndPopulateDropdown(`/monica/get_options/cultivar-parameters/${event.target.value}/`, cultivarSelector, updateWorkstepOption(workstep, 'cultivar', workstep.options.cultivar, project));
+                        // fetchAndPopulateDropdown(`/monica/get_options/crop-residue-parameters/${event.target.value}/`, residueSelector,  updateWorkstepOption(workstep, 'residue', workstep.options.residue, project));
                         fetch('/monica/get_options/cultivar-parameters/' + event.target.value + '/')
                         .then(response => response.json())
                         .then(data => {
-                            cultivarSelector.innerHTML = '';  // Clear current options
-                            data.options.forEach(option => {
-                                const optionElement = document.createElement('option');
-                                optionElement.value = option.id;
-                                optionElement.text = option.name;
-                                cultivarSelector.appendChild(optionElement);                     
-                            });  
+                            populateDropdown(data, cultivarSelector);
+                            // cultivarSelector.innerHTML = '';  // Clear current options
+                            // data.options.forEach(option => {
+                            //     const optionElement = document.createElement('option');
+                            //     optionElement.value = option.id;
+                            //     optionElement.text = option.name;
+                            //     cultivarSelector.appendChild(optionElement);                     
+                            // });  
                             if (!isLoading) {  
-                                console.log('cultivarSelector', cultivarSelector.value)
-                                console.log('workstep.options.cultivar', workstep.options.cultivar)
-                                workstep.options['cultivar'] = cultivarSelector.value    
-                             
+                                workstep.options['cultivar'] = cultivarSelector.value                     
                                 project.saveToLocalStorage();
                             }
                         });
@@ -1250,18 +1214,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         fetch('/monica/get_options/crop-residue-parameters/' + event.target.value + '/')
                             .then(response => response.json())
                             .then(data => {
-                                residueSelector.innerHTML = '';
-                                data.options.forEach(option => {
-                                    const optionElement = document.createElement('option');
-                                    optionElement.value = option.id;
-                                    optionElement.text = option.name;
-                                    residueSelector.appendChild(optionElement);
-                                });
+                                populateDropdown(data, residueSelector);
                                 if (!isLoading) {  
-                                    workstep.options['residue'] = residueSelector.value;
-                                    project.saveToLocalStorage();
-                                }
-                            });
+                                        workstep.options['residue'] = residueSelector.value;
+                                        project.saveToLocalStorage();
+                                    }                           
+                            })
                     };
                
                 } else if (event.target.type === 'checkbox') {
@@ -1332,23 +1290,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 'parameters': targetClass,
                 'parameters_id': value,
             }
-            fetchModalContent(params);
+            createModal(params);
         } else if (event.target.classList.contains('show-soil-parameters')) {
-            const params = {
-                'parameters': 'soil-profile',
-                'lon': project.longitude,
-                'lat': project.latitude
+            const project = MonicaProject.loadFromLocalStorage();
+            try {
+                const params = {
+                    'parameters': 'soil-profile',
+                    'lon': project.longitude,
+                    'lat': project.latitude
+                }
+                
+                createModal(params);
+            } catch {
+                handleAlerts({'success': false, 'message': 'Please provide a valid location'});
             }
-            
-            fetchModalContent(params);
+
         } else if (event.target.classList.contains('manually-select-soil-parameters')) {
-            const params = {
+            const project = MonicaProject.loadFromLocalStorage();
+            try {
+                const params = {
                 'parameters': 'select-soil-profile',
                 'lon': project.longitude,
                 'lat': project.latitude
             }
             
-            fetchModalContent(params);
+            createModal(params);
+            } catch {
+                handleAlerts({'success': false, 'message': 'Please provide a valid location'});
+            }
+            
         }
     });
 
@@ -1381,7 +1351,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'parameters': targetClass,
                     'parameters_id': value,
                 }
-                fetchModalContent(params);          
+                createModal(params);          
         } else if (event.target.classList.contains('monica-project')) {
             const projectId = $('#id_monica_project').val(); 
             const selecteprojectName = $('#id_monica_project option:selected').text()
@@ -1582,7 +1552,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tabs[1].click();
     
-    let project = new MonicaProject()
+    const getDefaultProject = () => {
+
+    };
+
+    let project = new MonicaProject(defaultProject);
     project.saveToLocalStorage();
     
     loadProjectToGui(project);

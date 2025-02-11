@@ -54,16 +54,11 @@
         {% endif %}
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button 
-            type="button" 
-            class="btn btn-primary" 
-            id="saveModalParameters"
-            {% if is_default %}disabled{% endif %}
-            >
-            {{ modal_save_button }}
+            <button type="button" class="btn btn-primary" id="saveModalParameters" {% if is_default %}disabled{% endif %}>
+              {{ modal_save_button }}
             </button>
             <button type="button" class="btn btn-primary" id="saveAsNewModalParameters">{{ modal_save_as_button }}</button>
-            </button>
+            
             <button type="button" class="btn btn-warning" id="deleteParameters"{% if is_default %}disabled{% endif %}>Delete Parameter Set</button>
           </div>
         

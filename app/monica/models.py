@@ -2057,7 +2057,7 @@ class MonicaProject(models.Model):
     def to_json(self):
         # Start with the project fields
         project_data = {
-            "id": self.id,
+            "id": self.id, # if self.id is not None else None,
             "name": self.name,
             "startDate": self.start_date,
             "description": self.description,

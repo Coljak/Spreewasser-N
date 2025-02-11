@@ -1,3 +1,7 @@
+"""
+This module automates the download of weather forecast data from the DWD Climate Data Center.
+It is used in the Django management command 'import_forecast_data.py' to download and convert the forecast data to combined NetCDF files.
+"""
 import requests
 from xml.etree import ElementTree
 from datetime import datetime
@@ -9,6 +13,7 @@ from datetime import datetime
 # Constants
 BASE_CATALOG_URL = "https://esgf-data.dwd.de/thredds/catalog/esgf3/data/climatepredictionsde/seasonal/output/public/DE-0075x005/DWD/GCFS21/svhYYYY{month:02}01/sfc{year}{month:02}01/{scenario}/DWD-EPISODES2022/v1-r1/day/{variable}/"
 SCENARIOS = ['r1i1p1', 'r2i1p1', 'r3i1p1']
+# SCENARIOS = ['r1i1p1']
 VARIABLES = ['hurs', 'pr', 'psl', 'rsds', 'sfcWind', 'tas', 'tasmax', 'tasmin']
 THREDDS_NAMESPACE = {"thredds": "http://www.unidata.ucar.edu/namespaces/thredds/InvCatalog/v1.0"}
 
@@ -62,7 +67,18 @@ def fetch_available_variables(catalog_url):
 # variables = ['hurs', 'pr', 'psl', 'rsds', 'sfcWind', 'tas', 'tasmax', 'tasmin']
 
 
-
+def delete_old_files(folder_path, new_files):
+    """Delete old NetCDF files from the folder that are not in new_files list."""
+    try:
+        print('delete_old_files TRY: ', folder_path, new_files)
+        for file in os.listdir(folder_path):
+            print('delete_old_files: ', file)
+            if file.endswith('.nc') and file not in new_files:
+                file_path = os.path.join(folder_path, file)
+                print(f"Deleting old file: {file_path}")
+                os.remove(file_path)
+    except Exception as e:
+        print(f"Error deleting old files: {e}")
 
 
 def download_and_save_nc_file(nc_url, save_path):
@@ -79,6 +95,7 @@ def download_and_save_nc_file(nc_url, save_path):
         file.write(response.content)
 
     print(f"Downloaded: {filename} to {save_path}")
+    return filename
 
 def automated_thredds_download():
     """Main function to automate downloads of variables across scenarios."""
@@ -88,18 +105,28 @@ def automated_thredds_download():
 
     local_path = get_local_path()
 
-    # Step 1: Iterate through scenarios
+    # Step 1: Iterate through scenarios and variables
     try:
         for scenario in SCENARIOS:
+            new_files = []  # Store newly downloaded files
+            save_path = f"{local_path}/{scenario}/"
+            folder_path = f"{local_path}/{scenario}/"
             for variable in VARIABLES:
                 try:
                     print(f"Processing variable '{variable}' for scenario '{scenario}'...")
                     nc_file_url = get_download_url(year, month, scenario, variable)
                     print(f"Download URL: {nc_file_url}")
-                    save_path = f"{local_path}/{scenario}/"
-                    download_and_save_nc_file(nc_file_url, save_path)
+                    
+                    downloaded_file = download_and_save_nc_file(nc_file_url, save_path)
+                    new_files.append(downloaded_file)
+                    print('new_files: ', new_files)
                 except ValueError as e:
                     print(f"Skipping {variable} for scenario {scenario}: {e}")
+
+            if  new_files != []:
+                print(f"Deleting old files for scenario '{scenario}'...")
+                delete_old_files(save_path, new_files)
+
     except ValueError as e:
         print(f"Download of forecast data failed: {e}")
 

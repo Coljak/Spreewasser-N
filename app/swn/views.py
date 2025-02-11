@@ -249,19 +249,18 @@ def sign_up(request):
 
     return render(request, 'registration/sign_up.html', {'form': form})
 
-
 @login_required
 def user_logout(request):
     logout(request)
     return HttpResponseRedirect(reverse('swn:swn_index'))
-
-
 
 def three_split(request):
     print("Request.user", request.user)
     user = request.user
     user_fields = models.UserField.objects.filter(user=request.user.id)
     context = monica_views.get_monica_forms(user)
+
+    default_project = monica_views.create_default_project(user)
 
 
     state_county_district_form = forms.PolygonSelectionForm(request.POST or None)
@@ -297,6 +296,7 @@ def three_split(request):
 
     data = {
             # 'user_fields': user_projects, 
+            'default_project': default_project,
             'user_field_form': forms.UserFieldForm(),
             'state_county_district_form': state_county_district_form,
             'project_region': feature,

@@ -77,6 +77,8 @@
   <script>
     {% comment %} const saveSimulationSettingsUrl = "{% url 'monica:save_simulation_settings' %}"; {% endcomment %}
     const runSimulationUrl = "{% url 'monica:run_simulation' %}";
+    const defaultProject = {{ default_project|safe }};
+    console.log(defaultProject);
   </script>
 
   {% comment %} <script type="text/javascript" src="{% static 'monica/monica_crop.js' %}"></script> {% endcomment %}

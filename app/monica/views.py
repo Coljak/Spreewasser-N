@@ -19,6 +19,7 @@ from buek import models as buek_models
 from .climate_data.lat_lon_mask import lat_lon_mask
 from .monica_events import *
 from .utils import save_monica_project
+from dateutil.relativedelta import relativedelta
 
 from pathlib import Path
 from netCDF4 import Dataset, MFDataset
@@ -787,7 +788,7 @@ def save_monica_project(request):
 
     
 def modify_model_parameters(request, parameter, id, rotation=None):
-
+    print("modify_model_parameters", parameter, id, rotation)
     """
     Every Monica Parameter JSON can be modified and saved. 
     This function applies to all parameters, loads the from and saves the data.
@@ -891,13 +892,8 @@ def modify_model_parameters(request, parameter, id, rotation=None):
     model_class = model_info['model']
     form_class = model_info['form']
 
-    # TODO  check this part: why should this only apply to residue and not also to cultivar? What if request.POST
-    if parameter == 'crop-residue-parameters':
-        obj = get_object_or_404(model_class, species_parameters=id)
-    else:
-        obj = get_object_or_404(model_class, pk=id)
-
-
+    obj = get_object_or_404(model_class, pk=id)
+    
     if request.method == 'POST':
         print("Request POST: ", request.POST)
         form = form_class(request.POST, instance=obj)
@@ -976,7 +972,7 @@ def get_monica_forms(user):
     workstep_irrigation_form = WorkstepIrrigationForm()
     workstep_mineral_fertilisation_form = WorkstepMineralFertilisationForm()
     workstep_organic_fertilisation_form = WorkstepOrganicFertilisationForm()
-    monica_forms = {
+    return {
         'workstep_selector_form': workstep_selector_form,
         'workstep_sowing_form': workstep_sowing_form,
         'workstep_harvest_form': workstep_harvest_form,
@@ -984,9 +980,29 @@ def get_monica_forms(user):
         'workstep_mineral_fertilisation_form': workstep_mineral_fertilisation_form,
         'workstep_organic_fertilisation_form': workstep_organic_fertilisation_form,
         'workstep_irrigation_form': workstep_irrigation_form,
+        }
 
-    }
-    return monica_forms
+def create_default_project(user):
+    """
+    Create a default project for the user.
+    """
+    start_date = (datetime.now().date() - relativedelta(months=6)).replace(day=1)
+    end_date = (datetime.now().date() + relativedelta(months=7)).replace(day=1) - relativedelta(days=1)
+
+    default_project = MonicaProject(
+        name='Default Project',
+        user=user,
+        start_date=start_date,
+        monica_model_setup=ModelSetup.objects.get(is_default=True),
+    ).to_json()
+    default_project['endDate'] = end_date
+    sowing_date = start_date + relativedelta(months=1)
+    harvest_date = sowing_date + relativedelta(months=4)
+    print(default_project['rotation'][0]['sowingWorkstep'][0]['date'])
+    default_project['rotation'][0]['sowingWorkstep'][0]['date'] = sowing_date
+    default_project['rotation'][0]['harvestWorkstep'][0]['date'] = harvest_date
+
+    return json.dumps(default_project, default=str)
     
 @login_required
 def monica_model(request):
@@ -998,6 +1014,10 @@ def monica_model(request):
     print("monica views request.user", user)
     context = get_monica_forms(user)
 
+    start_date = (datetime.now().date() - relativedelta(months=6)).replace(day=1)
+    end_date = (datetime.now().date() + relativedelta(months=7)).replace(day=1) - relativedelta(days=1)
+
+    default_project = create_default_project(user)
     project_select_form = MonicaProjectSelectionForm(user=user)
     project_form = MonicaProjectForm(user=user)
     project_modal_title = 'Create new project'
@@ -1025,6 +1045,7 @@ def monica_model(request):
 
 
     data = {
+        'default_project': default_project,
         'project_select_form': project_select_form,
         'project_form': project_form,
         'project_modal_title': project_modal_title,
@@ -1071,10 +1092,12 @@ def get_soil_parameters(request, lat, lon):
         'modal_title': 'Soil Profile',
         'soil_profile': soil_profile,
         'show_original_table': show_original_table,
+        # 'soil_profile_id': soil_profile['SoilProfileParameters']['id'],
         }
     
     print("Soil Profile: ", soil_profile)
     return render(request, 'monica/soil_profile_modal.html', context)
+    # return JsonResponse(request, context)
 
 
 def soil_profiles_from_polygon_ids(soil_profile_polygon_ids):

@@ -89,9 +89,11 @@ def save_project(project_data, user, project_class=MonicaProject):
         user_soil_temperature_parameters = SoilTemperatureModuleParameters.objects.get(pk=data.get('userSoilTemperatureParametersId'))
         project.monica_model_setup.user_soil_temperature_parameters = user_soil_temperature_parameters
 
-        simulation_parameters = UserSimulationSettings.objects.get(pk=data.get('userSimulationSettingsId'))
-        project.monica_model_setup.simulation_parameters = simulation_parameters
-
+        print("data.get('userSimulationSettingsId')", data.get('userSimulationSettingsId'))
+        user_simulation_settings = UserSimulationSettings.objects.get(pk=data.get('userSimulationSettingsId'))
+        
+        project.monica_model_setup.user_simulation_settings = user_simulation_settings
+        print("user_simulation_settings", project.monica_model_setup.user_simulation_settings)
         project.monica_model_setup.crop_rotation = data.get('rotation')
         project.monica_model_setup.save()
         

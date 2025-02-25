@@ -209,7 +209,21 @@ class SoilProfileHorizon(models.Model):
             'Thickness': [round((self.untergrenze_m - self.obergrenze_m), 2), "m"],
             'Sand': [round(self.ka5_texture_class.sand, 2) * 100, "%"] if self.ka5_texture_class else [],
             'Clay': [round(self.ka5_texture_class.clay, 2) * 100, "%"] if self.ka5_texture_class else [],
-            'pH': round(((self.ph_class.ph_lower_value + self.ph_class.ph_upper_value) / 2), 2) if self.ph_class else '',
+            'pH': round(((self.ph_class.ph_lower_value + self.ph_class.ph_upper_value) / 2), 2) if self.ph_class else 4.5,
+            # TODO: the ph class is set to 4. 5 for the profiles that do not have a ph class
+
+            """
+            select bsph.soilprofile_id, bsp.landusage, bsph.id as horizont_id,  bsph.horizont_nr, bsph.symbol, bsph.herkunft, bsph.herkunft, bsph.geogenese , bsph.torfarten ,
+            bhc.humus_class, bhc.corg, bktc.ka5_soiltype , bsph.ph_class_id, bpc.ph_class from buek_soil_profile_horizon bsph 
+            join buek_soil_profile bsp on bsp.id = bsph.soilprofile_id 
+            full join buek_ka5_texture_class bktc on bktc.id = bsph.ka5_texture_class_id 
+            full join buek_humus_class bhc  on bsph.humus_class_id  = bhc.id
+            full join buek_ph_class bpc on bsph.ph_class_id = bpc.id
+            where bpc.id is null
+            order by bsph.soilprofile_id, bsph.horizont_nr
+            """
+
+
             # 'Sceleton': soil stone content, a fraction between 0 and 1
             # 'Lambda': soil water conductivity coefficient
             # 'FieldCapacity':  	field capacity

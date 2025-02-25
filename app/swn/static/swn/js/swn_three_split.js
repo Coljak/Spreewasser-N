@@ -1,6 +1,6 @@
 
 
-import { MonicaProject } from '/static/monica/monica_model.js';
+import { MonicaProject,  loadProjectFromDB, loadProjectToGui } from '/static/monica/monica_model.js';
 import { getGeolocation } from '/static/shared/utils.js';
 import { handleAlerts } from '/static/swn/js/base.js';
 
@@ -290,10 +290,46 @@ leafletSidebarContent.addEventListener("click", (event) => {
           });
       }
     } else if (clickedElement.classList.contains("field-menu")) {
+      fetch(`field-projects-menu/${userField.id}/`)
+      .then(response => response.json())
+      .then(data => {
+        console.log("data", data);
       // TODO the hardcoded # fieldMenuModal is triggered from button
-        const fieldMenuModal = new bootstrap.Modal(document.getElementById('fieldMenuModal'));
-          fieldMenuModal.show();
+      const modalElement = document.getElementById('fieldMenuModal');
+      modalElement.querySelector('.modal-title').textContent = `Projekte in ${userField.name}`;
 
+        const table = modalElement.querySelector('.project-table');
+        table.innerHTML = '';
+        data.projects.forEach(project => {
+          const tableRow = document.createElement('tr');
+          // tableRow.classList.add('list-group-item');
+          tableRow.innerHTML = `
+          <td>${project.name}</td>
+          <td>${project.creation_date}</td>
+          <td>${project.last_modified}</td>
+          <td>
+            <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="${project.id}" data-user-field-id="${userField.id}">
+              Load
+            </button>
+          </td>
+          `;
+          table.appendChild(tableRow);
+        });
+        const fieldMenuModal = new bootstrap.Modal(modalElement);
+        fieldMenuModal.show();
+
+        modalElement.addEventListener('click', (event) => {
+          if(event.target.classList.contains('open-project')) {
+            const projectId = event.target.getAttribute('data-project-id');
+            const userFieldId = event.target.getAttribute('data-user-field-id');
+            console.log("open-project clicked", projectId, userFieldId);
+            const project = loadProjectFromDB(projectId);
+            loadProjectToGui(project);
+            fieldMenuModal.hide();
+            // TODO open project
+          }
+        });
+      });
     } else if (clickedElement.classList.contains("field-edit")) {
         // TODO the hardcoded modal is triggered from button
         console.log("field-edit clicked", leafletId, userField.id);
@@ -629,7 +665,7 @@ const addLayerToSidebar = (userField) => {
         (project) => `
           <li class="list-group-item">
             <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="${project.id}" data-user-field-id="${userField.id}">
-              Open Project: ${project.name}
+              ${project.name}
             </button>
           </li>
         `
@@ -639,7 +675,6 @@ const addLayerToSidebar = (userField) => {
     // Create project button
     projectListHTML += `
       <li class="list-group-item">
-        No related projects. 
         <button type="button" class="btn btn-success btn-sm create-project" data-user-field-id="${userField.id}">
           Create Project
         </button>

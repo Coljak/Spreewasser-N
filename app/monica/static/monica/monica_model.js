@@ -92,18 +92,20 @@ export class MonicaProject {
 
     // Convert instance to JSON for storage
     toJson() {
+        console.log("MonicaProject toJson", this);
         return JSON.stringify(this);
     }
 
     // Save project to localStorage
     saveToLocalStorage() {
-        console.log('saveToLocalStorage');
+        console.log('MonicaProject saveToLocalStorage', this);
         localStorage.setItem('monica_project', this.toJson());
     }
 
     // Load project from localStorage
     static loadFromLocalStorage() {
         const storedProject = localStorage.getItem('monica_project');
+        console.log('MonicaProject loadFromLocalStorage', storedProject);
         return storedProject ? MonicaProject.fromJson(JSON.parse(storedProject)) : null;
     }
 
@@ -114,6 +116,7 @@ export class MonicaProject {
 
     // Add a new rotation with default worksteps
     addRotation() {
+        console.log('MonicaProject addRotation');
         if (!Array.isArray(this.rotation)) {
             this.rotation = [];
         }
@@ -125,6 +128,7 @@ export class MonicaProject {
     }
 
     addWorkstep(workstepType, date=null, rotationIndex, options = {}) {
+        console.log('MonicaProject addWorkstep', workstepType, date, rotationIndex, options);
         this.rotation[rotationIndex].workstepIndex += 1;
         const workstepIndex = this.rotation[rotationIndex].workstepIndex;
         const workstep = new Workstep(workstepType, date, workstepIndex, options);
@@ -168,12 +172,13 @@ class Workstep {
 
 
 // Date Picker
-var startDate = '01.01.2007';
-var setStartDate = '01.02.2024';
-var setEndDate = '01.08.2024';
-var endDate = '26.11.2024';
+// var startDate = '01.01.2007';
+// var setStartDate = '01.02.2024';
+// var setEndDate = '01.08.2024';
+// var endDate = '26.11.2024';
 
-const setLanguage =  (language_code)=>{
+const setLanguage = (language_code)=>{
+    console.log('setLanguage', language_code);
     $('.datepicker').datepicker({
         language: language_code,
         autoclose: true
@@ -182,6 +187,7 @@ const setLanguage =  (language_code)=>{
 
 // function to check when the update of a dropdown menu is finished
 const observeDropdown = (selector, callback) => {
+    // console.log('observeDropdown', selector);
     const dropdown = document.querySelector(selector);
     if (!dropdown) 
         {
@@ -205,6 +211,24 @@ const observeDropdown = (selector, callback) => {
     observer.observe(dropdown, { childList: true });
 };
 
+export const loadProjectFromDB = (project_id) => {
+    console.log('loadProjectFromDB id', project_id);
+    fetch('load-project/' + project_id + '/')
+        .then(response => response.json())
+        .then(data => {
+            // console.log('loadProjectFromDB', data);
+            if (data.message.success) {
+                handleAlerts(data.message)
+                const project = new MonicaProject(data.project);
+                loadProjectToGui(project)
+                project.saveToLocalStorage();
+                return project;
+            };
+            handleAlerts(data.message)
+        })
+        .catch(error => console.error('Error:', error));
+};
+
 
 
 const runSimulation = (monicaProject) => {   
@@ -221,7 +245,7 @@ const runSimulation = (monicaProject) => {
     .then(data => {
         console.log('data', data.message.success);
         if (data.message.success) {
-            console.log('SUCCESS', data.message)
+            // console.log('SUCCESS', data.message)
             $('#runSimulationButton').prop('disabled', true);
             $('#runSimulationButton').text('...Simulation running');
             // Remove 'active' class from all nav links
@@ -435,19 +459,23 @@ const runSimulation = (monicaProject) => {
     });
 };
 
-let isLoading = false;
-const loadProjectToGui = (project) => {
-    isLoading = true;
+window.isLoading = false;
+
+export const loadProjectToGui = (project) => {
+    // console.log('loadProjectToGui', project);
+    window.isLoading = true;
     document.querySelector('#cropRotation').innerHTML = '';
-    console.log('loadProject', project);
+    
     
     $('#projectName').val(project.name);
     $('#projectDescription').val(project.description);
     $('#id_longitude').val(project.longitude);
     $('#id_latitude').val(project.latitude);
     $('userFieldSelect').val(project.userField);
+    
     $('#monicaStartDatePicker').datepicker('update', new Date(project.startDate));
     // TODO check if this is necessary/ what to do with it
+    
     $('#monicaEndDatePicker').datepicker('update', new Date(project.endDate));
     $('#id_user_environment').val(Number(project.userEnvironmentParametersId));
     $('#id_user_crop_parameters').val(Number(project.userCropParametersId));
@@ -456,15 +484,17 @@ const loadProjectToGui = (project) => {
     $('#id_soil_organic').val(project.userSoilOrganicParametersId);
     $('#id_soil_temperature').val(project.userSoilTemperatureParametersId);
     $('#id_soil_transport').val(project.userSoilTransportParametersId);
+    // console.log('loadProjectToGui project.rotation', project.rotation);
     project.rotation.forEach(rotation => {
         addRotationToGui(rotation.rotationIndex, rotation);
     });
-    isLoading = false;
+    window.isLoading = false;
 };
 
 // creates the rotation divs and adds the worksteps from the project
 const addRotationToGui = (rotationIndex, rotation=null) => {
     // check if rotation already exists in the Gui
+    // console.log('addRotationToGui', rotationIndex, rotation);
     let exists = false;
     $('#cropRotation').children().each(function() {
         
@@ -499,7 +529,7 @@ const addRotationToGui = (rotationIndex, rotation=null) => {
         Object.entries(rotation).forEach(([workstepType, worksteps]) => { 
             // rotationIndex and workstepIndex is at the same level in the rotation as the workstepTypes
             if (workstepType !== 'rotationIndex' && workstepType !== 'workstepIndex') {
-                console.log('AddRotationToGui workstepType', workstepType, 'worksteps', worksteps);
+                console.log('AddRotationToGui forEach workstepType', workstepType, 'worksteps', worksteps);
                 if (worksteps.length > 0) {
                     worksteps.forEach(workstep => { 
                         addWorkstepToGui(workstepType, rotationIndex, workstep.workstepIndex, workstep=workstep)     
@@ -511,6 +541,7 @@ const addRotationToGui = (rotationIndex, rotation=null) => {
     };
 };
 const populateDropdown = (data, dropdown) => {
+    console.log('populateDropdown', data, dropdown);
     dropdown.innerHTML = '';
     data.options.forEach(option => {
         const optionElement = document.createElement('option');
@@ -571,11 +602,17 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
         }
 
         if (workstepType === 'sowingWorkstep') {
-            console.log('workstepType', workstepType);
+            console.log('workstepType if workstep.options.species', workstepType, workstep.options.species);
             const speciesSelector = newForm.querySelector(`select[name="species"]`);
             const cultivarSelector = newForm.querySelector(`select[name="cultivar"]`);
             const residueSelector = newForm.querySelector(`select[name="residue"]`);
-            if (speciesSelector && speciesSelector.value) {
+            if (!((workstep.options.species === null) || (workstep.options.species === ''))) {
+                console.error('SPECIES!!!!', workstep.options.species);
+
+            // }
+            // if (speciesSelector && !speciesSelector.value) {
+                
+                console.log('speciesSelector', speciesSelector.value);
                 // Watch when the species dropdown gets its options
                 observeDropdown(`#${speciesSelector.id}`, (dropdown) => {
                     dropdown.value = workstep.options.species;  
@@ -602,6 +639,9 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
                 });
                 
             } 
+            else if (speciesSelector && !speciesSelector.value) {
+                speciesSelector.value = workstep.options.species;
+            }
             
 
         } else {    
@@ -620,7 +660,6 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
             };
         }
     }
-
 };
 
 
@@ -724,6 +763,7 @@ const updateDropdown = (parameterType, rotationIndex, newId) => {
 };
 
 const submitModalForm = (modalForm, modalAction) => {
+    console.log('submitModalForm', modalForm, modalAction);
     const actionUrl =  modalForm.getAttribute('data-action-url');
     const absoluteUrl = '/monica/' + actionUrl;
     const formData = new FormData(modalForm);
@@ -974,37 +1014,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     setLanguage(language);
-    $('#monicaStartDatePicker').datepicker({
-        startDate: startDate,
-        endDate: endDate,
-    });
+    // Set the max and min dates for the datepickers
+   
 
-//     $('.datepicker').datepicker({
-//         format: {
-//             /*
-//              * Say our UI should display a week ahead,
-//              * but textbox should store the actual date.
-//              * This is useful if we need UI to select local dates,
-//              * but store in UTC
-//              */
-//             toDisplay: function (date, format, language) {
-//                 var d = new Date(date);
-//                 d.setDate(d.getDate());
-//                 return d.toISOString();
-//             },
-//             toValue: function (date, format, language) {
-//                 if (language === 'de-DE') {
-//                     date = date.split('.');
-//                     date = date[2] + '-' + date[1] + '-' + date[0];
-//                     return date
-                
-//                     }
-//             }
-//         }
-// });
     
-    $('#monicaStartDatePicker').datepicker('update', setStartDate);
-    $('#monicaEndDatePicker').datepicker('update', setEndDate);
+    // $('#monicaStartDatePicker').datepicker('update', setStartDate);
+    // $('#monicaEndDatePicker').datepicker('update', setEndDate);
     $('#todaysDatePicker').datepicker('update', new Date('2024-05-15'));
     $('#todaysDatePicker').trigger('focusout');
 
@@ -1032,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //TODO: remove this!!!
     $('#todaysDatePicker').on('changeDate', function () {
-        if (!isLoading) {
+        if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
             project.todaysDate = $(this).datepicker('getUTCDate');
             project.saveToLocalStorage();
@@ -1040,7 +1055,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     $('#todaysDatePicker').on('focusout', function () {
-        if (!isLoading) {
+        if (!window.isLoading) {
+            console.log('todaysDatePicker focusout event');
             const project = MonicaProject.loadFromLocalStorage();
             project.todaysDate = $(this).datepicker('getUTCDate');
             project.saveToLocalStorage();
@@ -1071,28 +1087,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // TAB GENERAL EVENT LISTENERS
     document.getElementById('tabGeneralParameters').addEventListener('change', function (event) {
-        if (!isLoading) {
-            console.log("generalTab change event")
-            let name = event.target.getAttribute('name');
+        if (!window.isLoading) {
             
+            let name = event.target.getAttribute('name');
+            console.log("generalTab change event", name)
             const project = MonicaProject.loadFromLocalStorage();
-            project[name] = event.target.value;
+            if (name === 'startDate' || name === 'endDate') {
+                return;
+            } else {
+                project[name] = event.target.value;
+            }
             project.saveToLocalStorage();
         }
     });
 
-    $('#tabGeneralParameters').on('changeDate', function (event) {
-        if (!isLoading) {
+    $('#monicaStartDatePicker').on('changeDate', function (event) {
+        if (!window.isLoading) {
             const input = $(event.target);
         
             const project = MonicaProject.loadFromLocalStorage();
             let name = input.attr('name');
-            console.log('name', name)
+            // console.log('generalTab changeDate event', name)
             project[name] = input.datepicker('getUTCDate').toISOString().split('T')[0];
+            console.log('monicaStartDatePicker name', name, project[name])
             project.saveToLocalStorage();
         }
     });
         
+    $('#monicaEndDatePicker').on('changeDate', function (event) {
+        if (!window.isLoading) {
+            const input = $(event.target);
+        
+            const project = MonicaProject.loadFromLocalStorage();
+            let name = input.attr('name');
+            
+            project[name] = input.datepicker('getUTCDate').toISOString().split('T')[0];
+            console.log('monicaEndDatePicker name', name, project[name])
+            project.saveToLocalStorage();
+        }
+    });
   
 
     // TAB CROP ROTATION EVENT LISTENERS
@@ -1166,7 +1199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     $('#cropRotation').on('change', (event) => {
-        
+        if (!window.isLoading) {
         console.log("EvenLister cropRotation change")
         const rotationIndex = event.target.closest('.rotation').getAttribute('rotation-index');
         
@@ -1174,107 +1207,82 @@ document.addEventListener('DOMContentLoaded', () => {
         const workstepType = event.target.getAttribute('workstep-type');
         const name = event.target.getAttribute('name');
         console.log('crop rotation change', rotationIndex, workstepIndex, workstepType);
-        
-        
-        if (workstepIndex && workstepType && rotationIndex && name) {
-            console.log('if workstep...:', rotationIndex, workstepIndex, workstepType, name);
-                const project = MonicaProject.loadFromLocalStorage();
-                var workstep = project.rotation[rotationIndex][workstepType].find(workstep => workstep.workstepIndex == workstepIndex);
-                
-                console.log('if workstep...4:', rotationIndex, workstepIndex, workstepType, name);
 
-                if (event.target.classList.contains('species-parameters')) {
-                    console.log('if species-parameters', workstep)
-                    workstep.options.species = event.target.value;
-                    const cultivarSelector = event.target.closest('.rotation').querySelector('.select-parameters.cultivar-parameters');
-                    const residueSelector = event.target.closest('.rotation').querySelector('.select-parameters.crop-residue-parameters');
-                    if (event.target.value != '') {
-                        console.log("species-parameters != ''", event.target.value)
-                        // fetchAndPopulateDropdown(`/monica/get_options/cultivar-parameters/${event.target.value}/`, cultivarSelector, updateWorkstepOption(workstep, 'cultivar', workstep.options.cultivar, project));
-                        // fetchAndPopulateDropdown(`/monica/get_options/crop-residue-parameters/${event.target.value}/`, residueSelector,  updateWorkstepOption(workstep, 'residue', workstep.options.residue, project));
-                        fetch('/monica/get_options/cultivar-parameters/' + event.target.value + '/')
-                        .then(response => response.json())
-                        .then(data => {
-                            populateDropdown(data, cultivarSelector);
-                            // cultivarSelector.innerHTML = '';  // Clear current options
-                            // data.options.forEach(option => {
-                            //     const optionElement = document.createElement('option');
-                            //     optionElement.value = option.id;
-                            //     optionElement.text = option.name;
-                            //     cultivarSelector.appendChild(optionElement);                     
-                            // });  
-                            if (!isLoading) {  
-                                workstep.options['cultivar'] = cultivarSelector.value                     
-                                project.saveToLocalStorage();
-                            }
-                        });
-                    
+        const project = MonicaProject.loadFromLocalStorage();
+        var workstep = project.rotation[rotationIndex][workstepType].find(workstep => workstep.workstepIndex == workstepIndex);
+        
+        console.log('workstep...on change:', rotationIndex, workstepIndex, workstepType, name);
 
-                    
-                        fetch('/monica/get_options/crop-residue-parameters/' + event.target.value + '/')
-                            .then(response => response.json())
-                            .then(data => {
-                                populateDropdown(data, residueSelector);
-                                if (!isLoading) {  
-                                        workstep.options['residue'] = residueSelector.value;
-                                        project.saveToLocalStorage();
-                                    }                           
-                            })
-                    };
+        if (event.target.classList.contains('species-parameters')) {
+            console.log('if species-parameters', workstep)
+            workstep.options.species = event.target.value;
+            const cultivarSelector = event.target.closest('.rotation').querySelector('.select-parameters.cultivar-parameters');
+            const residueSelector = event.target.closest('.rotation').querySelector('.select-parameters.crop-residue-parameters');
+            console.log('species-parameters', event.target.value)
+            if (event.target.value != '') {
+                console.log("species-parameters != ''", event.target.value)
                
-                } else if (event.target.type === 'checkbox') {
-                    if (!isLoading) {
-                        workstep.options[name] = event.target.checked;
+                fetch('/monica/get_options/cultivar-parameters/' + event.target.value + '/')
+                .then(response => response.json())
+                .then(data => {
+                    populateDropdown(data, cultivarSelector); 
+                        workstep.options['cultivar'] = cultivarSelector.value                     
                         project.saveToLocalStorage();
-                    }
-                } else if (event.target.classList.contains('workstep-datepicker')) {
-                    if (!isLoading) {
-                        console.log(event.target.id)
-                        console.log($(`#${event.target.id}`).datepicker('getUTCDate').toISOString().split('T')[0])
-                        console.log('workstep', workstep)
-                        workstep.date = $(`#${event.target.id}`).datepicker('getUTCDate').toISOString().split('T')[0];
-                        project.saveToLocalStorage();
-                    }
-                }else {
-                    if (!isLoading) {
-                        workstep.options[name] = event.target.value;
-                        project.saveToLocalStorage();
-                    }
-                };
-        }
-           
+                });
+            
+                console.log("FROM     THE SPECIES")
+            
+                fetch('/monica/get_options/crop-residue-parameters/' + event.target.value + '/')
+                    .then(response => response.json())
+                    .then(data => {
+                        populateDropdown(data, residueSelector);
+                                workstep.options['residue'] = residueSelector.value;
+                                project.saveToLocalStorage();              
+                    })
+            } 
+        
+        } else if (event.target.type === 'checkbox') {
+                workstep.options[name] = event.target.checked;
+                project.saveToLocalStorage();
+        } else if (event.target.classList.contains('workstep-datepicker')) {
+                console.log(event.target.id)
+                console.log($(`#${event.target.id}`).datepicker('getUTCDate').toISOString().split('T')[0])
+                console.log('workstep', workstep)
+                workstep.date = $(`#${event.target.id}`).datepicker('getUTCDate').toISOString().split('T')[0];
+                project.saveToLocalStorage();
+        }else {
+                workstep.options[name] = event.target.value;
+                project.saveToLocalStorage();
+        };
+        
+    } 
     });
 
-
     
-
-    
-
-
     //TAB SOIL EVENT LISTENERS
     $('#id_soil_moisture').on('change', function () {
-        if (!isLoading) {
+        if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
             project.userSoilMoistureParametersId = $(this).val();
             project.saveToLocalStorage();
         }
     });
     $('#id_soil_organic').on('change', function () {
-        if (!isLoading) {
+        if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
             project.userSoilOrganicParametersId = $(this).val();
             project.saveToLocalStorage();
         }
     });
     $('#id_soil_temperature').on('change', function () {
-        if (!isLoading) {
+        if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
             project.userSoilTemperatureParametersId = $(this).val();
             project.saveToLocalStorage();
         }
     });
     $('#id_soil_transport').on('change', function () {
-        if (!isLoading) {
+        if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
             project.userSoilTransportParametersId = $(this).val();
             project.saveToLocalStorage();
@@ -1323,22 +1331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // TAB PROJECT EVENT LISTENERS
-    const loadProjectFromDB = (project_id) => {
-        console.log('loadProjectFromDB', project_id);
-        fetch('load-project/' + project_id + '/')
-            .then(response => response.json())
-            .then(data => {
-                console.log('loadProjectFromDB', data);
-                if (data.message.success) {
-                    handleAlerts(data.message)
-                    const project = new MonicaProject(data.project);
-                    loadProjectToGui(data.project)
-                    project.saveToLocalStorage();
-                };
-                handleAlerts(data.message)
-            })
-            .catch(error => console.error('Error:', error));
-    };
+
 
 
 
@@ -1464,35 +1457,35 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     $('#projectName').on('change', function () {
-        if (!isLoading) {
+        if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
             project.name = $(this).val();
             project.saveToLocalStorage();
         }
     });
     $('#projectDescription').on('change', function () {
-        if (!isLoading) {
+        if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
             project.description = $(this).val();
             project.saveToLocalStorage();
         }
     });
     $('#id_user_environment').on('change', function () {
-        if (!isLoading) {
+        if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
             project.userEnvironmentParametersId = $(this).val();
             project.saveToLocalStorage();
         }
     });
     $('#id_user_crop_parameters').on('change', function () {
-        if (!isLoading) {
+        if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
             project.userCropParametersId = $(this).val();
             project.saveToLocalStorage();
         }
     });
     $('#id_user_simulation_settings').on('change', function () {
-        if (!isLoading) {
+        if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
             project.userSimulationSettingsId = $(this).val();
             project.saveToLocalStorage();

@@ -17,10 +17,10 @@ EXPOSE 8000
 # Install Node.js
 RUN apt-get update -qq && apt-get install -y -qq \
     ca-certificates curl gnupg wget && \
-    && pip install --upgrade pip 
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -E -
-RUN apt-get install -y -qq nodejs
-RUN apt-get clean && \
+    pip install --upgrade pip 
+RUN curl -fsSL https://deb.nodesource.com/setup_23.x | bash -E - &&
+    apt-get install -y -qq nodejs && \
+    apt-get clean && \
     rm -rf /var/apt/lists/* && \
     rm -rf /var/cache/apt/*
 

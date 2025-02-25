@@ -13,6 +13,7 @@ class ToolboxType(models.Model):
     def __str__(self):
         return self.name
     
+
 # class Project(models.Model):
 #     name = models.CharField(max_length=100)
 #     description = models.CharField(max_length=255)
@@ -94,7 +95,7 @@ class UserProject(models.Model):
     def __str__(self):
         return self.name
 
-
+######################### INJECTION ###########################
 
 # DE: Injektion/ Qgis _injektion_diss_4326
 class OutlineInjection(gis_models.Model):
@@ -134,25 +135,6 @@ class OutlineGeste(gis_models.Model):
 #     def __str__(self):
 #                 return self.name
 
-
-class SoilProperties4326(models.Model): # DELETE
-    geom = gis_models.MultiPolygonField(srid=4326)
-    # nitrate_co = models.CharField(max_length=100, null=True)
-    # waterloggi = models.CharField(max_length=100, null=True)
-    depth_to_groundwater = models.CharField(max_length=100, null=True)
-    hydraulic_1m = models.CharField(max_length=100, null=True)
-    hydraulic_2m = models.CharField(max_length=100, null=True)
-    field_capacity = models.CharField(max_length=100, null=True)
-    hydromorph = models.CharField(max_length=100, null=True)
-    agriculture = models.CharField(max_length=100, null=True)
-    wetness_so = models.CharField(max_length=100, null=True)
-    type_of_agriculture = models.CharField(max_length=100, null=True)
-    class_land = models.CharField(max_length=100, null=True)
-    index_soil = models.FloatField(null=True)
-    nitrate_contamination = models.BooleanField(null=True)
-    waterlogging = models.BooleanField(null=True)
-    depth_to_groundwater_lower = models.FloatField(null=True)
-    depth_to_groundwater_upper = models.FloatField(null=True)
 
 
 class SinksWithLandUseAndSoilProperties(models.Model): # DELETE

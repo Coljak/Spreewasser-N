@@ -403,10 +403,13 @@ def delete_user_field(request, id):
 
 
 @login_required
-def get_field_project(request, id):
-    user_projects = models.UserProject.objects.filter(Q(user_field_id=id) & Q(user_field_user=request.user))
+def get_field_project_modal(request, id):
+    # user_projects = models.SwnProject.objects.filter(Q(user_field__id=id) & Q(user_field_user=request.user))
+    user_projects = models.SwnProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user))
+    print('user_projects:', user_projects)
+    print('user_projects.values():', list(user_projects.values()))
     
-    return JsonResponse({'user_project': list(user_projects.values())})
+    return JsonResponse({'projects': list(user_projects.values())})
 
 
 def load_nuts_polygon(request, entity, polygon_id):

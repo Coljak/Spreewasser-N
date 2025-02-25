@@ -549,22 +549,13 @@ function handleSaveUserField() {
 
 
 
-// EventListener for the draw event 
 map.on("draw:created", function (event) {
-
   let layer = event.layer;
-  const layer2 = L.geoJSON(layer.toGeoJSON().geometry);
-  featureGroup.addLayer(layer2);
+  // is added to the map only for display
+  featureGroup.addLayer(layer);
 
-  let userField = new UserField("", layer);
-  console.log("draw:created userField", userField);
-  userField.leafletId = layer2._leaflet_id;
-  currentUserField = userField;
-  // Show the modal to enter the userField name. After the name is entered, the userField is saved in the DB
-  $('#userFieldNameModal').modal('show'); 
-
+  openUserFieldNameModal(layer);
 });
-
 
 
 // A list element is created and the corresponding userField object is attached to the li element in the sidebar

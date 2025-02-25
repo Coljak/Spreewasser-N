@@ -237,7 +237,8 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
                 print(f"⚠️ Error reading {file_path}: {e}")
 
     print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
-    climate_json['8'] = [x / 100 for x in climate_json['8']]
+    climate_json['8'] = [x / 100 if x is not None and x != 0 and x != -9999 else 0 for x in climate_json['8']]
+
     # climate_json['8'] = np.array(climate_json['8']) / 100
     return climate_json
 
@@ -1014,9 +1015,6 @@ def monica_model(request):
     print("monica views request.user", user)
     context = get_monica_forms(user)
 
-    start_date = (datetime.now().date() - relativedelta(months=6)).replace(day=1)
-    end_date = (datetime.now().date() + relativedelta(months=7)).replace(day=1) - relativedelta(days=1)
-
     default_project = create_default_project(user)
     project_select_form = MonicaProjectSelectionForm(user=user)
     project_form = MonicaProjectForm(user=user)
@@ -1288,6 +1286,7 @@ def run_simulation(request):
             envs = create_irrigation_envs2(envs, data)
 
         json_msgs = run_monica_simulation(envs)
+        print('run_simulation \n', json_msgs)
         return JsonResponse({'message': {'success': True, 'message': json_msgs}})
     else:
         return JsonResponse({'message': {'success': False, 'message': 'Simulation not started.'}})

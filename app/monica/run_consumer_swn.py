@@ -24,7 +24,7 @@ def run_consumer(path_to_output_dir = None, leave_after_finished_run = True, ser
     config = {
         "port": "7777",
         "server": "swn_monica", 
-        "shared_id": shared_id,
+        # "shared_id": shared_id,
         "out": path_to_output_dir if path_to_output_dir else os.path.join(os.path.dirname(__file__), 'monica_output/'),
         "leave_after_finished_run": leave_after_finished_run
     }
@@ -32,7 +32,8 @@ def run_consumer(path_to_output_dir = None, leave_after_finished_run = True, ser
     # print("consumer config:", config)
 
     context = zmq.Context()
-    if config["shared_id"]:
+    print('context', context)
+    if config.get("shared_id", None):
         socket = context.socket(zmq.DEALER)
         socket.setsockopt(zmq.IDENTITY, config["shared_id"])
         print("Consumer shared_id: ", config["shared_id"])
@@ -79,6 +80,7 @@ def run_consumer(path_to_output_dir = None, leave_after_finished_run = True, ser
         try:
             print("trying to leave")
             msg = socket.recv_json()
+            print("msg", msg)
             leave = process_message(msg)
             print("leave", leave)
         except:

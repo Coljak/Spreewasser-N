@@ -203,6 +203,16 @@ class SoilProfileHorizon(models.Model):
         return super().__str__() + ' soilprofile_id: ' + str(self.soilprofile_id) + ' horizont_nr: ' + str(self.horizont_nr)
     # TODO pH value is a range - how to use it
     # TODO Sceleton fraction 0-1, soil stone content
+    # TODO: the ph class is set to 4. 5 for the profiles that do not have a ph class
+    # select bsph.soilprofile_id, bsp.landusage, bsph.id as horizont_id,  bsph.horizont_nr, bsph.symbol, bsph.herkunft, bsph.herkunft, bsph.geogenese , bsph.torfarten ,
+    # bhc.humus_class, bhc.corg, bktc.ka5_soiltype , bsph.ph_class_id, bpc.ph_class from buek_soil_profile_horizon bsph 
+    # join buek_soil_profile bsp on bsp.id = bsph.soilprofile_id 
+    # full join buek_ka5_texture_class bktc on bktc.id = bsph.ka5_texture_class_id 
+    # full join buek_humus_class bhc  on bsph.humus_class_id  = bhc.id
+    # full join buek_ph_class bpc on bsph.ph_class_id = bpc.id
+    # where bpc.id is null
+    # order by bsph.soilprofile_id, bsph.horizont_nr
+  
     def to_json(self):
         # TODO: can Monica actually handle the NULL values as '' or []?
         monica_json = {
@@ -210,18 +220,9 @@ class SoilProfileHorizon(models.Model):
             'Sand': [round(self.ka5_texture_class.sand, 2) * 100, "%"] if self.ka5_texture_class else [],
             'Clay': [round(self.ka5_texture_class.clay, 2) * 100, "%"] if self.ka5_texture_class else [],
             'pH': round(((self.ph_class.ph_lower_value + self.ph_class.ph_upper_value) / 2), 2) if self.ph_class else 4.5,
-            # TODO: the ph class is set to 4. 5 for the profiles that do not have a ph class
+            
 
-            """
-            select bsph.soilprofile_id, bsp.landusage, bsph.id as horizont_id,  bsph.horizont_nr, bsph.symbol, bsph.herkunft, bsph.herkunft, bsph.geogenese , bsph.torfarten ,
-            bhc.humus_class, bhc.corg, bktc.ka5_soiltype , bsph.ph_class_id, bpc.ph_class from buek_soil_profile_horizon bsph 
-            join buek_soil_profile bsp on bsp.id = bsph.soilprofile_id 
-            full join buek_ka5_texture_class bktc on bktc.id = bsph.ka5_texture_class_id 
-            full join buek_humus_class bhc  on bsph.humus_class_id  = bhc.id
-            full join buek_ph_class bpc on bsph.ph_class_id = bpc.id
-            where bpc.id is null
-            order by bsph.soilprofile_id, bsph.horizont_nr
-            """
+           
 
 
             # 'Sceleton': soil stone content, a fraction between 0 and 1

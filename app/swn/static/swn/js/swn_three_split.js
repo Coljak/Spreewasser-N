@@ -1,6 +1,6 @@
 
 
-import { MonicaProject,  loadProjectFromDB, loadProjectToGui } from '/static/monica/monica_model.js';
+import { MonicaProject,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica_model.js';
 import { getGeolocation } from '/static/shared/utils.js';
 import { handleAlerts } from '/static/swn/js/base.js';
 
@@ -37,35 +37,19 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // TODO userfield highlight
+  // in Create new project modal
   $('#userFieldSelect').on('change', function () {
-    const project = MonicaProject.loadFromLocalStorage();
+    
     // get centroid of the userfield
     console.log('userFieldSelect change event');
     var userFieldId = $(this).val();
     let leafletId = getLeafletIdByUserFieldId(userFieldId);
     highlightLayer(leafletId);
-    project.userField = userFieldId;
-    project.saveToLocalStorage();
-    // TODO using the userFields's centroid
-    // if (userFieldId != null) {
-    //     fetch('/drought/get_lat_lon/' + userFieldId + '/')
-    //   .then((response) => response.json())
-    //   .then((data) => {
-    //     console.log('data', data);
-    //     $('#id_latitude').val(data.lat);
-    //     $('#id_longitude').val(data.lon);
-    //   });
-    // }
+    selectUserField(userFieldId);
+    
   });
 
-    $('#todaysDatePicker').on('changeDate', function () {
-        console.log()
-        const project = MonicaProject.loadFromLocalStorage();
-        console.log("EvenLister todaysDatePicker changeDate", project)
-        project.todaysDate = $(this).datepicker('getUTCDate');
-        project.saveToLocalStorage();
-        
-    });
+  $('#todaysDatePicker').on('changeDate focusout', handleDateChange);
 
 // -----------User Field Name Modal -----------------
 
@@ -135,25 +119,49 @@ const mapScale = new L.control.scale({
   position: "bottomright",
 }).addTo(map);
 
+function selectUserField(userFieldId) {
+  console.log("selectUserField", userFieldId);
+  const project = MonicaProject.loadFromLocalStorage();
+  if (project.userField && project.userField != userFieldId && project.id) {
+    let modal = document.getElementById('interactionModal');
+    let modalInstance = new bootstrap.Modal(modal);
+    document.getElementById('interactionModalTitle').innerHTML = "User Field Selection";
+    document.getElementById('interactionModalText').innerHTML = "you are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.";
+    $('#interactionModalOK').on('click', function () {
+      project.userField = userFieldId;
+      project.saveToLocalStorage();
+      highlightLayer(getLeafletIdByUserFieldId(userFieldId));
+    }
+    );
+    modalInstance.show(); 
+  } else {
+    alert('uncaught option')
+    project.userField = userFieldId;
+    project.saveToLocalStorage();
+    highlightLayer(getLeafletIdByUserFieldId(userFieldId));
+  }
+  
+  
+}
+
 
 // handles clicks on a userField layer in the map
 var featureGroup = new L.FeatureGroup()
 map.addLayer(featureGroup);
-
-
 featureGroup.bringToFront();
 
 featureGroup.on("click", function (event) {
   let leafletId = Object.keys(event.layer._eventParents)[0];
-  highlightLayer(leafletId);
+  let userFieldId = getUserFieldIdByLeafletId(leafletId);
+  selectUserField(userFieldId);
   console.log("droughtFeutureGroup click event: highlight ", leafletId, event.layer);
   // highlightPolygon(event.layer)
 });
 
 // highlight layer and li element on click in the sidebar
 
-function highlightLayer(id) {
-  console.log("HIGHLIGHT", id);
+function highlightLayer(leafletId) {
+  console.log("HIGHLIGHT", leafletId);
   // remove highlight from all layers
   featureGroup.eachLayer(function (layer) {
     const key = Object.keys(layer._layers)[0];
@@ -161,13 +169,13 @@ function highlightLayer(id) {
     value._path.classList.remove("highlight");
   });
   // deselect layer/ header: remove highlight class from  header
-  if ($(`#accordionHeader-${id}`).hasClass("highlight")) {
-    $(`#accordionHeader-${id}`).removeClass("highlight");
+  if ($(`#accordionHeader-${leafletId}`).hasClass("highlight")) {
+    $(`#accordionHeader-${leafletId}`).removeClass("highlight");
 
     
-    let key = Object.keys(featureGroup._layers[id]._layers)[0]
-    console.log("Key: ", key, "id: ", id)
-     featureGroup._layers[id]._layers[key]._path.classList.remove('highlight');
+    let key = Object.keys(featureGroup._layers[leafletId]._layers)[0]
+    console.log("Key: ", key, "leafletId: ", leafletId)
+     featureGroup._layers[leafletId]._layers[key]._path.classList.remove('highlight');
   } else { // select layer/ header: 
 
       const accordionUserFieldHeaders = document.querySelectorAll('#accordionUserFields .accordion-header');
@@ -175,10 +183,10 @@ function highlightLayer(id) {
         header.classList.remove('highlight')
       });
 
-    $(`#accordionHeader-${id}`).addClass("highlight")
+    $(`#accordionHeader-${leafletId}`).addClass("highlight")
     // add highlight class to leaflet layer
-    let key = Object.keys(featureGroup._layers[id]._layers)[0]
-    featureGroup._layers[id]._layers[key]._path.classList.add('highlight');
+    let key = Object.keys(featureGroup._layers[leafletId]._layers)[0]
+    featureGroup._layers[leafletId]._layers[key]._path.classList.add('highlight');
   };
 };
 
@@ -188,7 +196,13 @@ function getLeafletIdByUserFieldId(id) {
   const entry = Object.values(userFields).find(field => field.id == id);
   console.log("getLeafletIdByUserFieldId", id, entry, userFields);
   return entry ? entry.leafletId : null;
-}
+};
+
+function getUserFieldIdByLeafletId(leafletId) {
+  const entry = Object.values(userFields).find(field => field.leafletId == leafletId);
+  console.log("getUserFieldIdByLeafletId", leafletId, entry, userFields);
+  return entry ? entry.id : null;
+};
   
 // Draw functionality
 var drawControl = new L.Control.Draw({
@@ -259,8 +273,9 @@ leafletSidebarContent.addEventListener("click", (event) => {
   if (clickedElement.classList.contains("user-field-header") || clickedElement.classList.contains("user-field-btn")) {
     const leafletId = clickedElement.getAttribute("leaflet-id");
     console.log("user-field-header clicked", leafletId);
-   
-    highlightLayer(leafletId);
+
+    selectUserField(getUserFieldIdByLeafletId(leafletId));
+    
   } else if (clickedElement.classList.contains("user-field-action")) {
     const leafletId = clickedElement.getAttribute("leaflet-id");
     console.log("user-field-action clicked", leafletId);
@@ -308,7 +323,7 @@ leafletSidebarContent.addEventListener("click", (event) => {
           <td>${project.creation_date}</td>
           <td>${project.last_modified}</td>
           <td>
-            <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="${project.id}" data-user-field-id="${userField.id}">
+            <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="${project.id}">
               Load
             </button>
           </td>
@@ -321,22 +336,17 @@ leafletSidebarContent.addEventListener("click", (event) => {
         modalElement.addEventListener('click', (event) => {
           if(event.target.classList.contains('open-project')) {
             const projectId = event.target.getAttribute('data-project-id');
-            const userFieldId = event.target.getAttribute('data-user-field-id');
-            console.log("open-project clicked", projectId, userFieldId);
             const project = loadProjectFromDB(projectId);
             loadProjectToGui(project);
+            selectUserField(project.userField);
             fieldMenuModal.hide();
-            // TODO open project
           }
         });
       });
     } else if (clickedElement.classList.contains("field-edit")) {
-        // TODO the hardcoded modal is triggered from button
-        console.log("field-edit clicked", leafletId, userField.id);
-        // select the userField in the modal
         $('#userFieldSelect').val(userField.id);
         $('#monicaProjectModal').modal('show');
-    } else { console.log("else in eventlistener") }
+    } else { return;}
     }
   });
 
@@ -607,7 +617,7 @@ function handleSaveUserField(layer, bootstrapModal) {
           userField.leafletId  = featureGroup.getLayerId(userField.layer);
           userFields[userField.leafletId] = userField;
           addLayerToSidebar(userField);
-          highlightLayer(userField.leafletId)
+          selectUserField(userField.id);
           updateFieldSelectorOption(userField);
         })
         .catch((error) => {

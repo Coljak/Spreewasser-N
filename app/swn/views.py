@@ -26,6 +26,7 @@ from monica import models as monica_models
 from monica import views as monica_views
 
 from buek import models as buek_models
+from buek import views as buek_views
 from toolbox import models as toolbox_models
 from app.helpers import is_ajax
 import xmltodict
@@ -297,7 +298,7 @@ def three_split(request):
     data = {
             # 'user_fields': user_projects, 
             'default_project': default_project,
-            'user_field_form': forms.UserFieldForm(),
+            # 'user_field_form': forms.UserFieldForm(),
             'state_county_district_form': state_county_district_form,
             'project_region': feature,
             #MONICA FORMS
@@ -461,6 +462,15 @@ def manual_soil_selection(request, user_field_id):
     return render(request, 'monica/modal_manual_soil_selection.html', data_menu)
 
 
+def recommended_soil_profile(request, user_field_id):
+    """
+    This function returns the preselected soil profile for the given UserField.
+    """
+    
+    user_field = models.UserField.objects.get(id=user_field_id)
+    return monica_views.get_soil_parameters(request, user_field.centroid_lat, user_field.centroid_lon)
+
+
 def load_swn_project(request, id):
     try:
         project = models.SwnProject.objects.get(pk=id)
@@ -531,6 +541,7 @@ def create_automatic_irrigation_envs(envs, data):
         envs.append(env2)
 
     return envs
+
     
 def run_simulation(request):
     # TODO projectId!!!!

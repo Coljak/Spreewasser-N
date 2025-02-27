@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.apps import apps
 from django.db.models import Q
 
-from .run_consumer_swn import run_consumer
+# from ...xx_obsolete.run_consumer_swn import run_consumer
 from . import models as m_models
 from . import monica_io3_swn
 from swn import models as swn_models
@@ -21,8 +21,8 @@ from .monica_events import *
 from .utils import save_monica_project
 from dateutil.relativedelta import relativedelta
 
+from netCDF4 import Dataset, date2index, MFDataset
 from pathlib import Path
-from netCDF4 import Dataset, MFDataset
 import xarray as xr
 import dask.array as da
 import os
@@ -199,9 +199,7 @@ def load_netcdf_to_memory():
 #     climate_json['8'] = [x / 100 for x in climate_json['8']]
 #     return climate_json
 
-from netCDF4 import Dataset, date2index
-from pathlib import Path
-from datetime import datetime
+
 
 def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     """Returns climate data as JSON using Monica's keys for the given start and end date and lat/lon index."""
@@ -358,7 +356,11 @@ def create_monica_env_from_json(json_data):
     else:
         # TODO specify SoilProfile content Type!
         soil_profile_id = json_data.get('soilProfileId')
-        soil_profile_parameters = buek_models.SoilProfile.objects.get(id=soil_profile_id).get_horizons_json()
+        soil_profile_type = json_data.get('soilProfileType')
+        # TODO SoilProfile content Type--> UserSoilProfile
+        soil_profile_parameters = []
+        if soil_profile_type == 'buekSoilProfile':
+            soil_profile_parameters, message = buek_models.SoilProfile.objects.get(id=soil_profile_id).get_monica_horizons_json()
 
 
 
@@ -1062,6 +1064,13 @@ def monica_model(request):
     context.update(data)
     return render(request, 'monica/monica_model.html', context)
 
+# def get_soil_profile(landusage, lat, lon):
+#     """
+#     Get the soil profile for the given location.
+#     """
+#     # Get the soil profile from the BUEK database
+#     return context
+
 
 def get_soil_parameters(request, lat, lon):
     """
@@ -1237,16 +1246,23 @@ def run_monica_simulation(envs):
     for e in envs:
         i += 1
         context = zmq.Context()
-        socket = context.socket(zmq.PUSH)
-        socket.connect("tcp://swn_monica:6666")
+        producer_socket = context.socket(zmq.PUSH)
+        producer_socket.connect("tcp://swn_monica:6666")
         print("check 6")
         # print(env)
-        socket.send_json(e)
+        producer_socket.send_json(e)
         file_path = Path(__file__).resolve().parent
         with open(f'{file_path}/monica_io/env_{str(i)}.json', 'w') as _: 
             json.dump(e, _)
         print("check 7")
-        msg = run_consumer()
+
+        consumer_socket = context.socket(zmq.PULL)
+        consumer_socket.connect("tcp://swn_monica:7777")
+        # msg = run_consumer()
+        msg = consumer_socket.recv_json()
+        producer_socket.close()
+        consumer_socket.close()
+
         print("check 9: consumer run")
         json_msg = msg_to_json(msg)
         json_msgs.append(json_msg)

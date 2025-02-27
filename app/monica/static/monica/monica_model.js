@@ -86,7 +86,7 @@ export class MonicaProject {
         this.userCropParametersId = project.userCropParametersId ?? 1;
         this.userSoilOrganicParametersId = project.userSoilOrganicParametersId ?? 1;
         this.userSimulationSettingsId = project.userSimulationSettingsId ?? 1;
-        this.soilProfileType = project.soilProfileType ?? 'soilprofile';
+        this.soilProfileType = project.soilProfileType ?? 'buekSoilProfile';
         this.soilProfileId = project.soilProfileId ?? null;
     }
 
@@ -491,6 +491,22 @@ export const loadProjectToGui = (project) => {
     window.isLoading = false;
 };
 
+export function handleDateChange(event) {
+    console.log('handleDateChange', event);
+    if (!window.isLoading) {
+        const input = $(event.target);
+        const project = MonicaProject.loadFromLocalStorage();
+        let name = input.attr('name');
+
+        const date = input.datepicker('getUTCDate');
+        if (date) {  // Prevent errors if datepicker is empty
+            project[name] = date.toISOString().split('T')[0];
+            console.log(`${input.attr('id')} name:`, name, project[name]);
+            project.saveToLocalStorage();
+        }
+    }
+}
+
 // creates the rotation divs and adds the worksteps from the project
 const addRotationToGui = (rotationIndex, rotation=null) => {
     // check if rotation already exists in the Gui
@@ -540,7 +556,7 @@ const addRotationToGui = (rotationIndex, rotation=null) => {
         });              
     };
 };
-const populateDropdown = (data, dropdown) => {
+export const populateDropdown = (data, dropdown) => {
     console.log('populateDropdown', data, dropdown);
     dropdown.innerHTML = '';
     data.options.forEach(option => {
@@ -607,7 +623,7 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
             const cultivarSelector = newForm.querySelector(`select[name="cultivar"]`);
             const residueSelector = newForm.querySelector(`select[name="residue"]`);
             if (!((workstep.options.species === null) || (workstep.options.species === ''))) {
-                console.error('SPECIES!!!!', workstep.options.species);
+                // console.error('SPECIES!!!!', workstep.options.species);
 
             // }
             // if (speciesSelector && !speciesSelector.value) {
@@ -728,7 +744,15 @@ const bindModalEventListeners = (parameters) => {
             // the modal is not a simulation settings modal
             ;
         };
-    } 
+    } else if (parameters === 'soil-profile') {
+        console.log("bindModalEventListeners show-soil-parameters");
+        $('#btnSelectPreselectedSoilProfile').on('click', function (e) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.soilProfileId = e.target.getAttribute('data-soil-profile-id');
+            project.soilProfileType = "buekSoilProfile";
+            project.saveToLocalStorage();
+        });
+    }
 };
 
 const updateDropdown = (parameterType, rotationIndex, newId) => {
@@ -919,7 +943,7 @@ const initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, l
     const btnSelectSoilProfile = document.getElementById("btnSelectSoilProfile");
     btnSelectSoilProfile.addEventListener("click", function () {      
         const project = MonicaProject.loadFromLocalStorage();
-        
+        project.soilProfileType = "buekSoilProfile";
         project.soilProfileId = soilProfileField.value;
         // console.log('project.soilProfileId', project.soilProfileId);
         project.saveToLocalStorage();
@@ -938,6 +962,9 @@ const createModal = (params) => {
         }
         if (params.rotation_index) {
             url += params.rotation_index + '/';
+        }
+        if (window.location.pathname.endsWith('/drought/') && params.parameters === 'show-soil-parameters') {
+            url = '/drought/' + params.parameters + '/' + params.user_field + '/';
         }
         if (params.lon) {
             url += params.lat + '/' + params.lon + '/';
@@ -982,13 +1009,15 @@ const createModal = (params) => {
 const validateProject = (project) => {
     var valid = true;
     console.log("validateProject", project)
-    // if (project.name === null) {
-    //     valid = false;
-    //     handleAlerts('warning', 'Please provide a project name');
-    // } else 
-    if (project.longitude === null || project.latitude === null) {
+    if (window.location.pathname.endsWith('/drought/') && project.userField === null) {
+        valid = false;
+        handleAlerts({'success': false, 'message': 'Please select a userfield'});
+    } else if (window.location.pathname.endsWith('/monica/') && (project.longitude === null || project.latitude === null)) {
         valid = false;
         handleAlerts({'success': false, 'message': 'Please provide a valid location'});
+    }else if (project.name === null || project.name === '') {
+        valid = false;
+        handleAlerts({'success': false, 'message': 'Please provide a project name'});
     } else if (project.startDate === null || project.endDate === null) {
         valid = false;
         handleAlerts({'success': false, 'message': 'Please provide a valid date range'});
@@ -1020,8 +1049,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // $('#monicaStartDatePicker').datepicker('update', setStartDate);
     // $('#monicaEndDatePicker').datepicker('update', setEndDate);
-    $('#todaysDatePicker').datepicker('update', new Date('2024-05-15'));
-    $('#todaysDatePicker').trigger('focusout');
+    $('#todaysDatePicker').datepicker('update', new Date());
+    $('#todaysDatePicker').trigger('focusout'); // saving the todays date to the project
 
 
     const calculateDaysInRotation = function() {
@@ -1046,23 +1075,43 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     //TODO: remove this!!!
-    $('#todaysDatePicker').on('changeDate', function () {
-        if (!window.isLoading) {
-            const project = MonicaProject.loadFromLocalStorage();
-            project.todaysDate = $(this).datepicker('getUTCDate');
-            project.saveToLocalStorage();
-        }
-    });
+    // $('#todaysDatePicker').on('changeDate', function () {
+    //     if (!window.isLoading) {
+    //         const project = MonicaProject.loadFromLocalStorage();
+    //         project.todaysDate = $(this).datepicker('getUTCDate');
+    //         project.saveToLocalStorage();
+    //     }
+    // });
 
-    $('#todaysDatePicker').on('focusout', function () {
-        if (!window.isLoading) {
-            console.log('todaysDatePicker focusout event');
-            const project = MonicaProject.loadFromLocalStorage();
-            project.todaysDate = $(this).datepicker('getUTCDate');
-            project.saveToLocalStorage();
-        }
+    // $('#todaysDatePicker').on('focusout', function () {
+    //     if (!window.isLoading) {
+    //         console.log('todaysDatePicker focusout event');
+    //         const project = MonicaProject.loadFromLocalStorage();
+    //         project.todaysDate = $(this).datepicker('getUTCDate');
+    //         project.saveToLocalStorage();
+    //     }
         
-    });
+    // });
+    
+    
+    // Attach both events to both elements
+    $('#monicaStartDatePicker, #monicaEndDatePicker').on('changeDate focusout', handleDateChange);
+    
+        
+    // $('#monicaEndDatePicker').on('focusout', function (event) {
+    //     console.log('monicaEndDatePicker focusout event');
+    //     if (!window.isLoading) {
+    //         const input = $(event.target);
+        
+    //         const project = MonicaProject.loadFromLocalStorage();
+    //         let name = input.attr('name');
+            
+    //         project[name] = input.datepicker('getUTCDate').toISOString().split('T')[0];
+    //         console.log('monicaEndDatePicker name', name, project[name])
+    //         project.saveToLocalStorage();
+    //     }
+    // });
+  
 
 
     var advancedMode = false;
@@ -1086,47 +1135,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // TAB GENERAL EVENT LISTENERS
-    document.getElementById('tabGeneralParameters').addEventListener('change', function (event) {
-        if (!window.isLoading) {
+    // document.getElementById('tabGeneralParameters').addEventListener('change', function (event) {
+    //     if (!window.isLoading) {
             
-            let name = event.target.getAttribute('name');
-            console.log("generalTab change event", name)
-            const project = MonicaProject.loadFromLocalStorage();
-            if (name === 'startDate' || name === 'endDate') {
-                return;
-            } else {
-                project[name] = event.target.value;
-            }
-            project.saveToLocalStorage();
-        }
-    });
+    //         let name = event.target.getAttribute('name');
+    //         console.log("generalTab change event", name)
+    //         const project = MonicaProject.loadFromLocalStorage();
+    //         if (name === 'startDate' || name === 'endDate') {
+    //             return;
+    //         } else {
+    //             project[name] = event.target.value;
+    //         }
+    //         project.saveToLocalStorage();
+    //     }
+    // });
 
-    $('#monicaStartDatePicker').on('changeDate', function (event) {
-        if (!window.isLoading) {
-            const input = $(event.target);
-        
-            const project = MonicaProject.loadFromLocalStorage();
-            let name = input.attr('name');
-            // console.log('generalTab changeDate event', name)
-            project[name] = input.datepicker('getUTCDate').toISOString().split('T')[0];
-            console.log('monicaStartDatePicker name', name, project[name])
-            project.saveToLocalStorage();
-        }
-    });
-        
-    $('#monicaEndDatePicker').on('changeDate', function (event) {
-        if (!window.isLoading) {
-            const input = $(event.target);
-        
-            const project = MonicaProject.loadFromLocalStorage();
-            let name = input.attr('name');
-            
-            project[name] = input.datepicker('getUTCDate').toISOString().split('T')[0];
-            console.log('monicaEndDatePicker name', name, project[name])
-            project.saveToLocalStorage();
-        }
-    });
-  
+
 
     // TAB CROP ROTATION EVENT LISTENERS
     $('#addRotationButton').on('click', () => {
@@ -1290,33 +1314,49 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     $('#tabSoil').on('click', (event) => {
+        let params = {};
         if (event.target.classList.contains('modify-parameters')) {
             const targetClass = event.target.classList[3];
             const value = $('.form-select.' + targetClass).val();
             
-            const params = {
+            params = {
                 'parameters': targetClass,
                 'parameters_id': value,
             }
             createModal(params);
         } else if (event.target.classList.contains('show-soil-parameters')) {
             const project = MonicaProject.loadFromLocalStorage();
-            try {
-                const params = {
-                    'parameters': 'soil-profile',
-                    'lon': project.longitude,
-                    'lat': project.latitude
+            if (window.location.pathname.endsWith('/drought/') && project.userField) {
+                try {
+                params = {
+                    'parameters': 'recommended-soil-profile',
+                    'user_field': project.userField
                 }
-                
                 createModal(params);
-            } catch {
-                handleAlerts({'success': false, 'message': 'Please provide a valid location'});
+                } catch {
+                    handleAlerts({'success': false, 'message': 'Please provide a valid location'});
+                }
+            } else if (window.location.pathname.endsWith('/monica/')) {
+                try {
+                    params = {
+                        'parameters': 'soil-profile',
+                        'lon': project.longitude,
+                        'lat': project.latitude
+                    }
+                    
+                    createModal(params);
+                } catch {
+                    handleAlerts({'success': false, 'message': 'Please provide a valid location'});
+                }
+
             }
+
+        
 
         } else if (event.target.classList.contains('manually-select-soil-parameters')) {
             const project = MonicaProject.loadFromLocalStorage();
             try {
-                const params = {
+                params = {
                 'parameters': 'select-soil-profile',
                 'lon': project.longitude,
                 'lat': project.latitude

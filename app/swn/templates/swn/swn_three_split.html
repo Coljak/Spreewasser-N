@@ -9,11 +9,11 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css" />
-    <link rel="stylesheet" href="{% static 'swn/css/leaflet.contextmenu.css' %}"/>
+    <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.contextmenu.css' %}"/>
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap-datepicker.standalone.css' %}"/>
     {% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/> {% endcomment %}
     <!-- virtual-select is for the multiple select boxes -->
-    <link rel="stylesheet" href="{% static 'swn/src/virtual-select.min.css' %}" />
-    {% comment %} <link rel="stylesheet" href="{% static 'swn/css/leaflet-sidebar.min.css' %}" /> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'vendor/virtual-select/virtual-select.min.css' %}" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
     <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
 
@@ -28,7 +28,7 @@
 
 
 {% block left_panel %}
-    {% include 'swn/sidebar_new.html' %}
+    {% include 'swn/sidebar.html' %}
     {% include 'swn/modal_field_name.html' %}
     {% include 'swn/modal_field_menu.html' %}
     
@@ -129,9 +129,9 @@
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js"></script> {% endcomment %}
     {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js"></script>{% endcomment %}
-    <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.de.min.js' %}"></script> 
-    <script type="text/javascript" src="{% static 'swn/js/leaflet.contextmenu.js' %}"></script> 
+    <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.de.min.js' %}"></script> 
+    <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.contextmenu.js' %}"></script> 
     {% comment %} <script src="{% static 'leaflet/georaster/georaster-layer-for-leaflet.min.js' %}"></script> {% endcomment %}
     {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" defer></script>{% endcomment %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
@@ -139,7 +139,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
     
-    <script type="text/javascript" src="{% static 'swn/src/virtual-select.js' %}"></script> 
+    <script type="text/javascript" src="{% static 'vendor/virtual-select/virtual-select.min.js' %}"></script> 
     <script type="module" src="{% static 'monica/monica_model.js' %}" defer></script>
     <script type="module" src="{% static 'swn/js/swn_three_split.js' %}" defer></script>
 

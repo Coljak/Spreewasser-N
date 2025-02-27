@@ -3,7 +3,6 @@ from .models import *
 from swn.models import SwnProject
 from crispy_forms.helper import FormHelper
 from django.db.models import Q
-# from bootstrap_datepicker_plus.widgets import DatePickerInput
 from django.contrib.postgres.fields import JSONField
 
 from django.core import validators

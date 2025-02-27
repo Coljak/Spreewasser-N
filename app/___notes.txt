@@ -1,0 +1,6 @@
+    <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.de.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'swn/js/bootstrap-datepicker.de.min.js' %}"></script>
+
+    <link rel="stylesheet" href="{% static 'swn/css/bootstrap-datepicker.standalone.css' %}"/>

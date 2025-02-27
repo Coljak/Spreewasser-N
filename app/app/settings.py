@@ -62,7 +62,6 @@ INSTALLED_APPS = [
     'django_select2',
     'crispy_forms',
     'crispy_bootstrap5',
-    # 'bootstrap_datepicker_plus',
     'django_celery_beat',
     # 'raster',
 ]

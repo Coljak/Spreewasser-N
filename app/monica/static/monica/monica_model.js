@@ -683,6 +683,7 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
 // Parameters Modal
 const bindModalEventListeners = (parameters) => {
     console.log('bindModalEventListeners', parameters);
+    // bind the save/save as new/delete buttons in the modal for monica parameters
     try {
         const modalForm = document.getElementById('modalForm');
         modalForm.addEventListener('submit', (event) => {
@@ -730,6 +731,7 @@ const bindModalEventListeners = (parameters) => {
     } catch {
         console.log('no modal save buttons found');
     }
+    // user-simulation-settings is mainly the same as all monica parameters, but with two unfoldable subdivisions
     if (parameters === 'user-simulation-settings') {
         // extra event listeners for the simulation settings modal
         try {   
@@ -744,8 +746,8 @@ const bindModalEventListeners = (parameters) => {
             // the modal is not a simulation settings modal
             ;
         };
-    } else if (parameters === 'soil-profile') {
-        console.log("bindModalEventListeners show-soil-parameters");
+    } else if (parameters === 'recommended-soil-profile') {
+        console.log("bindModalEventListeners recommended-soil-profile");
         $('#btnSelectPreselectedSoilProfile').on('click', function (e) {
             const project = MonicaProject.loadFromLocalStorage();
             project.soilProfileId = e.target.getAttribute('data-soil-profile-id');
@@ -953,7 +955,7 @@ const initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, l
 
 
 const createModal = (params) => {
-    console.log('create modal', params);
+    // console.log('create modal', params)
     try {
 
         let url = '/monica/' + params.parameters + '/';
@@ -963,8 +965,13 @@ const createModal = (params) => {
         if (params.rotation_index) {
             url += params.rotation_index + '/';
         }
-        if (window.location.pathname.endsWith('/drought/') && params.parameters === 'show-soil-parameters') {
-            url = '/drought/' + params.parameters + '/' + params.user_field + '/';
+        if (params.parameters === 'recommended-soil-profile') {
+            if (window.location.pathname.endsWith('/drought/')) {
+                url = `/drought/${params.parameters}/${params.profile_landusage}/${params.user_field}/`;
+                console.log(url)
+            } else {
+                url = `/monica/${params.parameters}/${params.profile_landusage}/`;
+            }
         }
         if (params.lon) {
             url += params.lat + '/' + params.lon + '/';
@@ -1324,13 +1331,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 'parameters_id': value,
             }
             createModal(params);
-        } else if (event.target.classList.contains('show-soil-parameters')) {
+        } else if (event.target.classList.contains('recommended-soil-profile')) {
             const project = MonicaProject.loadFromLocalStorage();
             if (window.location.pathname.endsWith('/drought/') && project.userField) {
                 try {
                 params = {
                     'parameters': 'recommended-soil-profile',
-                    'user_field': project.userField
+                    'profile_landusage': 'general',
+                    'user_field': project.userField,
+                    
                 }
                 createModal(params);
                 } catch {
@@ -1339,7 +1348,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (window.location.pathname.endsWith('/monica/')) {
                 try {
                     params = {
-                        'parameters': 'soil-profile',
+                        'parameters': 'recommended-soil-profile',
+                        'profile_landusage': 'general',
                         'lon': project.longitude,
                         'lat': project.latitude
                     }

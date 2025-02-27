@@ -34,7 +34,7 @@ urlpatterns = [
     path('drought/field-projects-menu/<int:id>/', views.get_field_project_modal, name='field_projects_menu'),
     # path('drought/get_lat_lon/<int:user_field_id>/', views.get_centroid, name='get_centroid'),
     path('drought/manual-soil-selection/<int:user_field_id>/', views.manual_soil_selection, name='manual_soil_selection'),
-    path('drought/recommended-soil-profile/<int:user_field_id>/', views.recommended_soil_profile, name='recommended_soil_profile'),
+    path('drought/recommended-soil-profile/<str:profile_landusage>/<int:user_field_id>/', views.recommended_soil_profile, name='recommended_soil_profile'),
     path('drought/run-simulation/', views.run_simulation, name='run_simulation'),
     
     # path('login/Dashboard/field-edit/<int:field_id>/chartdata/<int:crop_id>/<int:soil_id>/', views.get_chart, name='chart-api'),

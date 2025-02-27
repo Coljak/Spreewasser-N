@@ -1072,12 +1072,12 @@ def monica_model(request):
 #     return context
 
 
-def get_soil_parameters(request, lat, lon):
+def get_soil_parameters(request, profile_landusage, lat, lon):
     """
     The view returns two profiles in cases where the profile has to be completed.
     It is used in the soil tab of MONICA/swn-Monica.
     """
-    soil_profile = get_soil_profile('general', lat, lon)
+    soil_profile = get_soil_profile(profile_landusage, lat, lon)
     
     show_original_table = (soil_profile['SoilProfileParameters'] != soil_profile['OriginalSoilProfileParameters'])
 

@@ -462,13 +462,13 @@ def manual_soil_selection(request, user_field_id):
     return render(request, 'monica/modal_manual_soil_selection.html', data_menu)
 
 
-def recommended_soil_profile(request, user_field_id):
+def recommended_soil_profile(request, profile_landusage, user_field_id):
     """
     This function returns the preselected soil profile for the given UserField.
     """
     
     user_field = models.UserField.objects.get(id=user_field_id)
-    return monica_views.get_soil_parameters(request, user_field.centroid_lat, user_field.centroid_lon)
+    return monica_views.get_soil_parameters(request, profile_landusage, user_field.centroid_lat, user_field.centroid_lon)
 
 
 def load_swn_project(request, id):

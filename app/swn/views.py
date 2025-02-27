@@ -28,7 +28,6 @@ from monica import views as monica_views
 from buek import models as buek_models
 from buek import views as buek_views
 from toolbox import models as toolbox_models
-from app.helpers import is_ajax
 import xmltodict
 from datetime import datetime, timedelta
 import copy

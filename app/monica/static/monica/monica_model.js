@@ -1,5 +1,3 @@
-// import { handleAlerts } from `${staticBasePath}swn/js/base`;
-// Utility functions
 export const alertBox = document.getElementById('alert-box');
 
 const handleAlerts = (message) => {
@@ -105,7 +103,6 @@ export class MonicaProject {
     // Load project from localStorage
     static loadFromLocalStorage() {
         const storedProject = localStorage.getItem('monica_project');
-        console.log('MonicaProject loadFromLocalStorage', storedProject);
         return storedProject ? MonicaProject.fromJson(JSON.parse(storedProject)) : null;
     }
 
@@ -1015,14 +1012,14 @@ const createModal = (params) => {
 
 const validateProject = (project) => {
     var valid = true;
-    console.log("validateProject", project)
+    
     if (window.location.pathname.endsWith('/drought/') && project.userField === null) {
         valid = false;
         handleAlerts({'success': false, 'message': 'Please select a userfield'});
     } else if (window.location.pathname.endsWith('/monica/') && (project.longitude === null || project.latitude === null)) {
         valid = false;
         handleAlerts({'success': false, 'message': 'Please provide a valid location'});
-    }else if (project.name === null || project.name === '') {
+    } else if (project.name === null || project.name === '') {
         valid = false;
         handleAlerts({'success': false, 'message': 'Please provide a project name'});
     } else if (project.startDate === null || project.endDate === null) {
@@ -1037,10 +1034,14 @@ const validateProject = (project) => {
     } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => new Date(sowingWorkstep.date) < new Date(project.startDate) || new Date(sowingWorkstep.date) > new Date(project.endDate)))) {
         valid = false;
         handleAlerts({'success': false, 'message': 'Please provide a sowing date for each crop that is within your selected timeframe'});
-    } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => sowingWorkstep.options.species == null))) {
+    } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => sowingWorkstep.options.species == null || sowingWorkstep.options.species == ''))) {
         valid = false;
         handleAlerts({'success': false, 'message': 'Please provide a crop for each sowing workstep!'});
+    } else if (project.rotation.some(rotation => new Date(rotation.harvestWorkstep[0]?.date) < new Date(rotation.sowingWorkstep[0]?.date))) {
+        valid = false;
+        handleAlerts({'success': false, 'message': 'Please make sure that the harvest dates are after the sowing dates!'});
     }
+    console.log("validateProject", valid, project)
     return valid;
 };
 // var project = new MonicaProject();
@@ -1081,43 +1082,11 @@ document.addEventListener('DOMContentLoaded', () => {
         $(target).show();
     });
 
-    //TODO: remove this!!!
-    // $('#todaysDatePicker').on('changeDate', function () {
-    //     if (!window.isLoading) {
-    //         const project = MonicaProject.loadFromLocalStorage();
-    //         project.todaysDate = $(this).datepicker('getUTCDate');
-    //         project.saveToLocalStorage();
-    //     }
-    // });
 
-    // $('#todaysDatePicker').on('focusout', function () {
-    //     if (!window.isLoading) {
-    //         console.log('todaysDatePicker focusout event');
-    //         const project = MonicaProject.loadFromLocalStorage();
-    //         project.todaysDate = $(this).datepicker('getUTCDate');
-    //         project.saveToLocalStorage();
-    //     }
-        
-    // });
     
     
     // Attach both events to both elements
     $('#monicaStartDatePicker, #monicaEndDatePicker').on('changeDate focusout', handleDateChange);
-    
-        
-    // $('#monicaEndDatePicker').on('focusout', function (event) {
-    //     console.log('monicaEndDatePicker focusout event');
-    //     if (!window.isLoading) {
-    //         const input = $(event.target);
-        
-    //         const project = MonicaProject.loadFromLocalStorage();
-    //         let name = input.attr('name');
-            
-    //         project[name] = input.datepicker('getUTCDate').toISOString().split('T')[0];
-    //         console.log('monicaEndDatePicker name', name, project[name])
-    //         project.saveToLocalStorage();
-    //     }
-    // });
   
 
 
@@ -1138,24 +1107,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Advanced mode:', advancedMode); // Log the current mode
     });
 
-
-
-
-    // TAB GENERAL EVENT LISTENERS
-    // document.getElementById('tabGeneralParameters').addEventListener('change', function (event) {
-    //     if (!window.isLoading) {
-            
-    //         let name = event.target.getAttribute('name');
-    //         console.log("generalTab change event", name)
-    //         const project = MonicaProject.loadFromLocalStorage();
-    //         if (name === 'startDate' || name === 'endDate') {
-    //             return;
-    //         } else {
-    //             project[name] = event.target.value;
-    //         }
-    //         project.saveToLocalStorage();
-    //     }
-    // });
 
 
 

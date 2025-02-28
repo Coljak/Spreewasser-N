@@ -1,25 +1,29 @@
 
 
 import { MonicaProject,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica_model.js';
-import { getGeolocation } from '/static/shared/utils.js';
-import { handleAlerts } from '/static/swn/js/base.js';
+import { getGeolocation, handleAlerts } from '/static/shared/utils.js';
+// import { handleAlerts } from '/static/swn/js/base.js';
 
 
 
-getGeolocation()
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Hide the coordinate form card from plain Monica
+  $('#coordinateFormCard').hide();
+
+  // center map at geolocation
+  getGeolocation()
     .then((position) => {
-        console.log("Position:", position);
-        $('#id_latitude').val(position.latitude);
-        $('#id_longitude').val(position.longitude);
+      map.setView([position.latitude, position.longitude], 12);
     })
     .catch((error) => {
         console.error(error.message);
         handleAlerts({ success: false, message: error.message });
     });
 
-
-document.addEventListener("DOMContentLoaded", () => {
-  $('#coordinateFormCard').hide();
+  
   
   let csrfToken = document.cookie
     .split("; ")
@@ -38,9 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // TODO userfield highlight
   // in Create new project modal
-  $('#userFieldSelect').on('change', function () {
-    
-    // get centroid of the userfield
+  $('#userFieldSelect').on('change', function () { 
     console.log('userFieldSelect change event');
     var userFieldId = $(this).val();
     let leafletId = getLeafletIdByUserFieldId(userFieldId);
@@ -48,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     selectUserField(userFieldId);
     
   });
-
+  // all other datepickers are managed in monica_model.js
   $('#todaysDatePicker').on('changeDate focusout', handleDateChange);
 
 // -----------User Field Name Modal -----------------
@@ -227,7 +229,8 @@ map.addControl(drawControl);
 // zoom to user's layers via chrosshair
 // added back-to-home bullseyer button to zoom controls
 $(".leaflet-control-zoom").append(
-  '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>'
+  '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>',
+  '<a class="leaflet-control-geolocation" href="#" role="button" title="My location" area-label="User location"><i class="bi bi-geo"></i></a>'
 );
 const chrosshair = document.getElementsByClassName("leaflet-control-home")[0];
 
@@ -238,6 +241,19 @@ chrosshair.addEventListener("click", () => {
   } catch {
     return;
   }
+});
+
+const locationPin = document.getElementsByClassName("leaflet-control-geolocation")[0];
+
+locationPin.addEventListener("click", () => {
+  getGeolocation()
+    .then((position) => {
+      map.setView([position.latitude, position.longitude], 12);
+    })
+    .catch((error) => {
+      console.error(error.message);
+      handleAlerts({ success: false, message: error.message });
+    });
 });
 
 

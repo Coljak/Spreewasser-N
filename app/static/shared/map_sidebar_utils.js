@@ -97,6 +97,19 @@ export function initializeSidebarEventHandler({ sidebar, map, baseMaps, overlayL
           map.fitBounds(listElement.layer.getBounds());
         }
     });
+
+    // sidebar.addEventListener("click", (event) => {
+    //     console.log('CLICK')
+    //     if (event.target.classList.contains("user-field-header") || event.target.classList.contains("user-field-btn")) {
+    //             const leafletId = event.target.getAttribute("leaflet-id");
+    //             console.log("user-field-header clicked", leafletId);
+            
+    //             selectUserField(getUserFieldIdByLeafletId(leafletId));
+                
+    //           }
+    //   });
+
+    
 }
 
 
@@ -185,3 +198,16 @@ export const addLayerToSidebar = (userField, layer) => {
   
     userFieldsAccordion.appendChild(accordion);
   };
+
+  export function openUserFieldNameModal(layer) {
+    // Set the modal content (e.g., name input)
+    const modal = document.querySelector('#userFieldNameModal');
+  
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+  
+    // Add event listeners for the save and dismiss actions
+    modal.querySelector('#btnUserFieldSave').onclick = () => handleSaveUserField(layer, bootstrapModal);
+    modal.querySelector('#btnUserFieldDismiss').onclick = () => dismissPolygon(layer, bootstrapModal);
+    modal.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModal);
+  }

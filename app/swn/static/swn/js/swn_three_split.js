@@ -163,8 +163,6 @@ locationPin.addEventListener("click", () => {
 //-------------------- Baselayers ------------------------------
 const leafletSidebarContent = document.querySelector(".sidebar-content");
 
-const baseLayerCollapse = document.getElementById("baseLayerCollapse")
-
 const overlayLayers = {
   "droughtOverlay": droughtOverlay,
   "demOverlay": demOverlay,
@@ -195,8 +193,6 @@ const drawControl = new L.Control.Draw({
 });
 map.addControl(drawControl);
 
-var accordionUserFields = document.getElementById("accordionUserFields")
-var userFieldsAccordion = document.getElementById("userFieldsAccordion");
 
 $(function () {
   $('[data-toggle="tooltip"]').tooltip();
@@ -253,12 +249,18 @@ leafletSidebarContent.addEventListener("click", (event) => {
 
         const table = modalElement.querySelector('.project-table');
         table.innerHTML = '';
+        const headerRow = document.createElement('tr');
+        headerRow.innerHTML = `
+          <th>Name</th>
+          <th>Last Modified</th>
+          <th>Actions</th>
+        `;
+        table.appendChild(headerRow);
         data.projects.forEach(project => {
           const tableRow = document.createElement('tr');
           // tableRow.classList.add('list-group-item');
           tableRow.innerHTML = `
           <td>${project.name}</td>
-          <td>${project.creation_date}</td>
           <td>${project.last_modified}</td>
           <td>
             <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="${project.id}">
@@ -305,19 +307,8 @@ document.querySelector(".zoom-to-project-region").addEventListener("click", () =
 });
 
 
-// Create a function to handle the basemap change
-
-
 // sidebar Base Layers
 createBaseLayerSwitchGroup(baseMaps, map);
-
-
-
-
-//-------------------- Baselayers end ------------------------------
-
-//-------------------- Overlays start ------------------------------
-// const overlayLayerCollapses = document.querySelectorAll(".overlay-layer-collapse");
 
 
 //---------------MAP END-------------------------------
@@ -344,7 +335,6 @@ function saveUserField(name, geomJson) {
       csrfmiddlewaretoken: csrfToken,
       geom: JSON.stringify(geomJson.geometry),
       name: name,
-      // swnTool: userField.swnTool,
     };
     fetch(saveUrl, {
       method: "POST",
@@ -401,7 +391,6 @@ const getData = async function () {
         // localStorage.setItem('userFields', JSON.stringify(userFields));
         console.log("getData, userFields: ", userFields);
         addLayerToSidebar(userField, layer);
-        // console.log("getData, userFields: ", userFields);
     });
   });
 };
@@ -470,8 +459,6 @@ function handleSaveUserField(layer, bootstrapModal) {
 function openUserFieldNameModal(layer) {
   // Set the modal content (e.g., name input)
   const modal = document.querySelector('#userFieldNameModal');
-  // const nameInput = modal.querySelector('#fieldNameInput');
-  // nameInput.value = ''; // Reset input
 
   const bootstrapModal = new bootstrap.Modal(modal);
   bootstrapModal.show();
@@ -491,13 +478,6 @@ map.on("draw:created", function (event) {
 });
 
 
-// Sidebar
-// zoom to layer on dbclick in sidebar
-// accordionUserFields.addEventListener("dblclick", (e) => {
-//   const listElement = e.target.closest(".accordion-item");
-//   console.log("listElement", listElement);
-//   map.fitBounds(listElement.userField.layer.getBounds());
-// });
 
 
 // Create a LayerGroup to hold the displayed polygons
@@ -583,12 +563,8 @@ administrativeAreaDiv.forEach(function (areaDropdown) {
 
 
 function saveProject() {
-  // var swnMonicaProject = JSON.parse(localStorage.getItem('project'));
   const project = MonicaProject.loadFromLocalStorage();
-  // console.log('swnMonicaProject', swnMonicaProject);
-  // try {
       project.updated = Date.now();
-      // handleAlerts({'success': true, 'message': 'Project save trying'});
 
       fetch(saveProjectUrl, {
         method: 'POST',

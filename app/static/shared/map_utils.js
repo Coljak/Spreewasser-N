@@ -67,6 +67,8 @@ export function initializeMapEventlisteners (map, featureGroup) {
         });
     });
 
+    
+
 };
 
   //add map scale

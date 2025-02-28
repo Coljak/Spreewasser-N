@@ -1,13 +1,20 @@
-export function changeBasemap(basemap, baseMaps, map) {
-    if (!basemap?.getAttribute) return;
+// Baselayers
+export function changeBasemap(basemapSwitch, baseMaps, map) {
+    console.log("changeBasemap", basemapSwitch);
+    if (!basemapSwitch?.getAttribute) return;
 
-    const selectedBasemap = basemap.getAttribute("data-basemap");
+    const selectedBasemap = basemapSwitch.getAttribute("data-basemap");
     map.eachLayer((layer) => {
         if (layer instanceof L.TileLayer && layer.options.name !== selectedBasemap) {
             map.removeLayer(layer);
         }
     });
     map.addLayer(baseMaps[selectedBasemap]);
+    document.querySelectorAll(".basemap-switch").forEach((switchInput) => {
+        if (switchInput !== basemapSwitch) {
+            switchInput.checked = false;
+        }
+    });
 }
 
 
@@ -43,59 +50,32 @@ export function createBaseLayerSwitchGroup(baseMaps, map) {
     }
 };
 
-// export function initializeSidebarEventHandler(leafletSidebarContent, map, overlayLayers, userFields) {
-//     leafletSidebarContent.addEventListener("change", (event) => {
-//         const switchInput = event.target;
+// Overlays
+function handleOverlaySwitch(switchInput, overlayLayers, map) {
+    const overlayId = switchInput.getAttribute("data-layer");
+    const overlay = overlayLayers[overlayId];
+    const opacitySlider = document.getElementById(`${overlayId}Opacity`);
 
-//         if (switchInput.classList.contains("basemap-switch")) {
-//             changeBasemap(switchInput);
-//         } else if (switchInput.classList.contains("layer-switch")) {
-//             const layerId = switchInput.getAttribute("data-layer");
-//             if (switchInput.checked) {
-//                 map.addLayer(overlayLayers[layerId]);
-//             } else {
-//                 map.removeLayer(overlayLayers[layerId]);
-//             }
-//         } else if (switchInput.classList.contains("layer-opacity")) {
-//             const overlayId = switchInput.getAttribute("data-layer");
-//             const opacityValue = switchInput.value;
-//             overlayLayers[overlayId].setOpacity(opacityValue);
-//         } else if (switchInput.classList.contains("overlay-switch")) {
-//             const overlayId = switchInput.getAttribute("data-layer");
-//             const overlay = overlayLayers[overlayId];
-//             const opacitySlider = document.getElementById(`${overlayId}Opacity`);
+    if (switchInput.checked) {
+    overlay.addTo(map);
+    if (opacitySlider) {
+        opacitySlider.disabled = false;
+    };
+    overlay.bringToBack(); 
+    } else {
+    overlay.remove();
+    if (opacitySlider) {
+        opacitySlider.disabled = true;
+    };
+    };
+}
 
-//             if (switchInput.checked) {
-//                 overlay.addTo(map);
-//                 if (opacitySlider) {
-//                     opacitySlider.disabled = false;
-//                 }
-//                 overlay.bringToBack();
-//             } else {
-//                 overlay.remove();
-//                 if (opacitySlider) {
-//                     opacitySlider.disabled = true;
-//                 }
-//             }
-//         } else if (switchInput.classList.contains("user-field-switch")) {
-//             const leafletId = switchInput.getAttribute("leaflet-id");
-//             const userField = userFields[leafletId];
-//             if (switchInput.checked) {
-//                 map.addLayer(userField.layer);
-//             } else {
-//                 map.removeLayer(map._layers[leafletId]);
-//             }
-//         }
-//     });
-// }
-
-
-export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, getUserFields }) {
+export function initializeSidebarEventHandler({ sidebar, map, baseMaps, overlayLayers, getUserFields, featureGroup }) {
     sidebar.addEventListener("change", (event) => {
         const switchInput = event.target;
 
         if (switchInput.classList.contains("basemap-switch")) {
-            changeBasemap(switchInput, map);
+            changeBasemap(switchInput, baseMaps, map);
         } else if (switchInput.classList.contains("layer-switch")) {
             const layerId = switchInput.getAttribute("data-layer");
             switchInput.checked ? map.addLayer(overlayLayers[layerId]) : map.removeLayer(overlayLayers[layerId]);
@@ -105,16 +85,103 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
         } else if (switchInput.classList.contains("overlay-switch")) {
             handleOverlaySwitch(switchInput, overlayLayers, map);
         } else if (switchInput.classList.contains("user-field-switch")) {
-            toggleUserField(switchInput, getUserFields(), map);
+            toggleUserField(switchInput, featureGroup);
+        }
+    });
+
+    sidebar.addEventListener("dblclick", (event) => {
+        
+        if (event.target.classList.contains("user-field-btn")) {
+          const listElement = event.target.closest(".accordion-item");
+          
+          map.fitBounds(listElement.layer.getBounds());
         }
     });
 }
 
-function toggleUserField(switchInput, userFields, map) {
+
+function toggleUserField(switchInput,  map) {
     const leafletId = switchInput.getAttribute("leaflet-id");
-    const userField = userFields[leafletId];
+    const accordion = switchInput.closest(".accordion-item");
+    switchInput.checked ? map.addLayer(accordion.layer) : map.removeLayer(accordion.layer);
 
-    if (!userField) return; // Handle cases where userFields has changed and the key no longer exists
+};
 
-    switchInput.checked ? map.addLayer(userField.layer) : map.removeLayer(map._layers[leafletId]);
-}
+
+
+export const addLayerToSidebar = (userField, layer) => {
+    var menuType = '';
+  
+    // new Accordion UserField style
+    const accordion = document.createElement("div");
+    accordion.setAttribute("class", "accordion-item");
+    accordion.setAttribute("id", `accordion-${userField.leafletId}`);
+    accordion.setAttribute("leaflet-id", userField.leafletId);
+    accordion.setAttribute("user-field-id", userField.id);
+   
+  
+    let projectListHTML = "";
+    // Check if there are related projects
+    if (userField.userProjects && userField.userProjects.length > 0) {
+      projectListHTML = userField.userProjects
+        .map(
+          (project) => `
+            <li class="list-group-item">
+              <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="${project.id}" data-user-field-id="${userField.id}">
+                ${project.name}
+              </button>
+            </li>
+          `
+        )
+        .join("");
+    } 
+      // Create project button
+      projectListHTML += `
+        <li class="list-group-item">
+          <button type="button" class="btn btn-success btn-sm create-project" data-user-field-id="${userField.id}">
+            Create Project
+          </button>
+        </li>
+      `;
+  
+    // Generate the full HTML for the accordion
+    accordion.innerHTML = `
+      <div 
+        class="accordion-header nested user-field-header d-flex align-items-center justify-content-between" 
+        id="accordionHeader-${userField.leafletId}" 
+        leaflet-id="${userField.leafletId}"
+      >
+        <span class="form-check form-switch h6">  
+          <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="fieldSwitch-${userField.leafletId}" checked>
+        </span>
+        <button class="accordion-button nested btn collapsed user-field-btn" type="button" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="accordionButton-${userField.leafletId}" data-bs-toggle="collapse" data-bs-target="#accordionField-${userField.leafletId}" aria-expanded="false" aria-controls="accordionField-${userField.leafletId}"> 
+          ${userField.name}
+        </button>
+        <span class="column col-4 field-btns-col">
+          <form id="deleteAndCalcForm-${userField.leafletId}">
+            <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
+              <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
+              <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
+              <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+            </button>
+          </form>
+        </span>  
+      </div>
+      <div id="accordionField-${userField.leafletId}" class="accordion-collapse collapse">
+        <div class="accordion-body">
+          <ul class="list-group" id="projectList-${userField.leafletId}">
+            ${projectListHTML}
+          </ul>
+        </div>
+      </div>
+    `;
+  
+    // adding the UserField to the HTML-list element
+    accordion.layer = layer;
+  
+    userFieldsAccordion.appendChild(accordion);
+  };

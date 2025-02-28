@@ -121,6 +121,11 @@
 
         const defaultProject = {{ default_project|safe }};
 
+        const loadUrl = "{% url 'swn:get-user-fields' %}";
+        const saveUrl = "{% url 'swn:save-user-field' %}";
+        {% comment %} const deleteUrl = "{% url 'swn:delete-user-field' %}"; {% endcomment %}
+        const updateUrl = "{% url 'swn:update-user-field' %}";
+
         {% comment %} const userFields = {{ user_fields|safe }} ;  {% endcomment %}
           
     </script>

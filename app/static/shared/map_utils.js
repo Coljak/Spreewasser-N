@@ -1,3 +1,5 @@
+import { getGeolocation } from '/static/shared/utils.js';
+
 const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const osmAttrib =
   '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
@@ -42,7 +44,30 @@ const map = new L.Map("map", {
     tapHold: true,
   }).addLayer(osm);
 
+export function initializeMapEventlisteners (map, featureGroup) {
+    const chrosshair = document.getElementsByClassName("leaflet-control-home")[0];
+    chrosshair.addEventListener("click", () => {
+    try {
+        var bounds = featureGroup.getBounds();
+        map.fitBounds(bounds);
+    } catch {
+        return;
+    }
+    });
 
+    const locationPin = document.getElementsByClassName("leaflet-control-geolocation")[0];
+    locationPin.addEventListener("click", () => {
+      getGeolocation()
+        .then((position) => {
+          map.setView([position.latitude, position.longitude], 12);
+        })
+        .catch((error) => {
+          console.error(error.message);
+          handleAlerts({ success: false, message: error.message });
+        });
+    });
+
+};
 
   //add map scale
 const mapScale = new L.control.scale({

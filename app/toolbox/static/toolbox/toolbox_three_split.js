@@ -1,3 +1,8 @@
+// import { MonicaProject,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica_model.js';
+import { getGeolocation, handleAlerts } from '/static/shared/utils.js';
+import { projectRegion, baseMaps, map } from '/static/shared/map_utils.js';
+
+
 document.addEventListener("DOMContentLoaded", () => {
 
 
@@ -21,12 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // bootstrap colors
-const highlightColor = getComputedStyle(document.body).getPropertyValue('--bs-warning');
-const primaryColor = getComputedStyle(document.body).getPropertyValue('--bs-primary');
-const secondaryColor = getComputedStyle(document.body).getPropertyValue('--bs-secondary');
-const successColor = getComputedStyle(document.body).getPropertyValue('--bs-success');
-const infoColor = getComputedStyle(document.body).getPropertyValue('--bs-info');
-const lightColor = getComputedStyle(document.body).getPropertyValue('--bs-light');
 
 var currentUserField;
 
@@ -59,41 +58,6 @@ const topoUrl = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
 const topoAttrib =
   'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
 const topo = L.tileLayer(topoUrl, { maxZoom: 18, attribution: topoAttrib });
-
-
-
-
-
-const projectRegion = new L.geoJSON(project_region, {
-  attribution: 'Project Region',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.name);
-  }
-});
-
-
-// basemaps
-const baseMaps = {
-  "Open Street Maps": osm,
-  Satellit: satellite,
-  Topomap: topo,
-};
-
-//Map with open street map,opentopo-map and arcgis satellite map
-// opens at Müncheberg by default
-const map = new L.Map("map", {
-  layers: [osm],
-  center: new L.LatLng(52.338145830363914, 13.85877631507592),
-  zoom: 8,
-  zoomSnap: 0.25,
-  wheelPxPerZoomLevel: 500,
-});
-
-
-//add map scale
-const mapScale = new L.control.scale({
-  position: "bottomright",
-}).addTo(map);
 
 
 // handles clicks on a userField layer in the map
@@ -612,10 +576,6 @@ const addLayerToSidebar = (userField) => {
   
   userFieldsAccordion.appendChild(accordion);
   
-};
-
-var highlight = {
-  color: successColor,
 };
 
 

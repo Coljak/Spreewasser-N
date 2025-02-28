@@ -2,11 +2,9 @@
 
 import { MonicaProject,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica_model.js';
 import { getGeolocation, handleAlerts } from '/static/shared/utils.js';
+import { projectRegion, baseMaps, map } from '/static/shared/map_utils.js';
+import { createBaseLayerSwitchGroup, changeBasemap, initializeSidebarEventHandler } from '/static/shared/map_sidebar_utils.js';
 // import { handleAlerts } from '/static/swn/js/base.js';
-
-
-
-
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -23,24 +21,13 @@ document.addEventListener("DOMContentLoaded", () => {
         handleAlerts({ success: false, message: error.message });
     });
 
-  
-  
+    
   let csrfToken = document.cookie
     .split("; ")
     .find(row => row.startsWith("csrftoken="))
     .split("=")[1];
 
-  // Update the CSRF token value if it changes
-  function updateCsrfToken() {
-    console.log("updateCsrfToken");
-    csrfToken = document.cookie
-      .split("; ")
-      .find(row => row.startsWith("csrftoken="))
-      .split("=")[1];
-    return csrfToken;
-  };
 
-  // TODO userfield highlight
   // in Create new project modal
   $('#userFieldSelect').on('change', function () { 
     console.log('userFieldSelect change event');
@@ -58,68 +45,17 @@ document.addEventListener("DOMContentLoaded", () => {
 // -------------MAP --------------------------------------
 
 
-const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-const osmAttrib =
-  '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-const osm = L.tileLayer(osmUrl, { maxZoom: 18, attribution: osmAttrib });
 
-const satelliteUrl =
-  "http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
-const satelliteAttrib =
-  "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community";
-const satellite = L.tileLayer(satelliteUrl, {
-  maxZoom: 18,
-  attribution: satelliteAttrib,
-});
-
-const topoUrl = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
-const topoAttrib =
-  'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
-const topo = L.tileLayer(topoUrl, { maxZoom: 18, attribution: topoAttrib });
 
 // Bounds for DEM image overlay
-const demBounds = [
-  [47.136744752, 15.57241882],
-  [55.058996788, 5.564783468],
-];
-const droughtBounds = [
-  [46.89, 15.33],
-  [55.31, 5.41],
-];
+const demBounds = [[47.136744752, 15.57241882],[55.058996788, 5.564783468],];
+const droughtBounds = [[46.89, 15.33], [55.31, 5.41],];
 const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
 const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5 });
-const projectRegion = new L.geoJSON(project_region, {
-    attribution: 'Project Region',
-    onEachFeature: function (feature, layer) {
-      layer.bindTooltip(feature.properties.name);
-  }
-});
-
-// basemaps
-const baseMaps = {
-  "Open Street Maps": osm,
-  Satellit: satellite,
-  Topomap: topo,
-};
 
 
 
 
-//Map with open street map,opentopo-map and arcgis satellite map
-// opens at Müncheberg by default
-const map = new L.Map("map", {
-  layers: [osm],
-  center: new L.LatLng(52.338145830363914, 13.85877631507592),
-  zoom: 8,
-  zoomSnap: 0.25,
-  wheelPxPerZoomLevel: 500,
-});
-
-
-//add map scale
-const mapScale = new L.control.scale({
-  position: "bottomright",
-}).addTo(map);
 
 function selectUserField(userFieldId) {
   console.log("selectUserField", userFieldId);
@@ -193,6 +129,37 @@ function highlightLayer(leafletId) {
 };
 
 
+// function highlightLayer(leafletId) {
+//   console.log("HIGHLIGHT", leafletId);
+//   // remove highlight from all layers
+//   featureGroup.eachLayer(function (layer) {
+//     const key = Object.keys(layer._layers)[0];
+//     const value = layer._layers[key];
+//     value._path.classList.remove("highlight");
+//   });
+//   // deselect layer/ header: remove highlight class from  header
+//   if ($(`#accordionHeader-${leafletId}`).hasClass("highlight")) {
+//     $(`#accordionHeader-${leafletId}`).removeClass("highlight");
+
+    
+//     let key = Object.keys(featureGroup._layers[leafletId]._layers)[0]
+//     console.log("Key: ", key, "leafletId: ", leafletId)
+//      featureGroup._layers[leafletId]._layers[key]._path.classList.remove('highlight');
+//   } else { // select layer/ header: 
+
+//       const accordionUserFieldHeaders = document.querySelectorAll('#accordionUserFields .accordion-header');
+//       accordionUserFieldHeaders.forEach(header => {
+//         header.classList.remove('highlight')
+//       });
+
+//     $(`#accordionHeader-${leafletId}`).addClass("highlight")
+//     // add highlight class to leaflet layer
+//     let key = Object.keys(featureGroup._layers[leafletId]._layers)[0]
+//     featureGroup._layers[leafletId]._layers[key]._path.classList.add('highlight');
+//   };
+// };
+
+
       
 function getLeafletIdByUserFieldId(id) {
   const entry = Object.values(userFields).find(field => field.id == id);
@@ -207,24 +174,7 @@ function getUserFieldIdByLeafletId(leafletId) {
 };
   
 // Draw functionality
-var drawControl = new L.Control.Draw({
-  position: "topright",
-  edit: {
-    featureGroup: featureGroup,
-  },
-  draw: {
-    circlemarker: false,
-    polyline: false,
-    polygon: {
-      shapeOptions: {
-        color: "#000000",
-      },
-      allowIntersection: false,
-      showArea: true,
-    },
-  },
-});
-map.addControl(drawControl);
+
 
 // zoom to user's layers via chrosshair
 // added back-to-home bullseyer button to zoom controls
@@ -274,7 +224,24 @@ const overlayLayers = {
 // ------------------- Sidebar eventlisteners -------------------
 
 // -------------------Sidebar new----------------
-
+const drawControl = new L.Control.Draw({
+  position: "topright",
+  edit: {
+    featureGroup: featureGroup,
+  },
+  draw: {
+    circlemarker: false,
+    polyline: false,
+    polygon: {
+      shapeOptions: {
+        color: "#000000",
+      },
+      allowIntersection: false,
+      showArea: true,
+    },
+  },
+});
+map.addControl(drawControl);
 
 var accordionUserFields = document.getElementById("accordionUserFields")
 var userFieldsAccordion = document.getElementById("userFieldsAccordion");
@@ -300,8 +267,11 @@ leafletSidebarContent.addEventListener("click", (event) => {
     if (clickedElement.classList.contains("delete")) {
       let confirmDelete = confirm(`Are you sure to delete ` + userField.name + "?");
       if (confirmDelete) {
+        
+        let layer = featureGroup.getLayer(userField.leafletId);
         delete userFields[userField.leafletId];
-        userField.layer.remove(); // removes shape from map
+        featureGroup.removeLayer(layer); // removes shape from map
+
         const listElement = document.getElementById("accordion-"+leafletId);
         listElement.remove(); // removes HTML element from sidebar
         // removes field from db
@@ -366,107 +336,69 @@ leafletSidebarContent.addEventListener("click", (event) => {
     }
   });
 
-//event bubbling for the switches and menus in the sidebar
-leafletSidebarContent.addEventListener("change", (event) => {
-  const switchInput = event.target;
-
-  if (switchInput.classList.contains("basemap-switch")) {
-    changeBasemap(switchInput);
-  } else if (switchInput.classList.contains("layer-switch")) {
-    const layerId = switchInput.getAttribute("data-layer");
-    if (switchInput.checked) {
-      // Add the layer
-      map.addLayer(overlayLayers[layerId]);
-    } else {
-      // Remove the layer
-      map.removeLayer(overlayLayers[layerId]);
-    }
-    } else if (switchInput.classList.contains("layer-opacity")) {
-      const overlayId = switchInput.getAttribute("data-layer");
-      overlayLayers[overlayId].setOpacity(switchInput.value);
-      const opacityValue = switchInput.value;
-      overlayLayers[overlayId].setOpacity(opacityValue);
-    } else if (switchInput.classList.contains("overlay-switch")) {
-      const overlayId = switchInput.getAttribute("data-layer");
-      const overlay = overlayLayers[overlayId];
-      const opacitySlider = document.getElementById(`${overlayId}Opacity`);
-
-      if (switchInput.checked) {
-        overlay.addTo(map);
-        if (opacitySlider) {
-          opacitySlider.disabled = false;
-        };
-        overlay.bringToBack(); 
-      } else {
-        overlay.remove();
-        if (opacitySlider) {
-          opacitySlider.disabled = true;
-        };
-      };
-    } else if (switchInput.classList.contains("user-field-switch")) {
-      const leafletId = switchInput.getAttribute("leaflet-id");
-      const userField = userFields[leafletId];
-      if (switchInput.checked) {
-        map.addLayer(userField.layer);
-      } else {
-        map.removeLayer(map._layers[leafletId]);
-      };
-    };
+  
+  initializeSidebarEventHandler({
+    sidebar: document.querySelector(".sidebar-content"),
+    map,
+    overlayLayers,
+    getUserFields: () => userFields // Always returns the latest userFields
 });
+
+//event bubbling for the switches and menus in the sidebar
+// leafletSidebarContent.addEventListener("change", (event) => {
+//   const switchInput = event.target;
+
+//   if (switchInput.classList.contains("basemap-switch")) {
+//     changeBasemap(switchInput);
+//   } else if (switchInput.classList.contains("layer-switch")) {
+//     const layerId = switchInput.getAttribute("data-layer");
+//     if (switchInput.checked) {
+//       // Add the layer
+//       map.addLayer(overlayLayers[layerId]);
+//     } else {
+//       // Remove the layer
+//       map.removeLayer(overlayLayers[layerId]);
+//     }
+//     } else if (switchInput.classList.contains("layer-opacity")) {
+//       const overlayId = switchInput.getAttribute("data-layer");
+//       overlayLayers[overlayId].setOpacity(switchInput.value);
+//       const opacityValue = switchInput.value;
+//       overlayLayers[overlayId].setOpacity(opacityValue);
+//     } else if (switchInput.classList.contains("overlay-switch")) {
+//       const overlayId = switchInput.getAttribute("data-layer");
+//       const overlay = overlayLayers[overlayId];
+//       const opacitySlider = document.getElementById(`${overlayId}Opacity`);
+
+//       if (switchInput.checked) {
+//         overlay.addTo(map);
+//         if (opacitySlider) {
+//           opacitySlider.disabled = false;
+//         };
+//         overlay.bringToBack(); 
+//       } else {
+//         overlay.remove();
+//         if (opacitySlider) {
+//           opacitySlider.disabled = true;
+//         };
+//       };
+//     } else if (switchInput.classList.contains("user-field-switch")) {
+//       const leafletId = switchInput.getAttribute("leaflet-id");
+//       const userField = userFields[leafletId];
+//       if (switchInput.checked) {
+//         map.addLayer(userField.layer);
+//       } else {
+//         map.removeLayer(map._layers[leafletId]);
+//       };
+//     };
+// });
 
 
 // Create a function to handle the basemap change
-function changeBasemap(basemap) {
-  if (!basemap || !basemap.getAttribute) {
-    return;
-  } else {
-    // Update the map's basemap
-    const selectedBasemap = basemap.getAttribute("data-basemap");
-    map.eachLayer((layer) => {
-      if (layer instanceof L.TileLayer && layer.options.name !== selectedBasemap) {
-        map.removeLayer(layer);
-      }
-    });
-    map.addLayer(baseMaps[selectedBasemap]);
-  };
-};
 
-// Create a function to handle the creation of the Baselayer Switches in the sidebar
-let switchGroupId = 1; 
 
-function createBaseLayerSwitchGroup() {
-  let initialBasemapChecked = false; 
-  const baseLayerControlList = document.getElementById("baseLayerList");
-  // Loop through the baseMaps and create the control switches
-  for (const [basemapName, basemapLayer] of Object.entries(baseMaps)) {
-    const li = document.createElement("li");
-    li.classList.add("list-group-item")
-    const switchDiv = document.createElement("div");
-    switchDiv.classList.add("col", "form-check", "form-switch")
-    const switchInput = document.createElement("input");
-    switchInput.type = "radio";
-    switchInput.name = `switchGroup${switchGroupId}`; // Assign the same name to all switch inputs in a group
-    switchInput.classList.add("form-check-input", "user-field-switch");
-    const switchLabel = document.createElement("label");
-    switchDiv.appendChild(switchInput);
-    switchDiv.appendChild(switchLabel);
-    li.appendChild(switchDiv);
-    switchLabel.textContent = basemapName;
-    switchInput.classList.add("basemap-switch");
-    switchInput.setAttribute("data-basemap", basemapName);
-    baseLayerControlList.appendChild(li);
-  }
-  baseLayerCollapse.appendChild(baseLayerControlList);
-  switchGroupId++;
+// sidebar Base Layers
+createBaseLayerSwitchGroup(baseMaps, map);
 
-  if (!initialBasemapChecked) {
-    const initialBasemapSwitches = baseLayerControlList.querySelector(".basemap-switch");
-    initialBasemapSwitches.checked = true;
-    changeBasemap(initialBasemapSwitches);
-    initialBasemapChecked = true;
-  }
-};
-createBaseLayerSwitchGroup();
 
 
 
@@ -478,6 +410,7 @@ createBaseLayerSwitchGroup();
 
 //---------------MAP END-------------------------------
 var userFields = {};
+// localStorage.setItem('userFields', JSON.stringify(userFields));
 
 
 
@@ -490,31 +423,20 @@ const deleteUrl = "/drought/delete-user-field/";
 
 
 class UserField {
-  constructor(name, layer, id=null, userProjects=[]) {
+  constructor(name, id=null, userProjects=[]) {
     this.name = name;
-    this.layer = layer;
+    // this.layer = layer;
     this.id = id;
     this.userProjects = userProjects;
   }
-  hideLayer() {
-    map.removeLayer(this.layer);
-  }
-  showLayer() {
-    map.addLayer(this.layer);
-  }
+  // hideLayer() {
+  //   map.removeLayer(this.layer);
+  // }
+  // showLayer() {
+  //   map.addLayer(this.layer);
+  // }
 };
 
-
-class DroughtProject {
-  constructor(userFieldId) {
-    this.userFieldId = userFieldId;
-    this.monicaProject = null;
-    this.soilProfile = 0;
-    this.calculation = {};
-    this.created = Date.now();
-    this.updated = Date.now();
-  }
-}
 
 
 // Save a newly created userField in DB
@@ -550,6 +472,7 @@ function saveUserField(name, geomJson) {
 
 // Load all user fields from DB
 const getData = async function () {
+  // let userFields = {};
   fetch(loadUrl, {
     method: "GET",
     credentials: "same-origin",
@@ -564,25 +487,29 @@ const getData = async function () {
     // clear all userFields from map and sidebar
     $("#display-data").empty();
     const userFieldsDb = data.user_fields;
+    
     userFieldsDb.forEach((el) => {
       var layer = L.geoJSON(el.geom_json);
       layer.bindTooltip(el.name);
       // console.log("getData, element: ", el);
       const userField = new UserField(
         el.name,
-        layer,
+        // layer,
         el.id,
         el.user_projects    
       );
       // Add the layer to the droughtFeutureGroup layer group
-        featureGroup.addLayer(userField.layer);
-        userField.leafletId  = featureGroup.getLayerId(userField.layer);
+        featureGroup.addLayer(layer);
+        userField.leafletId  = featureGroup.getLayerId(layer);
         userFields[userField.leafletId ] = userField;
-
+        // localStorage.setItem('userFields', JSON.stringify(userFields));
+        console.log("getData, userFields: ", userFields);
         addLayerToSidebar(userField);
         // console.log("getData, userFields: ", userFields);
     });
+    
   });
+  
 };
 
 
@@ -623,14 +550,14 @@ function handleSaveUserField(layer, bootstrapModal) {
           var layerGeoJson = L.geoJSON(data.geom_json);
           const userField = new UserField(
             data.name,
-            layerGeoJson,
+            // layerGeoJson,
             data.id,  
           );
           
-          featureGroup.addLayer(userField.layer);
+          featureGroup.addLayer(layerGeoJson);
           // temporary layer is removed from the map
           featureGroup.removeLayer(layer);
-          userField.leafletId  = featureGroup.getLayerId(userField.layer);
+          userField.leafletId  = featureGroup.getLayerId(layerGeoJson);
           userFields[userField.leafletId] = userField;
           addLayerToSidebar(userField);
           selectUserField(userField.id);

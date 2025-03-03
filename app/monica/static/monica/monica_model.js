@@ -191,23 +191,47 @@ const observeDropdown = (selector, callback) => {
     observer.observe(dropdown, { childList: true });
 };
 
-export const loadProjectFromDB = (project_id) => {
+// export function loadProjectFromDB(project_id) {
+//     console.log('loadProjectFromDB id', project_id);
+//     fetch('load-project/' + project_id + '/')
+//     .then(response => response.json())
+//     .then(data => {
+//         // console.log('loadProjectFromDB', data);
+//         if (data.message.success) {
+//             handleAlerts(data.message)
+//             const project = new MonicaProject(data.project);
+//             console.log('loadProjectFromDB project', project)
+//             // loadProjectToGui(project)
+//             project.saveToLocalStorage();
+//             return project;
+//         };
+//         handleAlerts(data.message)
+//     })
+//     .catch(error => console.error('Error:', error));
+// };
+
+export function loadProjectFromDB(project_id) {
     console.log('loadProjectFromDB id', project_id);
-    fetch('load-project/' + project_id + '/')
+    return fetch('load-project/' + project_id + '/')
         .then(response => response.json())
         .then(data => {
-            // console.log('loadProjectFromDB', data);
             if (data.message.success) {
-                handleAlerts(data.message)
+                handleAlerts(data.message);
                 const project = new MonicaProject(data.project);
-                loadProjectToGui(project)
+                console.log('loadProjectFromDB project', project);
                 project.saveToLocalStorage();
-                return project;
-            };
-            handleAlerts(data.message)
+                return project;  // Return the project after it has been loaded
+            } else {
+                handleAlerts(data.message);
+                return null;  // Return null if the project wasn't loaded successfully
+            }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            return null;  // Return null in case of error
+        });
 };
+
 
 
 
@@ -443,6 +467,7 @@ window.isLoading = false;
 
 export const loadProjectToGui = (project) => {
     // console.log('loadProjectToGui', project);
+    console.log("Project is loading..", project)
     window.isLoading = true;
     document.querySelector('#cropRotation').innerHTML = '';
     
@@ -1334,8 +1359,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const selecteprojectName = $('#id_monica_project option:selected').text()
             if (event.target.classList.contains('load-project')) {
                 console.log('LOAD PROJECT')
-                loadProjectFromDB(projectId);
-            }else if (event.target.classList.contains('new-project')) {
+                loadProjectFromDB(projectId)
+                .then(project => {
+                    loadProjectToGui(project);
+                    
+                });
+            } else if (event.target.classList.contains('new-project')) {
                 console.log('NEW PROJECT')
                 projectModalForm.reset();
                 $('#monicaProjectModal').modal('show');
@@ -1411,8 +1440,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // TODO: obsolete ??? --------
 
         // this works for monica and swn
-        var saveUrl = 'save-project/';
-        fetch(saveUrl, {
+
+        fetch('save-project/', {
             method: 'POST',
             body: JSON.stringify(project),
             headers: {

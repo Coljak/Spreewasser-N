@@ -357,7 +357,7 @@ var userFields = {};
 // User Field Name Modal
 
 
-const loadUrl = "/toolbox/load/";
+const loadDataUrl = "/toolbox/load/";
 const saveUrl = "/toolbox/save/";
 const deleteUrl = "/toolbox/delete/";
 
@@ -420,7 +420,7 @@ function saveUserField(userField) {
 
 // Load all user fields from DB
 const getData = async function () {
-  fetch(loadUrl, {
+  fetch(loadDataUrl, {
     method: "GET",
     credentials: "same-origin",
     headers: {

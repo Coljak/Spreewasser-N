@@ -58,12 +58,13 @@ export const handleAlerts = (message) => {
  * Update the CSRF token value if it changes.
  * @returns {string} The updated CSRF token.
  */
-
-export function updateCsrfToken() {
-    console.log("updateCsrfToken");
-    csrfToken = document.cookie
+export const getCSRFToken = () => {
+    return document.cookie
       .split("; ")
       .find(row => row.startsWith("csrftoken="))
       .split("=")[1];
-    return csrfToken;
   };
+  
+
+
+

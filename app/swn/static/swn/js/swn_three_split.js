@@ -1,5 +1,5 @@
 import { MonicaProject,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica_model.js';
-import { getGeolocation, handleAlerts, getCSRFToken } from '/static/shared/utils.js';
+import { getGeolocation, handleAlerts, getCSRFToken, saveProject } from '/static/shared/utils.js';
 import { projectRegion, baseMaps, map, initializeMapEventlisteners } from '/static/shared/map_utils.js';
 import { 
   createBaseLayerSwitchGroup, 

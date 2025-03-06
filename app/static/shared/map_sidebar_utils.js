@@ -517,24 +517,7 @@ export async function getData (loadDataUrl, featureGroup) {
 };
 
 
-export function saveProject(saveProjectUrl, project) {
-  
-      project.updated = Date.now();
 
-      fetch(saveProjectUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken,
-        },
-        body: JSON.stringify(project)
-      })
-        .then(response => response.json())
-        .then(data => {
-          console.log('data', data);
-          handleAlerts(data.message);
-        });
-};
 
 
 

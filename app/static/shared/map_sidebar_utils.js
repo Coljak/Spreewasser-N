@@ -395,27 +395,27 @@ export const addLayerToSidebar = (userField, layer) => {
   
     let projectListHTML = "";
     // Check if there are related projects
-    if (userField.userProjects && userField.userProjects.length > 0) {
-      projectListHTML = userField.userProjects
-        .map(
-          (project) => `
-            <li class="list-group-item">
-              <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="${project.id}" data-user-field-id="${userField.id}">
-                ${project.name}
-              </button>
-            </li>
-          `
-        )
-        .join("");
-    } 
+    // if (userField.userProjects && userField.userProjects.length > 0) {
+    //   projectListHTML = userField.userProjects
+    //     .map(
+    //       (project) => `
+    //         <li class="list-group-item">
+    //           <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="${project.id}" data-user-field-id="${userField.id}">
+    //             ${project.name}
+    //           </button>
+    //         </li>
+    //       `
+    //     )
+    //     .join("");
+    // } 
       // Create project button
-      projectListHTML += `
-        <li class="list-group-item">
-          <button type="button" class="btn btn-success btn-sm create-project" data-user-field-id="${userField.id}">
-            Create Project
-          </button>
-        </li>
-      `;
+      // projectListHTML += `
+      //   <li class="list-group-item">
+      //     <button type="button" class="btn btn-success btn-sm create-project" data-user-field-id="${userField.id}">
+      //       Create Project
+      //     </button>
+      //   </li>
+      // `;
   
     // Generate the full HTML for the accordion
     accordion.innerHTML = `
@@ -427,7 +427,7 @@ export const addLayerToSidebar = (userField, layer) => {
         <span class="form-check form-switch h6">  
           <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="fieldSwitch-${userField.leafletId}" checked>
         </span>
-        <button class="accordion-button nested btn collapsed user-field-btn" type="button" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="accordionButton-${userField.leafletId}" data-bs-toggle="collapse" data-bs-target="#accordionField-${userField.leafletId}" aria-expanded="false" aria-controls="accordionField-${userField.leafletId}"> 
+        <button class=" btn user-field-btn" type="button" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="accordionButton-${userField.leafletId}" > 
           ${userField.name}
         </button>
         <span class="column col-4 field-btns-col">
@@ -444,13 +444,7 @@ export const addLayerToSidebar = (userField, layer) => {
           </form>
         </span>  
       </div>
-      <div id="accordionField-${userField.leafletId}" class="accordion-collapse collapse">
-        <div class="accordion-body">
-          <ul class="list-group" id="projectList-${userField.leafletId}">
-            ${projectListHTML}
-          </ul>
-        </div>
-      </div>
+      
     `;
   
     // adding the UserField to the HTML-list element

@@ -35,14 +35,46 @@ export const baseMaps = {
 
   //Map with open street map,opentopo-map and arcgis satellite map
 const map = new L.Map("map", {
-    // layers: [osm],
-    // // center: new L.LatLng(52.338145830363914, 13.85877631507592),
-    // zoom: 8,
     zoomSnap: 0.25,
     wheelPxPerZoomLevel: 500,
     inertia: true,
     tapHold: true,
   }).addLayer(osm);
+
+
+export function openUserFieldNameModal(layer, featureGroup) {
+  // Set the modal content (e.g., name input)
+  const modal = document.querySelector('#userFieldNameModal');
+
+  const bootstrapModal = new bootstrap.Modal(modal);
+  bootstrapModal.show();
+
+  // Add event listeners for the save and dismiss actions
+  modal.querySelector('#btnUserFieldSave').onclick = () => handleSaveUserField(layer, bootstrapModal, featureGroup);
+  modal.querySelector('#btnUserFieldDismiss').onclick = () => dismissPolygon(layer, bootstrapModal, featureGroup);
+  modal.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModa, featureGroup);
+}
+
+export function initializeDrawControl(map, featureGroup) {
+  const drawControl = new L.Control.Draw({
+    position: "topright",
+    edit: {
+      featureGroup: featureGroup,
+    },
+    draw: {
+      circlemarker: false,
+      polyline: false,
+      polygon: {
+        shapeOptions: {
+          color: "#000000",
+        },
+        allowIntersection: false,
+        showArea: true,
+      },
+    },
+  });
+  map.addControl(drawControl);
+};
 
 export function initializeMapEventlisteners (map, featureGroup) {
     const chrosshair = document.getElementsByClassName("leaflet-control-home")[0];
@@ -67,8 +99,14 @@ export function initializeMapEventlisteners (map, featureGroup) {
         });
     });
 
-    
 
+    map.on("draw:created", function (event) {
+      let layer = event.layer;
+      // is added to the map only for display
+      featureGroup.addLayer(layer);
+    
+      openUserFieldNameModal(layer, featureGroup);
+    });
 };
 
   //add map scale

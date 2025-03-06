@@ -1,7 +1,12 @@
 import { MonicaProject,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica_model.js';
 import { getGeolocation, handleAlerts, getCSRFToken, saveProject } from '/static/shared/utils.js';
-import { projectRegion, baseMaps, map, initializeMapEventlisteners } from '/static/shared/map_utils.js';
+// import { projectRegion, baseMaps, map, initializeMapEventlisteners, initializeDrawControl } from '/static/shared/map_utils.js';
 import { 
+  projectRegion, 
+  baseMaps, 
+  map, 
+  initializeMapEventlisteners, 
+  initializeDrawControl,
   createBaseLayerSwitchGroup, 
   changeBasemap, 
   initializeSidebarEventHandler, 
@@ -11,6 +16,9 @@ import {
   getData, 
   highlightLayer, 
   selectUserField,
+  handleSaveUserField,
+  dismissPolygon,
+  
 } from '/static/shared/map_sidebar_utils.js';
 
 
@@ -59,13 +67,7 @@ var featureGroup = new L.FeatureGroup()
 map.addLayer(featureGroup);
 featureGroup.bringToFront();
 
-featureGroup.on("click", function (event) {
-  let leafletId = Object.keys(event.layer._eventParents)[0];
-  let userFieldId = getUserFieldIdByLeafletId(leafletId);
-  let project = MonicaProject.loadFromLocalStorage();
-  selectUserField(userFieldId, project, featureGroup);
-  // highlightPolygon(event.layer)
-});
+
 
 // zoom to user's layers via chrosshair
 // added back-to-home bullseyer button to zoom controls
@@ -73,10 +75,6 @@ $(".leaflet-control-zoom").append(
   '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>',
   '<a class="leaflet-control-geolocation" href="#" role="button" title="My location" area-label="User location"><i class="bi bi-geo"></i></a>'
 );
-
-
-
-
 
 
 const overlayLayers = {
@@ -90,24 +88,8 @@ const overlayLayers = {
 // ------------------- Sidebar eventlisteners -------------------
 
 // -------------------Sidebar new----------------
-const drawControl = new L.Control.Draw({
-  position: "topright",
-  edit: {
-    featureGroup: featureGroup,
-  },
-  draw: {
-    circlemarker: false,
-    polyline: false,
-    polygon: {
-      shapeOptions: {
-        color: "#000000",
-      },
-      allowIntersection: false,
-      showArea: true,
-    },
-  },
-});
-map.addControl(drawControl);
+initializeDrawControl(map, featureGroup);
+
 
 
 
@@ -152,51 +134,9 @@ createBaseLayerSwitchGroup(baseMaps, map);
 
 
 //---------------MAP END-------------------------------
-// var userFields = {};
-// localStorage.setItem('userFields', JSON.stringify(userFields));
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// function connected to the "Save" and "SaveAndCalc" button in the modal
-
-
-function openUserFieldNameModal(layer) {
-  // Set the modal content (e.g., name input)
-  const modal = document.querySelector('#userFieldNameModal');
-
-  const bootstrapModal = new bootstrap.Modal(modal);
-  bootstrapModal.show();
-
-  // Add event listeners for the save and dismiss actions
-  modal.querySelector('#btnUserFieldSave').onclick = () => handleSaveUserField(layer, bootstrapModal);
-  modal.querySelector('#btnUserFieldDismiss').onclick = () => dismissPolygon(layer, bootstrapModal);
-  modal.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModal);
-}
-
-map.on("draw:created", function (event) {
-  let layer = event.layer;
-  // is added to the map only for display
-  featureGroup.addLayer(layer);
-
-  openUserFieldNameModal(layer);
-});
 
 
 

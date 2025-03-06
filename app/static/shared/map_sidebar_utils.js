@@ -1,5 +1,6 @@
+import { getGeolocation } from '/static/shared/utils.js';
 import { MonicaProject,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica_model.js';
-
+import { getCSRFToken, handleAlerts } from '/static/shared/utils.js';
 export class UserField {
   constructor(name, id=null, userProjects=[]) {
     this.name = name;
@@ -8,6 +9,129 @@ export class UserField {
     this.userProjects = userProjects;
   }
 };
+
+
+const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+const osmAttrib =
+  '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+export const osm = L.tileLayer(osmUrl, { maxZoom: 18, attribution: osmAttrib });
+
+const satelliteUrl =
+  "http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+const satelliteAttrib =
+  "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community";
+const satellite = L.tileLayer(satelliteUrl, {
+  maxZoom: 18,
+  attribution: satelliteAttrib,
+});
+
+const topoUrl = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
+const topoAttrib =
+  'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
+const topo = L.tileLayer(topoUrl, { maxZoom: 18, attribution: topoAttrib });
+
+export const projectRegion = new L.geoJSON(project_region, {
+    attribution: 'Project Region',
+    onEachFeature: function (feature, layer) {
+      layer.bindTooltip(feature.properties.name);
+  }
+});
+
+// basemaps
+export const baseMaps = {
+    "Open Street Maps": osm,
+    Satellit: satellite,
+    Topomap: topo,
+  };
+
+  //Map with open street map,opentopo-map and arcgis satellite map
+export const map = new L.Map("map", {
+    zoomSnap: 0.25,
+    wheelPxPerZoomLevel: 500,
+    inertia: true,
+    tapHold: true,
+  }).addLayer(osm);
+
+
+export function openUserFieldNameModal(layer, featureGroup) {
+  // Set the modal content (e.g., name input)
+  const modal = document.querySelector('#userFieldNameModal');
+
+  const bootstrapModal = new bootstrap.Modal(modal);
+  bootstrapModal.show();
+
+  // Add event listeners for the save and dismiss actions
+  modal.querySelector('#btnUserFieldSave').onclick = () => handleSaveUserField(layer, bootstrapModal, featureGroup);
+  modal.querySelector('#btnUserFieldDismiss').onclick = () => dismissPolygon(layer, bootstrapModal, featureGroup);
+  modal.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModa, featureGroup);
+}
+
+export function initializeDrawControl(map, featureGroup) {
+  const drawControl = new L.Control.Draw({
+    position: "topright",
+    edit: {
+      featureGroup: featureGroup,
+    },
+    draw: {
+      circlemarker: false,
+      polyline: false,
+      polygon: {
+        shapeOptions: {
+          color: "#000000",
+        },
+        allowIntersection: false,
+        showArea: true,
+      },
+    },
+  });
+  map.addControl(drawControl);
+};
+
+export function initializeMapEventlisteners (map, featureGroup) {
+    const chrosshair = document.getElementsByClassName("leaflet-control-home")[0];
+    chrosshair.addEventListener("click", () => {
+    try {
+        var bounds = featureGroup.getBounds();
+        map.fitBounds(bounds);
+    } catch {
+        return;
+    }
+    });
+
+    const locationPin = document.getElementsByClassName("leaflet-control-geolocation")[0];
+    locationPin.addEventListener("click", () => {
+      getGeolocation()
+        .then((position) => {
+          map.setView([position.latitude, position.longitude], 12);
+        })
+        .catch((error) => {
+          console.error(error.message);
+          handleAlerts({ success: false, message: error.message });
+        });
+    });
+
+
+    map.on("draw:created", function (event) {
+      let layer = event.layer;
+      // is added to the map only for display
+      featureGroup.addLayer(layer);
+    
+      openUserFieldNameModal(layer, featureGroup);
+    });
+
+    featureGroup.on("click", function (event) {
+      let leafletId = Object.keys(event.layer._eventParents)[0];
+      let userFieldId = getUserFieldIdByLeafletId(leafletId);
+      let project = MonicaProject.loadFromLocalStorage();
+      selectUserField(userFieldId, project, featureGroup);
+      // highlightPolygon(event.layer)
+    });
+};
+
+  //add map scale
+const mapScale = new L.control.scale({
+    position: "bottomright",
+  }).addTo(map);
 
 // Baselayers
 export function changeBasemap(basemapSwitch, baseMaps, map) {
@@ -77,7 +201,7 @@ function handleOverlaySwitch(switchInput, overlayLayers, map) {
     if (opacitySlider) {
         opacitySlider.disabled = true;
     };
-    };
+  };
 };
 
 
@@ -103,6 +227,7 @@ export function highlightLayer(leafletId, featureGroup) {
   // remove highlight from all layers
   console.log('HighlightLayer, featureGroup' , featureGroup)
   featureGroup.eachLayer(function (layer) {
+    
     const key = Object.keys(layer._layers)[0];
     const value = layer._layers[key];
     value._path.classList.remove("highlight");
@@ -130,9 +255,13 @@ export function highlightLayer(leafletId, featureGroup) {
 };
 
 export function selectUserField(userFieldId, project, featureGroup) {
+  if (!project) {
+    project = MonicaProject.loadFromLocalStorage();
+  }
+
   console.log("selectUserField featureGroup", featureGroup);
   // const project = MonicaProject.loadFromLocalStorage();
-  if (project.userField && project.userField != userFieldId && project.id) {
+  if (project && project.userField && project.userField != userFieldId && project.id) {
     console.log('If action')
     let modal = document.getElementById('interactionModal');
     let modalInstance = new bootstrap.Modal(modal);
@@ -146,7 +275,7 @@ export function selectUserField(userFieldId, project, featureGroup) {
     );
     modalInstance.show(); 
   } else {
-    console.log('Else action')
+    console.log('Else if action')
     project.userField = userFieldId;
     project.saveToLocalStorage();
     highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
@@ -175,8 +304,7 @@ export function initializeSidebarEventHandler({ sidebar, map, baseMaps, overlayL
     sidebar.addEventListener("dblclick", (event) => {
         
         if (event.target.classList.contains("user-field-btn")) {
-          const listElement = event.target.closest(".accordion-item");
-          
+          const listElement = event.target.closest(".accordion-item");  
           map.fitBounds(listElement.layer.getBounds());
         }
     });
@@ -212,7 +340,7 @@ export function initializeSidebarEventHandler({ sidebar, map, baseMaps, overlayL
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken,
+                "X-CSRFToken": getCSRFToken(),
               }}).then(response => response.json())
               .then(data => {
                 handleAlerts(data.message);
@@ -291,7 +419,7 @@ function toggleUserField(switchInput,  map) {
 function saveUserField(name, geomJson) {
   return new Promise((resolve, reject) => {
     const requestData = {
-      csrfmiddlewaretoken: csrfToken,
+      csrfmiddlewaretoken: getCSRFToken(),
       geom: JSON.stringify(geomJson.geometry),
       name: name,
     };
@@ -300,7 +428,7 @@ function saveUserField(name, geomJson) {
       credentials: "same-origin",
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken,
+        'X-CSRFToken': getCSRFToken(),
       },
       body: JSON.stringify(requestData)
     })
@@ -316,8 +444,7 @@ function saveUserField(name, geomJson) {
   });
 };
 
-function updateFieldSelectorOption(userField, fieldSelector) {
-  
+function updateFieldSelectorOption(userField, fieldSelector) {  
   const option = document.createElement("option");
   option.value = userField.id;
   option.text = userField.name;
@@ -325,7 +452,7 @@ function updateFieldSelectorOption(userField, fieldSelector) {
 };
 
 // Modal Userfield Name Input
-function handleSaveUserField(layer, bootstrapModal) {
+export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
   const fieldNameInput = document.getElementById("fieldNameInput");
   const fieldName = fieldNameInput.value;
   let userFields = {};
@@ -334,8 +461,8 @@ function handleSaveUserField(layer, bootstrapModal) {
           } catch { ; }
 
   if (fieldName !== "") {
-    if (Object.values(userFields).some((proj) => proj.name === fieldName)) {
-      alert(`Please change the name since "${fieldName}" already exists.`);
+    if (Object.values(userFields).some((uf) => uf.name === fieldName)) {
+      handleAlerts({'success': false, 'message': `Please change the name since "${fieldName}" already exists.`});
     } else {
       var geomJson = layer.toGeoJSON();
 
@@ -346,7 +473,6 @@ function handleSaveUserField(layer, bootstrapModal) {
         var layerGeoJson = L.geoJSON(data.geom_json);
         const userField = new UserField(
           data.name,
-          // layerGeoJson,
           data.id,  
         );
         
@@ -359,13 +485,13 @@ function handleSaveUserField(layer, bootstrapModal) {
         localStorage.setItem('userFields', JSON.stringify(userFields));
 
         addLayerToSidebar(userField, layerGeoJson);
-        selectUserField(userField.id);
+        selectUserField(userField.id, null, featureGroup);
         const fieldSelector = document.getElementById("userFieldSelect");
         updateFieldSelectorOption(userField, fieldSelector);
       })
-      .catch((error) => {
-        console.log("Error: ", error);
-      });
+      // .catch((error) => {
+      //   console.log("Error: ", error);
+      // });
       // reset name input field
       fieldNameInput.value = '';
     }
@@ -376,12 +502,11 @@ function handleSaveUserField(layer, bootstrapModal) {
 };
 
 
-function dismissPolygon(layer, modalInstance) {
+export function dismissPolygon(layer, modalInstance, featureGroup) {
   modalInstance.hide();
   // temporary layer is removed from the map
   featureGroup.removeLayer(layer);
 };
-
 
 
 export const addLayerToSidebar = (userField, layer) => {
@@ -391,31 +516,6 @@ export const addLayerToSidebar = (userField, layer) => {
     accordion.setAttribute("id", `accordion-${userField.leafletId}`);
     accordion.setAttribute("leaflet-id", userField.leafletId);
     accordion.setAttribute("user-field-id", userField.id);
-   
-  
-    let projectListHTML = "";
-    // Check if there are related projects
-    // if (userField.userProjects && userField.userProjects.length > 0) {
-    //   projectListHTML = userField.userProjects
-    //     .map(
-    //       (project) => `
-    //         <li class="list-group-item">
-    //           <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="${project.id}" data-user-field-id="${userField.id}">
-    //             ${project.name}
-    //           </button>
-    //         </li>
-    //       `
-    //     )
-    //     .join("");
-    // } 
-      // Create project button
-      // projectListHTML += `
-      //   <li class="list-group-item">
-      //     <button type="button" class="btn btn-success btn-sm create-project" data-user-field-id="${userField.id}">
-      //       Create Project
-      //     </button>
-      //   </li>
-      // `;
   
     // Generate the full HTML for the accordion
     accordion.innerHTML = `
@@ -446,28 +546,13 @@ export const addLayerToSidebar = (userField, layer) => {
       </div>
       
     `;
-  
     // adding the UserField to the HTML-list element
     accordion.layer = layer;
   
     userFieldsAccordion.appendChild(accordion);
   };
 
-  export function openUserFieldNameModal(layer) {
-    // Set the modal content (e.g., name input)
-    const modal = document.querySelector('#userFieldNameModal');
   
-    const bootstrapModal = new bootstrap.Modal(modal);
-    bootstrapModal.show();
-  
-    // Add event listeners for the save and dismiss actions
-    modal.querySelector('#btnUserFieldSave').onclick = () => handleSaveUserField(layer, bootstrapModal);
-    modal.querySelector('#btnUserFieldDismiss').onclick = () => dismissPolygon(layer, bootstrapModal);
-    modal.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModal);
-  };
-
-
-
   // Load all user fields from DB
 export async function getData (loadDataUrl, featureGroup) {
   let userFields = {};

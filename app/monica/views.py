@@ -993,7 +993,7 @@ def create_default_project(user):
     end_date = (datetime.now().date() + relativedelta(months=7)).replace(day=1) - relativedelta(days=1)
 
     default_project = MonicaProject(
-        name='Default Project',
+        name= '',
         user=user,
         start_date=start_date,
         monica_model_setup=ModelSetup.objects.get(is_default=True),

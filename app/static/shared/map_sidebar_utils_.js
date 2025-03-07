@@ -44,30 +44,43 @@ export const baseMaps = {
     Topomap: topo,
   };
 
- export function enhanceMap (map) {
-  $(".leaflet-control-zoom").append(
-    '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>',
-    '<a class="leaflet-control-geolocation" href="#" role="button" title="My location" area-label="User location"><i class="bi bi-geo"></i></a>'
-  );
+//  export function enhanceMap (map, osm) {
+//   map.addLayer(osm);
+
+//   $(".leaflet-control-zoom").append(
+//     '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>',
+//     '<a class="leaflet-control-geolocation" href="#" role="button" title="My location" area-label="User location"><i class="bi bi-geo"></i></a>'
+//   );
+
+//   const mapScale = new L.control.scale({
+//     position: "bottomright",
+//   }).addTo(map);
+
+//   return map;
+//   };
+
+  //Map with open street map,opentopo-map and arcgis satellite map
+// export const map = enhanceMap(
+//   new L.Map("map", {
+//     zoomSnap: 0.25,
+//     wheelPxPerZoomLevel: 500,
+//     inertia: true,
+//     tapHold: true,
+//   })
+// );
+
+export const map = new L.Map("map", {
+      zoomSnap: 0.25,
+      wheelPxPerZoomLevel: 500,
+      inertia: true,
+      tapHold: true,
+    }).addLayer(osm);
 
   const mapScale = new L.control.scale({
     position: "bottomright",
   }).addTo(map);
-
-  return map;
-  };
-
-  //Map with open street map,opentopo-map and arcgis satellite map
-export const map = enhanceMap(
-  new L.Map("map", {
-    zoomSnap: 0.25,
-    wheelPxPerZoomLevel: 500,
-    inertia: true,
-    tapHold: true,
-  }).addLayer(osm)
-);
-
   
+// map = enhanceMap(map);
 
 
 export function openUserFieldNameModal(layer, featureGroup) {
@@ -694,7 +707,7 @@ export async function getData (loadDataUrl, featureGroup) {
         userField.leafletId  = featureGroup.getLayerId(layer);
         userFields[userField.leafletId ] = userField;
         // localStorage.setItem('userFields', JSON.stringify(userFields));
-        console.log("getData, userFields: ", userFields);
+        
         addLayerToSidebar(userField, layer);
     });
     localStorage.setItem('userFields', JSON.stringify(userFields))
@@ -703,6 +716,7 @@ export async function getData (loadDataUrl, featureGroup) {
     console.log(error);
   });
 };
+
 
 
 

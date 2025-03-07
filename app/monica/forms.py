@@ -186,7 +186,7 @@ class UserEnvironmentParametersForm(ParametersModelForm):
 class MonicaProjectSelectionForm(forms.Form):
     monica_project = forms.ChoiceField(
         choices=[],
-        label="Monica Project",
+        label="Monica Projekt",
         widget=forms.Select(attrs={'class': 'form-control monica-project'})
     )
 

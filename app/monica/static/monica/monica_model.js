@@ -41,6 +41,7 @@ export class MonicaProject {
     constructor(project = {}) {
         this.id = project.id ?? null;
         this.name = project.name ?? '';
+        this.updated = project.updated ?? null;
         this.todaysDate = project.todaysDate ?? new Date().toISOString().split('T')[0];
         this.startDate = project.startDate ?? '2024-01-01';
         this.endDate = project.endDate ?? '2024-08-31';
@@ -1003,7 +1004,7 @@ const validateProject = (project) => {
     } else if (window.location.pathname.endsWith('/monica/') && (project.longitude === null || project.latitude === null)) {
         valid = false;
         handleAlerts({'success': false, 'message': 'Please provide a valid location'});
-    } else if (project.name === null || project.name === '') {
+    } else if (project.name === null || project.name === '' || project.name === undefined || project.name === 'Default Project') {
         valid = false;
         handleAlerts({'success': false, 'message': 'Please provide a project name'});
     } else if (project.startDate === null || project.endDate === null) {
@@ -1045,8 +1046,9 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#todaysDatePicker').trigger('focusout'); // saving the todays date to the project
     document.getElementById('monica-project-save').addEventListener('click', function () {
         const project = MonicaProject.loadFromLocalStorage();
-      
-        saveProject(project);
+        if (validateProject(project)) {
+            saveProject(project);
+        } 
       });
 
     const calculateDaysInRotation = function() {

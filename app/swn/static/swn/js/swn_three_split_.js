@@ -31,22 +31,29 @@ document.addEventListener("DOMContentLoaded", () => {
   $('#coordinateFormCard').hide();
 
   // center map at geolocation
-  getGeolocation()
-    .then((position) => {
-      map.setView([position.latitude, position.longitude], 12);
-    })
-    .catch((error) => {
-        console.error(error.message);
-        handleAlerts({ success: false, message: error.message });
-    });
+  // getGeolocation()
+  //   .then((position) => {
+  //     map.setView([position.latitude, position.longitude], 12);
+  //   })
+  //   .catch((error) => {
+  //       handleAlerts({ success: false, message: error.message });
+  //   });
+  let csrfToken = getCSRFToken();
 
+
+  // in Create new project modal
+
+  $(".leaflet-control-zoom").append(
+        '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>',
+        '<a class="leaflet-control-geolocation" href="#" role="button" title="My location" area-label="User location"><i class="bi bi-geo"></i></a>'
+      );
+    
 
   // dropDownMenu in the project modal
   $('#userFieldSelect').on('change', function () { 
     console.log('userFieldSelect change event');
     var userFieldId = $(this).val();
     let project = MonicaProject.loadFromLocalStorage();
-    // TODO: featureGroup as getFeatureGroup
     selectUserField(userFieldId,  project, featureGroup);
     
   });
@@ -61,22 +68,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
   const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5 });
 
-const overlayLayers = {
-  "droughtOverlay": droughtOverlay,
-  "demOverlay": demOverlay,
-  "projectRegion": projectRegion,
-};
-
-
 
 // swn-drought specific overlays
 var featureGroup = new L.FeatureGroup()
 map.addLayer(featureGroup);
 featureGroup.bringToFront();
 
+const overlayLayers = {
+  "droughtOverlay": droughtOverlay,
+  "demOverlay": demOverlay,
+  "projectRegion": projectRegion,
+};
+
 initializeMapEventlisteners(map, featureGroup);
 initializeDrawControl(map, featureGroup);
- 
+createBaseLayerSwitchGroup(baseMaps, map);
 initializeSidebarEventHandler({
   sidebar: document.querySelector(".sidebar-content"),
   map,
@@ -89,15 +95,7 @@ initializeSidebarEventHandler({
 
 createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});
 
-// sidebar Base Layers
-createBaseLayerSwitchGroup(baseMaps, map);
 
-
-document.getElementById('monica-project-save').addEventListener('click', function () {
-  const project = MonicaProject.loadFromLocalStorage();
-
-  saveProject(project);
-});
 
 
 getData(loadDataUrl, featureGroup);

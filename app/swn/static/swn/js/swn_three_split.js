@@ -31,15 +31,23 @@ document.addEventListener("DOMContentLoaded", () => {
   $('#coordinateFormCard').hide();
 
   // center map at geolocation
-  getGeolocation()
-    .then((position) => {
-      map.setView([position.latitude, position.longitude], 12);
-    })
-    .catch((error) => {
-        console.error(error.message);
-        handleAlerts({ success: false, message: error.message });
-    });
+  // getGeolocation()
+  //   .then((position) => {
+  //     map.setView([position.latitude, position.longitude], 12);
+  //   })
+  //   .catch((error) => {
+  //       handleAlerts({ success: false, message: error.message });
+  //   });
+  let csrfToken = getCSRFToken();
 
+
+  // in Create new project modal
+
+  $(".leaflet-control-zoom").append(
+        '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>',
+        '<a class="leaflet-control-geolocation" href="#" role="button" title="My location" area-label="User location"><i class="bi bi-geo"></i></a>'
+      );
+    
 
   // dropDownMenu in the project modal
   $('#userFieldSelect').on('change', function () { 
@@ -74,7 +82,7 @@ const overlayLayers = {
 
 initializeMapEventlisteners(map, featureGroup);
 initializeDrawControl(map, featureGroup);
- 
+createBaseLayerSwitchGroup(baseMaps, map);
 initializeSidebarEventHandler({
   sidebar: document.querySelector(".sidebar-content"),
   map,
@@ -88,111 +96,6 @@ initializeSidebarEventHandler({
 createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});
 
 
-// $(function () {
-//   $('[data-toggle="tooltip"]').tooltip();
-// });
-
-
-// sidebar Base Layers
-createBaseLayerSwitchGroup(baseMaps, map);
-
-
-// export function createNUTSSelectors() {
-// // Create a LayerGroup to hold the displayed polygons
-// // const stateCountyDistrictLayer = L.layerGroup().addTo(map);
-// const stateCountyDistrictLayer = new L.FeatureGroup().addTo(map);
-// stateCountyDistrictLayer.on("click", function (event) {
-//   console.log("stateCountyDistrictLayer click event: ", event);
-
-//   // Get the clicked layer
-//   let clickedLayer = event.layer;
-  
-//   // Confirm action with the user
-//   if (confirm("Save this region as a user field?")) {
-//     openUserFieldNameModal(clickedLayer, featureGroup) 
-//   }
-// });
-
-
-// stateCountyDistrictLayer.on("click", function (event) {
-//   console.log("stateCountyDistrictLayer click event: ", event);
-// });
-
-// // Handle dropdown menu change event
-// // Multiple Select from https://www.cssscript.com/select-box-virtual-scroll/
-// VirtualSelect.init({ 
-//   ele: '#stateSelect',
-//   placeholder: 'Bundesland',
-//   required: false,
-//   disableSelectAll: true,
-// });
-// VirtualSelect.init({ 
-//   ele: '#districtSelect',
-//   placeholder: 'Regierungsbezirk',
-//   required: false,
-//   disableSelectAll: true,
-// });
-// VirtualSelect.init({ 
-//   ele: '#countySelect',
-//   placeholder: 'Landkreis',
-//   required: false,
-//   disableSelectAll: true,
-// });
-
-// var administrativeAreaDiv = document.querySelectorAll('div.administrative-area');
-// var selectedAdminAreas = {
-//   states: [],
-//   counties: [],
-//   districts: [],
-// };
-
-
-// administrativeAreaDiv.forEach(function (areaDropdown) {
-//   areaDropdown.addEventListener('change', function (event) {
-//     stateCountyDistrictLayer.clearLayers();
-//     var name = areaDropdown.getAttribute("name");
-//     var selectedOptions = areaDropdown.value;
-//     selectedAdminAreas[name] = selectedOptions;
-
-//     for (let key in selectedAdminAreas) {
-//       if (selectedAdminAreas[key].length > 0) {
-//         selectedAdminAreas[key].forEach(function (polygon) {
-//           var url = loadNutsUrl + key + '/' + polygon + '/';
-//         console.log("URL", url)
-//         var color = '';
-//         if (key == 'states') {
-//             color = 'purple';
-//         } else if (key == 'counties') {
-//             color = 'blue';
-//         } else if (key == 'districts') {
-//             color = 'green';
-//         }
-//         var geojsonLayer = new L.GeoJSON.AJAX(url, {
-//             style: {
-//                 color: color 
-//             },
-//             onEachFeature: function (feature, layer) {
-//                 layer.bindTooltip(`${feature.properties.nuts_name}`);
-//                 layer.setStyle({
-//                   fill: false, 
-//                 });
-//             }
-//         });
-//         console.log("geojsonLayer", geojsonLayer)
-//         geojsonLayer.addTo(stateCountyDistrictLayer);
-//         });
-//       }
-//     }
-//   }); 
-// });
-
-// };
-
-document.getElementById('monica-project-save').addEventListener('click', function () {
-  const project = MonicaProject.loadFromLocalStorage();
-
-  saveProject(saveProjectUrl, project);
-});
 
 
 getData(loadDataUrl, featureGroup);

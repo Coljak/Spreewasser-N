@@ -67,11 +67,11 @@ export const getCSRFToken = () => {
   
 
 
-  export function saveProject(saveProjectUrl, project) {
+  export function saveProject(project) {
   
     project.updated = Date.now();
 
-    fetch(saveProjectUrl, {
+    fetch('save-project/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

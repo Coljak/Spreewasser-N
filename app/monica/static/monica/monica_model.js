@@ -1,4 +1,4 @@
-import { handleAlerts } from '/static/shared/utils.js';
+import { handleAlerts, getCSRFToken, saveProject } from '/static/shared/utils.js';
 
 const getCsrfToken = () => {
     return document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1];
@@ -150,13 +150,6 @@ class Workstep {
 }   
 
 
-
-// Date Picker
-// var startDate = '01.01.2007';
-// var setStartDate = '01.02.2024';
-// var setEndDate = '01.08.2024';
-// var endDate = '26.11.2024';
-
 const setLanguage = (language_code)=>{
     console.log('setLanguage', language_code);
     $('.datepicker').datepicker({
@@ -191,26 +184,9 @@ const observeDropdown = (selector, callback) => {
     observer.observe(dropdown, { childList: true });
 };
 
-// export function loadProjectFromDB(project_id) {
-//     console.log('loadProjectFromDB id', project_id);
-//     fetch('load-project/' + project_id + '/')
-//     .then(response => response.json())
-//     .then(data => {
-//         // console.log('loadProjectFromDB', data);
-//         if (data.message.success) {
-//             handleAlerts(data.message)
-//             const project = new MonicaProject(data.project);
-//             console.log('loadProjectFromDB project', project)
-//             // loadProjectToGui(project)
-//             project.saveToLocalStorage();
-//             return project;
-//         };
-//         handleAlerts(data.message)
-//     })
-//     .catch(error => console.error('Error:', error));
-// };
 
-export function loadProjectFromDB(project_id) {
+
+export async function loadProjectFromDB(project_id) {
     console.log('loadProjectFromDB id', project_id);
     return fetch('load-project/' + project_id + '/')
         .then(response => response.json())
@@ -1067,7 +1043,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // $('#monicaEndDatePicker').datepicker('update', setEndDate);
     $('#todaysDatePicker').datepicker('update', new Date());
     $('#todaysDatePicker').trigger('focusout'); // saving the todays date to the project
-
+    document.getElementById('monica-project-save').addEventListener('click', function () {
+        const project = MonicaProject.loadFromLocalStorage();
+      
+        saveProject(project);
+      });
 
     const calculateDaysInRotation = function() {
         var startDate = project.startDate;
@@ -1405,6 +1385,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             $('#deleteProjectModal').modal('hide');
     });
+    
     const projectModalForm = document.getElementById('projectModalForm');
     // project modal save project
     $('#saveProjectButton').on('click', () => {
@@ -1446,7 +1427,7 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify(project),
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
+                'X-CSRFToken': getCSRFToken(),
             }
         })
         .then(response => response.json())

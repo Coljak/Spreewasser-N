@@ -44,13 +44,30 @@ export const baseMaps = {
     Topomap: topo,
   };
 
+ export function enhanceMap (map) {
+  $(".leaflet-control-zoom").append(
+    '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>',
+    '<a class="leaflet-control-geolocation" href="#" role="button" title="My location" area-label="User location"><i class="bi bi-geo"></i></a>'
+  );
+
+  const mapScale = new L.control.scale({
+    position: "bottomright",
+  }).addTo(map);
+
+  return map;
+  };
+
   //Map with open street map,opentopo-map and arcgis satellite map
-export const map = new L.Map("map", {
+export const map = enhanceMap(
+  new L.Map("map", {
     zoomSnap: 0.25,
     wheelPxPerZoomLevel: 500,
     inertia: true,
     tapHold: true,
-  }).addLayer(osm);
+  }).addLayer(osm)
+);
+
+  
 
 
 export function openUserFieldNameModal(layer, featureGroup) {
@@ -64,7 +81,7 @@ export function openUserFieldNameModal(layer, featureGroup) {
   modal.querySelector('#btnUserFieldSave').onclick = () => handleSaveUserField(layer, bootstrapModal, featureGroup);
   modal.querySelector('#btnUserFieldDismiss').onclick = () => dismissPolygon(layer, bootstrapModal, featureGroup);
   modal.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModa, featureGroup);
-}
+};
 
 export function initializeDrawControl(map, featureGroup) {
   const drawControl = new L.Control.Draw({
@@ -129,9 +146,7 @@ export function initializeMapEventlisteners (map, featureGroup) {
 };
 
   //add map scale
-const mapScale = new L.control.scale({
-    position: "bottomright",
-  }).addTo(map);
+
 
 // Baselayers
 export function changeBasemap(basemapSwitch, baseMaps, map) {
@@ -203,6 +218,98 @@ function handleOverlaySwitch(switchInput, overlayLayers, map) {
     };
   };
 };
+
+export function createNUTSSelectors({getFeatureGroup}) {
+  // Create a LayerGroup to hold the displayed polygons
+  // const stateCountyDistrictLayer = L.layerGroup().addTo(map);
+  const stateCountyDistrictLayer = new L.FeatureGroup().addTo(map);
+  stateCountyDistrictLayer.on("click", function (event) {
+    console.log("stateCountyDistrictLayer click event: ", event);
+  
+    // Get the clicked layer
+    let clickedLayer = event.layer;
+    
+    // Confirm action with the user
+    if (confirm("Save this region as a user field?")) {
+      openUserFieldNameModal(clickedLayer, getFeatureGroup()) 
+    }
+  });
+  
+  
+  stateCountyDistrictLayer.on("click", function (event) {
+    console.log("stateCountyDistrictLayer click event: ", event);
+  });
+  
+  // Handle dropdown menu change event
+  // Multiple Select from https://www.cssscript.com/select-box-virtual-scroll/
+  VirtualSelect.init({ 
+    ele: '#stateSelect',
+    placeholder: 'Bundesland',
+    required: false,
+    disableSelectAll: true,
+  });
+  VirtualSelect.init({ 
+    ele: '#districtSelect',
+    placeholder: 'Regierungsbezirk',
+    required: false,
+    disableSelectAll: true,
+  });
+  VirtualSelect.init({ 
+    ele: '#countySelect',
+    placeholder: 'Landkreis',
+    required: false,
+    disableSelectAll: true,
+  });
+  
+  var administrativeAreaDiv = document.querySelectorAll('div.administrative-area');
+  var selectedAdminAreas = {
+    states: [],
+    counties: [],
+    districts: [],
+  };
+  
+  
+  administrativeAreaDiv.forEach(function (areaDropdown) {
+    areaDropdown.addEventListener('change', function (event) {
+      stateCountyDistrictLayer.clearLayers();
+      var name = areaDropdown.getAttribute("name");
+      var selectedOptions = areaDropdown.value;
+      selectedAdminAreas[name] = selectedOptions;
+  
+      for (let key in selectedAdminAreas) {
+        if (selectedAdminAreas[key].length > 0) {
+          selectedAdminAreas[key].forEach(function (polygon) {
+            var url = loadNutsUrl + key + '/' + polygon + '/';
+          console.log("URL", url)
+          var color = '';
+          if (key == 'states') {
+              color = 'purple';
+          } else if (key == 'counties') {
+              color = 'blue';
+          } else if (key == 'districts') {
+              color = 'green';
+          }
+          var geojsonLayer = new L.GeoJSON.AJAX(url, {
+              style: {
+                  color: color 
+              },
+              onEachFeature: function (feature, layer) {
+                  layer.bindTooltip(`${feature.properties.nuts_name}`);
+                  layer.setStyle({
+                    fill: false, 
+                  });
+              }
+          });
+          console.log("geojsonLayer", geojsonLayer)
+          geojsonLayer.addTo(stateCountyDistrictLayer);
+          });
+        }
+      }
+    }); 
+  });
+  
+  };
+  
 
 
 export function getUserFields() {
@@ -453,6 +560,8 @@ function updateFieldSelectorOption(userField, fieldSelector) {
 
 // Modal Userfield Name Input
 export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
+
+  
   const fieldNameInput = document.getElementById("fieldNameInput");
   const fieldName = fieldNameInput.value;
   let userFields = {};

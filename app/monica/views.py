@@ -774,7 +774,7 @@ def save_monica_site(request):
 
         
 
-def save_monica_project(request):
+def save_project(request):
     """
     This function refers to save_monica_project.save_project and where it project to the database.
     The save_project function also handles SwnProjects for DRY reasons.
@@ -784,7 +784,7 @@ def save_monica_project(request):
         user = request.user
         
         project_data = json.loads(request.body)
-        project = save_monica_project.save_project(project_data, user, project_class=models.MonicaProject)
+        project = save_monica_project.save_project(project_data, user, project_class=m_models.MonicaProject)
     
 
         return JsonResponse({'message': {'success': True, 'message': f'Project {project.name} saved'}, 'project_id': project.id, 'project_name': project.name})

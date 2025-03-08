@@ -44,30 +44,6 @@ export const baseMaps = {
     Topomap: topo,
   };
 
-//  export function enhanceMap (map, osm) {
-//   map.addLayer(osm);
-
-//   $(".leaflet-control-zoom").append(
-//     '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>',
-//     '<a class="leaflet-control-geolocation" href="#" role="button" title="My location" area-label="User location"><i class="bi bi-geo"></i></a>'
-//   );
-
-//   const mapScale = new L.control.scale({
-//     position: "bottomright",
-//   }).addTo(map);
-
-//   return map;
-//   };
-
-  //Map with open street map,opentopo-map and arcgis satellite map
-// export const map = enhanceMap(
-//   new L.Map("map", {
-//     zoomSnap: 0.25,
-//     wheelPxPerZoomLevel: 500,
-//     inertia: true,
-//     tapHold: true,
-//   })
-// );
 
 export const map = new L.Map("map", {
       zoomSnap: 0.25,
@@ -80,8 +56,6 @@ export const map = new L.Map("map", {
     position: "bottomright",
   }).addTo(map);
   
-// map = enhanceMap(map);
-
 
 export function openUserFieldNameModal(layer, featureGroup) {
   // Set the modal content (e.g., name input)

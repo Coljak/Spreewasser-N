@@ -18,7 +18,7 @@
 
 
 <div class="container py-5">  
-    <h1>Monica</h1>
+    <h1>Monica  <input type="text" id="projectName" placeholder="Kein Projekt geladen"/></h1>
     
   <ul class="nav nav-tabs">
     <li class="nav-item">
@@ -46,7 +46,7 @@
   <!-- Tab panes -->
   <!-- Project-->
   {% load component_tags %}
-
+  
   {% render_tab_project project_form user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
   
   <div id="tabGeneralParameters" class="tab-content card mb-3 active">

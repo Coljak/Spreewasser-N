@@ -92,7 +92,8 @@ swn_events = [
             [
             "Precip",
             "SUM"
-            ]
+            ],
+            
         ]
     ]
 

@@ -2101,3 +2101,25 @@ class MonicaCalculation(models.Model):
             "forecastStartDate": self.forecast_start_date,
             "result": self.result
         }
+    
+class OutputSettings(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    description = models.TextField(null=True, blank=True)
+    color_palette = models.JSONField(null=True, blank=True)
+    # output_aggregation = models.ForeignKey(OutputAggregation, on_delete=models.CASCADE, null=True, blank=True)
+    # output_event = models.ForeignKey(OutputEvent, on_delete=models.CASCADE, null=True, blank=True)
+    monica_project = models.ForeignKey(MonicaProject, on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def to_json(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "output": self.output,
+            "outputAggregation": self.output_aggregation,
+            "outputEvent": self.output_event
+        }
+    
+

@@ -49,7 +49,7 @@ export class MonicaProject {
         this.longitude = project.longitude ?? 10.0;
         this.latitude = project.latitude ?? 52.0;
         this.userField = project.userField ?? null;
-        this.swnForecast = project.swnForecast ?? false;
+        // this.swnForecast = project.swnForecast ?? false;
 
         if (Array.isArray(project.rotation) && project.rotation.length > 0) {
             console.log('MonicaProject constructor project.rotation', project.rotation);
@@ -159,6 +159,14 @@ const setLanguage = (language_code)=>{
     })
 };
 
+
+
+function createOutputCharts() {
+    const colorPalette = localStorage.getItem('colorPalette');
+    const chartSettings = localStorage.getItem('chartSettings');
+    const monicaResults = localStorage.getItem('monicaResults');
+}
+
 // function to check when the update of a dropdown menu is finished
 const observeDropdown = (selector, callback) => {
     // console.log('observeDropdown', selector);
@@ -243,7 +251,6 @@ const runSimulation = (monicaProject) => {
                 'rgba(0, 255, 100, 0.7)']
 
             var resultOutput = {
-               
                 'Yield': false,
                 'Irrig': true,
                 'organ': false,
@@ -255,25 +262,25 @@ const runSimulation = (monicaProject) => {
                 'SOC_2': false,
                 'SOC_3': false,
                 'LAI': false,
-
             }
 
-
-            var dates = data.message.message[0].daily.Date;
-            var datasets = [
+            let listOfResults = data.message.message
+            localStorage.setItem('monicaResults', JSON.stringify(listOfResults));
+            let dates = listOfResults[0].daily.Date;
+            let datasets = [
             {
                 type: 'bar',  // Specifies the type as bar for precipitation
                 yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
                 label: 'Precipitation',
-                data: data.message.message[0].daily.Precip,
+                data: listOfResults[0].daily.Precip,
                 backgroundColor: 'rgba(0, 0, 255, 0.5)',  // Semi-transparent blue
                 borderColor: 'rgba(0, 0, 255, 0.7)',
                 borderWidth: 1,
             },
         ];
-            for (let i = 0; i < data.message.message.length; i++) {
+            for (let i = 0; i < listOfResults.length; i++) {
                 console.log(i);
-                var msg = data.message.message[i].daily
+                var msg = listOfResults[i].daily
                 
                 if (resultOutput.Yield) {
                     datasets.push({

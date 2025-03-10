@@ -361,7 +361,7 @@ def create_monica_env_from_json(json_data):
         # soil_profile_parameters = []
         if soil_profile_type == 'buekSoilProfile':
             soil_profile_parameters, message = buek_models.SoilProfile.objects.get(id=soil_profile_id).get_monica_horizons_json()
-        
+
 
 
     # TODO site parameters
@@ -1024,12 +1024,6 @@ def monica_model(request):
 
     coordinate_form = CoordinateForm()
    
-
-
-    # sim_settings_queryset = m_models.UserSimulationSettings.objects.filter(user__in=[user, None])
-    # user_simulation_settings = m_models.UserSimulationSettings.objects.get(is_default=True)
-    # user_simulation_settings_form = UserSimulationSettingsForm(instance=user_simulation_settings)
-
     user_simulation_settings_select_form = UserSimulationSettingsInstanceSelectionForm(user=user)
 
     user_crop_parameters_select_form = UserCropParametersSelectionForm(user=user)
@@ -1063,14 +1057,6 @@ def monica_model(request):
     }
     context.update(data)
     return render(request, 'monica/monica_model.html', context)
-
-# def get_soil_profile(landusage, lat, lon):
-#     """
-#     Get the soil profile for the given location.
-#     """
-#     # Get the soil profile from the BUEK database
-#     return context
-
 
 def get_soil_parameters(request, profile_landusage, lat, lon):
     """
@@ -1214,31 +1200,6 @@ def manual_soil_selection(request, lat, lon):
     return JsonResponse(data_menu)
 
 
-    
-
-
-def create_irrigation_envs2(envs, data):
-    """
-    This function creates a new environment for each irrigation event.
-    """
-    today = datetime.strptime(data.get('todaysDate').split('T')[0], '%Y-%m-%d')
-
-
-    simulation_settings = [
-        # UserSimulationSettings.objects.get(id=30).to_json(),
-        UserSimulationSettings.objects.get(id=31).to_json(),
-        UserSimulationSettings.objects.get(id=32).to_json()
-    ]
-    for sim in simulation_settings:
-        sim["AutoIrrigationParams"]["startDate"] = today.strftime('%Y-%m-%d')
-        env2 = copy.deepcopy(envs[0])
-        env2["params"]["simulationParameters"] = sim
-        envs.append(env2)
-
-    return envs
-
-
-
 def run_monica_simulation(envs):
     print("running simulation")
     json_msgs = []
@@ -1298,9 +1259,6 @@ def run_simulation(request):
         # # split function here --> if swn, then create irrigation
         envs = [env]
         
-        if data.get('swnForecast', False):
-            envs = create_irrigation_envs2(envs, data)
-
         json_msgs = run_monica_simulation(envs)
         print('run_simulation \n', json_msgs)
         return JsonResponse({'message': {'success': True, 'message': json_msgs}})

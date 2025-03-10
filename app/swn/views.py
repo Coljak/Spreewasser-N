@@ -321,8 +321,6 @@ def three_split(request):
 
 def get_user_fields(request):
     if request.method == "GET":
-
-        # user_projects = models.UserProject.objects.filter(user_field__user=request.user)
         user_fields = models.UserField.objects.filter(user=request.user)
         user_projects = models.SwnProject.objects.filter(user=request.user)
         ufs = []
@@ -471,11 +469,17 @@ def recommended_soil_profile(request, profile_landusage, user_field_id):
 
 
 def load_swn_project(request, id):
-    try:
-        project = models.SwnProject.objects.get(pk=id)
-        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project.to_json()})
-    except:
-            return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
+    # try:
+    project = models.SwnProject.objects.get(pk=id)
+    return JsonResponse({
+        'message':{
+            'success': True, 
+            'message': f'Project {project.name} loaded'
+            }, 
+        'project': project.to_json()
+        })
+    # except:
+    #         return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
     
 
 def save_swn_project(request, project_id=None):

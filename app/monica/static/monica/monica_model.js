@@ -1390,40 +1390,106 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const projectModalForm = document.getElementById('projectModalForm');
     // project modal save project
+    // $('#saveProjectButton').on('click', () => {
+    //     console.log('saveProjectButton clicked');
+    //     // TODO test if this is obsolete ----
+    //     // in case it is a SWN project, longitude and latidude are provided from user field centroid
+    //     const project = new MonicaProject();
+    //     try {
+    //         const longitude = $('#id_longitude').val();
+    //         const latitude = $('#id_latitude').val();
+            
+    //         project.longitude = longitude;
+    //         project.latitude = latitude;
+    //     }
+    //     catch {
+    //         ;
+    //     }
+
+    //     try {
+    //         const userField = $('#userFieldSelect').val();
+    //         project.userField = userField;
+    //     }
+    //     catch {
+    //         ;
+    //     }
+
+    //     project.name = $('#id_project_name').val();
+    //     project.description = $('#id_project_description').val();
+    //     project.startDate = $('#id_project_start_date').datepicker('getUTCDate');
+    //     project.modelSetupId = $('#id_project_model_setup').val();
+
+    //     project.saveToLocalStorage();
+    //     // TODO: obsolete ??? --------
+
+    //     // this works for monica and swn
+
+    //     fetch('save-project/', {
+    //         method: 'POST',
+    //         body: JSON.stringify(project),
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //             'X-CSRFToken': getCSRFToken(),
+    //         }
+    //     })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         console.log('data', data);
+    //         if (data.message.success) {
+    //             project.id = data.project_id;
+    //             $('#project-info').find('.card-title').text('Project '+ data.project_name);
+    //             updateDropdown('monica-project','', data.project_id)
+    //             handleAlerts(data.message);
+                
+    //             projectModalForm.reset();
+                
+    //             $('#monicaProjectModal').modal('hide');
+    //             project.saveToLocalStorage();
+    //         } else {
+    //             handleAlerts(data.message);
+    //         }
+            
+    //     })
+    // });
+
     $('#saveProjectButton').on('click', () => {
         console.log('saveProjectButton clicked');
-        // TODO test if this is obsolete ----
-        // in case it is a SWN project, longitude and latidude are provided from user field centroid
+        
+        // Get the project name field
+        const projectNameInput = $('#id_project_name');
+        const projectName = projectNameInput.val().trim();
+    
+        // Check if the project name is empty
+        if (!projectName) {
+            projectNameInput.addClass('is-invalid'); // Bootstrap class for red highlight
+            projectNameInput.focus();
+            return; // Stop execution if validation fails
+        } else {
+            projectNameInput.removeClass('is-invalid'); // Remove error class if fixed
+        }
+    
         const project = new MonicaProject();
+        
         try {
-            const longitude = $('#id_longitude').val();
-            const latitude = $('#id_latitude').val();
-            
-            project.longitude = longitude;
-            project.latitude = latitude;
+            project.longitude = $('#id_longitude').val();
+            project.latitude = $('#id_latitude').val();
+        } catch (e) {
+            console.log('Longitude/Latitude not found');
         }
-        catch {
-            ;
-        }
-
+    
         try {
-            const userField = $('#userFieldSelect').val();
-            project.userField = userField;
+            project.userField = $('#userFieldSelect').val();
+        } catch (e) {
+            console.log('UserField not found');
         }
-        catch {
-            ;
-        }
-
-        project.name = $('#id_project_name').val();
+    
+        project.name = projectName;
         project.description = $('#id_project_description').val();
         project.startDate = $('#id_project_start_date').datepicker('getUTCDate');
-        project.modelSetup = $('#id_project_model_setup').val();
-
+        project.modelSetupId = $('#id_project_model_setup').val();
+    
         project.saveToLocalStorage();
-        // TODO: obsolete ??? --------
-
-        // this works for monica and swn
-
+    
         fetch('save-project/', {
             method: 'POST',
             body: JSON.stringify(project),
@@ -1438,7 +1504,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.message.success) {
                 project.id = data.project_id;
                 $('#project-info').find('.card-title').text('Project '+ data.project_name);
-                updateDropdown('monica-project','', data.project_id)
+                updateDropdown('monica-project', '', data.project_id);
                 handleAlerts(data.message);
                 
                 projectModalForm.reset();
@@ -1448,9 +1514,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 handleAlerts(data.message);
             }
-            
-        })
+        });
     });
+    
 
     $('#projectName').on('change', function () {
         if (!window.isLoading) {

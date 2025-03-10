@@ -50,6 +50,12 @@ class MonicaSiteAdmin(BaseUserAdmin):
 class SiteParametersAdmin(BaseUserAdmin):
     list_display = ('id', 'name', 'user', 'latitude', 'longitude')
     list_filter = ('user')
+
+class ModelSetupAdmin(BaseUserAdmin):
+    list_display = ('id', 'name', 'user')
+    # list_filter = ('user')
+
+
  
 
 
@@ -88,6 +94,7 @@ admin.site.register(models.WorkstepHarvest, admin.ModelAdmin)
 
 admin.site.register(models.MonicaSite, MonicaSiteAdmin)
 admin.site.register(models.MonicaProject, MonicaProjectAdmin)
+admin.site.register(models.ModelSetup, ModelSetupAdmin)
 admin.site.register(models.Rotation, admin.ModelAdmin)
 admin.site.register(models.CropRotation, admin.ModelAdmin)
 

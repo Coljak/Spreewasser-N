@@ -358,10 +358,10 @@ def create_monica_env_from_json(json_data):
         soil_profile_id = json_data.get('soilProfileId')
         soil_profile_type = json_data.get('soilProfileType')
         # TODO SoilProfile content Type--> UserSoilProfile
-        soil_profile_parameters = []
+        # soil_profile_parameters = []
         if soil_profile_type == 'buekSoilProfile':
             soil_profile_parameters, message = buek_models.SoilProfile.objects.get(id=soil_profile_id).get_monica_horizons_json()
-
+        
 
 
     # TODO site parameters

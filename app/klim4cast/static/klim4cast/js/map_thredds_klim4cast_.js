@@ -92,109 +92,7 @@ const palette_and_min_max = {
     },
 };
 
-
 var ncmlMetadata;
-
-
-
-// Format the yyyy-mm-dd date to dd/mm/yyyy as required for the bootstrap-datepicker
-const dateFormatter = function(date) {
-    var components = date.split('-');
-    var formattedDate = components[2] + '/' + components[1] + '/' + components[0];
-    console.log('Formatted Date: ', date, formattedDate)
-    return formattedDate;
-};
-
-// initialize the datepickers with the start and end date of the dataset - datepicker runs with jQuery
-const formatDatePicker = function(startDate, endDate) {
-    $('.input-daterange').datepicker({
-        language: 'de-DE',
-        format: "dd.mm.yyyy",
-        startDate: startDate,
-        endDate: endDate,
-        weekStart: 1,
-        immediateUpdates: true,
-        startView: 1,
-        maxViewMode: 3,
-        clearBtn: true, 
-        autoclose: true,
-    });
-    $('#startDatePicker').datepicker('update', startDate);
-    $('#endDatePicker').datepicker('update', endDate);
-    $('#datepicker').show()
-};
-
-
-// Get selected parameters and load the netCDF file
-loadNetCDFButton.addEventListener('click', function() {
-    try {
-        map.timeDimension.remove();}
-    catch (error) {console.log('Deleting old time dimension items failed')  }
-        
-    $('.info').remove();
-    var netCdf = datasetSelector.value;
-    var startDate = $('#startDatePicker').datepicker('getDate');
-    var endDate = $('#endDatePicker').datepicker('getDate');
-    var variable = netcdfVariableSelector.value;
-    console.log('startDate', startDate);
-    console.log('endDate', endDate);
-    let style = palette_and_min_max[variable].style;
-    params = {
-        'netCdf': netCdf,
-        'variable': variable,
-        'startDate': startDate,
-        'endDate': endDate,
-        'style': style,
-        'colorerscaleRange': palette_and_min_max[variable].valueRange,
-        'attribution': ncmlMetadata.global_attributes.title,
-    };
-    console.log('params', params);
-    initializeWms(params);
-    map.timeDimension.setCurrentTimeIndex(0);
-})
-
-document.addEventListener('DOMContentLoaded', function() {
-
-    // Get the metadata of the chosen dataset and update the variable selector
-    // datasetSelector.addEventListener('change', (event) => {
-        $('.input-daterange').datepicker('destroy');
-        netcdfVariableSelector.innerHTML = '';
-        
-        // const dataset = event.target.value;
-        const dataset = datasetSelector.value;
-        console.log('dataset', dataset);
-        fetch(`/klim4cast/get_ncml_metadata/${dataset}`)
-            .then(response => response.text())
-            .then(data => {
-                console.log('data', data);
-                var data_json = JSON.parse(data);
-                console.log('data_json', data_json);
-
-                // formatting the start and end date of the dataset for the datepicker
-                var formattedStartDate = dateFormatter(data_json.global_attributes.time_coverage_start_ymd);
-                var formattedEndDate = dateFormatter(data_json.global_attributes.time_coverage_end_ymd);
-                formatDatePicker(formattedStartDate, formattedEndDate)
-
-                Object.keys(data_json.variables).forEach(variable => {
-                    console.log(variable);
-                    var option = document.createElement("option");
-                                    option.text = data_json.variables[variable].attributes.description;
-                                    option.value = variable;
-                                    netcdfVariableSelector.add(option);
-                });
-                var selectedVariable = netcdfVariableSelector.value;
-
-                attribution = data_json.variables[selectedVariable].attributes.long_name;
-                ncmlMetadata = data_json;
-
-
-                return data;
-            })
-
-    // }); 
-}
-);
-
 
 
 // Function to create the base map with OpenStreetMap layer
@@ -233,6 +131,7 @@ function createBaseMap() {
 
     return map;
 };
+
 function showCoordinates (e) {
     alert(e.latlng);
 };
@@ -263,42 +162,23 @@ function createWMSLayer(wmsUrl, layerName,  style) {
 
 
 // Function to create legend control. the div gets the image directly from the WMS server
-function createLegendControl(legendUrl) {
+function createLegendControl(legendUrl, map) {
     const legendControl = L.control({
         position: 'topright',
     });
 
-    legendControl.onAdd = function(map) {
-        const src = legendUrl;
+    legendControl.onAdd = function() {
+        
         const div = L.DomUtil.create('div', 'info legend leaflet-bar');
-        div.innerHTML += '<img src="' + src + '" alt="legend" height="200rem">';
+        div.innerHTML += '<img src="' + legendUrl + '" alt="legend" height="200rem">';
         return div;
     };
 
-    return legendControl;
+    legendControl.addTo(map);
 };
 
-// Main function to initialize the map
-const map = createBaseMap();
-map.addEventListener('click', function(e) {
-    console.log('MAP CLICKED');
-    var lat = e.latlng.lat;
-    var lng = e.latlng.lng;
-    console.log('You clicked the map at: ' + lat + ', ' + lng);
-});
-map.timeDimension.on('availabletimeschanged', function() {
-    console.log('timeloading', );
-        map.timeDimension.setCurrentTimeIndex(0);
-    });
 
-
-// let timeDimension;
-let wmsLayer;
-let timeDimensionWmsLayer;
-let legendControl;
-
-
-async function initializeWms(params) {
+async function initializeWms(params, map) {
     console.log('InitializeWms params', params);
 
      try {
@@ -312,8 +192,8 @@ async function initializeWms(params) {
     const attribution = ncmlMetadata.global_attributes.title;    
     const legendUrl = `${wmsUrl}?request=GetLegendGraphic&PALETTE=default&LAYERS=${params.variable}&transparent=TRUE&&colorscalerange=${colorscaleRange}&numcolorbands=100&styles=${params.style}`;
 
-    legendControl = createLegendControl(legendUrl);
-    legendControl.addTo(map);
+    createLegendControl(legendUrl, map);
+
     // the actual WMS layer is created with the selected parameters
     wmsLayer = createWMSLayer(wmsUrl, params.variable, params.style);
     wmsLayer.addTo(map);
@@ -327,7 +207,129 @@ async function initializeWms(params) {
         });
         
         timeDimensionWmsLayer.addTo(map);
-    } catch (error) {console.log('Creating time dimension layer failed')  }
-    
-    
+    } catch (error) {console.log('Creating time dimension layer failed') } 
 };
+
+// Format the yyyy-mm-dd date to dd/mm/yyyy as required for the bootstrap-datepicker
+const dateFormatter = function(date) {
+    var components = date.split('-');
+    var formattedDate = components[2] + '/' + components[1] + '/' + components[0];
+    console.log('Formatted Date: ', date, formattedDate)
+    return formattedDate;
+};
+
+// initialize the datepickers with the start and end date of the dataset - datepicker runs with jQuery
+const formatDatePicker = function(startDate, endDate) {
+    $('.input-daterange').datepicker({
+        language: 'de-DE',
+        format: "dd.mm.yyyy",
+        startDate: startDate,
+        endDate: endDate,
+        weekStart: 1,
+        immediateUpdates: true,
+        startView: 1,
+        maxViewMode: 3,
+        clearBtn: true, 
+        autoclose: true,
+    });
+    $('#startDatePicker').datepicker('update', startDate);
+    $('#endDatePicker').datepicker('update', endDate);
+    $('#datepicker').show()
+};
+
+
+// Get selected parameters and load the netCDF file
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Main function to initialize the map
+    const map = createBaseMap();
+    map.addEventListener('click', function(e) {
+        console.log('MAP CLICKED');
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        console.log('You clicked the map at: ' + lat + ', ' + lng);
+    });
+    map.timeDimension.on('availabletimeschanged', function() {
+        console.log('timeloading', );
+            map.timeDimension.setCurrentTimeIndex(0);
+        });
+
+
+    // let timeDimension;
+    let wmsLayer;
+    let timeDimensionWmsLayer;
+    let legendControl;
+
+    // Get the metadata of the chosen dataset and update the variable selector
+    datasetSelector.addEventListener('change', (event) => {
+        const netcdfVariableSelector = document.getElementById('netcdfVariableSelector');
+        // $('.input-daterange').datepicker('destroy');
+        netcdfVariableSelector.innerHTML = '';
+        
+        // const dataset = event.target.value;
+        const dataset = datasetSelector.value;
+        console.log('dataset', dataset);
+        fetch(`/klim4cast/get_ncml_metadata/${dataset}`)
+            .then(response => response.text())
+            .then(data => {
+                console.log('data', data);
+                var data_json = JSON.parse(data);
+                console.log('data_json', data_json);
+
+                // formatting the start and end date of the dataset for the datepicker
+                // var formattedStartDate = dateFormatter(data_json.global_attributes.time_coverage_start_ymd);
+                // var formattedEndDate = dateFormatter(data_json.global_attributes.time_coverage_end_ymd);
+                // formatDatePicker(formattedStartDate, formattedEndDate)
+
+                Object.keys(data_json.variables).forEach(variable => {
+                    console.log(variable);
+                    var option = document.createElement("option");
+                                    option.text = data_json.variables[variable].attributes.description;
+                                    option.value = variable;
+                                    netcdfVariableSelector.add(option);
+                });
+                var selectedVariable = netcdfVariableSelector.value;
+
+                attribution = data_json.variables[selectedVariable].attributes.long_name;
+                ncmlMetadata = data_json;
+
+
+                return data;
+            })
+
+    }); 
+
+    loadNetCDFButton.addEventListener('click', function() {
+        const netcdfVariableSelector = document.getElementById('netcdfVariableSelector');
+        try {
+            map.timeDimension.remove();
+        }
+        catch (error) {console.log('Removing old time dimension items failed')  }
+            
+        $('.info').remove();
+        var netCdf = datasetSelector.value;
+        // var startDate = $('#startDatePicker').datepicker('getDate');
+        // var endDate = $('#endDatePicker').datepicker('getDate');
+        var variable = netcdfVariableSelector.value;
+
+        let style = palette_and_min_max[variable].style;
+        params = {
+            'netCdf': netCdf,
+            'variable': variable,
+            // 'startDate': startDate,
+            // 'endDate': endDate,
+            'style': style,
+            'colorerscaleRange': palette_and_min_max[variable].valueRange,
+            'attribution': ncmlMetadata.global_attributes.title,
+        };
+        console.log('params', params);
+        initializeWms(params, map);
+        map.timeDimension.setCurrentTimeIndex(0);
+    });
+
+
+});
+
+
+

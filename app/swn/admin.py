@@ -56,6 +56,7 @@ class UserFieldAdmin(LeafletGeoAdmin):
 admin.site.register(ProjectRegion, LeafletGeoAdmin)
 
 admin.site.register(UserField, UserFieldAdmin)
+admin.site.register(SwnProject, ModelAdmin)
 admin.site.register(NUTS5000_N1, LeafletGeoAdmin)
 admin.site.register(NUTS5000_N2, LeafletGeoAdmin)
 admin.site.register(NUTS5000_N3, LeafletGeoAdmin)

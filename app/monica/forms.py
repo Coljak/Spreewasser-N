@@ -32,9 +32,9 @@ class MonicaProjectForm(forms.Form):
         required=False
     )
     name = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_project_name'}),
+        widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_project_name', 'required': 'required',}),
         label='Project Name',
-        required=True
+        required=True,
     )
     start_date = forms.DateField(
         widget=forms.DateInput(attrs={

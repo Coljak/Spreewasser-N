@@ -371,7 +371,6 @@ class OrganFromDB(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
-# crop residues
 class CropResidueParameters(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True)
     species_name = models.CharField(max_length=100,blank=True, null=True)
@@ -504,7 +503,6 @@ class CropResidueParameters(models.Model):
             "species": self.species_name,
             "type": self.__class__.__name__
         }
-
 
 class OrganicFertiliser(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True)
@@ -1498,32 +1496,19 @@ class UserSimulationSettings(models.Model):
         }
         	
 
-# class SiteParameters(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-#     name = models.CharField(max_length=100, blank=True, null=True)
-#     latitude = models.FloatField()
-#     longitude = models.FloatField()
-#     altitude = models.FloatField() # heightNN
-#     slope = models.FloatField()
-#     n_deposition = models.FloatField()
-#     soil_profile = models.ForeignKey(buek_models.SoilProfile, on_delete=models.CASCADE)
-
-#     def to_json(self):
-#         return {
-#             "Latitude": self.latitude,
-#             "Slope": self.slope,
-#             "HeightNN": [self.altitude, "m"],
-#             "NDeposition": [self.n_deposition, "kg N ha-1 y-1"],
-#             "SoilProfileParameters": self.soil_profile.get_monica_horizons_json()
-#         }
-
 class CropRotation(models.Model):
+    """
+    The crop rotation is the collection of rotations that are to be simulated.
+    """
     name = models.CharField(max_length=255, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
 class Rotation(models.Model):
+    """
+    Rotation is the collection of worksteps in one agronomic year.
+    """
     name = models.CharField(max_length=255, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     crop_rotation = models.ForeignKey(CropRotation, on_delete=models.CASCADE, related_name='rotations')
@@ -1537,6 +1522,9 @@ class Rotation(models.Model):
         ordering = ['order']  # Ensures rotations are retrieved in order
 
 class Workstep(models.Model):
+    """
+    Workstep is one agronomic operation in a rotation. Worksteps are not saved to the database.
+    """
     # rotation = models.ForeignKey(Rotation, on_delete=models.CASCADE, related_name='worksteps')
     date = models.DateField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
@@ -1660,8 +1648,7 @@ class WorkstepHarvest(Workstep):
         })
         return json_data
 
-
-
+# TODO: to be deleted or implemented
 class Output(models.Model):
     short_name = models.CharField(max_length=100)
     to_layers = models.BooleanField(default=False)
@@ -2011,7 +1998,7 @@ class MonicaSite(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     soil_profile_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True) # identifies the class (buek.models.SoilProfile or UserSoilProfile)
-    soil_profile_object_id = models.PositiveIntegerField(null=True, blank=True) # id of object
+    soil_profile_object_id = models.PositiveIntegerField(null=True, blank=True) # id of soilprofile
     soil_profile = GenericForeignKey('soil_profile_content_type', 'soil_profile_object_id') # The actual foreign key, composed of the two entries above
 
 
@@ -2023,8 +2010,12 @@ class MonicaSite(models.Model):
     
     def to_json(self):
         soil_profile_type = None
+
         if self.soil_profile_content_type:
-            soil_profile_type = self.soil_profile_content_type.model
+            if self.soil_profile_content_type.model == 'soilprofile':
+                soil_profile_type = 'buekSoilProfile'
+            elif self.soil_profile_content_type.model == 'usersoilprofile':
+                soil_profile_type = 'userSoilProfile'
 
         return {
             "site_name": self.name or None,

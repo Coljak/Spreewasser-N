@@ -17,6 +17,7 @@
 
 
 {% block right_panel %}
+    {% comment %} {% include 'klim4cast/chart_modal.html' %} {% endcomment %}
         <div id="map" style="height: 100%; width: 100%"></div>
 {% endblock right_panel %}
 
@@ -38,7 +39,7 @@
         <select id='netcdfVariableSelector' class="form-select" aria-label="netcdfVariableSelector-label"></select>
 
             
-        <div class="input-daterange input-group" id="datepicker" display="none">
+        <div class="input-daterange input-group" id="datepicker" style="display: none;">
             <input type="text" id="startDatePicker" class="input-sm form-control" name="start" />
             <span class="input-group-addon  px-3"> bis </span>
             <input type="text" id="endDatePicker" class="input-sm form-control" name="end" />
@@ -48,6 +49,8 @@
     </div>
 </div>
 </div>
+
+
     <script>
         var netcdfVariableSelector = document.getElementById('netcdfVariableSelector');
         var datasetSelector = document.getElementById('datasetSelector');
@@ -56,6 +59,21 @@
 
     </script>
 {% endblock left_panel %}
+
+{% block bottom_panel %}
+
+<div class="card">
+    <div class="card-header text-white bg-primary" id="clim4castChartTitle">Title</div>
+    <div class="card-body card-body-fixed-height">
+        
+
+
+        
+        <canvas id="clim4castChartDiv"></canvas>
+
+    </div>
+</div>
+{% endblock bottom_panel %}
 
 
 
@@ -69,6 +87,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js"></script>
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.de.min.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.contextmenu.js' %}"></script>
     <script type="text/javascript" src="{% static 'klim4cast/js/map_thredds_klim4cast.js' %}"></script>
 {% endblock %}

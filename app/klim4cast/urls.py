@@ -16,5 +16,5 @@ urlpatterns = [
     path('Timelapse/', views.klim4cast_timelapse_items, name='timelapse-page'),
     path('get_ncml_metadata/<str:name>', views.get_ncml_metadata, name='get-ncml-metadata'),
     path('Timelapse/Thredds/wms/<str:netcdf>', views.timelapse_django_passthrough_wms, name='timelapse-passthrough-wms'),
-    
+    path('get_data/<str:name>/<str:variable>/<str:lat>/<str:lon>/', views.get_data, name='get-data'),
 ]

@@ -2,7 +2,10 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
 import requests
 import xmltodict
-from datetime import datetime, timedelta
+import xarray as xr
+import numpy as np
+from datetime import datetime, timedelta, date
+import json
 
 def klim4cast(request):
     return 'Klim4Cast'
@@ -122,3 +125,42 @@ def timelapse_django_passthrough_wms(request, netcdf):
         # Handle request exception, e.g., log the error
         print(f"Error: {e}")
         return HttpResponse(f"Error: {e}", content_type='text/plain')
+    
+
+def get_data(request, name, variable, lat, lon):
+    """
+    Get data from the Thredds server.
+    """
+    path = 'klim4cast/data/netcdf/' + name + '.nc'
+    nc = xr.open_dataset(path)
+
+    lat = float(lat)
+    lon = float(lon)
+    print('lat', lat)
+    print('lon', lon)
+
+    ds = nc.sel(lat=lat, lon=lon, method='nearest')
+
+    context = {
+        'variable': variable,
+        'long_name': ds.data_vars[variable].long_name,
+        'dates': [str(date)[:10] for date in ds.time.values],  # Convert datetime64 to string
+        'values': [float(val) for val in ds.data_vars[variable].values.flatten()],  # Convert NumPy types to Python
+        'latitude': lat,
+        'longitude': lon,
+    }
+
+    try:
+        context['unit'] = ds.data_vars[variable].units
+    except AttributeError:
+        context['unit'] = ''
+
+    try:
+        context['upper_limit'] = float(ds.data_vars[variable].upper_limit) if np.isscalar(ds.data_vars[variable].upper_limit) else ''
+        context['lower_limit'] = float(ds.data_vars[variable].lower_limit) if np.isscalar(ds.data_vars[variable].lower_limit) else ''
+    except AttributeError:
+        context['upper_limit'] = ''
+        context['lower_limit'] = ''
+
+    print('context', context)
+    return JsonResponse(context)

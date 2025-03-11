@@ -159,13 +159,209 @@ const setLanguage = (language_code)=>{
     })
 };
 
+function createChartDataset() {
 
+    let outputSettings = JSON.parse(localStorage.getItem('outputSettings'));
+    console.log('outputSettings', outputSettings);
+    let colors = outputSettings.colors;
+    let resultOutput = outputSettings.resultOutput;
 
-function createOutputCharts() {
-    const colorPalette = localStorage.getItem('colorPalette');
-    const chartSettings = localStorage.getItem('chartSettings');
-    const monicaResults = localStorage.getItem('monicaResults');
+    let listOfResults = JSON.parse(localStorage.getItem('monicaResults'));
+    let dates = listOfResults[0].daily.Date;
+    let datasets = [
+        {
+            type: 'bar',  // Specifies the type as bar for precipitation
+            yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
+            label: 'Precipitation',
+            data: listOfResults[0].daily.Precip,
+            backgroundColor: 'rgba(0, 0, 255, 0.5)',  // Semi-transparent blue
+            borderColor: 'rgba(0, 0, 255, 0.7)',
+            borderWidth: 1,
+        },];
+        for (let i = 0; i < listOfResults.length; i++) {
+            console.log(i);
+            var msg = listOfResults[i].daily
+            
+            if (resultOutput.Yield) {
+                datasets.push({
+                    yAxisID: 'y2',
+                    label: `${resultTranslation.Yield} ${i}`,
+                    data: msg.Yield,
+                    borderWidth: 2,
+                    borderColor: colors[i],
+                    pointHitRadius: 10,
+                });
+            };
+            if (resultOutput.AbBiom) {
+                datasets.push({
+                    yAxisID: 'y2',
+                    label: `${resultTranslation.AbBiom} ${i}`,
+                    data: msg.AbBiom,
+                    borderWidth: 2,
+                    borderColor: colors[i],
+                    pointHitRadius: 10,
+                });
+            };
+
+            if (resultOutput.Irrig){
+                datasets.push({
+                    type: 'bar',  
+                    yAxisID: 'y1',  
+                    label: `${resultTranslation.Irrig} ${i}`,
+                    data: msg.Irrig,
+                    backgroundColor: colors[i],  // Semi-transparent blue
+                    borderColor: colors[i],
+                    borderWidth: 1,
+                    pointHitRadius: 10,
+                });
+            };
+
+            if (resultOutput.organ) {
+                datasets.push({
+                    type: 'bar',  // Specifies the type as bar for precipitation
+                    yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
+                    label: `${resultTranslation.organ} ${i}`,
+                    data: msg.Stage,
+                    backgroundColor: colors[i],  // Semi-transparent blue
+                    borderColor: colors[i],
+                    borderWidth: 1,
+                    pointHitRadius: 10,
+                });
+            };
+            if (resultOutput.Mois_1) {
+                datasets.push({
+                    yAxisID: 'y3',
+                    label: `${resultTranslation.Mois_1} ${i}`,
+                    data: msg.Mois_1,
+                    borderWidth: 2,
+                    borderColor: colors[i],
+                    pointHitRadius: 10,
+                });
+            };
+            if (resultOutput.Mois_2) {
+                datasets.push({
+                    yAxisID: 'y3',
+                    label: `${resultTranslation.Mois_2} ${i}`,
+                    data: msg.Mois_1,
+                    borderWidth: 2,
+                    borderColor: colors[i],
+                    pointHitRadius: 10,
+                });
+            };
+            if (resultOutput.Mois_3) {
+                datasets.push({
+                    yAxisID: 'y3',
+                    label: `${resultTranslation.Mois_3} ${i}`,
+                    data: msg.Mois_3,
+                    borderWidth: 2,
+                    borderColor: colors[i],
+                    pointHitRadius: 10,
+                });
+            };
+            if (resultOutput.SOC_1) {
+                datasets.push({
+                    yAxisID: 'y4',
+                    label: `${resultTranslation.SOC_1} ${i}`,
+                    data: msg.Mois_1,
+                    borderWidth: 2,
+                    borderColor: colors[i],
+                    pointHitRadius: 10,
+                });
+            };
+            if (resultOutput.SOC_2) {
+                datasets.push({
+                    yAxisID: 'y4',
+                    label: `${resultTranslation.SOC_2} ${i}`,
+                    data: msg.SOC_2,
+                    borderWidth: 2,
+                    borderColor: colors[i],
+                    pointHitRadius: 10,
+                });
+            };
+            if (resultOutput.SOC_3) {
+                datasets.push({
+                    yAxisID: 'y4',
+                    label: `${resultTranslation.SOC_3} ${i}`,
+                    data: msg.SOC_3,
+                    borderWidth: 2,
+                    borderColor: colors[i],
+                    pointHitRadius: 10,
+                });
+            };
+            if (resultOutput.LAI) {
+                datasets.push({
+                    yAxisID: 'y5',
+                    label: `${resultTranslation.LAI} ${i}`,
+                    data: msg.LAI,
+                    borderWidth: 2,
+                    borderColor: colors[i],
+                    pointHitRadius: 10,
+                    pointHoverRadius: 10,
+                    pointHoverBackgroundColor: 'rgba(0, 0, 0, 0)',
+                    pointHoverBorderColor: 'rgba(0, 0, 0, 0)',
+                });
+            };
+
+        };
+        console.log("Datasets", datasets)
+
+        chartDiv.innerHTML = '<canvas id="Chart"></canvas>'
+        const ctx = document.getElementById('Chart')
+        const chart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: dates,
+                datasets: datasets,
+            },
+            options: {
+                elements: {
+                    point: {
+                    radius: 0,
+                    },
+                },
+                responsive: true,
+                plugins: {
+                    // title: {
+                    //     display: true,
+                    //     text: 'Custom Chart Title'
+                    // },
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            },
+           
+        });
+        chart.update();
+    return datasets;
 }
+
+localStorage.setItem(
+    'outputSettings',
+    JSON.stringify({
+    colors: [
+        'rgba(255, 200, 0, 0.7)', 
+        'rgba(0, 150, 200, 0.7)', 
+        'rgba(0, 200, 255, 0.7)', 
+        'rgba(0, 255, 200, 0.7)',
+        'rgba(0, 255, 100, 0.7)'],
+
+    resultOutput: {
+        'Yield': true,
+        'Irrig': true,
+        // 'organ': false,
+        'AbBiom': true,
+        'Mois_1': false,
+        'Mois_2': false,
+        'Mois_3': false,
+        'SOC_1': false,
+        'SOC_2': false,
+        'SOC_3': false,
+        'LAI': false,
+    }
+
+}));
+
 
 // function to check when the update of a dropdown menu is finished
 const observeDropdown = (selector, callback) => {
@@ -241,200 +437,11 @@ const runSimulation = (monicaProject) => {
             $('.nav-link.monica').removeClass('active');
 
             $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
-            
-            
-            var colors = [
-                'rgba(255, 200, 0, 0.7)', 
-                'rgba(0, 150, 200, 0.7)', 
-                'rgba(0, 200, 255, 0.7)', 
-                'rgba(0, 255, 200, 0.7)',
-                'rgba(0, 255, 100, 0.7)']
-
-            var resultOutput = {
-                'Yield': false,
-                'Irrig': true,
-                'organ': false,
-                'AbBiom': true,
-                'Mois_1': true,
-                'Mois_2': true,
-                'Mois_3': true,
-                'SOC_1': false,
-                'SOC_2': false,
-                'SOC_3': false,
-                'LAI': false,
-            }
 
             let listOfResults = data.message.message
             localStorage.setItem('monicaResults', JSON.stringify(listOfResults));
-            let dates = listOfResults[0].daily.Date;
-            let datasets = [
-            {
-                type: 'bar',  // Specifies the type as bar for precipitation
-                yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
-                label: 'Precipitation',
-                data: listOfResults[0].daily.Precip,
-                backgroundColor: 'rgba(0, 0, 255, 0.5)',  // Semi-transparent blue
-                borderColor: 'rgba(0, 0, 255, 0.7)',
-                borderWidth: 1,
-            },
-        ];
-            for (let i = 0; i < listOfResults.length; i++) {
-                console.log(i);
-                var msg = listOfResults[i].daily
-                
-                if (resultOutput.Yield) {
-                    datasets.push({
-                        yAxisID: 'y2',
-                        label: `Yield_${i}`,
-                        data: msg.Yield,
-                        borderWidth: 2,
-                        borderColor: colors[i],
-                        pointHitRadius: 10,
-                    });
-                };
-                if (resultOutput.AbBiom) {
-                    datasets.push({
-                        yAxisID: 'y2',
-                        label: `Biomass_${i}`,
-                        data: msg.AbBiom,
-                        borderWidth: 2,
-                        borderColor: colors[i],
-                        pointHitRadius: 10,
-                    });
-                };
-
-                if (resultOutput.Irrig){
-                    datasets.push({
-                        type: 'bar',  // Specifies the type as bar for precipitation
-                        yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
-                        label: `Irrigation_${i}`,
-                        data: msg.Irrig,
-                        backgroundColor: colors[i],  // Semi-transparent blue
-                        borderColor: colors[i],
-                        borderWidth: 1,
-                        pointHitRadius: 10,
-                    });
-                };
-
-                if (resultOutput.organ) {
-                    datasets.push({
-                        type: 'bar',  // Specifies the type as bar for precipitation
-                        yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
-                        label: `Stage_${i}`,
-                        data: msg.Stage,
-                        backgroundColor: colors[i],  // Semi-transparent blue
-                        borderColor: colors[i],
-                        borderWidth: 1,
-                        pointHitRadius: 10,
-                    });
-                };
-                if (resultOutput.Mois_1) {
-                    datasets.push({
-                        yAxisID: 'y3',
-                        label: `Moisture 0-10cm ${i}`,
-                        data: msg.Mois_1,
-                        borderWidth: 2,
-                        borderColor: colors[i],
-                        pointHitRadius: 10,
-                    });
-                };
-                if (resultOutput.Mois_2) {
-                    datasets.push({
-                        yAxisID: 'y3',
-                        label: `Moisture 10-20cm ${i}`,
-                        data: msg.Mois_1,
-                        borderWidth: 2,
-                        borderColor: colors[i],
-                        pointHitRadius: 10,
-                    });
-                };
-                if (resultOutput.Mois_3) {
-                    datasets.push({
-                        yAxisID: 'y3',
-                        label: `Moisture 20-30cm ${i}`,
-                        data: msg.Mois_3,
-                        borderWidth: 2,
-                        borderColor: colors[i],
-                        pointHitRadius: 10,
-                    });
-                };
-                if (resultOutput.SOC_1) {
-                    datasets.push({
-                        yAxisID: 'y4',
-                        label: `SOC 0-10cm ${i}`,
-                        data: msg.Mois_1,
-                        borderWidth: 2,
-                        borderColor: colors[i],
-                        pointHitRadius: 10,
-                    });
-                };
-                if (resultOutput.SOC_2) {
-                    datasets.push({
-                        yAxisID: 'y4',
-                        label: `SOC 10-20cm ${i}`,
-                        data: msg.SOC_2,
-                        borderWidth: 2,
-                        borderColor: colors[i],
-                        pointHitRadius: 10,
-                    });
-                };
-                if (resultOutput.SOC_3) {
-                    datasets.push({
-                        yAxisID: 'y4',
-                        label: `SOC 20-30cm ${i}`,
-                        data: msg.SOC_3,
-                        borderWidth: 2,
-                        borderColor: colors[i],
-                        pointHitRadius: 10,
-                    });
-                };
-                if (resultOutput.LAI) {
-                    datasets.push({
-                        yAxisID: 'y5',
-                        label: `LAI ${i}`,
-                        data: msg.LAI,
-                        borderWidth: 2,
-                        borderColor: colors[i],
-                        pointHitRadius: 10,
-                        pointHoverRadius: 10,
-                        pointHoverBackgroundColor: 'rgba(0, 0, 0, 0)',
-                        pointHoverBorderColor: 'rgba(0, 0, 0, 0)',
-                    });
-                };
-
-            };
-            console.log("Datasets", datasets)
-
-            chartDiv.innerHTML = '<canvas id="Chart"></canvas>'
-            const ctx = document.getElementById('Chart')
-            const chart = new Chart(ctx, {
-                type: "line",
-                data: {
-                    labels: dates,
-                    datasets: datasets,
-                },
-                options: {
-                    elements: {
-                        point: {
-                        radius: 0,
-                        },
-                    },
-                    responsive: true,
-                    plugins: {
-                        // title: {
-                        //     display: true,
-                        //     text: 'Custom Chart Title'
-                        // },
-                        legend: {
-                            position: 'right'
-                        }
-                    }
-                },
-               
-            });
-            chart.update();
+            createChartDataset();
             
-
             $('#runSimulationButton').prop('disabled', false);
             $('#runSimulationButton').text('Run Simulation');
 
@@ -1036,19 +1043,94 @@ const validateProject = (project) => {
     console.log("validateProject", valid, project)
     return valid;
 };
+
+const resultTranslation = {
+    'AbBiom': 'Biomasse gesamt',
+    'Yield': 'Ertrag',
+    'Irrig': 'Bewässerung',
+    'Date': 'Datum',
+    'Precip': 'Niederschlag',
+    'LAI': 'LAI',
+    'Mois_1': 'Bodenfeuchte 0-10cm',
+    'Mois_2': 'Bodenfeuchte 10-20cm',
+    'Mois_3': 'Bodenfeuchte 20-30cm',
+    'SOC_1': 'organischer Kohlenstoff 0-10cm',
+    'SOC_2': 'organischer Kohlenstoff 10-20cm',
+    'SOC_3': 'organischer Kohlenstoff 20-30cm',
+};
 // var project = new MonicaProject();
 // Event listeners
 var language = 'de-DE'
 document.addEventListener('DOMContentLoaded', () => {
-
-
     setLanguage(language);
     // Set the max and min dates for the datepickers
    
-
+    document.getElementById('btnOpenOutputSettings').addEventListener('click', function () {
+        
     
-    // $('#monicaStartDatePicker').datepicker('update', setStartDate);
-    // $('#monicaEndDatePicker').datepicker('update', setEndDate);
+        const modalHtml = document.getElementById('outputSettingsModal');
+        if (!modalHtml) {
+            console.error("Modal element not found!");
+            return;
+        }
+    
+        let outputSettings = JSON.parse(localStorage.getItem('outputSettings'));
+        console.log("Check 1 ")
+    
+        if (outputSettings && outputSettings.resultOutput) {
+            // Find the checkbox container inside the modal
+            let container = modalHtml.querySelector("#outputSettingsCheckboxDiv");
+            if (!container) {
+                console.error("Checkbox container not found inside the modal!");
+                return;
+            }
+    
+            // Clear old checkboxes before adding new ones
+            container.innerHTML = '';
+    
+            // Create checkboxes dynamically
+            Object.entries(outputSettings.resultOutput).forEach(([key, value]) => {
+                let div = document.createElement("div");
+                div.classList.add("form-check");  // Bootstrap styling
+    
+                let checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.id = key;
+                checkbox.name = key;
+                checkbox.checked = value;
+                checkbox.classList.add("form-check-input");
+    
+                let label = document.createElement("label");
+                label.htmlFor = key;
+                label.textContent = resultTranslation[key];
+                label.classList.add("form-check-label");
+
+                checkbox.addEventListener("change", function () {
+
+                    outputSettings.resultOutput[key] = this.checked;
+                    localStorage.setItem('outputSettings', JSON.stringify(outputSettings));
+                    console.log("Updated outputSettings:", outputSettings);
+                });
+    
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                container.appendChild(div);
+                console.log('div', div);
+            });
+        } else {
+            console.warn("No outputSettings found in localStorage!");
+        }
+    
+        // Show the modal
+        const modal = new bootstrap.Modal(modalHtml);
+        modal.show();
+    });
+
+    document.getElementById('btnOutputSettingsApply').addEventListener('click', function () {
+        createChartDataset();
+    });
+    
+
     $('#todaysDatePicker').datepicker('update', new Date());
     $('#todaysDatePicker').trigger('focusout'); // saving the todays date to the project
     document.getElementById('monica-project-save').addEventListener('click', function () {

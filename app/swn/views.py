@@ -24,6 +24,7 @@ from monica.utils import save_monica_project
 from monica import forms as monica_forms
 from monica import models as monica_models
 from monica import views as monica_views
+from monica.utils import get_weather_forecast
 
 from buek import models as buek_models
 from buek import views as buek_views
@@ -468,18 +469,30 @@ def recommended_soil_profile(request, profile_landusage, user_field_id):
     return monica_views.get_soil_parameters(request, profile_landusage, user_field.centroid_lat, user_field.centroid_lon)
 
 
+# def load_swn_project(request, id):
+#     # try:
+#     project = models.SwnProject.objects.get(pk=id)
+#     return JsonResponse({
+#         'message':{
+#             'success': True, 
+#             'message': f'Project {project.name} loaded'
+#             }, 
+#         'project': project.to_json()
+#         })
+#     # except:
+#     #         return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
+
 def load_swn_project(request, id):
-    # try:
+
     project = models.SwnProject.objects.get(pk=id)
-    return JsonResponse({
-        'message':{
-            'success': True, 
-            'message': f'Project {project.name} loaded'
-            }, 
-        'project': project.to_json()
-        })
-    # except:
-    #         return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
+    print("Monica Project: ", project)
+    if not project:
+        return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
+    else:
+        project_json = project.to_json()
+        project_json['endDate'] = get_weather_forecast.get_last_valid_forecast_date_cached()
+        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
+
     
 
 def save_swn_project(request, project_id=None):

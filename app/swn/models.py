@@ -101,6 +101,8 @@ class UserField(models.Model):
         print("get_weather_grid_points")
         userfield_geom = self.geom
         weather_data_indices = monica_models.DWDGridAsPolygon.objects.filter(geom__intersects=userfield_geom)
+        #TODO  get the forecast data
+        # weather_forecast_indices = monica_models.DWDForecastGridAsPolygon.objects.filter(geom__intersects=userfield_geom)
         
         weather_indices_list = []
         for w in weather_data_indices:

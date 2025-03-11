@@ -4,11 +4,12 @@ It is used in the Django management command 'import_forecast_data.py' to downloa
 """
 import requests
 from xml.etree import ElementTree
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 import xarray as xr
+import numpy as np
 import os
-from datetime import datetime
+from django.core.cache import cache
 
 # Constants
 BASE_CATALOG_URL = "https://esgf-data.dwd.de/thredds/catalog/esgf3/data/climatepredictionsde/seasonal/output/public/DE-0075x005/DWD/GCFS21/svhYYYY{month:02}01/sfc{year}{month:02}01/{scenario}/DWD-EPISODES2022/v1-r1/day/{variable}/"
@@ -66,6 +67,23 @@ def fetch_available_variables(catalog_url):
     return variables
 # variables = ['hurs', 'pr', 'psl', 'rsds', 'sfcWind', 'tas', 'tasmax', 'tasmin']
 
+def get_last_valid_forecast_date():
+    nc_folder_path = get_local_path()
+    print(os.listdir(nc_folder_path))
+    netcdf_paths = [f'{nc_folder_path}/{nc}' for nc in os.listdir(nc_folder_path) if nc.endswith('.nc')]
+    nc_path = netcdf_paths[0]
+    ds = xr.open_dataset(nc_path)
+    times = ds.time[:].values
+    last_valid_date = times[-1]
+    return last_valid_date.astype('datetime64[D]').astype(date)
+
+def get_last_valid_forecast_date_cached(update=False):
+    last_valid_forecast_date = cache.get('last_valid_forecast_date')
+    if last_valid_forecast_date is None or update == True:
+        last_valid_forecast_date = get_last_valid_forecast_date()
+        cache.set('last_valid_forecast_date', last_valid_forecast_date, timeout=259200)  # Cache for 72 hours
+
+    return last_valid_forecast_date
 
 def delete_old_files(folder_path, new_files):
     """Delete old NetCDF files from the folder that are not in new_files list."""
@@ -109,7 +127,6 @@ def automated_thredds_download():
     try:
         for scenario in SCENARIOS:
             new_files = []  # Store newly downloaded files
-            save_path = f"{local_path}/{scenario}/"
             folder_path = f"{local_path}/{scenario}/"
             for variable in VARIABLES:
                 try:
@@ -117,7 +134,7 @@ def automated_thredds_download():
                     nc_file_url = get_download_url(year, month, scenario, variable)
                     print(f"Download URL: {nc_file_url}")
                     
-                    downloaded_file = download_and_save_nc_file(nc_file_url, save_path)
+                    downloaded_file = download_and_save_nc_file(nc_file_url, folder_path)
                     new_files.append(downloaded_file)
                     print('new_files: ', new_files)
                 except ValueError as e:
@@ -125,13 +142,16 @@ def automated_thredds_download():
 
             if  new_files != []:
                 print(f"Deleting old files for scenario '{scenario}'...")
-                delete_old_files(save_path, new_files)
+                delete_old_files(folder_path, new_files)
 
     except ValueError as e:
         print(f"Download of forecast data failed: {e}")
 
     else:
         print("Download of forecast data completed successfully.")
+        old_ncs = [f'{local_path}/{nc}' for nc in os.listdir(local_path) if nc.endswith('.nc')]
+        print('old_ncs: ', old_ncs)
+
         try:
             for scenario in SCENARIOS:
                 folder_path = f"{local_path}/{scenario}/"
@@ -142,6 +162,11 @@ def automated_thredds_download():
                 file_path = f"{local_path}/{filename}"
                 ds.to_netcdf(file_path)
                 ds.close()
+            
+            for old_nc in old_ncs:
+                os.remove(old_nc)
+
+            get_last_valid_forecast_date_cached(update=True)
         except Exception as e:
             print(f"Combining NetCDF files failed: {e}")
 

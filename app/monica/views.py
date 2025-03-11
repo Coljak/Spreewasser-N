@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.apps import apps
 from django.db.models import Q
+from django.core.cache import cache
 
 # from ...xx_obsolete.run_consumer_swn import run_consumer
 from . import models as m_models
@@ -18,8 +19,10 @@ from buek.views import get_soil_profile
 from buek import models as buek_models
 from .climate_data.lat_lon_mask import lat_lon_mask
 from .monica_events import *
-from .utils import save_monica_project
+from .utils import save_monica_project, get_weather_hindcasts, get_weather_forecast
 from dateutil.relativedelta import relativedelta
+import glob
+
 
 from netCDF4 import Dataset, date2index, MFDataset
 from pathlib import Path
@@ -37,7 +40,7 @@ import copy
 # create a new monica env
 # from ...xx_obsolete import climate
 # from .process_weather_data import *
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dask.diagnostics import ProgressBar
 import dask
 import warnings
@@ -78,6 +81,9 @@ CLIMATE_VARIABLES = {
     '12': 'hurs'
     }
 
+
+def ensure_datetime(d):
+    return d if isinstance(d, datetime) else datetime.combine(d, datetime.min.time())
 
 # not in use
 def get_lat_lon_as_index(lat, lon):
@@ -201,9 +207,10 @@ def load_netcdf_to_memory():
 
 
 
-def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
+def get_climate_data_as_json_from_hindcast(start_date, end_date, lat_idx, lon_idx):
     """Returns climate data as JSON using Monica's keys for the given start and end date and lat/lon index."""
     print("get_climate_data_as_json", start_date, end_date, lat_idx, lon_idx)
+
 
     start = datetime.now()
     climate_json = { '3': [], '4': [], '5': [], '6': [], '8': [], '9': [], '12': [] }
@@ -237,8 +244,87 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
     climate_json['8'] = [x / 100 if x is not None and x != 0 and x != -9999 else 0 for x in climate_json['8']]
 
-    # climate_json['8'] = np.array(climate_json['8']) / 100
+
     return climate_json
+
+def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_idx):
+    """Returns climate data as JSON using Monica's keys for the given start and end date and lat/lon index."""
+    print("get_climate_data_as_json_from_forecast", start_date, end_date, lat_idx, lon_idx)
+    start_date = ensure_datetime(start_date)
+    end_date = ensure_datetime(end_date)
+
+    start = datetime.now()
+    climate_json = { '3': [], '4': [], '5': [], '6': [], '8': [], '9': [], '12': [] }
+    climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf_forecast')
+
+    for scenario in [get_weather_forecast.SCENARIOS[0]]:
+
+        glob_path = f"{climate_data_path}/forecast_{scenario}_*.nc"
+        file_path = glob.glob(glob_path)[0]
+
+        with Dataset(file_path, 'r') as nc:
+            start_idx = date2index(start_date, nc['time'], select='nearest')
+            end_idx = date2index(end_date, nc['time'], select='nearest') + 1
+            for key, value in CLIMATE_VARIABLES.items():
+
+            
+                        
+                    
+                values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx]
+                if value in ('tas', 'tasmin', 'tasmax'):
+                    values = values - 273.15
+                if value == 'pr':
+                    values = values * 60 * 60 * 24
+                if value == 'rsds':
+                    values = values * 10
+                values = values.tolist()
+                climate_json[key].extend(values)
+
+
+            # except Exception as e:
+            #     print(f"⚠️ Error reading {file_path}: {e}")
+
+    print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
+    climate_json['8'] = [x / 100 if x is not None and x != 0 and x != -9999 else 0 for x in climate_json['8']]
+
+    return climate_json
+
+from datetime import timedelta
+
+def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
+    start_date = ensure_datetime(start_date)
+    end_date = ensure_datetime(end_date)
+    last_hindcast_date = ensure_datetime(get_weather_hindcasts.get_last_valid_date_cached())
+    last_forecast_date = ensure_datetime(get_weather_forecast.get_last_valid_forecast_date_cached())
+    forecast_lat_idx, forecast_lon_idx = m_models.DWDGridToPointIndices.get_forecast_indices(lat_idx, lon_idx)
+
+    # Initialize empty dictionaries
+    hindcast_json = {}
+    forecast_json = {}
+
+    # If start_date is before or equal to last_hindcast_date, we need hindcast data
+    if start_date <= last_hindcast_date:
+        hindcast_start_date = start_date
+        hindcast_end_date = min(end_date, last_hindcast_date)  # Ensure it doesn't exceed last_hindcast_date
+        hindcast_json = get_climate_data_as_json_from_hindcast(hindcast_start_date, hindcast_end_date, lat_idx, lon_idx)
+    
+    # If end_date is after last_hindcast_date, we need forecast data
+    if end_date > last_hindcast_date:
+        forecast_start_date = max(start_date, last_hindcast_date + timedelta(days=1))  # Start from the day after hindcast ends
+        forecast_end_date = end_date
+        forecast_json = get_climate_data_as_json_from_forecast(forecast_start_date, forecast_end_date, forecast_lat_idx, forecast_lon_idx)
+
+    # If hindcast data is missing, return forecast data only, and vice versa
+    if not hindcast_json:
+        return forecast_json
+    if not forecast_json:
+        return hindcast_json
+
+    # Merge hindcast and forecast data if both exist
+    climate_json = {key: hindcast_json[key] + forecast_json[key] for key in hindcast_json.keys()}
+    
+    return climate_json
+
 
 
 ### MONICA VIEWS ###
@@ -362,14 +448,10 @@ def create_monica_env_from_json(json_data):
         if soil_profile_type == 'buekSoilProfile':
             soil_profile_parameters, message = buek_models.SoilProfile.objects.get(id=soil_profile_id).get_monica_horizons_json()
 
-
-
     # TODO site parameters
     slope = 0
     height_nn = 0
     n_deposition = 30
-
-   
 
     siteParameters = {
         "Latitude": float(json_data['latitude']),
@@ -435,12 +517,14 @@ def create_monica_env_from_json(json_data):
     }
 
      # get climate data from database
-    # print("Lat lon: ", json_data['latitude'], json_data['longitude'])
+
+
     lat_idx, lon_idx = m_models.DWDGridAsPolygon.get_idx(float(json_data['latitude']), float(json_data['longitude']))
+    forecast_lat_idx, forecast_lon_idx = m_models.DWDGridToPointIndices.get_forecast_indices(lat_idx, lon_idx)
+    print('lat_idx, lon_idx', lat_idx, lon_idx, forecast_lat_idx, forecast_lon_idx)
     
-    # TODO use get_climate_data_as_json_new and activate CLIMATE_DATES
+    # TODO use get_climate_data_as_json_new and activate CLIMATE_DATES; BUT get_climate_data_as_json now also includes the forecast!!!
     climate_data = get_climate_data_as_json(parser.parse(json_data['startDate'].split('T')[0]), parser.parse(json_data['endDate'].split('T')[0]), lat_idx, lon_idx)
-    #climate_data = get_climate_data_as_json_new(parser.parse(json_data['startDate'].split('T')[0]), parser.parse(json_data['endDate'].split('T')[0]), lat_idx, lon_idx)
 
     # print('available_climate_data', available_climate_data)
     # print("check 1")
@@ -737,7 +821,9 @@ def load_monica_project(request, id):
     if not project:
         return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
     else:
-        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project.to_json()})
+        project_json = project.to_json()
+        project_json['endDate'] = get_weather_forecast.get_last_valid_forecast_date_cached()
+        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
 
 
 def delete_monica_project(request, id):
@@ -989,8 +1075,12 @@ def create_default_project(user):
     """
     Create a default project for the user.
     """
+
+    
+
     start_date = (datetime.now().date() - relativedelta(months=6)).replace(day=1)
-    end_date = (datetime.now().date() + relativedelta(months=7)).replace(day=1) - relativedelta(days=1)
+    end_date = get_weather_forecast.get_last_valid_forecast_date_cached()
+    # end_date = (datetime.now().date() + relativedelta(months=7)).replace(day=1) - relativedelta(days=1)
 
     default_project = MonicaProject(
         name= '',

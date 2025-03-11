@@ -1724,7 +1724,13 @@ class DWDGridToPointIndices(models.Model):
     def create_instance(self, lat, lat_idx, lon, lon_idx):
         return self.objects.create(point=Point(lat, lon), lat=lat, lat_idx=lat_idx, lon=lon, lon_idx=lon_idx)
     
-        #TODO code unreacheable - what was it for?
+    @classmethod
+    def get_forecast_indices(cls, lat_idx, lon_idx):
+        instance = cls.objects.get(lat_idx=lat_idx, lon_idx=lon_idx)
+        return instance.forecast_lat_idx, instance.forecast_lon_idx
+    
+    @classmethod
+    def get_points_within_geom(cls, geom):
     
         """
         Returns all DWDGridToPointIndices instances with points within the given geometry.
@@ -1845,7 +1851,7 @@ class DWDGridAsPolygon(models.Model):
     is_valid = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Polygon with centroid lat {self.lat} and longitude {self.lon} at the indeices {self.lat_idx} and {self.lon_idx}."
+        return f"Polygon with centroid lat {self.lat} and longitude {self.lon} at the indices {self.lat_idx} and {self.lon_idx}."
 
     @classmethod
     def get_idx(cls, lat, lon):
@@ -1866,7 +1872,7 @@ class DWDForecastGridAsPolygon(models.Model):
     geom = gis_models.PolygonField()
 
     def __str__(self):
-        return f"Polygon with centroid lat {self.lat} and longitude {self.lon} at the indeices {self.lat_idx} and {self.lon_idx}."
+        return f"Polygon with centroid lat {self.lat} and longitude {self.lon} at the indices {self.lat_idx} and {self.lon_idx}."
 
     @classmethod
     def get_idx(cls, lat, lon):

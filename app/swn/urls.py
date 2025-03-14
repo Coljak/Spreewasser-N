@@ -23,7 +23,7 @@ urlpatterns = [
     path('drought/save-user-field/', views.save_user_field, name='save-user-field'),
     path('drought/get-user-fields/', views.get_user_fields, name='get-user-fields'),
     path('drought/update-user-field/', views.update_user_field, name='update-user-field'),
-    path('drought/delete-user-field/<int:id>', views.delete_user_field, name='delete-user-field'),
+    path('drought/delete-user-field/<int:id>/', views.delete_user_field, name='delete-user-field'),
     # path('drought/create-project/', views.create_project, name='create-project'),
     path('drought/save-project/', views.save_swn_project, name='save-project'),
 

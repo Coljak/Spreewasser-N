@@ -488,20 +488,38 @@ class WorkstepOrganicFertilisationForm(forms.ModelForm):
         fields = ['date', 'amount', 'organic_fertiliser', 'incorporation']
 
 
+from django import forms
+from django.core.validators import MinValueValidator, MaxValueValidator
+from .models import WorkstepTillage
+
 class WorkstepTillageForm(forms.ModelForm):
     date = forms.DateField(
         widget=forms.DateInput(attrs={
             'class': 'form-control datepicker workstep-datepicker',
             'workstep-type': 'tillageWorkstep'
-            }),   
+        }),   
         input_formats=['%d.%m.%Y']
-        )
+    )
+
+    tillage_depth = forms.IntegerField(
+        initial=30,  # Default value
+        validators=[
+            MinValueValidator(1, message="Tillage depth must be at least 1."),
+            MaxValueValidator(100, message="Tillage depth cannot exceed 100.")
+        ],
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': '1',
+            'max': '100',
+            'type': 'number',
+            'step': '1',
+            'pattern': '[0-9]*'        })
+    )
+
     class Meta:
         model = WorkstepTillage
         fields = ['date', 'tillage_depth']
-        widgets = {
-            'date': forms.DateInput(),
-        }
+
 
 
 class WorkstepHarvestForm(forms.ModelForm):

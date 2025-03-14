@@ -1012,6 +1012,54 @@ const createModal = (params) => {
 };
 
 
+// const validateProject = (project) => {
+//     var valid = true;
+    
+//     if (window.location.pathname.endsWith('/drought/') && project.userField === null) {
+//         valid = false;
+//         handleAlerts({'success': false, 'message': 'Please select a userfield'});
+//     } else if (window.location.pathname.endsWith('/monica/') && (project.longitude === null || project.latitude === null)) {
+//         valid = false;
+//         handleAlerts({'success': false, 'message': 'Please provide a valid location'});
+//     } else if (project.name === null || project.name === '' || project.name === undefined || project.name === 'Default Project') {
+//         document.querySelector('#projectName').focus()
+//         valid = false;
+//         handleAlerts({'success': false, 'message': 'Please provide a project name'});
+//     } else if (project.startDate === null || project.endDate === null || new Date(project.startDate) > new Date(project.endDate)) {
+//         valid = false;
+//         document.querySelector('a[href="#tabGeneralParameters"]').click();
+//         document.querySelector('#monicaStartDatePicker').focus()
+//         handleAlerts({'success': false, 'message': 'Please provide a valid date range'});
+//     } else if (project.rotation.length === 0) {
+//         valid = false;
+//         document.querySelector('a[href="#tabRotation"]').click();
+//         handleAlerts({'success': false, 'message': 'Please provide a crop rotation'});
+//     } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => sowingWorkstep.date == null))) {
+//         valid = false;
+//         document.querySelector('a[href="#tabRotation"]').click();
+//         handleAlerts({'success': false, 'message': 'Please provide a sowing date for each crop'});
+//     } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => new Date(sowingWorkstep.date) < new Date(project.startDate) || new Date(sowingWorkstep.date) > new Date(project.endDate)))) {
+//         valid = false;
+//         document.querySelector('a[href="#tabRotation"]').click();
+//         handleAlerts({'success': false, 'message': 'Please provide a sowing date for each crop that is within your selected timeframe'});
+//     } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => sowingWorkstep.options.species == null || sowingWorkstep.options.species == ''))) {
+//         valid = false;
+//         document.querySelector('a[href="#tabRotation"]').click();
+//         handleAlerts({'success': false, 'message': 'Please provide a crop for each sowing workstep!'});
+//     } else if (project.rotation.some(rotation => new Date(rotation.harvestWorkstep[0]?.date) < new Date(rotation.sowingWorkstep[0]?.date))) {
+//         valid = false;
+//         document.querySelector('a[href="#tabRotation"]').click();
+//         handleAlerts({'success': false, 'message': 'Please make sure that the harvest dates are after the sowing dates!'});
+//     }
+
+//     if (valid && project.id === null) {
+//         alert('Please save your project before running the simulation');
+
+//     } 
+//     console.log("validateProject", valid, project)
+//     return valid;
+// };
+
 const validateProject = (project) => {
     var valid = true;
     
@@ -1021,28 +1069,187 @@ const validateProject = (project) => {
     } else if (window.location.pathname.endsWith('/monica/') && (project.longitude === null || project.latitude === null)) {
         valid = false;
         handleAlerts({'success': false, 'message': 'Please provide a valid location'});
-    } else if (project.name === null || project.name === '' || project.name === undefined || project.name === 'Default Project') {
+    // } else if (project.name === null || project.name === '' || project.name === undefined || project.name === 'Default Project') {
+    //     document.querySelector('#projectName').focus()
+    //     valid = false;
+    //     handleAlerts({'success': false, 'message': 'Please provide a project name'});
+    } else if (project.startDate === null || project.endDate === null || new Date(project.startDate) > new Date(project.endDate)) {
         valid = false;
-        handleAlerts({'success': false, 'message': 'Please provide a project name'});
-    } else if (project.startDate === null || project.endDate === null) {
-        valid = false;
+        document.querySelector('a[href="#tabGeneralParameters"]').click();
+        document.querySelector('#monicaStartDatePicker').focus()
         handleAlerts({'success': false, 'message': 'Please provide a valid date range'});
     } else if (project.rotation.length === 0) {
         valid = false;
+        document.querySelector('a[href="#tabRotation"]').click();        
+        // Focus on the crop rotation input field (if it has an ID or class)
+        document.querySelector('#cropRotationInput')?.focus();
+
         handleAlerts({'success': false, 'message': 'Please provide a crop rotation'});
-    } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => sowingWorkstep.date == null))) {
-        valid = false;
-        handleAlerts({'success': false, 'message': 'Please provide a sowing date for each crop'});
-    } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => new Date(sowingWorkstep.date) < new Date(project.startDate) || new Date(sowingWorkstep.date) > new Date(project.endDate)))) {
-        valid = false;
-        handleAlerts({'success': false, 'message': 'Please provide a sowing date for each crop that is within your selected timeframe'});
-    } else if (project.rotation.some(rotation => rotation.sowingWorkstep.some(sowingWorkstep => sowingWorkstep.options.species == null || sowingWorkstep.options.species == ''))) {
-        valid = false;
-        handleAlerts({'success': false, 'message': 'Please provide a crop for each sowing workstep!'});
-    } else if (project.rotation.some(rotation => new Date(rotation.harvestWorkstep[0]?.date) < new Date(rotation.sowingWorkstep[0]?.date))) {
-        valid = false;
-        handleAlerts({'success': false, 'message': 'Please make sure that the harvest dates are after the sowing dates!'});
+    } else {
+        let found = false; // To stop after first invalid field
+    
+        project.rotation.forEach((rotation, rotationIndex) => {
+            rotation.sowingWorkstep.forEach((sowingWorkstep) => {
+                if (!found && sowingWorkstep.date == null) {
+                    valid = false;
+                    document.querySelector('a[href="#tabRotation"]').click();
+    
+                    // Focus on the corresponding sowing date input field
+                    document.querySelector(`#sowingDate-${rotationIndex}-${sowingWorkstep.workstepIndex}`)?.focus();
+                    found = true;
+                    handleAlerts({'success': false, 'message': 'Please provide a sowing date for each crop'});
+    
+                } else if (!found && (new Date(sowingWorkstep.date) < new Date(project.startDate) || new Date(sowingWorkstep.date) > new Date(project.endDate))) {
+                    valid = false;
+                    document.querySelector('a[href="#tabRotation"]').click();
+    
+                    document.querySelector(`#id_date_sowingWorkstep_${rotationIndex}_${sowingWorkstep.workstepIndex}`)?.focus();
+                    found = true;
+                    handleAlerts({'success': false, 'message': 'Please provide a sowing date for each crop that is within your selected timeframe'});
+    
+                } else if (!found && (!sowingWorkstep.options.species || sowingWorkstep.options.species === '')) {
+                    valid = false;
+                    document.querySelector('a[href="#tabRotation"]').click();
+    
+                    document.querySelector(`#id_species_sowingWorkstep_${rotationIndex}_${sowingWorkstep.workstepIndex}`)?.focus();
+                    found = true;
+                    handleAlerts({'success': false, 'message': 'Please provide a crop for each sowing workstep!'});
+    
+                }
+            });
+            rotation.harvestWorkstep.forEach((harvestWorkstep) => {
+                if (!found && rotation.harvestWorkstep.length > 0 && new Date(rotation.harvestWorkstep[0]?.date) < new Date(rotation.sowingWorkstep[0]?.date)) {
+                    valid = false;
+                    document.querySelector('a[href="#tabRotation"]').click();
+                    document.querySelector(`#id_date_harvestWorkstep_${rotationIndex}_${harvestWorkstep.workstepIndex}`)?.focus();
+                    found = true;
+                    handleAlerts({'success': false, 'message': 'Please make sure that the harvest dates are after the sowing dates!'});
+                }
+            });
+
+            rotation.tillageWorkstep.forEach((tillageWorkstep) => {
+                
+                if (!found && (rotation.tillageWorkstep.some(tillageWorkstep => tillageWorkstep.date == null ))) {
+                    valid = false;
+                    document.querySelector('a[href="#tabRotation"]').click();
+                    document.querySelector(`#id_date_tillageWorkstep_${rotationIndex}_${tillageWorkstep.workstepIndex}`)?.focus();
+                    found = true;
+                    handleAlerts({'success': false, 'message': 'Please input a tillage Date !'});
+                } else if (!found && (new Date(tillageWorkstep.date) < new Date(project.startDate) || new Date(tillageWorkstep.date) > new Date(project.endDate))) {
+                    valid = false;
+                    document.querySelector('a[href="#tabRotation"]').click();
+    
+                    document.querySelector(`#id_date_tillageWorkstep_${rotationIndex}_${tillageWorkstep.workstepIndex}`)?.focus();
+                    found = true;
+                    handleAlerts({'success': false, 'message': 'Please provide a tillage date that is within your selected timeframe'});
+     
+                } else if (!found && tillageWorkstep.options.tillage_depth == '' ) {
+                    valid = false;
+                    document.querySelector('a[href="#tabRotation"]').click();
+                    document.querySelector(`#id_tillage_depth_tillageWorkstep_${rotationIndex}_${tillageWorkstep.workstepIndex}`)?.focus();
+                    found = true;
+                    handleAlerts({'success': false, 'message': 'Please input a valid tillage depth !'});
+                }
+            });
+
+        rotation.mineralFertilisationWorkstep.forEach((mineralFertilisationWorkstep) => {
+            if (!found && mineralFertilisationWorkstep.date == null) {
+                valid = false;
+                document.querySelector('a[href="#tabRotation"]').click();
+
+                // Focus on the corresponding sowing date input field
+                document.querySelector(`#sowingDate-${rotationIndex}-${mineralFertilisationWorkstep.workstepIndex}`)?.focus();
+                found = true;
+                handleAlerts({'success': false, 'message': 'Please provide a fertilisation date!'});
+
+            } else if (!found && (new Date(mineralFertilisationWorkstep.date) < new Date(project.startDate) || new Date(mineralFertilisationWorkstep.date) > new Date(project.endDate))) {
+                valid = false;
+                document.querySelector('a[href="#tabRotation"]').click();
+
+                document.querySelector(`#id_date_mineralFertilisationWorkstep_${rotationIndex}_${mineralFertilisationWorkstep.workstepIndex}`)?.focus();
+                found = true;
+                handleAlerts({'success': false, 'message': 'Please provide a fertilisation date that is within your selected timeframe'});
+
+            } else if (!found && (!mineralFertilisationWorkstep.options.mineral_fertiliser || mineralFertilisationWorkstep.options.mineral_fertiliser === '')) {
+                valid = false;
+                document.querySelector('a[href="#tabRotation"]').click();
+
+                document.querySelector(`#id_mineral_fertiliser_mineralFertilisationWorkstep_${rotationIndex}_${mineralFertilisationWorkstep.workstepIndex}`)?.focus();
+                found = true;
+                handleAlerts({'success': false, 'message': 'Please choose a fertiliser!'});
+
+            } else if (!found && (!mineralFertilisationWorkstep.options.amount || mineralFertilisationWorkstep.options.amount === '')) {
+                valid = false;
+                document.querySelector('a[href="#tabRotation"]').click();
+
+                document.querySelector(`#id_amount_mineralFertilisationWorkstep_${rotationIndex}_${mineralFertilisationWorkstep.workstepIndex}`)?.focus();
+                found = true;
+                handleAlerts({'success': false, 'message': 'Please choose a fertiliser!'});
+
+            }
+        });
+        rotation.organicFertilisationWorkstep.forEach((organicFertilisationWorkstep) => {
+            if (!found && organicFertilisationWorkstep.date == null) {
+                valid = false;
+                document.querySelector('a[href="#tabRotation"]').click();
+
+                // Focus on the corresponding sowing date input field
+                document.querySelector(`#sowingDate-${rotationIndex}-${organicFertilisationWorkstep.workstepIndex}`)?.focus();
+                found = true;
+                handleAlerts({'success': false, 'message': 'Please provide a fertilisation date!'});
+
+            } else if (!found && (new Date(organicFertilisationWorkstep.date) < new Date(project.startDate) || new Date(organicFertilisationWorkstep.date) > new Date(project.endDate))) {
+                valid = false;
+                document.querySelector('a[href="#tabRotation"]').click();
+
+                document.querySelector(`#id_date_organicFertilisationWorkstep_${rotationIndex}_${organicFertilisationWorkstep.workstepIndex}`)?.focus();
+                found = true;
+                handleAlerts({'success': false, 'message': 'Please provide a sowing date for each crop that is within your selected timeframe'});
+
+            } else if (!found && (!organicFertilisationWorkstep.options.organic_fertiliser || organicFertilisationWorkstep.options.organic_fertiliser === '')) {
+                valid = false;
+                document.querySelector('a[href="#tabRotation"]').click();
+
+                document.querySelector(`#id_organic_fertiliser_organicFertilisationWorkstep_${rotationIndex}_${organicFertilisationWorkstep.workstepIndex}`)?.focus();
+                found = true;
+                handleAlerts({'success': false, 'message': 'Please choose a fertiliser!'});
+
+            } else if (!found && (!organicFertilisationWorkstep.options.amount || organicFertilisationWorkstep.options.amount === '')) {
+                valid = false;
+                document.querySelector('a[href="#tabRotation"]').click();
+
+                document.querySelector(`#id_amount_organicFertilisationWorkstep_${rotationIndex}_${organicFertilisationWorkstep.workstepIndex}`)?.focus();
+                found = true;
+                handleAlerts({'success': false, 'message': 'Please choose a fertiliser!'});
+
+            }
+        });
+        });
     }
+    
+
+    if (valid && project.id === null) {
+        let modal = document.getElementById('saveProjectDialog')
+        let saveProjectDialog = new bootstrap.Modal(modal);
+        saveProjectDialog.show();
+
+        const btnSave = document.getElementById('btnSaveMonicaProjectModalDialog');
+        btnSave.addEventListener('click', function () {
+            if (project.name) {
+                saveProject(project);
+                // saveProjectDialog.hide();
+            } else {
+                document.querySelector('#projectName').focus()
+                handleAlerts({'success': false, 'message': 'Please provide a project name'});
+            }
+        });
+
+        const btnDontSaveAndRun = document.getElementById('btnDontSaveAndRun');
+        btnDontSaveAndRun.addEventListener('click', function () {
+            ;
+        });
+
+    } 
     console.log("validateProject", valid, project)
     return valid;
 };

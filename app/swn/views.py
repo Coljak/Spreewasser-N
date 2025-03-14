@@ -382,9 +382,12 @@ def save_user_field(request):
     
 
 @login_required
-@csrf_protect
+# @csrf_protect
 def delete_user_field(request, id):
+    # id = int(id)
+    print("delete 1")
     if request.method == 'POST' and request.user.is_authenticated:
+        print("delete 2")
         try:
             user_field = models.UserField.objects.get(id=id)
 

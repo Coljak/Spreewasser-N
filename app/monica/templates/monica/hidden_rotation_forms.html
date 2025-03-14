@@ -19,6 +19,28 @@
   </div>
 </div>
 
+<div class="modal fade" id="saveProjectDialog" tabindex="-1" aria-labelledby="saveProjectDialogLabel" aria-hidden="true">
+  <div class="modal-dialog  modal-lg">
+    <div class="modal-content" id="saveProjectDialogContent">
+      
+      <div class="modal-header">
+        <h5 class="modal-title" id="saveProjectDialogLabel">Do you want to save the project?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+
+      <form id="saveProjectForm" method="post">
+        {% csrf_token %}
+        <div class="modal-footer">
+          <button id="btnSaveMonicaProjectModalDialog" type="button" class="btn btn-primary" data-bs-dismiss="modal" data-bs-target="saveProjectDialog">Projekt speichern</button>
+          <button id="btnDontSaveAndRun" type="button" class="btn btn-primary" data-bs-dismiss="modal" data-bs-target="saveProjectDialog">Projekt nicht speichern</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
 
 <div id="hiddenForms" style="display: none;">
 

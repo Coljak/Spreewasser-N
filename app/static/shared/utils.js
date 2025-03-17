@@ -85,3 +85,50 @@ export const getCSRFToken = () => {
         handleAlerts(data.message);
       });
 };
+
+
+/**
+ * Sets the language for Bootstrap datepickers.
+ *
+ * @param {string} language_code - The language code to set for the datepicker.
+ */
+export function setLanguage(language_code){
+    console.log('setLanguage', language_code);
+    $('.datepicker').datepicker({
+        language: language_code,
+        autoclose: true
+    })
+};
+
+
+// function to check when the update of a dropdown menu is finished
+/**
+ * Observes a dropdown element for changes in its child nodes (options) and executes a callback function when options are added.
+ *
+ * @param {string} selector - The CSS selector for the dropdown element to observe.
+ * @param {Function} callback - The callback function to execute when options are added to the dropdown.
+ */
+export function observeDropdown (selector, callback) {
+    // console.log('observeDropdown', selector);
+    const dropdown = document.querySelector(selector);
+    if (!dropdown) 
+        {
+            console.error(`Dropdown not found: ${selector}`);
+            return; // Exit if dropdown does not exist
+        }
+    if (dropdown.options.length > 0) {
+        callback(dropdown);
+        return; // Exit if options are already loaded
+    }
+
+    const observer = new MutationObserver((mutations, obs) => {
+        mutations.forEach(mutation => {
+            if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+                callback(dropdown);
+                obs.disconnect(); // Stop observing after options are loaded
+            }
+        });
+    });
+
+    observer.observe(dropdown, { childList: true });
+};

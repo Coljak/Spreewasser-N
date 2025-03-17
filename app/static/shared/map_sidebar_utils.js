@@ -1,5 +1,7 @@
 import { getGeolocation } from '/static/shared/utils.js';
-import { MonicaProject,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica_model.js';
+import { MonicaProject, loadProjectFromDB, loadProjectToGui  } from '/static/monica/monica.js';
+
+import { ToolboxProject } from '/static/toolbox/toolbox.js';
 import { getCSRFToken, handleAlerts } from '/static/shared/utils.js';
 export class UserField {
   constructor(name, id=null, userProjects=[]) {
@@ -104,7 +106,7 @@ export function initializeDrawControl(map, featureGroup) {
   map.addControl(drawControl);
 };
 
-export function initializeMapEventlisteners (map, featureGroup) {
+export function initializeMapEventlisteners (map, featureGroup, projectClass) {
     const chrosshair = document.getElementsByClassName("leaflet-control-home")[0];
     chrosshair.addEventListener("click", () => {
     try {
@@ -139,7 +141,11 @@ export function initializeMapEventlisteners (map, featureGroup) {
     featureGroup.on("click", function (event) {
       let leafletId = Object.keys(event.layer._eventParents)[0];
       let userFieldId = getUserFieldIdByLeafletId(leafletId);
-      let project = MonicaProject.loadFromLocalStorage();
+      let projectClass = MonicaProject
+      if (window.location.pathname.endsWith('/toolbox/')) {
+        projectClass = ToolboxProject
+      }
+      let project = projectClass.loadFromLocalStorage();
       selectUserField(userFieldId, project, featureGroup);
       // highlightPolygon(event.layer)
     });
@@ -362,18 +368,28 @@ export function highlightLayer(leafletId, featureGroup) {
 };
 
 export function selectUserField(userFieldId, project, featureGroup) {
-  if (!project) {
-    project = MonicaProject.loadFromLocalStorage();
-  }
 
   console.log("selectUserField featureGroup", featureGroup);
-  // const project = MonicaProject.loadFromLocalStorage();
+
   if (project && project.userField && project.userField != userFieldId && project.id) {
     console.log('If action')
     let modal = document.getElementById('interactionModal');
     let modalInstance = new bootstrap.Modal(modal);
     document.getElementById('interactionModalTitle').innerHTML = "User Field Selection";
-    document.getElementById('interactionModalText').innerHTML = "you are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.";
+    document.getElementById('interactionModalText').innerHTML = "you are changing a Monica Project's user field.";
+    $('#interactionModalOK').off('click').on('click', function () {
+      project.userField = userFieldId;
+      project.saveToLocalStorage();
+      highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
+    }
+    );
+    modalInstance.show(); 
+  } else if (project && (!project.userField || project.userField === '' || project.userField === undefined) && project.id) {
+    console.log('If action')
+    let modal = document.getElementById('interactionModal');
+    let modalInstance = new bootstrap.Modal(modal);
+    document.getElementById('interactionModalTitle').innerHTML = "User Field Selection";
+    document.getElementById('interactionModalText').innerHTML = "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.";
     $('#interactionModalOK').off('click').on('click', function () {
       project.userField = userFieldId;
       project.saveToLocalStorage();
@@ -382,14 +398,14 @@ export function selectUserField(userFieldId, project, featureGroup) {
     );
     modalInstance.show(); 
   } else {
-    console.log('Else if action')
-    project.userField = userFieldId;
-    project.saveToLocalStorage();
+
+    // project.userField = userFieldId;
+    // project.saveToLocalStorage();
     highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
   };
 };
 
-export function initializeSidebarEventHandler({ sidebar, map, baseMaps, overlayLayers, getUserFields, getFeatureGroup, getProject }) {
+export function initializeSidebarEventHandler({projectClass, sidebar, map, baseMaps, overlayLayers, getUserFields, getFeatureGroup, getProject }) {
     sidebar.addEventListener("change", (event) => {
         const switchInput = event.target;
 
@@ -441,7 +457,7 @@ export function initializeSidebarEventHandler({ sidebar, map, baseMaps, overlayL
 
             const listElement = document.getElementById("accordion-"+leafletId);
             listElement.remove(); // removes HTML element from sidebar
-            // removes field from db
+            // removes field from dbprojectClass
             console.log("delete UserField ", userField)
             fetch(`/drought/delete-user-field/${userField.id}/`, {
               method: "POST",
@@ -594,9 +610,9 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
         localStorage.setItem('userFields', JSON.stringify(userFields));
 
         addLayerToSidebar(userField, layerGeoJson);
-        selectUserField(userField.id, null, featureGroup);
-        const fieldSelector = document.getElementById("userFieldSelect");
-        updateFieldSelectorOption(userField, fieldSelector);
+        // selectUserField(userField.id, null, featureGroup);
+        // const fieldSelector = document.getElementById("userFieldSelect");
+        // updateFieldSelectorOption(userField, fieldSelector);
       })
       // .catch((error) => {
       //   console.log("Error: ", error);
@@ -663,9 +679,9 @@ export const addLayerToSidebar = (userField, layer) => {
 
   
   // Load all user fields from DB
-export async function getData (loadDataUrl, featureGroup) {
+export async function getUserFieldsFromDb (featureGroup) {
   let userFields = {};
-  fetch(loadDataUrl, {
+  fetch('get-user-fields/', {
     method: "GET",
     credentials: "same-origin",
     headers: {

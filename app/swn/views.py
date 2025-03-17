@@ -28,16 +28,14 @@ from monica.utils import get_weather_forecast
 
 from buek import models as buek_models
 from buek import views as buek_views
-from toolbox import models as toolbox_models
+
 import xmltodict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import copy
 
 from .utils import get_geolocation
 import random
 
-from .data import calc_list, calc_dict
-from datetime import date
 import time
 import urllib
 # from bs4 import BeautifulSoup
@@ -244,7 +242,7 @@ def sign_up(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('swn:swn_user_dashboard')
+            return redirect('swn:swn_dashboard')
     else:
         form = forms.RegistrationForm()
 
@@ -255,7 +253,7 @@ def user_logout(request):
     logout(request)
     return HttpResponseRedirect(reverse('swn:swn_index'))
 
-def three_split(request):
+def swn_dashboard(request):
     print("Request.user", request.user)
     user = request.user
     user_fields = models.UserField.objects.filter(user=request.user.id)
@@ -333,25 +331,23 @@ def get_user_fields(request):
     return JsonResponse({'user_fields': ufs})
 
 @login_required
-def update_user_field(request, pk):
-    """
-    Currently not in use!
-    """
-    obj = models.UserField.objects.get(pk=pk)
+# @csrf_protect
+def delete_user_field(request, id):
+    if request.method == 'POST' and request.user.is_authenticated:
+        try:
+            user_field = models.UserField.objects.get(id=id)
 
-    if request.POST and request.user.is_authenticated:
+            if user_field.user == request.user:
+                user_field.delete()
+                return JsonResponse({'message': {'success': True, 'message': 'Field deleted'}})
+            else:
+                return JsonResponse({'message': {'success': False, 'message': 'You do not have permission to delete this field'}}, status=403)
 
-        obj.name = request.POST.get('name')
-        obj.geom_json = request.POST.get('geomJson')
-        obj.geom = request.POST.get('geom')
-
-
-        obj.save()
-        return JsonResponse({
-            'fieldName': obj.name,
-            'geom': obj.geom,
-        })
-    return redirect('swn:swn_user_dashboard')
+        except models.UserField.DoesNotExist:
+            return JsonResponse({'message': {'success': False, 'message': 'Field not found'}}, status=404)
+    else:
+        return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}}, status=400)
+        
 
 @login_required
 @csrf_protect
@@ -378,7 +374,7 @@ def save_user_field(request):
             return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
         
     else:
-        return HttpResponseRedirect('swn:swn_user_dashboard')
+        return HttpResponseRedirect('swn:swn_dashboard')
     
 
 @login_required
@@ -471,19 +467,6 @@ def recommended_soil_profile(request, profile_landusage, user_field_id):
     user_field = models.UserField.objects.get(id=user_field_id)
     return monica_views.get_soil_parameters(request, profile_landusage, user_field.centroid_lat, user_field.centroid_lon)
 
-
-# def load_swn_project(request, id):
-#     # try:
-#     project = models.SwnProject.objects.get(pk=id)
-#     return JsonResponse({
-#         'message':{
-#             'success': True, 
-#             'message': f'Project {project.name} loaded'
-#             }, 
-#         'project': project.to_json()
-#         })
-#     # except:
-#     #         return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
 
 def load_swn_project(request, id):
 

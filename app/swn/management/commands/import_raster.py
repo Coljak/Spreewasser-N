@@ -2,30 +2,7 @@
 # from swn.models import BuekCLCRaster
 from django.contrib.gis.gdal import DataSource, GDALRaster, SpatialReference
 
-# class Command(BaseCommand):
-#     help = 'Load raster data into DB'
 
-#     def add_arguments(self, parser):
-#         parser.add_argument('file_path', type=str, help='Path to the raster file')
-#         parser.add_argument('burn_in_description', type=str, help='Parameter description of the raster values')
-#         parser.add_argument('name', type=str, help='Name of the raster')
-#         parser.add_argument('grid_size_m', type=int, help='Approximate grid size of the raster in meters')
-        
-
-#     def handle(self, *args, **kwargs):
-#         file_path = kwargs['file_path']
-#         burn_in_description = kwargs['burn_in_description']
-#         name = kwargs['name']
-#         grid_size_m = kwargs['grid_size_m']
-#         raster = GDALRaster(file_path)
-#         raster.srs = SpatialReference(4326)
-        
-
-#         # Create a new raster model instance
-#         raster_instance = BuekCLCRaster(name=name, raster_data=raster, burn_in_description=burn_in_description, grid_size_m=grid_size_m)
-#         raster_instance.save()
-
-#         self.stdout.write(self.style.SUCCESS('Successfully loaded raster data')
 from osgeo import gdal, osr
 from django.core.management.base import BaseCommand
 from swn.models import BuekCLCRaster

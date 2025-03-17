@@ -11,9 +11,9 @@
         {% if user.is_authenticated  %}    
         {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:user_dashboard' %}">Spreewasser:N Tools</a></li> {% endcomment %}
         {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:toolbox_dashboard' %}">Toolbox</a></li> {% endcomment %}
-        <li class="nav-item"><a class="nav-link" href="{% url 'swn:swn_user_dashboard' %}">SWN</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'swn:swn_dashboard' %}">SWN</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'monica:monica_model' %}">Monica</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:three_split' %}">Toolbox</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:toolbox_dashboard' %}">Toolbox</a></li>
         {% endif %}
 
         <li class="nav-item"><a class="nav-link" href="{% url 'klim4cast:timelapse-page' %}">Clim4Cast</a></li>

@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css" />
-    <link rel="stylesheet" href="{% static 'swn/css/leaflet.contextmenu.css' %}"/>
+    <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.contextmenu.css' %}"/>
     {% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/> {% endcomment %}
     <!-- virtual-select is for the multiple select boxes -->
     <link rel="stylesheet" href="{% static 'vendor/virtual-select/virtual-select.min.css' %}" />
@@ -57,7 +57,11 @@
         </li>
     </ul>
 
-
+    <button id="toolboxPreviousButton" class="btn btn-primary mt-3">Previous</button>
+    <button id="toolboxNextButton" class="btn btn-primary mt-3">Next</button>
+    <button id="runToolbox" class="btn btn-primary mt-3">Run SimuToolboxtation</button>
+  
+    <button id="toolbox-project-save" class="btn btn-primary mt-3 ">Save Project</button>
 
 
 </div>
@@ -70,19 +74,17 @@
     {{ block.super }}
     <script>
         const loadNutsUrl = "{% url 'swn:load_nuts_polygon' %}";
-        const project_region = {{ project_region|safe }}                    
+        const project_region = {{ project_region|safe }}   
+        const getUserFieldsUrl = "{% url 'toolbox:get-user-fields' %}";                 
     </script>
     
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js"></script> {% endcomment %}
     {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js"></script>{% endcomment %}
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.de.min.js' %}"></script> 
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.contextmenu.js' %}"></script> 
-    {% comment %} <script src="https://unpkg.com/chroma-js"></script>
-    <script src="https://unpkg.com/georaster"></script>
-    <script src="https://unpkg.com/proj4"></script> {% endcomment %}
     {% comment %} <script src="{% static 'leaflet/georaster/georaster-layer-for-leaflet.min.js' %}"></script> {% endcomment %}
     {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" defer></script>{% endcomment %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
@@ -91,6 +93,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
     
     <script type="text/javascript" src="{% static 'vendor/virtual-select/virtual-select.min.js' %}"></script> 
-    <script type="text/javascript" src="{% static 'toolbox/toolbox_three_split.js' %}" ></script>
+    <script type="module" src="{% static 'toolbox/toolbox_three_split.js' %}" ></script>
 {% endblock %}
 

@@ -17,14 +17,11 @@ urlpatterns = [
     path('favicon.ico', views.favicon_view, name='favicon'),
     #user related paths
     path('sign-up/', views.sign_up, name='sign_up'),
-    # path('drought/', views.user_dashboard, name='user_dashboard'),
-    path('drought/', views.three_split, name='swn_user_dashboard'),
+    path('drought/', views.swn_dashboard, name='swn_dashboard'),
     path('drought/get-csrf-token/', views.get_csrf_token, name='get-csrf-token'),
     path('drought/save-user-field/', views.save_user_field, name='save-user-field'),
     path('drought/get-user-fields/', views.get_user_fields, name='get-user-fields'),
-    path('drought/update-user-field/', views.update_user_field, name='update-user-field'),
     path('drought/delete-user-field/<int:id>/', views.delete_user_field, name='delete-user-field'),
-    # path('drought/create-project/', views.create_project, name='create-project'),
     path('drought/save-project/', views.save_swn_project, name='save-project'),
 
     path('drought/load-project/<int:id>/', views.load_swn_project, name='load-project'),
@@ -37,7 +34,6 @@ urlpatterns = [
     path('drought/recommended-soil-profile/<str:profile_landusage>/<int:user_field_id>/', views.recommended_soil_profile, name='recommended_soil_profile'),
     path('drought/run-simulation/', views.run_simulation, name='run_simulation'),
     
-    # path('login/Dashboard/field-edit/<int:field_id>/chartdata/<int:crop_id>/<int:soil_id>/', views.get_chart, name='chart-api'),
     # Impressum and Acknoledgements
     path('Impressum-Information/', views.ImpressumView.as_view(), name='impressum_information'),
     path('acknoledgements/', views.AcknoledgementsView.as_view(), name='acknoledgements'),

@@ -1,4 +1,4 @@
-import { MonicaProject,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica_model.js';
+import { MonicaCalculation, MonicaProject, Rotation, Workstep, loadProjectFromDB, handleDateChange } from '/static/monica/monica.js';
 import { getGeolocation, handleAlerts, getCSRFToken, saveProject } from '/static/shared/utils.js';
 // import { projectRegion, baseMaps, map, initializeMapEventlisteners, initializeDrawControl } from '/static/shared/map_utils.js';
 import { 
@@ -15,7 +15,7 @@ import {
   addLayerToSidebar, 
   getUserFieldIdByLeafletId, 
   getLeafletIdByUserFieldId, 
-  getData, 
+  getUserFieldsFromDb, 
   highlightLayer, 
   selectUserField,
   handleSaveUserField,
@@ -74,7 +74,7 @@ var featureGroup = new L.FeatureGroup()
 map.addLayer(featureGroup);
 featureGroup.bringToFront();
 
-initializeMapEventlisteners(map, featureGroup);
+initializeMapEventlisteners(map, featureGroup, MonicaProject);
 initializeDrawControl(map, featureGroup);
  
 initializeSidebarEventHandler({
@@ -100,6 +100,6 @@ document.getElementById('monica-project-save').addEventListener('click', functio
 });
 
 
-getData(loadDataUrl, featureGroup);
+getUserFieldsFromDb(featureGroup);
 
 });

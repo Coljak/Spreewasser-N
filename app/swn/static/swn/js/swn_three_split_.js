@@ -80,7 +80,7 @@ const overlayLayers = {
   "projectRegion": projectRegion,
 };
 
-initializeMapEventlisteners(map, featureGroup);
+initializeMapEventlisteners(map, featureGroup, MonicaProject);
 initializeDrawControl(map, featureGroup);
 createBaseLayerSwitchGroup(baseMaps, map);
 initializeSidebarEventHandler({
@@ -98,6 +98,6 @@ createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});
 
 
 
-getData(loadDataUrl, featureGroup);
+getData(getUserFieldsUrl, featureGroup);
 
 });

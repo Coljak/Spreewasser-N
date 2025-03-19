@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from . import models
 from swn import models as swn_models
+from swn import forms as swn_forms
 from . import forms
 
 from django.shortcuts import render, redirect
@@ -9,6 +10,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpRes
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
+from django.forms.models import model_to_dict
 from django.core.serializers import serialize
 import json
 from django.core.serializers.json import DjangoJSONEncoder
@@ -21,8 +23,19 @@ from django.db import connection
 # Create your views here.
 
 
-def toolbox_dashboard(request):
+def create_default_project(user):
+    """
+    Create a default project for the user.
+    """
+    default_project = models.ToolboxProject(
+        name= '',
+        user=user,
+    ).to_json()
 
+    return json.dumps(default_project, default=str)
+
+def toolbox_dashboard(request):
+    user = request.user
     projectregion = swn_models.ProjectRegion.objects.first()
     geojson = json.loads(projectregion.geom.geojson) 
     feature = {
@@ -33,8 +46,21 @@ def toolbox_dashboard(request):
             }
         }
     
+    state_county_district_form = swn_forms.PolygonSelectionForm(request.POST or None)
+
+    project_select_form = forms.ToolboxProjectSelectionForm(user=user)
+    project_form = forms.ToolboxProjectForm(user=user)
+    project_modal_title = 'Create new project'
+
+    default_project = create_default_project(user)
+
     context = {
         'project_region': feature,
+        'default_project': default_project,
+        'state_county_district_form': state_county_district_form,
+        'project_select_form': project_select_form,
+        'project_form': project_form,
+        'project_modal_title': project_modal_title,
     }
 
     return render(request, 'toolbox/toolbox_three_split.html', context)
@@ -46,11 +72,11 @@ def load_nuts_polygon(request, entity, polygon_id):
         try:
             # Retrieve the polygon based on the ID
             if entity == 'states':
-                polygon = models.NUTS5000_N1.objects.get(id=polygon_id)
+                polygon = swn_models.NUTS5000_N1.objects.get(id=polygon_id)
             elif entity == 'districts':
-                polygon = models.NUTS5000_N2.objects.get(id=polygon_id)
+                polygon = swn_models.NUTS5000_N2.objects.get(id=polygon_id)
             elif entity == 'counties':
-                polygon = models.NUTS5000_N3.objects.get(id=polygon_id)
+                polygon = swn_models.NUTS5000_N3.objects.get(id=polygon_id)
             
             # Generate the GeoJSON representation of the polygon
             geometry = GEOSGeometry(polygon.geom)
@@ -129,19 +155,16 @@ def save_user_field(request):
             body = json.loads(request.body)
             name = body['name']
             geom = json.loads(body['geom'])
-            geos = GEOSGeometry(body['geom'], srid=4326)
+            geos = GEOSGeometry(body['geom'])
+            geos.transform(25833)
             user = request.user
             instance = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
-            # TODO this should rather be a save method of UserField
             instance.save()
-            instance.get_centroid()
-            instance.get_intersecting_soil_data()
-            instance.get_weather_grid_points()
             
             return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
         
     else:
-        return HttpResponseRedirect('swn:swn_dashboard')
+        return HttpResponseRedirect('toolbox:toolbox_dashboard')
     
 def get_user_fields(request):
     if request.method == "GET":

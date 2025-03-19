@@ -14,15 +14,7 @@ class ToolboxType(models.Model):
         return self.name
     
 
-# class Project(models.Model):
-#     name = models.CharField(max_length=100)
-#     description = models.CharField(max_length=255)
-#     created = models.DateTimeField(auto_now_add=True)
-#     modified = models.DateTimeField(auto_now=True)
-#     geom = gis_models.MultiPolygonField(srid=25833, null=True)
 
-#     def __str__(self):
-#         return self.name
 
 class DigitalElevationModel10(models.Model):
      name = models.CharField(max_length=100, null=True, blank=True)
@@ -76,24 +68,36 @@ class UserField(models.Model):
     creation_date = models.DateField(blank=True, default=now)
     geom_json = PolygonField(null=True)
     comment = models.TextField(null=True, blank=True)
-    geom = gis_models.GeometryField(null=True, srid=4326)
+    geom = gis_models.GeometryField(null=True, srid=25833)
     
 
     def __str__(self):
         return self.name
+    
 
 
-class UserProject(models.Model):    
+class ToolboxProject(models.Model):    
     name = models.CharField(max_length=255)
-    user_field = models.ForeignKey(UserField, on_delete=models.CASCADE, related_name="toolbox_userprojects")
-    comment = models.TextField(null=True, blank=True)
-    calculation_start_date = models.DateField(null=True, blank=True)
-    calculation_end_date = models.DateField(null=True, blank=True)
-    calculation = models.JSONField(null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="toolbox_projects")
+    description = models.TextField(null=True, blank=True)
+    user_field = models.ForeignKey(UserField, on_delete=models.CASCADE)
+    toolbox_type = models.ForeignKey(ToolboxType, on_delete=models.CASCADE)
     creation_date = models.DateField(blank=True, default=now)
+    last_modified = models.DateTimeField(auto_now=True, blank=True)
 
     def __str__(self):
         return self.name
+    
+    def to_json(self):
+        # Start with the project fields
+        return {
+            "id": self.id, # if self.id is not None else None,
+            "name": self.name,
+            "description": self.description,
+            # 'userField': self.user_field.id,
+            # 'toolbox_type': self.toolbox_type.name,
+        }
+
 
 ######################### INJECTION ###########################
 

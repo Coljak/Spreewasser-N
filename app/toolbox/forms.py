@@ -1,8 +1,9 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.db.models import Max, Min
-
-from toolbox.models import UserProject, SinksWithLandUseAndSoilProperties
+from .models import *
+from django.db.models import Q
+from toolbox.models import ToolboxProject, SinksWithLandUseAndSoilProperties
 from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
@@ -47,3 +48,32 @@ class SinksFilterForm(forms.Form):
         self.fields['land_use'].choices = land_use_options
         # Set all checkboxes to selected by default
         self.fields['land_use'].initial = [choice[0] for choice in land_use_options]
+
+
+
+class ToolboxProjectSelectionForm(forms.Form):
+    toolbox_project = forms.ChoiceField(
+        choices=[],
+        label="Toolbox Project",
+        widget=forms.Select(attrs={'class': 'form-control toolbox-project'})
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['toolbox_project'].choices = [
+            (instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
+        ]
+
+    
+class ToolboxProjectForm(forms.Form):
+    toolboox_project = forms.ChoiceField(
+        choices=[],
+        label="Toolbox Project",
+        widget=forms.Select(attrs={'class': 'form-control toolbox-project'})
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['toolboox_project'].choices = [
+            (instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
+        ]

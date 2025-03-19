@@ -51,14 +51,13 @@ class UserField(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
     creation_date = models.DateField(auto_now_add=True, blank=True, null=True)
-    swn_tool = models.CharField(max_length=16, null=True, blank=True)
+    # swn_tool = models.CharField(max_length=16, null=True, blank=True)
     geom_json = PolygonField(null=True)
     comment = models.TextField(null=True, blank=True)
     geom = gis_models.GeometryField(null=True, srid=4326)
     soil_profile_polygon_ids = models.JSONField(null=True, blank=True)
     centroid_lat = models.FloatField(null=True, blank=True)
     centroid_lon = models.FloatField(null=True, blank=True)
-
     weather_grid_points = models.JSONField(null=True, blank=True)
     
 

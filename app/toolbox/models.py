@@ -131,93 +131,6 @@ class OutlineGeste(gis_models.Model):
                 return self.name
     
 
-# # DE: Dränung
-# class OutlineDrainage(gis_models.Model):
-#     name = models.CharField(max_length=64, blank=True, null=True)
-#     geom = gis_models.MultiPolygonField('Drainage')
-
-#     def __str__(self):
-#                 return self.name
-
-
-
-class SinksWithLandUseAndSoilProperties(models.Model): # DELETE
-    geom = gis_models.MultiPolygonField(srid=4326)
-    objectid = models.IntegerField(null=True)
-    fid_sink = models.IntegerField(null=True)
-    depth_sink = models.FloatField(null=True)
-    area_sink = models.FloatField(null=True)
-    index_sink = models.FloatField(null=True)
-    index_si_1 = models.FloatField(null=True)
-    landuse_1 = models.CharField(max_length=100, null=True)
-    landuse_2 = models.CharField(max_length=100, null=True)
-    landuse_3 = models.CharField(max_length=100, null=True)
-    landuse_1_percent = models.FloatField(null=True)
-    landuse_2_percent = models.FloatField(null=True)
-    landuse_3_percent = models.FloatField(null=True)
-    index_soil = models.FloatField(null=True)
-    forest_deciduous_trees = models.FloatField(null=True, default=0)
-    heath = models.FloatField(null=True, default=0)
-    orchard_meadow = models.FloatField(null=True, default=0)
-    vegetation = models.FloatField(null=True, default=0)
-    grassland = models.FloatField(null=True, default=0)
-    agricultural_area_without_information = models.FloatField(null=True, default=0)
-    farmland = models.FloatField(null=True, default=0)
-    woody_area = models.FloatField(null=True, default=0)
-    forest_conifers = models.FloatField(null=True, default=0)
-    forest_conifers_and_deciduous_trees = models.FloatField(null=True, default=0)
-
-class SinksWithLandUseAndSoilPropertiesSimplified(models.Model): # DELETE
-    geom = gis_models.MultiPolygonField(srid=4326, default=None)
-    objectid = models.IntegerField(null=True)
-    fid_sink = models.IntegerField(null=True)
-    depth_sink = models.FloatField(null=True)
-    area_sink = models.FloatField(null=True)
-    index_sink = models.FloatField(null=True)
-    index_si_1 = models.FloatField(null=True)
-    landuse_1 = models.CharField(max_length=100, null=True)
-    landuse_2 = models.CharField(max_length=100, null=True)
-    landuse_3 = models.CharField(max_length=100, null=True)
-    landuse_1_percent = models.FloatField(null=True)
-    landuse_2_percent = models.FloatField(null=True)
-    landuse_3_percent = models.FloatField(null=True)
-    index_soil = models.FloatField(null=True)
-    forest_deciduous_trees = models.FloatField(null=True, default=0)
-    heath = models.FloatField(null=True, default=0)
-    orchard_meadow = models.FloatField(null=True, default=0)
-    vegetation = models.FloatField(null=True, default=0)
-    grassland = models.FloatField(null=True, default=0)
-    agricultural_area_without_information = models.FloatField(null=True, default=0)
-    farmland = models.FloatField(null=True, default=0)
-    woody_area = models.FloatField(null=True, default=0)
-    forest_conifers = models.FloatField(null=True, default=0)
-    forest_conifers_and_deciduous_trees = models.FloatField(null=True, default=0)
-
-class SinksWithLandUseAndSoilPropertiesAsPoints(models.Model): # DELETE
-    geom = gis_models.PointField(srid=4326)
-    objectid = models.IntegerField(null=True)
-    fid_sink = models.IntegerField(null=True)
-    depth_sink = models.FloatField(null=True)
-    area_sink = models.FloatField(null=True)
-    index_sink = models.FloatField(null=True)
-    index_si_1 = models.FloatField(null=True)
-    landuse_1 = models.CharField(max_length=100, null=True)
-    landuse_2 = models.CharField(max_length=100, null=True)
-    landuse_3 = models.CharField(max_length=100, null=True)
-    landuse_1_percent = models.FloatField(null=True)
-    landuse_2_percent = models.FloatField(null=True)
-    landuse_3_percent = models.FloatField(null=True)
-    index_soil = models.FloatField(null=True)
-    forest_deciduous_trees = models.FloatField(null=True, default=0)
-    heath = models.FloatField(null=True, default=0)
-    orchard_meadow = models.FloatField(null=True, default=0)
-    vegetation = models.FloatField(null=True, default=0)
-    grassland = models.FloatField(null=True, default=0)
-    agricultural_area_without_information = models.FloatField(null=True, default=0)
-    farmland = models.FloatField(null=True, default=0)
-    woody_area = models.FloatField(null=True, default=0)
-    forest_conifers = models.FloatField(null=True, default=0)
-    forest_conifers_and_deciduous_trees = models.FloatField(null=True, default=0)
 
 
 class Wasserrueckhaltepotentiale(models.Model):
@@ -240,6 +153,39 @@ class Wasserrueckhaltepotentiale(models.Model):
     
 
 ### ---- 2024-12-02 ---- ###
+class LandUse(models.Model):
+    geom = gis_models.MultiPolygonField(srid=25833)
+    centroid = gis_models.PointField(srid=25833, null=True, blank=True)
+
+    name = models.CharField(max_length=50)
+    name_v = models.CharField(max_length=50)
+
+    index_land = models.IntegerField()
+    corine_1 = models.IntegerField(null=True)
+    corine_2 = models.IntegerField(null=True)
+    corine_3 = models.IntegerField(null=True)
+    corine_land_cover = models.ForeignKey(CorineLandCover2018, on_delete=models.DO_NOTHING, null=True)
+
+class Stream(models.Model):
+    geom = gis_models.MultiLineStringField(srid=25833)
+    shape_length = models.FloatField()
+    # id_source = models.IntegerField()
+    min_sv = models.FloatField()
+    mean_sv = models.FloatField()
+    max_sv = models.FloatField()
+    plus_days = models.FloatField()
+
+class Lakes(models.Model):
+    geom = gis_models.MultiPolygonField(srid=25833)
+    centroid = gis_models.PointField(srid=25833, null=True, blank=True)
+    shape_length = models.FloatField()
+    shape_area = models.FloatField()
+    # id_lake = models.IntegerField()
+    min_sv = models.FloatField()
+    mean_sv = models.FloatField()
+    max_sv = models.FloatField()
+    plus_days = models.FloatField()
+
 
 class Sink(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -258,12 +204,28 @@ class Sink(models.Model):
     shape_length = models.FloatField(null=True)
     shape_area = models.FloatField(null=True)
     feasibility_sinks_index = models.FloatField(null=True)
+    #ExtractionPointsSinks ep
+    ep_geom = gis_models.PointField(srid=25833, null=True)
+    ep_sink = models.IntegerField(null=True)
+    ep_stream = models.ForeignKey(Stream, on_delete=models.CASCADE, null=True)
+    ep_lake = models.ForeignKey(Lakes, on_delete=models.CASCADE, null=True)
+    ep_distance = models.FloatField(null=True)
+    ep_min_sv = models.FloatField(null=True)
+    ep_mean_sv = models.FloatField(null=True)
+    ep_max_sv = models.FloatField(null=True)
+    ep_vol_sink = models.FloatField(null=True)
+    ep_index_1 = models.FloatField(null=True)
+    ep_weight_1 = models.FloatField(null=True)
+    ep_index_2 = models.FloatField(null=True)
+    ep_weight_2 = models.FloatField(null=True)
+    ep_index_3 = models.FloatField(null=True)
 
 # checked/copied
-class DataEnlargedSinks(models.Model): 
-    fid_sink = models.IntegerField(null=True) # primary_key=True does not work - DUPLICATE KEYS!
+class EnlargedSinks(models.Model): 
+    fid_sink = models.IntegerField(primary_key=True)
     geom = gis_models.MultiPolygonField(srid=25833)
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
+    extractionpoint = models.ForeignKey('ExtractionPointsEnlargedSinks', on_delete=models.DO_NOTHING, null=True)
     depth = models.FloatField(null=True)
     area = models.FloatField(null=True)
     nat_length = models.FloatField(null=True)
@@ -285,6 +247,21 @@ class DataEnlargedSinks(models.Model):
     shape_length = models.FloatField(null=True)
     shape_area = models.FloatField(null=True)
     feasibilty_enlarged_sinks_index = models.FloatField(null=True)
+    # ExtractionPointsEnlargedSinks ep
+    ep_geom = gis_models.PointField(srid=25833, null=True)
+    ep_fid_sink = models.IntegerField(null=True)
+    ep_id_source = models.IntegerField(null=True)
+    ep_id_lake = models.IntegerField(null=True)
+    ep_distance = models.FloatField(null=True)
+    ep_min_sv = models.FloatField(null=True)
+    ep_mean_sv = models.FloatField(null=True)
+    ep_max_sv = models.FloatField(null=True)
+    ep_vol_sink = models.FloatField(null=True)
+    ep_index_1 = models.FloatField(null=True)
+    ep_weight_1 = models.FloatField(null=True)
+    ep_index_2 = models.FloatField(null=True)
+    ep_weight_2 = models.FloatField(null=True)
+    ep_index_3 = models.FloatField(null=True)
 
 class Feasability(models.Model): # soilstuff
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
@@ -346,23 +323,13 @@ class HydrogeologyEnlargedSinks(models.Model):
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
     aq_complex = models.CharField(max_length=50)
     aquifer = models.CharField(max_length=150)
-    fid_sink = models.IntegerField(null=True)
+    # fid_sink = models.IntegerField(null=True)
     index_sink = models.FloatField(null=True)
     shape_length = models.FloatField(null=True)
     shape_area = models.FloatField(null=True)
+    enlarged_sink = models.ForeignKey(EnlargedSinks, on_delete=models.CASCADE, null=True) # fid_sink
 
-class LandUse(models.Model):
-    geom = gis_models.MultiPolygonField(srid=25833)
-    centroid = gis_models.PointField(srid=25833, null=True, blank=True)
 
-    name = models.CharField(max_length=50)
-    name_v = models.CharField(max_length=50)
-
-    index_land = models.IntegerField()
-    corine_1 = models.IntegerField(null=True)
-    corine_2 = models.IntegerField(null=True)
-    corine_3 = models.IntegerField(null=True)
-    corine_land_cover = models.ForeignKey(CorineLandCover2018, on_delete=models.DO_NOTHING, null=True)
 
 # for enlarged sinks
 class SinkEmbankment(models.Model):
@@ -416,25 +383,9 @@ class SoilProperties(models.Model):
     shape_length = models.FloatField()
     shape_area = models.FloatField()
 
-class Lakes(models.Model):
-    geom = gis_models.MultiPolygonField(srid=25833)
-    centroid = gis_models.PointField(srid=25833, null=True, blank=True)
-    shape_length = models.FloatField()
-    shape_area = models.FloatField()
-    # id_lake = models.IntegerField()
-    min_sv = models.FloatField()
-    mean_sv = models.FloatField()
-    max_sv = models.FloatField()
-    plus_days = models.FloatField()
 
-class Stream(models.Model):
-    geom = gis_models.MultiLineStringField(srid=25833)
-    shape_length = models.FloatField()
-    # id_source = models.IntegerField()
-    min_sv = models.FloatField()
-    mean_sv = models.FloatField()
-    max_sv = models.FloatField()
-    plus_days = models.FloatField()
+
+
 
 class ExtractionPointsSinks(models.Model):
     geom = gis_models.PointField(srid=25833)

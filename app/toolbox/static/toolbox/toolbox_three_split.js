@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage } from '/static/shared/utils.js';
-import { ToolboxProject } from '/static/toolbox/toolbox.js';
+import { ToolboxProject, toolboxSinks } from '/static/toolbox/toolbox.js';
 import { 
   projectRegion, 
   baseMaps, 
@@ -54,12 +54,63 @@ document.addEventListener("DOMContentLoaded", () => {
 //   const droughtBounds = [[46.89, 15.33], [55.31, 5.41],];
 //   const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
 //   const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5 });
+const demBounds = [
+  [47.136744752, 15.57241882],
+  [55.058996788, 5.564783468],
+];
+const toolboxBounds = [
+  [51.9015194452089901, 14.5048979594768852],
+  [52.7436194452089921, 13.4503979594768843]
+];
+const sinksBounds = [
+  [51.903417526,14.473467455],
+  [52.742055454,13.500732582]
+];
 
-const overlayLayers = {
-  // "droughtOverlay": droughtOverlay,
-  // "demOverlay": demOverlay,
-  "projectRegion": projectRegion,
-};
+const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
+const toolboxOverlaySoil = L.imageOverlay(toolboxUrl, toolboxBounds, { opacity: 1.0 });
+const toolboxOverlaySinks = L.imageOverlay(toolboxSinksUrl, sinksBounds, { opacity: 1.0 });
+
+const toolboxOutlineInjection = new L.geoJSON(outline_injection, {
+  attribution: 'Outline Injection',
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.name);
+}
+});
+
+const toolboxOutlineSurfaceWater = new L.geoJSON(outline_surface_water, {
+  attribution: 'Outline Surface Water',
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.name);
+}
+});
+
+const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
+  attribution: 'Outline Infiltration',
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.name);
+}
+});
+
+const toolboxOutlineGeste = new L.geoJSON(outline_geste, {
+  attribution: 'Geste??',
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.name);
+}
+});
+
+  const overlayLayers = {
+    // "droughtOverlay": droughtOverlay,
+    "demOverlay": demOverlay,
+    "projectRegion": projectRegion,
+    "toolboxOverlaySoil": toolboxOverlaySoil,
+    "toolboxOverlaySinks": toolboxOverlaySinks,
+    "toolboxOutlineInjection": toolboxOutlineInjection,
+    "toolboxOutlineSurfaceWater": toolboxOutlineSurfaceWater,
+    "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
+    "toolboxOutlineGeste": toolboxOutlineGeste,
+    "sinks": toolboxSinks,
+  };
 
 
 

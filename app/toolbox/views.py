@@ -38,13 +38,53 @@ def toolbox_dashboard(request):
     user = request.user
     projectregion = swn_models.ProjectRegion.objects.first()
     geojson = json.loads(projectregion.geom.geojson) 
-    feature = {
+    project_region = {
             "type": "Feature",
             "geometry": geojson,
             "properties": {
                 "name": 'Spreewasser:N Projektregion',
             }
         }
+
+    outline_injection = models.OutlineInjection.objects.first().geom.geojson
+    outline_injection = json.loads(outline_injection)
+    outline_injection = {
+        "type": "Feature",
+        "geometry": outline_injection,
+        "properties": {
+            "name": 'Spreewasser:N Injektionsbereich',
+        }
+    }
+
+    outline_surface_water = models.OutlineSurfaceWater.objects.first().geom.geojson
+    outline_surface_water = json.loads(outline_surface_water)
+    outline_surface_water = {
+        "type": "Feature",
+        "geometry": outline_surface_water,
+        "properties": {
+            "name": 'Spreewasser:N Oberflächenwasser',
+        }
+    }
+
+    outline_infiltration = models.OutlineInfiltration.objects.first().geom.geojson
+    outline_infiltration = json.loads(outline_infiltration)
+    outline_infiltration = {
+        "type": "Feature",
+        "geometry": outline_infiltration,
+        "properties": {
+            "name": 'Spreewasser:N Infiltrationsbereich',
+        }
+    }
+
+    outline_geste = models.OutlineGeste.objects.first().geom.geojson
+    outline_geste = json.loads(outline_geste)
+    outline_geste = {
+        "type": "Feature",
+        "geometry": outline_geste,
+        "properties": {
+            "name": 'Spreewasser:N Geste',
+        }
+    }
     
     state_county_district_form = swn_forms.PolygonSelectionForm(request.POST or None)
 
@@ -55,12 +95,16 @@ def toolbox_dashboard(request):
     default_project = create_default_project(user)
 
     context = {
-        'project_region': feature,
+        'project_region': project_region,
         'default_project': default_project,
         'state_county_district_form': state_county_district_form,
         'project_select_form': project_select_form,
         'project_form': project_form,
         'project_modal_title': project_modal_title,
+        'outline_injection': outline_injection,
+        'outline_surface_water': outline_surface_water,
+        'outline_infiltration': outline_infiltration,
+        'outline_geste': outline_geste,
     }
 
     return render(request, 'toolbox/toolbox_three_split.html', context)

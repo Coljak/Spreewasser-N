@@ -30,6 +30,7 @@
     {% include 'toolbox/sidebar.html' %}
     {% include 'swn/modal_field_name.html' %}
     {% include 'swn/modal_field_menu.html' %}
+    {% comment %} {% include 'toolbox/dtl_variables.html' %}   {% endcomment %}
 {% endblock left_panel %}
 
 {% block bottom_panel %}
@@ -72,11 +73,26 @@
 
 {% block javascript %}
     {{ block.super }}
+
     <script>
+
         const loadNutsUrl = "{% url 'swn:load_nuts_polygon' %}";
+        const getUserFieldsUrl = "{% url 'toolbox:get-user-fields' %}";  
+
+        const demUrl= "{% static 'data/dem_3857.png' %}"
+        const toolboxUrl= "{% static 'data/soil_4326_rendered_image_2.png' %}"
+        const toolboxSinksUrl = "{% static 'data/sinks_3857_pink.png' %}"
+    
         const project_region = {{ project_region|safe }}   
-        const getUserFieldsUrl = "{% url 'toolbox:get-user-fields' %}";                 
+
+        const outline_injection = {{ outline_injection|safe }}   
+        const outline_surface_water = {{ outline_surface_water|safe }}   
+        const outline_infiltration = {{ outline_infiltration|safe }}   
+        const outline_geste = {{ outline_geste|safe }}   
+      
+                  
     </script>
+
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>

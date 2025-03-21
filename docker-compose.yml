@@ -116,8 +116,10 @@ services:
   # MONICA
   monica:
     # image: zalfrpm/monica-cluster:3.6.10.soil_organic_fixed
-    image: zalfrpm/monica-cluster:3.6.33.auto_irrig_start_date
-    
+    image: zalfrpm/monica-cluster:3.6.35.shared_id
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.monica
     container_name: swn_monica
     # volumes:
     #   - ./monica:/run/monica
@@ -132,6 +134,8 @@ services:
       - 7777:7777
       - 7788:7788
     # entrypoint: ["sh", "-c", "sleep 2073600"]
+    environment:
+      - monica_proxy_out_mode=-prs
     networks:
       - swn_network
 

@@ -2,51 +2,55 @@ FROM ubuntu:jammy-20230308
 
 LABEL maintainer="Colja"
 
-ENV PYTHONUNBUFFERED 1
-ENV DEBIAN_FRONTEND noninteractive
-ENV LANG C.UTF-8
+ENV PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    PATH="/py/bin:$PATH"
 
 ARG DEV=true
 
+# Set working directory and copy app code
+WORKDIR /app
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements.dev.txt /tmp/requirements.dev.txt
 COPY ./app /app
-WORKDIR /app
+
+# Expose application port
 EXPOSE 8000
 
-# Install Node.js
+# Install system dependencies and Node.js
 RUN apt-get update -qq && apt-get install -y -qq \
-    ca-certificates curl gnupg wget && \
-    pip install --upgrade pip 
-RUN curl -fsSL https://deb.nodesource.com/setup_23.x | bash -E - &&
+    ca-certificates curl gnupg wget python3-pip && \
+    curl -fsSL https://deb.nodesource.com/setup_23.x | bash -E - && \
     apt-get install -y -qq nodejs && \
     apt-get clean && \
-    rm -rf /var/apt/lists/* && \
-    rm -rf /var/cache/apt/*
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
-# Continue with the rest of your Dockerfile
-RUN apt-get install -y -qq \
-    git less nano \
-    build-essential \
+# Install essential development packages
+RUN apt-get update -qq && apt-get install -y -qq \
+    git less nano build-essential \
     python3.10 python3.10-dev python3.10-venv gettext \
     gdal-bin binutils libproj-dev libgdal-dev \
     libpq-dev postgresql-client && \
-    apt-get clean all && rm -rf /var/apt/lists/* && rm -rf /var/cache/apt/* 
-RUN wget https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get-pip.py 
-RUN npm init -y 
-RUN npm install bootstrap 
-RUN npm install sass 
-RUN pip install --no-cache-dir setuptools wheel -U && \
-    python3 -m venv /py && \
-    /py/bin/pip install --upgrade pip && \
-    /py/bin/pip install -r /tmp/requirements.txt && \
-    if [ $DEV = "true" ]; \
-        then /py/bin/pip install -r /tmp/requirements.dev.txt ; \
-    fi && \
-    rm -rf /tmp 
-RUN adduser \
-        --disabled-password \
-        --no-create-home \
-        django-user
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
-ENV PATH="/py/bin:$PATH"
+# Upgrade pip and install required Python packages
+RUN wget https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get-pip.py
+
+# Initialize Node.js project and install dependencies
+RUN npm init -y && \
+    npm install bootstrap sass
+
+# Setup Python virtual environment and install dependencies
+RUN python3 -m venv /py && \
+    /py/bin/pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    /py/bin/pip install -r /tmp/requirements.txt && \
+    if [ "$DEV" = "true" ]; then \
+        /py/bin/pip install -r /tmp/requirements.dev.txt; \
+    fi && \
+    rm -rf /tmp
+
+# Create a non-root user for security
+RUN adduser --disabled-password --no-create-home django-user
+

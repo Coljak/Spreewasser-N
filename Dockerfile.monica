@@ -54,6 +54,8 @@ ENV monica_auto_restart_proxies=true
 ENV monica_auto_restart_worker=true
 ENV monica_proxy_in_host=localhost
 ENV monica_proxy_out_host=localhost
+# TODO https://github.com/zalf-rpm/build-pipeline/blob/master/hpc/monica/sbatch_monica_proxy.sh monica_proxy_out_mode=${SHARED_ID_MODE}
+ENV monica_proxy_out_mode=-prs
 
 ENV monica_intern_in_port=6677
 ENV monica_intern_out_port=7788

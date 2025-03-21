@@ -1290,6 +1290,44 @@ def manual_soil_selection(request, lat, lon):
     return JsonResponse(data_menu)
 
 
+# def run_monica_simulation(envs):
+#     print("running simulation")
+#     json_msgs = []
+#     i = 0
+#     for e in envs:
+#         i += 1
+#         context = zmq.Context()
+#         producer_socket = context.socket(zmq.PUSH)
+#         producer_socket.connect("tcp://swn_monica:6666")
+#         print("check 6")
+#         # print(env)
+#         producer_socket.send_json(e)
+#         file_path = Path(__file__).resolve().parent
+#         with open(f'{file_path}/monica_io/env_{str(i)}.json', 'w') as _: 
+#             json.dump(e, _)
+#         print("check 7")
+
+#         consumer_socket = context.socket(zmq.PULL)
+#         consumer_socket.connect("tcp://swn_monica:7777")
+#         # msg = run_consumer()
+#         msg = consumer_socket.recv_json()
+#         producer_socket.close()
+#         consumer_socket.close()
+
+#         print("check 9: consumer run")
+#         json_msg = msg_to_json(msg)
+#         json_msgs.append(json_msg)
+#         print("check 10: ")
+#         # print(msg)
+#         with open(f'{file_path}/monica_io/message_out_{str(i)}.json', 'w') as _: 
+#             json.dump(msg, _)
+#         with open(f'{file_path}/monica_io/json_message_out_{str(i)}.json', 'w') as _: 
+#             json.dump(json_msg, _)
+
+    
+#     return json_msgs
+import uuid
+    
 def run_monica_simulation(envs):
     print("running simulation")
     json_msgs = []
@@ -1301,13 +1339,19 @@ def run_monica_simulation(envs):
         producer_socket.connect("tcp://swn_monica:6666")
         print("check 6")
         # print(env)
+
+        shared_id = str(uuid.uuid4())
+        e['sharedId'] = shared_id
+        print("shared_id: ", shared_id)
         producer_socket.send_json(e)
         file_path = Path(__file__).resolve().parent
         with open(f'{file_path}/monica_io/env_{str(i)}.json', 'w') as _: 
             json.dump(e, _)
         print("check 7")
 
-        consumer_socket = context.socket(zmq.PULL)
+        consumer_socket = context.socket(zmq.DEALER)
+        consumer_socket.setsockopt_string(zmq.ROUTING_ID, shared_id)
+        consumer_socket.RCVTIMEO = 20000
         consumer_socket.connect("tcp://swn_monica:7777")
         # msg = run_consumer()
         msg = consumer_socket.recv_json()
@@ -1326,7 +1370,6 @@ def run_monica_simulation(envs):
 
     
     return json_msgs
-    
 
 def run_simulation(request):
     user = request.user

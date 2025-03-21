@@ -28,5 +28,31 @@ export class ToolboxProject {
   static fromJson(json) {
       return new ToolboxProject(json);
   }
-}
+};
+
+export async function toolboxSinks() {
+  try {
+      const response = await fetch('toolbox_sinks/');
+      if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const geojsonData = await response.json();
+
+      // Create a Leaflet GeoJSON layer
+      const toolboxSinks = L.geoJSON(geojsonData, {
+          attribution: 'Toolbox Sinks',
+          onEachFeature: function (feature, layer) {
+              layer.bindTooltip(feature.properties.name);
+          }
+      });
+
+      return toolboxSinks; // Return the Leaflet layer
+  } catch (error) {
+      console.error("Error loading project region:", error);
+      return null;
+  }
+};
+
+
 

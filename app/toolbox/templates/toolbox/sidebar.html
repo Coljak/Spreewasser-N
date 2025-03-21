@@ -108,15 +108,90 @@
                 </div>
               </li>
 
-              <!-- drought index -->
-              <li class="list-group-item drought-overlay-sidebar-item" id="liElementDroughtIndex">
+              <!-- Toolbox overlays -->
+              <li class="list-group-item toolbox-overlay-sidebar-item">
                 <div class="row">
                   <div class="form-check form-switch col">
-                    <input type="checkbox" class="form-check-input overlay-switch" data-layer="droughtOverlay" id="droughtSwitch" >
-                    <label class="form-check-label" for="droughtSwitch">Dürreindex</label>
+                    <input type="checkbox" data-layer="toolboxOverlaySoil" class="form-check-input overlay-switch" id="toolboxOverlaySoilwitch"/>
+                    <label class="form-check-label" for="toolboxOverlaySoilSwitch">
+                      Bodenanalyse
+                    </label>
                   </div>
-                  <div class="range col-5">
-                    <input type="range" class="form-range layer-opacity" data-layer="droughtOverlay" min="0.0" max="1.0" step="0.1" id="droughtOverlayOpacity" disabled />
+                </div>
+              </li>
+
+              <li class="list-group-item toolbox-overlay-sidebar-item">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOverlaySinks" class="form-check-input overlay-switch" id="toolboxOverlaySinksSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlaySinksSwitch">
+                      Senken
+                    </label>
+                  </div>
+                </div>
+              </li>
+
+              {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOutlineRetention" class="form-check-input overlay-switch" id="toolboxOverlayRetentionSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlayRetentionSwitch">
+                      Wasserrückhaltepotentiale
+                    </label>
+                  </div>
+                </div>
+              </li> {% endcomment %}
+
+              {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item d-none">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxSinks" class="form-check-input overlay-switch" id="toolboxSinksSwitch"/>
+                    <label class="form-check-label" for="toolboxSinksSwitch">
+                      Senken
+                    </label>
+                  </div>
+                </div>
+              </li> {% endcomment %}
+
+              <li class="list-group-item toolbox-overlay-sidebar-item ">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOutlineInjection" class="form-check-input overlay-switch" id="toolboxOverlayInjectionSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlayInjectionSwitch">
+                      Grundwasseranreicherung durch Injektion <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Grundwasseranreicherung durch Injektionsgebiet" style="text-align: left;"></i>
+                    </label>
+                  </div>
+                </div>
+              </li>
+
+              <li class="list-group-item toolbox-overlay-sidebar-item">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOutlineInfiltration" class="form-check-input overlay-switch" id="toolboxOverlayInfiltrationSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlayInfiltrationSwitch">
+                      Grundwasseranreicherung durch Versickerung <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Grundwasseranreicherung durch Versickerung" style="text-align: left;"></i>
+                    </label>
+                  </div>  
+                </div>
+              </li>
+              <li class="list-group-item toolbox-overlay-sidebar-item">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOutlineGeste" class="form-check-input overlay-switch" id="toolboxOverlayGesteSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlayGesteSwitch">
+                      Gesteuerte Drainagen <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Gesteuerte Drainagen" style="text-align: left;"></i>
+                    </label>
+                  </div>
+                </div>
+              </li>
+
+              <li class="list-group-item toolbox-overlay-sidebar-item">
+                <div class="row">
+                  <div class="form-check form-switch col">
+                    <input type="checkbox" data-layer="toolboxOutlineSurfaceWater" class="form-check-input overlay-switch" id="toolboxOverlaySurfaceWaterSwitch"/>
+                    <label class="form-check-label" for="toolboxOverlaySurfaceWaterSwitch">
+                      Senken in Ufernähe <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Senken in Ufernähe" style="text-align: left;"></i>
+                    </label>
                   </div>
                 </div>
               </li>

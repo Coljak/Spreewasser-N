@@ -93,11 +93,11 @@ createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});
 createBaseLayerSwitchGroup(baseMaps, map);
 
 
-document.getElementById('monica-project-save').addEventListener('click', function () {
-  const project = MonicaProject.loadFromLocalStorage();
+// document.getElementById('monica-project-save').addEventListener('click', function () {
+//   const project = MonicaProject.loadFromLocalStorage();
 
-  saveProject(project);
-});
+//   saveProject(project);
+// });
 
 
 getUserFieldsFromDb(featureGroup);

@@ -880,6 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#todaysDatePicker').datepicker('update', new Date());
     $('#todaysDatePicker').trigger('focusout'); // saving the todays date to the project
     document.getElementById('monica-project-save').addEventListener('click', function () {
+        console.log('monica-project-save clicked');
         const project = MonicaProject.loadFromLocalStorage();
         if (validateProject(project)) {
             saveProject(project);
@@ -903,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
         $('.nav-link.monica').removeClass('active');
         $(this).addClass('active');
         const target = $(this).attr('href');
-        $('.tab-content').hide();
+        $('.tab-pane').hide();
         $(target).show();
     });
 
@@ -1336,11 +1337,11 @@ document.addEventListener('DOMContentLoaded', () => {
         $('.dropdown-item').removeClass('active');
         $(this).addClass('active');
         const target = $(this).attr('href');
-        $('.tab-content').hide();
+        $('.tab-pane').hide();
         $(target).show();
     });
 
-    $('.tab-content').hide();
+    $('.tab-pane').hide();
 
     const tabs = document.querySelectorAll('.monica.nav-link');
 
@@ -1381,9 +1382,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tabs[1].click();
     
-    const getDefaultProject = () => {
+    // const getDefaultProject = () => {
 
-    };
+    // };
 
     let project = new MonicaProject(defaultProject);
     project.saveToLocalStorage();

@@ -422,8 +422,7 @@ def load_nuts_polygon(request, entity, polygon_id):
                 polygon = models.NUTS5000_N3.objects.get(id=polygon_id)
             
             # Generate the GeoJSON representation of the polygon
-            geometry = GEOSGeometry(polygon.geom)
-            geojson = json.loads(geometry.geojson)
+            geojson = json.loads(polygon.geom)
 
             feature = {
                 "type": "Feature",

@@ -427,23 +427,29 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
         }
     });
 
+    let clickTimeout;
+
     sidebar.addEventListener("dblclick", (event) => {
-        
-        if (event.target.classList.contains("user-field-btn")) {
-          const listElement = event.target.closest(".accordion-item");  
-          map.fitBounds(listElement.layer.getBounds());
-        }
+      clearTimeout(clickTimeout); // prevent single click logic
+      if (event.target.classList.contains("user-field-header")) {
+        const listElement = event.target.closest(".accordion-item");
+        map.fitBounds(listElement.layer.getBounds());
+        console.log("DOUBLE CLICK");
+      }
     });
 
     sidebar.addEventListener("click", (event) => {
       const clickedElement = event.target;
       let featureGroup = getFeatureGroup()
+  
       if (clickedElement.classList.contains("user-field-header") || clickedElement.classList.contains("user-field-btn")) {
-        const leafletId = clickedElement.getAttribute("leaflet-id");
-        console.log("user-field-header clicked", leafletId);
-
-        selectUserField(getUserFieldIdByLeafletId(leafletId), getProject(), featureGroup);
-        
+        clearTimeout(clickTimeout);
+        clickTimeout = setTimeout(() => {
+          // clickTimeout = null;
+          const leafletId = clickedElement.getAttribute("leaflet-id");
+          console.log("user-field-header clicked", leafletId);
+          selectUserField(getUserFieldIdByLeafletId(leafletId), getProject(), featureGroup);
+        }, 250);
       } else if (clickedElement.classList.contains("user-field-action")) {
         const leafletId = clickedElement.getAttribute("leaflet-id");
         console.log("user-field-action clicked", leafletId);
@@ -462,7 +468,7 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
             listElement.remove(); // removes HTML element from sidebar
             // removes field from dbprojectClass
             console.log("delete UserField ", userField)
-            fetch(`/drought/delete-user-field/${userField.id}/`, {
+            fetch(`delete-user-field/${userField.id}/`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -526,8 +532,14 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
             });
           });
         } else if (clickedElement.classList.contains("field-edit")) {
-            $('#userFieldSelect').val(userField.id);
+          $('#userFieldSelect').val(userField.id);
+          if (window.location.pathname.endsWith('/drought/') || window.location.pathname.endsWith('/monica/')) {
+            
             $('#monicaProjectModal').modal('show');
+        } else if (window.location.pathname.endsWith('/toolbox/')){
+          $('#toolboxProjectModal').modal('show');
+        }
+
         } else { return;}
         }
       });
@@ -655,9 +667,9 @@ export const addLayerToSidebar = (userField, layer) => {
         <span class="form-check form-switch h6">  
           <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="fieldSwitch-${userField.leafletId}" checked>
         </span>
-        <button class=" btn user-field-btn" type="button" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="accordionButton-${userField.leafletId}" > 
+        
           ${userField.name}
-        </button>
+
         <span class="column col-4 field-btns-col">
           <form id="deleteAndCalcForm-${userField.leafletId}">
             <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">

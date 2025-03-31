@@ -1,5 +1,5 @@
-import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage } from '/static/shared/utils.js';
-import { ToolboxProject, toolboxSinks } from '/static/toolbox/toolbox.js';
+import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
+import { ToolboxProject, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
 import { 
   projectRegion, 
   baseMaps, 
@@ -25,7 +25,9 @@ import {
 
 document.addEventListener("DOMContentLoaded", () => {
   // Hide the coordinate form card from plain Monica
-  
+  const project = new ToolboxProject();
+  project.saveToLocalStorage();
+
   $('#coordinateFormCard').hide();
 
   // center map at geolocation
@@ -47,6 +49,70 @@ document.addEventListener("DOMContentLoaded", () => {
     // TODO: featureGroup as getFeatureGroup
     selectUserField(userFieldId,  project, featureGroup);
     
+  });
+
+  $('#saveToolboxProjectButton').on('click', () => {
+    console.log('saveToolboxProjectButton clicked');
+    
+      // Get the project name field
+      const projectNameInput = $('#id_project_name');
+      const projectName = projectNameInput.val().trim();
+  
+      // Check if the project name is empty
+      if (!projectName) {
+          projectNameInput.addClass('is-invalid'); // Bootstrap class for red highlight
+          projectNameInput.focus();
+          return; // Stop execution if validation fails
+      } else {
+          projectNameInput.removeClass('is-invalid'); // Remove error class if fixed
+      }
+  
+
+      const project = new ToolboxProject();
+  
+      try {
+          project.userField = $('#userFieldSelect').val();
+      } catch (e) {
+          console.log('UserField not found');
+      }
+
+      try {
+        project.toolboxType = $('#projectTypeSelect').val();
+    } catch (e) {
+        console.log('ProjectType not found');
+    }
+  
+      project.name = projectName;
+      project.description = $('#id_project_description').val();
+  
+      project.saveToLocalStorage();
+  
+      fetch('save-project/', {
+          method: 'POST',
+          body: JSON.stringify(project),
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCSRFToken(),
+          }
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log('data', data);
+          if (data.message.success) {
+              project.id = data.project_id;
+              // $('#project-info').find('.card-title').text('Project '+ data.project_name);
+              addToDropdown(data.project_id, data.project_name, document.querySelector('.toolbox-project.form-select'));
+              // updateDropdown('toolbox-project', data.project_id);
+              handleAlerts(data.message);
+              
+              projectModalForm.reset();
+              
+              $('#toolboxProjectModal').modal('hide');
+              project.saveToLocalStorage();
+          } else {
+              handleAlerts(data.message);
+          }
+      });
   });
 
 // // Bounds for DEM image overlay
@@ -145,6 +211,6 @@ createBaseLayerSwitchGroup(baseMaps, map);
 // });
 
 
-// getUserFieldsFromDb(featureGroup);
+getUserFieldsFromDb(featureGroup);
 
 });

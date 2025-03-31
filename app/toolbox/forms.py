@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models import Max, Min
 from .models import *
 from django.db.models import Q
-from toolbox.models import ToolboxProject #, SinksWithLandUseAndSoilProperties
+from toolbox.models import * #, SinksWithLandUseAndSoilProperties
 from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
@@ -61,19 +61,40 @@ class ToolboxProjectSelectionForm(forms.Form):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['toolbox_project'].choices = [
+            # print(instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
             (instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
         ]
 
     
+
+
 class ToolboxProjectForm(forms.Form):
-    toolboox_project = forms.ChoiceField(
-        choices=[],
-        label="Toolbox Project",
-        widget=forms.Select(attrs={'class': 'form-control toolbox-project'})
+    user_field = forms.ModelChoiceField(
+        queryset=UserField.objects.all(),
+        label='Field',
+        widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'user-field-dropdown'}),
+    )
+    project_type = forms.ModelChoiceField(
+        queryset = ToolboxType.objects.all(),
+        label='Project Type',
+        empty_label=None,
+        widget=forms.Select(attrs={'id': 'projectTypeSelect', 'class': 'project-type-dropdown'}),
+    )
+    project_id = forms.IntegerField(
+        widget=forms.HiddenInput(),
+        required=False
+    )
+    name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_project_name', 'required': 'required',}),
+        label='Project Name',
+        required=True,
+    )
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'id': 'id_project_description'}),
+        label='Description',
+        required=False
     )
 
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['toolboox_project'].choices = [
-            (instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
-        ]
+    class Meta:
+        model = ToolboxProject
+        exclude = ['id', 'user']

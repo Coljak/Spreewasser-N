@@ -1,3 +1,5 @@
+import { getGeolocation, handleAlerts, getCSRFToken, saveProject, observeDropdown,  setLanguage, populateDropdown } from '/static/shared/utils.js';
+
 export class ToolboxProject {
   constructor (project = {}) {
     this.id = project.id ?? null;
@@ -5,7 +7,7 @@ export class ToolboxProject {
     this.updated = project.updated ?? null;
     this.description = project.description ?? '';
     this.userField = project.userField ?? null;
-    this.type = project.type ?? 'injection';
+    this.toolboxType = project.toolboxType ?? 1;
   }
 
     // Convert instance to JSON for storage
@@ -16,6 +18,7 @@ export class ToolboxProject {
   // Save project to localStorage
   saveToLocalStorage() {
       localStorage.setItem('toolbox_project', this.toJson());
+      console.log('saveToLocalStorage', this.toJson());
   }
 
   // Load project from localStorage
@@ -29,6 +32,31 @@ export class ToolboxProject {
       return new ToolboxProject(json);
   }
 };
+
+
+export const updateDropdown = (parameterType, newId) => {
+    
+    // the absolute path is needed because most options are exclusively from /monica
+    let baseUrl = 'get_options/';
+
+    console.log('updateDropdown baseUrl', baseUrl);
+    var select = document.querySelector('.form-select.' + parameterType); 
+    fetch(baseUrl + parameterType + '/')
+        .then(response => response.json())
+        .then(data => {
+            console.log('updateDropdown', data);
+            populateDropdown(data, select);
+        })
+        .then(() => {
+            if (newId != '') {
+                select.value = newId
+            }
+            $(select).trigger('change');
+        })
+        .catch(error => console.log('Error in updateDropdown', error));
+};
+
+
 
 export async function toolboxSinks() {
   try {
@@ -53,6 +81,21 @@ export async function toolboxSinks() {
       return null;
   }
 };
+
+// export async function saveProject(project) {
+//     fetch('save-project/', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify(project),
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         console.log('Success:', data);
+//     });
+// }
+
 
 
 

@@ -100,6 +100,28 @@ export function setLanguage(language_code){
     })
 };
 
+export const populateDropdown = (data, dropdown) => {
+    console.log('populateDropdown', data, dropdown);
+    dropdown.innerHTML = '';
+    data.options.forEach(option => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option.id;
+        optionElement.text = option.name;
+        dropdown.appendChild(optionElement);
+    });       
+};
+
+export const addToDropdown = (id, name, dropdown) => {
+    console.log('addToDropdown', id, name, dropdown);
+ 
+    const optionElement = document.createElement('option');
+    optionElement.value = id;
+    optionElement.text = name;
+    dropdown.appendChild(optionElement);
+    dropdown.value = id;
+    $(dropdown).trigger('change');
+      
+};
 
 // function to check when the update of a dropdown menu is finished
 /**

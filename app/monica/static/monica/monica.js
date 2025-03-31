@@ -1,5 +1,5 @@
 
-import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage } from '/static/shared/utils.js';
+import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, populateDropdown } from '/static/shared/utils.js';
 export class MonicaCalculation {
     constructor(project) {
         this.project = project;
@@ -351,16 +351,6 @@ const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=n
     }
 };
 
-export const populateDropdown = (data, dropdown) => {
-    console.log('populateDropdown', data, dropdown);
-    dropdown.innerHTML = '';
-    data.options.forEach(option => {
-        const optionElement = document.createElement('option');
-        optionElement.value = option.id;
-        optionElement.text = option.name;
-        dropdown.appendChild(optionElement);
-    });       
-};
 
 export function handleDateChange(event) {
     console.log('handleDateChange', event);

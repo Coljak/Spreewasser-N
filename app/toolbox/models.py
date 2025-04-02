@@ -413,6 +413,7 @@ class Sink(models.Model):
             depth = self.depth,
             area = self.area,
             volume = self.volume,
+            shape_length = self.shape_length,
             index_1 = self.index_1,
             index_2 = self.index_2,
             index_3 = self.index_3,

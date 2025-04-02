@@ -193,9 +193,9 @@ def get_selected_sinks(request):
             project = json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        print('Project:', type(project), project)
-        print('infiltration:', type(project['infiltration']), project['infiltration'])
-        print('project.userField:', project['userField'])
+        # print('Project:', type(project), project)
+        # print('infiltration:', type(project['infiltration']), project['infiltration'])
+        # print('project.userField:', project['userField'])
         user_field = models.UserField.objects.get(pk=project['userField'])
         geom = GEOSGeometry(user_field.geom)
         sinks = models.Sink4326.objects.filter(geom__within=geom)
@@ -212,13 +212,14 @@ def get_selected_sinks(request):
         for sink in sinks:
             centroid = sink.centroid
             geojson = json.loads(centroid.geojson)
+            print('geojson:', geojson)
             geojson['properties'] = {
-                "Tiefe": sink.depth,
-                "Fläche": sink.area,
-                "Eignung": str(sink.index_soil * 100) + "%",
-                "Landnuntzung 1": sink.land_use_1,
-                "Landnuntzung 2": sink.land_use_2,
-                "Landnuntzung 3": sink.land_use_3,
+                "depth": sink.depth,
+                "area": sink.area,
+                "index_soil": str(sink.index_soil * 100) + "%",
+                "land_use_1": sink.land_use_1,
+                "land_use_2": sink.land_use_2,
+                "land_use_3": sink.land_use_3,
             }
             features.append(geojson)
         feature_collection = {

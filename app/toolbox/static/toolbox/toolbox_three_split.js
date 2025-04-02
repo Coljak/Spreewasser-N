@@ -203,8 +203,8 @@ createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});
 // sidebar Base Layers
 createBaseLayerSwitchGroup(baseMaps, map);
 
-var sinkFeaureGroup = new L.FeatureGroup()
-map.addLayer(sinkFeaureGroup);
+var sinkFeatureGroup = new L.FeatureGroup()
+map.addLayer(sinkFeatureGroup);
 
 // document.getElementById('toolbox-project-save').addEventListener('click', function () {
 //   const project = ToolboxProject.loadFromLocalStorage();
@@ -216,25 +216,63 @@ function initializeSinkFilterEventHandler() {
   $('#filterSinksButton').on('click', function () {
     const project = ToolboxProject.loadFromLocalStorage();
     console.log('project', project);
-    fetch('get_selected_sinks/' ,
-        {
-            method: 'POST',
-            body: JSON.stringify(project),
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(),
-            }
+
+    fetch('get_selected_sinks/', {
+        method: 'POST',
+        body: JSON.stringify(project),
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
         }
-    )
-        .then(response => response.json())
-        .then(data => {
-            console.log('data', data);
-            sinkFeaureGroup.clearLayers();
-            sinkFeaureGroup.addLayer(L.geoJSON(data));
-            map.fitBounds(sinkFeaureGroup.getBounds());
-        })
-        .catch(error => console.error("Error fetching data:", error));
-  });
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('data', data);
+
+        // Clear existing markers
+        sinkFeatureGroup.clearLayers();
+
+        // Initialize marker cluster
+        let markers = L.markerClusterGroup();
+
+        // Iterate through features and add them to the cluster
+        data.features.forEach(feature => {
+            let coords = feature.coordinates; // Get the lat/lng coordinates
+            let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
+
+            // Create popup content with all properties
+            let popupContent = `
+                <b>Tiefe:</b> ${feature.properties.depth} m<br>
+                <b>Fläche:</b> ${feature.properties.area} m²<br>
+                <b>Bodeneignung:</b> ${feature.properties.index_soil}<br>
+                <b>Landnuntzung 1:</b> ${feature.properties.land_use_1}<br>
+                ${feature.properties.land_use_2 ? `<b>Landnuntzung 2:</b> ${feature.properties.land_use_2}<br>` : ''}
+                ${feature.properties.land_use_3 ? `<b>Landnuntzung 3:</b> ${feature.properties.land_use_3}<br>` : ''}
+            `;
+
+
+            // Create a marker
+            let marker = L.marker(latlng).bindPopup(popupContent);
+            marker.on('mouseover', function () {
+              this.openPopup();
+            });
+
+            // Hide popup when not hovering
+            marker.on('mouseout', function () {
+                this.closePopup();
+            });
+
+            // Add marker to cluster
+            markers.addLayer(marker);
+        });
+
+        // Add the cluster group to the map
+        sinkFeatureGroup.addLayer(markers);
+        map.fitBounds(markers.getBounds());
+    })
+    .catch(error => console.error("Error fetching data:", error));
+});
+
 
   $('#id_depth_sink_min').on('change', function () {
     const project = ToolboxProject.loadFromLocalStorage();

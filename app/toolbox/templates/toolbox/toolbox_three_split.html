@@ -14,7 +14,6 @@
     <!-- virtual-select is for the multiple select boxes -->
     <link rel="stylesheet" href="{% static 'vendor/virtual-select/virtual-select.min.css' %}" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
-    {% comment %} <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" /> {% endcomment %}
     <link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.css' %}" />
 	<link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.Default.css' %}" />
 
@@ -38,72 +37,35 @@
 {% endblock left_panel %}
 
 {% block bottom_panel %}
+<button id="injectionGo" class="btn btn-primary mt-3">Injektion</button>
 <div class="overflow-auto">
     <!-- Navigation -->
     <ul class="nav nav-tabs">
         <li class="nav-item">
             <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject">Project</a>
         </li>
-        <li class="nav-item">
-            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabInjection">Versickerung</a>
+        
+        <li class="nav-item infiltration">
+            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabSinks">Senken</a>
         </li>
-        <li class="nav-item">
-            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabDrainage">Dränung</a>
+        <li class="nav-item infiltration">
+            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabWaterbodies">Gewässer</a>
         </li>
-        <li class="nav-item">
+        <li class="nav-item infiltration">
             <a id="toolboxResultTab" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabToolboxResult">Result</a>
         </li>
-        <li>
-            <button id="toggle-advanced-mode" class="btn btn-primary simple" type="button">
-                Switch to Advanced Mode
-            </button>
-        </li>
+
     </ul>
 
     <!-- Tab Content Wrapper -->
     <div class="tab-content" id="toolboxTabContent">
 
-        <div id="tabToolboxProject" class="tab-pane active show">
-            <div class="card mb-3">
-                <div class="card-body">
-                    {{ project_select_form |crispy }}
-                </div>
-            </div>
-        </div>
-
-        <div id="tabInjection" class="tab-pane">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">tabInjection</h5>
-                    <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
-                </div>
-            </div>
-        </div>
-
-        <div id="tabDrainage" class="tab-pane">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">tabDrainage</h5>
-                    <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
-                </div>
-            </div>
-        </div>
-
-        <div id="tabToolboxResult" class="tab-pane">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">tabToolboxResult</h5>
-                    <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
-                </div>
-            </div>
-        </div>
-
-        <button id="toolboxPreviousButton" class="btn btn-primary mt-3">Previous</button>
-        <button id="toolboxNextButton" class="btn btn-primary mt-3">Next</button>
-        <button id="runToolbox" class="btn btn-primary mt-3">Run SimuToolboxtation</button>
-        <button id="toolbox-project-save" class="btn btn-primary mt-3">Save Project</button>
-
     </div>
+
+    <button id="toolboxPreviousButton" class="btn btn-primary mt-3">Previous</button>
+    <button id="toolboxNextButton" class="btn btn-primary mt-3">Next</button>
+    <button id="runToolbox" class="btn btn-primary mt-3">Run Toolbox</button>
+    <button id="toolbox-project-save" class="btn btn-primary mt-3">Save Project</button>
 </div>
 
 {% endblock bottom_panel %}
@@ -116,7 +78,7 @@
 
     <script>
 
-        const loadNutsUrl = "{% url 'swn:load_nuts_polygon' %}";
+
         const getUserFieldsUrl = "{% url 'toolbox:get-user-fields' %}";  
 
         const demUrl= "{% static 'data/dem_3857.png' %}"

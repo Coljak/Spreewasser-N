@@ -1113,6 +1113,7 @@ def monica_model(request):
     project_modal_title = 'Create new project'
 
     coordinate_form = CoordinateForm()
+    print('COORDINATE FORM', coordinate_form.helper )
    
     user_simulation_settings_select_form = UserSimulationSettingsInstanceSelectionForm(user=user)
 

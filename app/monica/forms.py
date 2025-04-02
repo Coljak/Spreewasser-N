@@ -1,7 +1,7 @@
 from django import forms
 from .models import *
 from swn.models import SwnProject
-from crispy_forms.helper import FormHelper
+
 from django.db.models import Q
 from django.contrib.postgres.fields import JSONField
 
@@ -13,6 +13,8 @@ from django_select2.forms import Select2Widget
 from .widgets import SingleRowTextarea
 from django.utils.translation import gettext_lazy as _
 from utils.widgets import UnitInputWrapper
+
+from crispy_forms.layout import Field, Layout, Row, Column
 
 
 
@@ -83,15 +85,27 @@ class CoordinateForm(forms.Form):
     latitude = forms.FloatField(
         max_value=54.92,
         min_value=47.27,
-        initial = 50.00,
-        widget=forms.NumberInput(attrs={'class': 'form-control',  'step': 0.1})
+        initial=50.00,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': 0.1})
     )
     longitude = forms.FloatField(
-        min_value = 5.87,
-        max_value = 15.04,
-        initial = 10.00,
-        widget=forms.NumberInput(attrs={'class': 'form-control',  'step': 0.1})
+        min_value=5.87,
+        max_value=15.04,
+        initial=10.00,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': 0.1})
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_method = "post" 
+        self.helper.layout = Layout(
+            Row(
+                Column('longitude', css_class='form-group col-md-6 mb-0'),
+                Column('latitude', css_class='form-group col-md-6 mb-0'),
+                css_class='form-row'
+            ),
+        )
 
             
 class CultivarParametersForm(ParametersModelForm):

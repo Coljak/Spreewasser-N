@@ -13,6 +13,8 @@ from django.contrib.gis.gdal import DataSource
 from django.forms.models import model_to_dict
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
 from django.views.decorators.csrf import csrf_protect
+
+from django.core.serializers import serialize
 from django.shortcuts import render
 from django.conf import settings
 import numpy as np
@@ -409,8 +411,8 @@ def get_field_project_modal(request, id):
     
     return JsonResponse({'projects': list(user_projects.values())})
 
-
 def load_nuts_polygon(request, entity, polygon_id):
+    print('load_nuts_polygon:', entity, polygon_id)
     if request.method == 'GET':
         try:
             # Retrieve the polygon based on the ID
@@ -420,10 +422,11 @@ def load_nuts_polygon(request, entity, polygon_id):
                 polygon = models.NUTS5000_N2.objects.get(id=polygon_id)
             elif entity == 'counties':
                 polygon = models.NUTS5000_N3.objects.get(id=polygon_id)
-            
+            print('polygon:', polygon)
             # Generate the GeoJSON representation of the polygon
-            geojson = json.loads(polygon.geom)
-
+            # geojson = json.loads(polygon.geom)
+            geojson = json.loads(serialize("geojson", [polygon]))["features"][0]["geometry"]
+            print('geojson:', geojson)
             feature = {
                 "type": "Feature",
                 "geometry": geojson,

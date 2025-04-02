@@ -1,5 +1,5 @@
-import { MonicaCalculation, MonicaProject, Rotation, Workstep, populateDropdown, loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica.js';
-import { getGeolocation, handleAlerts, getCSRFToken, saveProject, observeDropdown,  setLanguage } from '/static/shared/utils.js';
+import { MonicaCalculation, MonicaProject, Rotation, Workstep,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica.js';
+import { getGeolocation, handleAlerts, getCSRFToken, saveProject, observeDropdown, populateDropdown,  setLanguage, addToDropdown } from '/static/shared/utils.js';
 
 function formatDateToISO(date) {
     return date.toISOString().split('T')[0];
@@ -313,6 +313,7 @@ const bindModalEventListeners = (parameters) => {
     }
 };
 
+// TODO addToDropdown instead of updateDropdown
 const updateDropdown = (parameterType, rotationIndex, newId) => {
     console.log('updateDropdown', parameterType, rotationIndex, newId);
     // the absolute path is needed because most options are exclusively from /monica
@@ -327,8 +328,6 @@ const updateDropdown = (parameterType, rotationIndex, newId) => {
     fetch(baseUrl + parameterType + '/')
         .then(response => response.json())
         .then(data => {
-            console.log('updateDropdown', data);
-            
             if (rotationIndex != '') {
                 const rotationDiv = document.querySelector(`div[rotation-index='${rotationIndex}']`);
                 select = rotationDiv.querySelector('.select-parameters.' + parameterType);
@@ -367,6 +366,7 @@ const submitModalForm = (modalForm, modalAction) => {
             const parameterType = actionUrl.split('/')[0];
             const rotationIndex = actionUrl.split('/')[2];
             if (modalAction === 'save_as_new') {
+                // addToDropdown(data.new_id, document.querySelector('.form-select.' + parameterType));
                 updateDropdown(parameterType, rotationIndex, data.new_id);
             } else if (modalAction === 'delete') {
                 updateDropdown(parameterType, rotationIndex, '');

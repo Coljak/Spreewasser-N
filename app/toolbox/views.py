@@ -12,6 +12,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
 from django.forms.models import model_to_dict
 from django.core.serializers import serialize
+from django.template.loader import render_to_string
+from django.db.models import Max, Min
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from datetime import datetime
@@ -20,6 +22,14 @@ from django.db.models import F, Q
 from django.contrib.gis.db.models import PointField
 from django.db import connection
 # Create your views here.
+
+
+def test(request):
+    context = {
+        'form': forms.ToolboxProjectForm()
+    }
+    return render(request, 'toolbox/test.html', context)
+
 
 
 def create_default_project(user):
@@ -108,6 +118,117 @@ def toolbox_dashboard(request):
 
     return render(request, 'toolbox/toolbox_three_split.html', context)
 
+
+def filter_sinks(request):
+    if request.method == 'POST':
+        sink_form = forms.SinksFilterForm(request.POST)
+        if sink_form.is_valid():
+            sinks = models.Sink.objects.filter(
+                depth__gte=sink_form.cleaned_data['depth_min'],
+                depth__lte=sink_form.cleaned_data['depth_max'],
+                area__gte=sink_form.cleaned_data['area_min'],
+                area__lte=sink_form.cleaned_data['area_max'],
+                index_soil__gte=sink_form.cleaned_data['index_soil_min'],
+                index_soil__lte=sink_form.cleaned_data['index_soil_max'],
+            )
+            sinks_json = [sink.to_json() for sink in sinks]
+            return JsonResponse({'sinks': sinks_json})
+        else:
+            return JsonResponse({'message': {'success': False, 'message': 'Invalid form data'}})
+    else:
+        return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}})
+
+
+def load_infiltration_gui(request, user_field_id):
+    if user_field_id == "null":
+        user_field_id = None
+    else:
+        user_field_id = int(user_field_id)
+
+        user_field = models.UserField.objects.get(id=user_field_id)
+        user_field_geom = GEOSGeometry(user_field.geom)
+        sinks = models.Sink4326.objects.filter(
+            geom__within=user_field_geom
+        )
+    if user_field_id is not None:
+        user_field = models.UserField.objects.get(id=user_field_id)
+        user_field_geom = GEOSGeometry(user_field.geom)
+        sinks = models.Sink.objects.filter(
+            geom__within=user_field_geom
+        )
+    else:
+        sinks = models.Sink.objects.all()
+
+    sink_extremes = sinks.aggregate(
+        depth_sink_min=Min('depth'),
+        depth_sink_max=Max('depth'),
+        area_sink_min=Min('area'),
+        area_sink_max=Max('area'),
+        volume_min=Min('volume'),
+        volume_max=Max('volume'),
+    )
+
+    # sinks = sinks.values('depth', 'area', 'land_use_1', 'land_use_2', 'land_use_3', 'index_soil', 'geom')
+
+    # soils = models.SoilProperties.objects.filter(
+    #     geom__within=user_field_geom
+    # )
+    # index_soil = sinks.values_list('index_soil', flat=True).distinct()
+
+
+
+
+    project_select_form = forms.ToolboxProjectSelectionForm()
+    sink_form = forms.SinksFilterForm(sink_extremes=sink_extremes)
+    html = render_to_string('toolbox/infiltration.html', {
+        'sink_form': sink_form, 
+        'project_select_form': project_select_form
+    }, request=request) 
+
+    return JsonResponse({'html': html, 'sink_extremes': sink_extremes})
+
+def get_selected_sinks(request):
+    if request.method == 'POST':
+        try:
+            project = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        print('Project:', type(project), project)
+        print('infiltration:', type(project['infiltration']), project['infiltration'])
+        print('project.userField:', project['userField'])
+        user_field = models.UserField.objects.get(pk=project['userField'])
+        geom = GEOSGeometry(user_field.geom)
+        sinks = models.Sink4326.objects.filter(geom__within=geom)
+        sinks = sinks.filter(
+            depth__gte=float(project['infiltration']['sinkDepthMin']),
+            depth__lte=float(project['infiltration']['sinkDepthMax']),
+            area__gte=float(project['infiltration']['sinkAreaMin']),
+            area__lte=float(project['infiltration']['sinkAreaMax']),
+            volume__gte=float(project['infiltration']['sinkVolumeMin']),
+            volume__lte=float(project['infiltration']['sinkVolumeMax']),
+        )
+
+        features = []
+        for sink in sinks:
+            centroid = sink.centroid
+            geojson = json.loads(centroid.geojson)
+            geojson['properties'] = {
+                "Tiefe": sink.depth,
+                "Fläche": sink.area,
+                "Eignung": str(sink.index_soil * 100) + "%",
+                "Landnuntzung 1": sink.land_use_1,
+                "Landnuntzung 2": sink.land_use_2,
+                "Landnuntzung 3": sink.land_use_3,
+            }
+            features.append(geojson)
+        feature_collection = {
+            "type": "FeatureCollection",
+            "features": features,
+            }
+
+        return JsonResponse(feature_collection)
+    else:    
+        return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 def load_nuts_polygon(request, entity, polygon_id):

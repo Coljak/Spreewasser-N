@@ -53,8 +53,8 @@ urlpatterns = [
     # path('Thredds/wcs/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     # path('Thredds/wms/<path:thredds_link>', views.thredds_wms_view, name='thredds-wms'),
     path('bootstrap/', views.bootstrap, name='bootstrap'),
-    path('drought/load_polygon/', views.load_nuts_polygon, name='load_nuts_polygon'),
-    path('drought/load_polygon/<str:entity>/<int:polygon_id>/', views.load_nuts_polygon, name='load_nuts_polygon_entity'),
+    # path('drought/load_polygon/', views.load_nuts_polygon, name='load_nuts_polygon'),
+    path('drought/load_nuts_polygon/<str:entity>/<int:polygon_id>/', views.load_nuts_polygon, name='load_nuts_polygon_entity'),
 
     ]
 

@@ -1,5 +1,21 @@
 import { getGeolocation, handleAlerts, getCSRFToken, saveProject, observeDropdown,  setLanguage, populateDropdown } from '/static/shared/utils.js';
 
+
+
+export class Infiltration {
+    constructor (infiltration = {}) {
+        this.id = infiltration.id ?? null;
+        this.name = infiltration.name ?? '';
+        this.sinkAreaMin = infiltration.sinkAreaMin ?? null;
+        this.sinkAreaMax = infiltration.sinkAreaMax ?? null;
+        this.sinkVolumeMin = infiltration.sinkVolumeMin ?? null;
+        this.sinkVolumeMax = infiltration.sinkVolumeMax ?? null;
+        this.sinkDepthMin = infiltration.sinkDepthMin ?? null;
+        this.sinkDepthMax = infiltration.sinkDepthMax ?? null;
+
+        this.selectedSinks = infiltration.selectedSinks ?? [];
+    }
+};
 export class ToolboxProject {
   constructor (project = {}) {
     this.id = project.id ?? null;
@@ -8,6 +24,7 @@ export class ToolboxProject {
     this.description = project.description ?? '';
     this.userField = project.userField ?? null;
     this.toolboxType = project.toolboxType ?? 1;
+    this.infiltration = new Infiltration(project.infiltration) ?? new Infiltration();
   }
 
     // Convert instance to JSON for storage
@@ -32,6 +49,9 @@ export class ToolboxProject {
       return new ToolboxProject(json);
   }
 };
+
+
+
 
 
 export const updateDropdown = (parameterType, newId) => {
@@ -96,6 +116,15 @@ export async function toolboxSinks() {
 //     });
 // }
 
+// export async function getInfiltrationGui() {
+//     const project = ToolboxProject.loadFromLocalStorage();
+//     const userField = project.userField;
+//     const toolboxType = project.toolboxType;
+//     const response = await fetch('get_infiltration_gui/' + userField + '/' );
+//     const data = await response.json();
+//     console.log('getInfiltrationGui', data);
+//     return data;
+// };
 
 
 

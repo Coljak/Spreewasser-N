@@ -288,7 +288,7 @@ export function createNUTSSelectors({getFeatureGroup}) {
       for (let key in selectedAdminAreas) {
         if (selectedAdminAreas[key].length > 0) {
           selectedAdminAreas[key].forEach(function (polygon) {
-            var url = loadNutsUrl + key + '/' + polygon + '/';
+            var url = '/drought/load_nuts_polygon/' + key + '/' + polygon + '/';
           console.log("URL", url)
           var color = '';
           if (key == 'states') {
@@ -405,6 +405,8 @@ export function selectUserField(userFieldId, project, featureGroup) {
     // project.userField = userFieldId;
     // project.saveToLocalStorage();
     highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
+    project.userField = userFieldId;
+    project.saveToLocalStorage();
   };
 };
 

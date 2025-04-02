@@ -9,30 +9,66 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.gis.geos import GEOSGeometry
 
-# SINK_EXTREMES = SinksWithLandUseAndSoilProperties.objects.aggregate(
-#     depth_sink_min=Min('depth_sink'),
-#     depth_sink_max=Max('depth_sink'),
-#     area_sink_min=Min('area_sink'),
-#     area_sink_max=Max('area_sink'),
-# )
+SINK_EXTREMES = Sink.objects.aggregate(
+    depth_sink_min=Min('depth'),
+    depth_sink_max=Max('depth'),
+    area_sink_min=Min('area'),
+    area_sink_max=Max('area'),
+)
+
+ENLARGED_SINK_EXTREMES = EnlargedSink.objects.aggregate(
+    depth_sink_min=Min('depth'),
+    depth_sink_max=Max('depth'),
+    area_sink_min=Min('area'),
+    area_sink_max=Max('area'),
+)
 
 
 # class SinksFilterForm(forms.Form):
-#     depth_sink_min = forms.FloatField(required=False, label="Min Depth Sink", min_value=SINK_EXTREMES['depth_sink_min'], max_value=SINK_EXTREMES['depth_sink_max'], initial=SINK_EXTREMES['depth_sink_min'])
-#     depth_sink_max = forms.FloatField(required=False, label="Max Depth Sink",  min_value=SINK_EXTREMES['depth_sink_min'], max_value=SINK_EXTREMES['depth_sink_max'], initial=SINK_EXTREMES['depth_sink_max'])
-#     area_sink_min = forms.FloatField(required=False, label="Min Area Sink",  min_value=SINK_EXTREMES['area_sink_min'], max_value=SINK_EXTREMES['area_sink_max'], initial=SINK_EXTREMES['area_sink_min'])
-#     area_sink_max = forms.FloatField(required=False, label="Max Area Sink",  min_value=SINK_EXTREMES['area_sink_min'], max_value=SINK_EXTREMES['area_sink_max'], initial=SINK_EXTREMES['area_sink_max'])
+#     depth_sink_min = forms.FloatField(required=False, label="Min Depth Sink")
+#     depth_sink_max = forms.FloatField(required=False, label="Max Depth Sink")
+#     area_sink_min = forms.FloatField(required=False, label="Min Area Sink")
+#     area_sink_max = forms.FloatField(required=False, label="Max Area Sink")
+#     volume_min = forms.FloatField(required=False, label="Min Volume")
+#     volume_max = forms.FloatField(required=False, label="Max Volume")
     
-#     # This field is a calculated field (area_sink * depth_sink)
-#     volume_min = forms.FloatField(required=False, label="Min Volume",  min_value=0, initial=SINK_EXTREMES['area_sink_min'] * SINK_EXTREMES['depth_sink_min'])
-#     volume_max = forms.FloatField(required=False, label="Max Volume",  min_value=0, initial=SINK_EXTREMES['area_sink_max'] * SINK_EXTREMES['depth_sink_max'])
+#     land_use = forms.MultipleChoiceField(
+#         widget=forms.CheckboxSelectMultiple, 
+#         required=False, 
+#         label="Land Use"
+#     )
 
-#     # Dynamic radio buttons for land use selection (values greater than 0)
-#     land_use = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, required=False, label="Land Use" )
+#     def __init__(self, *args, sink_extremes=None, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         print('sink_extremes',sink_extremes)
+#         if sink_extremes:
+#             self.fields['depth_sink_min'].min_value = sink_extremes['depth_sink_min']
+#             self.fields['depth_sink_min'].max_value = sink_extremes['depth_sink_max']
+#             self.fields['depth_sink_min'].initial = sink_extremes['depth_sink_min']
 
-#     def __init__(self, *args, **kwargs):
-#         super(SinksFilterForm, self).__init__(*args, **kwargs)
+#             self.fields['depth_sink_max'].min_value = sink_extremes['depth_sink_min']
+#             self.fields['depth_sink_max'].max_value = sink_extremes['depth_sink_max']
+#             self.fields['depth_sink_max'].initial = sink_extremes['depth_sink_max']
+
+#             self.fields['area_sink_min'].min_value = sink_extremes['area_sink_min']
+#             self.fields['area_sink_min'].max_value = sink_extremes['area_sink_max']
+#             self.fields['area_sink_min'].initial = sink_extremes['area_sink_min']
+
+#             self.fields['area_sink_max'].min_value = sink_extremes['area_sink_min']
+#             self.fields['area_sink_max'].max_value = sink_extremes['area_sink_max']
+#             self.fields['area_sink_max'].initial = sink_extremes['area_sink_max']
+
+#             self.fields['volume_min'].min_value = sink_extremes['volume_min']
+#             self.fields['volume_min'].max_value = sink_extremes['volume_max']
+#             self.fields['volume_min'].initial = sink_extremes['volume_min']
+
+#             self.fields['volume_max'].min_value = sink_extremes['volume_min']
+#             self.fields['volume_min'].max_value = sink_extremes['volume_max']
+#             self.fields['volume_max'].initial = sink_extremes['volume_max']
+
+#         # Define land use options dynamically
 #         land_use_options = [
 #             ('forest_deciduous_trees', 'Forest Deciduous Trees'),
 #             ('heath', 'Heath'),
@@ -46,8 +82,87 @@ from django.contrib.auth.forms import UserCreationForm
 #             ('forest_conifers_and_deciduous_trees', 'Forest Conifers and Deciduous Trees')
 #         ]
 #         self.fields['land_use'].choices = land_use_options
-#         # Set all checkboxes to selected by default
-#         self.fields['land_use'].initial = [choice[0] for choice in land_use_options]
+#         self.fields['land_use'].initial = [choice[0] for choice in land_use_options]  # Select all by default
+
+
+class SinksFilterForm(forms.Form):
+    depth_sink_min = forms.FloatField(required=False, label="Min Depth Sink")
+    depth_sink_max = forms.FloatField(required=False, label="Max Depth Sink")
+    area_sink_min = forms.FloatField(required=False, label="Min Area Sink")
+    area_sink_max = forms.FloatField(required=False, label="Max Area Sink")
+    volume_min = forms.FloatField(required=False, label="Min Volume")
+    volume_max = forms.FloatField(required=False, label="Max Volume")
+    
+    land_use = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple, 
+        required=False, 
+        label="Land Use"
+    )
+
+    def __init__(self, *args, sink_extremes=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        print('sink_extremes', sink_extremes)
+
+        if sink_extremes:
+            # Explicitly set min, max, and initial values inside the widget attributes
+            self.fields['depth_sink_min'].widget.attrs.update({
+                'min': sink_extremes['depth_sink_min'],
+                'max': sink_extremes['depth_sink_max'],
+                'value': sink_extremes['depth_sink_min'],
+                'step': 0.05
+            })
+
+            self.fields['depth_sink_max'].widget.attrs.update({
+                'min': sink_extremes['depth_sink_min'],
+                'max': sink_extremes['depth_sink_max'],
+                'value': sink_extremes['depth_sink_max'], 
+                'step': 0.05
+            })
+
+            self.fields['area_sink_min'].widget.attrs.update({
+                'min': sink_extremes['area_sink_min'],
+                'max': sink_extremes['area_sink_max'],
+                'value': sink_extremes['area_sink_min'],
+                'step': 10
+            })
+
+            self.fields['area_sink_max'].widget.attrs.update({
+                'min': sink_extremes['area_sink_min'],
+                'max': sink_extremes['area_sink_max'],
+                'value': sink_extremes['area_sink_max'],
+                'step': 10
+            })
+
+            self.fields['volume_min'].widget.attrs.update({
+                'min': sink_extremes['volume_min'],
+                'max': sink_extremes['volume_max'],
+                'value': sink_extremes['volume_min'],
+                'step': 100
+            })
+
+            self.fields['volume_max'].widget.attrs.update({
+                'min': sink_extremes['volume_min'],
+                'max': sink_extremes['volume_max'],
+                'value': sink_extremes['volume_max'],
+                'step': 100
+            })
+
+        # Define land use options dynamically
+        land_use_options = [
+            ('forest_deciduous_trees', 'Forest Deciduous Trees'),
+            ('heath', 'Heath'),
+            ('orchard_meadow', 'Orchard Meadow'),
+            ('vegetation', 'Vegetation'),
+            ('grassland', 'Grassland'),
+            ('agricultural_area_without_information', 'Agricultural Area Without Information'),
+            ('farmland', 'Farmland'),
+            ('woody_area', 'Woody Area'),
+            ('forest_conifers', 'Forest Conifers'),
+            ('forest_conifers_and_deciduous_trees', 'Forest Conifers and Deciduous Trees')
+        ]
+        self.fields['land_use'].choices = land_use_options
+        self.fields['land_use'].initial = [choice[0] for choice in land_use_options]  # Select all by default
+
 
 
 

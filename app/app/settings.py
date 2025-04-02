@@ -224,11 +224,11 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # # Use HttpOnly to prevent JavaScript access to the cookie
 # SESSION_COOKIE_HTTPONLY = True  # Prevents JavaScript access to the cookie
 
-
-CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
+CRISPY_ALLOWED_TEMPLATE_PACKS = ('bootstrap5',)
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 CRISPY_FAIL_SILENTLY = not DEBUG
+
 
 # Celery
 CELERY_BROKER_URL = 'redis://redis:6379/0'

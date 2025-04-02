@@ -1,0 +1,42 @@
+
+{% load crispy_forms_tags %}
+{% load static %}
+
+
+<div id="tabToolboxProject" class="tab-pane show">
+    <div class="card mb-3">
+        <div class="card-body">
+            {{ project_select_form |crispy }}
+        </div>
+    </div>
+</div>
+
+<div id="tabSinks" class="tab-pane active ">
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">tabSinks</h5>
+            {{ sink_form |crispy }}
+        </div>
+    </div>
+</div>
+
+<div id="tabWaterbodies" class="tab-pane">
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Oberflächengewässer</h5>
+            <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
+        </div>
+    </div>
+</div>
+
+<div id="tabToolboxResult" class="tab-pane">
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">tabToolboxResult</h5>
+            <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
+        </div>
+    </div>
+</div>
+
+<button id="filterSinksButton" class="btn btn-primary mt-3">Show Sinks</button>
+

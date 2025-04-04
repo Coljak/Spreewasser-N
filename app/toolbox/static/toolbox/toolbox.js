@@ -5,7 +5,7 @@ import { getGeolocation, handleAlerts, getCSRFToken, saveProject, observeDropdow
 export class Infiltration {
     constructor (infiltration = {}) {
         this.id = infiltration.id ?? null;
-        this.name = infiltration.name ?? '';
+
         this.sinkAreaMin = infiltration.sinkAreaMin ?? null;
         this.sinkAreaMax = infiltration.sinkAreaMax ?? null;
         this.sinkVolumeMin = infiltration.sinkVolumeMin ?? null;
@@ -13,7 +13,16 @@ export class Infiltration {
         this.sinkDepthMin = infiltration.sinkDepthMin ?? null;
         this.sinkDepthMax = infiltration.sinkDepthMax ?? null;
 
-        this.selectedSinks = infiltration.selectedSinks ?? [];
+        this.sinksSelected = infiltration.sinksSelected ?? [];
+
+        this.enlargedSinkAreaMin = infiltration.enlargedSinkAreaMin ?? null;
+        this.enlargedSinkAreaMax = infiltration.enlargedSinkAreaMax ?? null;
+        this.enlargedSinkVolumeMin = infiltration.enlargedSinkVolumeMin ?? null;
+        this.enlargedSinkVolumeMax = infiltration.enlargedSinkVolumeMax ?? null;
+        this.enlargedSinkDepthMin = infiltration.enlargedSinkDepthMin ?? null;
+        this.enlargedSinkDepthMax = infiltration.enlargedSinkDepthMax ?? null;
+
+        this.enlargedSinksSelected = infiltration.enlargedSinksSelected ?? [];
     }
 };
 export class ToolboxProject {

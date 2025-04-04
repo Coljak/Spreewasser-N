@@ -38,35 +38,13 @@
 
 {% block bottom_panel %}
 <button id="injectionGo" class="btn btn-primary mt-3">Injektion</button>
-<div class="overflow-auto">
-    <!-- Navigation -->
-    <ul class="nav nav-tabs">
-        <li class="nav-item">
-            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject">Project</a>
-        </li>
-        
-        <li class="nav-item infiltration">
-            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabSinks">Senken</a>
-        </li>
-        <li class="nav-item infiltration">
-            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabWaterbodies">Gewässer</a>
-        </li>
-        <li class="nav-item infiltration">
-            <a id="toolboxResultTab" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabToolboxResult">Result</a>
-        </li>
+<button id="toggleSinks" class="btn btn-primary mt-3">toggleSinks</button>
+<button id="toggleEnlargedSinks" class="btn btn-primary mt-3">toggleEnlargedSinks</button>
+<button id="toggleLakes" class="btn btn-primary mt-3">toggleLakes</button>
+<button id="toggleStreams" class="btn btn-primary mt-3">toggleStreams</button>
+<div id="toolboxPanel" class="overflow-auto"></div>
 
-    </ul>
 
-    <!-- Tab Content Wrapper -->
-    <div class="tab-content" id="toolboxTabContent">
-
-    </div>
-
-    <button id="toolboxPreviousButton" class="btn btn-primary mt-3">Previous</button>
-    <button id="toolboxNextButton" class="btn btn-primary mt-3">Next</button>
-    <button id="runToolbox" class="btn btn-primary mt-3">Run Toolbox</button>
-    <button id="toolbox-project-save" class="btn btn-primary mt-3">Save Project</button>
-</div>
 
 {% endblock bottom_panel %}
 

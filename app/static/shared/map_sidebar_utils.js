@@ -141,6 +141,10 @@ export function initializeMapEventlisteners (map, featureGroup, projectClass) {
       openUserFieldNameModal(layer, featureGroup);
     });
 
+    map.on('draw:edited', function (e) {
+      console.log('Edited layers:', e.layers);
+  });
+
     featureGroup.on("click", function (event) {
       let leafletId = Object.keys(event.layer._eventParents)[0];
       let userFieldId = getUserFieldIdByLeafletId(leafletId);
@@ -343,7 +347,7 @@ export function highlightLayer(leafletId, featureGroup) {
   // remove highlight from all layers
   console.log('HighlightLayer, featureGroup' , featureGroup)
   featureGroup.eachLayer(function (layer) {
-    
+    // layer.editing.disable();
     const key = Object.keys(layer._layers)[0];
     const value = layer._layers[key];
     value._path.classList.remove("highlight");
@@ -367,6 +371,7 @@ export function highlightLayer(leafletId, featureGroup) {
     // add highlight class to leaflet layer
     let key = Object.keys(featureGroup._layers[leafletId]._layers)[0]
     featureGroup._layers[leafletId]._layers[key]._path.classList.add('highlight');
+    // featureGroup._layers[leafletId]._layers[key].editing.enable();
   };
 };
 
@@ -594,7 +599,15 @@ function updateFieldSelectorOption(userField, fieldSelector) {
 // Modal Userfield Name Input
 export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
 
-  
+  let userFieldsName;
+  if (window.location.pathname.endsWith('/drought/')) {
+    userFieldsName = 'droughtUserFields';
+  } else if (window.location.pathname.endsWith('toolbox/')) {
+    userFieldsName = 'toolboxUserFields'
+  } else {
+    userFieldsName = '';
+  }
+
   const fieldNameInput = document.getElementById("fieldNameInput");
   const fieldName = fieldNameInput.value;
   let userFields = {};
@@ -605,6 +618,10 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
   if (fieldName !== "") {
     if (Object.values(userFields).some((uf) => uf.name === fieldName)) {
       handleAlerts({'success': false, 'message': `Please change the name since "${fieldName}" already exists.`});
+      setTimeout(() => {
+        bootstrapModal.show();
+      }
+      , 2000);
     } else {
       var geomJson = layer.toGeoJSON();
 

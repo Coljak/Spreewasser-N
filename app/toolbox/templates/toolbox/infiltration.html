@@ -1,42 +1,89 @@
-
 {% load crispy_forms_tags %}
 {% load static %}
 
+<!-- Navigation -->
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Project</a>
+    </li>
+    
+    <li class="nav-item infiltration">
+        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabSinks" aria-selected="false">Senken</a>
+    </li>
+    <li class="nav-item infiltration">
+        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabEnlargedSinks" aria-selected="false">Vergrößerte Senken</a>
+    </li>
+    <li class="nav-item infiltration">
+        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabWaterbodies" aria-selected="false">Gewässer</a>
+    </li>
+    <li class="nav-item infiltration">
+        <a id="toolboxResultTab" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabToolboxResult">Result</a>
+    </li>
+</ul>
 
-<div id="tabToolboxProject" class="tab-pane show">
-    <div class="card mb-3">
-        <div class="card-body">
-            {{ project_select_form |crispy }}
+<!-- Tab Content Wrapper -->
+<div class="tab-content" id="toolboxTabContent">
+
+    <div id="tabToolboxProject" class="tab-pane active show">
+        <div class="card mb-3">
+            <div class="card-body">
+                {{ project_select_form | crispy }}
+            </div>
         </div>
     </div>
-</div>
 
-<div id="tabSinks" class="tab-pane active ">
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">tabSinks</h5>
-            {{ sink_form |crispy }}
+    <div id="tabSinks" class="tab-pane">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">tabSinks</h5>
+                {{ sink_form | crispy }}
+                <button id="filterSinksButton" class="btn btn-primary mt-3">Show Sinks</button>
+            </div>
         </div>
     </div>
-</div>
 
-<div id="tabWaterbodies" class="tab-pane">
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">Oberflächengewässer</h5>
-            <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
+    <div id="tabEnlargedSinks" class="tab-pane">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">tabEnlargedSinks</h5>
+                {{ enlarged_sink_form | crispy }}
+                <button id="filterEnlargedSinksButton" class="btn btn-primary mt-3">Show Enlarged Sinks</button>
+            </div>
         </div>
     </div>
-</div>
 
-<div id="tabToolboxResult" class="tab-pane">
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">tabToolboxResult</h5>
-            <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
+    <div id="tabWaterbodies" class="tab-pane">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Oberflächengewässer</h5>
+                <div class="card-title">Fließgewässer</div>
+                    <div class="card-body">
+                        {{ streams_form | crispy }}
+                        <button id="filterStreamsButton" class="btn btn-primary mt-3">Flüsse anzeigen</button>
+                    </div>
+                </div>
+                <div class="card title">Stillgewässer</div>
+                    <div class="card-body">
+                        {{ lakes_form | crispy }}
+                        <button id="filterLakesButton" class="btn btn-primary mt-3">Seeen anzeigen</button>
+                    </div>
+                </div>
+
+                
+                
+            </div>
         </div>
     </div>
+
+    <div id="tabToolboxResult" class="tab-pane">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">tabToolboxResult</h5>
+                <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<button id="filterSinksButton" class="btn btn-primary mt-3">Show Sinks</button>
-
+<!--

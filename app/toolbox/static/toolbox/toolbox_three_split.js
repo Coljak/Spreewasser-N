@@ -28,7 +28,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const project = new ToolboxProject();
   project.saveToLocalStorage();
 
-  $('#coordinateFormCard').hide();
+
+  $('#map').on('click', function (e) {
+    if (e.target.classList.contains('show-sink-outline')) {
+      const sinkId = e.target.getAttribute('sinkId');
+      console.log('sinkId', sinkId);
+    } else if (e.target.classList.contains('select-sink')) {
+        const sinkId = e.target.getAttribute('sinkId');
+        console.log('sinkId', sinkId);
+      }
+  });
+
 
   // center map at geolocation
   getGeolocation()
@@ -115,11 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   });
 
-// // Bounds for DEM image overlay
-//   const demBounds = [[47.136744752, 15.57241882],[55.058996788, 5.564783468],];
-//   const droughtBounds = [[46.89, 15.33], [55.31, 5.41],];
-//   const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
-//   const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5 });
+
 const demBounds = [
   [47.136744752, 15.57241882],
   [55.058996788, 5.564783468],
@@ -206,116 +212,256 @@ createBaseLayerSwitchGroup(baseMaps, map);
 var sinkFeatureGroup = new L.FeatureGroup()
 map.addLayer(sinkFeatureGroup);
 
+var enlargedSinkFeatureGroup = new L.FeatureGroup()
+map.addLayer(enlargedSinkFeatureGroup);
+
+var lakesFeatureGroup = new L.FeatureGroup()
+map.addLayer(lakesFeatureGroup);
+
+var streamsFeatureGroup = new L.FeatureGroup()
+map.addLayer(streamsFeatureGroup);
+
 // document.getElementById('toolbox-project-save').addEventListener('click', function () {
 //   const project = ToolboxProject.loadFromLocalStorage();
 
 //   saveProject(project);
 // });
 
-function initializeSinkFilterEventHandler() {
-  $('#filterSinksButton').on('click', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    console.log('project', project);
+const showSinkOutline = function (sinkId) {
+  const project = ToolboxProject.loadFromLocalStorage();
+  console.log('project', project);
+  console.log('showSinkOutline sinkId', sinkId);
+}
 
-    fetch('get_selected_sinks/', {
-        method: 'POST',
-        body: JSON.stringify(project),
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken(),
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('data', data);
+function getSinks(enlargedSink) {
+  const project = ToolboxProject.loadFromLocalStorage();
+  project['enlargedSink'] = enlargedSink;
+  fetch('get_selected_sinks/', {
+    method: 'POST',
+    body: JSON.stringify(project),
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('data', data);
+    const activeGroup = enlargedSink ? enlargedSinkFeatureGroup : sinkFeatureGroup;
 
-        // Clear existing markers
-        sinkFeatureGroup.clearLayers();
+    // Clear existing markers
+    activeGroup.clearLayers();
 
-        // Initialize marker cluster
-        let markers = L.markerClusterGroup();
+    // Initialize marker cluster
+    let markers = L.markerClusterGroup();
 
-        // Iterate through features and add them to the cluster
-        data.features.forEach(feature => {
-            let coords = feature.coordinates; // Get the lat/lng coordinates
-            let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
+    // Iterate through features and add them to the cluster
+    data.features.forEach(feature => {
+        let coords = feature.coordinates; // Get the lat/lng coordinates
+        let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
 
-            // Create popup content with all properties
-            let popupContent = `
-                <b>Tiefe:</b> ${feature.properties.depth} m<br>
-                <b>Fläche:</b> ${feature.properties.area} m²<br>
-                <b>Bodeneignung:</b> ${feature.properties.index_soil}<br>
-                <b>Landnuntzung 1:</b> ${feature.properties.land_use_1}<br>
-                ${feature.properties.land_use_2 ? `<b>Landnuntzung 2:</b> ${feature.properties.land_use_2}<br>` : ''}
-                ${feature.properties.land_use_3 ? `<b>Landnuntzung 3:</b> ${feature.properties.land_use_3}<br>` : ''}
-            `;
+        // Create popup content with all properties
+        let popupContent = `
+            <b>Tiefe:</b> ${feature.properties.depth} m<br>
+            <b>Fläche:</b> ${feature.properties.area} m²<br>
+            <b>Bodeneignung:</b> ${feature.properties.index_soil}<br>
+            <b>Landnuntzung 1:</b> ${feature.properties.land_use_1}<br>
+            ${feature.properties.land_use_2 ? `<b>Landnuntzung 2:</b> ${feature.properties.land_use_2}<br>` : ''}
+            ${feature.properties.land_use_3 ? `<b>Landnuntzung 3:</b> ${feature.properties.land_use_3}<br>` : ''}
+            ${feature.properties.land_use_4 ? `<b>Landnuntzung 4:</b> ${feature.properties.land_use_4}<br>` : ''}
+        `;
 
 
-            // Create a marker
-            let marker = L.marker(latlng).bindPopup(popupContent);
-            marker.on('mouseover', function () {
-              this.openPopup();
-            });
-
-            // Hide popup when not hovering
-            marker.on('mouseout', function () {
-                this.closePopup();
-            });
-
-            // Add marker to cluster
-            markers.addLayer(marker);
+        // Create a marker
+        let marker = L.marker(latlng).bindPopup(popupContent);
+        marker.on('mouseover', function () {
+          this.openPopup();
         });
 
-        // Add the cluster group to the map
-        sinkFeatureGroup.addLayer(markers);
-        map.fitBounds(markers.getBounds());
-    })
-    .catch(error => console.error("Error fetching data:", error));
-});
+        // Hide popup when not hovering
+        marker.on('mouseout', function () {
+            this.closePopup();
+        });
+        marker.on('contextmenu', function (event) {
+          L.popup()
+              .setLatLng(event.latlng)
+              .setContent(`
+                  <b>Sink Options</b><br>
+                  <button class="btn btn-outline-secondary show-sink-outline" sinkId=${feature.properties.id}">Show Sink Outline</button>
+                  <button class="btn btn-outline-secondary select-sink" sinkId=${feature.properties.id}">Select Sink</button>
+              `)
+              .openOn(map);
+      });
+      
+
+        // Add marker to cluster
+        markers.addLayer(marker);
+    });
+
+    // Add the cluster group to the map
+    activeGroup.addLayer(markers);
+    map.fitBounds(markers.getBounds());
+})
+.catch(error => console.error("Error fetching data:", error));
+};
+
+function getLakes(){
+  const project = ToolboxProject.loadFromLocalStorage();
+  project['lakes'] = true;
+  fetch('get_selected_lakes/', {
+    method: 'POST',
+    body: JSON.stringify(project),
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('data', data);
+    const activeGroup = project['lakes'] ? lakesFeatureGroup : streamsFeatureGroup;
+
+    // Clear existing markers
+    activeGroup.clearLayers();
+
+    // Initialize marker cluster
+    let markers = L.markerClusterGroup();
+
+    // Iterate through features and add them to the cluster
+    data.features.forEach(feature => {
+        let coords = feature.coordinates; // Get the lat/lng coordinates
+        let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
+
+        // Create popup content with all properties
+        let popupContent = `
+            <b>Länge:</b> ${feature.properties.shape_length} m<br>
+            ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
+            <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume}<br>
+            <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume}<br>
+            <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume}<br>
+            <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
+        `;
+
+
+        // Create a marker
+        let marker = L.marker(latlng).bindPopup(popupContent);
+        marker.on('mouseover', function () {
+          this.openPopup();
+        });
+
+        // Hide popup when not hovering
+        marker.on('mouseout', function () {
+            this.closePopup();
+        });
+        marker.on('contextmenu', function (event) {
+          L.popup()
+              .setLatLng(event.latlng)
+              .setContent(`
+                  <b>Sink Options</b><br>
+                  <button class="btn btn-outline-secondary show-sink-outline" sinkId=${feature.properties.id}">Show Sink Outline</button>
+                  <button class="btn btn-outline-secondary select-sink" sinkId=${feature.properties.id}">Select Sink</button>
+              `)
+              .openOn(map);
+      });
+      
+
+        // Add marker to cluster
+        markers.addLayer(marker);
+    });
+
+    // Add the cluster group to the map
+    activeGroup.addLayer(markers);
+    map.fitBounds(markers.getBounds());
+})
+.catch(error => console.error("Error fetching data:", error));
+}
+
+
+function initializeSinkFilterEventHandler() {
+  $('#filterSinksButton').on('click', function () {
+    const enlargedSink = false;
+    getSinks(enlargedSink)  
+    console.log('initializeSinkFilterEventHandler');   
+  });
+
+  $('#filterEnlargedSinksButton').on('click', function () {
+    const enlargedSink = true;
+    getSinks(enlargedSink)
+    console.log('initializeSinkFilterEventHandler');
+  });
 
 
   $('#id_depth_sink_min').on('change', function () {
     const project = ToolboxProject.loadFromLocalStorage();
     project.infiltration.sinkDepthMin = $(this).val();
-    console.log('sinkDepthMin', project.infiltration.sinkDepthMin);
     project.saveToLocalStorage();
-  }
-  );
+  });
+
+  $('#id_depth_sink_min_enlarged').on('change', function () {
+    const project = ToolboxProject.loadFromLocalStorage();
+    project.infiltration.enlargedSinkDepthMin = $(this).val();
+    project.saveToLocalStorage();
+  });
 
   $('#id_depth_sink_max').on('change', function () {
     const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.sinkDepthMin = $(this).val();
+    project.infiltration.sinkDepthMax = $(this).val();
     project.saveToLocalStorage();
-  }
-  );
+  });
+
+  $('#id_depth_sink_max_enlarged').on('change', function () {
+    const project = ToolboxProject.loadFromLocalStorage();
+    project.infiltration.enlargedSinkDepthMax = $(this).val();
+    project.saveToLocalStorage();
+  });
 
   $('#id_area_sink_min').on('change', function () {
     const project = ToolboxProject.loadFromLocalStorage();
     project.infiltration.sinkAreaMin = $(this).val();
     project.saveToLocalStorage();
-  }
-  );
+  });
+
+  $('#id_area_sink_min_enlarged').on('change', function () {
+    const project = ToolboxProject.loadFromLocalStorage();
+    project.infiltration.enlargedSinkAreaMin = $(this).val();
+    project.saveToLocalStorage();
+  });
 
   $('#id_area_sink_max').on('change', function () {
     const project = ToolboxProject.loadFromLocalStorage();
     project.infiltration.sinkAreaMax = $(this).val();
     project.saveToLocalStorage();
-  }
-  );
+  });
+
+  $('#id_area_sink_max_enlarged').on('change', function () {
+    const project = ToolboxProject.loadFromLocalStorage();
+    project.infiltration.enlargedSinkAreaMax = $(this).val();
+    project.saveToLocalStorage();
+  });
 
   $('#id_volume_min').on('change', function () {
     const project = ToolboxProject.loadFromLocalStorage();
     project.infiltration.sinkVolumeMin = $(this).val();
     project.saveToLocalStorage();
-  }
-  );
+  });
+
+  $('#id_volume_min_enlarged').on('change', function () {
+    const project = ToolboxProject.loadFromLocalStorage();
+    project.infiltration.enlargedSinkVolumeMin = $(this).val();
+    project.saveToLocalStorage();
+  });
 
   $('#id_volume_max').on('change', function () {
     const project = ToolboxProject.loadFromLocalStorage();
     project.infiltration.sinkVolumeMax = $(this).val();
     project.saveToLocalStorage();
-  }
-  );
+  });
+
+  $('#id_volume_max_enlarged').on('change', function () {
+    const project = ToolboxProject.loadFromLocalStorage();
+    project.infiltration.enlargedSinkVolumeMax = $(this).val();
+    project.saveToLocalStorage();
+  });
 };
 
 $('#injectionGo').on('click', function () {
@@ -328,7 +474,7 @@ $('#injectionGo').on('click', function () {
           
           
           // Replace HTML content
-          $('#toolboxTabContent').html(data.html);
+          $('#toolboxPanel').html(data.html);
 
       })
       .then(() => {
@@ -342,6 +488,13 @@ $('#injectionGo').on('click', function () {
             project.infiltration.sinkVolumeMin = $('#id_volume_min').val();
             project.infiltration.sinkDepthMax = $('#id_depth_sink_max').val();
             project.infiltration.sinkDepthMin = $('#id_depth_sink_min').val();
+            
+            project.infiltration.enlargedSinkAreaMax = $('#id_area_sink_max_enlarged').val();
+            project.infiltration.enlargedSinkAreaMin = $('#id_area_sink_min_enlarged').val();
+            project.infiltration.enlargedSinkVolumeMax = $('#id_volume_max_enlarged').val();
+            project.infiltration.enlargedSinkVolumeMin = $('#id_volume_min_enlarged').val();
+            project.infiltration.enlargedSinkDepthMax = $('#id_depth_sink_max_enlarged').val();
+            project.infiltration.enlargedSinkDepthMin = $('#id_depth_sink_min_enlarged').val();
             project.saveToLocalStorage();
         });
     })
@@ -349,8 +502,42 @@ $('#injectionGo').on('click', function () {
       .catch(error => console.error("Error fetching data:", error));
 });
 
-
-
+let sinksVisible = true;
+let enlargedSinksVisible = true;
+let lakesVisible = true;
+let streamsVisible = true;
+document.getElementById('toggleSinks').addEventListener('click', function () {
+  if (sinksVisible) {
+      map.removeLayer(sinkFeatureGroup);
+  } else {
+      map.addLayer(sinkFeatureGroup);
+  }
+  sinksVisible = !sinksVisible;
+});
+document.getElementById('toggleEnlargedSinks').addEventListener('click', function () {
+  if (enlargedSinksVisible) {
+      map.removeLayer(enlargedSinkFeatureGroup);
+  } else {
+      map.addLayer(enlargedSinkFeatureGroup);
+  }
+  enlargedSinksVisible = !enlargedSinksVisible;
+});
+document.getElementById('toggleLakes').addEventListener('click', function () {
+  if (lakesVisible) {
+      map.removeLayer(lakesFeatureGroup);
+  } else {
+      map.addLayer(lakesFeatureGroup);
+  }
+  lakesVisible = !lakesVisible;
+});
+document.getElementById('toggleStreams').addEventListener('click', function () {
+  if (streamsVisible) {
+      map.removeLayer(streamsFeatureGroup);
+  } else {
+      map.addLayer(streamsFeatureGroup);
+  }
+  streamsVisible = !streamsVisible;
+});
 
 
 

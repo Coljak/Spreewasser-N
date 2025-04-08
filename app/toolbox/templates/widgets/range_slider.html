@@ -1,0 +1,56 @@
+<div class="form-group" id="{{ slider_id }}-slider-container">
+    <label>{{ label_left }} – {{ label_right }}</label>
+    <div style="position: relative;">
+      <div id="{{ slider_id }}-max-label" class="slider-label"></div>
+      <div id="{{ slider_id }}-min-label" class="slider-label"></div>
+      <div id="{{ slider_id }}-slider-div" style="display: flex; align-items: center;">
+        <div>{{ min_value }}{{ unit }}</div>
+        <div class="mx-2" style="flex-grow: 1;">
+          <input 
+            id="{{ slider_id }}" 
+            type="text"
+            data-slider-min="{{ min_value }}"
+            data-slider-max="{{ max_value }}"
+            data-slider-value="[{{ initial_min }}, {{ initial_max }}]"
+            data-slider-tooltip="hide"
+          />
+        </div>
+        <div>{{ max_value }}{{ unit }}</div>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+  (function() {
+    const sliderId = "{{ slider_id }}";
+    const minLbl = $(`#${sliderId}-min-label`);
+    const maxLbl = $(`#${sliderId}-max-label`);
+    const input = $(`#${sliderId}`);
+    
+    const setLabel = (lbl, val) => {
+      const label = lbl === 'min' ? minLbl : maxLbl;
+      const handle = $(`#${sliderId}-slider-div .${lbl}-slider-handle`);
+      if (handle.length) {
+        const rect = handle[0].getBoundingClientRect();
+        label.text(val);
+        label.offset({
+          top: rect.top - 30 + window.scrollY,
+          left: rect.left + window.scrollX
+        });
+      }
+    };
+  
+    const setLabels = (values) => {
+      setLabel('min', values[0]);
+      setLabel('max', values[1]);
+    };
+  
+    input.slider().on('slide', function(ev) {
+      setLabels(ev.value);
+    });
+  
+    const initVals = input.data("slider-value");
+    if (initVals) setLabels(initVals);
+  })();
+  </script>
+  

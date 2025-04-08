@@ -72,8 +72,6 @@ export const map = enhanceMap(
   }).addLayer(osm)
 );
 
-  
-
 
 export function openUserFieldNameModal(layer, featureGroup) {
   // Set the modal content (e.g., name input)
@@ -141,12 +139,18 @@ export function initializeMapEventlisteners (map, featureGroup, projectClass) {
       openUserFieldNameModal(layer, featureGroup);
     });
 
+    map.on('draw:editstart', function (e) {
+      console.log('editstart layers:', e.layers);
+    });
+
+
     map.on('draw:edited', function (e) {
       console.log('Edited layers:', e.layers);
-  });
+    });
 
     featureGroup.on("click", function (event) {
-      let leafletId = Object.keys(event.layer._eventParents)[0];
+      let leafletId = event.layer._leaflet_id;
+  
       let userFieldId = getUserFieldIdByLeafletId(leafletId);
       let projectClass = MonicaProject
       if (window.location.pathname.endsWith('/toolbox/')) {
@@ -158,7 +162,30 @@ export function initializeMapEventlisteners (map, featureGroup, projectClass) {
     });
 };
 
-  //add map scale
+// editing Userfields
+export function startEditMode(featureGroup) {
+  const userFields = JSON.parse(localStorage.getItem('userFields') || '{}');
+  const highlightedLeafletId = Object.keys(userFields).find(id => {
+    const header = document.getElementById(`accordionHeader-${id}`);
+    return header && header.classList.contains('highlight');
+  });
+
+  if (!highlightedLeafletId) {
+    handleAlerts({ success: false, message: 'No highlighted UserField found to edit.' });
+    return;
+  }
+
+  const layer = featureGroup.getLayer(highlightedLeafletId);
+
+  if (layer && layer.editing && !layer.editing._enabled) {
+    layer.editing.enable();
+    handleAlerts({ success: true, message: 'Edit mode enabled for selected UserField.' });
+  } else {
+    console.warn("Layer not found or editing not supported.");
+  }
+};
+
+
 
 
 // Baselayers
@@ -324,7 +351,6 @@ export function createNUTSSelectors({getFeatureGroup}) {
   };
   
 
-
 export function getUserFields() {
   let userFields = localStorage.getItem("userFields");
   return userFields ? JSON.parse(userFields) : {};
@@ -342,38 +368,83 @@ export function getUserFieldIdByLeafletId(leafletId) {
   console.log("getUserFieldIdByLeafletId", leafletId, entry, userFields);
   return entry ? entry.id : null;
 };
-export function highlightLayer(leafletId, featureGroup) {
-  console.log("HIGHLIGHT", leafletId);
-  // remove highlight from all layers
-  console.log('HighlightLayer, featureGroup' , featureGroup)
-  featureGroup.eachLayer(function (layer) {
-    // layer.editing.disable();
-    const key = Object.keys(layer._layers)[0];
-    const value = layer._layers[key];
-    value._path.classList.remove("highlight");
-  });
-  // deselect layer/ header: remove highlight class from  header
-  if ($(`#accordionHeader-${leafletId}`).hasClass("highlight")) {
-    $(`#accordionHeader-${leafletId}`).removeClass("highlight");
+
+// export function highlightLayer(leafletId, featureGroup) {
+//   console.log("HIGHLIGHT", leafletId);
+//   // remove highlight from all layers
+//   console.log('HighlightLayer, featureGroup' , featureGroup)
+//   featureGroup.eachLayer(function (layer) {
+//     // layer.editing.disable();
+//     const key = Object.keys(layer._layers)[0];
+//     console.log("Key: ", key, "leafletId: ", leafletId)
+//     const value = layer._layers[key];
+//     console.log("Value: ", value);
+//     value._path.classList.remove("highlight");
+//   });
+//   // deselect layer/ header: remove highlight class from  header
+//   if ($(`#accordionHeader-${leafletId}`).hasClass("highlight")) {
+//     $(`#accordionHeader-${leafletId}`).removeClass("highlight");
 
     
-    let key = Object.keys(featureGroup._layers[leafletId]._layers)[0]
-    console.log("Key: ", key, "leafletId: ", leafletId)
-     featureGroup._layers[leafletId]._layers[key]._path.classList.remove('highlight');
-  } else { // select layer/ header: 
+//     let key = Object.keys(featureGroup._layers[leafletId]._layers)[0]
+//     console.log("Key: ", key, "leafletId: ", leafletId)
+//      featureGroup._layers[leafletId]._layers[key]._path.classList.remove('highlight');
+//   } else { // select layer/ header: 
 
-      const accordionUserFieldHeaders = document.querySelectorAll('#accordionUserFields .accordion-header');
-      accordionUserFieldHeaders.forEach(header => {
-        header.classList.remove('highlight')
-      });
+//       const accordionUserFieldHeaders = document.querySelectorAll('#accordionUserFields .accordion-header');
+//       accordionUserFieldHeaders.forEach(header => {
+//         header.classList.remove('highlight')
+//       });
 
-    $(`#accordionHeader-${leafletId}`).addClass("highlight")
-    // add highlight class to leaflet layer
-    let key = Object.keys(featureGroup._layers[leafletId]._layers)[0]
-    featureGroup._layers[leafletId]._layers[key]._path.classList.add('highlight');
-    // featureGroup._layers[leafletId]._layers[key].editing.enable();
-  };
-};
+//     $(`#accordionHeader-${leafletId}`).addClass("highlight")
+//     // add highlight class to leaflet layer
+//     let key = Object.keys(featureGroup._layers[leafletId]._layers)[0]
+//     featureGroup._layers[leafletId]._layers[key]._path.classList.add('highlight');
+//     // featureGroup._layers[leafletId]._layers[key].editing.enable();
+//   };
+// };
+
+export function highlightLayer(leafletId, featureGroup) {
+  console.log("HIGHLIGHT", leafletId);
+
+  // Step 1: Remove highlight class from all layers
+  featureGroup.eachLayer(function (layer) {
+    if (layer.getElement) {
+      const el = layer.getElement();
+      if (el) el.classList.remove("highlight");
+    }
+  });
+
+  // Step 2: Remove highlight from all sidebar headers
+  const accordionHeaders = document.querySelectorAll("#accordionUserFields .accordion-header");
+  accordionHeaders.forEach(header => header.classList.remove("highlight"));
+
+  // Step 3: Toggle highlight on selected layer + header
+  const header = $(`#accordionHeader-${leafletId}`);
+  const layer = featureGroup.getLayer(leafletId);
+  
+
+  if (header.hasClass("highlight")) {
+    header.removeClass("highlight");
+    if (layer?.getElement) {
+      const el = layer.getElement();
+      if (el) {
+        el.classList.remove("highlight");
+        layer.editing.disable();
+      }
+    }
+  } else {
+    header.addClass("highlight");
+    if (layer?.getElement) {
+      const el = layer.getElement();
+      if (el) {
+        el.classList.add("highlight");
+        layer.editing.enable();
+      }
+    }
+  }
+}
+
 
 export function selectUserField(userFieldId, project, featureGroup) {
 
@@ -415,6 +486,7 @@ export function selectUserField(userFieldId, project, featureGroup) {
   };
 };
 
+// TODO rename to MapEventhandler
 export function initializeSidebarEventHandler({projectClass, sidebar, map, baseMaps, overlayLayers, getUserFields, getFeatureGroup, getProject }) {
     sidebar.addEventListener("change", (event) => {
         const switchInput = event.target;
@@ -550,6 +622,17 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
         } else { return;}
         }
       });
+
+    // MAP Eventhandler
+    $('.leaflet-draw-edit-edit').on('click', function (e) {
+      e.preventDefault();
+      console.log("Edit Clicked", e);
+      const featureGroup = getFeatureGroup();
+      startEditMode(featureGroup);
+      // const leafletId = e.target.getAttribute("leaflet-id");
+      // const layer = featureGroup.getLayer(leafletId);
+      // layer.editing.enable();
+    });
 };
 
 
@@ -561,10 +644,10 @@ function toggleUserField(switchInput,  map) {
 };
 
 // Save a newly created userField in DB
-function saveUserField(name, geomJson) {
+function saveUserField(name, layer) {
+  let geomJson = layer.toGeoJSON();
   return new Promise((resolve, reject) => {
     const requestData = {
-      csrfmiddlewaretoken: getCSRFToken(),
       geom: JSON.stringify(geomJson.geometry),
       name: name,
     };
@@ -588,6 +671,35 @@ function saveUserField(name, geomJson) {
     });
   });
 };
+
+export function updateUserField(userField, layer) {
+  let geomJson = layer.toGeoJSON();
+  return new Promise((resolve, reject) => {
+    const requestData = {
+      geom: JSON.stringify(geomJson.geometry),
+      userField: userField,
+    };
+    fetch(`update-user-field/${userField.id}/`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+      },
+      body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+      handleAlerts({'success': true, 'message': 'UserField saved successfully'});
+      resolve(data); 
+    })
+    .catch(error => {
+      handleAlerts({'success': false, 'message': 'Error saving UserField: ', error});
+      reject(error); 
+    });
+  });
+
+}
 
 function updateFieldSelectorOption(userField, fieldSelector) {  
   const option = document.createElement("option");
@@ -623,35 +735,35 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
       }
       , 2000);
     } else {
-      var geomJson = layer.toGeoJSON();
+      
 
       // userField.name = fieldName;
-      saveUserField(fieldName, geomJson)
+      saveUserField(fieldName, layer)
       .then((data) => {
         console.log("Data: ", data);
-        var layerGeoJson = L.geoJSON(data.geom_json);
+        var layerGeoJson = L.geoJSON(data.geom_json,
+          {
+            onEachFeature: function (f, l) {
+              l.bindTooltip(fieldName);
+              featureGroup.addLayer(l);
+            },
+          }
+        );
         const userField = new UserField(
           data.name,
           data.id,  
         );
-        
-        featureGroup.addLayer(layerGeoJson);
-        // temporary layer is removed from the map
-        featureGroup.removeLayer(layer);
-        userField.leafletId  = featureGroup.getLayerId(layerGeoJson);
+        layer.remove(); // removes the drawn shape from map
+        const newLayer = Object.values(layerGeoJson._layers)[0];
+        // featureGroup.addLayer(newLayer);
+        userField.leafletId  = featureGroup.getLayerId(newLayer);
         
         userFields[userField.leafletId] = userField;
         localStorage.setItem('userFields', JSON.stringify(userFields));
 
-        addLayerToSidebar(userField, layerGeoJson);
-        // selectUserField(userField.id, null, featureGroup);
-        // const fieldSelector = document.getElementById("userFieldSelect");
-        // updateFieldSelectorOption(userField, fieldSelector);
+        addLayerToSidebar(userField, newLayer);
       })
-      // .catch((error) => {
-      //   console.log("Error: ", error);
-      // });
-      // reset name input field
+
       fieldNameInput.value = '';
     }
   } else {
@@ -659,6 +771,7 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
   }
   bootstrapModal.hide();
 };
+
 
 
 export function dismissPolygon(layer, modalInstance, featureGroup) {
@@ -711,7 +824,6 @@ export const addLayerToSidebar = (userField, layer) => {
     userFieldsAccordion.appendChild(accordion);
   };
 
-  
   // Load all user fields from DB
 export async function getUserFieldsFromDb (featureGroup) {
   let userFields = {};
@@ -730,8 +842,20 @@ export async function getUserFieldsFromDb (featureGroup) {
     const userFieldsDb = data.user_fields;
     
     userFieldsDb.forEach((el) => {
-      var layer = L.geoJSON(el.geom_json);
-      layer.bindTooltip(el.name);
+      // var layer = L.geoJSON(el.geom_json);
+      let layerGeoJson = L.geoJson(el.geom_json, {
+        style: {
+          color: "#ffaa00",
+          fillColor: "#000000",
+          fillOpacity: 0.5,
+          weight: 2,
+        },
+        onEachFeature: function (feature, layer) {
+          layer.bindTooltip(el.name);
+          featureGroup.addLayer(layer);
+        },
+      });
+
       // console.log("getData, element: ", el);
       const userField = new UserField(
         el.name,
@@ -739,13 +863,15 @@ export async function getUserFieldsFromDb (featureGroup) {
         el.id,
         el.user_projects    
       );
-      // Add the layer to the droughtFeutureGroup layer group
-        featureGroup.addLayer(layer);
-        userField.leafletId  = featureGroup.getLayerId(layer);
-        userFields[userField.leafletId ] = userField;
-        // localStorage.setItem('userFields', JSON.stringify(userFields));
-        console.log("getData, userFields: ", userFields);
-        addLayerToSidebar(userField, layer);
+      // Add the layer to the droughtFeatureGroup layer group
+      // featureGroup.addLayer(layer);
+      const newLayer = Object.values(layerGeoJson._layers)[0];
+      // featureGroup.addLayer(newLayer);
+      userField.leafletId  = featureGroup.getLayerId(newLayer);
+      userFields[userField.leafletId ] = userField;
+      // console.log("getData, userFields: ", userFields);
+      addLayerToSidebar(userField, newLayer);
+
     });
     localStorage.setItem('userFields', JSON.stringify(userFields))
   })

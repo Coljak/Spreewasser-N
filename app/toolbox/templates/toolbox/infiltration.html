@@ -35,9 +35,11 @@
     <div id="tabSinks" class="tab-pane">
         <div class="card mb-3">
             <div class="card-body">
-                <h5 class="card-title">tabSinks</h5>
-                {{ sink_form | crispy }}
-                <button id="filterSinksButton" class="btn btn-primary mt-3">Show Sinks</button>
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    {% crispy sink_filter.form %}
+                    <button id="btnFilterSinks"type="submit" class="btn btn-primary">Filter Sinks</button>
+                </form>
             </div>
         </div>
     </div>
@@ -45,9 +47,11 @@
     <div id="tabEnlargedSinks" class="tab-pane">
         <div class="card mb-3">
             <div class="card-body">
-                <h5 class="card-title">tabEnlargedSinks</h5>
-                {{ enlarged_sink_form | crispy }}
-                <button id="filterEnlargedSinksButton" class="btn btn-primary mt-3">Show Enlarged Sinks</button>
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    {% crispy enlarged_sink_filter.form %}
+                    <button id="btnFilterEnlargedSinks" type="submit" class="btn btn-primary">Filter Enlarged Sinks</button>
+                </form>
             </div>
         </div>
     </div>
@@ -58,24 +62,21 @@
                 <h5 class="card-title">Oberflächengewässer</h5>
                 <div class="card-title">Fließgewässer</div>
                     <div class="card-body">
-                        {{ streams_form | crispy }}
+                        {% crispy streams_form.form  %}
                         <button id="filterStreamsButton" class="btn btn-primary mt-3">Flüsse anzeigen</button>
                     </div>
                 </div>
                 <div class="card title">Stillgewässer</div>
                     <div class="card-body">
-                        {{ lakes_form | crispy }}
+                        {% crispy lakes_form.form %}
                         <button id="filterLakesButton" class="btn btn-primary mt-3">Seeen anzeigen</button>
                     </div>
-                </div>
-
-                
-                
+                </div>  
             </div>
         </div>
     </div>
 
-    <div id="tabToolboxResult" class="tab-pane">
+    <div id="tabToolboxResult" class="tab-pane ">
         <div class="card mb-3">
             <div class="card-body">
                 <h5 class="card-title">tabToolboxResult</h5>

@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'django.forms',
     'django_extensions',
+    'django_filters',
 
     'swn',
     'toolbox',
@@ -229,6 +231,8 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ('bootstrap5',)
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 CRISPY_FAIL_SILENTLY = not DEBUG
 
+
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
 # Celery
 CELERY_BROKER_URL = 'redis://redis:6379/0'

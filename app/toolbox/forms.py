@@ -1,4 +1,5 @@
 from django import forms
+from django.urls import reverse
 from django.contrib.auth.models import User
 from django.db.models import Max, Min
 from .models import *
@@ -7,9 +8,43 @@ from toolbox.models import * #, SinksWithLandUseAndSoilProperties
 from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
-from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
+from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, StrictButton
+from django_filters.fields import RangeField
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.gis.geos import GEOSGeometry
+
+
+
+
+
+class SliderFilterForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+    # def __init__(self, *args, model=None, form_action=None, **kwargs):
+        super().__init__(*args,  **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        # self.helper.form_class = 'form-horizontal'
+        self.helper.form_id = 'sink-filter-form'
+        
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-lg-2 col-md-2 col-sm-auto'
+        self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
+
+        layout_fields = []
+        for field_name, field in self.fields.items():
+            if isinstance(field, RangeField):
+                layout_field = Field(field_name, template="forms/fields/range-slider.html")
+            else:
+                layout_field = Field(field_name)
+            layout_fields.append(layout_field)
+        # layout_fields.append(StrictButton("Filter sinks", name='filter_sinks', type='submit', css_class='btn btn-fill-out btn-block mt-1'))
+        self.helper.layout = Layout(*layout_fields)
+
+
+
+
+
+
 
 SINK_EXTREMES = Sink.objects.aggregate(
     depth_sink_min=Min('depth'),
@@ -154,6 +189,8 @@ class WaterbodyFilterForm(forms.Form):
         if extremes:
             self.fields['min_min_surplus_volume'].widget.attrs.update({
                 'id': f"id_min_min_surplus_volume{id_suffix}",
+                'type':"range",
+                'class': "form-range",
                 'min': extremes['min_min_surplus_volume'],
                 'max': extremes['max_min_surplus_volume'],
                 'value': extremes['min_min_surplus_volume'],

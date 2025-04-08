@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
     <link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.css' %}" />
 	<link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.Default.css' %}" />
+    <link rel="stylesheet" href="{% static 'toolbox/custom_slider.css' %}">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 
 
 {% endblock css %} 
@@ -83,6 +85,7 @@
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.contextmenu.js' %}"></script> 
     {% comment %} <script src="{% static 'leaflet/georaster/georaster-layer-for-leaflet.min.js' %}"></script> {% endcomment %}
     {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" defer></script>{% endcomment %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
     {% comment %} <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script> {% endcomment %}
 
@@ -93,6 +96,8 @@
     
     <script type="text/javascript" src="{% static 'vendor/virtual-select/virtual-select.min.js' %}"></script> 
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.markercluster-src.js' %}"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="module" src="{% static 'toolbox/custom_slider.js' %}"></script>
     <script type="module" src="{% static 'toolbox/toolbox_three_split.js' %}" ></script>
 {% endblock %}
 

@@ -1,5 +1,6 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
 import { ToolboxProject, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
+import {initializeSliders} from '/static/toolbox/custom_slider.js';
 import { 
   projectRegion, 
   baseMaps, 
@@ -233,9 +234,9 @@ const showSinkOutline = function (sinkId) {
   console.log('showSinkOutline sinkId', sinkId);
 }
 
-function getSinks(enlargedSink) {
+function getSinks(isEnlargedSink) {
   const project = ToolboxProject.loadFromLocalStorage();
-  project['enlargedSink'] = enlargedSink;
+  project['enlargedSink'] = isEnlargedSink;
   fetch('get_selected_sinks/', {
     method: 'POST',
     body: JSON.stringify(project),
@@ -247,7 +248,7 @@ function getSinks(enlargedSink) {
   .then(response => response.json())
   .then(data => {
     console.log('data', data);
-    const activeGroup = enlargedSink ? enlargedSinkFeatureGroup : sinkFeatureGroup;
+    const activeGroup = isEnlargedSink ? enlargedSinkFeatureGroup : sinkFeatureGroup;
 
     // Clear existing markers
     activeGroup.clearLayers();
@@ -478,25 +479,26 @@ $('#injectionGo').on('click', function () {
 
       })
       .then(() => {
-        initializeSinkFilterEventHandler();
+        initializeSliders();
+        // initializeSinkFilterEventHandler();
     
-        requestAnimationFrame(() => {
-            const project = ToolboxProject.loadFromLocalStorage();
-            project.infiltration.sinkAreaMax = $('#id_area_sink_max').val();
-            project.infiltration.sinkAreaMin = $('#id_area_sink_min').val();
-            project.infiltration.sinkVolumeMax = $('#id_volume_max').val();
-            project.infiltration.sinkVolumeMin = $('#id_volume_min').val();
-            project.infiltration.sinkDepthMax = $('#id_depth_sink_max').val();
-            project.infiltration.sinkDepthMin = $('#id_depth_sink_min').val();
+        // requestAnimationFrame(() => {
+        //     const project = ToolboxProject.loadFromLocalStorage();
+        //     project.infiltration.sinkAreaMax = $('#id_area_sink_max').val();
+        //     project.infiltration.sinkAreaMin = $('#id_area_sink_min').val();
+        //     project.infiltration.sinkVolumeMax = $('#id_volume_max').val();
+        //     project.infiltration.sinkVolumeMin = $('#id_volume_min').val();
+        //     project.infiltration.sinkDepthMax = $('#id_depth_sink_max').val();
+        //     project.infiltration.sinkDepthMin = $('#id_depth_sink_min').val();
             
-            project.infiltration.enlargedSinkAreaMax = $('#id_area_sink_max_enlarged').val();
-            project.infiltration.enlargedSinkAreaMin = $('#id_area_sink_min_enlarged').val();
-            project.infiltration.enlargedSinkVolumeMax = $('#id_volume_max_enlarged').val();
-            project.infiltration.enlargedSinkVolumeMin = $('#id_volume_min_enlarged').val();
-            project.infiltration.enlargedSinkDepthMax = $('#id_depth_sink_max_enlarged').val();
-            project.infiltration.enlargedSinkDepthMin = $('#id_depth_sink_min_enlarged').val();
-            project.saveToLocalStorage();
-        });
+        //     project.infiltration.enlargedSinkAreaMax = $('#id_area_sink_max_enlarged').val();
+        //     project.infiltration.enlargedSinkAreaMin = $('#id_area_sink_min_enlarged').val();
+        //     project.infiltration.enlargedSinkVolumeMax = $('#id_volume_max_enlarged').val();
+        //     project.infiltration.enlargedSinkVolumeMin = $('#id_volume_min_enlarged').val();
+        //     project.infiltration.enlargedSinkDepthMax = $('#id_depth_sink_max_enlarged').val();
+        //     project.infiltration.enlargedSinkDepthMin = $('#id_depth_sink_min_enlarged').val();
+        //     project.saveToLocalStorage();
+        // });
     })
     
       .catch(error => console.error("Error fetching data:", error));

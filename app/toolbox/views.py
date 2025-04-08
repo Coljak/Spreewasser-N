@@ -3,8 +3,9 @@ from . import models
 from swn import models as swn_models
 from swn import forms as swn_forms
 from . import forms
+from .filters import SinkFilter, EnlargedSinkFilter, LakeFilter, StreamFilter
 
-from django.shortcuts import render, redirect
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.contrib.gis.geos import GEOSGeometry
@@ -24,13 +25,35 @@ from django.db import connection
 # Create your views here.
 
 
+# def test(request):
+#     context = {
+#         'form': forms.ToolboxProjectForm()
+#     }
+#     return render(request, 'toolbox/test.html', context)
+
+
+
+
+
 def test(request):
-    context = {
-        'form': forms.ToolboxProjectForm()
-    }
-    return render(request, 'toolbox/test.html', context)
+    sink_filter = SinkFilter(request.GET)
+    enlarged_sink_filter = EnlargedSinkFilter(request.GET)
+    return render(request, 'toolbox/test.html', {'sink_filter':sink_filter, 'enlarged_sink_filter': enlarged_sink_filter})
 
+def filter_sinks(request):
+    print('sink_filter', request.GET)
+    # sink_filter = SinkFilter(request.GET)
+    # enlarged_sink_filter = EnlargedSinkFilter(request.GET)
+    # if sink_filter.is_valid() and enlarged_sink_filter.is_valid():
+    #     sinks = sink_filter.qs
+    #     enlarged_sinks = enlarged_sink_filter.qs
+    #     print('Sinks:', sinks)
+    #     print('Enlarged Sinks:', enlarged_sinks)
+    # else:
+    #     sinks = []
+    #     enlarged_sinks = []
 
+    # return render(request, 'toolbox/sinks_filter.html', {'sink_filter':sink_filter, 'enlarged_sink_filter': enlarged_sink_filter, 'sinks': sinks, 'enlarged_sinks': enlarged_sinks})
 
 def create_default_project(user):
     """
@@ -208,17 +231,22 @@ def load_infiltration_gui(request, user_field_id):
         max_plus_days= Max('plus_days'),
     )
 
-    lake_form = forms.WaterbodyFilterForm(extremes=lake_extremes, lake=True)
-    stream_form = forms.WaterbodyFilterForm(extremes=stream_extremes)
-
+    # lake_form = forms.WaterbodyFilterForm(extremes=lake_extremes, lake=True)
+    # stream_form = forms.WaterbodyFilterForm(extremes=stream_extremes)
+    lake_form = LakeFilter(request.GET)
+    stream_form = StreamFilter(request.GET)
     lakes = models.Lake4326.objects.all()
     streams = models.Stream4326.objects.all()
 
+    sink_filter = SinkFilter(request.GET)
+    enlarged_sink_filter = EnlargedSinkFilter(request.GET)
 
     html = render_to_string('toolbox/infiltration.html', {
         'sink_form': sink_form, 
         'enlarged_sink_form': enlarged_sink_form,
         'project_select_form': project_select_form,
+        'sink_filter': sink_filter,
+        'enlarged_sink_filter': enlarged_sink_filter,
         'streams_form': stream_form,
         'lakes_form': lake_form,
     }, request=request) 
@@ -377,7 +405,7 @@ def save_user_field(request):
             name = body['name']
             geom = json.loads(body['geom'])
             geos = GEOSGeometry(body['geom'])
-            geos.transform(25833)
+            # geos.transform(25833)
             user = request.user
             instance = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
             instance.save()
@@ -387,7 +415,7 @@ def save_user_field(request):
     else:
         return HttpResponseRedirect('toolbox:toolbox_dashboard')
 
-
+@login_required
 def get_user_fields(request):
     if request.method == "GET":
         user_fields = models.UserField.objects.filter(user=request.user)
@@ -399,6 +427,24 @@ def get_user_fields(request):
             ufs.append(uf)
         # print('user_fields:', ufs)
     return JsonResponse({'user_fields': ufs})
+
+@login_required
+def update_user_field(request, id):
+    if request.method == 'POST':
+        body = json.loads(request.body)
+        name = body['name']
+        geom = json.loads(body['geom'])
+        geos = GEOSGeometry(body['geom'])
+        # geos.transform(25833)
+        user_field = models.UserField.objects.get(id=id)
+        user_field.name = name
+        user_field.geom_json = geom
+        user_field.geom = geos
+        user_field.save()
+        
+        return JsonResponse({'message': {'success': True, 'message': 'User field updated.'},'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
+    else:
+        return JsonResponse({'message': {'success': False, 'message': 'An error occurred updating the user field.'}})
 
 def get_options(request, parameter):
     dropdown_list = []

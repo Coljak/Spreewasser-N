@@ -142,25 +142,25 @@ def toolbox_dashboard(request):
     return render(request, 'toolbox/toolbox_three_split.html', context)
 
 
-def filter_sinks(request):
-    # TODO enlarged Sinks!
-    if request.method == 'POST':
-        sink_form = forms.SinksFilterForm(request.POST)
-        if sink_form.is_valid():
-            sinks = models.Sink.objects.filter(
-                depth__gte=sink_form.cleaned_data['depth_min'],
-                depth__lte=sink_form.cleaned_data['depth_max'],
-                area__gte=sink_form.cleaned_data['area_min'],
-                area__lte=sink_form.cleaned_data['area_max'],
-                index_soil__gte=sink_form.cleaned_data['index_soil_min'],
-                index_soil__lte=sink_form.cleaned_data['index_soil_max'],
-            )
-            sinks_json = [sink.to_json() for sink in sinks]
-            return JsonResponse({'sinks': sinks_json})
-        else:
-            return JsonResponse({'message': {'success': False, 'message': 'Invalid form data'}})
-    else:
-        return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}})
+# def filter_sinks(request):
+#     # TODO enlarged Sinks!
+#     if request.method == 'POST':
+#         sink_form = forms.SinksFilterForm(request.POST)
+#         if sink_form.is_valid():
+#             sinks = models.Sink.objects.filter(
+#                 depth__gte=sink_form.cleaned_data['depth_min'],
+#                 depth__lte=sink_form.cleaned_data['depth_max'],
+#                 area__gte=sink_form.cleaned_data['area_min'],
+#                 area__lte=sink_form.cleaned_data['area_max'],
+#                 index_soil__gte=sink_form.cleaned_data['index_soil_min'],
+#                 index_soil__lte=sink_form.cleaned_data['index_soil_max'],
+#             )
+#             sinks_json = [sink.to_json() for sink in sinks]
+#             return JsonResponse({'sinks': sinks_json})
+#         else:
+#             return JsonResponse({'message': {'success': False, 'message': 'Invalid form data'}})
+#     else:
+#         return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}})
 
 
 def load_infiltration_gui(request, user_field_id):
@@ -186,53 +186,25 @@ def load_infiltration_gui(request, user_field_id):
     else:
         sinks = models.Sink.objects.all()
 
-    sink_extremes = sinks.aggregate(
-        depth_sink_min=Min('depth'),
-        depth_sink_max=Max('depth'),
-        area_sink_min=Min('area'),
-        area_sink_max=Max('area'),
-        volume_min=Min('volume'),
-        volume_max=Max('volume'),
-    )
-    enlarged_sink_extremes = enlarged_sinks.aggregate(
-        depth_sink_min=Min('depth'),
-        depth_sink_max=Max('depth'),
-        area_sink_min=Min('area'),
-        area_sink_max=Max('area'),
-        volume_min=Min('volume'),
-        volume_max=Max('volume'),
-    )
+    # sink_extremes = sinks.aggregate(
+    #     depth_sink_min=Min('depth'),
+    #     depth_sink_max=Max('depth'),
+    #     area_sink_min=Min('area'),
+    #     area_sink_max=Max('area'),
+    #     volume_min=Min('volume'),
+    #     volume_max=Max('volume'),
+    # )
+    # enlarged_sink_extremes = enlarged_sinks.aggregate(
+    #     depth_sink_min=Min('depth'),
+    #     depth_sink_max=Max('depth'),
+    #     area_sink_min=Min('area'),
+    #     area_sink_max=Max('area'),
+    #     volume_min=Min('volume'),
+    #     volume_max=Max('volume'),
+    # )
 
     project_select_form = forms.ToolboxProjectSelectionForm()
-    sink_form = forms.SinksFilterForm(sink_extremes=sink_extremes)
-    enlarged_sink_form = forms.SinksFilterForm(sink_extremes=enlarged_sink_extremes, enlarged_sinks=True)
 
-    lakes = models.Lake.objects.all()
-    streams = models.Stream.objects.all()
-    lake_extremes = lakes.aggregate(
-        min_min_surplus_volume=Min('min_surplus_volume'),
-        max_min_surplus_volume=Max('min_surplus_volume'),
-        min_mean_surplus_volume=Min('mean_surplus_volume'),
-        max_mean_surplus_volume=Max('mean_surplus_volume'),
-        min_max_surplus_volume=Min('max_surplus_volume'),
-        max_max_surplus_volume=Max('max_surplus_volume'),
-        min_plus_days= Min('plus_days'),
-        max_plus_days= Max('plus_days'),
-    )
-
-    stream_extremes = streams.aggregate(
-        min_min_surplus_volume=Min('min_surplus_volume'),
-        max_min_surplus_volume=Max('min_surplus_volume'),
-        min_mean_surplus_volume=Min('mean_surplus_volume'),
-        max_mean_surplus_volume=Max('mean_surplus_volume'),
-        min_max_surplus_volume=Min('max_surplus_volume'),
-        max_max_surplus_volume=Max('max_surplus_volume'),
-        min_plus_days= Min('plus_days'),
-        max_plus_days= Max('plus_days'),
-    )
-
-    # lake_form = forms.WaterbodyFilterForm(extremes=lake_extremes, lake=True)
-    # stream_form = forms.WaterbodyFilterForm(extremes=stream_extremes)
     lake_form = LakeFilter(request.GET)
     stream_form = StreamFilter(request.GET)
     lakes = models.Lake4326.objects.all()
@@ -242,8 +214,8 @@ def load_infiltration_gui(request, user_field_id):
     enlarged_sink_filter = EnlargedSinkFilter(request.GET)
 
     html = render_to_string('toolbox/infiltration.html', {
-        'sink_form': sink_form, 
-        'enlarged_sink_form': enlarged_sink_form,
+        # 'sink_form': sink_form, 
+        # 'enlarged_sink_form': enlarged_sink_form,
         'project_select_form': project_select_form,
         'sink_filter': sink_filter,
         'enlarged_sink_filter': enlarged_sink_filter,
@@ -251,7 +223,36 @@ def load_infiltration_gui(request, user_field_id):
         'lakes_form': lake_form,
     }, request=request) 
 
-    return JsonResponse({'html': html, 'sink_extremes': sink_extremes})
+    return JsonResponse({'html': html})
+
+# @csrf_exempt
+def get_filtered_sinks(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST allowed'}, status=405)
+    
+    data = json.loads(request.body)
+    is_enlarged = data.get('enlargedSink', False)
+    filters = data.get('infiltration', {})
+    user_field_id = data.get('userField', None)
+    if user_field_id:
+        user_field_geom = models.UserField.objects.get(id=user_field_id).geom
+    else:
+        user_field_geom = None
+    print('user_field_geom:', user_field_geom)
+    if user_field_geom:
+        qs = qs.filter(geom__intersects=user_field_geom)
+    
+    filter_data = {}
+    if is_enlarged:
+        prefix = 'enlarged_sink'
+    else:
+        prefix = 'sink'
+    for param in filters:
+        val = filters.get(param)
+
+
+
+
 
 def get_selected_sinks(request):
     if request.method == 'POST':
@@ -259,9 +260,7 @@ def get_selected_sinks(request):
             project = json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        # print('Project:', type(project), project)
-        # print('infiltration:', type(project['infiltration']), project['infiltration'])
-        # print('project.userField:', project['userField'])
+
         user_field = models.UserField.objects.get(pk=project['userField'])
         geom = GEOSGeometry(user_field.geom)
         sinks = []

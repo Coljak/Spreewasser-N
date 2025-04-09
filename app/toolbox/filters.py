@@ -13,8 +13,19 @@ class MinMaxRangeFilter(RangeFilter):
         if field_name:
             values = model.objects.values_list(field_name, flat=True)
             values = list(filter(None, values))  # remove None/nulls
-            if field_name == 'index_soil':
-                values = [int(v * 100) for v in values]
+            if field_name == 'index_soil':  
+                int_values = []
+                for v in values:
+                    if (v * 100) < 1:
+                        v = 0
+                    elif (v * 100) > 99:
+                        v = 100
+                    else:
+                        v = int(v * 100)
+                    int_values.append(v)
+                values = int_values
+                print('int_values', int_values)
+
             if values:
                 min_value = min(values)
                 max_value = max(values)
@@ -57,6 +68,7 @@ class SinkFilter(FilterSet):
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f"{prefix}_{name}"
             field.widget.attrs['name'] = f"{prefix}_{name}"
+            field.widget.attrs['prefix'] = prefix
 
 
     class Meta:
@@ -101,6 +113,7 @@ class EnlargedSinkFilter(FilterSet):
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f'{prefix}_{name}'
             field.widget.attrs['name'] = f'{prefix}_{name}'
+            field.widget.attrs['prefix'] = prefix
 
     class Meta:
         model = EnlargedSink4326
@@ -122,6 +135,7 @@ class StreamFilter(FilterSet):
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f'{prefix}_{name}'
             field.widget.attrs['name'] = f'{prefix}_{name}'
+            field.widget.attrs['prefix'] = prefix
 
     class Meta:
         model = Stream4326
@@ -142,6 +156,7 @@ class LakeFilter(FilterSet):
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f'{prefix}_{name}'
             field.widget.attrs['name'] = f'{prefix}_{name}'
+            field.widget.attrs['prefix'] = prefix
 
     class Meta:
         model = Lake4326

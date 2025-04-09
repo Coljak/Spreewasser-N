@@ -13,11 +13,16 @@ export function initializeSliders() {
           min: parseFloat(parent.data("range_min")),
           max: parseFloat(parent.data("range_max")),
           values: [parent.data("cur_min"), parent.data("cur_max")],
+          // slide: function (event, ui) {
+          //   $("#" + id + "_min").val(ui.values[0]);
+          //   $("#" + id + "_max").val(ui.values[1]);
+          //   $("#" + id + "_text").text(ui.values[0] + " - " + ui.values[1]);
+          // }
           slide: function (event, ui) {
-            $("#" + id + "_min").val(ui.values[0]);
-            $("#" + id + "_max").val(ui.values[1]);
+            $("#" + id + "_min").val(ui.values[0]).trigger("change");
+            $("#" + id + "_max").val(ui.values[1]).trigger("change");
             $("#" + id + "_text").text(ui.values[0] + " - " + ui.values[1]);
-          }
+        }
         });
       
         // Set initial text and hidden field values

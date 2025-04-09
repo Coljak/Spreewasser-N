@@ -1332,14 +1332,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    $('.dropdown-item').on('click', function (e) {
-        e.preventDefault();
-        $('.dropdown-item').removeClass('active');
-        $(this).addClass('active');
-        const target = $(this).attr('href');
-        $('.tab-pane').hide();
-        $(target).show();
-    });
+    // $('.dropdown-item').on('click', function (e) {
+    //     e.preventDefault();
+    //     $('.dropdown-item').removeClass('active');
+    //     $(this).addClass('active');
+    //     const target = $(this).attr('href');
+    //     $('.tab-pane').hide();
+    //     $(target).show();
+    // });
 
     $('.tab-pane').hide();
 

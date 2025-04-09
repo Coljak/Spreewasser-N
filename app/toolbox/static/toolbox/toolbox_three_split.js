@@ -377,93 +377,60 @@ function getLakes(){
 .catch(error => console.error("Error fetching data:", error));
 }
 
+// document.getElementById('toolboxPanel').addEventListener('change', function (e) {
+//   if (e.target.classList.contains('hiddeninput'))  {
+//     // all sliders
+//     const project = ToolboxProject.loadFromLocalStorage();
+//     const inputId = e.target.id;
+//     const inputVal = e.target.value;
 
-function initializeSinkFilterEventHandler() {
-  $('#filterSinksButton').on('click', function () {
-    const enlargedSink = false;
-    getSinks(enlargedSink)  
-    console.log('initializeSinkFilterEventHandler');   
-  });
+//     // Set the corresponding property in the infiltration object
+//     project.infiltration[inputId] = inputVal;
 
-  $('#filterEnlargedSinksButton').on('click', function () {
-    const enlargedSink = true;
-    getSinks(enlargedSink)
-    console.log('initializeSinkFilterEventHandler');
-  });
+//     project.saveToLocalStorage();
+//     console.log('Updated infiltration', inputId, '=', inputVal);
+//   } else if (e.target.classList.contains('form-check-input')) {
+//     // checkboxes
+//     const project = ToolboxProject.loadFromLocalStorage();
+//     const inputId = e.target.id;
+//     const inputVal = e.target.checked;
+    
+//     // Set the corresponding property in the infiltration object
+//     project.infiltration[inputId] = inputVal;
 
+//     project.saveToLocalStorage();
+//     console.log('Updated infiltration', inputId, '=', inputVal);
 
-  $('#id_depth_sink_min').on('change', function () {
+//   };
+// }) 
+$('#toolboxPanel').on('change',  function (event) {
+  const $target = $(event.target);
+  if ($target.hasClass('hiddeninput'))  {
+  // all sliders
     const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.sinkDepthMin = $(this).val();
-    project.saveToLocalStorage();
-  });
+    const inputId = $target.attr('id');
+    const inputVal = $target.val();
 
-  $('#id_depth_sink_min_enlarged').on('change', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.enlargedSinkDepthMin = $(this).val();
-    project.saveToLocalStorage();
-  });
+    // Set the corresponding property in the infiltration object
+    project.infiltration[inputId] = inputVal;
 
-  $('#id_depth_sink_max').on('change', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.sinkDepthMax = $(this).val();
     project.saveToLocalStorage();
-  });
+    console.log('Updated infiltration', inputId, '=', inputVal);
+  } else if ($target.hasClass('form-check-input')) {
+    // checkboxes
+    const project = ToolboxProject.loadFromLocalStorage();
+    const inputId = $target.attr('id');
+    const inputVal = $target.is(':checked');
+    
+    // Set the corresponding property in the infiltration object
+    project.infiltration[inputId] = inputVal;
 
-  $('#id_depth_sink_max_enlarged').on('change', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.enlargedSinkDepthMax = $(this).val();
     project.saveToLocalStorage();
-  });
+    console.log('Updated infiltration', inputId, '=', inputVal);
 
-  $('#id_area_sink_min').on('change', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.sinkAreaMin = $(this).val();
-    project.saveToLocalStorage();
-  });
+  };
+});
 
-  $('#id_area_sink_min_enlarged').on('change', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.enlargedSinkAreaMin = $(this).val();
-    project.saveToLocalStorage();
-  });
-
-  $('#id_area_sink_max').on('change', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.sinkAreaMax = $(this).val();
-    project.saveToLocalStorage();
-  });
-
-  $('#id_area_sink_max_enlarged').on('change', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.enlargedSinkAreaMax = $(this).val();
-    project.saveToLocalStorage();
-  });
-
-  $('#id_volume_min').on('change', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.sinkVolumeMin = $(this).val();
-    project.saveToLocalStorage();
-  });
-
-  $('#id_volume_min_enlarged').on('change', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.enlargedSinkVolumeMin = $(this).val();
-    project.saveToLocalStorage();
-  });
-
-  $('#id_volume_max').on('change', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.sinkVolumeMax = $(this).val();
-    project.saveToLocalStorage();
-  });
-
-  $('#id_volume_max_enlarged').on('change', function () {
-    const project = ToolboxProject.loadFromLocalStorage();
-    project.infiltration.enlargedSinkVolumeMax = $(this).val();
-    project.saveToLocalStorage();
-  });
-};
 
 $('#injectionGo').on('click', function () {
   const project = ToolboxProject.loadFromLocalStorage();
@@ -480,25 +447,7 @@ $('#injectionGo').on('click', function () {
       })
       .then(() => {
         initializeSliders();
-        // initializeSinkFilterEventHandler();
-    
-        // requestAnimationFrame(() => {
-        //     const project = ToolboxProject.loadFromLocalStorage();
-        //     project.infiltration.sinkAreaMax = $('#id_area_sink_max').val();
-        //     project.infiltration.sinkAreaMin = $('#id_area_sink_min').val();
-        //     project.infiltration.sinkVolumeMax = $('#id_volume_max').val();
-        //     project.infiltration.sinkVolumeMin = $('#id_volume_min').val();
-        //     project.infiltration.sinkDepthMax = $('#id_depth_sink_max').val();
-        //     project.infiltration.sinkDepthMin = $('#id_depth_sink_min').val();
-            
-        //     project.infiltration.enlargedSinkAreaMax = $('#id_area_sink_max_enlarged').val();
-        //     project.infiltration.enlargedSinkAreaMin = $('#id_area_sink_min_enlarged').val();
-        //     project.infiltration.enlargedSinkVolumeMax = $('#id_volume_max_enlarged').val();
-        //     project.infiltration.enlargedSinkVolumeMin = $('#id_volume_min_enlarged').val();
-        //     project.infiltration.enlargedSinkDepthMax = $('#id_depth_sink_max_enlarged').val();
-        //     project.infiltration.enlargedSinkDepthMin = $('#id_depth_sink_min_enlarged').val();
-        //     project.saveToLocalStorage();
-        // });
+
     })
     
       .catch(error => console.error("Error fetching data:", error));

@@ -37,7 +37,6 @@ class SliderFilterForm(forms.Form):
             else:
                 layout_field = Field(field_name)
             layout_fields.append(layout_field)
-        # layout_fields.append(StrictButton("Filter sinks", name='filter_sinks', type='submit', css_class='btn btn-fill-out btn-block mt-1'))
         self.helper.layout = Layout(*layout_fields)
 
 
@@ -46,196 +45,196 @@ class SliderFilterForm(forms.Form):
 
 
 
-SINK_EXTREMES = Sink.objects.aggregate(
-    depth_sink_min=Min('depth'),
-    depth_sink_max=Max('depth'),
-    area_sink_min=Min('area'),
-    area_sink_max=Max('area'),
-)
+# SINK_EXTREMES = Sink.objects.aggregate(
+#     depth_sink_min=Min('depth'),
+#     depth_sink_max=Max('depth'),
+#     area_sink_min=Min('area'),
+#     area_sink_max=Max('area'),
+# )
 
-ENLARGED_SINK_EXTREMES = EnlargedSink.objects.aggregate(
-    depth_sink_min=Min('depth'),
-    depth_sink_max=Max('depth'),
-    area_sink_min=Min('area'),
-    area_sink_max=Max('area'),
-)
+# ENLARGED_SINK_EXTREMES = EnlargedSink.objects.aggregate(
+#     depth_sink_min=Min('depth'),
+#     depth_sink_max=Max('depth'),
+#     area_sink_min=Min('area'),
+#     area_sink_max=Max('area'),
+# )
 
 
-class SinksFilterForm(forms.Form):
-    depth_sink_min = forms.FloatField(required=False, label="Min Depth Sink")
-    depth_sink_max = forms.FloatField(required=False, label="Max Depth Sink")
-    area_sink_min = forms.FloatField(required=False, label="Min Area Sink")
-    area_sink_max = forms.FloatField(required=False, label="Max Area Sink")
-    volume_min = forms.FloatField(required=False, label="Min Volume")
-    volume_max = forms.FloatField(required=False, label="Max Volume")
+# class SinksFilterForm(forms.Form):
+#     depth_sink_min = forms.FloatField(required=False, label="Min Depth Sink")
+#     depth_sink_max = forms.FloatField(required=False, label="Max Depth Sink")
+#     area_sink_min = forms.FloatField(required=False, label="Min Area Sink")
+#     area_sink_max = forms.FloatField(required=False, label="Max Area Sink")
+#     volume_min = forms.FloatField(required=False, label="Min Volume")
+#     volume_max = forms.FloatField(required=False, label="Max Volume")
     
-    land_use = forms.MultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple, 
-        required=False, 
-        label="Land Use"
-    )
+#     land_use = forms.MultipleChoiceField(
+#         widget=forms.CheckboxSelectMultiple, 
+#         required=False, 
+#         label="Land Use"
+#     )
 
-    def __init__(self, *args, sink_extremes=None, enlarged_sinks=False, **kwargs):
-        super().__init__(*args, **kwargs)
+#     def __init__(self, *args, sink_extremes=None, enlarged_sinks=False, **kwargs):
+#         super().__init__(*args, **kwargs)
 
-        id_suffix = "_enlarged" if enlarged_sinks else ""
+#         id_suffix = "_enlarged" if enlarged_sinks else ""
 
-        if sink_extremes:
-            self.fields['depth_sink_min'].widget.attrs.update({
-                'id': f"id_depth_sink_min{id_suffix}",
-                'min': sink_extremes['depth_sink_min'],
-                'max': sink_extremes['depth_sink_max'],
-                'value': sink_extremes['depth_sink_min'],
-                'step': 0.05
-            })
+#         if sink_extremes:
+#             self.fields['depth_sink_min'].widget.attrs.update({
+#                 'id': f"id_depth_sink_min{id_suffix}",
+#                 'min': sink_extremes['depth_sink_min'],
+#                 'max': sink_extremes['depth_sink_max'],
+#                 'value': sink_extremes['depth_sink_min'],
+#                 'step': 0.05
+#             })
 
-            self.fields['depth_sink_max'].widget.attrs.update({
-                'id': f"id_depth_sink_max{id_suffix}",
-                'min': sink_extremes['depth_sink_min'],
-                'max': sink_extremes['depth_sink_max'],
-                'value': sink_extremes['depth_sink_max'], 
-                'step': 0.05
-            })
+#             self.fields['depth_sink_max'].widget.attrs.update({
+#                 'id': f"id_depth_sink_max{id_suffix}",
+#                 'min': sink_extremes['depth_sink_min'],
+#                 'max': sink_extremes['depth_sink_max'],
+#                 'value': sink_extremes['depth_sink_max'], 
+#                 'step': 0.05
+#             })
 
-            self.fields['area_sink_min'].widget.attrs.update({
-                'id': f"id_area_sink_min{id_suffix}",
-                'min': sink_extremes['area_sink_min'],
-                'max': sink_extremes['area_sink_max'],
-                'value': sink_extremes['area_sink_min'],
-                'step': 10
-            })
+#             self.fields['area_sink_min'].widget.attrs.update({
+#                 'id': f"id_area_sink_min{id_suffix}",
+#                 'min': sink_extremes['area_sink_min'],
+#                 'max': sink_extremes['area_sink_max'],
+#                 'value': sink_extremes['area_sink_min'],
+#                 'step': 10
+#             })
 
-            self.fields['area_sink_max'].widget.attrs.update({
-                'id': f"id_area_sink_max{id_suffix}",
-                'min': sink_extremes['area_sink_min'],
-                'max': sink_extremes['area_sink_max'],
-                'value': sink_extremes['area_sink_max'],
-                'step': 10
-            })
+#             self.fields['area_sink_max'].widget.attrs.update({
+#                 'id': f"id_area_sink_max{id_suffix}",
+#                 'min': sink_extremes['area_sink_min'],
+#                 'max': sink_extremes['area_sink_max'],
+#                 'value': sink_extremes['area_sink_max'],
+#                 'step': 10
+#             })
 
-            self.fields['volume_min'].widget.attrs.update({
-                'id': f"id_volume_min{id_suffix}",
-                'min': sink_extremes['volume_min'],
-                'max': sink_extremes['volume_max'],
-                'value': sink_extremes['volume_min'],
-                'step': 100
-            })
+#             self.fields['volume_min'].widget.attrs.update({
+#                 'id': f"id_volume_min{id_suffix}",
+#                 'min': sink_extremes['volume_min'],
+#                 'max': sink_extremes['volume_max'],
+#                 'value': sink_extremes['volume_min'],
+#                 'step': 100
+#             })
 
-            self.fields['volume_max'].widget.attrs.update({
-                'id': f"id_volume_max{id_suffix}",
-                'min': sink_extremes['volume_min'],
-                'max': sink_extremes['volume_max'],
-                'value': sink_extremes['volume_max'],
-                'step': 100
-            })
+#             self.fields['volume_max'].widget.attrs.update({
+#                 'id': f"id_volume_max{id_suffix}",
+#                 'min': sink_extremes['volume_min'],
+#                 'max': sink_extremes['volume_max'],
+#                 'value': sink_extremes['volume_max'],
+#                 'step': 100
+#             })
 
-        # Define land use options dynamically
-        land_use_options = [
-            ('forest_deciduous_trees', 'Forest Deciduous Trees'),
-            ('heath', 'Heath'),
-            ('orchard_meadow', 'Orchard Meadow'),
-            ('vegetation', 'Vegetation'),
-            ('grassland', 'Grassland'),
-            ('agricultural_area_without_information', 'Agricultural Area Without Information'),
-            ('farmland', 'Farmland'),
-            ('woody_area', 'Woody Area'),
-            ('forest_conifers', 'Forest Conifers'),
-            ('forest_conifers_and_deciduous_trees', 'Forest Conifers and Deciduous Trees')
-        ]
+#         # Define land use options dynamically
+#         land_use_options = [
+#             ('forest_deciduous_trees', 'Forest Deciduous Trees'),
+#             ('heath', 'Heath'),
+#             ('orchard_meadow', 'Orchard Meadow'),
+#             ('vegetation', 'Vegetation'),
+#             ('grassland', 'Grassland'),
+#             ('agricultural_area_without_information', 'Agricultural Area Without Information'),
+#             ('farmland', 'Farmland'),
+#             ('woody_area', 'Woody Area'),
+#             ('forest_conifers', 'Forest Conifers'),
+#             ('forest_conifers_and_deciduous_trees', 'Forest Conifers and Deciduous Trees')
+#         ]
         
-        self.fields['land_use'].choices = land_use_options
-        self.fields['land_use'].initial = [choice[0] for choice in land_use_options]  # Select all by default
+#         self.fields['land_use'].choices = land_use_options
+#         self.fields['land_use'].initial = [choice[0] for choice in land_use_options]  # Select all by default
 
 
-class WaterbodyFilterForm(forms.Form):
-    min_min_surplus_volume = forms.FloatField(
-        required=False, 
-        label="Minimum Überschussvolumen Untergrenze"
-    )
-    max_min_surplus_volume = forms.FloatField(
-        required=False, 
-        label="Minimum Überschussvolumen Obergrenze"
-    )
-    min_max_surplus_volume = forms.FloatField(
-        required=False, 
-        label="Maximum Überschussvolumen Untergrenze"
-    )
-    max_max_surplus_volume = forms.FloatField(
-        required=False, 
-        label="Maximum Überschussvolumen Obergrenze"
-    )
-    min_mean_surplus_volume = forms.FloatField(
-        required=False, 
-        label="Durchnittliches Überschussvolumen Untergrenze"
-    )
-    max_mean_surplus_volume = forms.FloatField(
-        required=False, 
-        label="Durchnittliches Überschussvolumen Obergrenze"
-    )
-    min_plus_days = forms.FloatField(
-        required=False, 
-        label="Überschusstage Untergrenze"
-    )
-    max_plus_days = forms.FloatField(
-        required=False, 
-        label="Überschusstage Obergrenze"
-    )
+# class WaterbodyFilterForm(forms.Form):
+#     min_min_surplus_volume = forms.FloatField(
+#         required=False, 
+#         label="Minimum Überschussvolumen Untergrenze"
+#     )
+#     max_min_surplus_volume = forms.FloatField(
+#         required=False, 
+#         label="Minimum Überschussvolumen Obergrenze"
+#     )
+#     min_max_surplus_volume = forms.FloatField(
+#         required=False, 
+#         label="Maximum Überschussvolumen Untergrenze"
+#     )
+#     max_max_surplus_volume = forms.FloatField(
+#         required=False, 
+#         label="Maximum Überschussvolumen Obergrenze"
+#     )
+#     min_mean_surplus_volume = forms.FloatField(
+#         required=False, 
+#         label="Durchnittliches Überschussvolumen Untergrenze"
+#     )
+#     max_mean_surplus_volume = forms.FloatField(
+#         required=False, 
+#         label="Durchnittliches Überschussvolumen Obergrenze"
+#     )
+#     min_plus_days = forms.FloatField(
+#         required=False, 
+#         label="Überschusstage Untergrenze"
+#     )
+#     max_plus_days = forms.FloatField(
+#         required=False, 
+#         label="Überschusstage Obergrenze"
+#     )
 
-    def __init__(self, *args, extremes=None, lake=False, **kwargs):
-        super().__init__(*args, **kwargs)
+#     def __init__(self, *args, extremes=None, lake=False, **kwargs):
+#         super().__init__(*args, **kwargs)
 
-        id_suffix = "_lake" if lake else "_stream"
+#         id_suffix = "_lake" if lake else "_stream"
 
-        if extremes:
-            self.fields['min_min_surplus_volume'].widget.attrs.update({
-                'id': f"id_min_min_surplus_volume{id_suffix}",
-                'type':"range",
-                'class': "form-range",
-                'min': extremes['min_min_surplus_volume'],
-                'max': extremes['max_min_surplus_volume'],
-                'value': extremes['min_min_surplus_volume'],
-                'step': 0.05
-            })
+#         if extremes:
+#             self.fields['min_min_surplus_volume'].widget.attrs.update({
+#                 'id': f"id_min_min_surplus_volume{id_suffix}",
+#                 'type':"range",
+#                 'class': "form-range",
+#                 'min': extremes['min_min_surplus_volume'],
+#                 'max': extremes['max_min_surplus_volume'],
+#                 'value': extremes['min_min_surplus_volume'],
+#                 'step': 0.05
+#             })
 
-            self.fields['max_min_surplus_volume'].widget.attrs.update({
-                'id': f"id_max_min_surplus_volume{id_suffix}",
-                'min': extremes['min_min_surplus_volume'],
-                'max': extremes['max_min_surplus_volume'],
-                'value': extremes['max_min_surplus_volume'],
-                'step': 0.05
-            })
+#             self.fields['max_min_surplus_volume'].widget.attrs.update({
+#                 'id': f"id_max_min_surplus_volume{id_suffix}",
+#                 'min': extremes['min_min_surplus_volume'],
+#                 'max': extremes['max_min_surplus_volume'],
+#                 'value': extremes['max_min_surplus_volume'],
+#                 'step': 0.05
+#             })
 
-            self.fields['min_mean_surplus_volume'].widget.attrs.update({
-                'id': f"id_min_mean_surplus_volume{id_suffix}",
-                'min': extremes['min_mean_surplus_volume'],
-                'max': extremes['max_mean_surplus_volume'],
-                'value': extremes['min_mean_surplus_volume'],
-                'step': 0.05
-            })
+#             self.fields['min_mean_surplus_volume'].widget.attrs.update({
+#                 'id': f"id_min_mean_surplus_volume{id_suffix}",
+#                 'min': extremes['min_mean_surplus_volume'],
+#                 'max': extremes['max_mean_surplus_volume'],
+#                 'value': extremes['min_mean_surplus_volume'],
+#                 'step': 0.05
+#             })
 
-            self.fields['max_min_surplus_volume'].widget.attrs.update({
-                'id': f"id_max_mean_surplus_volume{id_suffix}",
-                'min': extremes['min_mean_surplus_volume'],
-                'max': extremes['max_mean_surplus_volume'],
-                'value': extremes['max_mean_surplus_volume'],
-                'step': 0.05
-            })
+#             self.fields['max_min_surplus_volume'].widget.attrs.update({
+#                 'id': f"id_max_mean_surplus_volume{id_suffix}",
+#                 'min': extremes['min_mean_surplus_volume'],
+#                 'max': extremes['max_mean_surplus_volume'],
+#                 'value': extremes['max_mean_surplus_volume'],
+#                 'step': 0.05
+#             })
 
-            self.fields['min_max_surplus_volume'].widget.attrs.update({
-                'id': f"id_min_max_surplus_volume{id_suffix}",
-                'min': extremes['min_max_surplus_volume'],
-                'max': extremes['max_max_surplus_volume'],
-                'value': extremes['min_max_surplus_volume'],
-                'step': 0.05
-            })
+#             self.fields['min_max_surplus_volume'].widget.attrs.update({
+#                 'id': f"id_min_max_surplus_volume{id_suffix}",
+#                 'min': extremes['min_max_surplus_volume'],
+#                 'max': extremes['max_max_surplus_volume'],
+#                 'value': extremes['min_max_surplus_volume'],
+#                 'step': 0.05
+#             })
 
-            self.fields['max_max_surplus_volume'].widget.attrs.update({
-                'id': f"id_max_max_surplus_volume{id_suffix}",
-                'min': extremes['min_max_surplus_volume'],
-                'max': extremes['max_max_surplus_volume'],
-                'value': extremes['max_max_surplus_volume'],
-                'step': 0.05
-            })
+#             self.fields['max_max_surplus_volume'].widget.attrs.update({
+#                 'id': f"id_max_max_surplus_volume{id_suffix}",
+#                 'min': extremes['min_max_surplus_volume'],
+#                 'max': extremes['max_max_surplus_volume'],
+#                 'value': extremes['max_max_surplus_volume'],
+#                 'step': 0.05
+#             })
 
 
 class ToolboxProjectSelectionForm(forms.Form):

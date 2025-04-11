@@ -456,7 +456,7 @@ $('#injectionGo').on('click', function () {
       })
       .then(() => {
         initializeSliders();
-
+        $('input[type="checkbox"][name="land_use"]').prop('checked', true);
     })
     
       .catch(error => console.error("Error fetching data:", error));

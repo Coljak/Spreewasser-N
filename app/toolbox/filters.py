@@ -27,7 +27,7 @@ class MinMaxRangeFilter(RangeFilter):
                         v = int(v * 100)
                     int_values.append(v)
                 values = int_values
-                print('int_values', int_values)
+                # print('int_values', int_values)
 
             if values:
                 min_value = min(values)
@@ -56,7 +56,8 @@ class SinkFilter(FilterSet):
         label="Land Use",
         choices=[(lu, lu) for lu in LAND_USE_CHOICES],
         method='filter_land_use',
-        widget=forms.CheckboxSelectMultiple
+        widget=forms.CheckboxSelectMultiple,
+        # initial=[lu for lu in LAND_USE_CHOICES],
     )
 
     def filter_land_use(self, queryset, name, value):
@@ -72,6 +73,8 @@ class SinkFilter(FilterSet):
             field.widget.attrs['id'] = f"{prefix}_{name}"
             field.widget.attrs['name'] = f"{prefix}_{name}"
             field.widget.attrs['prefix'] = prefix
+
+        # self.form.fields['land_use'].initial = ['agricultural_area_without_information']
 
 
     class Meta:

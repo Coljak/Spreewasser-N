@@ -55,8 +55,13 @@ class SliderFilterForm(forms.Form):
                 layout_fields.append(layout_field)
         self.helper.layout = Layout(*layout_fields)
 
-
-
+        for f in self.fields:
+            print(f)
+            if f == 'land_use':
+                self.fields['land_use'].initial = [
+                    choice[0] for choice in self.fields['land_use'].choices
+                ]
+                print('land_use field found', self.fields['land_use'].initial)
 
 
 class ToolboxProjectSelectionForm(forms.Form):

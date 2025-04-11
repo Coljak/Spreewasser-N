@@ -46,6 +46,6 @@ urlpatterns = [
     path('toolbox/filter_lakes/', views.filter_lakes, name='filter_lakes'),
     # path('toolbox/get_sinks_within/<int:user_field_id>/', views.toolbox_get_sinks_within, name='toolbox_get_sinks_within'),
     path('toolbox/load_infiltration_gui/<str:user_field_id>/', views.load_infiltration_gui, name='load_infiltration_gui'),
-    path('toolbox/get_selected_sinks/', views.get_selected_sinks, name='get_selected_sinks'),
+    # path('toolbox/get_selected_sinks/', views.get_selected_sinks, name='get_selected_sinks'),
     path('toolbox/test/', views.test, name='test'),
 ]

@@ -22,3 +22,19 @@ class CustomRangeSliderWidget(RangeWidget):
             subwidget['attrs']['id'] = base_id + "_" + self.suffixes[swx]
         ctx['widget']['value_text'] = "{} - {}".format(cur_min,cur_max)
         return ctx
+    
+class CustomSingleSliderWidget(HiddenInput):
+    template_name = "forms/widgets/single-slider.html"
+
+    def __init__(self, attrs=None):
+        default_attrs = {
+            "data_range_min": 0,
+            "data_range_max": 1000,
+            "data_cur_val": 0,
+            "class": "hiddeninput",
+        }
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(attrs=default_attrs)
+
+    

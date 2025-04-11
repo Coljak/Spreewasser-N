@@ -234,10 +234,9 @@ const showSinkOutline = function (sinkId) {
   console.log('showSinkOutline sinkId', sinkId);
 }
 
-function getSinks(isEnlargedSink) {
+function getSinks(url, featureGroup) {
   const project = ToolboxProject.loadFromLocalStorage();
-  project['enlargedSink'] = isEnlargedSink;
-  fetch('get_selected_sinks/', {
+  fetch(url, {
     method: 'POST',
     body: JSON.stringify(project),
     headers: {
@@ -247,69 +246,70 @@ function getSinks(isEnlargedSink) {
   })
   .then(response => response.json())
   .then(data => {
-    console.log('data', data);
-    const activeGroup = isEnlargedSink ? enlargedSinkFeatureGroup : sinkFeatureGroup;
+    featureGroup.clearLayers();
+    if (data.message.success) {
 
-    // Clear existing markers
-    activeGroup.clearLayers();
+      // Initialize marker cluster
+      let markers = L.markerClusterGroup();
 
-    // Initialize marker cluster
-    let markers = L.markerClusterGroup();
+      // Iterate through features and add them to the cluster
+      data.feature_collection.features.forEach(feature => {
+          let coords = feature.coordinates; // Get the lat/lng coordinates
+          let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
 
-    // Iterate through features and add them to the cluster
-    data.features.forEach(feature => {
-        let coords = feature.coordinates; // Get the lat/lng coordinates
-        let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
-
-        // Create popup content with all properties
-        let popupContent = `
-            <b>Tiefe:</b> ${feature.properties.depth} m<br>
-            <b>Fläche:</b> ${feature.properties.area} m²<br>
-            <b>Bodeneignung:</b> ${feature.properties.index_soil}<br>
-            <b>Landnuntzung 1:</b> ${feature.properties.land_use_1}<br>
-            ${feature.properties.land_use_2 ? `<b>Landnuntzung 2:</b> ${feature.properties.land_use_2}<br>` : ''}
-            ${feature.properties.land_use_3 ? `<b>Landnuntzung 3:</b> ${feature.properties.land_use_3}<br>` : ''}
-            ${feature.properties.land_use_4 ? `<b>Landnuntzung 4:</b> ${feature.properties.land_use_4}<br>` : ''}
-        `;
+          // Create popup content with all properties
+          let popupContent = `
+              <b>Tiefe:</b> ${feature.properties.depth} m<br>
+              <b>Fläche:</b> ${feature.properties.area} m²<br>
+              <b>Bodeneignung:</b> ${feature.properties.index_soil}<br>
+              ${feature.properties.volume_construction_barrier ? `<b>Volumen Barriere:</b> ${feature.properties.volume_construction_barrier}<br>` : ''}
+              ${feature.properties.volume_gained ? `<b>Zusätzliches Volumen:</b> ${feature.properties.volume_gained}<br>` : ''}
+              <b>Landnuntzung 1:</b> ${feature.properties.land_use_1}<br>
+              ${feature.properties.land_use_2 ? `<b>Landnuntzung 2:</b> ${feature.properties.land_use_2}<br>` : ''}
+              ${feature.properties.land_use_3 ? `<b>Landnuntzung 3:</b> ${feature.properties.land_use_3}<br>` : ''}
+              ${feature.properties.land_use_4 ? `<b>Landnuntzung 4:</b> ${feature.properties.land_use_4}<br>` : ''}
+          `;
 
 
-        // Create a marker
-        let marker = L.marker(latlng).bindPopup(popupContent);
-        marker.on('mouseover', function () {
-          this.openPopup();
+          // Create a marker
+          let marker = L.marker(latlng).bindPopup(popupContent);
+          marker.on('mouseover', function () {
+            this.openPopup();
+          });
+
+          // Hide popup when not hovering
+          marker.on('mouseout', function () {
+              this.closePopup();
+          });
+          marker.on('contextmenu', function (event) {
+            L.popup()
+                .setLatLng(event.latlng)
+                .setContent(`
+                    <b>Sink Options</b><br>
+                    <button class="btn btn-outline-secondary show-sink-outline" sinkId=${feature.properties.id}">Show Sink Outline</button>
+                    <button class="btn btn-outline-secondary select-sink" sinkId=${feature.properties.id}">Select Sink</button>
+                `)
+                .openOn(map);
         });
+        
 
-        // Hide popup when not hovering
-        marker.on('mouseout', function () {
-            this.closePopup();
-        });
-        marker.on('contextmenu', function (event) {
-          L.popup()
-              .setLatLng(event.latlng)
-              .setContent(`
-                  <b>Sink Options</b><br>
-                  <button class="btn btn-outline-secondary show-sink-outline" sinkId=${feature.properties.id}">Show Sink Outline</button>
-                  <button class="btn btn-outline-secondary select-sink" sinkId=${feature.properties.id}">Select Sink</button>
-              `)
-              .openOn(map);
+          // Add marker to cluster
+          markers.addLayer(marker);
       });
-      
 
-        // Add marker to cluster
-        markers.addLayer(marker);
-    });
-
-    // Add the cluster group to the map
-    activeGroup.addLayer(markers);
-    map.fitBounds(markers.getBounds());
+      // Add the cluster group to the map
+      featureGroup.addLayer(markers);
+    } else {
+      handleAlerts(data.message);
+    }
 })
 .catch(error => console.error("Error fetching data:", error));
 };
 
-function getLakes(){
+function getWaterBodies(url, featureGroup){
   const project = ToolboxProject.loadFromLocalStorage();
-  project['lakes'] = true;
-  fetch('get_selected_lakes/', {
+  // project['lakes'] = true;
+  fetch(url, {
     method: 'POST',
     body: JSON.stringify(project),
     headers: {
@@ -319,93 +319,70 @@ function getLakes(){
   })
   .then(response => response.json())
   .then(data => {
-    console.log('data', data);
-    const activeGroup = project['lakes'] ? lakesFeatureGroup : streamsFeatureGroup;
+    featureGroup.clearLayers();
 
-    // Clear existing markers
-    activeGroup.clearLayers();
+    if (data.message.success) {
+      // Initialize marker cluster
+      let markers = L.markerClusterGroup();
 
-    // Initialize marker cluster
-    let markers = L.markerClusterGroup();
+      // Iterate through features and add them to the cluster
+      data.feature_collection.features.forEach(feature => {
+          let coords = feature.coordinates; // Get the lat/lng coordinates
+          let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
 
-    // Iterate through features and add them to the cluster
-    data.features.forEach(feature => {
-        let coords = feature.coordinates; // Get the lat/lng coordinates
-        let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
-
-        // Create popup content with all properties
-        let popupContent = `
-            <b>Länge:</b> ${feature.properties.shape_length} m<br>
-            ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
-            <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume}<br>
-            <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume}<br>
-            <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume}<br>
-            <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
-        `;
+          // Create popup content with all properties
+          let popupContent = `
+              <b>Länge:</b> ${feature.properties.shape_length} m<br>
+              ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
+              <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume}<br>
+              <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume}<br>
+              <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume}<br>
+              <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
+          `;
 
 
-        // Create a marker
-        let marker = L.marker(latlng).bindPopup(popupContent);
-        marker.on('mouseover', function () {
-          this.openPopup();
+          // Create a marker
+          let marker = L.marker(latlng).bindPopup(popupContent);
+          marker.on('mouseover', function () {
+            this.openPopup();
+          });
+
+          // Hide popup when not hovering
+          marker.on('mouseout', function () {
+              this.closePopup();
+          });
+          marker.on('contextmenu', function (event) {
+            L.popup()
+                .setLatLng(event.latlng)
+                .setContent(`
+                    <b>Sink Options</b><br>
+                    <button class="btn btn-outline-secondary show-sink-outline" sinkId=${feature.properties.id}">Show Sink Outline</button>
+                    <button class="btn btn-outline-secondary select-sink" sinkId=${feature.properties.id}">Select Sink</button>
+                `)
+                .openOn(map);
         });
+        
 
-        // Hide popup when not hovering
-        marker.on('mouseout', function () {
-            this.closePopup();
-        });
-        marker.on('contextmenu', function (event) {
-          L.popup()
-              .setLatLng(event.latlng)
-              .setContent(`
-                  <b>Sink Options</b><br>
-                  <button class="btn btn-outline-secondary show-sink-outline" sinkId=${feature.properties.id}">Show Sink Outline</button>
-                  <button class="btn btn-outline-secondary select-sink" sinkId=${feature.properties.id}">Select Sink</button>
-              `)
-              .openOn(map);
+          // Add marker to cluster                                              
+          markers.addLayer(marker);
       });
-      
 
-        // Add marker to cluster
-        markers.addLayer(marker);
-    });
-
-    // Add the cluster group to the map
-    activeGroup.addLayer(markers);
-    map.fitBounds(markers.getBounds());
+      // Add the cluster group to the map
+      featureGroup.addLayer(markers);
+      map.fitBounds(markers.getBounds());    
+    }  else {
+      handleAlerts(data.message);
+    } 
 })
 .catch(error => console.error("Error fetching data:", error));
 }
 
-// document.getElementById('toolboxPanel').addEventListener('change', function (e) {
-//   if (e.target.classList.contains('hiddeninput'))  {
-//     // all sliders
-//     const project = ToolboxProject.loadFromLocalStorage();
-//     const inputId = e.target.id;
-//     const inputVal = e.target.value;
 
-//     // Set the corresponding property in the infiltration object
-//     project.infiltration[inputId] = inputVal;
-
-//     project.saveToLocalStorage();
-//     console.log('Updated infiltration', inputId, '=', inputVal);
-//   } else if (e.target.classList.contains('form-check-input')) {
-//     // checkboxes
-//     const project = ToolboxProject.loadFromLocalStorage();
-//     const inputId = e.target.id;
-//     const inputVal = e.target.checked;
-    
-//     // Set the corresponding property in the infiltration object
-//     project.infiltration[inputId] = inputVal;
-
-//     project.saveToLocalStorage();
-//     console.log('Updated infiltration', inputId, '=', inputVal);
-
-//   };
-// }) 
 $('#toolboxPanel').on('change',  function (event) {
   const $target = $(event.target);
+  console.log('change event', $target);
   if ($target.hasClass('hiddeninput'))  {
+    console.log('hiddeninput', $target);
   // all sliders
     const project = ToolboxProject.loadFromLocalStorage();
     const inputId = $target.attr('id');
@@ -420,16 +397,48 @@ $('#toolboxPanel').on('change',  function (event) {
     // checkboxes
     const project = ToolboxProject.loadFromLocalStorage();
     const inputId = $target.attr('id');
-    const inputVal = $target.is(':checked');
-    
-    // Set the corresponding property in the infiltration object
-    project.infiltration[inputId] = inputVal;
+    const inputName = $target.attr('name');
+    const inputPrefix = $target.attr('prefix');
+    const inputValue = $target.attr('value');
+    const inputChecked = $target.is(':checked');
 
+    
+    const key = `${inputPrefix}_${inputName}`;
+    // Set the corresponding property in the infiltration object
+
+    console.log('Input checked:', inputChecked);
+    console.log('Input key:', key);
+    if (inputChecked) {
+      project.infiltration[key].push(inputValue);
+      console.log('Input value added:', inputValue);
+      console.log('Input value added:', project.infiltration[key]);
+    } else {
+      project.infiltration[key].pop(inputValue);
+      console.log('Input value removed:', inputValue);
+      console.log('Input value removed:', project.infiltration[key]);
+    }
     project.saveToLocalStorage();
-    console.log('Updated infiltration', inputId, '=', inputVal);
+    console.log('Updated infiltration', inputId, '=', inputValue);
 
   };
 });
+
+$('#toolboxPanel').on('click', function (event) {
+  const $target = $(event.target);
+  if ($target.attr('id') === 'btnFilterSinks') {
+    getSinks('filter_sinks/', sinkFeatureGroup);
+  
+  } else if ($target.attr('id') === 'btnFilterEnlargedSinks') {
+    getSinks('filter_enlarged_sinks/', enlargedSinkFeatureGroup);
+  
+  } else if ($target.attr('id') === 'btnFilterStreams') {
+    getWaterBodies('filter_streams/', streamsFeatureGroup);
+  
+  } else if ($target.attr('id') === 'btnFilterLakes') {
+    getWaterBodies('filter_lakes/', lakesFeatureGroup);
+  
+  } 
+}) 
 
 
 $('#injectionGo').on('click', function () {

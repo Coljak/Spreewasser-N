@@ -6,23 +6,49 @@ export class Infiltration {
     constructor (infiltration = {}) {
         this.id = infiltration.id ?? null;
 
-        this.sinkAreaMin = infiltration.sinkAreaMin ?? null;
-        this.sinkAreaMax = infiltration.sinkAreaMax ?? null;
-        this.sinkVolumeMin = infiltration.sinkVolumeMin ?? null;
-        this.sinkVolumeMax = infiltration.sinkVolumeMax ?? null;
-        this.sinkDepthMin = infiltration.sinkDepthMin ?? null;
-        this.sinkDepthMax = infiltration.sinkDepthMax ?? null;
+        this.sink_area_min = infiltration.sink_area_min ?? null;
+        this.sink_area_max = infiltration.sink_area_max ?? null;
+        this.sink_volume_min = infiltration.sink_volume_min ?? null;
+        this.sink_volume_max = infiltration.sink_volume_max ?? null;
+        this.sink_depth_min = infiltration.sink_depth_min ?? null;
+        this.sink_depth_max = infiltration.sink_depth_max ?? null;
+        this.sink_index_soil_min = infiltration.sink_index_soil_min ?? null;
+        this.sink_index_soil_max = infiltration.sink_index_soil_max ?? null;
+        this.sink_land_use = infiltration.sink_land_use ?? [];
 
         this.sinksSelected = infiltration.sinksSelected ?? [];
 
-        this.enlargedSinkAreaMin = infiltration.enlargedSinkAreaMin ?? null;
-        this.enlargedSinkAreaMax = infiltration.enlargedSinkAreaMax ?? null;
-        this.enlargedSinkVolumeMin = infiltration.enlargedSinkVolumeMin ?? null;
-        this.enlargedSinkVolumeMax = infiltration.enlargedSinkVolumeMax ?? null;
-        this.enlargedSinkDepthMin = infiltration.enlargedSinkDepthMin ?? null;
-        this.enlargedSinkDepthMax = infiltration.enlargedSinkDepthMax ?? null;
+        this.enlarged_sink_area_min = infiltration.enlarged_sink_area_min ?? null;
+        this.enlarged_sink_area_max = infiltration.enlarged_sink_area_max ?? null;
+        this.enlarged_sink_volume_min = infiltration.enlarged_sink_volume_minn ?? null;
+        this.enlarged_sink_volume_max = infiltration.enlarged_sink_volume_max ?? null;
+        this.enlarged_sink_depth_min = infiltration.enlarged_sink_depth_min ?? null;
+        this.enlarged_sink_depth_max = infiltration.enlarged_sink_depth_max ?? null;
+        this.enlarged_sink_volume_construction_barrier_min = infiltration.enlarged_sink_volume_construction_barrier_min ?? null;
+        this.enlarged_sink_volume_construction_barrier_max = infiltration.enlarged_sink_volume_construction_barrier_max ?? null;
+        this.enlarged_sink_volume_gained_min = infiltration.enlarged_sink_volume_gained_min ?? null;
+        this.enlarged_sink_volume_gained_max = infiltration.enlarged_sink_volume_gained_max ?? null;
+        this.enlarged_sink_index_soil_min = infiltration.enlarged_sink_index_soil_min ?? null;
+        this.enlarged_sink_index_soil_max = infiltration.enlarged_sink_index_soil_max ?? null;
+        this.enlarged_sink_land_use = infiltration.enlarged_sink_land_use ?? [];
 
         this.enlargedSinksSelected = infiltration.enlargedSinksSelected ?? [];
+
+        this.stream_min_surplus_min = infiltration.stream_min_surplus_min ?? null;
+        this.stream_min_surplus_max = infiltration.stream_min_surplus_max ?? null;
+        this.stream_mean_surplus_min = infiltration.stream_mean_surplus_min ?? null;
+        this.stream_mean_surplus_max = infiltration.stream_mean_surplus_max ?? null;
+        this.stream_max_surplus_min = infiltration.stream_max_surplus_min ?? null;
+        this.stream_max_surplus_max = infiltration.stream_max_surplus_max ?? null;
+        this.stream_distance_to_userfield = infiltration.stream_distance_to_userfield ?? 0;
+
+        this.lake_min_surplus_min = infiltration.lake_min_surplus_min ?? null;
+        this.lake_min_surplus_max = infiltration.lake_min_surplus_max ?? null;
+        this.lake_mean_surplus_min = infiltration.lake_mean_surplus_min ?? null;
+        this.lake_mean_surplus_max = infiltration.lake_mean_surplus_max ?? null;
+        this.lake_max_surplus_min = infiltration.lake_max_surplus_min ?? null;
+        this.lake_max_surplus_max = infiltration.lake_max_surplus_max ?? null;
+        this.lake_distance_to_userfield = infiltration.lake_distance_to_userfield ?? 0;
     }
 };
 export class ToolboxProject {

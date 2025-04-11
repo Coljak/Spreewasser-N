@@ -1,10 +1,13 @@
 
 from django_filters import FilterSet
-from django_filters.filters import RangeFilter, RangeFilter, ChoiceFilter, MultipleChoiceFilter
+# from django_filters import FloatFilter
+from django_filters.filters import RangeFilter, ChoiceFilter, MultipleChoiceFilter, NumberFilter
+from django_filters.fields import RangeField
 from django import forms
 from .models import *
-from .forms import SliderFilterForm
-from .widgets import CustomRangeSliderWidget
+from .forms import SliderFilterForm, SingleWidgetForm
+from .widgets import CustomRangeSliderWidget, CustomSingleSliderWidget
+# from django_filters import FloatFilter
 
 class MinMaxRangeFilter(RangeFilter):
     def __init__(self, model=None, field_name=None, *args, **kwargs):
@@ -122,11 +125,26 @@ class EnlargedSinkFilter(FilterSet):
 
 
 class StreamFilter(FilterSet):
-    min_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='min_surplus_volume', label="Volume (m³)")
-    mean_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='mean_surplus_volume', label="Volume (m³)")
-    max_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='max_surplus_volume', label="Volume (m³)")
-    plus_days = MinMaxRangeFilter(model=Stream4326, field_name='plus_days', label="Days")
+    min_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='min_surplus_volume', label="Min Surplus Volume (m³)")
+    mean_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='mean_surplus_volume', label="Mean Surplus Volume (m³)")
+    max_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='max_surplus_volume', label="Max Surplus Volume (m³)")
+    plus_days = MinMaxRangeFilter(model=Stream4326, field_name='plus_days', label="Surplus Days")
+
+    distance_to_userfield = NumberFilter(
+        label="Distance to userfield (m)",
+        method='filter_distance_placeholder',
+        widget=CustomSingleSliderWidget(attrs = {
+            "data_range_min": 0,
+            "data_range_max": 2000,
+            "data_cur_val": 0,
+            "class": "hiddeninput",
+        }) 
+    )
    
+
+    def filter_distance_placeholder(self, queryset, name, value):
+        # We don’t filter here – this is just a placeholder.
+        return queryset
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -137,16 +155,17 @@ class StreamFilter(FilterSet):
             field.widget.attrs['name'] = f'{prefix}_{name}'
             field.widget.attrs['prefix'] = prefix
 
+
     class Meta:
         model = Stream4326
         fields = ['min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days']
         form = SliderFilterForm
 
 class LakeFilter(FilterSet):
-    min_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='min_surplus_volume', label="Volume (m³)")
-    mean_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='mean_surplus_volume', label="Volume (m³)")
-    max_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='max_surplus_volume', label="Volume (m³)")
-    plus_days = MinMaxRangeFilter(model=Stream4326, field_name='plus_days', label="Days")
+    min_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='min_surplus_volume', label="Min Surplus Volume (m³)")
+    mean_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='mean_surplus_volume', label="Mean Surplus Volume (m³)")
+    max_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='max_surplus_volume', label="Max Surplus Volume (m³)")
+    plus_days = MinMaxRangeFilter(model=Stream4326, field_name='plus_days', label="Surplus Days")
    
     
     def __init__(self, *args, **kwargs):

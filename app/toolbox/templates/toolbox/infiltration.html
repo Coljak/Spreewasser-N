@@ -57,21 +57,44 @@
     </div>
 
     <div id="tabWaterbodies" class="tab-pane">
+        <h2 class="title">Oberflächengewässer</h2>
         <div class="card mb-3">
             <div class="card-body">
-                <h5 class="card-title">Oberflächengewässer</h5>
-                <div class="card-title">Fließgewässer</div>
-                    <div class="card-body">
-                        {% crispy streams_form.form  %}
-                        <button id="filterStreamsButton" class="btn btn-primary mt-3">Flüsse anzeigen</button>
-                    </div>
+                
+                <h5 class="card-title">Fließgewässer</h5>
+                <div class="card-body">
+                    {% crispy streams_form.form  %}
+                    <button id="btnFilterStreams" class="btn btn-primary mt-3">Flüsse anzeigen</button>
                 </div>
-                <div class="card title">Stillgewässer</div>
-                    <div class="card-body">
-                        {% crispy lakes_form.form %}
-                        <button id="filterLakesButton" class="btn btn-primary mt-3">Seeen anzeigen</button>
+              
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Stillgewässer</h5>
+                <div class="card-body">
+                    {% crispy lakes_form.form %}
+                    
+                    <div class="form-group row align-items-center">
+                        <label class="col-form-label col-lg-2 col-md-2 col-sm-auto" for="id_distance_to_userfield">Suchradius um Benutzerfeld</label>
+                        <div class="col-lg-10 col-md-10 col-sm-auto">   
+                            <!-- content of django field -->
+                            <div id="distance_to_userfield_slider"
+                                class="numeric-slider-single-container form-group"
+                                data-range_min="0"
+                                data-range_max="1000"
+                                data-cur_val="0">
+                                <div class="numeric-slider-single"></div>
+                                <input type="hidden" id="id_distance_to_userfield" name="distance_to_userfield">
+                                <span id="id_distance_to_userfield_text"></span>
+                            </div>
+                        </div>
                     </div>
-                </div>  
+
+
+
+                    <button id="btnFilterLakes" class="btn btn-primary mt-3">Seeen anzeigen</button>
+                </div> 
             </div>
         </div>
     </div>

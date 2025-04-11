@@ -1,18 +1,43 @@
+{% extends "swn/base.html" %}
 {% load static %}
 {% load crispy_forms_tags %}
 
 
+{% block css %}
+{{ block.super }}
 
-<head>
-  <link rel="stylesheet" href="{% static 'toolbox/custom_slider.css' %}">
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="{% static 'toolbox/custom_slider.css' %}">
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+{% endblock css %}
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-</head>
-
-<body>
+{% block body_block %}
     <div class="container">
+
+
+
+
+        <div class="card">
+        
+            <div class="card-header">
+                <h2>Slider test</h2>
+            </div>
+            <div class="card-body">
+                {% crispy single_widget %}
+            </div>
+        </div>
+
+        <div class="card">
+        
+            <div class="card-header">
+                <h2>Double Slider test</h2>
+            </div>
+            <div class="card-body">
+                {% comment %} {% crispy double_widget %} {% endcomment %}
+            </div>
+        </div>
+
+
+
         <div class="card">
             <div class="card-header">
                 <h2>Sink Slider</h2>
@@ -39,7 +64,44 @@
             </div>
         </div>
     </div>
+    
 
 
-  <script src="{% static 'toolbox/custom_slider.js' %}"></script>
-</body>
+
+
+
+
+
+
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Test</h2>
+            </div>
+            <div class="card-body">
+                <div id="id_distance_to_userfield_slider"   class="numeric-slider-single-container form-group"   data-range_min="0"   data-range_max="1000"   data-cur_val="0"><div class="numeric-slider-single ui-slider ui-slider-horizontal ui-slider-range"></div><input type="hidden" name="distance_to_userfield" id="id_distance_to_userfield" value="None"><span id="id_distance_to_userfield_text">0</span></div>
+            </div>
+        </div>
+
+
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Test</h2>
+            </div>
+            <div class="card-body">
+                <input type="hidden" name="double_slider" data-range_min="0" data-range_max="1000" data-cur_min="0" data-cur_max="0" class="numeric-slider-double" id="id_double_slider">
+            
+            </div>
+
+  {% endblock body_block %}
+
+{% block javascript %}
+{{ block.super }}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="module" src="{% static 'toolbox/custom_slider.js' %}"></script>
+    <script type="module" src="{% static 'toolbox/test.js' %}"></script>
+
+{% endblock %}

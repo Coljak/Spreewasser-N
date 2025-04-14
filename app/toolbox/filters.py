@@ -1,5 +1,7 @@
 
 from django_filters import FilterSet
+from django.db.models import Min, Max
+from django.db.models import Q
 # from django_filters import FloatFilter
 from django_filters.filters import RangeFilter, ChoiceFilter, MultipleChoiceFilter, NumberFilter
 from django_filters.fields import RangeField
@@ -9,33 +11,74 @@ from .forms import SliderFilterForm, SingleWidgetForm
 from .widgets import CustomRangeSliderWidget, CustomSingleSliderWidget
 # from django_filters import FloatFilter
 
-class MinMaxRangeFilter(RangeFilter):
-    def __init__(self, model=None, field_name=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Auto-detect min and max from the queryset based on field_name
-        if field_name:
-            values = model.objects.values_list(field_name, flat=True)
-            values = list(filter(None, values))  # remove None/nulls
-            if field_name == 'index_soil':  
-                int_values = []
-                for v in values:
-                    if (v * 100) < 1:
-                        v = 0
-                    elif (v * 100) > 99:
-                        v = 100
-                    else:
-                        v = int(v * 100)
-                    int_values.append(v)
-                values = int_values
-                # print('int_values', int_values)
+# class MinMaxRangeFilter(RangeFilter):
+#     def __init__(self, model=None, field_name=None, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         # Auto-detect min and max from the queryset based on field_name
+#         if field_name:
+#             values = model.objects.values_list(field_name, flat=True)
+#             values = list(filter(None, values))  # remove None/nulls
+#             if field_name == 'index_soil':  
+#                 int_values = []
+#                 for v in values:
+#                     if (v * 100) < 1:
+#                         v = 0
+#                     elif (v * 100) > 99:
+#                         v = 100
+#                     else:
+#                         v = int(v * 100)
+#                     int_values.append(v)
+#                 values = int_values
+#                 # print('int_values', int_values)
 
-            if values:
-                min_value = min(values)
-                max_value = max(values)
-                self.extra['widget'] = CustomRangeSliderWidget(attrs={
-                    'data-range_min': min_value,
-                    'data-range_max': max_value
-                })
+#             if values:
+#                 min_value = min(values)
+#                 max_value = max(values)
+#                 self.extra['widget'] = CustomRangeSliderWidget(attrs={
+#                     'data-range_min': min_value,
+#                     'data-range_max': max_value
+#                 })
+
+class MinMaxRangeFilter(RangeFilter):
+    def __init__(self, *args, model=None, field_name=None, **kwargs):
+        self.model = model
+        self.field_name = field_name
+        self.queryset_for_bounds = None  # to be set in FilterSet
+        super().__init__(*args, **kwargs)
+
+        self.extra['widget'] = CustomRangeSliderWidget()
+
+    def set_bounds(self):
+        if not self.queryset_for_bounds or not self.field_name:
+            return
+
+        qs = self.queryset_for_bounds.exclude(**{f"{self.field_name}__isnull": True})
+
+        if self.field_name == 'index_soil':
+            values = list(qs.values_list(self.field_name, flat=True))
+            int_values = []
+            for v in values:
+                if (v * 100) < 1:
+                    v = 0
+                elif (v * 100) > 99:
+                    v = 100
+                else:
+                    v = int(v * 100)
+                int_values.append(v)
+            if int_values:
+                min_val, max_val = min(int_values), max(int_values)
+            else:
+                min_val, max_val = 0, 100
+        else:
+            agg = qs.aggregate(min_val=Min(self.field_name), max_val=Max(self.field_name))
+            min_val = agg.get("min_val", 0)
+            max_val = agg.get("max_val", 100)
+
+        # Assign attributes directly
+        self.field.widget.attrs.update({
+            'data-range_min': min_val,
+            'data-range_max': max_val,
+        })
 
 class SinkFilter(FilterSet):
     area = MinMaxRangeFilter(model=Sink4326, field_name='area', label="Area (ha)")
@@ -65,16 +108,19 @@ class SinkFilter(FilterSet):
             models.Q(land_use_1=value) | models.Q(land_use_2=value) | models.Q(land_use_3=value)
         )
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, queryset=None, **kwargs):
+        super().__init__(*args, queryset=queryset, **kwargs)
+
+        for name, filter_ in self.filters.items():
+            if isinstance(filter_, MinMaxRangeFilter):
+                filter_.queryset_for_bounds = queryset
+                filter_.set_bounds()  # <=== DIRECTLY call method that updates widget attrs
 
         prefix = 'sink'
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f"{prefix}_{name}"
             field.widget.attrs['name'] = f"{prefix}_{name}"
             field.widget.attrs['prefix'] = prefix
-
-        # self.form.fields['land_use'].initial = ['agricultural_area_without_information']
 
 
     class Meta:
@@ -112,8 +158,13 @@ class EnlargedSinkFilter(FilterSet):
             models.Q(land_use_1=value) | models.Q(land_use_2=value) | models.Q(land_use_3=value)
         )
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, queryset=None, **kwargs):
+        super().__init__(*args, queryset=queryset, **kwargs)
+
+        for name, filter_ in self.filters.items():
+            if isinstance(filter_, MinMaxRangeFilter):
+                filter_.queryset_for_bounds = queryset
+                filter_.set_bounds()  # <=== DIRECTLY call method that updates widget attrs
 
         prefix = 'enlarged_sink'
         for name, field in self.form.fields.items():
@@ -149,8 +200,13 @@ class StreamFilter(FilterSet):
         # We don’t filter here – this is just a placeholder.
         return queryset
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, queryset=None, **kwargs):
+        super().__init__(*args, queryset=queryset, **kwargs)
+
+        for name, filter_ in self.filters.items():
+            if isinstance(filter_, MinMaxRangeFilter):
+                filter_.queryset_for_bounds = queryset
+                filter_.set_bounds()
 
         prefix = 'stream'
         for name, field in self.form.fields.items():
@@ -171,8 +227,13 @@ class LakeFilter(FilterSet):
     plus_days = MinMaxRangeFilter(model=Stream4326, field_name='plus_days', label="Surplus Days")
    
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, queryset=None, **kwargs):
+        super().__init__(*args, queryset=queryset, **kwargs)
+
+        for name, filter_ in self.filters.items():
+            if isinstance(filter_, MinMaxRangeFilter):
+                filter_.queryset_for_bounds = queryset
+                filter_.set_bounds()
 
         prefix = 'lake'
         for name, field in self.form.fields.items():

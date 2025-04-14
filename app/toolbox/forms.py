@@ -45,6 +45,7 @@ class SliderFilterForm(forms.Form):
         layout_fields = []
         for field_name, field in self.fields.items():
             if isinstance(field, RangeField):
+                # field.widget.set_bounds(min_value=0, max_value=1000)
                 layout_field = Field(field_name, template="forms/fields/range-slider.html")
                 layout_fields.append(layout_field)
             elif field_name == "distance_to_userfield":
@@ -55,13 +56,7 @@ class SliderFilterForm(forms.Form):
                 layout_fields.append(layout_field)
         self.helper.layout = Layout(*layout_fields)
 
-        for f in self.fields:
-            print(f)
-            if f == 'land_use':
-                self.fields['land_use'].initial = [
-                    choice[0] for choice in self.fields['land_use'].choices
-                ]
-                print('land_use field found', self.fields['land_use'].initial)
+        
 
 
 class ToolboxProjectSelectionForm(forms.Form):

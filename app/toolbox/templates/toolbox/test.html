@@ -22,7 +22,7 @@
                 <h2>Slider test</h2>
             </div>
             <div class="card-body">
-                {% crispy single_widget %}
+                {% comment %} {% crispy single_widget %} {% endcomment %}
             </div>
         </div>
 
@@ -32,13 +32,13 @@
                 <h2>Double Slider test</h2>
             </div>
             <div class="card-body">
-                {% comment %} {% crispy double_widget %} {% endcomment %}
+                {% crispy double_widget %}
             </div>
         </div>
 
 
 
-        <div class="card">
+        {% comment %} <div class="card">
             <div class="card-header">
                 <h2>Sink Slider</h2>
             </div>
@@ -62,7 +62,7 @@
                     <button id="btnFilterEnlargedSinks" type="submit" class="btn btn-primary">Filter Enlarged Sinks</button>
                 </form>
             </div>
-        </div>
+        </div> {% endcomment %}
     </div>
     
 

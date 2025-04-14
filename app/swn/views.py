@@ -64,8 +64,8 @@ class IndexView(TemplateView):
 class ImpressumView(TemplateView):
     template_name = "swn/impressum_information.html"
 
-class AcknoledgementsView(TemplateView):
-    template_name = "swn/acknoledgements.html"
+class AcknowledgementsView(TemplateView):
+    template_name = "swn/acknowledgements.html"
 
 # turning off the default browser favicon request
 def favicon_view(request):

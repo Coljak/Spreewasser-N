@@ -36,7 +36,7 @@ urlpatterns = [
     
     # Impressum and Acknoledgements
     path('Impressum-Information/', views.ImpressumView.as_view(), name='impressum_information'),
-    path('acknoledgements/', views.AcknoledgementsView.as_view(), name='acknoledgements'),
+    path('acknowledgements/', views.AcknowledgementsView.as_view(), name='acknowledgements'),
     # Thredds timelapse paths
     # Thredds Timelapse page, metadata and capabilities
     path('Timelapse/', views.timelapse_items, name='timelapse-page'),

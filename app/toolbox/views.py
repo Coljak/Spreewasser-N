@@ -39,9 +39,10 @@ def test(request):
     sink_filter = SinkFilter(request.GET)
     enlarged_sink_filter = EnlargedSinkFilter(request.GET)
 
-    single_widget = forms.SingleWidgetForm()
-    double_widget = forms.DoubleWidgetForm()
-    single_widget = forms.SingleWidgetForm()
+    # single_widget = forms.SingleWidgetForm()
+    # double_widget = forms.DoubleWidgetForm()
+    double_widget = forms.CustomRangeSliderWidget()
+    single_widget = forms.CustomSingleSliderWidget()
     return render(request, 'toolbox/test.html', {'sink_filter':sink_filter, 'enlarged_sink_filter': enlarged_sink_filter, 'single_widget': single_widget, 'double_widget': double_widget})
 
 def create_default_project(user):
@@ -138,71 +139,45 @@ def load_infiltration_gui(request, user_field_id):
         user_field_id = None
     else:
         user_field_id = int(user_field_id)
-
-        user_field = models.UserField.objects.get(id=user_field_id)
-        user_field_geom = GEOSGeometry(user_field.geom)
-        sinks = models.Sink4326.objects.filter(
-            centroid__within=user_field_geom
-        )
-        enlarged_sinks = models.EnlargedSink4326.objects.filter(
-            centroid__within=user_field_geom
-        )
-    if user_field_id is not None:
-        user_field = models.UserField.objects.get(id=user_field_id)
-        user_field_geom = GEOSGeometry(user_field.geom)
-        sinks = models.Sink.objects.filter(
-            geom__within=user_field_geom
-        )
-    else:
-        sinks = models.Sink.objects.all()
-
-
     project_select_form = forms.ToolboxProjectSelectionForm()
+    user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
+    if user_field is None:
+        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
+    
+    user_field_geom = GEOSGeometry(user_field.geom)
+    sinks = models.Sink4326.objects.filter(
+        centroid__within=user_field.geom
+    )
+    enlarged_sinks = models.EnlargedSink4326.objects.filter(
+        centroid__within=user_field.geom
+    )
+    streams = models.Stream4326.objects.filter(
+        geom__within=user_field.geom
+    )
+    lakes = models.Lake4326.objects.filter(
+        geom__within=user_field.geom
+    )
 
-    lake_form = LakeFilter(request.GET)
-    stream_form = StreamFilter(request.GET)
-    lakes = models.Lake4326.objects.all()
-    streams = models.Stream4326.objects.all()
+    
 
-    sink_filter = SinkFilter(request.GET)
-    enlarged_sink_filter = EnlargedSinkFilter(request.GET)
+    lake_form = LakeFilter(request.GET, queryset=lakes)
+    stream_form = StreamFilter(request.GET, queryset=streams)
+    sink_form = SinkFilter(request.GET, queryset=sinks)
+    print("Queryset Sinks", sinks.count())
+    enlarged_sink_form = EnlargedSinkFilter(request.GET, queryset=enlarged_sinks)
 
     html = render_to_string('toolbox/infiltration.html', {
         # 'sink_form': sink_form, 
         # 'enlarged_sink_form': enlarged_sink_form,
         'project_select_form': project_select_form,
-        'sink_filter': sink_filter,
-        'enlarged_sink_filter': enlarged_sink_filter,
+        'sink_filter': sink_form,
+        'enlarged_sink_filter': enlarged_sink_form,
         'streams_form': stream_form,
         'lakes_form': lake_form,
     }, request=request) 
 
     return JsonResponse({'html': html})
 
-# # @csrf_exempt
-# def get_filtered_sinks(request):
-#     if request.method != 'POST':
-#         return JsonResponse({'error': 'Only POST allowed'}, status=405)
-    
-#     data = json.loads(request.body)
-#     is_enlarged = data.get('enlargedSink', False)
-#     filters = data.get('infiltration', {})
-#     user_field_id = data.get('userField', None)
-#     if user_field_id:
-#         user_field_geom = models.UserField.objects.get(id=user_field_id).geom
-#     else:
-#         user_field_geom = None
-#     print('user_field_geom:', user_field_geom)
-#     if user_field_geom:
-#         qs = qs.filter(geom__intersects=user_field_geom)
-    
-#     filter_data = {}
-#     if is_enlarged:
-#         prefix = 'enlarged_sink'
-#     else:
-#         prefix = 'sink'
-#     for param in filters:
-#         val = filters.get(param)
 
 
 
@@ -396,7 +371,7 @@ def filter_streams(request):
             print('geojson:', geojson)
             geojson['properties'] = {
                 "id": stream.id,
-                "min_surplus_volume": stream.demin_surplus_volumepth,
+                "min_surplus_volume": stream.min_surplus_volume,
                 "mean_surplus_volume": stream.mean_surplus_volume,
                 "max_surplus_volume": stream.max_surplus_volume,
             }

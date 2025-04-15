@@ -261,9 +261,10 @@ function getSinks(url, featureGroup) {
           let popupContent = `
               <b>Tiefe:</b> ${feature.properties.depth} m<br>
               <b>Fläche:</b> ${feature.properties.area} m²<br>
+              <b>Volumen:</b> ${feature.properties.volume} m³<br>
               <b>Bodeneignung:</b> ${feature.properties.index_soil}<br>
-              ${feature.properties.volume_construction_barrier ? `<b>Volumen Barriere:</b> ${feature.properties.volume_construction_barrier}<br>` : ''}
               ${feature.properties.volume_gained ? `<b>Zusätzliches Volumen:</b> ${feature.properties.volume_gained}<br>` : ''}
+              ${feature.properties.volume_construction_barrier ? `<b>Volumen Barriere:</b> ${feature.properties.volume_construction_barrier}<br>` : ''}
               <b>Landnuntzung 1:</b> ${feature.properties.land_use_1}<br>
               ${feature.properties.land_use_2 ? `<b>Landnuntzung 2:</b> ${feature.properties.land_use_2}<br>` : ''}
               ${feature.properties.land_use_3 ? `<b>Landnuntzung 3:</b> ${feature.properties.land_use_3}<br>` : ''}
@@ -327,18 +328,19 @@ function getWaterBodies(url, featureGroup){
 
       // Iterate through features and add them to the cluster
       data.feature_collection.features.forEach(feature => {
+        try {
           let coords = feature.coordinates; // Get the lat/lng coordinates
           let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
 
           // Create popup content with all properties
-          let popupContent = `
+            let popupContent = `
               <b>Länge:</b> ${feature.properties.shape_length} m<br>
               ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
-              <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume}<br>
-              <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume}<br>
-              <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume}<br>
+              <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume} m³<br>
+              <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume} m³<br>
+              <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume} m³<br>
               <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
-          `;
+            `;
 
 
           // Create a marker
@@ -356,8 +358,8 @@ function getWaterBodies(url, featureGroup){
                 .setLatLng(event.latlng)
                 .setContent(`
                     <b>Sink Options</b><br>
-                    <button class="btn btn-outline-secondary show-sink-outline" sinkId=${feature.properties.id}">Show Sink Outline</button>
-                    <button class="btn btn-outline-secondary select-sink" sinkId=${feature.properties.id}">Select Sink</button>
+                    <button class="btn btn-outline-secondary show-lake-outline" lakeId=${feature.properties.id}">Show Waterbody Outline</button>
+                    <button class="btn btn-outline-secondary select-lake" lakeId=${feature.properties.id}">Select Waterbody</button>
                 `)
                 .openOn(map);
         });
@@ -365,6 +367,10 @@ function getWaterBodies(url, featureGroup){
 
           // Add marker to cluster                                              
           markers.addLayer(marker);
+          console.log('Processed feature:', feature.properties.id);
+      } catch {
+        console.log('Error processing feature:', feature.properties.id);
+      }
       });
 
       // Add the cluster group to the map

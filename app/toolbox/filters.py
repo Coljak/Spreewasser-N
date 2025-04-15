@@ -9,6 +9,7 @@ from django import forms
 from .models import *
 from .forms import SliderFilterForm, SingleWidgetForm
 from .widgets import CustomRangeSliderWidget, CustomSingleSliderWidget
+import math
 # from django_filters import FloatFilter
 
 # class MinMaxRangeFilter(RangeFilter):
@@ -71,8 +72,17 @@ class MinMaxRangeFilter(RangeFilter):
                 min_val, max_val = 0, 100
         else:
             agg = qs.aggregate(min_val=Min(self.field_name), max_val=Max(self.field_name))
-            min_val = agg.get("min_val", 0)
-            max_val = agg.get("max_val", 100)
+
+
+            if agg['min_val'] is not None and agg['max_val'] is not None:
+                min_val = math.floor(agg['min_val'])
+                max_val = math.ceil(agg['max_val'])
+            else:
+                min_val = 0
+                max_val = 1  # Avoid 0 range
+
+            # min_val = agg.get("min_val", 0)
+            # max_val = agg.get("max_val", 100)
 
         # Assign attributes directly
         self.field.widget.attrs.update({
@@ -86,35 +96,33 @@ class SinkFilter(FilterSet):
     depth = MinMaxRangeFilter(model=Sink4326, field_name='depth', label="Depth (m)")
     index_soil = MinMaxRangeFilter(model=Sink4326, field_name='index_soil', label="Soil Index (%)")
 
-    # Custom land use filter combining all 3 fields
-    LAND_USE_CHOICES = sorted(set(
-        Sink4326.objects.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
-    ).union(
-        Sink4326.objects.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
-    ).union(
-        Sink4326.objects.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
-    ))
-
     land_use = MultipleChoiceFilter(
         label="Land Use",
-        choices=[(lu, lu) for lu in LAND_USE_CHOICES],
-        method='filter_land_use',
+        choices=[],  # Will be set in __init__
+        # method='filter_land_use',
         widget=forms.CheckboxSelectMultiple,
-        # initial=[lu for lu in LAND_USE_CHOICES],
     )
 
-    def filter_land_use(self, queryset, name, value):
-        return queryset.filter(
-            models.Q(land_use_1=value) | models.Q(land_use_2=value) | models.Q(land_use_3=value)
-        )
     
     def __init__(self, *args, queryset=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
 
+        if queryset is not None:
+            land_use_values = set(
+                queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
+            ).union(
+                queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
+            ).union(
+                queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
+            )
+            choices = sorted([(lu, lu) for lu in land_use_values])
+            self.filters['land_use'].extra['choices'] = choices
+
+
         for name, filter_ in self.filters.items():
             if isinstance(filter_, MinMaxRangeFilter):
                 filter_.queryset_for_bounds = queryset
-                filter_.set_bounds()  # <=== DIRECTLY call method that updates widget attrs
+                filter_.set_bounds()
 
         prefix = 'sink'
         for name, field in self.form.fields.items():
@@ -127,8 +135,6 @@ class SinkFilter(FilterSet):
         model = Sink4326
         fields = ['area', 'volume', 'depth', 'index_soil', 'land_use']
         form = SliderFilterForm
-
-
 class EnlargedSinkFilter(FilterSet):
     area = MinMaxRangeFilter(model=EnlargedSink4326, field_name='area', label="Area (ha)")
     volume = MinMaxRangeFilter(model=EnlargedSink4326, field_name='volume', label="Volume (m³)")
@@ -137,34 +143,35 @@ class EnlargedSinkFilter(FilterSet):
     volume_gained = MinMaxRangeFilter(model=EnlargedSink4326, field_name='volume_gained', label="Volume Gained (m³)")
     index_soil = MinMaxRangeFilter(model=EnlargedSink4326, field_name='index_soil', label="Soil Index (%)")
 
-    # Custom land use filter combining all 3 fields
-    LAND_USE_CHOICES = sorted(set(
-        EnlargedSink4326.objects.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
-    ).union(
-        EnlargedSink4326.objects.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
-    ).union(
-        EnlargedSink4326.objects.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
-    ))
-
+    # Placeholder for land_use — choices will be set dynamically
     land_use = MultipleChoiceFilter(
         label="Land Use",
-        choices=[(lu, lu) for lu in LAND_USE_CHOICES],
-        method='filter_land_use',
-        widget=forms.CheckboxSelectMultiple
+        choices=[],  # Will be set in __init__
+        widget=forms.CheckboxSelectMultiple,
     )
 
-    def filter_land_use(self, queryset, name, value):
-        return queryset.filter(
-            models.Q(land_use_1=value) | models.Q(land_use_2=value) | models.Q(land_use_3=value)
-        )
-    
     def __init__(self, *args, queryset=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
 
+        # Dynamically set land use choices from queryset
+        if queryset is not None:
+            land_use_values = set(
+                queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
+            ).union(
+                queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
+            ).union(
+                queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
+            ).union(
+                queryset.exclude(land_use_4__isnull=True).values_list('land_use_4', flat=True)
+            )
+            choices = sorted([(lu, lu) for lu in land_use_values])
+            self.filters['land_use'].extra['choices'] = choices
+
+        # Configure range sliders (MinMaxRangeFilter)
         for name, filter_ in self.filters.items():
             if isinstance(filter_, MinMaxRangeFilter):
                 filter_.queryset_for_bounds = queryset
-                filter_.set_bounds()  # <=== DIRECTLY call method that updates widget attrs
+                filter_.set_bounds()
 
         prefix = 'enlarged_sink'
         for name, field in self.form.fields.items():
@@ -176,6 +183,7 @@ class EnlargedSinkFilter(FilterSet):
         model = EnlargedSink4326
         fields = ['area', 'volume', 'depth', 'volume_construction_barrier', 'volume_gained', 'index_soil', 'land_use']
         form = SliderFilterForm
+
 
 
 class StreamFilter(FilterSet):

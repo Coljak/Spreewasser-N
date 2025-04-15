@@ -366,9 +366,9 @@ def filter_streams(request):
     else:
 
         for stream in streams:
-            geom = stream.geom
+            geom = stream.simple_geom
             geojson = json.loads(geom.geojson)
-            print('geojson:', geojson)
+            # print('geojson:', geojson)
             geojson['properties'] = {
                 "id": stream.id,
                 "min_surplus_volume": stream.min_surplus_volume,
@@ -386,6 +386,7 @@ def filter_streams(request):
             'message': f'Found {streams.count()} streams'
         }
 
+        print('feature_collection:', feature_collection)
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
 
 def filter_lakes(request):
@@ -412,14 +413,17 @@ def filter_lakes(request):
     else:
         features = []
         for lake in lakes:
-            geom = lake.geom
+            geom = lake.centroid
             geojson = json.loads(geom.geojson)
             print('geojson:', geojson)
             geojson['properties'] = {
                 "id": lake.id,
-                "min_surplus_volume": lake.demin_surplus_volumepth,
-                "mean_surplus_volume": lake.mean_surplus_volume,
-                "max_surplus_volume": lake.max_surplus_volume,
+                "min_surplus_volume": int(lake.min_surplus_volume),
+                "mean_surplus_volume": int(lake.mean_surplus_volume),
+                "max_surplus_volume": int(lake.max_surplus_volume),
+                "plus_days": lake.plus_days,
+                "shape_length": int(lake.shape_length),
+                "shape_area": int(lake.shape_area),
             }
             features.append(geojson)
         feature_collection = {
@@ -430,7 +434,7 @@ def filter_lakes(request):
             'success': True, 
             'message': f'Found {lakes.count()} lakes'
         }
-
+        print('feature_collection:', feature_collection)
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
 
 

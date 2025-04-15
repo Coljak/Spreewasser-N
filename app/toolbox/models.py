@@ -214,6 +214,9 @@ class Stream4326(models.Model):
     mean_surplus_volume = models.FloatField()
     max_surplus_volume = models.FloatField()
     plus_days = models.IntegerField()
+    simple_geom = gis_models.LineStringField(srid=4326, null=True, blank=True)
+
+
 
 class Stream(models.Model):
     geom = gis_models.MultiLineStringField(srid=25833)
@@ -246,6 +249,7 @@ class Lake4326(models.Model):
     mean_surplus_volume = models.FloatField()
     max_surplus_volume = models.FloatField()
     plus_days = models.IntegerField()
+    simple_geom = gis_models.PolygonField(srid=4326, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if self.geom and not self.centroid:
@@ -289,6 +293,7 @@ class Lake(models.Model):
 class Sink4326(models.Model):
     id = models.IntegerField(primary_key=True)
     geom = gis_models.MultiPolygonField(srid=4326)
+    geom_simplified = gis_models.PolygonField(srid=4326, null=True, blank=True)
     centroid = gis_models.PointField(srid=4326, null=True, blank=True)
     depth = models.FloatField(null=True)
     area = models.FloatField(null=True)
@@ -404,6 +409,7 @@ class Sink(models.Model):
 class EnlargedSink4326(models.Model): 
     id = models.IntegerField(primary_key=True) # former fid_sink
     geom = gis_models.MultiPolygonField(srid=4326)
+    geom_simplified = gis_models.PolygonField(srid=4326, null=True, blank=True)
     centroid = gis_models.PointField(srid=4326, null=True, blank=True)
     extractionpoint = models.ForeignKey('ExtractionPointsEnlargedSinks', on_delete=models.DO_NOTHING, null=True)
     depth = models.FloatField(null=True)

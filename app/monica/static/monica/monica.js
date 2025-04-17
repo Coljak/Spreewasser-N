@@ -193,7 +193,7 @@ export const loadProjectToGui = (project) => {
     window.isLoading = false;
 };
 
-const addRotationToGui = (rotationIndex, rotation=null) => {
+export const addRotationToGui = (rotationIndex, rotation=null) => {
 
     let exists = false;
     $('#cropRotation').children().each(function() {
@@ -242,7 +242,7 @@ const addRotationToGui = (rotationIndex, rotation=null) => {
 };
 
 
-const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=null) => {
+export const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=null) => {
     console.log("addWorkstepToGui", workstepType, rotationIndex, workstepIndex, workstep);
     // load and modify the according workstep template
     const formTemplate = document.getElementById(workstepType + '-template');

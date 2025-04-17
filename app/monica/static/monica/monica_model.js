@@ -1,4 +1,4 @@
-import { MonicaCalculation, MonicaProject, Rotation, Workstep,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica.js';
+import { MonicaCalculation, MonicaProject, Rotation, Workstep,  loadProjectFromDB, loadProjectToGui, handleDateChange, addWorkstepToGui, addRotationToGui } from '/static/monica/monica.js';
 import { getGeolocation, handleAlerts, getCSRFToken, saveProject, observeDropdown, populateDropdown,  setLanguage, addToDropdown } from '/static/shared/utils.js';
 
 function formatDateToISO(date) {

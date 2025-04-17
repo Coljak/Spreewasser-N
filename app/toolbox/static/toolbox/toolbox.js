@@ -16,7 +16,7 @@ export class Infiltration {
         this.sink_index_soil_max = infiltration.sink_index_soil_max ?? null;
         this.sink_land_use = infiltration.sink_land_use ?? [];
 
-        this.sinksSelected = infiltration.sinksSelected ?? [];
+        this.sink_selected = infiltration.sink_selected ?? [];
 
         this.enlarged_sink_area_min = infiltration.enlarged_sink_area_min ?? null;
         this.enlarged_sink_area_max = infiltration.enlarged_sink_area_max ?? null;
@@ -32,7 +32,7 @@ export class Infiltration {
         this.enlarged_sink_index_soil_max = infiltration.enlarged_sink_index_soil_max ?? null;
         this.enlarged_sink_land_use = infiltration.enlarged_sink_land_use ?? [];
 
-        this.enlargedSinksSelected = infiltration.enlargedSinksSelected ?? [];
+        this.enlarged_sink_selected = infiltration.enlarged_sink_selected ?? [];
 
         this.stream_min_surplus_min = infiltration.stream_min_surplus_min ?? null;
         this.stream_min_surplus_max = infiltration.stream_min_surplus_max ?? null;
@@ -136,30 +136,4 @@ export async function toolboxSinks() {
       return null;
   }
 };
-
-// export async function saveProject(project) {
-//     fetch('save-project/', {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify(project),
-//     })
-//     .then(response => response.json())
-//     .then(data => {
-//         console.log('Success:', data);
-//     });
-// }
-
-// export async function getInfiltrationGui() {
-//     const project = ToolboxProject.loadFromLocalStorage();
-//     const userField = project.userField;
-//     const toolboxType = project.toolboxType;
-//     const response = await fetch('get_infiltration_gui/' + userField + '/' );
-//     const data = await response.json();
-//     console.log('getInfiltrationGui', data);
-//     return data;
-// };
-
-
 

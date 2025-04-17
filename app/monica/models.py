@@ -667,7 +667,7 @@ class MineralFertiliser(models.Model):
 class UserCropParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
-    default = models.BooleanField(default=False) # user's default
+    # default = models.BooleanField(default=False) # user's default
     canopy_reflection_coefficient = models.FloatField()
     growth_respiration_parameter1 = models.FloatField()
     growth_respiration_parameter2 = models.FloatField()
@@ -740,7 +740,7 @@ class UserCropParameters(models.Model):
 class UserEnvironmentParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
-    default = models.BooleanField(default=False) # user's default
+    # default = models.BooleanField(default=False) # user's default
     albedo = models.FloatField()
     rcp = models.CharField(max_length=10)
     atmospheric_co2 = models.FloatField() 
@@ -1444,7 +1444,7 @@ class UserSimulationSettings(models.Model):
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
-    default = models.BooleanField(default=False)
+    # default = models.BooleanField(default=False)
 
     debug = models.BooleanField(default=True)
     use_secondary_yields = models.BooleanField(default=False)

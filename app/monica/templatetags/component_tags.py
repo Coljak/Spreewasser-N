@@ -29,7 +29,7 @@ def render_tab_general_parameters(context, coordinate_form):
     })
 
 
-    return context
+    return {'coordinate_form': coordinate_form}
 
 
 

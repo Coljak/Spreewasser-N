@@ -196,6 +196,9 @@ class StreamFilter(FilterSet):
         label="Distance to userfield (m)",
         method='filter_distance_placeholder',
         widget=CustomSingleSliderWidget(attrs = {
+            "id": "stream_distance_to_userfield",
+            "name": "stream_distance_to_userfield",
+            "prefix": "stream",
             "data_range_min": 0,
             "data_range_max": 2000,
             "data_cur_val": 0,
@@ -234,6 +237,24 @@ class LakeFilter(FilterSet):
     max_surplus_volume = MinMaxRangeFilter(model=Stream4326, field_name='max_surplus_volume', label="Max Surplus Volume (m³)")
     plus_days = MinMaxRangeFilter(model=Stream4326, field_name='plus_days', label="Surplus Days")
    
+    distance_to_userfield = NumberFilter(
+        label="Distance to userfield (m)",
+        method='filter_distance_placeholder',
+        widget=CustomSingleSliderWidget(attrs = {
+            "id": "lake_distance_to_userfield",
+            "name": "lake_distance_to_userfield",
+            "prefix": "lake",
+            "data_range_min": 0,
+            "data_range_max": 2000,
+            "data_cur_val": 0,
+            "class": "hiddeninput",
+        }) 
+    )
+   
+
+    def filter_distance_placeholder(self, queryset, name, value):
+        # We don’t filter here – this is just a placeholder.
+        return queryset
     
     def __init__(self, *args, queryset=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)

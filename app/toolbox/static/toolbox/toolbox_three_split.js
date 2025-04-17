@@ -234,7 +234,11 @@ const showSinkOutline = function (sinkId) {
   console.log('showSinkOutline sinkId', sinkId);
 }
 
-function getSinks(url, featureGroup) {
+function getSinks(sinkType, featureGroup) {
+  let url = 'filter_sinks/';
+  if (sinkType === 'enlarged_sink') {
+    url = 'filter_enlarged_sinks/';
+  }
   const project = ToolboxProject.loadFromLocalStorage();
   fetch(url, {
     method: 'POST',
@@ -251,7 +255,8 @@ function getSinks(url, featureGroup) {
 
       // Initialize marker cluster
       let markers = L.markerClusterGroup();
-
+      // project[sinkType] = data.feature_collection;
+      project.saveToLocalStorage();
       // Iterate through features and add them to the cluster
       data.feature_collection.features.forEach(feature => {
           let coords = feature.coordinates; // Get the lat/lng coordinates
@@ -287,8 +292,8 @@ function getSinks(url, featureGroup) {
                 .setLatLng(event.latlng)
                 .setContent(`
                     <b>Sink Options</b><br>
-                    <button class="btn btn-outline-secondary show-sink-outline" sinkId=${feature.properties.id}">Show Sink Outline</button>
-                    <button class="btn btn-outline-secondary select-sink" sinkId=${feature.properties.id}">Select Sink</button>
+                    <button class="btn btn-outline-secondary show-sink-outline" data-type="${sinkType}" sinkId=${feature.properties.id}">Show Sink Outline</button>
+                    <button class="btn btn-outline-secondary select-sink" data-type="${sinkType}" sinkId=${feature.properties.id}">Select Sink</button>
                 `)
                 .openOn(map);
         });
@@ -300,6 +305,73 @@ function getSinks(url, featureGroup) {
 
       // Add the cluster group to the map
       featureGroup.addLayer(markers);
+
+
+      // Data Table
+      const elId = sinkType === 'sink' ? 'sink-table-container' : 'enlarged-sink-table-container';  
+      const tableContainer = document.getElementById(elId);
+
+
+      let tableHTML = `
+        
+        <table class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="sink-select-all-checkbox" data-type="${sinkType}">Select all</th>
+              <th>Tiefe (m)</th>
+              <th>Fläche (m²)</th>
+              <th>Volumen (m³)</th>
+              <th>Bodeneignung</th>
+              <th class="hide-for-enlarged-sink">Volumen Barriere</th>
+              <th class="hide-for-enlarged-sink">Zusätzliches Volumen</th>
+              <th>Landnutzung 1</th>
+              <th>Landnutzung 2</th>
+              <th>Landnutzung 3</th>
+              <th class="hide-for-enlarged-sink">Landnutzung 4</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      data.feature_collection.features.forEach((feature, index) => {
+        const p = feature.properties;
+
+        tableHTML += `
+          <tr data-sink-id="${p.id}">
+            <td><input type="checkbox" class="sink-select-checkbox" data-type=${sinkType} data-id="${p.id}"></td>
+            <td>${p.depth}</td>
+            <td>${p.area}</td>
+            <td>${p.volume}</td>
+            <td>${p.index_soil}</td>
+            <td class="hide-for-enlarged-sink">${p.volume_construction_barrier ?? '-'}</td>
+            <td class="hide-for-enlarged-sink">${p.volume_gained ?? '-'}</td>
+            <td>${p.land_use_1 ?? '-'}</td>
+            <td>${p.land_use_2 ?? '-'}</td>
+            <td>${p.land_use_3 ?? '-'}</td>
+            <td class="hide-for-enlarged-sink">${p.land_use_4 ?? '-'}</td>
+          </tr>
+        `;
+      });
+
+      tableHTML += `</tbody></table>`;
+      tableContainer.innerHTML = tableHTML;
+      
+      if (sinkType === 'sink') {
+        const tableColumns = document.querySelectorAll('hide-for-enlarged-sink');
+        tableColumns.forEach(col => {
+          col.style.display = 'none';
+        });
+      }
+      
+      
+      // Select all / deselect all logic
+
+      
+
+
+
+
+
     } else {
       handleAlerts(data.message);
     }
@@ -307,7 +379,11 @@ function getSinks(url, featureGroup) {
 .catch(error => console.error("Error fetching data:", error));
 };
 
-function getWaterBodies(url, featureGroup){
+function getWaterBodies(waterbody, featureGroup){
+  let url = 'filter_lakes/';
+  if (waterbody === 'streams') {
+    url = 'filter_streams/';
+  } 
   const project = ToolboxProject.loadFromLocalStorage();
   // project['lakes'] = true;
   fetch(url, {
@@ -324,58 +400,92 @@ function getWaterBodies(url, featureGroup){
 
     if (data.message.success) {
       // Initialize marker cluster
-      let markers = L.markerClusterGroup();
-
-      // Iterate through features and add them to the cluster
+      // let markers = L.markerClusterGroup();
+      project[waterbody] = data.feature_collection;
+      project.saveToLocalStorage();
+      console.log(data.feature_collection.features.length)
       data.feature_collection.features.forEach(feature => {
         try {
-          let coords = feature.coordinates; // Get the lat/lng coordinates
-          let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
+          // let coords = feature.properties.centroid; // Get the lat/lng coordinates
+          // let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
+            let layer = L.geoJSON(feature, {
+              style: {
+                color: 'purple',
+                weight: 2,
+                fillOpacity: 0.5
+              },
+              onEachFeature: function (feature, layer) {
+                let popupContent = `
+                   <b>Länge:</b> ${feature.properties.shape_length} m<br>
+                   ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
+                   <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume} m³<br>
+                   <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume} m³<br>
+                   <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume} m³<br>
+                   <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
+                 `;
+                layer.bindTooltip(popupContent);
+                layer.on('mouseover', function () {
+                  this.openPopup();
+                });
+              }
+            })
+            layer.on('contextmenu', function (event) {
+                    L.popup()
+                        .setLatLng(event.latlng)
+                        .setContent(`
+                            <b>Sink Options</b><br>
+                            
+                            <button class="btn btn-outline-secondary select-${waterbody}" ${waterbody}Id=${feature.properties.id}">Select Waterbody</button>
+                        `)
+                        .openOn(map);
+                      });
+            layer.addTo(featureGroup);
 
-          // Create popup content with all properties
-            let popupContent = `
-              <b>Länge:</b> ${feature.properties.shape_length} m<br>
-              ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
-              <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume} m³<br>
-              <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume} m³<br>
-              <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume} m³<br>
-              <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
-            `;
+      //     // Create popup content with all properties
+      //       let popupContent = `
+      //         <b>Länge:</b> ${feature.properties.shape_length} m<br>
+      //         ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
+      //         <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume} m³<br>
+      //         <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume} m³<br>
+      //         <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume} m³<br>
+      //         <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
+      //       `;
 
+      //     let geom = feature.geometry;
+      //     geom.bindPopup(popupContent)
+      //     // Create a marker
+      //     // let marker = L.marker(latlng).bindPopup(popupContent);
+      //     geom.on('mouseover', function () {
+      //       this.openPopup();
+      //     });
 
-          // Create a marker
-          let marker = L.marker(latlng).bindPopup(popupContent);
-          marker.on('mouseover', function () {
-            this.openPopup();
-          });
-
-          // Hide popup when not hovering
-          marker.on('mouseout', function () {
-              this.closePopup();
-          });
-          marker.on('contextmenu', function (event) {
-            L.popup()
-                .setLatLng(event.latlng)
-                .setContent(`
-                    <b>Sink Options</b><br>
-                    <button class="btn btn-outline-secondary show-lake-outline" lakeId=${feature.properties.id}">Show Waterbody Outline</button>
-                    <button class="btn btn-outline-secondary select-lake" lakeId=${feature.properties.id}">Select Waterbody</button>
-                `)
-                .openOn(map);
-        });
+      //     // Hide popup when not hovering
+      //     geom.on('mouseout', function () {
+      //         this.closePopup();
+      //     });
+      //     geom.on('contextmenu', function (event) {
+      //       L.popup()
+      //           .setLatLng(event.latlng)
+      //           .setContent(`
+      //               <b>Sink Options</b><br>
+      //               <button class="btn btn-outline-secondary show-lake-outline" lakeId=${feature.properties.id}">Show Waterbody Outline</button>
+      //               <button class="btn btn-outline-secondary select-lake" lakeId=${feature.properties.id}">Select Waterbody</button>
+      //           `)
+      //           .openOn(map);
+      //         });
         
 
-          // Add marker to cluster                                              
-          markers.addLayer(marker);
-          console.log('Processed feature:', feature.properties.id);
+      //     // Add marker to cluster                                              
+      //     featureGroup.addLayer(geom);
+      //     console.log('Processed feature:', feature.properties.id);
       } catch {
         console.log('Error processing feature:', feature.properties.id);
       }
       });
 
       // Add the cluster group to the map
-      featureGroup.addLayer(markers);
-      map.fitBounds(markers.getBounds());    
+      // featureGroup.addLayer(markers);
+      // map.fitBounds(featureGroup.getBounds());    
     }  else {
       handleAlerts(data.message);
     } 
@@ -426,22 +536,66 @@ $('#toolboxPanel').on('change',  function (event) {
     project.saveToLocalStorage();
     console.log('Updated infiltration', inputId, '=', inputValue);
 
-  };
-});
+  } else if ($target.hasClass('sink-select-all-checkbox')) {
+    const project = ToolboxProject.loadFromLocalStorage();
+    const allSelected = $target.is(':checked');
+    const sinkType = $target.data('type');
+    console.log('sinkType', sinkType);
+    
+    
+    const key = sinkType === 'sink' ? 'sink_selected' : 'enlarged_sink_selected';
+    if (!allSelected) {
+      project.infiltration[key] = [];
+    }
+    $(`.sink-select-checkbox[data-type="${sinkType}"]`).each(function(){
+      const $checkbox = $(this);
+      $checkbox.prop('checked', allSelected);
+      const sinkId = $checkbox.data('id');
+      if (allSelected) {
+        console.log("Selected sink:", sinkId);
+        project.infiltration[key].push(sinkId);
+      } 
+    })
+    project.saveToLocalStorage();
+  } else if ($target.hasClass('sink-select-checkbox')) {
+    const sinkType = $target.data('type');
+    const key = sinkType === 'sink' ? 'sink_selected' : 'enlarged_sink_selected';
+    console.log('sinkType', sinkType);
+      if ($target.is(':checked')) {
+        console.log("Selected sink:", $target.data('id'));
+        const project= ToolboxProject.loadFromLocalStorage();
+        project.infiltration[key].push($target.data('id'));
+        project.saveToLocalStorage();
+
+      } else {
+        const sinkId = $target.data('id');
+        console.log("Selected sink:", sinkId);
+        const project= ToolboxProject.loadFromLocalStorage();
+        const index = project.infiltration[key].indexOf(sinkId);
+        if (index > -1) {
+          project.infiltration[key].splice(index, 1);
+        }
+        project.saveToLocalStorage();
+      }
+
+      // You can trigger your map sink selection logic here
+    };
+  });
+
 
 $('#toolboxPanel').on('click', function (event) {
   const $target = $(event.target);
   if ($target.attr('id') === 'btnFilterSinks') {
-    getSinks('filter_sinks/', sinkFeatureGroup);
+    getSinks('sink', sinkFeatureGroup);
   
   } else if ($target.attr('id') === 'btnFilterEnlargedSinks') {
-    getSinks('filter_enlarged_sinks/', enlargedSinkFeatureGroup);
+    getSinks('enlarged_sink', enlargedSinkFeatureGroup);
   
   } else if ($target.attr('id') === 'btnFilterStreams') {
-    getWaterBodies('filter_streams/', streamsFeatureGroup);
+    getWaterBodies('streams', streamsFeatureGroup);
   
   } else if ($target.attr('id') === 'btnFilterLakes') {
-    getWaterBodies('filter_lakes/', lakesFeatureGroup);
+    getWaterBodies('lakes', lakesFeatureGroup);
   
   } 
 }) 

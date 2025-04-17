@@ -7,7 +7,7 @@ from django.contrib.postgres.fields import JSONField
 
 from django.core import validators
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
+from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Column
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 from django_select2.forms import Select2Widget
 from .widgets import SingleRowTextarea
@@ -81,6 +81,20 @@ class ParametersModelForm(forms.ModelForm):
         for field in self.fields.values():
             use_single_row_textarea(field)
 
+            self.helper = FormHelper()
+            self.helper.form_method = "post"
+            self.helper.label_class = 'col-5 col-form-label'
+            self.helper.field_class = 'col-7'
+
+            # Optional: Automatically generate a layout with all fields, each wrapped in a row
+            self.helper.layout = Layout(
+                *[
+                    Field(field_name, wrapper_class='row')
+                    for field_name in self.fields
+                ]
+            )
+
+
 class CoordinateForm(forms.Form):
     latitude = forms.FloatField(
         max_value=54.92,
@@ -98,17 +112,20 @@ class CoordinateForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        self.helper.form_method = "post" 
+
+        self.helper.label_class = 'col-6 col-form-label'
+        self.helper.field_class = 'col-6'
+
         self.helper.layout = Layout(
-            Row(
-                Column('longitude', css_class='form-group col-md-6 mb-0'),
-                Column('latitude', css_class='form-group col-md-6 mb-0'),
-                css_class='form-row'
-            ),
+            Field('latitude', wrapper_class='row'),
+            Field('longitude', wrapper_class='row')
         )
 
             
 class CultivarParametersForm(ParametersModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
     
     class Meta:
         model = CultivarParameters
@@ -155,6 +172,9 @@ class CropResidueParametersForm(ParametersModelForm):
         exclude = ['id', 'user', 'is_default', 'species_name']
 
 class OrganicFertiliserForm(ParametersModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        AppendedText('aom_dry_matter_content', "kg DM kg FM-1")
     class Meta:
         model = OrganicFertiliser
         exclude = ['id', 'user', 'is_default']
@@ -359,6 +379,29 @@ class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
 
 class UserSimulationSettingsForm(forms.ModelForm):
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
+        layout_fields = []
+
+        for field_name, field in self.fields.items():
+            if isinstance(field, forms.BooleanField):
+                # Keep BooleanFields as regular stacked checkboxes
+                layout_fields.append(
+                    Field(field_name, css_class='form-check-input mb-3')
+                )
+            else:
+                # Set label/field alignment only for non-Boolean fields
+                layout_fields.append(Field(field_name))
+
+        # Set horizontal layout classes globally (affects only non-Boolean fields above)
+        self.helper.label_class = 'col-5 col-form-label'
+        self.helper.field_class = 'col-7'
+
+        self.helper.layout = Layout(*layout_fields)
     class Meta:
         model = UserSimulationSettings
         field_order = ['name']
@@ -406,22 +449,77 @@ class WorkstepSelectorForm(forms.Form):
             })
         )
 
+# class WorkstepSowingForm(forms.ModelForm):
+    
+#     class Meta:
+#         model = WorkstepSowing 
+#         fields = ['date', 'species', 'residue', 'cultivar']
+
+#     date = forms.DateField(
+#         widget=forms.DateInput(attrs={
+#             'class': 'form-control datepicker workstep-datepicker',
+#             'workstep-type': 'sowingWorkstep'
+#             }),  
+#         input_formats=['%d.%m.%Y']
+#         )
+#     species = forms.ChoiceField(
+#         choices=[],
+#         label="Species",
+#         widget=forms.Select(attrs={
+#             'class': 'form-control form-select species-selector select-parameters species-parameters',
+#             'workstep-type': 'sowingWorkstep'
+#             }),
+#         )
+
+#     cultivar = forms.ModelChoiceField(
+#         queryset=CultivarParameters.objects.none(),
+#         label="Cultivar",
+#         widget=forms.Select(attrs={
+#             'class': 'form-control form-select cultivar-selector select-parameters cultivar-parameters',
+#             'workstep-type': 'sowingWorkstep'
+#             }),
+#         )
+#     residue = forms.ModelChoiceField(
+#         queryset=CropResidueParameters.objects.none(),
+#         label="Residue Parameters",
+#         widget=forms.Select(attrs={'class': 'form-control form-select crop-residue-selector select-parameters crop-residue-parameters'}),
+#         )
+
+#     # class Meta:
+#     #     model = WorkstepSowing
+#     #     fields = ['species', 'cultivar', 'date', 'plant_density']
+
+#     def __init__(self, *args, user=None, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         if user is not None:
+#             self.fields['species'].choices = [('', '---------')] + [
+#                 (instance.id, instance.name) for instance in SpeciesParameters.objects.filter(Q(user=user) | Q(user=None)).order_by('name')
+#             ]
+
+        
+
+
 class WorkstepSowingForm(forms.ModelForm):
+    class Meta:
+        model = WorkstepSowing 
+        fields = ['date', 'species', 'residue', 'cultivar']
+
     date = forms.DateField(
         widget=forms.DateInput(attrs={
             'class': 'form-control datepicker workstep-datepicker',
             'workstep-type': 'sowingWorkstep'
-            }),  
+        }),  
         input_formats=['%d.%m.%Y']
-        )
+    )
+
     species = forms.ChoiceField(
         choices=[],
         label="Species",
         widget=forms.Select(attrs={
             'class': 'form-control form-select species-selector select-parameters species-parameters',
             'workstep-type': 'sowingWorkstep'
-            }),
-        )
+        }),
+    )
 
     cultivar = forms.ModelChoiceField(
         queryset=CultivarParameters.objects.none(),
@@ -429,29 +527,90 @@ class WorkstepSowingForm(forms.ModelForm):
         widget=forms.Select(attrs={
             'class': 'form-control form-select cultivar-selector select-parameters cultivar-parameters',
             'workstep-type': 'sowingWorkstep'
-            }),
-        )
+        }),
+    )
+
     residue = forms.ModelChoiceField(
         queryset=CropResidueParameters.objects.none(),
         label="Residue Parameters",
-        widget=forms.Select(attrs={'class': 'form-control form-select crop-residue-selector select-parameters crop-residue-parameters'}),
-        )
-
-    class Meta:
-        model = WorkstepSowing
-        fields = ['species', 'cultivar', 'date', 'plant_density']
+        widget=forms.Select(attrs={
+            'class': 'form-control form-select crop-residue-selector select-parameters crop-residue-parameters'
+        }),
+    )
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Assign species choices based on user
         if user is not None:
             self.fields['species'].choices = [('', '---------')] + [
                 (instance.id, instance.name) for instance in SpeciesParameters.objects.filter(Q(user=user) | Q(user=None)).order_by('name')
             ]
 
-        
+        # # --- Crispy Helper ---
+        # self.helper = FormHelper()
+        # self.helper.form_class = 'sowing-form'
+        # self.helper.form_tag = False  # So the <form> is in your HTML, not auto-rendered
+
+        # self.helper.layout = Layout(
+        #     Field('date'),
+
+        #     Div(
+        #         Row(
+        #             Column('species', css_class='col-md-6'),
+        #             Column(
+        #                 Button(
+        #                     'modify_species',
+        #                     'Modify Species Parameters',
+        #                     css_class='btn btn-primary modify-parameters species-parameters advanced',
+        #                     **{'data-bs-target': '#formModal', 'type': 'button'}
+        #                 ),
+        #                 css_class='col-md-6 d-flex align-items-end'
+        #             )
+        #         ),
+        #         css_class='form-group'
+        #     ),
+
+        #     Div(
+        #         Row(
+        #             Column('residue', css_class='col-md-6'),
+        #             Column(
+        #                 Button(
+        #                     'modify_residue',
+        #                     "Modify Species' Residue Parameters",
+        #                     css_class='btn btn-primary modify-parameters crop-residue-parameters',
+        #                     **{'data-bs-target': '#formModal', 'type': 'button'}
+        #                 ),
+        #                 css_class='col-md-6 d-flex align-items-end'
+        #             )
+        #         ),
+        #         css_class='form-group advanced'
+        #     ),
+
+        #     Div(
+        #         Row(
+        #             Column('cultivar', css_class='col-md-6'),
+        #             Column(
+        #                 Button(
+        #                     'modify_cultivar',
+        #                     "Modify Cultivar Parameters",
+        #                     css_class='btn btn-primary modify-parameters cultivar-parameters advanced',
+        #                     **{'data-bs-target': '#formModal', 'type': 'button'}
+        #                 ),
+        #                 css_class='col-md-6 d-flex align-items-end'
+        #             )
+        #         ),
+        #         css_class='form-group'
+        #     )
+        # )
 
 
 class WorkstepMineralFertilisationForm(forms.ModelForm):
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+
+
     date = forms.DateField(
         widget=forms.DateInput(attrs={
             'class': 'form-control datepicker workstep-datepicker',

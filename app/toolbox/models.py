@@ -207,14 +207,14 @@ class LandUse4326(models.Model):
     corine_land_cover = models.ForeignKey(CorineLandCover2018, on_delete=models.DO_NOTHING, null=True)
 
 class Stream4326(models.Model):
-    geom = gis_models.MultiLineStringField(srid=4326)
+    # geom = gis_models.MultiLineStringField(srid=4326)
     shape_length = models.FloatField()
     # id_source = models.IntegerField()
     min_surplus_volume = models.FloatField()
     mean_surplus_volume = models.FloatField()
     max_surplus_volume = models.FloatField()
     plus_days = models.IntegerField()
-    simple_geom = gis_models.LineStringField(srid=4326, null=True, blank=True)
+    geom = gis_models.LineStringField(srid=4326, null=True, blank=True)
 
 
 

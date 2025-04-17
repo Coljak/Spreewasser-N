@@ -45,6 +45,26 @@ def test(request):
     single_widget = forms.CustomSingleSliderWidget()
     return render(request, 'toolbox/test.html', {'sink_filter':sink_filter, 'enlarged_sink_filter': enlarged_sink_filter, 'single_widget': single_widget, 'double_widget': double_widget})
 
+
+
+def get_elevations_for_line(line_geom):
+    sql = """
+    SELECT
+      ST_Value(rast, 1, pt.geom) AS elevation,
+      ST_AsText(pt.geom) AS point
+    FROM (
+      SELECT (ST_DumpPoints(ST_Segmentize(ST_GeomFromText(%s, 25833), 1))).geom
+    ) pt,
+    dem
+    WHERE ST_Intersects(rast, pt.geom);
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [line_geom.wkt])
+        return cursor.fetchall()
+
+
+
+
 def create_default_project(user):
     """
     Create a default project for the user.
@@ -345,7 +365,16 @@ def filter_streams(request):
 
     user_field = models.UserField.objects.get(pk=project['userField'])
     geom = GEOSGeometry(user_field.geom)
-    streams = models.Stream4326.objects.filter(geom__within=geom)
+    distance = int(project['infiltration'].get('stream_distance_to_userfield', 0))
+    streams = None
+    if distance > 0:
+        geom_25833 = user_field.geom.transform(25833, clone=True)
+        
+        geom_25833 = geom_25833.buffer(distance)
+        buffered_4326 = geom_25833.transform(4326, clone=True)
+        streams = models.Stream4326.objects.filter(geom__intersects=buffered_4326)
+    else:
+        streams = models.Stream4326.objects.filter(geom__intersects=geom)
 
     filters = Q()
     filters = add_range_filter(filters, project['infiltration'], 'stream_min_surplus', 'min_surplus_volume')
@@ -364,16 +393,19 @@ def filter_streams(request):
         }
         return JsonResponse({'message': {'success': False, 'message': 'No streams found.'}})
     else:
-
+        
         for stream in streams:
-            geom = stream.simple_geom
+            geom = stream.geom
             geojson = json.loads(geom.geojson)
-            # print('geojson:', geojson)
+            print('geojson:', geojson)
             geojson['properties'] = {
                 "id": stream.id,
+                # "centroid": geom.centroid,
+                "shape_length": stream.shape_length,
                 "min_surplus_volume": stream.min_surplus_volume,
                 "mean_surplus_volume": stream.mean_surplus_volume,
                 "max_surplus_volume": stream.max_surplus_volume,
+                "plus_days": stream.plus_days,
             }
             features.append(geojson)
         feature_collection = {
@@ -397,13 +429,27 @@ def filter_lakes(request):
 
     user_field = models.UserField.objects.get(pk=project['userField'])
     geom = GEOSGeometry(user_field.geom)
-    lakes = models.Lake4326.objects.filter(geom__within=geom)
+
+    distance = int(project['infiltration'].get('lake_distance_to_userfield', 0))
+    lakes = None
+    if distance > 0:
+        # Transform to EPSG:25833 (meters) and add the buffer
+        user_geom_25833 = user_field.geom.transform(25833, clone=True)
+        buffer_25833 = user_geom_25833.buffer(distance)
+        buffer_4326 = buffer_25833.transform(4326, clone=True)
+        lakes = models.Lake4326.objects.filter(geom__intersects=buffer_4326)
+    else:
+        lakes = models.Lake4326.objects.filter(geom__intersects=geom)
+
     filter = Q()
     filter = add_range_filter(filter, project['infiltration'], 'lake_min_surplus', 'min_surplus_volume')
     filter = add_range_filter(filter, project['infiltration'], 'lake_mean_surplus', 'mean_surplus_volume')
     filter = add_range_filter(filter, project['infiltration'], 'lake_max_surplus', 'max_surplus_volume')
     filter = add_range_filter(filter, project['infiltration'], 'lake_plus_days', 'plus_days')
     lakes = lakes.filter(filter)
+
+
+
     if lakes.count() == 0:
         message = {
             'success': False, 
@@ -413,7 +459,9 @@ def filter_lakes(request):
     else:
         features = []
         for lake in lakes:
-            geom = lake.centroid
+            # geom = lake.centroid
+            geom = lake.geom
+            # geom = GEOSGeometry(lake.geom)
             geojson = json.loads(geom.geojson)
             print('geojson:', geojson)
             geojson['properties'] = {
@@ -438,62 +486,6 @@ def filter_lakes(request):
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
 
 
-
-# def get_selected_sinks(request):
-#     if request.method == 'POST':
-#         try:
-#             project = json.loads(request.body)
-#         except json.JSONDecodeError:
-#             return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-#         user_field = models.UserField.objects.get(pk=project['userField'])
-#         geom = GEOSGeometry(user_field.geom)
-#         sinks = []
-#         if project.get('enlargedSink') is True:
-#             sinks = models.EnlargedSink4326.objects.filter(geom__within=geom)
-#             sinks = sinks.filter(
-#                 depth__gte=float(project['infiltration']['enlargedSinkDepthMin']),
-#                 depth__lte=float(project['infiltration']['enlargedSinkDepthMax']),
-#                 area__gte=float(project['infiltration']['enlargedSinkAreaMin']),
-#                 area__lte=float(project['infiltration']['enlargedSinkAreaMax']),
-#                 volume__gte=float(project['infiltration']['enlargedSinkVolumeMin']),
-#                 volume__lte=float(project['infiltration']['enlargedSinkVolumeMax']),
-#             )
-            
-#         else:
-#             sinks = models.Sink4326.objects.filter(geom__within=geom)
-#             sinks = sinks.filter(
-#                 depth__gte=float(project['infiltration']['sinkDepthMin']),
-#                 depth__lte=float(project['infiltration']['sinkDepthMax']),
-#                 area__gte=float(project['infiltration']['sinkAreaMin']),
-#                 area__lte=float(project['infiltration']['sinkAreaMax']),
-#                 volume__gte=float(project['infiltration']['sinkVolumeMin']),
-#                 volume__lte=float(project['infiltration']['sinkVolumeMax']),
-#             )
-
-#         features = []
-#         for sink in sinks:
-#             centroid = sink.centroid
-#             geojson = json.loads(centroid.geojson)
-#             print('geojson:', geojson)
-#             geojson['properties'] = {
-#                 "id": sink.id,
-#                 "depth": sink.depth,
-#                 "area": sink.area,
-#                 "index_soil": str(sink.index_soil * 100) + "%",
-#                 "land_use_1": sink.land_use_1,
-#                 "land_use_2": sink.land_use_2,
-#                 "land_use_3": sink.land_use_3,
-#             }
-#             features.append(geojson)
-#         feature_collection = {
-#             "type": "FeatureCollection",
-#             "features": features,
-#             }
-
-#         return JsonResponse(feature_collection)
-#     else:    
-#         return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 def load_nuts_polygon(request, entity, polygon_id):

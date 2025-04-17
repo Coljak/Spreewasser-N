@@ -314,7 +314,8 @@ function getSinks(sinkType, featureGroup) {
 
       let tableHTML = `
         
-        <table class="table table-bordered table-hover">
+        <table class="table table-bordered table-hover" id="${sinkType}-table">
+          <caption>${sinkType === 'sink' ? 'Sinks' : 'Enlarged Sinks'}</caption>
           <thead>
             <tr>
               <th><input type="checkbox" class="sink-select-all-checkbox" data-type="${sinkType}">Select all</th>
@@ -355,22 +356,80 @@ function getSinks(sinkType, featureGroup) {
 
       tableHTML += `</tbody></table>`;
       tableContainer.innerHTML = tableHTML;
-      
+
+      $('#' + elId + ' table').DataTable(
+        {
+          "order": [[1, "asc"]],
+          "searching": false,
+          "columnDefs": [
+            {
+              "targets": 0,
+              "orderable": false,
+              "searchable": false
+            },
+            {
+              "targets": 1,
+              "orderable": true,
+              "searchable": false
+            },
+            {
+              "targets": 2,
+              "orderable": true,
+              "searchable": false
+            },
+            {
+              "targets": 3,
+              "orderable": true,
+              "searchable": false
+            },
+            {
+              "targets": 4,
+              "orderable": true,
+              "searchable": false
+            },
+            {
+              "targets": 5,
+              "visible": sinkType === 'sink'? false : true,
+              "orderable": true,
+              "searchable": false
+            },
+            {
+              "targets": 6,
+              "visible": sinkType === 'sink'? false : true,
+              "orderable": true,
+              "searchable": false
+            },
+            {
+              "targets": 7,
+              "orderable": true,
+              "searchable": false
+            },
+            {
+              "targets": 8,
+              "orderable": true,
+              "searchable": false
+            },
+            {
+              "targets": 9,
+              "orderable": true,
+              "searchable": false
+            },
+            {
+              "targets": 10,
+              "visible": sinkType === 'sink'? false : true,
+              "orderable": true,
+              "searchable": false
+            }
+          ]
+        }
+      );
       if (sinkType === 'sink') {
         const tableColumns = document.querySelectorAll('hide-for-enlarged-sink');
         tableColumns.forEach(col => {
           col.style.display = 'none';
         });
-      }
+      };
       
-      
-      // Select all / deselect all logic
-
-      
-
-
-
-
 
     } else {
       handleAlerts(data.message);

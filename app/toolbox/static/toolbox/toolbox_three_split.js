@@ -30,15 +30,15 @@ document.addEventListener("DOMContentLoaded", () => {
   project.saveToLocalStorage();
 
 
-  $('#map').on('click', function (e) {
-    if (e.target.classList.contains('show-sink-outline')) {
-      const sinkId = e.target.getAttribute('sinkId');
-      console.log('sinkId', sinkId);
-    } else if (e.target.classList.contains('select-sink')) {
-        const sinkId = e.target.getAttribute('sinkId');
-        console.log('sinkId', sinkId);
-      }
-  });
+  // $('#map').on('click', function (e) {
+  //   if (e.target.classList.contains('show-sink-outline')) {
+  //     const sinkId = e.target.getAttribute('sinkId');
+  //     console.log('sinkId', sinkId);
+  //   } else if (e.target.classList.contains('select-sink')) {
+  //       const sinkId = e.target.getAttribute('sinkId');
+  //       console.log('sinkId', sinkId);
+  //     }
+  // });
 
 
   // center map at geolocation
@@ -228,6 +228,34 @@ map.addLayer(streamsFeatureGroup);
 //   saveProject(project);
 // });
 
+document.getElementById('map').addEventListener('click', function (event) {
+  if (event.target.classList.contains('select-sink')) {
+    const sinkId = event.target.getAttribute('sinkId');
+    const sinkType = event.target.getAttribute('data-type');
+    console.log('sinkId', sinkId);
+    console.log('sinkType', sinkType);
+    const project = ToolboxProject.loadFromLocalStorage();
+    let selectedSinks = project.infiltration[sinkType + '_selected'];
+    if (selectedSinks.includes(sinkId)) {
+      
+      selectedSinks = selectedSinks.filter(id => id !== sinkId);
+      project.infiltration[sinkType + '_selected'] = selectedSinks;
+      
+      console.log("Sink already selected:", sinkId);
+    } else {
+      console.log("Selected sink:", sinkId);
+      
+      selectedSinks.push(sinkId);
+      
+    } 
+    project.saveToLocalStorage();
+    
+  }
+});
+
+function selectSinkPopup(sinkId, sinkType) {
+}
+
 const showSinkOutline = function (sinkId) {
   const project = ToolboxProject.loadFromLocalStorage();
   console.log('project', project);
@@ -293,7 +321,7 @@ function getSinks(sinkType, featureGroup) {
                 .setContent(`
                     <b>Sink Options</b><br>
                     <button class="btn btn-outline-secondary show-sink-outline" data-type="${sinkType}" sinkId=${feature.properties.id}">Show Sink Outline</button>
-                    <button class="btn btn-outline-secondary select-sink" data-type="${sinkType}" sinkId=${feature.properties.id}">Select Sink</button>
+                    <button class="btn btn-outline-secondary select-sink" data-type="${sinkType}" sinkId=${feature.properties.id}">Toggle Sink selection</button>
                 `)
                 .openOn(map);
         });
@@ -500,43 +528,7 @@ function getWaterBodies(waterbody, featureGroup){
                       });
             layer.addTo(featureGroup);
 
-      //     // Create popup content with all properties
-      //       let popupContent = `
-      //         <b>Länge:</b> ${feature.properties.shape_length} m<br>
-      //         ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
-      //         <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume} m³<br>
-      //         <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume} m³<br>
-      //         <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume} m³<br>
-      //         <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
-      //       `;
-
-      //     let geom = feature.geometry;
-      //     geom.bindPopup(popupContent)
-      //     // Create a marker
-      //     // let marker = L.marker(latlng).bindPopup(popupContent);
-      //     geom.on('mouseover', function () {
-      //       this.openPopup();
-      //     });
-
-      //     // Hide popup when not hovering
-      //     geom.on('mouseout', function () {
-      //         this.closePopup();
-      //     });
-      //     geom.on('contextmenu', function (event) {
-      //       L.popup()
-      //           .setLatLng(event.latlng)
-      //           .setContent(`
-      //               <b>Sink Options</b><br>
-      //               <button class="btn btn-outline-secondary show-lake-outline" lakeId=${feature.properties.id}">Show Waterbody Outline</button>
-      //               <button class="btn btn-outline-secondary select-lake" lakeId=${feature.properties.id}">Select Waterbody</button>
-      //           `)
-      //           .openOn(map);
-      //         });
-        
-
-      //     // Add marker to cluster                                              
-      //     featureGroup.addLayer(geom);
-      //     console.log('Processed feature:', feature.properties.id);
+      //     
       } catch {
         console.log('Error processing feature:', feature.properties.id);
       }

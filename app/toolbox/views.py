@@ -580,13 +580,24 @@ def save_user_field(request):
             body = json.loads(request.body)
             name = body['name']
             geom = json.loads(body['geom'])
-            geos = GEOSGeometry(body['geom'])
-            # geos.transform(25833)
+            geos = GEOSGeometry(body['geom'], srid=4326)
             user = request.user
-            instance = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
-            instance.save()
+            user_field = None
+            if body['id']:
+                # Update existing UserField
+                user_field = models.UserField.objects.get(id=body['id'])
+                user_field.name = name
+                user_field.geom_json = geom
+                user_field.geom = geos
+                
+                user_field.save()
+            else:
+                user_field = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
+                
+                user_field.save()
+
             
-            return JsonResponse({'name': instance.name, 'geom_json': instance.geom_json, 'id': instance.id})
+            return JsonResponse({'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
         
     else:
         return HttpResponseRedirect('toolbox:toolbox_dashboard')

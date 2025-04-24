@@ -50,10 +50,12 @@ export const baseMaps = {
   };
 
  export function enhanceMap (map) {
+  
   $(".leaflet-control-zoom").append(
-    '<a class="leaflet-control-home" href="#" role="button" title="Project area" area-label="Project area"><i class="bi bi-bullseye"></i></a>',
-    '<a class="leaflet-control-geolocation" href="#" role="button" title="My location" area-label="User location"><i class="bi bi-geo"></i></a>'
+    '<a class="leaflet-control-home" href="#" role="button" title="Project area" aria-label="Project area"><i class="bi bi-bullseye"></i></a>',
+    '<a class="leaflet-control-geolocation" href="#" role="button" title="My location" aria-label="User location"><i class="bi bi-geo"></i></a>'
   );
+
 
   const mapScale = new L.control.scale({
     position: "bottomright",
@@ -91,6 +93,7 @@ export function initializeDrawControl(map, featureGroup) {
     position: "topright",
     edit: {
       featureGroup: featureGroup,
+      edit: false,
     },
     draw: {
       circlemarker: false,
@@ -139,14 +142,7 @@ export function initializeMapEventlisteners (map, featureGroup, projectClass) {
       openUserFieldNameModal(layer, featureGroup);
     });
 
-    map.on('draw:editstart', function (e) {
-      console.log('editstart layers:', e.layers);
-    });
-
-
-    map.on('draw:edited', function (e) {
-      console.log('Edited layers:', e.layers);
-    });
+  
 
     featureGroup.on("click", function (event) {
       let leafletId = event.layer._leaflet_id;
@@ -162,28 +158,19 @@ export function initializeMapEventlisteners (map, featureGroup, projectClass) {
     });
 };
 
-// editing Userfields
-export function startEditMode(featureGroup) {
+export function getSelectedUserField() {
   const userFields = JSON.parse(localStorage.getItem('userFields') || '{}');
-  const highlightedLeafletId = Object.keys(userFields).find(id => {
-    const header = document.getElementById(`accordionHeader-${id}`);
+  console.log('getSelectedUserField', userFields);
+  // Find the highlighted leafletId
+  const highlightedLeafletId = Object.keys(userFields).find(leafletId => {
+    const header = document.getElementById(`accordionHeader-${leafletId}`);
     return header && header.classList.contains('highlight');
   });
+  console.log('highlightedLeafletId', highlightedLeafletId);
+  return highlightedLeafletId? highlightedLeafletId : null;
+}
 
-  if (!highlightedLeafletId) {
-    handleAlerts({ success: false, message: 'No highlighted UserField found to edit.' });
-    return;
-  }
 
-  const layer = featureGroup.getLayer(highlightedLeafletId);
-
-  if (layer && layer.editing && !layer.editing._enabled) {
-    layer.editing.enable();
-    handleAlerts({ success: true, message: 'Edit mode enabled for selected UserField.' });
-  } else {
-    console.warn("Layer not found or editing not supported.");
-  }
-};
 
 
 
@@ -369,45 +356,11 @@ export function getUserFieldIdByLeafletId(leafletId) {
   return entry ? entry.id : null;
 };
 
-// export function highlightLayer(leafletId, featureGroup) {
-//   console.log("HIGHLIGHT", leafletId);
-//   // remove highlight from all layers
-//   console.log('HighlightLayer, featureGroup' , featureGroup)
-//   featureGroup.eachLayer(function (layer) {
-//     // layer.editing.disable();
-//     const key = Object.keys(layer._layers)[0];
-//     console.log("Key: ", key, "leafletId: ", leafletId)
-//     const value = layer._layers[key];
-//     console.log("Value: ", value);
-//     value._path.classList.remove("highlight");
-//   });
-//   // deselect layer/ header: remove highlight class from  header
-//   if ($(`#accordionHeader-${leafletId}`).hasClass("highlight")) {
-//     $(`#accordionHeader-${leafletId}`).removeClass("highlight");
-
-    
-//     let key = Object.keys(featureGroup._layers[leafletId]._layers)[0]
-//     console.log("Key: ", key, "leafletId: ", leafletId)
-//      featureGroup._layers[leafletId]._layers[key]._path.classList.remove('highlight');
-//   } else { // select layer/ header: 
-
-//       const accordionUserFieldHeaders = document.querySelectorAll('#accordionUserFields .accordion-header');
-//       accordionUserFieldHeaders.forEach(header => {
-//         header.classList.remove('highlight')
-//       });
-
-//     $(`#accordionHeader-${leafletId}`).addClass("highlight")
-//     // add highlight class to leaflet layer
-//     let key = Object.keys(featureGroup._layers[leafletId]._layers)[0]
-//     featureGroup._layers[leafletId]._layers[key]._path.classList.add('highlight');
-//     // featureGroup._layers[leafletId]._layers[key].editing.enable();
-//   };
-// };
 
 export function highlightLayer(leafletId, featureGroup) {
   console.log("HIGHLIGHT", leafletId);
 
-  // Step 1: Remove highlight class from all layers
+  // remove highlight class from all layers
   featureGroup.eachLayer(function (layer) {
     if (layer.getElement) {
       const el = layer.getElement();
@@ -415,11 +368,11 @@ export function highlightLayer(leafletId, featureGroup) {
     }
   });
 
-  // Step 2: Remove highlight from all sidebar headers
+  // remove highlight from all sidebar headers
   const accordionHeaders = document.querySelectorAll("#accordionUserFields .accordion-header");
   accordionHeaders.forEach(header => header.classList.remove("highlight"));
 
-  // Step 3: Toggle highlight on selected layer + header
+  // toggle highlight on selected layer + header
   const header = $(`#accordionHeader-${leafletId}`);
   const layer = featureGroup.getLayer(leafletId);
   
@@ -439,7 +392,6 @@ export function highlightLayer(leafletId, featureGroup) {
       const el = layer.getElement();
       if (el) {
         el.classList.add("highlight");
-        layer.editing.enable();
       }
     }
   }
@@ -485,6 +437,58 @@ export function selectUserField(userFieldId, project, featureGroup) {
     project.saveToLocalStorage();
   };
 };
+
+
+
+
+// function revertEdit(layer) {
+//   // reset an edited layer 
+//   if (layer._originalLatLngs) {
+//     layer.setLatLngs(layer._originalLatLngs);
+//     layer.editing.disable();
+//     delete layer._originalLatLngs;
+//     console.log("Edits reverted.");
+//     return layer;
+//   }
+// }
+
+function revertEdit(layer) {
+  if (layer._originalLatLngs) {
+    const original = L.LatLngUtil.cloneLatLngs(layer._originalLatLngs);
+
+    // Step 1: Reset shape and visuals
+    layer.setLatLngs(original);
+    layer.redraw();
+
+    // Step 2: Disable editing
+    if (layer.editing && layer.editing._enabled) {
+      layer.editing.disable();
+    }
+
+    // Step 3: Clean up vertices handlers safely
+    if (layer.editing && Array.isArray(layer.editing._verticesHandlers)) {
+      layer.editing._verticesHandlers.forEach(handler => {
+        if (handler._markerGroup && handler._markerGroup.clearLayers) {
+          handler._markerGroup.clearLayers();
+        }
+      });
+      layer.editing._verticesHandlers = [];
+    }
+
+    // Step 4: Reset the editing plugin completely
+    layer.editing = new L.Edit.Poly(layer);
+
+    // Step 5: Clean up the original backup
+    delete layer._originalLatLngs;
+
+    console.log("Edits truly reverted (safe).");
+  }
+}
+
+
+
+
+
 
 // TODO rename to MapEventhandler
 export function initializeSidebarEventHandler({projectClass, sidebar, map, baseMaps, overlayLayers, getUserFields, getFeatureGroup, getProject }) {
@@ -539,8 +543,8 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
           let confirmDelete = confirm(`Are you sure to delete ` + userField.name + "?");
           if (confirmDelete) {
             
-            let layer = featureGroup.getLayer(userField.leafletId);
-            delete userFields[userField.leafletId];
+            let layer = featureGroup.getLayer(leafletId);
+            delete userFields[leafletId];
             featureGroup.removeLayer(layer); // removes shape from map
 
             const listElement = document.getElementById("accordion-"+leafletId);
@@ -562,6 +566,7 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
               });
           }
         } else if (clickedElement.classList.contains("field-menu")) {
+          console.log('field-menu clicked');
           fetch(`field-projects-menu/${userField.id}/`)
           .then(response => response.json())
           .then(data => {
@@ -610,29 +615,95 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
               }
             });
           });
-        } else if (clickedElement.classList.contains("field-edit")) {
+        } else if (clickedElement.classList.contains("field-project-add")) {
           $('#userFieldSelect').val(userField.id);
           if (window.location.pathname.endsWith('/drought/') || window.location.pathname.endsWith('/monica/')) {
             
             $('#monicaProjectModal').modal('show');
-        } else if (window.location.pathname.endsWith('/toolbox/')){
-          $('#toolboxProjectModal').modal('show');
-        }
+          } else if (window.location.pathname.endsWith('/toolbox/')){
+            $('#toolboxProjectModal').modal('show');
+          }
+        } else if (clickedElement.classList.contains('field-edit')) {
+          console.log('field-edit clicked');
+          let layer = featureGroup.getLayer(leafletId);
+        
+          if (layer && layer.editing && !layer.editing._enabled) {
+            console.log('Edit enabling')
+            // Save original latlngs for cancel
+            layer._originalLatLngs = L.LatLngUtil.cloneLatLngs(layer.getLatLngs());
+            layer.editing.enable();
+        
+            // Use plain HTML string for popup content
+            const popupHtml = `
+              <strong>Editing field</strong><br>
+              <button class="btn btn-sm btn-success" id="btnUpdateUserField">💾 Save</button>
+              <button class="btn btn-sm btn-danger" id="btnCancelEditUserField">✖ Cancel</button>
+            `;
+        
+            // Bind and open the popup
+            
+        
+            // Listen for popupopen ON THE MAP
+            function onPopupOpen(e){
+              console.log("On Popup opened");
+              if (e.popup._source !== layer) return;
+        
+              const popupEl = e.popup.getElement();
+              const saveBtn = popupEl.querySelector('#btnUpdateUserField');
+              const cancelBtn = popupEl.querySelector('#btnCancelEditUserField');
+              let editConfirmed = false;
+        
+              // Save button
+              L.DomEvent.on(saveBtn, 'click', () => {
+                console.log('Save clicked');
+                editConfirmed = true;
+                saveUserField(userField.name, userField.id, layer);
+                layer.editing.disable();
+                layer.closePopup();
+                layer.unbindPopup(); // Prevent popup from reopening later
+              });
+        
+              // Cancel button
+              L.DomEvent.on(cancelBtn, 'click', () => {
+                console.log('Cancel clicked');
+                editConfirmed = false;
+                revertEdit(layer);
+                layer.editing.disable();
+                layer.closePopup();
+                layer.unbindPopup(); // Also prevent reappearing
+              });
+        
+              // Popup close fallback — only revert if NOT confirmed
+              function onPopupClose(e){
+                console.log('On Popup close', layer)
+                if (e.popup._source === layer && !editConfirmed) {
+                  console.log('Popup closed without save – reverting');
+                  revertEdit(layer);
+                  layer.editing.disable();
+                  layer.unbindPopup(); // Cleanup
+                  console.log('Popup closed:', layer);
+                }
+                map.off('popupclose', onPopupClose);
+              };
+        
+              map.on('popupclose', onPopupClose);
+              map.off('popupopen', onPopupOpen); // Prevent multiple bindings
+            };
+        
+            map.on('popupopen', onPopupOpen);
+            layer.bindPopup(popupHtml).openPopup();
+          } else {
+            console.log('Edit disabling');
+            layer.editing.disable();
+            layer.closePopup();
+            layer.unbindPopup(); // Prevent popup from reopening later
+          }
 
-        } else { return;}
+        }
+         else { return;}
         }
       });
 
-    // MAP Eventhandler
-    $('.leaflet-draw-edit-edit').on('click', function (e) {
-      e.preventDefault();
-      console.log("Edit Clicked", e);
-      const featureGroup = getFeatureGroup();
-      startEditMode(featureGroup);
-      // const leafletId = e.target.getAttribute("leaflet-id");
-      // const layer = featureGroup.getLayer(leafletId);
-      // layer.editing.enable();
-    });
 };
 
 
@@ -644,12 +715,13 @@ function toggleUserField(switchInput,  map) {
 };
 
 // Save a newly created userField in DB
-function saveUserField(name, layer) {
+function saveUserField(name, id, layer) {
   let geomJson = layer.toGeoJSON();
   return new Promise((resolve, reject) => {
     const requestData = {
       geom: JSON.stringify(geomJson.geometry),
       name: name,
+      id: id,
     };
     fetch('save-user-field/', {
       method: "POST",
@@ -708,6 +780,8 @@ function updateFieldSelectorOption(userField, fieldSelector) {
   fieldSelector.add(option);
 };
 
+
+
 // Modal Userfield Name Input
 export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
 
@@ -738,7 +812,7 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
       
 
       // userField.name = fieldName;
-      saveUserField(fieldName, layer)
+      saveUserField(fieldName, null, layer)
       .then((data) => {
         console.log("Data: ", data);
         var layerGeoJson = L.geoJSON(data.geom_json,
@@ -794,6 +868,7 @@ export const addLayerToSidebar = (userField, layer) => {
       <div 
         class="accordion-header nested user-field-header d-flex align-items-center justify-content-between" 
         id="accordionHeader-${userField.leafletId}" 
+        user-field-id="${userField.id}"
         leaflet-id="${userField.leafletId}"
       >
         <span class="form-check form-switch h6">  
@@ -806,6 +881,9 @@ export const addLayerToSidebar = (userField, layer) => {
           <form id="deleteAndCalcForm-${userField.leafletId}">
             <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
               <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-project-add" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
+              <span><i class="bi bi-plus user-field-action field-project-add" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
             </button>
             <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
               <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>

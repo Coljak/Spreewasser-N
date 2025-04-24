@@ -70,7 +70,7 @@ export class ToolboxProject {
   // Save project to localStorage
   saveToLocalStorage() {
       localStorage.setItem('toolbox_project', this.toJson());
-      console.log('saveToLocalStorage', this.toJson());
+      console.log('saveToLocalStorage');
   }
 
   // Load project from localStorage

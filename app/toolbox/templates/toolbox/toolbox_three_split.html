@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.css' %}" />
 	<link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.Default.css' %}" />
     <link rel="stylesheet" href="{% static 'toolbox/custom_slider.css' %}">
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    {% comment %} <link rel="stylesheet" href="https://code.jquery.com/code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> {% endcomment %}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 
 
@@ -45,6 +45,7 @@
 <button id="toggleEnlargedSinks" class="btn btn-primary mt-3">toggleEnlargedSinks</button>
 <button id="toggleLakes" class="btn btn-primary mt-3">toggleLakes</button>
 <button id="toggleStreams" class="btn btn-primary mt-3">toggleStreams</button>
+<button id="btnWeightingForms" class="btn btn-primary mt-3">Open Weighting Forms</button>
 <div id="toolboxPanel" class="overflow-auto"></div>
 
 

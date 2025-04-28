@@ -5,7 +5,6 @@ from swn import forms as swn_forms
 from . import forms
 from .filters import SinkFilter, EnlargedSinkFilter, LakeFilter, StreamFilter
 
-
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.contrib.gis.geos import GEOSGeometry
@@ -43,7 +42,8 @@ def test(request):
     # double_widget = forms.DoubleWidgetForm()
     double_widget = forms.CustomRangeSliderWidget()
     single_widget = forms.CustomSingleSliderWidget()
-    return render(request, 'toolbox/test.html', {'sink_filter':sink_filter, 'enlarged_sink_filter': enlarged_sink_filter, 'single_widget': single_widget, 'double_widget': double_widget})
+    double_form = forms.DoubleSliderTestForm()
+    return render(request, 'toolbox/test.html', {'double_form':double_form})
 
 
 
@@ -186,6 +186,10 @@ def load_infiltration_gui(request, user_field_id):
     print("Queryset Sinks", sinks.count())
     enlarged_sink_form = EnlargedSinkFilter(request.GET, queryset=enlarged_sinks)
 
+    forest_weighting = forms.WeightingsForestForm()
+    agriculture_weighting = forms.WeightingsAgricultureForm()
+    grassland_weighting = forms.WeightingsGrasslandForm()
+
     html = render_to_string('toolbox/infiltration.html', {
         # 'sink_form': sink_form, 
         # 'enlarged_sink_form': enlarged_sink_form,
@@ -194,6 +198,9 @@ def load_infiltration_gui(request, user_field_id):
         'enlarged_sink_filter': enlarged_sink_form,
         'streams_form': stream_form,
         'lakes_form': lake_form,
+        'forest_weighting': forest_weighting,
+        'agriculture_weighting': agriculture_weighting,
+        'grassland_weighting': grassland_weighting,
     }, request=request) 
 
     return JsonResponse({'html': html})
@@ -284,6 +291,7 @@ def filter_sinks(request):
             'success': True, 
             'message': f'Found {sinks.count()} sinks'
         }
+        
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
 
 
@@ -633,13 +641,12 @@ def update_user_field(request, id):
     else:
         return JsonResponse({'message': {'success': False, 'message': 'An error occurred updating the user field.'}})
 
+#TODO needed?
 def get_options(request, parameter):
     dropdown_list = []
     if parameter == 'toolbox-project':
         toolbox_projects = models.ToolboxProject.objects.filter(user=request.user)
         dropdown_list = [(project.id, project.name) for project in toolbox_projects]
-
-
     return JsonResponse({'options': dropdown_list})
         
 
@@ -670,5 +677,65 @@ def delete_user_field(request, id):
     else:
         return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}}, status=400)
     
+
+def get_weighting_forms(request):
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        print('Project:', project)
+        sinks = project['infiltration'].get('sink_selected', [])
+        enlarged_sinks = project['infiltration'].get('enlarged_sink_selected', [])
+        
+        land_use_values = {}
+        if len(sinks) > 0:
+            sinks = [int(sink) for sink in sinks]
+            queryset = models.Sink4326.objects.filter(id__in=sinks)
+            land_use_values = set(
+                queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
+            ).union(
+                queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
+            ).union(
+                queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
+            )
+        if len(enlarged_sinks) > 0:
+            enlarged_sinks = [int(sink) for sink in enlarged_sinks]
+            queryset = models.EnlargedSink4326.objects.filter(id__in=sinks)
+            land_use_values.union(set(
+                    queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
+                ).union(
+                    queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
+                ).union(
+                    queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
+                ).union(
+                    queryset.exclude(land_use_4__isnull=True).values_list('land_use_4', flat=True)
+                )
+            )
+        
+        land_use_values = list(land_use_values)
+
+        context = {
+            # 'forest_weighting': ForestWeightingFilter(),
+            'forest_weighting': forms.WeightingsForestForm(),
+            'agriculture_weighting': forms.WeightingsAgricultureForm(),
+            'grassland_weighting': forms.WeightingsGrasslandForm(),
+            'forms': {
+                'grassland': False,
+                'forest': False,
+                'agriculture': False,
+            }
+
+
+        }
+        # TODO weighting forms
+
+        if 'forest_conifers' in land_use_values or 'forest_deciduous_trees' in land_use_values \
+            or 'forest_conifers_and_deciduous_trees' in land_use_values:
+            context['forms']['forest'] = True
+        if 'agricultural_area_without_information' in land_use_values or 'farmland' in land_use_values:
+            context['forms']['agriculture'] = True
+        if 'grassland' in land_use_values:
+            context['forms']['grassland'] = True
+        
+
+        return render(request, 'toolbox/weighting_tab.html', context)
 
     

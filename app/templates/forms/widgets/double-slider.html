@@ -1,0 +1,39 @@
+
+
+
+<div id="{{ widget.attrs.id }}-outer" class="slider-outer-div">
+    <div id="{{ widget.attrs.id }}-div" class="row">
+        <div id="{{ widget.attrs.id }}-min-label" class="col-2">{{ widget.attrs.data_range_min }} {{ widget.attrs.units|default:"" }}</div>
+        <div class="col-8">
+            <input
+                id="{{ widget.attrs.id }}"
+                type="text"
+                class="w-100"
+                data-slider-min="{{ widget.attrs.data_range_min }}"
+                data-slider-max="{{ widget.attrs.data_range_max }}"
+                data-slider-value="[{{ widget.attrs.data_cur_min }},{{ widget.attrs.data_cur_max }}]"
+                data-slider-tooltip="hide"
+            />
+        </div>
+        <div id="{{ widget.attrs.id }}-max-label" class="col-2">{{ widget.attrs.data_range_max }} {{ widget.attrs.units|default:"" }}</div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var slider = $('#{{ widget.attrs.id }}').slider();
+        var minLabel = document.getElementById('{{ widget.attrs.id }}-min-label');
+        var maxLabel = document.getElementById('{{ widget.attrs.id }}-max-label');
+        
+        slider.on('slide', function(ev) {
+            minLabel.innerText = ev.value[0] + ' {{ widget.attrs.units|default:"" }}';
+            maxLabel.innerText = ev.value[1] + ' {{ widget.attrs.units|default:"" }}';
+        });
+    
+        // Initialize on load
+        const initial = slider.slider('getValue');
+        minLabel.innerText = initial[0] + ' {{ widget.attrs.units|default:"" }}';
+        maxLabel.innerText = initial[1] + ' {{ widget.attrs.units|default:"" }}';
+    });
+</script>
+    

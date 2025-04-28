@@ -3,7 +3,7 @@
 }
 
 .numeric-slider .ui-widget-header {
-  background: var(bs-secondary);
+  background: #999;
 }
 
 .numeric-slider .value {

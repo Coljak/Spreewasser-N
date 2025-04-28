@@ -1,4 +1,4 @@
-from django.forms.widgets import HiddenInput
+from django.forms.widgets import HiddenInput, NumberInput,TextInput
 from django_filters.widgets import RangeWidget
 
 class CustomRangeSliderWidget(RangeWidget):
@@ -7,17 +7,6 @@ class CustomRangeSliderWidget(RangeWidget):
     def __init__(self, attrs=None):
         widgets = (HiddenInput(), HiddenInput())
         super(RangeWidget, self).__init__(widgets, attrs)
-        # default_attrs = {
-        #     "data-range_min": 0,
-        #     "data-range_max": 1000,
-        #     "data-cur_min": 0,
-        #     "data-cur_max": 1000,
-        #     "class": "hiddeninput",
-        # }
-        # if attrs:
-        #     default_attrs.update(attrs)
-        # super().__init__(attrs=default_attrs)
-
 
     def get_context(self, name, value, attrs):
         ctx = super().get_context(name, value, attrs)
@@ -56,6 +45,53 @@ class CustomSingleSliderWidget(HiddenInput):
             "data_range_max": 1000,
             "data_cur_val": 0,
             "class": "hiddeninput",
+        }
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(attrs=default_attrs)
+
+class CustomSimpleSliderWidget(NumberInput):
+    template_name = "forms/widgets/simple-slider.html"
+
+    def __init__(self, attrs=None):
+        default_attrs = {
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_range_step": 1,
+            "data_cur_val": 0,
+            "class": "hiddeninput",
+            "units": "",
+        }
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(attrs=default_attrs)
+
+# class CustomDoubleSliderWidget(NumberInput):
+#     template_name = "forms/widgets/double-slider.html"
+
+#     def __init__(self, attrs=None):
+#         default_attrs = {
+#             "data_range_min": 0,
+#             "data_range_max": 100,
+#             "data_cur_min": 1,
+#             "data_cur_max": 0,
+#             "class": "hiddeninput",
+#             "units": "",
+#         }
+#         if attrs:
+#             default_attrs.update(attrs)
+#         super().__init__(attrs=default_attrs)
+class CustomDoubleSliderWidget(TextInput):
+    template_name = "forms/widgets/double-slider.html"
+
+    def __init__(self, attrs=None):
+        default_attrs = {
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_min": 10,
+            "data_cur_max": 90,
+            "data_range_step": 1,
+            "units": "%",
         }
         if attrs:
             default_attrs.update(attrs)

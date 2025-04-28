@@ -234,24 +234,31 @@ document.getElementById('map').addEventListener('click', function (event) {
     const sinkType = event.target.getAttribute('data-type');
     console.log('sinkId', sinkId);
     console.log('sinkType', sinkType);
-    const project = ToolboxProject.loadFromLocalStorage();
-    let selectedSinks = project.infiltration[sinkType + '_selected'];
-    if (selectedSinks.includes(sinkId)) {
-      
-      selectedSinks = selectedSinks.filter(id => id !== sinkId);
-      project.infiltration[sinkType + '_selected'] = selectedSinks;
-      
-      console.log("Sink already selected:", sinkId);
-    } else {
-      console.log("Selected sink:", sinkId);
-      
-      selectedSinks.push(sinkId);
-      
-    } 
-    project.saveToLocalStorage();
-    
+
+    const checkbox = document.querySelector(`.sink-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
+    checkbox.checked = !checkbox.checked;
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
   }
 });
+
+  //   const project = ToolboxProject.loadFromLocalStorage();
+  //   let selectedSinks = project.infiltration[sinkType + '_selected'];
+  //   if (selectedSinks.includes(sinkId)) {
+      
+  //     selectedSinks = selectedSinks.filter(id => id !== sinkId);
+  //     project.infiltration[sinkType + '_selected'] = selectedSinks;
+      
+  //     console.log("Sink already selected:", sinkId);
+  //   } else {
+  //     console.log("Selected sink:", sinkId);
+      
+  //     selectedSinks.push(sinkId);
+      
+  //   } 
+  //   project.saveToLocalStorage();
+    
+  // }
+
 
 function selectSinkPopup(sinkId, sinkType) {
 }
@@ -321,7 +328,7 @@ function getSinks(sinkType, featureGroup) {
                 .setContent(`
                     <b>Sink Options</b><br>
                     <button class="btn btn-outline-secondary show-sink-outline" data-type="${sinkType}" sinkId=${feature.properties.id}">Show Sink Outline</button>
-                    <button class="btn btn-outline-secondary select-sink" data-type="${sinkType}" sinkId=${feature.properties.id}">Toggle Sink selection</button>
+                    <button class="btn btn-outline-secondary select-sink" data-type="${sinkType}" sinkId="${feature.properties.id}">Toggle Sink selection</button>
                 `)
                 .openOn(map);
         });
@@ -571,18 +578,11 @@ $('#toolboxPanel').on('change',  function (event) {
 
     
     const key = `${inputPrefix}_${inputName}`;
-    // Set the corresponding property in the infiltration object
 
-    console.log('Input checked:', inputChecked);
-    console.log('Input key:', key);
     if (inputChecked) {
       project.infiltration[key].push(inputValue);
-      console.log('Input value added:', inputValue);
-      console.log('Input value added:', project.infiltration[key]);
     } else {
       project.infiltration[key].pop(inputValue);
-      console.log('Input value removed:', inputValue);
-      console.log('Input value removed:', project.infiltration[key]);
     }
     project.saveToLocalStorage();
     console.log('Updated infiltration', inputId, '=', inputValue);
@@ -710,6 +710,8 @@ document.getElementById('toggleStreams').addEventListener('click', function () {
   }
   streamsVisible = !streamsVisible;
 });
+
+
 
 
 

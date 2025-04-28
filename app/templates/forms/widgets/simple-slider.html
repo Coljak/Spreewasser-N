@@ -1,0 +1,15 @@
+<div class="d-flex align-items-center">
+    <input
+        type="range"
+        class="form-range"
+        min="{{ widget.attrs.data_range_min }}"
+        max="{{ widget.attrs.data_range_max }}"
+        step="{{ widget.attrs.data_range_step }}"
+        value="{{ widget.attrs.data_cur_val }}"
+        id="{{ widget.attrs.id }}_slider"
+        oninput="document.getElementById('{{ widget.attrs.id }}_value').innerText = this.value + '{{ widget.attrs.units|default:"" }}';"
+    >
+    <span id="{{ widget.attrs.id }}_value" class="ms-2">
+        {{ widget.attrs.data_cur_val }}{{ widget.attrs.units|default:"" }}
+    </span>
+</div>

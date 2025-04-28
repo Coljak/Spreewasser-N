@@ -13,21 +13,50 @@ from django_filters.fields import RangeField
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.gis.geos import GEOSGeometry
 
-from .widgets import CustomRangeSliderWidget, CustomSingleSliderWidget
+from .widgets import CustomRangeSliderWidget, CustomSingleSliderWidget,CustomSimpleSliderWidget, CustomDoubleSliderWidget
 
-class SingleWidgetForm(forms.Form):
-    distance_to_userfield = forms.FloatField(
-        required=False,
-        label="Distance to userfield (m)",
-        widget=CustomSingleSliderWidget()
-    )
+# class SingleWidgetForm(forms.Form):
+#     distance_to_userfield = forms.FloatField(
+#         required=False,
+#         label="Distance to userfield (m)",
+#         widget=CustomSingleSliderWidget()
+#     )
 
-class DoubleWidgetForm(forms.Form):
-    double_slider = forms.FloatField(
-        required=False,
-        label="Distance to userfield (m)",
-        widget=CustomRangeSliderWidget()
+# class DoubleWidgetForm(forms.Form):
+#     double_slider = forms.FloatField(
+#         required=False,
+#         label="Distance to userfield (m)",
+#         widget=CustomRangeSliderWidget()
+#     )
+
+class DoubleSliderTestForm(forms.Form):
+    field_capacity = forms.IntegerField(
+        min_value=0, 
+        max_value=100, 
+        # initial=33, 
+        widget=CustomDoubleSliderWidget(attrs={
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_min": 10,
+            "data_cur_max": 80,
+            "units": "%",
+            
+        }),
+        label="Feldkapazität (%)",
+        help_text = (
+            "Die Feldkapazität ist das Wasservolumen das über längere Zeit entgegen der "
+            "Schwerkraft im Boden gehalten werden kann. Eine geringere Feldkapazität begünstigt "
+            "Versickerungsmaßnahmen."
+        )
     )
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.helper = FormHelper(self)
+    #     self.helper.form_method = 'GET'
+    #     self.helper.form_id = 'double-slider-form'
+    #     self.helper.form_class = 'form-horizontal'
+    #     self.helper.label_class = 'col-lg-2 col-md-2 col-sm-auto'
+    #     self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
 
 class SliderFilterForm(forms.Form):
     def __init__(self, *args, **kwargs):
@@ -56,7 +85,6 @@ class SliderFilterForm(forms.Form):
                 layout_fields.append(layout_field)
         self.helper.layout = Layout(*layout_fields)
 
-        
 
 
 class ToolboxProjectSelectionForm(forms.Form):
@@ -106,3 +134,201 @@ class ToolboxProjectForm(forms.Form):
     class Meta:
         model = ToolboxProject
         exclude = ['id', 'user']
+
+
+class WeightingsForestForm(forms.Form):
+    field_capacity = forms.IntegerField(
+        min_value=0, 
+        max_value=100, 
+        # initial=33, 
+        widget=CustomSimpleSliderWidget(attrs={
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 33,
+            "units": "%",
+            
+        }),
+        label="Feldkapazität (%)",
+        help_text = (
+            "Die Feldkapazität ist das Wasservolumen das über längere Zeit entgegen der "
+            "Schwerkraft im Boden gehalten werden kann. Eine geringere Feldkapazität begünstigt "
+            "Versickerungsmaßnahmen."
+        )
+    )
+    hydraulic_conductivity_1m = forms.IntegerField(
+        min_value=0,
+        max_value=100,
+        # initial=33,
+        widget=CustomSimpleSliderWidget(attrs={
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 33,
+            "units": "%",
+        }),
+        label="Hydraulische Leitfähigkeit 1m (%)",
+        help_text=(
+            "Die hydraulische Leitfähigkeit ist die gesättigte Wasserleitfähigkeit des Bodens bis in eine "
+            "Tiefe von einem Meter. Bei aktiver Nutzung werden gesättigte Bedingungen unterhalb der Geländeoberkante "
+            "angenommen. Eine hohe Leitfähigkeit begünstigt hohe Versickerungsraten."
+        )
+    )
+    hydraulic_conductivity_2m = forms.IntegerField(
+        min_value=0,
+        max_value=100,
+        # initial=33,
+        widget=CustomSimpleSliderWidget(attrs={
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 33,
+            "units": "%",
+        }),
+        label="Hydraulische Leitfähigkeit 2m (%)",
+        help_text=(
+            "Die hydraulische Leitfähigkeit ist die gesättigte Wasserleitfähigkeit des Bodens bis in eine "
+            "Tiefe von zwei Metern. Bei aktiver Nutzung werden gesättigte Bedingungen unterhalb der Geländeoberkante "
+            "angenommen. Eine hohe Leitfähigkeit begünstigt hohe Versickerungsraten."
+        )
+    )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'forest-weighting-filter-form'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+    
+
+
+class WeightingsAgricultureForm(forms.Form):
+    field_capacity = forms.IntegerField(
+        min_value=0, 
+        max_value=100, 
+        # initial=33, 
+        widget=CustomSimpleSliderWidget(attrs={
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 33,
+            "units": "%",
+        }),
+        label="Feldkapazität (%)",
+        help_text = (
+            "Die Feldkapazität ist das Wasservolumen das über längere Zeit entgegen der "
+            "Schwerkraft im Boden gehalten werden kann. Eine geringere Feldkapazität begünstigt "
+            "Versickerungsmaßnahmen."
+        )
+    )
+    hydromorphy = forms.IntegerField(
+        min_value=0, 
+        max_value=100, 
+        # initial=33, 
+        widget=CustomSimpleSliderWidget(attrs={
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 33,
+            "units": "%",
+        }),
+        label="Hydromorphie (%)",
+        help_text = (
+            "Die Hydromorphie unterscheidet zwischen grund-, stau- und sickerwasserdominierten landwirtschaftlichen "
+            "Standorten. Für Versickerungsmaßnahmen sind letztere zu bevorzugen."
+        )
+    )
+    soil_type = forms.IntegerField(
+        min_value=0, 
+        max_value=100, 
+        # initial=33, 
+        widget=CustomSimpleSliderWidget(attrs={
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 33,
+            "units": "%",
+        }),
+        label="Bodenart (%)",
+        help_text = (
+            "Bewertung der Eignung der vorliegenden Bodenarten landwirtschaftlicher Standorte für Versickerungmaßnahmen." 
+        )
+    )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'agriculture-weighting-filter-form'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+
+class WeightingsGrasslandForm(forms.Form):
+    field_capacity = forms.IntegerField(
+        min_value=0, 
+        max_value=100, 
+        # initial=25, 
+        widget=CustomSimpleSliderWidget(attrs={
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 25,
+            "units": "%",
+        }),
+        label="Feldkapazität (%)",
+        help_text = (
+            "Die Feldkapazität ist das Wasservolumen das über längere Zeit entgegen der "
+            "Schwerkraft im Boden gehalten werden kann. Eine geringere Feldkapazität begünstigt "
+            "Versickerungsmaßnahmen."
+        )
+    )
+    hydromorphy = forms.IntegerField(
+        min_value=0, 
+        max_value=100, 
+        # initial=25, 
+        widget=CustomSimpleSliderWidget(attrs={
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 25,
+            "units": "%",
+        }),
+        label="Hydromorphie (%)",
+        help_text = (
+            "Die Hydromorphie unterscheidet zwischen grund-, stau- und sickerwasserdominierten landwirtschaftlichen "
+            "Standorten. Für Versickerungsmaßnahmen sind letztere zu bevorzugen."
+        )
+    )
+    soil_type = forms.IntegerField(
+        min_value=0, 
+        max_value=100, 
+        # initial=25, 
+        widget=CustomSimpleSliderWidget(attrs={
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 25,
+            "units": "%",
+        }),
+        label="Bodenart (%)",
+        help_text = (
+            "Bewertung der Eignung der vorliegenden Bodenarten landwirtschaftlicher Standorte für Versickerungmaßnahmen." 
+        )
+    )
+    soil_water_ratio = forms.IntegerField(
+        min_value=0, 
+        max_value=100, 
+        # initial=25, 
+        widget=CustomSimpleSliderWidget(attrs={
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 25,
+            "units": "%",
+        }),
+        label="Bodenfeuchte (%)",
+        help_text= (
+            "Bewertung der Sättigungsgrade von Böden auf Graslandstandorten."
+        )
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'grassland-weighting-filter-form'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        

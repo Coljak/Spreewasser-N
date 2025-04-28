@@ -186,6 +186,11 @@ STATICFILES_FINDERS = [
     
 ]
 
+SASS_PROCESSOR_OPTIONS = {
+    'source_map_enabled': False,
+}
+
+
 MEDIA_ROOT = MEDIA_DIR
 MEDIA_URL = 'media/'
 

@@ -636,8 +636,8 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
             // Use plain HTML string for popup content
             const popupHtml = `
               <strong>Editing field</strong><br>
-              <button class="btn btn-sm btn-success" id="btnUpdateUserField">💾 Save</button>
-              <button class="btn btn-sm btn-danger" id="btnCancelEditUserField">✖ Cancel</button>
+              <button class="btn btn-sm btn-success" id="btnUpdateUserField">Speichern</button>
+              <button class="btn btn-sm btn-danger" id="btnCancelEditUserField">Abbrechen</button>
             `;
         
             // Bind and open the popup

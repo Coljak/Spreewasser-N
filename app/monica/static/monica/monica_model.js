@@ -1329,18 +1329,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
-
-
-    // $('.dropdown-item').on('click', function (e) {
-    //     e.preventDefault();
-    //     $('.dropdown-item').removeClass('active');
-    //     $(this).addClass('active');
-    //     const target = $(this).attr('href');
-    //     $('.tab-pane').hide();
-    //     $(target).show();
-    // });
-
     $('.tab-pane').hide();
 
     const tabs = document.querySelectorAll('.monica.nav-link');
@@ -1370,14 +1358,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // project.userField = $('#userFieldSelect').val();
                 console.log("No userField selected!")
             } catch {;}
-   
         }
-
-
         if (validateProject(project)) {
             runSimulation(project);
-        }
-        
+        }  
     });
 
     tabs[1].click();

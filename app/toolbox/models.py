@@ -546,28 +546,7 @@ class Feasability(models.Model): # soilstuff
     fie_as_num = models.FloatField(null=True)
     index = models.FloatField(null=True)
 
-# class FeasabilitySinks(models.Model):
-#     fid_sink = models.IntegerField(null=True)
-#     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-#     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
-#     shape_length = models.FloatField(null=True)
-#     shape_area = models.FloatField(null=True)
-#     index = models.FloatField(null=True)
 
-
-class FeasabilityEnlargedSinks(models.Model):
-    fid_sink = models.IntegerField(null=True)
-    geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-    centroid = gis_models.PointField(srid=25833, null=True, blank=True)
-    shape_length = models.FloatField(null=True)
-    shape_area = models.FloatField(null=True)
-    index = models.FloatField(null=True)
-     
-# WHERE DID THID COME FROM?
-# class Aquifer(models.Model):
-#     name = models.CharField(max_length=255)
-#     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-#     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
 
 class Hydrogeology(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)

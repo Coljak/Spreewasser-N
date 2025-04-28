@@ -7,38 +7,11 @@ from django_filters.filters import RangeFilter, ChoiceFilter, MultipleChoiceFilt
 from django_filters.fields import RangeField
 from django import forms
 from .models import *
-from .forms import SliderFilterForm, SingleWidgetForm
+from .forms import SliderFilterForm
 from .widgets import CustomRangeSliderWidget, CustomSingleSliderWidget
 import math
 # from django_filters import FloatFilter
 
-# class MinMaxRangeFilter(RangeFilter):
-#     def __init__(self, model=None, field_name=None, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         # Auto-detect min and max from the queryset based on field_name
-#         if field_name:
-#             values = model.objects.values_list(field_name, flat=True)
-#             values = list(filter(None, values))  # remove None/nulls
-#             if field_name == 'index_soil':  
-#                 int_values = []
-#                 for v in values:
-#                     if (v * 100) < 1:
-#                         v = 0
-#                     elif (v * 100) > 99:
-#                         v = 100
-#                     else:
-#                         v = int(v * 100)
-#                     int_values.append(v)
-#                 values = int_values
-#                 # print('int_values', int_values)
-
-#             if values:
-#                 min_value = min(values)
-#                 max_value = max(values)
-#                 self.extra['widget'] = CustomRangeSliderWidget(attrs={
-#                     'data-range_min': min_value,
-#                     'data-range_max': max_value
-#                 })
 
 class MinMaxRangeFilter(RangeFilter):
     def __init__(self, *args, model=None, field_name=None, **kwargs):
@@ -274,3 +247,4 @@ class LakeFilter(FilterSet):
         model = Lake4326
         fields = ['min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days']
         form = SliderFilterForm
+

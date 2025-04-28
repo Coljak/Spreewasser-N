@@ -6,24 +6,25 @@
 {% block css %}
 {{ block.super }}
 
-<link rel="stylesheet" href="{% static 'toolbox/custom_slider.css' %}">
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/css/bootstrap-slider.css" integrity="sha512-SZgE3m1he0aEF3tIxxnz/3mXu/u/wlMNxQSnE0Cni9j/O8Gs+TjM9tm1NX34nRQ7GiLwUEzwuE3Wv2FLz2667w==" crossorigin="anonymous" />
+  <link rel="stylesheet" href="{% static 'toolbox/test.css' %}">
+
+  
 {% endblock css %}
 
 {% block body_block %}
     <div class="container">
 
-
-
-
         <div class="card">
         
             <div class="card-header">
-                <h2>Slider test</h2>
+                <h2>Slider Widget test</h2>
             </div>
             <div class="card-body">
-                {% comment %} {% crispy single_widget %} {% endcomment %}
+                {% crispy double_form %}
             </div>
+            Ändä
         </div>
 
         <div class="card">
@@ -31,77 +32,33 @@
             <div class="card-header">
                 <h2>Double Slider test</h2>
             </div>
-            <div class="card-body">
-                {% crispy double_widget %}
-            </div>
+            <div id="slider-outer-div">
+                
+                
+                <div id="slider-div">
+                    <div id="slider-min-label" class="slider-label"></div>
+                    
+                  <div>
+                    <input id="ex2" type="text" data-slider-min="50"
+                       data-slider-max="2000" data-slider-value="[80,300]"
+                       data-slider-tooltip="hide" />
+                  </div>
+                  <div id="slider-max-label" class="slider-label"></div>
+                </div>
+              </div>
         </div>
 
-
-
-        {% comment %} <div class="card">
-            <div class="card-header">
-                <h2>Sink Slider</h2>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="">
-                    {% csrf_token %}
-                    {% crispy sink_filter.form %}
-                    <button id="btnFilterSinks"type="submit" class="btn btn-primary">Filter Sinks</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h2>Enlarged Slider</h2>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="">
-                    {% csrf_token %}
-                    {% crispy enlarged_sink_filter.form %}
-                    <button id="btnFilterEnlargedSinks" type="submit" class="btn btn-primary">Filter Enlarged Sinks</button>
-                </form>
-            </div>
-        </div> {% endcomment %}
+        
     </div>
     
 
-
-
-
-
-
-
-
-
-    <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <h2>Test</h2>
-            </div>
-            <div class="card-body">
-                <div id="id_distance_to_userfield_slider"   class="numeric-slider-single-container form-group"   data-range_min="0"   data-range_max="1000"   data-cur_val="0"><div class="numeric-slider-single ui-slider ui-slider-horizontal ui-slider-range"></div><input type="hidden" name="distance_to_userfield" id="id_distance_to_userfield" value="None"><span id="id_distance_to_userfield_text">0</span></div>
-            </div>
-        </div>
-
-
-
-        <div class="card">
-            <div class="card-header">
-                <h2>Test</h2>
-            </div>
-            <div class="card-body">
-                <input type="hidden" name="double_slider" data-range_min="0" data-range_max="1000" data-cur_min="0" data-cur_max="0" class="numeric-slider-double" id="id_double_slider">
-            
-            </div>
 
   {% endblock body_block %}
 
 {% block javascript %}
 {{ block.super }}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <script type="module" src="{% static 'toolbox/custom_slider.js' %}"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/bootstrap-slider.min.js" integrity="sha512-f0VlzJbcEB6KiW8ZVtL+5HWPDyW1+nJEjguZ5IVnSQkvZbwBt2RfCBY0CBO1PsMAqxxrG4Di6TfsCPP3ZRwKpA==" crossorigin="anonymous"></script>
     <script type="module" src="{% static 'toolbox/test.js' %}"></script>
 
 {% endblock %}

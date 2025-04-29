@@ -66,21 +66,7 @@ class CustomSimpleSliderWidget(NumberInput):
             default_attrs.update(attrs)
         super().__init__(attrs=default_attrs)
 
-# class CustomDoubleSliderWidget(NumberInput):
-#     template_name = "forms/widgets/double-slider.html"
 
-#     def __init__(self, attrs=None):
-#         default_attrs = {
-#             "data_range_min": 0,
-#             "data_range_max": 100,
-#             "data_cur_min": 1,
-#             "data_cur_max": 0,
-#             "class": "hiddeninput",
-#             "units": "",
-#         }
-#         if attrs:
-#             default_attrs.update(attrs)
-#         super().__init__(attrs=default_attrs)
 class CustomDoubleSliderWidget(TextInput):
     template_name = "forms/widgets/double-slider.html"
 
@@ -91,7 +77,6 @@ class CustomDoubleSliderWidget(TextInput):
             "data_cur_min": 10,
             "data_cur_max": 90,
             "data_range_step": 1,
-            "units": "%",
         }
         if attrs:
             default_attrs.update(attrs)

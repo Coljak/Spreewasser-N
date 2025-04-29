@@ -1,6 +1,7 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
 import { ToolboxProject, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
-import {initializeSliders} from '/static/toolbox/custom_slider.js';
+// import {initializeSliders} from '/static/toolbox/custom_slider.js';
+import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 
   baseMaps, 

@@ -10,13 +10,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css" />
     <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.contextmenu.css' %}"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/css/bootstrap-slider.css" integrity="sha512-SZgE3m1he0aEF3tIxxnz/3mXu/u/wlMNxQSnE0Cni9j/O8Gs+TjM9tm1NX34nRQ7GiLwUEzwuE3Wv2FLz2667w==" crossorigin="anonymous" />
     {% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/> {% endcomment %}
     <!-- virtual-select is for the multiple select boxes -->
     <link rel="stylesheet" href="{% static 'vendor/virtual-select/virtual-select.min.css' %}" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
     <link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.css' %}" />
 	<link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.Default.css' %}" />
-    <link rel="stylesheet" href="{% static 'toolbox/custom_slider.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'toolbox/custom_slider.css' %}"> {% endcomment %}
     {% comment %} <link rel="stylesheet" href="https://code.jquery.com/code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> {% endcomment %}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 
@@ -98,8 +99,9 @@
     
     <script type="text/javascript" src="{% static 'vendor/virtual-select/virtual-select.min.js' %}"></script> 
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.markercluster-src.js' %}"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <script type="module" src="{% static 'toolbox/custom_slider.js' %}"></script>
+    {% comment %} <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script> {% endcomment %}
+    {% comment %} <script type="module" src="{% static 'toolbox/custom_slider.js' %}"></script> {% endcomment %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/bootstrap-slider.min.js" integrity="sha512-f0VlzJbcEB6KiW8ZVtL+5HWPDyW1+nJEjguZ5IVnSQkvZbwBt2RfCBY0CBO1PsMAqxxrG4Di6TfsCPP3ZRwKpA==" crossorigin="anonymous"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script type="module" src="{% static 'toolbox/toolbox_three_split.js' %}" ></script>
 {% endblock %}

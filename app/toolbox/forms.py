@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.db.models import Max, Min
 from .models import *
+from . import widgets
 from django.db.models import Q
 from toolbox.models import * #, SinksWithLandUseAndSoilProperties
 from django.core import validators
@@ -49,41 +50,102 @@ class DoubleSliderTestForm(forms.Form):
             "Versickerungsmaßnahmen."
         )
     )
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.helper = FormHelper(self)
-    #     self.helper.form_method = 'GET'
-    #     self.helper.form_id = 'double-slider-form'
-    #     self.helper.form_class = 'form-horizontal'
-    #     self.helper.label_class = 'col-lg-2 col-md-2 col-sm-auto'
-    #     self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
-
+  
 class SliderFilterForm(forms.Form):
     def __init__(self, *args, **kwargs):
-    # def __init__(self, *args, model=None, form_action=None, **kwargs):
-        super().__init__(*args,  **kwargs)
+        super().__init__(*args, **kwargs)
+
         self.helper = FormHelper(self)
         self.helper.form_method = 'GET'
-        # self.helper.form_class = 'form-horizontal'
-        self.helper.form_id = 'sink-filter-form'
-        
         self.helper.form_class = 'form-horizontal'
         self.helper.label_class = 'col-lg-2 col-md-2 col-sm-auto'
         self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
 
-        layout_fields = []
-        for field_name, field in self.fields.items():
-            if isinstance(field, RangeField):
-                # field.widget.set_bounds(min_value=0, max_value=1000)
-                layout_field = Field(field_name, template="forms/fields/range-slider.html")
-                layout_fields.append(layout_field)
-            elif field_name == "distance_to_userfield":
-                layout_fields.append(Field(field_name, template="forms/fields/single-slider.html"))
+        self.helper.layout = Layout(*[Field(name) for name in self.fields])
 
-            else:
-                layout_field = Field(field_name)
-                layout_fields.append(layout_field)
-        self.helper.layout = Layout(*layout_fields)
+
+# class SliderFilterForm(forms.Form):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+
+#         self.helper = FormHelper(self)
+#         self.helper.form_method = 'GET'
+#         # self.helper.form_id = 'sink-filter-form'
+#         self.helper.form_class = 'form-horizontal'
+#         self.helper.label_class = 'col-lg-2 col-md-2 col-sm-auto'
+#         self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
+
+#         layout_fields = []
+
+#         for field_name, field in self.fields.items():
+#             if isinstance(field, forms.MultiValueField):
+#                 # Range fields (min-max): assign double slider
+#                 field.widget = CustomDoubleSliderWidget()
+#             elif isinstance(field, forms.FloatField) or isinstance(field, forms.IntegerField):
+#                 # Single fields: assign simple slider
+#                 field.widget = CustomSimpleSliderWidget()
+#             # No else needed — other fields keep their widget
+
+#             layout_fields.append(Field(field_name))
+
+#         self.helper.layout = Layout(*layout_fields)
+
+
+
+# class SliderFilterForm(forms.Form):
+    # def __init__(self, *args, **kwargs):
+    # # def __init__(self, *args, model=None, form_action=None, **kwargs):
+    #     super().__init__(*args,  **kwargs)
+    #     self.helper = FormHelper(self)
+    #     self.helper.form_method = 'GET'
+    #     # self.helper.form_class = 'form-horizontal'
+    #     self.helper.form_id = 'sink-filter-form'
+        
+    #     self.helper.form_class = 'form-horizontal'
+    #     self.helper.label_class = 'col-lg-2 col-md-2 col-sm-auto'
+    #     self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
+
+    #     # layout_fields = []
+    #     # for field_name, field in self.fields.items():
+    #     #     if isinstance(field, RangeField):
+    #     #         # field.widget.set_bounds(min_value=0, max_value=1000)
+    #     #         layout_field = widgets.CustomDoubleSliderWidget()
+    #     #         layout_fields.append(layout_field)
+    #     #     elif field_name == "distance_to_userfield":
+    #     #         layout_fields.append(CustomSimpleSliderWidget())
+
+    #     #     else:
+    #     #         layout_field = Field(field_name)
+    #     #         layout_fields.append(layout_field)
+    #     # self.helper.layout = Layout(*layout_fields)
+
+
+# class SliderFilterForm(forms.Form):
+#     def __init__(self, *args, **kwargs):
+#     # def __init__(self, *args, model=None, form_action=None, **kwargs):
+#         super().__init__(*args,  **kwargs)
+#         self.helper = FormHelper(self)
+#         self.helper.form_method = 'GET'
+#         # self.helper.form_class = 'form-horizontal'
+#         self.helper.form_id = 'sink-filter-form'
+        
+#         self.helper.form_class = 'form-horizontal'
+#         self.helper.label_class = 'col-lg-2 col-md-2 col-sm-auto'
+#         self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
+
+#         layout_fields = []
+#         for field_name, field in self.fields.items():
+#             if isinstance(field, RangeField):
+#                 # field.widget.set_bounds(min_value=0, max_value=1000)
+#                 layout_field = Field(field_name, template="forms/fields/range-slider.html")
+#                 layout_fields.append(layout_field)
+#             elif field_name == "distance_to_userfield":
+#                 layout_fields.append(Field(field_name, template="forms/fields/single-slider.html"))
+
+#             else:
+#                 layout_field = Field(field_name)
+#                 layout_fields.append(layout_field)
+#         self.helper.layout = Layout(*layout_fields)
 
 
 

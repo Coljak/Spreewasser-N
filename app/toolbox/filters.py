@@ -8,25 +8,41 @@ from django_filters.fields import RangeField
 from django import forms
 from .models import *
 from .forms import SliderFilterForm
-from .widgets import CustomRangeSliderWidget, CustomSingleSliderWidget
+from .widgets import CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget
 import math
 # from django_filters import FloatFilter
 
 
+
+FIELD_UNITS = {
+    "area": "ha",
+    "volume": "m³",
+    "volume_construction_barrier": "m³",
+    "volume_gained": "m³",
+    "min_surplus_volume": "m³",
+    "max_surplus_volume": "m³",
+    "mean_surplus_volume": "m³",
+    "depth": "m",
+    "index_soil": "%",
+}
 class MinMaxRangeFilter(RangeFilter):
-    def __init__(self, *args, model=None, field_name=None, **kwargs):
+    def __init__(self, *args, model=None, field_name=None, widget=None, **kwargs):
+        
         self.model = model
         self.field_name = field_name
+        self.units = FIELD_UNITS.get(field_name, "")
         self.queryset_for_bounds = None  # to be set in FilterSet
-        super().__init__(*args, **kwargs)
+        if widget is None:
+            widget = CustomDoubleSliderWidget()
+        super().__init__(widget=widget, *args, **kwargs)
 
-        self.extra['widget'] = CustomRangeSliderWidget()
 
     def set_bounds(self):
         if not self.queryset_for_bounds or not self.field_name:
             return
 
         qs = self.queryset_for_bounds.exclude(**{f"{self.field_name}__isnull": True})
+        min_val, max_val = None, None
 
         if self.field_name == 'index_soil':
             values = list(qs.values_list(self.field_name, flat=True))
@@ -52,19 +68,26 @@ class MinMaxRangeFilter(RangeFilter):
                 max_val = math.ceil(agg['max_val'])
             else:
                 min_val = 0
-                max_val = 1  # Avoid 0 range
+                max_val = 1  
 
-            # min_val = agg.get("min_val", 0)
-            # max_val = agg.get("max_val", 100)
-
-        # Assign attributes directly
+        # Assign attributes to widget
         self.field.widget.attrs.update({
-            'data-range_min': min_val,
-            'data-range_max': max_val,
+            'data_range_min': min_val,
+            'data_range_max': max_val,
+            'data_cur_min': min_val,
+            'data_cur_max': max_val,
+            # 'data_range_step': 1,
+            'units': self.units,
         })
 
+
+
 class SinkFilter(FilterSet):
-    area = MinMaxRangeFilter(model=Sink4326, field_name='area', label="Area (ha)")
+    area = MinMaxRangeFilter(
+        model=Sink4326, 
+        field_name='area', 
+        label="Area (ha)",
+        )
     volume = MinMaxRangeFilter(model=Sink4326, field_name='volume', label="Volume (m³)")
     depth = MinMaxRangeFilter(model=Sink4326, field_name='depth', label="Depth (m)")
     index_soil = MinMaxRangeFilter(model=Sink4326, field_name='index_soil', label="Soil Index (%)")
@@ -108,6 +131,7 @@ class SinkFilter(FilterSet):
         model = Sink4326
         fields = ['area', 'volume', 'depth', 'index_soil', 'land_use']
         form = SliderFilterForm
+
 class EnlargedSinkFilter(FilterSet):
     area = MinMaxRangeFilter(model=EnlargedSink4326, field_name='area', label="Area (ha)")
     volume = MinMaxRangeFilter(model=EnlargedSink4326, field_name='volume', label="Volume (m³)")
@@ -168,13 +192,14 @@ class StreamFilter(FilterSet):
     distance_to_userfield = NumberFilter(
         label="Distance to userfield (m)",
         method='filter_distance_placeholder',
-        widget=CustomSingleSliderWidget(attrs = {
+        widget=CustomSimpleSliderWidget(attrs = {
             "id": "stream_distance_to_userfield",
             "name": "stream_distance_to_userfield",
             "prefix": "stream",
             "data_range_min": 0,
             "data_range_max": 2000,
             "data_cur_val": 0,
+            "units": "m",
             "class": "hiddeninput",
         }) 
     )
@@ -213,13 +238,14 @@ class LakeFilter(FilterSet):
     distance_to_userfield = NumberFilter(
         label="Distance to userfield (m)",
         method='filter_distance_placeholder',
-        widget=CustomSingleSliderWidget(attrs = {
+        widget=CustomSimpleSliderWidget(attrs = {
             "id": "lake_distance_to_userfield",
             "name": "lake_distance_to_userfield",
             "prefix": "lake",
             "data_range_min": 0,
             "data_range_max": 2000,
             "data_cur_val": 0,
+            "units": "m",
             "class": "hiddeninput",
         }) 
     )

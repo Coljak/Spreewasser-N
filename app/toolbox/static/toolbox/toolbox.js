@@ -34,20 +34,20 @@ export class Infiltration {
 
         this.enlarged_sink_selected = infiltration.enlarged_sink_selected ?? [];
 
-        this.stream_min_surplus_min = infiltration.stream_min_surplus_min ?? null;
-        this.stream_min_surplus_max = infiltration.stream_min_surplus_max ?? null;
-        this.stream_mean_surplus_min = infiltration.stream_mean_surplus_min ?? null;
-        this.stream_mean_surplus_max = infiltration.stream_mean_surplus_max ?? null;
-        this.stream_max_surplus_min = infiltration.stream_max_surplus_min ?? null;
-        this.stream_max_surplus_max = infiltration.stream_max_surplus_max ?? null;
+        this.stream_min_surplus_volume_min = infiltration.stream_min_surplus_volume_min ?? null;
+        this.stream_min_surplus_volume_max = infiltration.stream_min_surplus_volume_max ?? null;
+        this.stream_mean_surplus_volume_min = infiltration.stream_mean_surplus_volume_min ?? null;
+        this.stream_mean_surplus_volume_max = infiltration.stream_mean_surplus_volume_max ?? null;
+        this.stream_max_surplus_volume_min = infiltration.stream_max_surplus_volume_min ?? null;
+        this.stream_max_surplus_volume_max = infiltration.stream_max_surplus_volume_max ?? null;
         this.stream_distance_to_userfield = infiltration.stream_distance_to_userfield ?? 0;
 
-        this.lake_min_surplus_min = infiltration.lake_min_surplus_min ?? null;
-        this.lake_min_surplus_max = infiltration.lake_min_surplus_max ?? null;
-        this.lake_mean_surplus_min = infiltration.lake_mean_surplus_min ?? null;
-        this.lake_mean_surplus_max = infiltration.lake_mean_surplus_max ?? null;
-        this.lake_max_surplus_min = infiltration.lake_max_surplus_min ?? null;
-        this.lake_max_surplus_max = infiltration.lake_max_surplus_max ?? null;
+        this.lake_min_surplus_volume_min = infiltration.lake_min_surplus_volume_min ?? null;
+        this.lake_min_surplus_volume_max = infiltration.lake_min_surplus_volume_max ?? null;
+        this.lake_mean_surplus_volume_min = infiltration.lake_mean_surplus_volume_min ?? null;
+        this.lake_mean_surplus_volume_max = infiltration.lake_mean_surplus_volume_max ?? null;
+        this.lake_max_surplus_volume_min = infiltration.lake_max_surplus_volume_min ?? null;
+        this.lake_max_surplus_volume_max = infiltration.lake_max_surplus_volume_max ?? null;
         this.lake_distance_to_userfield = infiltration.lake_distance_to_userfield ?? 0;
     }
 };

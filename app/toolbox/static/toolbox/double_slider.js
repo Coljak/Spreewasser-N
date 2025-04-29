@@ -1,19 +1,21 @@
 export function initializeSliders() {
-    console.log("Initializing sliders...");
-      $(".double-slider").each(function () {
-        let slider = $(this).slider();
-        
-        let sliderUnit = $(this).attr("data-slider-unit");
-        let sliderId = $(this).attr("id");
-        
-        let minLabel = $("#" + sliderId + "-min-label");
-        let maxLabel = $("#" + sliderId + "-max-label");
-        slider.on('slide', function (event) {
-            minLabel.text(event.value[0] + sliderUnit) ;//+ $(this).attr('data-slider-unit'));
-            maxLabel.text(event.value[1] + sliderUnit) ;//+ $(this).attr('data-slider-unit'));
-        });
+  console.log("Initializing sliders...");
+  $(".double-slider").each(function () {
+      let $input = $(this);
+      let slider = $input.slider(); // initializes Bootstrap slider
 
-        $('.slider-horizontal').addClass('w-100');
+      let sliderUnit = $input.attr("data-slider-unit");
+      let sliderId = $input.attr("id");
 
+      let minLabel = $("#" + sliderId + "-min-label");
+      let maxLabel = $("#" + sliderId + "-max-label");
+
+      slider.on('slide', function (event) {
+          minLabel.text(event.value[0] + sliderUnit);
+          maxLabel.text(event.value[1] + sliderUnit);
       });
-    };
+
+      // Find the corresponding `.slider-horizontal` generated element and apply width class
+      $input.siblings(".slider-horizontal").addClass("w-100");
+  });
+};

@@ -556,19 +556,24 @@ function getWaterBodies(waterbody, featureGroup){
 $('#toolboxPanel').on('change',  function (event) {
   const $target = $(event.target);
   console.log('change event', $target);
-  if ($target.hasClass('hiddeninput'))  {
-    console.log('hiddeninput', $target);
-  // all sliders
+  if ($target.hasClass('double-slider')) {
+
     const project = ToolboxProject.loadFromLocalStorage();
-    const inputId = $target.attr('id');
-    const inputVal = $target.val();
-
-    // Set the corresponding property in the infiltration object
-    project.infiltration[inputId] = inputVal;
-
+    const inputName = $target.attr('name');
+    const minName = inputName + '_min';
+    const maxName = inputName + '_max'; 
+    const inputVals = $target.val().split(',');
+    project.infiltration[minName] = inputVals[0];
+    project.infiltration[maxName] = inputVals[1];
     project.saveToLocalStorage();
-    console.log('Updated infiltration', inputId, '=', inputVal);
-  } else if ($target.hasClass('form-check-input')) {
+  } else if ($target.hasClass('single-slider')) {
+
+    const project = ToolboxProject.loadFromLocalStorage();
+    const inputName = $target.attr('name'); 
+    const inputVal = $target.val();
+    project.infiltration[inputName] = inputVal;
+    project.saveToLocalStorage();
+  }else if ($target.hasClass('form-check-input')) {
     // checkboxes
     const project = ToolboxProject.loadFromLocalStorage();
     const inputId = $target.attr('id');
@@ -711,9 +716,6 @@ document.getElementById('toggleStreams').addEventListener('click', function () {
   }
   streamsVisible = !streamsVisible;
 });
-
-
-
 
 
 getUserFieldsFromDb(featureGroup);

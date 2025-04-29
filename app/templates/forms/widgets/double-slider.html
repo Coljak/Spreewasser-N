@@ -13,6 +13,10 @@
                 data-slider-max="{{ widget.attrs.data_range_max }}"
                 data-slider-value="[{{ widget.attrs.data_cur_min }},{{ widget.attrs.data_cur_max }}]"
                 data-slider-unit="{{ widget.attrs.units|default:"" }}"
+                {% if widget.attrs.prefix %}
+                    prefix="{{ widget.attrs.prefix|default:"" }}"
+                    name="{{ widget.attrs.name }}"
+                {% endif %}
                 data-slider-tooltip="hide"
             />
         </div>

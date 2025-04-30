@@ -40,6 +40,8 @@ export class Infiltration {
         this.stream_mean_surplus_volume_max = infiltration.stream_mean_surplus_volume_max ?? null;
         this.stream_max_surplus_volume_min = infiltration.stream_max_surplus_volume_min ?? null;
         this.stream_max_surplus_volume_max = infiltration.stream_max_surplus_volume_max ?? null;
+        this.stream_plus_days_min = infiltration.stream_plus_days_min ?? null;
+        this.stream_plus_days_max = infiltration.stream_plus_days_max ?? null;
         this.stream_distance_to_userfield = infiltration.stream_distance_to_userfield ?? 0;
 
         this.lake_min_surplus_volume_min = infiltration.lake_min_surplus_volume_min ?? null;
@@ -48,6 +50,8 @@ export class Infiltration {
         this.lake_mean_surplus_volume_max = infiltration.lake_mean_surplus_volume_max ?? null;
         this.lake_max_surplus_volume_min = infiltration.lake_max_surplus_volume_min ?? null;
         this.lake_max_surplus_volume_max = infiltration.lake_max_surplus_volume_max ?? null;
+        this.lake_plus_days_min = infiltration.lake_plus_days_min ?? null;
+        this.lake_plus_days_max = infiltration.lake_plus_days_max ?? null;
         this.lake_distance_to_userfield = infiltration.lake_distance_to_userfield ?? 0;
     }
 };

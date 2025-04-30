@@ -661,24 +661,26 @@ $('#toolboxPanel').on('click', function (event) {
 $('#injectionGo').on('click', function () {
   const project = ToolboxProject.loadFromLocalStorage();
   const userField = project.userField;
+  if (userField) {
   
-  fetch('load_infiltration_gui/' + userField + '/')
+    fetch('load_infiltration_gui/' + userField + '/')
       .then(response => response.json())
       .then(data => {
-          
-          
           // Replace HTML content
-          $('#toolboxPanel').html(data.html);
-
+        $('#toolboxPanel').html(data.html);
       })
       .then(() => {
         initializeSliders();
         $('input[type="checkbox"][name="land_use"]').prop('checked', true);
         $('input[type="checkbox"][name="land_use"]').trigger('change');
-    })
-    
+      })
+      
       .catch(error => console.error("Error fetching data:", error));
-});
+    } else {
+      handleAlerts({ success: false, message: 'Please select a user field!' });
+    }
+  });
+
 
 let sinksVisible = true;
 let enlargedSinksVisible = true;

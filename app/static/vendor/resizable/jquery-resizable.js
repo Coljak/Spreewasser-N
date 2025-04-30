@@ -1,4 +1,4 @@
-/// <reference path="../bower_components/jquery/dist/jquery.js" />
+
 /*
 jquery-resizable
 Version 0.35 - 11/18/2019

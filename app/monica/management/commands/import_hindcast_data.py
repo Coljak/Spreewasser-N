@@ -9,6 +9,9 @@ import os
 from datetime import datetime
 from monica.utils.get_weather_hindcasts import update_hindcast_data
 
+"""
+!!!!!!!!!!!!!! DOES NOT WORK FROM ZALF GUEST NETWORK !!!!!!!!!!!!!!!
+"""
 class Command(BaseCommand):
     help = 'Download hindcast data'
 

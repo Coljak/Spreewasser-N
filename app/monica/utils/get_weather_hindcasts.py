@@ -22,6 +22,7 @@ def download_from_ftps(host, username, password, remote_file_path, local_file_pa
     :param remote_file_path: Path to the file on the FTPS server
     :param local_file_path: Path to save the file locally
     """
+
     try:
         # Connect to FTPS server
         ftps = FTP_TLS(host)
@@ -36,13 +37,13 @@ def download_from_ftps(host, username, password, remote_file_path, local_file_pa
             ftps.retrbinary(f"RETR {remote_file_path}", f.write)
 
         print(f"Download complete: {local_file_path}")
+        ftps.quit()
     
     except Exception as e:
         print(f"Error: {e}")
     
-    finally:
-        # Always close the connection
-        ftps.quit()
+
+        
 
 
 def get_last_valid_date(year):

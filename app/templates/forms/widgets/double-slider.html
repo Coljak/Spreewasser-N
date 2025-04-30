@@ -4,7 +4,7 @@
 <div id="{{ widget.attrs.id }}-outer" class="slider-outer-div">
     <div id="{{ widget.attrs.id }}-div" class="row">
         <div id="{{ widget.attrs.id }}-min-label" class="col-2">{{ widget.attrs.data_range_min }} {{ widget.attrs.units|default:"" }}</div>
-        <div class="col-8">
+        <div class="col-7">
             <input
                 id="{{ widget.attrs.id }}"
                 type="text"
@@ -21,6 +21,10 @@
             />
         </div>
         <div id="{{ widget.attrs.id }}-max-label" class="col-2 text-end">{{ widget.attrs.data_range_max }} {{ widget.attrs.units|default:"" }}</div>
+        <div class="col-1">
+            <button id="{{ widget.attrs.id }}-reset" type="button" class="btn btn-outline-secondary btn-sm float-end reset-double-slider" title="Reset to default values" data-target="#{{ widget.attrs.id }}"><i class="bi bi-arrow-clockwise"></i></button>
+        </div>
+              
     </div>
 </div>
 

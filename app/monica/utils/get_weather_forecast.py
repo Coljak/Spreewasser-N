@@ -23,6 +23,7 @@ def get_download_url(year, month, scenario, variable):
 
     # get the version folder's name
     catalog_url = f"{BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}catalog.xml"
+    print('catalog_url: ', catalog_url)
     catalog = requests.get(catalog_url)
     catalog_tree = ElementTree.fromstring(catalog.content)
     
@@ -69,6 +70,7 @@ def fetch_available_variables(catalog_url):
 
 def get_last_valid_forecast_date():
     nc_folder_path = get_local_path()
+    nc_folder_path = os.path.join(nc_folder_path, 'r1i1p1/')
     print(os.listdir(nc_folder_path))
     netcdf_paths = [f'{nc_folder_path}/{nc}' for nc in os.listdir(nc_folder_path) if nc.endswith('.nc')]
     nc_path = netcdf_paths[0]
@@ -88,7 +90,7 @@ def get_last_valid_forecast_date_cached(update=False):
 def delete_old_files(folder_path, new_files):
     """Delete old NetCDF files from the folder that are not in new_files list."""
     try:
-        print('delete_old_files TRY: ', folder_path, new_files)
+        print('delete_old_files: ', folder_path, new_files)
         for file in os.listdir(folder_path):
             print('delete_old_files: ', file)
             if file.endswith('.nc') and file not in new_files:
@@ -149,9 +151,13 @@ def automated_thredds_download():
 
     else:
         print("Download of forecast data completed successfully.")
+
+        # delete obsolete files
         old_ncs = [f'{local_path}/{nc}' for nc in os.listdir(local_path) if nc.endswith('.nc')]
         print('old_ncs: ', old_ncs)
+        new_ncs = []
 
+        # Combine NetCDF files  into a single file for each scenario
         try:
             for scenario in SCENARIOS:
                 folder_path = f"{local_path}/{scenario}/"
@@ -162,9 +168,10 @@ def automated_thredds_download():
                 file_path = f"{local_path}/{filename}"
                 ds.to_netcdf(file_path)
                 ds.close()
-            
-            for old_nc in old_ncs:
-                os.remove(old_nc)
+                new_ncs.append(filename)
+            if old_ncs != [] and new_ncs != [] and old_ncs.sort() != new_ncs.sort():
+                for old_nc in old_ncs:
+                    os.remove(old_nc)
 
             get_last_valid_forecast_date_cached(update=True)
         except Exception as e:

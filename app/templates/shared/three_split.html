@@ -17,7 +17,6 @@
   <div class="panel-container">
     <!-- Top panel (contains left and right panels) -->
     <div class="panel-top panel-inner-container">
-      {% comment %} <div class="panel-inner-container"> {% endcomment %}
         <div class="panel-left">
           {% block left_panel %}
           {% endblock left_panel %}
@@ -31,7 +30,6 @@
           {% endblock right_panel %}
           <div id="cornerSplitter" class="corner-splitter"></div>
         </div>
-      {% comment %} </div> {% endcomment %}
     </div>
     
     <div id="horizontalSplitter" class="horizontal-splitter"></div>
@@ -40,12 +38,9 @@
     <div class="panel-bottom py-2" id="bottomPanel">
       <button class="btn btn-outline-secondary btn-sm float-end" id="toggleBottomFullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
       
-      {% comment %} <i class="bi bi-fullscreen-exit hidden"></i> {% endcomment %}
           {% block bottom_panel %}
           {% endblock bottom_panel %}
-        {% comment %} </div>
-      </div>
-    </div> {% endcomment %}
+
   </div>
 </div>
 {% endblock body_block %}
@@ -54,7 +49,6 @@
 {{ block.super }}
 {% comment %} <script src="{% static 'vendor/resizable/jquery-resizable.js' %}"></script> {% endcomment %}
   <script src="https://rawgit.com/RickStrahl/jquery-resizable/master/src/jquery-resizable.js"></script>
-  {% comment %} <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script> {% endcomment %}
   <script type="text/javascript" src="{% static 'shared/three_split.js' %}"></script>
 {% endblock %}
 

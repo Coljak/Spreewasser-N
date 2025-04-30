@@ -385,9 +385,9 @@ def filter_streams(request):
         streams = models.Stream4326.objects.filter(geom__intersects=geom)
 
     filters = Q()
-    filters = add_range_filter(filters, project['infiltration'], 'stream_min_surplus', 'min_surplus_volume')
-    filters = add_range_filter(filters, project['infiltration'], 'stream_mean_surplus', 'mean_surplus_volume')
-    filters = add_range_filter(filters, project['infiltration'], 'stream_max_surplus', 'max_surplus_volume')
+    filters = add_range_filter(filters, project['infiltration'], 'stream_min_surplus_volume', 'min_surplus_volume')
+    filters = add_range_filter(filters, project['infiltration'], 'stream_mean_surplus_volume', 'mean_surplus_volume')
+    filters = add_range_filter(filters, project['infiltration'], 'stream_max_surplus_volume', 'max_surplus_volume')
     filters = add_range_filter(filters, project['infiltration'], 'stream_plus_days', 'plus_days')
     streams = streams.filter(filters)
 

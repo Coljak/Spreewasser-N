@@ -1,9 +1,13 @@
 <div class="row">
-    <div class="col-2 text-start">
-         
-
+    {% if widget.attrs.prefix %}
+        <div class="col-2 text-start">
     </div>
-    <div class="col-8">
+    <div class="col-7">
+        {% else %}
+
+        <div class="col-10">
+
+        {% endif %}
         <input
             type="range"
             class="form-range w-100 single-slider"
@@ -21,5 +25,8 @@
     </div>
     <div class="col-2 text-end" id="{{ widget.attrs.id }}_value">
         {{ widget.attrs.data_cur_val }}{{ widget.attrs.units|default:"" }}
+    </div>
+    <div class="col-1">
+        <button id="{{ widget.attrs.id }}_slider-reset" type="button" class="btn btn-outline-secondary btn-sm float-end reset-slider" title="Reset to default values" data-target="#{{ widget.attrs.id }}_slider"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
 </div>

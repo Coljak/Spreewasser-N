@@ -64,91 +64,6 @@ class SliderFilterForm(forms.Form):
         self.helper.layout = Layout(*[Field(name) for name in self.fields])
 
 
-# class SliderFilterForm(forms.Form):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-
-#         self.helper = FormHelper(self)
-#         self.helper.form_method = 'GET'
-#         # self.helper.form_id = 'sink-filter-form'
-#         self.helper.form_class = 'form-horizontal'
-#         self.helper.label_class = 'col-lg-2 col-md-2 col-sm-auto'
-#         self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
-
-#         layout_fields = []
-
-#         for field_name, field in self.fields.items():
-#             if isinstance(field, forms.MultiValueField):
-#                 # Range fields (min-max): assign double slider
-#                 field.widget = CustomDoubleSliderWidget()
-#             elif isinstance(field, forms.FloatField) or isinstance(field, forms.IntegerField):
-#                 # Single fields: assign simple slider
-#                 field.widget = CustomSimpleSliderWidget()
-#             # No else needed — other fields keep their widget
-
-#             layout_fields.append(Field(field_name))
-
-#         self.helper.layout = Layout(*layout_fields)
-
-
-
-# class SliderFilterForm(forms.Form):
-    # def __init__(self, *args, **kwargs):
-    # # def __init__(self, *args, model=None, form_action=None, **kwargs):
-    #     super().__init__(*args,  **kwargs)
-    #     self.helper = FormHelper(self)
-    #     self.helper.form_method = 'GET'
-    #     # self.helper.form_class = 'form-horizontal'
-    #     self.helper.form_id = 'sink-filter-form'
-        
-    #     self.helper.form_class = 'form-horizontal'
-    #     self.helper.label_class = 'col-lg-2 col-md-2 col-sm-auto'
-    #     self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
-
-    #     # layout_fields = []
-    #     # for field_name, field in self.fields.items():
-    #     #     if isinstance(field, RangeField):
-    #     #         # field.widget.set_bounds(min_value=0, max_value=1000)
-    #     #         layout_field = widgets.CustomDoubleSliderWidget()
-    #     #         layout_fields.append(layout_field)
-    #     #     elif field_name == "distance_to_userfield":
-    #     #         layout_fields.append(CustomSimpleSliderWidget())
-
-    #     #     else:
-    #     #         layout_field = Field(field_name)
-    #     #         layout_fields.append(layout_field)
-    #     # self.helper.layout = Layout(*layout_fields)
-
-
-# class SliderFilterForm(forms.Form):
-#     def __init__(self, *args, **kwargs):
-#     # def __init__(self, *args, model=None, form_action=None, **kwargs):
-#         super().__init__(*args,  **kwargs)
-#         self.helper = FormHelper(self)
-#         self.helper.form_method = 'GET'
-#         # self.helper.form_class = 'form-horizontal'
-#         self.helper.form_id = 'sink-filter-form'
-        
-#         self.helper.form_class = 'form-horizontal'
-#         self.helper.label_class = 'col-lg-2 col-md-2 col-sm-auto'
-#         self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
-
-#         layout_fields = []
-#         for field_name, field in self.fields.items():
-#             if isinstance(field, RangeField):
-#                 # field.widget.set_bounds(min_value=0, max_value=1000)
-#                 layout_field = Field(field_name, template="forms/fields/range-slider.html")
-#                 layout_fields.append(layout_field)
-#             elif field_name == "distance_to_userfield":
-#                 layout_fields.append(Field(field_name, template="forms/fields/single-slider.html"))
-
-#             else:
-#                 layout_field = Field(field_name)
-#                 layout_fields.append(layout_field)
-#         self.helper.layout = Layout(*layout_fields)
-
-
-
 class ToolboxProjectSelectionForm(forms.Form):
     toolbox_project = forms.ChoiceField(
         choices=[],
@@ -197,16 +112,71 @@ class ToolboxProjectForm(forms.Form):
         model = ToolboxProject
         exclude = ['id', 'user']
 
+class OverallWeightingsForm(forms.Form):
+    overall_usability = forms.IntegerField(
+        min_value=0,
+        max_value=100,
+        widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_overall_usability",
+            "name": "weighting_overall_usability",
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 20,
+            "data_default_value": 20,
+            "units": "%",
+        }),
+        label="Gewichtung der allgemeine Nutzbarkeit",
+        help_text=(
+            "CHECK: Die allgemeine Nutzbarkeit ist eine Bewertung der Eignung des Standorts für "
+            "Versickerungsmaßnahmen. Eine hohe Bewertung begünstigt Versickerungsmaßnahmen."
+        )
+    )
 
+    soil_index = forms.IntegerField(
+        min_value=0,
+        max_value=100,
+        widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_soil_index",
+            "name": "weighting_soil_index",
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 80,
+            "data_default_value": 80,
+            "units": "%",
+        }),
+        label="Gewichtung der Bodenbewertung",
+        help_text=(
+            "CHECK: Gewichtung der Bodenbewertung ist eine Bewertung der Eignung des Standorts für "
+        )
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'overall-weighting-form'
+        self.helper.form_class = 'form-horizontal weighting-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'overall-weighting-reset', 
+            'Reset all', 
+            css_class='btn-secondary reset-all'))
+
+
+      
 class WeightingsForestForm(forms.Form):
     field_capacity = forms.IntegerField(
         min_value=0, 
         max_value=100, 
         # initial=33, 
         widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_forest_field_capacity",
+            "name": "weighting_forest_field_capacity",
             "data_range_min": 0,
             "data_range_max": 100,
             "data_cur_val": 33,
+            "data_default_value": 33,
             "units": "%",
             
         }),
@@ -222,9 +192,12 @@ class WeightingsForestForm(forms.Form):
         max_value=100,
         # initial=33,
         widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_forest_hydraulic_conductivity_1m",
+            "name": "weighting_forest_hydraulic_conductivity_1m",
             "data_range_min": 0,
             "data_range_max": 100,
             "data_cur_val": 33,
+            "data_default_value": 33,
             "units": "%",
         }),
         label="Hydraulische Leitfähigkeit 1m (%)",
@@ -239,9 +212,12 @@ class WeightingsForestForm(forms.Form):
         max_value=100,
         # initial=33,
         widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_forest_hydraulic_conductivity_2m",
+            "name": "weighting_forest_hydraulic_conductivity_2m",
             "data_range_min": 0,
             "data_range_max": 100,
             "data_cur_val": 33,
+            "data_default_value": 33,
             "units": "%",
         }),
         label="Hydraulische Leitfähigkeit 2m (%)",
@@ -256,10 +232,18 @@ class WeightingsForestForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.form_method = 'GET'
         self.helper.form_id = 'forest-weighting-filter-form'
-        self.helper.form_class = 'form-horizontal'
+        self.helper.form_class = 'form-horizontal weighting-form'
         self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
         self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
-    
+        self.helper.add_input(Button(
+            'forest-weighting-reset', 
+            'Reset all', 
+            css_class='btn-secondary reset-all'))
+
+
+
+        
+
 
 
 class WeightingsAgricultureForm(forms.Form):
@@ -268,9 +252,12 @@ class WeightingsAgricultureForm(forms.Form):
         max_value=100, 
         # initial=33, 
         widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_agriculture_field_capacity",
+            "name": "weighting_agriculture_field_capacity",
             "data_range_min": 0,
             "data_range_max": 100,
             "data_cur_val": 33,
+            "data_default_value": 33,
             "units": "%",
         }),
         label="Feldkapazität (%)",
@@ -285,9 +272,12 @@ class WeightingsAgricultureForm(forms.Form):
         max_value=100, 
         # initial=33, 
         widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_agriculture_hydromorphy",
+            "name": "weighting_agriculture_hydromorphy",
             "data_range_min": 0,
             "data_range_max": 100,
             "data_cur_val": 33,
+            "data_default_value": 33,
             "units": "%",
         }),
         label="Hydromorphie (%)",
@@ -301,9 +291,12 @@ class WeightingsAgricultureForm(forms.Form):
         max_value=100, 
         # initial=33, 
         widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_agriculture_soil_type",
+            "name": "weighting_agriculture_soil_type",
             "data_range_min": 0,
             "data_range_max": 100,
             "data_cur_val": 33,
+            "data_default_value": 33,
             "units": "%",
         }),
         label="Bodenart (%)",
@@ -316,9 +309,11 @@ class WeightingsAgricultureForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.form_method = 'GET'
         self.helper.form_id = 'agriculture-weighting-filter-form'
-        self.helper.form_class = 'form-horizontal'
+        self.helper.form_class = 'form-horizontal weighting-form'
         self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
         self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button('agriculture-weighting-reset', 'Reset All', css_class='btn-secondary reset-all'))
+        
 
 class WeightingsGrasslandForm(forms.Form):
     field_capacity = forms.IntegerField(
@@ -326,9 +321,12 @@ class WeightingsGrasslandForm(forms.Form):
         max_value=100, 
         # initial=25, 
         widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_grassland_field_capacity",
+            "name": "weighting_grassland_field_capacity",
             "data_range_min": 0,
             "data_range_max": 100,
             "data_cur_val": 25,
+            "data_default_value": 25,
             "units": "%",
         }),
         label="Feldkapazität (%)",
@@ -343,9 +341,12 @@ class WeightingsGrasslandForm(forms.Form):
         max_value=100, 
         # initial=25, 
         widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_grassland_hydromorphy",
+            "name": "weighting_grassland_hydromorphy",
             "data_range_min": 0,
             "data_range_max": 100,
             "data_cur_val": 25,
+            "data_default_value": 25,
             "units": "%",
         }),
         label="Hydromorphie (%)",
@@ -359,9 +360,12 @@ class WeightingsGrasslandForm(forms.Form):
         max_value=100, 
         # initial=25, 
         widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_grassland_soil_type",
+            "name": "weighting_grassland_soil_type",
             "data_range_min": 0,
             "data_range_max": 100,
             "data_cur_val": 25,
+            "data_default_value": 25,
             "units": "%",
         }),
         label="Bodenart (%)",
@@ -374,9 +378,12 @@ class WeightingsGrasslandForm(forms.Form):
         max_value=100, 
         # initial=25, 
         widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_grassland_soil_water_ratio",
+            "name": "weighting_grassland_soil_water_ratio",
             "data_range_min": 0,
             "data_range_max": 100,
             "data_cur_val": 25,
+            "data_default_value": 25,
             "units": "%",
         }),
         label="Bodenfeuchte (%)",
@@ -390,7 +397,9 @@ class WeightingsGrasslandForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.form_method = 'GET'
         self.helper.form_id = 'grassland-weighting-filter-form'
-        self.helper.form_class = 'form-horizontal'
+        self.helper.form_class = 'form-horizontal weighting-form'
         self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
         self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+
+        self.helper.add_input(Button('grassland-weighting-reset', 'Reset All', css_class='btn-secondary reset-all'))
         

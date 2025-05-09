@@ -195,6 +195,7 @@ class StreamFilter(FilterSet):
         widget=CustomSimpleSliderWidget(attrs = {
             "id": "stream_distance_to_userfield",
             "name": "stream_distance_to_userfield",
+            "reset": True,
             "prefix": "stream",
             "data_range_min": 0,
             "data_range_max": 2000,

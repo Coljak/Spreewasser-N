@@ -45,9 +45,10 @@
                 </form>
             </div>
         </div>
-        <div class="card mb-3">
+        <div id="cardSinkTable" class="card mb-3 d-none">
             <div class="card-body">
                 <div id="sink-table-container"></div>
+                <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3">Mit Auswahl fortfahren</button>
             </div>
         </div>
     </div>
@@ -63,12 +64,23 @@
             </div>
         </div>
         
-        <div class="card mb-3">
+        <div id="cardEnlargedSinkTable"  class="card mb-3 d-none">
             <div class="card-body">
                 <div id="enlarged-sink-table-container"></div>
+                <button id="btnCntinueWithEnlargedSinkSelection" type="button" class="btn btn-primary mt-3">Mit Auswahl fortfahren</button>
             </div>
         </div>
 
+    </div>
+
+    <div id="tabSinksSelection" class="tab-pane">
+        <div class="card mb-3">
+            <div class="card-body">
+                <div id="sink-selection-table-container"></div>
+                <button id="btnshowSinkSelection" type="button" class="btn btn-primary mt-3">Ausgewählte Senken Anzeigen</button>
+            </div>
+        </div>
+        
     </div>
     
 
@@ -96,7 +108,16 @@
     </div>
 
     <div id="tabWeightingForms" class="tab-pane">
-        <h2 class="title">Gewichtung</h2>
+        <h2 class="title">Gesamtgewichtung</h2>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Gesamtgewichtung</h5>
+                <div class="card-body">
+                    {% crispy overall_weighting %}            
+                </div>
+            </div>
+        </div>
+        <h2 class="title">Gewichtung der Bodeneignung</h2>
         <div class="card mb-3">
             <div class="card-body">
                 <h5 class="card-title">Gewichtung Ackerland</h5>

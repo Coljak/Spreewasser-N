@@ -178,14 +178,13 @@ def load_infiltration_gui(request, user_field_id):
         geom__within=user_field.geom
     )
 
-    
-
     lake_form = LakeFilter(request.GET, queryset=lakes)
     stream_form = StreamFilter(request.GET, queryset=streams)
     sink_form = SinkFilter(request.GET, queryset=sinks)
     print("Queryset Sinks", sinks.count())
     enlarged_sink_form = EnlargedSinkFilter(request.GET, queryset=enlarged_sinks)
 
+    overall_weighting = forms.OverallWeightingsForm()
     forest_weighting = forms.WeightingsForestForm()
     agriculture_weighting = forms.WeightingsAgricultureForm()
     grassland_weighting = forms.WeightingsGrasslandForm()
@@ -198,14 +197,13 @@ def load_infiltration_gui(request, user_field_id):
         'enlarged_sink_filter': enlarged_sink_form,
         'streams_form': stream_form,
         'lakes_form': lake_form,
+        'overall_weighting': overall_weighting,
         'forest_weighting': forest_weighting,
         'agriculture_weighting': agriculture_weighting,
         'grassland_weighting': grassland_weighting,
     }, request=request) 
 
     return JsonResponse({'html': html})
-
-
 
 
 def add_range_filter(filters, obj, field,  model_field=None):
@@ -456,8 +454,6 @@ def filter_lakes(request):
     filter = add_range_filter(filter, project['infiltration'], 'lake_plus_days', 'plus_days')
     lakes = lakes.filter(filter)
 
-
-
     if lakes.count() == 0:
         message = {
             'success': False, 
@@ -494,7 +490,42 @@ def filter_lakes(request):
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
 
 
+def calculate_index_for_selection(request):
+    """
+    Takes the selected sinks and  calculates 
+    """
+    if request.method == 'POST':
+        try:
+            project = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
+        selected_sinks = project['infiltration'].get('sink_selected', [])
+        selected_enlarged_sinks = project['infiltration'].get('enlarged_sink_selected', [])
+        
+
+        data = {}
+        if selected_sinks != []:
+            sinks = models.Sink4326.objects.filter(id__in=selected_sinks)   
+            for sink in sinks:
+                sink = model_to_dict(sink, fields=['id', 'area', 'volume', 'depth', 'geom_simplified', 'index_soil'])
+        if selected_enlarged_sinks:
+            enlarged_sinks = models.EnlargedSink4326.objects.filter(id__in=selected_enlarged_sinks)
+
+
+
+        # Perform calculations here
+
+
+        # Create a response dictionary with the calculated values
+        response_data = {
+            'total_sink_area': total_sink_area,
+            'total_enlarged_sink_area': total_enlarged_sink_area,
+            'total_stream_length': total_stream_length,
+            'total_lake_area': total_lake_area,
+        }
+
+        return JsonResponse(response_data)
 
 def load_nuts_polygon(request, entity, polygon_id):
     if request.method == 'GET':

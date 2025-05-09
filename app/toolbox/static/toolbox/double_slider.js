@@ -34,4 +34,6 @@ export function initializeSliders() {
       maxLabel.innerText = max + target.data('slider-unit');
     });
   });
+
+
 };

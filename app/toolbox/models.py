@@ -89,9 +89,6 @@ class SinkWeighting(models.Model):
     grassland_hydromorphy= models.FloatField(default=.25)
 
 
-class Infiltration(models.Model):
-    weighting = models.ForeignKey(SinkWeighting, on_delete=models.CASCADE, null=True)
-
 
 class ToolboxProject(models.Model):    
     name = models.CharField(max_length=255)
@@ -117,6 +114,10 @@ class ToolboxProject(models.Model):
 
 
 ######################### INJECTION ###########################
+
+class InfiltrationProject(ToolboxProject):
+    weighting = models.ForeignKey(SinkWeighting, on_delete=models.CASCADE, null=True)
+
 
 # DE: Injektion/ Qgis _injektion_diss_4326
 class OutlineInjection(gis_models.Model):
@@ -175,13 +176,13 @@ class Landuse(models.Model):
     name = models.CharField(max_length=50)
     name_v = models.CharField(max_length=50)
     buek_corine_land_cover = models.ForeignKey(CorineLandCover2018, on_delete=models.DO_NOTHING, null=True, related_name='buek_corine_land_cover')
+    sink_landuse_name = models.CharField(max_length=50, null=True)
     clc = models.IntegerField(null=True, blank=True)
 
 # landuse_dissolve
 class LandUseMap(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833)
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
-
     name = models.CharField(max_length=50)
     name_v = models.CharField(max_length=50)
 
@@ -293,6 +294,7 @@ class Lake(models.Model):
 class Sink4326(models.Model):
     id = models.IntegerField(primary_key=True)
     geom = gis_models.MultiPolygonField(srid=4326)
+    geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     geom_simplified = gis_models.PolygonField(srid=4326, null=True, blank=True)
     centroid = gis_models.PointField(srid=4326, null=True, blank=True)
     depth = models.FloatField(null=True)
@@ -309,6 +311,7 @@ class Sink4326(models.Model):
     land_use_2_percentage = models.FloatField(null=True)
     land_use_3_percentage = models.FloatField(null=True)
     index_soil = models.FloatField(null=True)
+    index_hydrology = models.FloatField(null=True)
     feasibility_sinks_index = models.FloatField(null=True)
 
 
@@ -330,6 +333,7 @@ class Sink4326(models.Model):
             "land_use_2": self.land_use_2,
             "land_use_3": self.land_use_3,
             "index_soil": self.index_soil,
+            "index_hydrology": self.index_hydrology,
             "shape_length": self.shape_length,
             "shape_area": self.shape_area,
             "feasibility_sinks_index": self.feasibility_sinks_index,
@@ -355,6 +359,7 @@ class Sink(models.Model):
     land_use_2_percentage = models.FloatField(null=True)
     land_use_3_percentage = models.FloatField(null=True)
     index_soil = models.FloatField(null=True)
+    index_hydrology = models.FloatField(null=True)
     feasibility_sinks_index = models.FloatField(null=True)
 
 
@@ -376,6 +381,7 @@ class Sink(models.Model):
             "land_use_2": self.land_use_2,
             "land_use_3": self.land_use_3,
             "index_soil": self.index_soil,
+            "index_hydrology": self.index_hydrology,
             "shape_length": self.shape_length,
             "shape_area": self.shape_area,
             "feasibility_sinks_index": self.feasibility_sinks_index,
@@ -409,6 +415,7 @@ class Sink(models.Model):
 class EnlargedSink4326(models.Model): 
     id = models.IntegerField(primary_key=True) # former fid_sink
     geom = gis_models.MultiPolygonField(srid=4326)
+    geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     geom_simplified = gis_models.PolygonField(srid=4326, null=True, blank=True)
     centroid = gis_models.PointField(srid=4326, null=True, blank=True)
     extractionpoint = models.ForeignKey('ExtractionPointsEnlargedSinks', on_delete=models.DO_NOTHING, null=True)
@@ -435,6 +442,7 @@ class EnlargedSink4326(models.Model):
     land_use_3_percentage = models.FloatField(null=True)
     land_use_4_percentage = models.FloatField(null=True)
     index_soil = models.FloatField(null=True)
+    index_hydrology = models.FloatField(null=True)
     shape_length = models.FloatField(null=True)
     shape_area = models.FloatField(null=True)
 
@@ -470,6 +478,7 @@ class EnlargedSink(models.Model):
     land_use_3_percentage = models.FloatField(null=True)
     land_use_4_percentage = models.FloatField(null=True)
     index_soil = models.FloatField(null=True)
+    index_hydrology = models.FloatField(null=True)
     shape_length = models.FloatField(null=True)
     shape_area = models.FloatField(null=True)
 
@@ -485,7 +494,6 @@ class EnlargedSink(models.Model):
         transformed_geom = self.geom.transform(4326, clone=True) if self.geom else None
         transformed_centroid = self.centroid.transform(4326, clone=True) if self.centroid else None
 
-        # ep_transformed = self.extractionpoint.ep_geom.transform(4326, clone=True) if self.extractionpoint.ep_geom else None
 
         EnlargedSink4326.objects.create(
             id = self.id,
@@ -518,21 +526,6 @@ class EnlargedSink(models.Model):
             shape_area = self.shape_area,
 
             feasibilty_enlarged_sinks_index = self.feasibilty_enlarged_sinks_index,
-            # ExtractionPointsEnlargedSinks ep
-            # ep_geom = ep_transformed,
-            # ep_fid_sink = self.ep_fid_sink,
-            # ep_id_source = self.ep_id_source,
-            # ep_id_lake = self.ep_id_lake,
-            # ep_distance = self.ep_distance,
-            # ep_min_surplus_volume = self.ep_min_surplus_volume,
-            # ep_mean_surplus_volume = self.ep_mean_surplus_volume,
-            # ep_max_surplus_volume = self.ep_max_surplus_volume,
-            # ep_vol_sink = self.ep_vol_sink,
-            # ep_index_1 = self.ep_index_1,
-            # ep_weight_1 = self.ep_weight_1,
-            # ep_index_2 = self.ep_index_2,
-            # ep_weight_2 = self.ep_weight_2,
-            # ep_index_3 = self.ep_index_3
         )
 
 class Feasability(models.Model): # soilstuff
@@ -547,7 +540,7 @@ class Feasability(models.Model): # soilstuff
     index = models.FloatField(null=True)
 
 
-
+# Hydrology is the layer the sinks are intersected with for HydrologySinks and HydrologyEnlargedSinks. It is not used.
 class Hydrogeology(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
@@ -566,8 +559,6 @@ class HydrogeologySinks(models.Model):
     aquifer = models.CharField(max_length=150)
     sink = models.ForeignKey(Sink, on_delete=models.DO_NOTHING, null=True)
     index_sink = models.FloatField(null=True)
-    shape_length = models.FloatField(null=True)
-    shape_area = models.FloatField(null=True)
 
     def save(self, *args, **kwargs):
         if self.geom and not self.centroid:
@@ -579,10 +570,7 @@ class HydrogeologyEnlargedSinks(models.Model):
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
     aq_complex = models.CharField(max_length=50)
     aquifer = models.CharField(max_length=150)
-    # fid_sink = models.IntegerField(null=True)
     index_sink = models.FloatField(null=True)
-    shape_length = models.FloatField(null=True)
-    shape_area = models.FloatField(null=True)
     enlarged_sink = models.ForeignKey(EnlargedSink, on_delete=models.CASCADE, null=True) # fid_sink
 
     def save(self, *args, **kwargs):
@@ -592,9 +580,12 @@ class HydrogeologyEnlargedSinks(models.Model):
 
 
 # for enlarged sinks
-class SinkEmbankment(models.Model):
+class EnlargedSinkEmbankment(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833)
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
+    geom4326 = gis_models.MultiPolygonField(srid=4326, null=True, blank=True)
+    centroid4326 = gis_models.PointField(srid=4326, null=True, blank=True)
+    enlarged_sink = models.ForeignKey(EnlargedSink4326, on_delete=models.CASCADE, null=True, blank=True) 
     fid_sink = models.IntegerField()
     height = models.FloatField()
     plat_width = models.FloatField()
@@ -607,11 +598,6 @@ class SinkEmbankment(models.Model):
             self.centroid = self.geom.centroid  # Auto-generate centroid
         super().save(*args, **kwargs)
 
-class FieldCapacityClass(models.Model):
-    upper_limit = models.FloatField(null=True)
-    lower_limit = models.FloatField(null=True)
-    class_name = models.CharField(max_length=50, null=True)
-    rating_index = models.FloatField()
 
 class GroundWaterDistanceClass(models.Model):
     upper_limit = models.FloatField(null=True)
@@ -691,7 +677,7 @@ class Hydromorphy(models.Model):
     name = models.CharField(max_length=50)
     rating_index = models.FloatField()
 
-class Soil(models.Model):
+class SoilTexture(models.Model):
     name = models.CharField(max_length=50)
     rating_index = models.FloatField()
 
@@ -706,26 +692,24 @@ class WetGrassland(models.Model):
 class SoilProperties(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833)
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)   
-    nitrate_contamination = models.BooleanField(default=False)
-    waterlog = models.BooleanField(default=False)
-    groundwater_distance = models.ForeignKey(GroundWaterDistanceClass, on_delete=models.DO_NOTHING, null=True)
-    hydraulic_conductivity_1m_rating = models.FloatField()
-    hydraulic_conductivity_2m_rating = models.FloatField()
-    fieldcapacity = models.ForeignKey(FieldCapacity, on_delete=models.DO_NOTHING, null=True)
-    hydromorphy = models.ForeignKey(Hydromorphy, on_delete=models.DO_NOTHING, null=True)
-    soil = models.ForeignKey(Soil, on_delete=models.DO_NOTHING, null=True)
-    wet_gras = models.CharField(max_length=50)
-    c_wet_gras = models.FloatField()
-    wet_grassland = models.ForeignKey(WetGrassland, on_delete=models.DO_NOTHING, null=True)
-    agricultural_landuse = models.ForeignKey(AgriculturalLanduse, on_delete=models.DO_NOTHING, null=True)
-    c_suit = models.IntegerField()
-    c_suit_gw = models.FloatField()
-    c_soil_1 = models.FloatField()
-    c_soil_2 = models.FloatField()
-    c_soil_3 = models.FloatField()
+    nitrate_contamination = models.BooleanField(default=False) # Factor for Index 1
+    waterlog = models.BooleanField(default=False) # Factor for Index 1
+    groundwater_distance = models.ForeignKey(GroundWaterDistanceClass, on_delete=models.DO_NOTHING, null=True) # Factor for Index 1 .ratig_index
+    hydraulic_conductivity_1m_rating = models.FloatField() # Factor for Index 2.1
+    hydraulic_conductivity_2m_rating = models.FloatField() # Factor for Index 2.1
+    fieldcapacity = models.ForeignKey(FieldCapacity, on_delete=models.DO_NOTHING, null=True) # Factor for Index 2.1, 2.2 and 2.3 .rating_index
+    hydromorphy = models.ForeignKey(Hydromorphy, on_delete=models.DO_NOTHING, null=True) # Factor for Index 2.2 and 2.3 .rating_index
+    soil_texture = models.ForeignKey(SoilTexture, on_delete=models.DO_NOTHING, null=True) # Factor for Index 2.2 and 2.3 .rating_index
+    wet_grassland = models.ForeignKey(WetGrassland, on_delete=models.DO_NOTHING, null=True)# Factor for Index 2.3 .rating_index
+    c_suit = models.IntegerField() # Index 1 without gw???? 0 or 1
+    c_suit_gw = models.FloatField() # Index 1 with depth_gw
+    c_soil_1 = models.FloatField() # Index 2.1
+    c_soil_2 = models.FloatField() # Index 2.2
+    c_soil_3 = models.FloatField() # Index 2.3
     index_soil = models.FloatField()
     shape_length = models.FloatField()
     shape_area = models.FloatField()
+    agricultural_landuse = models.ForeignKey(AgriculturalLanduse, on_delete=models.DO_NOTHING, null=True) # TODO !!!! THIS IS ANOTHER CATEGORY INTRODUCED!!! WHY???
     landuse = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True)
 
     def save(self, *args, **kwargs):
@@ -764,12 +748,28 @@ class SoilProperties(models.Model):
         return round(((weight_general * self.groundwater_distance.rating_index + weight_soil * index_soil) * bool_general), 2)
 
         
+# Intersection of SoilProperties and Sink4326
+class SinkSoilProperties(models.Model):
+    geom = gis_models.GeometryField(srid=4326, blank=True, null=True)
+    partial_sink_area = models.FloatField(blank=True, null=True)
+    percent_of_total_area = models.FloatField(blank=True, null=True)
+    soil_properties = models.ForeignKey(SoilProperties, on_delete=models.CASCADE, blank=True, null=True)
+    sink = models.ForeignKey(Sink4326, on_delete=models.CASCADE, null=True)
+   
 
-
+# Intersection of SoilProperties and EnlargedSink4326
+class EnlargedSinkSoilProperties(models.Model):
+    geom = gis_models.GeometryField(srid=4326, blank=True, null=True)
+    partial_sink_area = models.FloatField(blank=True, null=True)
+    percent_of_total_area = models.FloatField(blank=True, null=True)
+    soil_properties = models.ForeignKey(SoilProperties, on_delete=models.DO_NOTHING, blank=True, null=True)
+    sink = models.ForeignKey(Sink4326, on_delete=models.CASCADE,  blank=True, null=True)
+   
 
 
 class ExtractionPointsSinks(models.Model):
     geom = gis_models.PointField(srid=25833)
+    geom4326 = gis_models.PointField(srid=4326, null=True, blank=True)
     sink = models.ForeignKey(Sink, on_delete=models.CASCADE, null=True)
     stream = models.ForeignKey(Stream, on_delete=models.CASCADE, null=True)
     lake = models.ForeignKey(Lake, on_delete=models.CASCADE, null=True)
@@ -786,6 +786,8 @@ class ExtractionPointsSinks(models.Model):
 
 class ExtractionPointsEnlargedSinks(models.Model):
     geom = gis_models.PointField(srid=25833)
+    geom4326 = gis_models.PointField(srid=4326, null=True, blank=True)
+    enlarged_sink = models.ForeignKey(EnlargedSink4326, on_delete=models.CASCADE, null=True)
     fid_sink = models.IntegerField(null=True)
     id_source = models.IntegerField(null=True)
     id_lake = models.IntegerField(null=True)
@@ -802,6 +804,8 @@ class ExtractionPointsEnlargedSinks(models.Model):
 
 class InletPointsSinks(models.Model):
     geom = gis_models.PointField(srid=25833)
+    geom4326 = gis_models.PointField(srid=4326, null=True, blank=True)
+    sink = models.ForeignKey(Sink4326, on_delete=models.CASCADE, null=True)
     fid_sink = models.IntegerField(null=True)
     id_source = models.IntegerField(null=True)
     id_lake = models.IntegerField(null=True)
@@ -818,6 +822,8 @@ class InletPointsSinks(models.Model):
 
 class InletPointsEnlargedSinks(models.Model):
     geom = gis_models.PointField(srid=25833)
+    geom4326 = gis_models.PointField(srid=4326, null=True, blank=True)
+    enlarged_sink = models.ForeignKey(Sink4326, on_delete=models.CASCADE, null=True)
     fid_sink = models.IntegerField(null=True)
     id_source = models.IntegerField(null=True)
     id_lake = models.IntegerField(null=True)

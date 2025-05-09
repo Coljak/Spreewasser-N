@@ -49,7 +49,6 @@ class CustomSingleSliderWidget(HiddenInput):
         if attrs:
             default_attrs.update(attrs)
         super().__init__(attrs=default_attrs)
-
 class CustomSimpleSliderWidget(NumberInput):
     template_name = "forms/widgets/simple-slider.html"
 
@@ -59,12 +58,20 @@ class CustomSimpleSliderWidget(NumberInput):
             "data_range_max": 100,
             "data_range_step": 1,
             "data_cur_val": 0,
+            "data_default_value": 0,
             "class": "hiddeninput",
             "units": "",
         }
         if attrs:
             default_attrs.update(attrs)
         super().__init__(attrs=default_attrs)
+
+    def get_context(self, name, value, attrs):
+        if value is not None:
+            attrs = attrs or {}
+            attrs["data_cur_val"] = value  # 🟢 Ensure this is always set dynamically
+        return super().get_context(name, value, attrs)
+
 
 
 class CustomDoubleSliderWidget(TextInput):

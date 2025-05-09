@@ -53,6 +53,24 @@ export class Infiltration {
         this.lake_plus_days_min = infiltration.lake_plus_days_min ?? null;
         this.lake_plus_days_max = infiltration.lake_plus_days_max ?? null;
         this.lake_distance_to_userfield = infiltration.lake_distance_to_userfield ?? 0;
+
+        this.weighting_overall_usability = infiltration.weighting_overall_usability ?? 20;
+        this.weighting_soil_index = infiltration.weighting_soil_index ?? 80;
+
+
+        this.weighting_forest_field_capacity = infiltration.weighting_forest_field_capacity ?? 33;
+        this.weighting_forest_hydraulic_conductivity_1m = infiltration.weighting_forest_hydraulic_conductivity_1m ?? 33;
+        this.weighting_forest_hydraulic_conductivity_2m = infiltration.weighting_forest_hydraulic_conductivity_2m ?? 33;
+
+        this.weighting_agriculture_field_capacity = infiltration.weighting_agriculture_field_capacity ?? 33;
+        this.weighting_agriculture_hydromorphy = infiltration.weighting_agriculture_hydromorphy ?? 33;
+        this.weighting_agriculture_soil_type = infiltration.weighting_agriculture_soil_type ?? 33;
+
+        this.weighting_grassland_field_capacity = infiltration.weighting_grassland_field_capacity ?? 25;
+        this.weighting_grassland_hydromorphy = infiltration.weighting_grassland_hydromorphy ?? 25;
+        this.weighting_grassland_soil_type = infiltration.weighting_grassland_soil_type ?? 25;
+        this.weighting_grassland_soil_water_ratio = infiltration.weighting_grassland_soil_water_ratio ?? 25;
+
     }
 };
 export class ToolboxProject {

@@ -10,6 +10,9 @@ import numpy as np
 from .dwd_server import settings
 from django.core.cache import cache
 
+
+# TODO add a timeout if the download does not work/ continue7
+
 VARS = ['hurs', 'pr', 'rsds', 'sfcwind','tas', 'tasmax', 'tasmin']
 
 def download_from_ftps(host, username, password, remote_file_path, local_file_path):

@@ -22,31 +22,39 @@ def get_download_url(year, month, scenario, variable):
     """Get the latest catalog URL for the specified year, month, and scenario."""
 
     # get the version folder's name
-    catalog_url = f"{BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}catalog.xml"
-    print('catalog_url: ', catalog_url)
-    catalog = requests.get(catalog_url)
-    catalog_tree = ElementTree.fromstring(catalog.content)
-    
-    catalog = catalog_tree.findall(".//thredds:catalogRef", THREDDS_NAMESPACE)
-    latest_versions = []
-    for catalog_ref in catalog:
-        latest_versions.append(catalog_ref.attrib['name'])
-    latest_version = max(latest_versions)
+    try:
+        catalog_url = f"{BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}catalog.xml"
+        
+        catalog = requests.get(catalog_url)
+        catalog_tree = ElementTree.fromstring(catalog.content)
+        
+        catalog = catalog_tree.findall(".//thredds:catalogRef", THREDDS_NAMESPACE)
+        latest_versions = []
+        for catalog_ref in catalog:
+            latest_versions.append(catalog_ref.attrib['name'])
+        latest_version = max(latest_versions)
 
-    # compose catalog url for the latest version
-    latest_version_url = f"{BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}{latest_version}/catalog.xml"
-    
-    # Get the dataset name/ urlPath
-    dataset_name_reponse = requests.get(latest_version_url)
-    dataset_name_catalog_tree = ElementTree.fromstring(dataset_name_reponse.content)
-    dataset_name_catalog = dataset_name_catalog_tree.findall(".//thredds:dataset", THREDDS_NAMESPACE)
-    dataset_path = ''
-    for dataset in dataset_name_catalog:
-        if dataset.attrib.get('urlPath'):
-            dataset_path = dataset.attrib['urlPath']
+        # compose catalog url for the latest version
+        latest_version_url = f"{BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}{latest_version}/catalog.xml"
+        
+        # Get the dataset name/ urlPath
+        dataset_name_reponse = requests.get(latest_version_url)
+        dataset_name_catalog_tree = ElementTree.fromstring(dataset_name_reponse.content)
+        dataset_name_catalog = dataset_name_catalog_tree.findall(".//thredds:dataset", THREDDS_NAMESPACE)
+        dataset_path = ''
+        for dataset in dataset_name_catalog:
+            if dataset.attrib.get('urlPath'):
+                dataset_path = dataset.attrib['urlPath']
 
-    https_download_url = f"https://esgf-data.dwd.de/thredds/fileServer/{dataset_path}"
-    return https_download_url
+        https_download_url = f"https://esgf-data.dwd.de/thredds/fileServer/{dataset_path}"
+        print('https_download_url: ', https_download_url)
+        return {'success': True, 'url':https_download_url}
+    
+    except Exception as e:
+        print(f"Error fetching download URL: {e}")
+        return {'success': False, 'error': str(e)}
+        
+        
 
 
 def get_local_path():
@@ -71,12 +79,12 @@ def fetch_available_variables(catalog_url):
 def get_last_valid_forecast_date():
     nc_folder_path = get_local_path()
     nc_folder_path = os.path.join(nc_folder_path, 'r1i1p1/')
-    print(os.listdir(nc_folder_path))
     netcdf_paths = [f'{nc_folder_path}/{nc}' for nc in os.listdir(nc_folder_path) if nc.endswith('.nc')]
     nc_path = netcdf_paths[0]
     ds = xr.open_dataset(nc_path)
     times = ds.time[:].values
     last_valid_date = times[-1]
+    print('last_valid_date: ', last_valid_date)
     return last_valid_date.astype('datetime64[D]').astype(date)
 
 def get_last_valid_forecast_date_cached(update=False):
@@ -117,6 +125,7 @@ def download_and_save_nc_file(nc_url, save_path):
     print(f"Downloaded: {filename} to {save_path}")
     return filename
 
+
 def automated_thredds_download():
     """Main function to automate downloads of variables across scenarios."""
     now = datetime.now()
@@ -126,56 +135,62 @@ def automated_thredds_download():
     local_path = get_local_path()
 
     # Step 1: Iterate through scenarios and variables
+    
+    for scenario in SCENARIOS:
+        new_files = []  # Store newly downloaded files
+        folder_path = f"{local_path}/{scenario}/"
+        for variable in VARIABLES:
+            # try:
+            print(f"Processing variable '{variable}' for scenario '{scenario}'...")
+
+            nc_file_url_message = get_download_url(year, month, scenario, variable)
+            if nc_file_url_message['success']:
+
+                downloaded_file = download_and_save_nc_file(nc_file_url_message['url'], folder_path)
+                new_files.append(downloaded_file)
+                print('new_files: ', new_files)
+            else:
+                print(f"Failed to download {variable} for scenario {scenario}: {nc_file_url_message['error']}")
+            # except ValueError as e:
+            #     print(f"Skipping {variable} for scenario {scenario}: {e}")
+
+        if  new_files != []:
+            print('new_files: ', new_files)
+            print(f"Deleting old files for scenario '{scenario}'...")
+            delete_old_files(folder_path, new_files)
+
+
+    old_combined_ncs = [f'{local_path}/{nc}' for nc in os.listdir(local_path) if nc.endswith('.nc')]
+    # print('old_ncs: ', old_ncs)
+    new_combined_ncs = []
+
+    # Combine NetCDF files  into a single file for each scenario
     try:
         for scenario in SCENARIOS:
-            new_files = []  # Store newly downloaded files
             folder_path = f"{local_path}/{scenario}/"
-            for variable in VARIABLES:
-                try:
-                    print(f"Processing variable '{variable}' for scenario '{scenario}'...")
-                    nc_file_url = get_download_url(year, month, scenario, variable)
-                    print(f"Download URL: {nc_file_url}")
-                    
-                    downloaded_file = download_and_save_nc_file(nc_file_url, folder_path)
-                    new_files.append(downloaded_file)
-                    print('new_files: ', new_files)
-                except ValueError as e:
-                    print(f"Skipping {variable} for scenario {scenario}: {e}")
-
-            if  new_files != []:
-                print(f"Deleting old files for scenario '{scenario}'...")
-                delete_old_files(folder_path, new_files)
-
-    except ValueError as e:
-        print(f"Download of forecast data failed: {e}")
-
-    else:
-        print("Download of forecast data completed successfully.")
-
-        # delete obsolete files
-        old_ncs = [f'{local_path}/{nc}' for nc in os.listdir(local_path) if nc.endswith('.nc')]
-        print('old_ncs: ', old_ncs)
-        new_ncs = []
-
-        # Combine NetCDF files  into a single file for each scenario
-        try:
-            for scenario in SCENARIOS:
-                folder_path = f"{local_path}/{scenario}/"
-                netcdf_paths = [f'{folder_path}/{nc}' for nc in os.listdir(folder_path) if nc.endswith('.nc')]
+            netcdf_paths = [f'{folder_path}/{nc}' for nc in os.listdir(folder_path) if nc.endswith('.nc')]
+            
+            dates = netcdf_paths[0].split('_')[-1].split('.')[0]
+            filename = f'forecast_{scenario}_{dates}.nc'
+            file_path = f"{local_path}/{filename}"
+            if file_path not in old_combined_ncs:
                 ds = xr.open_mfdataset(netcdf_paths, combine='by_coords', compat='override')
-                dates = netcdf_paths[0].split('_')[-1].split('.')[0]
-                filename = f'forecast_{scenario}_{dates}.nc'
-                file_path = f"{local_path}/{filename}"
                 ds.to_netcdf(file_path)
                 ds.close()
-                new_ncs.append(filename)
-            if old_ncs != [] and new_ncs != [] and old_ncs.sort() != new_ncs.sort():
-                for old_nc in old_ncs:
-                    os.remove(old_nc)
+                new_combined_ncs.append(file_path)
+                
+        print('old_ncs: ', old_combined_ncs)
+        print('new_ncs: ', new_combined_ncs)
+        if old_combined_ncs != [] and new_combined_ncs != [] and old_combined_ncs.sort() != new_combined_ncs.sort():
+            for old_nc in old_combined_ncs:
+                os.remove(old_nc)
 
-            get_last_valid_forecast_date_cached(update=True)
-        except Exception as e:
-            print(f"Combining NetCDF files failed: {e}")
+        get_last_valid_forecast_date_cached(update=True)
+    except Exception as e:
+        print(f"Combining NetCDF files failed: {e}")
+
+
+
 
     # TODO:  Implement the deletion of obsolete files
 

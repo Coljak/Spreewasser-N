@@ -1671,6 +1671,35 @@ class Organ(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
 
+# Organ Classifications / stages https://github.com/zalf-rpm/monica/wiki/config_stages
+class BBCHStage(models.Model):
+    stage = models.CharField(max_length=4)  # e.g., "00", "09", "31", etc.
+    macro_stage = models.IntegerField()
+    micro_stage = models.IntegerField()
+    default_en_description = models.CharField(max_length=255)
+    default_de_description = models.CharField(max_length=255)
+
+    def save(self, *args, **kwargs):
+        if len(self.stage) == 2:
+            self.macro_stage = int(self.stage[0])
+            self.micro_stage = int(self.stage[1])
+        super().save(*args, **kwargs)
+
+# This overrides the BBCHStage descriptiopn, in case it is different for the crop (e.g. potato)
+class CropStageDescription(models.Model):
+    cultivar = models.ForeignKey(CultivarParameters, on_delete=models.CASCADE, related_name='stage_descriptions')
+    bbch_stage = models.ForeignKey(BBCHStage, on_delete=models.CASCADE)
+    custom_en_description = models.CharField(max_length=255, blank=True, null=True)
+    custom_de_description = models.CharField(max_length=255, blank=True, null=True)
+
+    def get_en_description(self):
+        return self.custom_en_description or self.bbch_stage.default_en_description
+
+    def get_de_description(self):
+        return self.custom_de_description or self.bbch_stage.default_de_description
+
+
+
 
 
 # --------------------GEODATA ------------------------------------

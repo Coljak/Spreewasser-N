@@ -1,0 +1,7 @@
+Stage,Event name,BBCH code,EN description,DE description
+1,Sowing,0,Sowing,Aussaat
+2,emergence,9,Emergence,Auflaufen
+3,,19,Ten leaves,Zehn Blätter
+4,,40,Begin tuber growth,Beginn Rübenwachstum
+5,,,Begin leaf senescence,Beginn Blattseneszenz
+6,,49,Harvest size,Erntegröße

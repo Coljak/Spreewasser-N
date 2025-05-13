@@ -16,6 +16,12 @@ swn_events = [
                 "Fruit"
             ],
             [
+                "PASW",
+                [
+                    1,5,"AVG"
+                ]
+            ],
+            [
                 "Mois",
                 [
                     1,

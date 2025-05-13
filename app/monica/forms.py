@@ -79,7 +79,18 @@ class ParametersModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
-            use_single_row_textarea(field)
+            # use_single_row_textarea(field)
+            if isinstance(field.widget, forms.Textarea):
+                field.widget = SingleRowTextarea()
+            # for field_name, field in self.fields.items():
+            # if isinstance(field, forms.BooleanField):
+            #     # Keep BooleanFields as regular stacked checkboxes
+            #     layout_fields.append(
+            #         Field(field_name, css_class='form-check-input mb-3')
+            #     )
+            # else:
+            #     # Set label/field alignment only for non-Boolean fields
+            #     layout_fields.append(Field(field_name))
 
             self.helper = FormHelper()
             self.helper.form_method = "post"
@@ -123,26 +134,31 @@ class CoordinateForm(forms.Form):
 
             
 class CultivarParametersForm(ParametersModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
     
     class Meta:
         model = CultivarParameters
         exclude = ['id', 'user', 'name', 'is_default']
 
-class CultivarParametersInstanceSelectForm(forms.ModelForm):
-    cultivar = forms.ChoiceField(
-        choices=[],
-        label="Cultivar",
-        widget=forms.Select(attrs={'class': 'form-control form-select cultivar-parameters'})
-    )
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['cultivar'].choices = [
-            (instance.id, instance.name) for instance in CultivarParameters.objects.all()
-        ]
+    
+        # Map field names to units
+        units = {
+            "begin_sensitive_phase_heat_stress": "°C d",
+            "critical_temperature_heat_stress": "°C",
+            "daylength_requirement": "h", 
+            "end_sensitive_phase_heat_stress": "°C d",
+            "max_crop_height": "m",
+            "optimum_temperature": "°C",
+            "specific_leaf_area": "ha/kg",
+            "stage_kc_factor": "1;0",
+            "stage_temperature_sum": "°C d"
+        }
+
+        for field_name, unit in units.items():
+            if field_name in self.fields:
+                original_widget = self.fields[field_name].widget
+                self.fields[field_name].widget = UnitInputWrapper(widget=original_widget, unit=unit)
 
 
 
@@ -171,10 +187,57 @@ class CropResidueParametersForm(ParametersModelForm):
         model = CropResidueParameters
         exclude = ['id', 'user', 'is_default', 'species_name']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+        # Map field names to units
+        units = {
+            "aom_dry_matter_content": "kg DM/ kg FM",
+            "aom_fast_dec_coeff_standard": "d⁻¹",
+            "aom_nh4_content": "kg N/ kg DM",
+            "aom_no3_content": "kg N/ kg DM",
+            "aom_slow_dec_coeff_standard": "d⁻¹",
+            "cn_ratio_aom_fast": "25",
+            "n_concentration": "kg N/ kg DM",
+            "corg_content": "kg C/ kg DM",
+            "part_aom_slow_to_smb_fast": "kg/kg",
+            "part_aom_slow_to_smb_slow": "kg/kg",
+            "part_aom_to_aom_fast": "kg/kg",
+            "part_aom_to_aom_slow": "kg/kg",
+
+        }
+
+        for field_name, unit in units.items():
+            if field_name in self.fields:
+                original_widget = self.fields[field_name].widget
+                self.fields[field_name].widget = UnitInputWrapper(widget=original_widget, unit=unit)
+
+
 class OrganicFertiliserForm(ParametersModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        AppendedText('aom_dry_matter_content', "kg DM kg FM-1")
+    
+        # Map field names to units
+        units = {
+            "aom_dry_matter_content": "kg DM/ kg FM",
+            "aom_fast_dec_coeff_standard": "d⁻¹",
+            "aom_nh4_content": "kg N/ kg DM",
+            "aom_no3_content": "kg N/ kg DM",
+            "aom_slow_dec_coeff_standard": "d⁻¹",
+            # "cn_ratio_aom_fast": "25",
+            # "n_concentration": "kg N/ kg DM",
+            # "corg_content": "kg C/ kg DM",
+            "part_aom_slow_to_smb_fast": "kg/kg",
+            "part_aom_slow_to_smb_slow": "kg/kg",
+            "part_aom_to_aom_fast": "kg/kg",
+            "part_aom_to_aom_slow": "kg/kg",
+
+        }
+
+        for field_name, unit in units.items():
+            if field_name in self.fields:
+                original_widget = self.fields[field_name].widget
+                self.fields[field_name].widget = UnitInputWrapper(widget=original_widget, unit=unit)
     class Meta:
         model = OrganicFertiliser
         exclude = ['id', 'user', 'is_default']
@@ -183,6 +246,22 @@ class MineralFertiliserForm(ParametersModelForm):
     class Meta:
         model = MineralFertiliser
         exclude = ['id', 'user', 'is_default', 'type']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+        # Map field names to units
+        units = {
+            "carbamid": "kg/kg",
+            "nh4": "kg/kg",
+            "no3": "kg/kg",
+           
+        }
+
+        for field_name, unit in units.items():
+            if field_name in self.fields:
+                original_widget = self.fields[field_name].widget
+                self.fields[field_name].widget = UnitInputWrapper(widget=original_widget, unit=unit)
 
 
 class UserCropParametersForm(ParametersModelForm):
@@ -251,7 +330,20 @@ class UserEnvironmentParametersSelectionForm(forms.Form):
                 (instance.id, instance.name) for instance in UserEnvironmentParameters.objects.filter(Q(user=user))
             ]
 
+        self.helper = FormHelper()
+        self.helper.form_method = "post"
+        self.helper.label_class = 'col-5 col-form-label'
+        self.helper.field_class = 'col-7'
 
+        # Optional: Automatically generate a layout with all fields, each wrapped in a row
+        self.helper.layout = Layout(
+            *[
+                Field(field_name, wrapper_class='row')
+                for field_name in self.fields
+            ]
+        )
+
+# TODO get all units in the right!!! Not all json files have units. Also, get info buttons for all fields
 class UserSoilMoistureParametersForm(ParametersModelForm):                
     class Meta:
         model = UserSoilMoistureParameters
@@ -277,11 +369,61 @@ class UserSoilMoistureInstanceSelectionForm(forms.Form):
             ]
 
 
-class UserSoilOrganicParametersForm(forms.ModelForm):
+class UserSoilOrganicParametersForm(ParametersModelForm):
     class Meta:
         model = UserSoilOrganicParameters
         field_order = ['name']
         exclude = ['id', 'user', 'is_default']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+        # Map field names to units
+        units = {
+            "temp_dec_optimal": "°C",
+            "moisture_dec_optimal": "%",
+            "ammonia_oxidation_rate_coeff_standard": "d⁻²",  # "kg/m³",
+            "atmospheric_resistance": "s/m",
+            "immobilisation_rate_coeff_nh4": "d⁻²",
+            "immobilisation_rate_coeff_no3": "d⁻¹",
+            "inhibitor_nh3": "kg·N/m³",
+            "limit_clay_effect": "kg/kg",
+            "n2o_production_rate": "d⁻¹",
+            "nitrite_oxidation_rate_coeff_standard": "d⁻¹",
+            "smb_fast_death_rate_standard": "d⁻¹",
+            "smb_fast_maint_rate_standard": "d⁻¹",
+            "smb_slow_death_rate_standard": "d⁻¹",
+            "smb_slow_maint_rate_standard": "d⁻¹",
+            "smb_utilization_efficiency": "d⁻¹",
+            "som_fast_dec_coeff_standard": "d⁻¹",
+            "som_slow_dec_coeff_standard": "d⁻¹",
+            "spec_anaerob_denitrification": "g gas-N·g CO₂-C⁻¹",
+            "transport_rate_coeff": "d⁻¹",
+            "tdenitopt_gauss": "°C",
+            "scale_tdenitopt": "°C",
+            "kd": "mg NO3-N/L",
+            "k_desat": "1/day",
+            "fnx": "1/day",
+            "vnitmax": "mg NH4-N/kg soil/day",
+            "kamm":  "mg NH4-N/L",
+            "tnitmin": "°C",
+            "tnitopt": "°C",
+            "tnitmax": "°C",
+            "tnitopt_gauss": "°C",
+            "scale_tnitopt": "°C",
+            "cmin_pdenit": "%",
+            "min_pdenit": "mg N/Kg soil/day",
+            "profdenit": "cm",
+            "vpotdenit": "kg N/ha/day",
+        }
+
+        for field_name, unit in units.items():
+            if field_name in self.fields:
+                original_widget = self.fields[field_name].widget
+                self.fields[field_name].widget = UnitInputWrapper(widget=original_widget, unit=unit)
+
+
+    
         
 class UserSoilOrganicInstanceSelectionForm(forms.Form):
     soil_organic = forms.ChoiceField(
@@ -302,7 +444,7 @@ class UserSoilOrganicInstanceSelectionForm(forms.Form):
             ]
 
 
-class SoilTemperatureModuleParametersForm(forms.ModelForm):
+class SoilTemperatureModuleParametersForm(ParametersModelForm):
     class Meta:
         model = SoilTemperatureModuleParameters
         field_order = ['name']
@@ -316,7 +458,7 @@ class SoilTemperatureModuleParametersForm(forms.ModelForm):
             "base_temperature": "°C",
             "initial_surface_temperature": "°C",
             "density_air": "kg/m³",
-            "specific_heat_capacity_air": "J/(kg·K)",
+            "specific_heat_capacity_air": "J/(kg·K) at 300° K",
             "density_humus": "kg/m³",
             "specific_heat_capacity_humus": "J/(kg·K)",
             "density_water": "kg/m³",
@@ -352,11 +494,13 @@ class SoilTemperatureModuleInstanceSelectionForm(forms.Form):
             ]
 
 
-class UserSoilTransportParametersForm(forms.ModelForm):
+class UserSoilTransportParametersForm(ParametersModelForm):
     class Meta:
         model = UserSoilTransportParameters
         field_order = ['name']
         exclude = ['id', 'user', 'is_default']
+
+    
 
 class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
     soil_transport = forms.ChoiceField(
@@ -377,35 +521,50 @@ class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
             ]
 
 
-class UserSimulationSettingsForm(forms.ModelForm):
+class UserSimulationSettingsForm(ParametersModelForm):
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
 
-        self.helper = FormHelper()
-        self.helper.form_tag = False
+    #     self.helper = FormHelper()
+    #     self.helper.form_tag = False
 
-        layout_fields = []
+    #     layout_fields = []
 
-        for field_name, field in self.fields.items():
-            if isinstance(field, forms.BooleanField):
-                # Keep BooleanFields as regular stacked checkboxes
-                layout_fields.append(
-                    Field(field_name, css_class='form-check-input mb-3')
-                )
-            else:
-                # Set label/field alignment only for non-Boolean fields
-                layout_fields.append(Field(field_name))
+    #     for field_name, field in self.fields.items():
+    #         if isinstance(field, forms.BooleanField):
+    #             # Keep BooleanFields as regular stacked checkboxes
+    #             layout_fields.append(
+    #                 Field(field_name, css_class='form-check-input mb-3')
+    #             )
+    #         else:
+    #             # Set label/field alignment only for non-Boolean fields
+    #             layout_fields.append(Field(field_name))
 
-        # Set horizontal layout classes globally (affects only non-Boolean fields above)
-        self.helper.label_class = 'col-5 col-form-label'
-        self.helper.field_class = 'col-7'
+    #     # Set horizontal layout classes globally (affects only non-Boolean fields above)
+    #     self.helper.label_class = 'col-5 col-form-label'
+    #     self.helper.field_class = 'col-7'
 
-        self.helper.layout = Layout(*layout_fields)
+    #     self.helper.layout = Layout(*layout_fields)
+
+    
     class Meta:
         model = UserSimulationSettings
         field_order = ['name']
         exclude = ['id', 'user', 'is_default']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+        # Map field names to units
+        units = {
+            "auto_irrigation_params_amount": "mm",
+        }
+
+        for field_name, unit in units.items():
+            if field_name in self.fields:
+                original_widget = self.fields[field_name].widget
+                self.fields[field_name].widget = UnitInputWrapper(widget=original_widget, unit=unit)
     
 
 class UserSimulationSettingsInstanceSelectionForm(forms.Form):

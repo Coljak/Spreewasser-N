@@ -32,7 +32,13 @@
     <div class="card mb-3 advanced">
       <div class="card-body">
         <h5 class="card-title">User Environment Parameters</h5>
-        {{ user_environment_parameters_select_form | crispy }}
+        <form method="post">
+          {% csrf_token %}
+          {{ user_environment_parameters_select_form | crispy }}
+          {% comment %} {% crispy user_environment_parameters_select_form %} {% endcomment %}
+        </form> 
+        {% comment %} {{ user_environment_parameters_select_form | crispy }} {% endcomment %}
+        
         <button class="btn btn-primary modify-parameters user-environment-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
           Modify User Environment Parameters
         </button>

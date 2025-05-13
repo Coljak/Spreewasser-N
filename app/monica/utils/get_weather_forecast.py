@@ -13,7 +13,7 @@ from django.core.cache import cache
 from dateutil.relativedelta import relativedelta
 
 # Constants
-BASE_CATALOG_URL = "https://esgf-data.dwd.de/thredds/catalog/esgf3/data/climatepredictionsde/seasonal/output/public/DE-0075x005/DWD/GCFS21/svhYYYY{month:02}01/sfc{year}{month:02}01/{scenario}/DWD-EPISODES2022/v1-r1/day/{variable}/"
+BASE_CATALOG_URL = "https://esgf-data.dwd.de/thredds/catalog/esgf3/data/climatepredictionsde/seasonal/output/public/DE-0075x005/DWD/GCFS21/svh2023{month:02}01/sfc{year}{month:02}01/{scenario}/DWD-EPISODES2022/v1-r1/day/{variable}/"
 
 BASE_DOWNLOAD = "https://esgf-data.dwd.de/thredds/fileServer/esgf3/data/climatepredictionsde/seasonal/output/public/DE-0075x005/DWD/GCFS22/"
 BBBBBBBBBBBBB = 'https://esgf-data.dwd.de/thredds/fileServer/esgf3/data/climatepredictionsde/seasonal/output/public/DE-0075x005/DWD/GCFS22/svh20230501/sfc20250501/r1i1p1/DWD-EPISODES2022/v1-r1/day/hurs/v2025506/hurs_day_GCFS22--DWD-EPISODES2022--DE-0075x005_sfc20250501_r1i1p1_20250501-20251130.nc'
@@ -23,65 +23,73 @@ SCENARIOS = ['r1i1p1', 'r2i1p1', 'r3i1p1']
 VARIABLES = ['hurs', 'pr', 'psl', 'rsds', 'sfcWind', 'tas', 'tasmax', 'tasmin']
 THREDDS_NAMESPACE = {"thredds": "http://www.unidata.ucar.edu/namespaces/thredds/InvCatalog/v1.0"}
 
-# def get_download_url(year, month, scenario, variable):
-#     """Get the latest catalog URL for the specified year, month, and scenario."""
-
-#     # get the version folder's name
-#     try:
-#         catalog_url = f"{BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}catalog.xml"
-        
-#         catalog = requests.get(catalog_url)
-#         catalog_tree = ElementTree.fromstring(catalog.content)
-        
-#         catalog = catalog_tree.findall(".//thredds:catalogRef", THREDDS_NAMESPACE)
-#         latest_versions = []
-#         for catalog_ref in catalog:
-#             latest_versions.append(catalog_ref.attrib['name'])
-#         latest_version = max(latest_versions)
-
-#         # compose catalog url for the latest version
-#         latest_version_url = f"{BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}{latest_version}/catalog.xml"
-        
-#         # Get the dataset name/ urlPath
-#         dataset_name_reponse = requests.get(latest_version_url)
-#         dataset_name_catalog_tree = ElementTree.fromstring(dataset_name_reponse.content)
-#         dataset_name_catalog = dataset_name_catalog_tree.findall(".//thredds:dataset", THREDDS_NAMESPACE)
-#         dataset_path = ''
-#         for dataset in dataset_name_catalog:
-#             if dataset.attrib.get('urlPath'):
-#                 dataset_path = dataset.attrib['urlPath']
-
-#         https_download_url = f"https://esgf-data.dwd.de/thredds/fileServer/{dataset_path}"
-#         print('https_download_url: ', https_download_url)
-#         return {'success': True, 'url':https_download_url}
-    
-#     except Exception as e:
-#         print(f"Error fetching download URL: {e}")
-#         return {'success': False, 'error': str(e)}
-    
 def get_download_url(scenario, variable):
     """Get the latest catalog URL for the specified year, month, and scenario."""
 
+    today = datetime.today()
+    year = today.year
+    month = today.month
+    future_date = today + relativedelta(months=+6)
+
+    # Move to the first day of the *next* month, then subtract one day
+    last_day_of_month = (future_date.replace(day=1) + relativedelta(months=+1)) - relativedelta(days=1)
+
     # get the version folder's name
     try:
-        today = datetime.today()
-        year = today.year
-        month = today.month
-        future_date = today + relativedelta(months=+6)
+        catalog_url = f"{BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}catalog.xml"
+        
+        catalog = requests.get(catalog_url)
+        catalog_tree = ElementTree.fromstring(catalog.content)
+        
+        catalog = catalog_tree.findall(".//thredds:catalogRef", THREDDS_NAMESPACE)
+        latest_versions = []
+        for catalog_ref in catalog:
+            latest_versions.append(catalog_ref.attrib['name'])
+        latest_version = max(latest_versions)
 
-        # Move to the first day of the *next* month, then subtract one day
-        last_day_of_month = (future_date.replace(day=1) + relativedelta(months=+1)) - relativedelta(days=1)
+        # compose catalog url for the latest version
+        latest_version_url = f"{BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}{latest_version}/catalog.xml"
+        
+        # Get the dataset name/ urlPath
+        dataset_name_reponse = requests.get(latest_version_url)
+        dataset_name_catalog_tree = ElementTree.fromstring(dataset_name_reponse.content)
+        dataset_name_catalog = dataset_name_catalog_tree.findall(".//thredds:dataset", THREDDS_NAMESPACE)
+        dataset_path = ''
+        for dataset in dataset_name_catalog:
+            if dataset.attrib.get('urlPath'):
+                dataset_path = dataset.attrib['urlPath']
 
-        # Format as YYYYMMDD
-        formatted_date = last_day_of_month.strftime("%Y%m%d")
-        # svh20230501/sfc20250501/r12i1p1/DWD-EPISODES2022/v1-r1/day/pr/v20250506/pr_day_GCFS22--DWD-EPISODES2022--DE-0075x005_sfc20250501_r12i1p1_20250501-20251130.nc
-        https_download_url = f"{BASE_DOWNLOAD}svh2023{month:02}01/sfc{year}{month:02}01/{scenario}/DWD-EPISODES2022/v1-r1/day/{variable}/v{year}{month:02}06/{variable}_day_GCFS22--DWD-EPISODES2022--DE-0075x005_sfc{year}{month:02}01_{scenario}_{year}{month:02}01-{formatted_date}.nc"
+        https_download_url = f"https://esgf-data.dwd.de/thredds/fileServer/{dataset_path}"
         print('https_download_url: ', https_download_url)
         return {'success': True, 'url':https_download_url}
     
     except Exception as e:
         print(f"Error fetching download URL: {e}")
         return {'success': False, 'error': str(e)}
+    
+# def get_download_url(scenario, variable):
+#     """Get the latest catalog URL for the specified year, month, and scenario."""
+
+#     # get the version folder's name
+#     try:
+#         today = datetime.today()
+#         year = today.year
+#         month = today.month
+#         future_date = today + relativedelta(months=+6)
+
+#         # Move to the first day of the *next* month, then subtract one day
+#         last_day_of_month = (future_date.replace(day=1) + relativedelta(months=+1)) - relativedelta(days=1)
+
+#         # Format as YYYYMMDD
+#         formatted_date = last_day_of_month.strftime("%Y%m%d")
+#         # svh20230501/sfc20250501/r12i1p1/DWD-EPISODES2022/v1-r1/day/pr/v20250506/pr_day_GCFS22--DWD-EPISODES2022--DE-0075x005_sfc20250501_r12i1p1_20250501-20251130.nc
+#         https_download_url = f"{BASE_DOWNLOAD}svh2023{month:02}01/sfc{year}{month:02}01/{scenario}/DWD-EPISODES2022/v1-r1/day/{variable}/v{year}{month:02}06/{variable}_day_GCFS22--DWD-EPISODES2022--DE-0075x005_sfc{year}{month:02}01_{scenario}_{year}{month:02}01-{formatted_date}.nc"
+#         print('https_download_url: ', https_download_url)
+#         return {'success': True, 'url':https_download_url}
+    
+#     except Exception as e:
+#         print(f"Error fetching download URL: {e}")
+#         return {'success': False, 'error': str(e)}
         
         
 

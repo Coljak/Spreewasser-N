@@ -1,0 +1,8 @@
+Stage,Event name,BBCH code,EN description,DE description
+1,Sowing,0,Sowing,Aussaat
+2,emergence,9,Emgence,Auflaufen
+_,cereal-stem-elongation,31,Begin stem elongation,Beginn Längenwachstum
+3,,,Double Ridge,Doppelring
+4,,51,Heading,Ährenschieben
+5,anthesis,65,Anthesis,Blüte
+6,maturity,89,Maturity,Vollreife

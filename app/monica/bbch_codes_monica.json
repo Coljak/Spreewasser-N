@@ -1,0 +1,26 @@
+[
+    {
+    "Makrostatiedien": {
+        "name": "BBCH",
+        "description": "Makrostadien zur Beschreibung der phänologischen Entwicklung mono- und dikotyle Pflanzen",
+        "Stadien": {
+            "0": "Keimung / Austrieb",
+            "1": "Blattentwicklung (Hauptsproß)",
+            "2": "Bildung von Seitensprossen / Bestockung",
+            "3": "Längen- bzw. Rosettenwachstum des Hauptsprosses/Triebentwicklung / Schossen (Haupttrieb)",
+            "4": "Entwicklung vegetativer Pflanzenteile (Erntegut) bzw. vegetativer Vermehrungsorgane/ Ähren- bzw. Rispenschwellen",
+            "5": "Erscheinen der Blütenanlage (Hauptsproß)/ Ähren- bzw. Rispenschieben",
+            "6": "Blüte (Hauptsproß)",
+            "7": "Fruchtentwicklung",
+            "8": "Frucht- und Samenreife",
+            "9": "Absterben bzw. Eintreten der Vegetationsruhe"
+        }
+    },
+    "Mesostatdien": {
+
+    },
+    "Mikrostadien": {
+
+    }
+}
+]

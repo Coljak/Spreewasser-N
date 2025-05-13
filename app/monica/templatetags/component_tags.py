@@ -18,6 +18,7 @@ def render_tab_project(
     })
     return context
 
+    
 
 @register.inclusion_tag('monica/monica_model_tab_general_parameters.html', takes_context=True)
 def render_tab_general_parameters(context, coordinate_form):

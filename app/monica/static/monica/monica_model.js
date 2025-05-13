@@ -77,6 +77,56 @@ function createChartDataset() {
                 pointHitRadius: 10,
             });
         };
+        if (resultOutput.PASW_AVG) {
+            datasets.push({
+                yAxisID: 'y4',
+                label: `${resultTranslation.PASW_AVG} ${i}`,
+                data: msg.PASW_AVG,
+                borderWidth: 2,
+                borderColor: colors[i],
+                pointHitRadius: 10,
+            });
+        };
+        // if (resultOutput.PASW_2) {
+        //     datasets.push({
+        //         yAxisID: 'y4',
+        //         label: `${resultTranslation.PASW_2} ${i}`,
+        //         data: msg.PASW_2,
+        //         borderWidth: 2,
+        //         borderColor: colors[i],
+        //         pointHitRadius: 10,
+        //     });
+        // };
+        // if (resultOutput.PASW_3) {
+        //     datasets.push({
+        //         yAxisID: 'y4',
+        //         label: `${resultTranslation.PASW_3} ${i}`,
+        //         data: msg.PASW_3,
+        //         borderWidth: 2,
+        //         borderColor: colors[i],
+        //         pointHitRadius: 10,
+        //     });
+        // };
+        // if (resultOutput.PASW_4) {
+        //     datasets.push({
+        //         yAxisID: 'y4',
+        //         label: `${resultTranslation.PASW_4} ${i}`,
+        //         data: msg.PASW_4,
+        //         borderWidth: 2,
+        //         borderColor: colors[i],
+        //         pointHitRadius: 10,
+        //     });
+        // };
+        // if (resultOutput.PASW_5) {
+        //     datasets.push({
+        //         yAxisID: 'y4',
+        //         label: `${resultTranslation.PASW_5} ${i}`,
+        //         data: msg.PASW_5,
+        //         borderWidth: 2,
+        //         borderColor: colors[i],
+        //         pointHitRadius: 10,
+        //     });
+        // };
         if (resultOutput.Mois_1) {
             datasets.push({
                 yAxisID: 'y3',
@@ -209,6 +259,7 @@ const runSimulation = (monicaProject) => {
             $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
 
             let listOfResults = data.message.message
+            console.log('ListofResults: ', data);
             localStorage.setItem('monicaResults', JSON.stringify(listOfResults));
             createChartDataset();
             
@@ -217,6 +268,8 @@ const runSimulation = (monicaProject) => {
 
         } else {
             handleAlerts(data.message);
+            $('#runSimulationButton').prop('disabled', false);
+            $('#runSimulationButton').text('Run Simulation');
         }    
     })
     .then(() => {
@@ -772,6 +825,11 @@ const resultTranslation = {
     'Date': 'Datum',
     'Precip': 'Niederschlag',
     'LAI': 'LAI',
+    'PASW_AVG': 'Pflanzenverfügbares Wasser 0-10cm',
+    // 'PASW_2': 'Pflanzenverfügbares Wasser 10-20cm',
+    // 'PASW_3': 'Pflanzenverfügbares Wasser 20-30cm',
+    // 'PASW_4': 'Pflanzenverfügbares Wasser 30-40cm',
+    // 'PASW_5': 'Pflanzenverfügbares Wasser 40-50cm',
     'Mois_1': 'Bodenfeuchte 0-10cm',
     'Mois_2': 'Bodenfeuchte 10-20cm',
     'Mois_3': 'Bodenfeuchte 20-30cm',
@@ -801,6 +859,11 @@ document.addEventListener('DOMContentLoaded', () => {
             'Irrig': true,
             // 'organ': false,
             'AbBiom': true,
+            'PASW_AVG': true,
+            // 'PASW_2': true,
+            // 'PASW_3': true,
+            // 'PASW_4': true,
+            // 'PASW_5': true,
             'Mois_1': false,
             'Mois_2': false,
             'Mois_3': false,
@@ -873,6 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btnOutputSettingsApply').addEventListener('click', function () {
+        // the selection of output parameters got changed so the graph needs to be reloaded
         createChartDataset();
     });
     

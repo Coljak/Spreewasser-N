@@ -36,6 +36,7 @@ import time
 import json
 import zmq
 import csv
+import uuid
 import copy
 # create a new monica env
 # from ...xx_obsolete import climate
@@ -265,11 +266,7 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
         with Dataset(file_path, 'r') as nc:
             start_idx = date2index(start_date, nc['time'], select='nearest')
             end_idx = date2index(end_date, nc['time'], select='nearest') + 1
-            for key, value in CLIMATE_VARIABLES.items():
-
-            
-                        
-                    
+            for key, value in CLIMATE_VARIABLES.items():        
                 values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx]
                 if value in ('tas', 'tasmin', 'tasmax'):
                     values = values - 273.15
@@ -279,6 +276,7 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
                     values = values * 10
                 values = values.tolist()
                 climate_json[key].extend(values)
+                # print('Climate to  json: ', key, value, start_date, end_date, values)
 
 
             # except Exception as e:
@@ -557,6 +555,7 @@ def create_monica_env_from_json(json_data):
             # ],
             "Yield",
             "LAI",
+            "Stage",
             "Precip",
             [
             "Mois",
@@ -679,9 +678,7 @@ def msg_to_json(msg):
         6: "UNDEFINED_ORGAN"
     }
 
-
-    # print("msg_to_json")
-    processed_msg = {}
+    # processed_msg = {}
     for_chart = {}
     for data_ in msg.get("data", []):
         results = data_.get("results", [])
@@ -726,9 +723,9 @@ def msg_to_json(msg):
                 except:
                     output_id["result_dict"]["error"] = "Error in processing results"
                     
-        processed_msg[orig_spec] = {
-            "output_ids": output_ids,     
-        }
+        # processed_msg[orig_spec] = {
+        #     "output_ids": output_ids,     
+        # }
            
     return for_chart
 
@@ -1291,43 +1288,6 @@ def manual_soil_selection(request, lat, lon):
     return JsonResponse(data_menu)
 
 
-# def run_monica_simulation(envs):
-#     print("running simulation")
-#     json_msgs = []
-#     i = 0
-#     for e in envs:
-#         i += 1
-#         context = zmq.Context()
-#         producer_socket = context.socket(zmq.PUSH)
-#         producer_socket.connect("tcp://swn_monica:6666")
-#         print("check 6")
-#         # print(env)
-#         producer_socket.send_json(e)
-#         file_path = Path(__file__).resolve().parent
-#         with open(f'{file_path}/monica_io/env_{str(i)}.json', 'w') as _: 
-#             json.dump(e, _)
-#         print("check 7")
-
-#         consumer_socket = context.socket(zmq.PULL)
-#         consumer_socket.connect("tcp://swn_monica:7777")
-#         # msg = run_consumer()
-#         msg = consumer_socket.recv_json()
-#         producer_socket.close()
-#         consumer_socket.close()
-
-#         print("check 9: consumer run")
-#         json_msg = msg_to_json(msg)
-#         json_msgs.append(json_msg)
-#         print("check 10: ")
-#         # print(msg)
-#         with open(f'{file_path}/monica_io/message_out_{str(i)}.json', 'w') as _: 
-#             json.dump(msg, _)
-#         with open(f'{file_path}/monica_io/json_message_out_{str(i)}.json', 'w') as _: 
-#             json.dump(json_msg, _)
-
-    
-#     return json_msgs
-import uuid
     
 def run_monica_simulation(envs):
     print("running simulation")
@@ -1360,6 +1320,17 @@ def run_monica_simulation(envs):
         consumer_socket.close()
 
         print("check 9: consumer run")
+        print("msg: ", msg)
+        
+        if msg.get('data', []) == []:
+            message = {'message': {
+                'success': False, 
+                'message': 'No data received from MONICA, error: ' + (', ').join(msg.get('errors', ''))
+                }
+                }
+            print("check 9b: ", message)
+            return message
+        
         json_msg = msg_to_json(msg)
         json_msgs.append(json_msg)
         print("check 10: ")
@@ -1368,8 +1339,8 @@ def run_monica_simulation(envs):
             json.dump(msg, _)
         with open(f'{file_path}/monica_io/json_message_out_{str(i)}.json', 'w') as _: 
             json.dump(json_msg, _)
-
-    
+        print("check 10b: ")
+    print('json_msgs is a  ', type(json_msgs))
     return json_msgs
 
 def run_simulation(request):
@@ -1392,10 +1363,11 @@ def run_simulation(request):
         env = create_monica_env_from_json(data)
         # # split function here --> if swn, then create irrigation
         envs = [env]
-        
+        print('check 11')
         json_msgs = run_monica_simulation(envs)
-        print('run_simulation \n', json_msgs)
+
         return JsonResponse({'message': {'success': True, 'message': json_msgs}})
+
     else:
         return JsonResponse({'message': {'success': False, 'message': 'Simulation not started.'}})
         

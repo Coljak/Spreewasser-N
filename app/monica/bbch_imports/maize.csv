@@ -1,0 +1,9 @@
+Stage,Event name,BBCH code,EN description,DE description
+1,Sowing,0,Germination,Aussaat
+2,emergence,9,Emergence,Auflaufen
+_,cereal-stem-elongation,31,Begin stem elongation,Beginn Längenwachstum
+3,,51,"Inflorescence emergence, heading",Rispenschieben
+4,,61,Begin male anthesis,Beginn männliche Blüte
+5,,65,Begin female anthesis,Beginn weibliche Blüte bis Kornfüllung
+6,anthesis,71,Begin grain filling,Beginn Kornfüllung
+7,maturity,89,Maturity,Vollreife

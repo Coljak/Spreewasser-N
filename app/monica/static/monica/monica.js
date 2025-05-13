@@ -16,6 +16,7 @@ export class MonicaCalculation {
             Stage: [],
             Yield: [],
             LAI: [],
+            PASW: [],
             Mois_1: [],
             Mois_2: [],
             Mois_3: [],

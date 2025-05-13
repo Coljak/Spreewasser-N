@@ -1,0 +1,7 @@
+Stage,Event name,BBCH code,EN description,DE description
+1,Sowing,0,Planting,Legen
+2,emergence,9,Emergence,Auflaufen
+3,,39,Total coverage,Bestandesschluss
+4,,40,Tuber growth,Beginn Knollenwachstum
+5,,,Begin leaf senescence,Beginn Blattseneszenz
+6,,48,Harvest size,Erntegröße

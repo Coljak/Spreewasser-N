@@ -10,7 +10,6 @@
         {% comment %} <input type="text" id="projectDescription" placeholder="Beschreibungescription"/> {% endcomment %}
         
         {% if project_select_form.fields.monica_project.choices %}
-        There are choices, but...
           <div>
               {% crispy project_select_form %}
               <button class="btn btn-primary monica-project load-project" type="button">
@@ -32,33 +31,10 @@
 
     <div class="card mb-3 advanced">
       <div class="card-body">
-        <h5 class="card-title">User Environment Parameters</h5>
+        <h5 class="card-title">User Parameters</h5>
         {% crispy user_environment_parameters_select_form %}
-       
-        <button class="btn btn-primary modify-parameters user-environment-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-          Modify User Environment Parameters
-        </button>
-      </div>
-    </div>
-
-
-    <div class="card mb-3 advanced">
-      <div class="card-body">
-        <h5 class="card-title">User Crop Parameters</h5>
         {% crispy user_crop_parameters_select_form %}
-        <button class="btn btn-primary modify-parameters user-crop-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-          Modify User Crop Parameters
-        </button>
-      </div>
-    </div>
-
-    <div class="card mb-3 advanced">
-      <div class="card-body">
-        <h5 class="card-title">User Simulation Settings</h5>
         {% crispy user_simulation_settings_select_form %}
-        <button class="btn btn-primary modify-parameters user-simulation-settings " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-          Modify User Simulation Settings
-        </button>
       </div>
     </div>
   </div>

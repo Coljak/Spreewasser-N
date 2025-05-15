@@ -594,7 +594,7 @@ const createModal = (params) => {
             .then(response => response.json())
             .then(data => {
                 console.log('createModal select-soil-profile', data);
-                const modal = $('#modalManualSoilSelection');
+                
                 const polygonIds = data.polygon_ids;
                 const systemUnitJson = JSON.parse(data.system_unit_json);
                 const landUsageChoices = JSON.parse(data.landusage_choices);
@@ -1062,7 +1062,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 $('#formModal').modal('show');
 
             } else {
-                // should be impossible to reach this
                 event.preventDefault();
                 handleAlerts({'success': false, 'message': 'Please select a parameter to modify'});
             }
@@ -1173,6 +1172,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'parameters_id': value,
             }
             createModal(params);
+            $('#formModal').modal('show');    
         } else if (event.target.classList.contains('recommended-soil-profile')) {
             const project = MonicaProject.loadFromLocalStorage();
             if (window.location.pathname.endsWith('/drought/') && project.userField) {
@@ -1238,7 +1238,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     'parameters_id': value,
                 }
                 console.log('Create Modal', params)
-                createModal(params);          
+                createModal(params);      
+                $('#formModal').modal('show');    
         } else if (event.target.classList.contains('monica-project')) {
             const projectId = $('#id_monica_project').val(); 
             const selecteprojectName = $('#id_monica_project option:selected').text()

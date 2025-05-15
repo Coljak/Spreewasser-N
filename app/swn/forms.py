@@ -47,8 +47,13 @@ class SwnProjectSelectionForm(forms.Form):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['monica_project'].choices = [
-            (instance.id, instance.name) for instance in SwnProject.objects.filter(Q(user=user))
+            (instance.id, instance.name) for instance in MonicaProject.objects.filter(Q(user=user))
         ]
+        self.helper = monica_forms.get_row_form_helper()
+        self.helper.layout = Layout(
+            Field('monica_project', wrapper_class='row')
+            
+        )
 
 # Selection of state, county and district
 

@@ -315,7 +315,7 @@ class UserCropParametersSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="user-crop-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <button type="button" data-parameters="user-crop-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -346,10 +346,8 @@ class MonicaProjectSelectionForm(forms.Form):
         ]
         self.helper = get_row_form_helper()
         self.helper.layout = Layout(
-            *[
-                Field(field_name, wrapper_class='row')
-                for field_name in self.fields
-            ]
+            Field('monica_project', wrapper_class='row')
+            
         )
 
 
@@ -383,7 +381,7 @@ class UserEnvironmentParametersSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="user-environment-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <button type="button" data-parameters="user-environment-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -429,7 +427,7 @@ class UserSoilMoistureInstanceSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="soil-moisture-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <button type="button" data-parameters="soil-moisture-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced" data-bs-target="#formModal">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -522,7 +520,7 @@ class UserSoilOrganicInstanceSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="soil-organic-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <button type="button" data-parameters="soil-organic-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -588,7 +586,7 @@ class SoilTemperatureModuleInstanceSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="soil-temperature-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <button type="button" data-parameters="soil-temperature-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -632,7 +630,7 @@ class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="soil-transport-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <button type="button" data-parameters="soil-transport-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -685,6 +683,29 @@ class UserSimulationSettingsForm(ParametersModelForm):
             if field_name in self.fields:
                 original_widget = self.fields[field_name].widget
                 self.fields[field_name].widget = UnitInputWrapper(widget=original_widget, unit=unit)
+
+        # self.helper = get_parameters_form_helper()
+        # self.helper.layout = Layout(
+        #     *[
+        #         Field(field_name, wrapper_class='row')
+        #         for field_name in self.fields
+        #     ]
+        # )
+        # self.helper.layout.append(
+        #     Row(
+        #         Div(
+        #             Field('name', wrapper_class='row'),
+        #             css_class='col-11'
+        #         ), 
+        #         HTML(
+        #             """
+        #                 <button type="button" data-parameters="user-simulation-settings" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
+        #                 <span><i class="bi bi-pencil-square"></i></span>
+        #                 </button>
+        #             """
+        #         )
+        #     )
+        #     )
     
 
 class UserSimulationSettingsInstanceSelectionForm(forms.Form):
@@ -712,13 +733,23 @@ class UserSimulationSettingsInstanceSelectionForm(forms.Form):
         if default_instance:
             self.initial['user_simulation_settings'] = default_instance.id
 
-        self.helper = get_row_form_helper()
-        self.helper.layout = Layout(
-            *[
-                Field(field_name, wrapper_class='row')
-                for field_name in self.fields
-            ]
-        )
+        self.helper = get_parameters_form_helper()
+        self.helper.layout = Layout()
+        self.helper.layout.append(
+            Row(
+                Div(
+                    Field('user_simulation_settings', wrapper_class='row'),
+                    css_class='col-11'
+                ), 
+                HTML(
+                    """
+                        <button type="button" data-parameters="user-simulation-settings" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
+                        <span><i class="bi bi-pencil-square"></i></span>
+                        </button>
+                    """
+                )
+            )
+            )
 
 class WorkstepSelectorForm(forms.Form):
     WORKSTEP_CHOICES = (
@@ -825,7 +856,7 @@ class WorkstepSowingForm(forms.ModelForm):
                 ),
                 HTML(
                 """
-                    <button type="button" data-parameters="species-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters species-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                    <button type="button" data-parameters="species-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters species-parameters advanced" data-bs-target="#formModal">
                     <span><i class="bi bi-pencil-square"></i></span>
                     </button>
                 """
@@ -838,7 +869,7 @@ class WorkstepSowingForm(forms.ModelForm):
                     css_class='col-11'
                 ),
                 HTML("""
-                        <button type="button" data-parameters="cultivar-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters cultivar-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <button type="button" data-parameters="cultivar-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters cultivar-parameters advanced" data-bs-target="#formModal">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """),
@@ -851,7 +882,7 @@ class WorkstepSowingForm(forms.ModelForm):
                 ),
                 HTML(
                 """
-                    <button type="button" data-parameters="crop-residue-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters crop-residue-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                    <button type="button" data-parameters="crop-residue-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters crop-residue-parameters advanced" data-bs-target="#formModal">
                     <span><i class="bi bi-pencil-square"></i></span>
                     </button>
                 """
@@ -907,7 +938,7 @@ class WorkstepMineralFertilisationForm(forms.ModelForm):
                 row_content.append(
                     HTML(
                         """
-                            <button type="button" data-parameters="mineral-fertiliser-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                            <button type="button" data-parameters="mineral-fertiliser-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced" data-bs-target="#formModal">
                             <span><i class="bi bi-pencil-square"></i></span>
                             </button>
                         """
@@ -964,7 +995,7 @@ class WorkstepOrganicFertilisationForm(forms.ModelForm):
                 row_content.append(
                     HTML(
                         """
-                            <button type="button" data-parameters="organic-fertiliser-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                            <button type="button" data-parameters="organic-fertiliser-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced"  data-bs-target="#formModal">
                             <span><i class="bi bi-pencil-square"></i></span>
                             </button>
                         """

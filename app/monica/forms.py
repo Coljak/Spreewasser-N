@@ -28,6 +28,25 @@ def use_single_row_textarea(field):
     return field
 
 
+def get_row_form_helper():
+    """
+    Defines the layout of Monica forms fields in a row. It requires the loop for field in..."""
+    helper = FormHelper()
+    helper.label_class = 'col-5 col-form-label'
+    helper.field_class = 'col-7'
+
+    return helper
+
+def get_parameters_form_helper():
+    helper = FormHelper()
+    helper.label_class = 'col-4 col-form-label'
+    helper.field_class = 'col-8'
+    helper.form_tag = False 
+    helper.form_tag = False
+    helper.layout = Layout()
+    return helper
+
+
 class MonicaProjectForm(forms.Form):
     project_id = forms.IntegerField(
         widget=forms.HiddenInput(),
@@ -72,6 +91,14 @@ class MonicaProjectForm(forms.Form):
             print(setup_choices, mp)
 
             self.fields['monica_model_setup'].choices = setup_choices
+
+        self.helper = get_row_form_helper()
+        self.helper.layout = Layout(
+            Field('name', wrapper_class='row'),
+            Field('description', wrapper_class='row'),
+            Field('start_date', wrapper_class='row'),
+            Field('monica_model_setup', wrapper_class='row'),
+        )
 
 
 # Use a base class to apply this callback to all forms
@@ -169,18 +196,6 @@ class SpeciesParametersForm(ParametersModelForm):
         exclude = ['id', 'user', 'is_default']
 
 
-
-class CultivarAndSpeciesSelectionForm(forms.Form):
-    """
-    This is the old selection form used in SWN field edit.
-    Can be deleted once Monica is incorporated into SWN.
-    """
-    species_parameters = forms.ModelChoiceField(queryset=SpeciesParameters.objects.all(), label="Feldkultur", empty_label="Select Species")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['cultivar_parameters'] = forms.ModelChoiceField(queryset=CultivarParameters.objects.none(), label="Kultursorte", empty_label="Select Cultivar")
-
 class CropResidueParametersForm(ParametersModelForm):
         
     class Meta:
@@ -269,6 +284,9 @@ class UserCropParametersForm(ParametersModelForm):
         model = UserCropParameters
         exclude = ['id', 'user', 'is_default']
 
+    
+    
+
 
 class UserCropParametersSelectionForm(forms.Form):
     user_crop_parameters = forms.ChoiceField(
@@ -286,7 +304,25 @@ class UserCropParametersSelectionForm(forms.Form):
         else:
             self.fields['user_crop_parameters'].choices = [
                 (instance.id, instance.name) for instance in UserCropParameters.objects.filter(Q(user=user))
-            ]
+            ]  
+        
+        self.helper = get_parameters_form_helper()
+        self.helper.layout.append(
+            Row(
+                Div(
+                    Field('user_crop_parameters', wrapper_class='row'),
+                    css_class='col-11'
+                ), 
+                HTML(
+                    """
+                        <button type="button" data-parameters="user-crop-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <span><i class="bi bi-pencil-square"></i></span>
+                        </button>
+                    """
+                )
+            )
+            )
+
 
 
 
@@ -308,7 +344,15 @@ class MonicaProjectSelectionForm(forms.Form):
         self.fields['monica_project'].choices = [
             (instance.id, instance.name) for instance in MonicaProject.objects.filter(Q(user=user))
         ]
-      
+        self.helper = get_row_form_helper()
+        self.helper.layout = Layout(
+            *[
+                Field(field_name, wrapper_class='row')
+                for field_name in self.fields
+            ]
+        )
+
+
 
 
 #TODO implement User Environment
@@ -330,18 +374,23 @@ class UserEnvironmentParametersSelectionForm(forms.Form):
                 (instance.id, instance.name) for instance in UserEnvironmentParameters.objects.filter(Q(user=user))
             ]
 
-        self.helper = FormHelper()
-        self.helper.form_method = "post"
-        self.helper.label_class = 'col-5 col-form-label'
-        self.helper.field_class = 'col-7'
+        self.helper = get_parameters_form_helper()
+        self.helper.layout.append(
+            Row(
+                Div(
+                    Field('user_environment', wrapper_class='row'),
+                    css_class='col-11'
+                ), 
+                HTML(
+                    """
+                        <button type="button" data-parameters="user-environment-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <span><i class="bi bi-pencil-square"></i></span>
+                        </button>
+                    """
+                )
+            )
+            )
 
-        # Optional: Automatically generate a layout with all fields, each wrapped in a row
-        self.helper.layout = Layout(
-            *[
-                Field(field_name, wrapper_class='row')
-                for field_name in self.fields
-            ]
-        )
 
 # TODO get all units in the right!!! Not all json files have units. Also, get info buttons for all fields
 class UserSoilMoistureParametersForm(ParametersModelForm):                
@@ -349,6 +398,8 @@ class UserSoilMoistureParametersForm(ParametersModelForm):
         model = UserSoilMoistureParameters
         field_order = ['name']
         exclude = ['id', 'user', 'is_default']
+
+    
 
 class UserSoilMoistureInstanceSelectionForm(forms.Form):
     soil_moisture = forms.ChoiceField(
@@ -367,6 +418,24 @@ class UserSoilMoistureInstanceSelectionForm(forms.Form):
             self.fields['soil_moisture'].choices = [
                 (instance.id, instance.name) for instance in UserSoilMoistureParameters.objects.filter(Q(user=user))
             ]
+
+        self.helper = get_parameters_form_helper()
+        
+        self.helper.layout.append(
+            Row(
+                Div(
+                    Field('soil_moisture', wrapper_class='row'),
+                    css_class='col-11'
+                ), 
+                HTML(
+                    """
+                        <button type="button" data-parameters="soil-moisture-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <span><i class="bi bi-pencil-square"></i></span>
+                        </button>
+                    """
+                )
+            )
+            )
 
 
 class UserSoilOrganicParametersForm(ParametersModelForm):
@@ -443,6 +512,24 @@ class UserSoilOrganicInstanceSelectionForm(forms.Form):
                 (instance.id, instance.name) for instance in UserSoilOrganicParameters.objects.filter(Q(user=user))
             ]
 
+        self.helper = get_parameters_form_helper()
+        
+        self.helper.layout.append(
+            Row(
+                Div(
+                    Field('soil_organic', wrapper_class='row'),
+                    css_class='col-11'
+                ), 
+                HTML(
+                    """
+                        <button type="button" data-parameters="soil-organic-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <span><i class="bi bi-pencil-square"></i></span>
+                        </button>
+                    """
+                )
+            )
+            )
+
 
 class SoilTemperatureModuleParametersForm(ParametersModelForm):
     class Meta:
@@ -492,6 +579,23 @@ class SoilTemperatureModuleInstanceSelectionForm(forms.Form):
             self.fields['soil_temperature'].choices = [
                 (instance.id, instance.name) for instance in SoilTemperatureModuleParameters.objects.filter(Q(user=user))
             ]
+        self.helper = get_parameters_form_helper()
+        self.helper.layout.append(
+            Row(
+                Div(
+                    Field('soil_temperature', wrapper_class='row'),
+                    css_class='col-11'
+                ), 
+                HTML(
+                    """
+                        <button type="button" data-parameters="soil-temperature-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <span><i class="bi bi-pencil-square"></i></span>
+                        </button>
+                    """
+                )
+            )
+            )
+        
 
 
 class UserSoilTransportParametersForm(ParametersModelForm):
@@ -519,6 +623,22 @@ class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
             self.fields['soil_transport'].choices = [
                 (instance.id, instance.name) for instance in UserSoilTransportParameters.objects.filter(Q(user=user))
             ]
+        self.helper = get_parameters_form_helper()
+        self.helper.layout.append(
+            Row(
+                Div(
+                    Field('soil_transport', wrapper_class='row'),
+                    css_class='col-11'
+                ), 
+                HTML(
+                    """
+                        <button type="button" data-parameters="soil-transport-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <span><i class="bi bi-pencil-square"></i></span>
+                        </button>
+                    """
+                )
+            )
+            )
 
 
 class UserSimulationSettingsForm(ParametersModelForm):
@@ -592,6 +712,14 @@ class UserSimulationSettingsInstanceSelectionForm(forms.Form):
         if default_instance:
             self.initial['user_simulation_settings'] = default_instance.id
 
+        self.helper = get_row_form_helper()
+        self.helper.layout = Layout(
+            *[
+                Field(field_name, wrapper_class='row')
+                for field_name in self.fields
+            ]
+        )
+
 class WorkstepSelectorForm(forms.Form):
     WORKSTEP_CHOICES = (
         ('harvestWorkstep', 'Harvest'),
@@ -607,54 +735,23 @@ class WorkstepSelectorForm(forms.Form):
             'class': 'workstep-type-select'
             })
         )
-
-# class WorkstepSowingForm(forms.ModelForm):
     
-#     class Meta:
-#         model = WorkstepSowing 
-#         fields = ['date', 'species', 'residue', 'cultivar']
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = get_parameters_form_helper()
+        for field_name in self.fields:
+            row_content = [
 
-#     date = forms.DateField(
-#         widget=forms.DateInput(attrs={
-#             'class': 'form-control datepicker workstep-datepicker',
-#             'workstep-type': 'sowingWorkstep'
-#             }),  
-#         input_formats=['%d.%m.%Y']
-#         )
-#     species = forms.ChoiceField(
-#         choices=[],
-#         label="Species",
-#         widget=forms.Select(attrs={
-#             'class': 'form-control form-select species-selector select-parameters species-parameters',
-#             'workstep-type': 'sowingWorkstep'
-#             }),
-#         )
-
-#     cultivar = forms.ModelChoiceField(
-#         queryset=CultivarParameters.objects.none(),
-#         label="Cultivar",
-#         widget=forms.Select(attrs={
-#             'class': 'form-control form-select cultivar-selector select-parameters cultivar-parameters',
-#             'workstep-type': 'sowingWorkstep'
-#             }),
-#         )
-#     residue = forms.ModelChoiceField(
-#         queryset=CropResidueParameters.objects.none(),
-#         label="Residue Parameters",
-#         widget=forms.Select(attrs={'class': 'form-control form-select crop-residue-selector select-parameters crop-residue-parameters'}),
-#         )
-
-#     # class Meta:
-#     #     model = WorkstepSowing
-#     #     fields = ['species', 'cultivar', 'date', 'plant_density']
-
-#     def __init__(self, *args, user=None, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         if user is not None:
-#             self.fields['species'].choices = [('', '---------')] + [
-#                 (instance.id, instance.name) for instance in SpeciesParameters.objects.filter(Q(user=user) | Q(user=None)).order_by('name')
-#             ]
-
+                    Div(
+                        Field(field_name, wrapper_class='row'),
+                        css_class='col-11'
+                    ),     
+            ]
+            self.helper.layout.append(
+                Row(
+                    *row_content
+                )
+            )
         
 
 
@@ -667,7 +764,7 @@ class WorkstepSowingForm(forms.ModelForm):
         widget=forms.DateInput(attrs={
             'class': 'form-control datepicker workstep-datepicker',
             'workstep-type': 'sowingWorkstep'
-        }),  
+        }),
         input_formats=['%d.%m.%Y']
     )
 
@@ -691,7 +788,7 @@ class WorkstepSowingForm(forms.ModelForm):
 
     residue = forms.ModelChoiceField(
         queryset=CropResidueParameters.objects.none(),
-        label="Residue Parameters",
+        label="Residues",
         widget=forms.Select(attrs={
             'class': 'form-control form-select crop-residue-selector select-parameters crop-residue-parameters'
         }),
@@ -700,74 +797,75 @@ class WorkstepSowingForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Assign species choices based on user
+        # Set species choices
         if user is not None:
             self.fields['species'].choices = [('', '---------')] + [
-                (instance.id, instance.name) for instance in SpeciesParameters.objects.filter(Q(user=user) | Q(user=None)).order_by('name')
+                (instance.id, instance.name)
+                for instance in SpeciesParameters.objects.filter(Q(user=user) | Q(user=None)).order_by('name')
             ]
 
-        # # --- Crispy Helper ---
-        # self.helper = FormHelper()
-        # self.helper.form_class = 'sowing-form'
-        # self.helper.form_tag = False  # So the <form> is in your HTML, not auto-rendered
+        self.helper = FormHelper()
+        self.helper.label_class = 'col-4 col-form-label'
+        self.helper.field_class = 'col-8'
+        # self.helper.button_class = 'col-5'
+        self.helper.form_tag = False  # Avoid rendering <form> wrapper if you're already in one
+        self.helper.layout = Layout(
+            Row(Div(
+                Field('date', wrapper_class='row'),
+                css_class='col-11'
 
-        # self.helper.layout = Layout(
-        #     Field('date'),
+                ),
+                
+            ),
+            # Field('date', wrapper_class='row'),
+            Row(
+                Div(
+                    Field('species', wrapper_class='row'),
+                    css_class='col-11'
+                ),
+                HTML(
+                """
+                    <button type="button" data-parameters="species-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters species-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                    <span><i class="bi bi-pencil-square"></i></span>
+                    </button>
+                """
+                ),
+               
+            ),
+            Row(
+                Div(
+                    Field('cultivar', wrapper_class='row'),
+                    css_class='col-11'
+                ),
+                HTML("""
+                        <button type="button" data-parameters="cultivar-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters cultivar-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                        <span><i class="bi bi-pencil-square"></i></span>
+                        </button>
+                    """),
+               
+            ),
+            Row(
+                Div(
+                    Field('residue', wrapper_class='row'),
+                    css_class='col-11 advanced'
+                ),
+                HTML(
+                """
+                    <button type="button" data-parameters="crop-residue-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters crop-residue-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                    <span><i class="bi bi-pencil-square"></i></span>
+                    </button>
+                """
+                ),
+                
+            ),
+        )
+    
 
-        #     Div(
-        #         Row(
-        #             Column('species', css_class='col-md-6'),
-        #             Column(
-        #                 Button(
-        #                     'modify_species',
-        #                     'Modify Species Parameters',
-        #                     css_class='btn btn-primary modify-parameters species-parameters advanced',
-        #                     **{'data-bs-target': '#formModal', 'type': 'button'}
-        #                 ),
-        #                 css_class='col-md-6 d-flex align-items-end'
-        #             )
-        #         ),
-        #         css_class='form-group'
-        #     ),
 
-        #     Div(
-        #         Row(
-        #             Column('residue', css_class='col-md-6'),
-        #             Column(
-        #                 Button(
-        #                     'modify_residue',
-        #                     "Modify Species' Residue Parameters",
-        #                     css_class='btn btn-primary modify-parameters crop-residue-parameters',
-        #                     **{'data-bs-target': '#formModal', 'type': 'button'}
-        #                 ),
-        #                 css_class='col-md-6 d-flex align-items-end'
-        #             )
-        #         ),
-        #         css_class='form-group advanced'
-        #     ),
-
-        #     Div(
-        #         Row(
-        #             Column('cultivar', css_class='col-md-6'),
-        #             Column(
-        #                 Button(
-        #                     'modify_cultivar',
-        #                     "Modify Cultivar Parameters",
-        #                     css_class='btn btn-primary modify-parameters cultivar-parameters advanced',
-        #                     **{'data-bs-target': '#formModal', 'type': 'button'}
-        #                 ),
-        #                 css_class='col-md-6 d-flex align-items-end'
-        #             )
-        #         ),
-        #         css_class='form-group'
-        #     )
-        # )
 
 
 class WorkstepMineralFertilisationForm(forms.ModelForm):
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
+
 
 
     date = forms.DateField(
@@ -792,6 +890,37 @@ class WorkstepMineralFertilisationForm(forms.ModelForm):
     class Meta:
         model = WorkstepMineralFertilisation 
         fields = ['date', 'amount', 'mineral_fertiliser']
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = get_parameters_form_helper()
+        for field_name in self.fields:
+            row_content = [
+
+                    Div(
+                        Field(field_name, wrapper_class='row'),
+                        css_class='col-11'
+                    ),     
+            ]
+            
+            if field_name == 'mineral_fertiliser':
+                row_content.append(
+                    HTML(
+                        """
+                            <button type="button" data-parameters="mineral-fertiliser-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                            <span><i class="bi bi-pencil-square"></i></span>
+                            </button>
+                        """
+                    )
+                )
+            self.helper.layout.append(
+                Row(
+                    *row_content
+                )
+            )
+        self.fields['amount'].widget = UnitInputWrapper(widget=self.fields['amount'].widget, unit='kg/ha ???')
+        
+        
 
 class WorkstepOrganicFertilisationForm(forms.ModelForm):
     date = forms.DateField(
@@ -818,6 +947,35 @@ class WorkstepOrganicFertilisationForm(forms.ModelForm):
     class Meta:
         model = WorkstepOrganicFertilisation   
         fields = ['date', 'amount', 'organic_fertiliser', 'incorporation']
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = get_parameters_form_helper()
+        for field_name in self.fields:
+            row_content = [
+
+                    Div(
+                        Field(field_name, wrapper_class='row'),
+                        css_class='col-11'
+                    ),     
+            ]
+            
+            if field_name == 'organic_fertiliser':
+                row_content.append(
+                    HTML(
+                        """
+                            <button type="button" data-parameters="organic-fertiliser-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced" data-bs-toggle="modal" data-bs-target="#formModal">
+                            <span><i class="bi bi-pencil-square"></i></span>
+                            </button>
+                        """
+                    )
+                )
+            self.helper.layout.append(
+                Row(
+                    *row_content
+                )
+            )
+        self.fields['amount'].widget = UnitInputWrapper(widget=self.fields['amount'].widget, unit='kg/ha ???')
 
 
 from django import forms
@@ -852,6 +1010,24 @@ class WorkstepTillageForm(forms.ModelForm):
         model = WorkstepTillage
         fields = ['date', 'tillage_depth']
 
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = get_parameters_form_helper()
+        for field_name in self.fields:
+            row_content = [
+
+                    Div(
+                        Field(field_name, wrapper_class='row'),
+                        css_class='col-11'
+                    ),     
+            ]
+            self.helper.layout.append(
+                Row(
+                    *row_content
+                )
+            )
+        self.fields['tillage_depth'].widget = UnitInputWrapper(widget=self.fields['tillage_depth'].widget, unit='cm')
+
 
 
 class WorkstepHarvestForm(forms.ModelForm):
@@ -869,6 +1045,22 @@ class WorkstepHarvestForm(forms.ModelForm):
         widgets = {
             'date': forms.DateInput(),
         }
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = get_parameters_form_helper()
+        for field_name in self.fields:
+            row_content = [
+
+                    Div(
+                        Field(field_name, wrapper_class='row'),
+                        css_class='col-11'
+                    ),     
+            ]
+            self.helper.layout.append(
+                Row(
+                    *row_content
+                )
+            )
 
 
 class WorkstepIrrigationForm(forms.ModelForm):
@@ -881,14 +1073,35 @@ class WorkstepIrrigationForm(forms.ModelForm):
         )
     amount = forms.FloatField(
         min_value=0.0, 
+        initial=20.0,
         widget=forms.NumberInput(attrs={
             'class': 'form-control number-selector irrigation-amount select-parameters',
             'workstep-type': 'irrigationWorkstep'
             }))
+    
     class Meta:
         model = WorkstepIrrigation
         
         fields = ['date', 'amount']
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = get_parameters_form_helper()
+        for field_name in self.fields:
+            row_content = [
+
+                    Div(
+                        Field(field_name, wrapper_class='row'),
+                        css_class='col-11'
+                    ),     
+            ]
+            self.helper.layout.append(
+                Row(
+                    *row_content
+                )
+            )
+        self.fields['amount'].widget = UnitInputWrapper(widget=self.fields['amount'].widget, unit='mm')
+
 
 
 

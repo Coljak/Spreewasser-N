@@ -20,40 +20,28 @@
       <div class="card mb-3 advanced">
         <div class="card-body">
           <h5 class="card-title">Soil Moisture Parameters</h5>
-          {{ user_soil_moisture_select_form | crispy }}
-          <button class="btn btn-primary modify-parameters soil-moisture-parameters " type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-            Modify Soil Moisture Parameters
-          </button>
+          {% crispy user_soil_moisture_select_form %}
         </div>
       </div>
 
       <div class="card mb-3 advanced">
         <div class="card-body">
           <h5 class="card-title">Soil Organic Parameters</h5>
-          {{ user_soil_organic_select_form | crispy }}
-          <button class="btn btn-primary modify-parameters soil-organic-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-            Modify Soil Organic Parameters
-          </button>
+          {% crispy user_soil_organic_select_form %}
         </div>
       </div>
 
       <div class="card mb-3 advanced">
         <div class="card-body">
           <h5 class="card-title">Soil Temperature Parameters</h5>
-          {{ soil_temperature_module_selection_form | crispy }}
-          <button class="btn btn-primary modify-parameters soil-temperature-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-            Modify Soil Temperature Parameters
-          </button>
+          {% crispy soil_temperature_module_selection_form %}
         </div>
       </div>
 
       <div class="card mb-3 advanced">
         <div class="card-body">
           <h5 class="card-title">Soil Transport Parameters</h5>
-          {{ user_soil_transport_parameters_selection_form | crispy }}
-          <button class="btn btn-primary modify-parameters soil-transport-parameters" type="button" data-bs-toggle="modal" data-bs-target="#formModal">
-            Modify Soil Transport Parameters
-          </button>
+          {% crispy user_soil_transport_parameters_selection_form %}
         </div>
       </div>
     </div>

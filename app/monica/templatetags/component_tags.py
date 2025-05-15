@@ -10,12 +10,16 @@ def render_tab_project(
     user_environment_parameters_select_form, 
     user_crop_parameters_select_form,
     user_simulation_settings_select_form):
-    context.update({
+    request = context.get('request')
+    project_select_form = context.get('project_select_form')
+    context = {
+        'request': request,
+        'project_select_form': project_select_form,
         'project_form': project_form,
         'user_environment_parameters_select_form': user_environment_parameters_select_form,
         'user_crop_parameters_select_form': user_crop_parameters_select_form,
         'user_simulation_settings_select_form': user_simulation_settings_select_form,
-    })
+    }
     return context
 
     
@@ -47,13 +51,14 @@ def render_tab_soil(
     soil_temperature_module_selection_form,
     user_soil_transport_parameters_selection_form
     ):
-    
-    context.update({
+    request = context.get('request')
+    context = {
+        'request': request,
         'user_soil_moisture_select_form': user_soil_moisture_select_form,
         'user_soil_organic_select_form': user_soil_organic_select_form,
         'soil_temperature_module_selection_form': soil_temperature_module_selection_form,
         'user_soil_transport_parameters_selection_form': user_soil_transport_parameters_selection_form,
-    })
+    }
     return context
 
 

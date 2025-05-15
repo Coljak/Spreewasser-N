@@ -564,7 +564,7 @@ const initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, l
 
 
 const createModal = (params) => {
-    // console.log('create modal', params)
+    console.log('create modal', params)
     try {
 
         let url = '/monica/' + params.parameters + '/';
@@ -1050,10 +1050,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } else if (event.target.classList.contains('modify-parameters')) {
             console.log('modify-parameters clicked');
-            const targetClass = event.target.classList[3];
-            const value = event.target.closest('.rotation').querySelector('.select-parameters.' + targetClass).value;
+            const parameters = event.target.dataset.parameters;
+            const value = event.target.closest('.rotation').querySelector('.select-parameters.' + parameters).value;
             const params = {
-                'parameters': targetClass,
+                'parameters': parameters,
                 'parameters_id': value,
                 'rotation_index': rotationIndex
             }
@@ -1164,11 +1164,12 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#tabSoil').on('click', (event) => {
         let params = {};
         if (event.target.classList.contains('modify-parameters')) {
-            const targetClass = event.target.classList[3];
-            const value = $('.form-select.' + targetClass).val();
+            
+            const parameters = event.target.dataset.parameters;
+            const value = $('.form-select.' + parameters).val();
             
             params = {
-                'parameters': targetClass,
+                'parameters': parameters,
                 'parameters_id': value,
             }
             createModal(params);
@@ -1228,13 +1229,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('#tabProject').on('click', (event) => {
         if (event.target.classList.contains('modify-parameters')) {
-            const targetClass = event.target.classList[3];
-            const value = $('.form-select.' + targetClass).val();
+            
+            const parameters = event.target.dataset.parameters;
+            const value = $('.form-select.' + parameters).val();
             
                 const params = {
-                    'parameters': targetClass,
+                    'parameters': parameters,
                     'parameters_id': value,
                 }
+                console.log('Create Modal', params)
                 createModal(params);          
         } else if (event.target.classList.contains('monica-project')) {
             const projectId = $('#id_monica_project').val(); 
@@ -1249,6 +1252,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (event.target.classList.contains('new-project')) {
                 console.log('NEW PROJECT')
                 projectModalForm.reset();
+                $('#monicaProjectModal').find('.modal-title').text('Create new project');
                 $('#monicaProjectModal').modal('show');
             } else if (event.target.classList.contains('delete-project')) {
                 console.log('delete project')

@@ -243,6 +243,115 @@ export const addRotationToGui = (rotationIndex, rotation=null) => {
 };
 
 
+// export const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=null) => {
+//     console.log("addWorkstepToGui", workstepType, rotationIndex, workstepIndex, workstep);
+//     // load and modify the according workstep template
+//     const formTemplate = document.getElementById(workstepType + '-template');
+//     const newForm = formTemplate.cloneNode(true);
+//     newForm.removeAttribute('id');
+
+//     newForm.querySelectorAll('*[id]').forEach(element => {
+       
+//         const newId = `${element.id}_${workstepType}_${rotationIndex}_${workstepIndex}`;
+//         newForm.querySelector(`label[for="${element.id}"]`).htmlFor = newId;
+//         element.id = newId;
+//         element.setAttribute('workstep-index', workstepIndex);
+//         element.setAttribute('workstep-type', workstepType);
+        
+//     });
+//     newForm.querySelector('form').setAttribute('workstep-type', workstepType);
+//     newForm.querySelector('form').setAttribute('workstep-index', workstepIndex);
+//     newForm.querySelector('form').setAttribute('rotation-index', rotationIndex);
+
+//     // add and initialize the datepicker
+//     $(newForm).find('.datepicker').datepicker({
+//         language: 'de-DE',
+//         format: "dd.mm.yyyy",
+//         weekStart: 1,
+//         autoclose: true
+//     });
+
+//     // TODO test which one is better
+//     // 
+    
+//     const parentDiv = document.querySelector(`div[rotation-index='${rotationIndex}']`); 
+//     const cardBody = parentDiv ? parentDiv.querySelector(`:scope > .card-body`) : null;
+//     const addWorkstepDiv = cardBody.querySelector('.add-workstep');
+//     cardBody.insertBefore(newForm, addWorkstepDiv);
+
+
+    
+// //--------------------------------------------------
+//     if (workstep) {
+//         console.log('IN addRotationToGui, if (rotation) workstep', workstepType);
+//         const datepickerInput = newForm.querySelector('.workstep-datepicker'); // Ensure correct selection
+//         if (datepickerInput) {
+//             $(datepickerInput).datepicker('update', new Date(workstep.date));
+//         } else {
+//             console.error("Datepicker input not found inside the form.");
+//         }
+
+//         if (workstepType === 'sowingWorkstep') {
+//             console.log('workstepType if workstep.options.species', workstepType, workstep.options.species);
+//             const speciesSelector = newForm.querySelector(`select[name="species"]`);
+//             const cultivarSelector = newForm.querySelector(`select[name="cultivar"]`);
+//             const residueSelector = newForm.querySelector(`select[name="residue"]`);
+//             if (!((workstep.options.species === null) || (workstep.options.species === ''))) {
+//                 // console.error('SPECIES!!!!', workstep.options.species);
+
+//             // }
+//             // if (speciesSelector && !speciesSelector.value) {
+                
+//                 console.log('speciesSelector', speciesSelector.value);
+//                 // Watch when the species dropdown gets its options
+//                 observeDropdown(`#${speciesSelector.id}`, (dropdown) => {
+//                     dropdown.value = workstep.options.species;  
+                    
+//                     fetch('/monica/get_options/cultivar-parameters/' + workstep.options.species + '/')
+//                         .then(response => response.json())
+//                         .then(data => {
+//                             populateDropdown(data, cultivarSelector);
+//                         })
+//                         .then(() => {
+//                             cultivarSelector.value = workstep.options.cultivar;  
+//                         });
+
+
+//                     // TODO these fetches may be duplicates
+//                     fetch('/monica/get_options/crop-residue-parameters/' + workstep.options.species + '/')
+//                         .then(response => response.json())
+//                         .then(data => {
+//                         populateDropdown(data, residueSelector);
+//                         })
+//                         .then(() => {
+//                             residueSelector.value = workstep.options.residue; 
+//                         });
+//                 });
+                
+//             } 
+//             else if (speciesSelector && !speciesSelector.value) {
+//                 speciesSelector.value = workstep.options.species;
+//             }
+            
+
+//         } else {    
+//             for (const [key, value] of Object.entries(workstep.options)) {
+//                 const input = newForm.querySelector(`select[name=${key}], input[name=${key}]`);
+
+//                 if (input) {
+//                     if (input.type ==="checkbox") {
+//                         input.checked = value;
+//                     } else {
+//                         input.value = value;
+//                     }
+//                 } else {
+//                     console.error("Input not found with name:", key);
+//                 }
+//             };
+//         }
+//     }
+// };
+
 export const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, workstep=null) => {
     console.log("addWorkstepToGui", workstepType, rotationIndex, workstepIndex, workstep);
     // load and modify the according workstep template
@@ -253,11 +362,19 @@ export const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, wor
     newForm.querySelectorAll('*[id]').forEach(element => {
        
         const newId = `${element.id}_${workstepType}_${rotationIndex}_${workstepIndex}`;
-        newForm.querySelector(`label[for="${element.id}"]`).htmlFor = newId;
+        // newForm.querySelector(`label[for="${element.id}"]`).htmlFor = newId;
         element.id = newId;
         element.setAttribute('workstep-index', workstepIndex);
         element.setAttribute('workstep-type', workstepType);
         
+    });
+
+    newForm.querySelectorAll('label').forEach(label => {
+        const forId = label.getAttribute('for');
+        if (forId) {
+            const newId = `${forId}_${workstepType}_${rotationIndex}_${workstepIndex}`;
+            label.setAttribute('for', newId);
+        }
     });
     newForm.querySelector('form').setAttribute('workstep-type', workstepType);
     newForm.querySelector('form').setAttribute('workstep-index', workstepIndex);
@@ -351,7 +468,6 @@ export const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, wor
         }
     }
 };
-
 
 export function handleDateChange(event) {
     console.log('handleDateChange', event);

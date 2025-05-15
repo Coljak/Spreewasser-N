@@ -49,42 +49,18 @@
     <div class="card-body">   
       <form class="sowing-form">
         <h5 class="card-title">Sowing Workstep</h5>
-        {{ workstep_sowing_form.no_field_errors  }}
-        <div class="form-group">
-          {{ workstep_sowing_form.date.label_tag  }}
-          {{ workstep_sowing_form.date  }}
-        </div>
-        <div class="form-group">
-          {{ workstep_sowing_form.species.label_tag }}
-          {{ workstep_sowing_form.species }}
-          <button type="button" class="btn btn-primary modify-parameters species-parameters advanced" data-bs-target="#formModal">
-            Modify Species Parameters
-          </button>
-          <div class="advanced">
-            {{ workstep_sowing_form.residue.label_tag }}
-            {{ workstep_sowing_form.residue }}
-            
-            <button type="button" class="btn btn-primary modify-parameters crop-residue-parameters " data-bs-target="#formModal">
-              Modify Species' Residue Parameters
-            </button>
-          </div>
-        </div>
-        <div class="form-group">
-          {{ workstep_sowing_form.cultivar.label_tag }}
-          {{ workstep_sowing_form.cultivar }}
-          <button type="button" class="btn btn-primary modify-parameters cultivar-parameters advanced" data-bs-target="#formModal">
-            Modify Cultivar Parameters
-          </button>
-        </div>  
+        {% crispy workstep_sowing_form %}
       </form>
     </div>
   </div>
+
+
 
   <div class="card mb-3" id="harvestWorkstep-template">
     <div class="card-body">
       <form class="harvest-form">
         <h5 class="card-title">Harvest Workstep</h5>
-        {{ workstep_harvest_form.as_p }}
+        {% crispy workstep_harvest_form %}
         <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
       </form>
     </div>
@@ -94,7 +70,7 @@
     <div class="card-body">
       <form class="tillage-form">
         <h5 class="card-title">Tillage Workstep</h5>
-        {{ workstep_tillage_form.as_p }}
+        {% crispy workstep_tillage_form %}
         <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
       </form>
     </div>
@@ -104,10 +80,7 @@
     <div class="card-body">
       <form class="mineral-fertilisation-form">
         <h5 class="card-title">Mineral Fertilisation Workstep</h5>
-        {{ workstep_mineral_fertilisation_form.as_p }}
-        <button type="button" class="btn btn-primary modify-parameters mineral-fertiliser-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
-          Modify Mineral Fertiliser Partitions
-        </button>
+        {% crispy workstep_mineral_fertilisation_form %}
         <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
       </form>
     </div>
@@ -117,10 +90,7 @@
     <div class="card-body">
       <form class="organic-fertilisation-form">
         <h5 class="card-title">Organic Fertilisation Workstep</h5>
-        {{ workstep_organic_fertilisation_form.as_p }}
-        <button type="button" class="btn btn-primary modify-parameters organic-fertiliser-parameters advanced" data-bs-toggle="modal" data-bs-target="#formModal">
-          Modify Mineral Fertiliser Partitions
-        </button>
+        {% crispy workstep_organic_fertilisation_form %}
         <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
       </form>
     </div>
@@ -130,7 +100,7 @@
     <div class="card-body">
       <form class="irrigation-form">
         <h5 class="card-title">Irrigation Workstep</h5>
-        {{ workstep_irrigation_form.as_p }}
+        {% crispy workstep_irrigation_form %}
         <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
       </form>
     </div>
@@ -144,7 +114,7 @@
       <div class="card-body">
         <h5 class="card-title">Add Workstep</h5>
         
-        {{ workstep_selector_form|crispy }}
+        {% crispy workstep_selector_form %}
         <button class="btn btn-primary add-workstep-button">Add Workstep</button>
       </div>
     </div>

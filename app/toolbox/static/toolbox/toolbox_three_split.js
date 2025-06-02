@@ -597,13 +597,20 @@ $('#toolboxPanel').on('change',  function (event) {
     
     const key = `${inputPrefix}_${inputName}`;
 
-    if (inputChecked) {
-      project.infiltration[key].push(inputValue);
-    } else {
-      project.infiltration[key].pop(inputValue);
-    }
-    project.saveToLocalStorage();
-    console.log('Updated infiltration', inputId, '=', inputValue);
+  const index = project.infiltration[key].indexOf(inputValue);
+
+  if (index > -1) {
+    // Value exists — remove it
+    project.infiltration[key] = project.infiltration[key].filter(
+      (v) => v !== inputValue
+    );
+    console.log('Checkbox unchecked:', inputId, '=', inputValue);
+  } else {
+    // Value does not exist — add it
+    project.infiltration[key].push(inputValue);
+    console.log('Checkbox checked:', inputId, '=', inputValue);
+  }
+  project.saveToLocalStorage();
 
   } else if ($target.hasClass('sink-select-all-checkbox')) {
     const project = ToolboxProject.loadFromLocalStorage();

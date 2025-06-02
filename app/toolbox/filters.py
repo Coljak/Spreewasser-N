@@ -104,15 +104,19 @@ class SinkFilter(FilterSet):
         super().__init__(*args, queryset=queryset, **kwargs)
 
         if queryset is not None:
-            land_use_values = set(
-                queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
+            land_use_ids = set(
+                queryset.exclude(landuse_1__isnull=True).values_list('landuse_1', flat=True)
             ).union(
-                queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
+                queryset.exclude(landuse_2__isnull=True).values_list('landuse_2', flat=True)
             ).union(
-                queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
+                queryset.exclude(landuse_3__isnull=True).values_list('landuse_3', flat=True)
             )
-            choices = sorted([(lu, lu) for lu in land_use_values])
+
+            land_uses = Landuse.objects.filter(id__in=land_use_ids)
+            choices = sorted([(lu.id, lu.de or f"Landuse {lu.id}") for lu in land_uses])
             self.filters['land_use'].extra['choices'] = choices
+            # choices = sorted([(lu, lu) for lu in land_use_values])
+            # self.filters['land_use'].extra['choices'] = choices
 
 
         for name, filter_ in self.filters.items():
@@ -152,16 +156,18 @@ class EnlargedSinkFilter(FilterSet):
 
         # Dynamically set land use choices from queryset
         if queryset is not None:
-            land_use_values = set(
-                queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
+            land_use_ids = set(
+                queryset.exclude(landuse_1__isnull=True).values_list('landuse_1', flat=True)
             ).union(
-                queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
+                queryset.exclude(landuse_2__isnull=True).values_list('landuse_2', flat=True)
             ).union(
-                queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
+                queryset.exclude(landuse_3__isnull=True).values_list('landuse_3', flat=True)
             ).union(
-                queryset.exclude(land_use_4__isnull=True).values_list('land_use_4', flat=True)
+                queryset.exclude(landuse_4__isnull=True).values_list('landuse_4', flat=True)
             )
-            choices = sorted([(lu, lu) for lu in land_use_values])
+
+            land_uses = Landuse.objects.filter(id__in=land_use_ids)
+            choices = sorted([(lu.id, lu.de or f"Landuse {lu.id}") for lu in land_uses])
             self.filters['land_use'].extra['choices'] = choices
 
         # Configure range sliders (MinMaxRangeFilter)

@@ -217,12 +217,13 @@ def filter_sinks(request):
 
     
     land_use_values = project['infiltration'].get('sink_land_use', [])
+    land_use_values = [int(value) for value in land_use_values if value.isdigit()]
     land_use_filter = (
-        Q(land_use_1__in=land_use_values) &
-        (Q(land_use_2__in=land_use_values) |
-        Q(land_use_2__isnull=True)) &
-        (Q(land_use_3__in=land_use_values) |
-        Q(land_use_3__isnull=True))
+        Q(landuse_1__in=land_use_values) &
+        (Q(landuse_2__in=land_use_values) |
+        Q(landuse_2__isnull=True)) &
+        (Q(landuse_3__in=land_use_values) |
+        Q(landuse_3__isnull=True))
         )
     sinks = sinks.filter(land_use_filter)
     if sinks.count() == 0:
@@ -244,9 +245,10 @@ def filter_sinks(request):
                 "area": round(sink.area, 2),
                 "volume": round(sink.volume, 2),
                 "index_soil": str(sink.index_soil * 100) + "%",
-                "land_use_1": sink.land_use_1,
-                "land_use_2": sink.land_use_2,
-                "land_use_3": sink.land_use_3,
+                "land_use_1": sink.landuse_1.de if sink.landuse_1 else None,
+                "land_use_2": sink.landuse_2.de if sink.landuse_2 else None,
+                "land_use_3": sink.landuse_3.de if sink.landuse_3 else None,
+
             }
             features.append(geojson)
         feature_collection = {
@@ -283,14 +285,15 @@ def filter_enlarged_sinks(request):
 
 
     land_use_values = project['infiltration'].get('enlarged_sink_land_use', [])
+    land_use_values = [int(value) for value in land_use_values if value.isdigit()]
     land_use_filter = (
-        Q(land_use_1__in=land_use_values) &
-        (Q(land_use_2__in=land_use_values) |
-        Q(land_use_2__isnull=True)) &
-        (Q(land_use_3__in=land_use_values) |
-        Q(land_use_3__isnull=True)) &
-        (Q(land_use_4__in=land_use_values) |
-        Q(land_use_4__isnull=True))
+        Q(landuse_1__in=land_use_values) &
+        (Q(landuse_2__in=land_use_values) |
+        Q(landuse_2__isnull=True)) &
+        (Q(landuse_3__in=land_use_values) |
+        Q(landuse_3__isnull=True))&
+        (Q(landuse_4__in=land_use_values) |
+        Q(landuse_4__isnull=True))
         )
     sinks = sinks.filter(land_use_filter)
     features = []
@@ -313,10 +316,10 @@ def filter_enlarged_sinks(request):
                 "volume_construction_barrier": round(sink.volume_construction_barrier, 2),
                 "volume_gained": round(sink.volume_gained, 2),
                 "index_soil": str(sink.index_soil * 100) + "%",
-                "land_use_1": sink.land_use_1,
-                "land_use_2": sink.land_use_2,
-                "land_use_3": sink.land_use_3,
-                "land_use_4": sink.land_use_4,
+                "land_use_1": sink.landuse_1.de if sink.landuse_1 else None,
+                "land_use_2": sink.landuse_2.de if sink.landuse_2 else None,
+                "land_use_3": sink.landuse_3.de if sink.landuse_3 else None,
+                "land_use_4": sink.landuse_4.de if sink.landuse_3 else None,
             }
             features.append(geojson)
         feature_collection = {

@@ -174,6 +174,11 @@ class Landuse(models.Model):
     buek_corine_land_cover = models.ForeignKey(CorineLandCover2018, on_delete=models.DO_NOTHING, null=True, related_name='buek_corine_land_cover')
     sink_landuse_name = models.CharField(max_length=50, null=True)
     clc = models.IntegerField(null=True, blank=True)
+    de = models.CharField(max_length=50, null=True, blank=True) # DE: Landnutzung
+    en = models.CharField(max_length=50, null=True, blank=True) # EN: Landuse
+    
+    def __str__(self):
+        return self.sink_landuse_name
 
 # landuse_dissolve
 class LandUseMap(models.Model):
@@ -301,8 +306,11 @@ class Sink4326(models.Model):
     index_2 = models.FloatField(null=True)
     index_3 = models.FloatField(null=True)
     land_use_1 = models.CharField(max_length=100, null=True)
+    landuse_1 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='sink_landuse_1')
     land_use_2 = models.CharField(max_length=100, null=True)
+    landuse_2 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='sink_landuse_2')
     land_use_3 = models.CharField(max_length=100, null=True)
+    landuse_3 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='sink_landuse_3')
     land_use_1_percentage = models.FloatField(null=True)
     land_use_2_percentage = models.FloatField(null=True)
     land_use_3_percentage = models.FloatField(null=True)
@@ -430,9 +438,13 @@ class EnlargedSink4326(models.Model):
     index_2 = models.FloatField(null=True)
     index_3 = models.FloatField(null=True)
     land_use_1 = models.CharField(max_length=100, null=True)
+    landuse_1 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='enlarged_sink_landuse_1')
     land_use_2 = models.CharField(max_length=100, null=True)
+    landuse_2 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='enlarged_sink_landuse_2')
     land_use_3 = models.CharField(max_length=100, null=True)
+    landuse_3 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='enlarged_sink_landuse_3')
     land_use_4 = models.CharField(max_length=100, null=True)
+    landuse_4 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='enlarged_sink_landuse_4')
     land_use_1_percentage = models.FloatField(null=True)
     land_use_2_percentage = models.FloatField(null=True)
     land_use_3_percentage = models.FloatField(null=True)

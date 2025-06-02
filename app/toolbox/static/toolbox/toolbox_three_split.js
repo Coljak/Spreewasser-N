@@ -166,12 +166,7 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
 }
 });
 
-const toolboxOutlineGeste = new L.geoJSON(outline_geste, {
-  attribution: 'Geste??',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.name);
-}
-});
+
 
   const overlayLayers = {
     // "droughtOverlay": droughtOverlay,
@@ -182,7 +177,6 @@ const toolboxOutlineGeste = new L.geoJSON(outline_geste, {
     "toolboxOutlineInjection": toolboxOutlineInjection,
     "toolboxOutlineSurfaceWater": toolboxOutlineSurfaceWater,
     "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
-    "toolboxOutlineGeste": toolboxOutlineGeste,
     "sinks": toolboxSinks,
   };
 
@@ -268,6 +262,85 @@ const showSinkOutline = function (sinkId) {
   const project = ToolboxProject.loadFromLocalStorage();
   console.log('project', project);
   console.log('showSinkOutline sinkId', sinkId);
+}
+
+function createSinkTableSettings(sinkType, indexVisible) {
+  return {
+    "order": [[1, "asc"]],
+    "searching": false,
+    "columnDefs": [
+      {
+        "targets": 0, // Select acheckbox
+        "orderable": false,
+        "searchable": false
+      },
+      {
+        "targets": 1, // Tiefe
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 2, // Fläche
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 3, // Volumen
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 4, // Bodeneignung
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 5, // Bodeneignung berechnet
+        "visible": false,
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 6, // Volumen Barriere
+        "visible": sinkType === 'sink'? false : true, 
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 7, // Zusätzliches Volumen
+        "visible": sinkType === 'sink'? false : true, 
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 8, // Landnutzung 1
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 9, //Landnutzung 2
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 10, //Landnutzung 3
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 11,
+        "visible": sinkType === 'sink'? false : true, // Landnutzung 4
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 12,
+        "visible": indexVisible, // Total Sink Index
+        "orderable": true,
+        "searchable": false
+      }
+    ]
+  }
 }
 
 function getSinks(sinkType, featureGroup) {
@@ -359,12 +432,14 @@ function getSinks(sinkType, featureGroup) {
               <th>Fläche (m²)</th>
               <th>Volumen (m³)</th>
               <th>Bodeneignung</th>
-              <th class="hide-for-enlarged-sink">Volumen Barriere</th>
-              <th class="hide-for-enlarged-sink">Zusätzliches Volumen</th>
+              <th>Bodeneignung berechnet</th>
+              <th>Volumen Barriere</th>
+              <th>Zusätzliches Volumen</th>
               <th>Landnutzung 1</th>
               <th>Landnutzung 2</th>
               <th>Landnutzung 3</th>
-              <th class="hide-for-enlarged-sink">Landnutzung 4</th>
+              <th>Landnutzung 4</th>
+              <th>Index BE</th>
             </tr>
           </thead>
           <tbody>
@@ -380,91 +455,23 @@ function getSinks(sinkType, featureGroup) {
             <td>${p.area}</td>
             <td>${p.volume}</td>
             <td>${p.index_soil}</td>
-            <td class="hide-for-enlarged-sink">${p.volume_construction_barrier ?? '-'}</td>
-            <td class="hide-for-enlarged-sink">${p.volume_gained ?? '-'}</td>
+            <td class="index-soil" data-type=${sinkType} data-id="${p.id}"></td>
+            <td>${p.volume_construction_barrier ?? '-'}</td>
+            <td>${p.volume_gained ?? '-'}</td>
             <td>${p.land_use_1 ?? '-'}</td>
             <td>${p.land_use_2 ?? '-'}</td>
             <td>${p.land_use_3 ?? '-'}</td>
-            <td class="hide-for-enlarged-sink">${p.land_use_4 ?? '-'}</td>
+            <td>${p.land_use_4 ?? '-'}</td>
+            <td class="index-total" data-type=${sinkType} data-id="${p.id}"></td>
           </tr>
         `;
       });
 
       tableHTML += `</tbody></table>`;
       tableContainer.innerHTML = tableHTML;
+      const tableSettings = createSinkTableSettings(sinkType, false);
+      $('#' + elId + ' table').DataTable(tableSettings);
 
-      $('#' + elId + ' table').DataTable(
-        {
-          "order": [[1, "asc"]],
-          "searching": false,
-          "columnDefs": [
-            {
-              "targets": 0,
-              "orderable": false,
-              "searchable": false
-            },
-            {
-              "targets": 1,
-              "orderable": true,
-              "searchable": false
-            },
-            {
-              "targets": 2,
-              "orderable": true,
-              "searchable": false
-            },
-            {
-              "targets": 3,
-              "orderable": true,
-              "searchable": false
-            },
-            {
-              "targets": 4,
-              "orderable": true,
-              "searchable": false
-            },
-            {
-              "targets": 5,
-              "visible": sinkType === 'sink'? false : true,
-              "orderable": true,
-              "searchable": false
-            },
-            {
-              "targets": 6,
-              "visible": sinkType === 'sink'? false : true,
-              "orderable": true,
-              "searchable": false
-            },
-            {
-              "targets": 7,
-              "orderable": true,
-              "searchable": false
-            },
-            {
-              "targets": 8,
-              "orderable": true,
-              "searchable": false
-            },
-            {
-              "targets": 9,
-              "orderable": true,
-              "searchable": false
-            },
-            {
-              "targets": 10,
-              "visible": sinkType === 'sink'? false : true,
-              "orderable": true,
-              "searchable": false
-            }
-          ]
-        }
-      );
-      if (sinkType === 'sink') {
-        const tableColumns = document.querySelectorAll('hide-for-enlarged-sink');
-        tableColumns.forEach(col => {
-          col.style.display = 'none';
-        });
-      };
 
       // display card with table
       const tableCardId = sinkType === 'sink' ? 'cardSinkTable' : 'cardEnlargedSinkTable';
@@ -659,12 +666,17 @@ $('#toolboxPanel').on('click', function (event) {
   } else if ($target.attr('id') === 'btnFilterLakes') {
     getWaterBodies('lakes', lakesFeatureGroup);
   
-  } 
+  } else if ($target.hasClass('evaluate-selected-sinks')) {
+    console.log('ClassList contains  evaluate-selected-sinks');
+    const project = ToolboxProject.loadFromLocalStorage();
+    calculateIndexForSelection(project)
+  }
 }) 
 
 
-function calculateIndexForSelection() {
-  const project = ToolboxProject.loadFromLocalStorage();
+
+function calculateIndexForSelection(project) {
+  
   fetch('calculate_index_for_selection/', {
     method: 'POST',
     body: JSON.stringify(project),
@@ -676,14 +688,43 @@ function calculateIndexForSelection() {
   .then(response => response.json())
   .then(data => {
     if (data.message.success) {
-      localStorage.setItem('sinkSelection', data.selection) ;
-      // TODO: create layer with sinks and toggleButton
+      console.log('data', data);
       handleAlerts(data.message);
+      const sinkTable = $('#sink-table').DataTable();
+      const enlargedSinkTable = $('#enlarged_sink-table').DataTable();
+      if (Object.keys(data.sinks).length !== 0) {
+        let sinkType = 'sink';
+        
+        sinkTable.column(12).visible(true);
+        Object.keys(data.sinks).forEach(key => {
+          const sinkId = key;
+          console.log(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`)
+          document.querySelector(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`).textContent = data.sinks[key].index_total;    
+        });
+        $('#sink-table').DataTable().destroy();
+        const tableSettings = createSinkTableSettings(sinkType, true);
+        $('#sink-table').DataTable(tableSettings);
+
+      };
+      if (Object.keys(data.enlarged_sinks).length !== 0) {
+        let sinkType = 'enlarged_sink';
+        enlargedSinkTable.column(12).visible(true);
+        Object.keys(data.enlarged_sinks).forEach(key => {
+          const sinkId = key;
+          document.querySelector(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`).textContent = data.enlarged_sinks[key].index_total;      
+      });
+      const tableSettings = createSinkTableSettings(sinkType, true);
+        $('#enlarged_sink-table').DataTable(tableSettings);
+      // enlargedSinkTable.destroy();
+      // enlargedSinkTable.DataTable();
+      };
     } else {
       handleAlerts(data.message);
     }
-  })
-}
+  });
+};
+
+
 $('#injectionGo').on('click', function () {
   const userField = ToolboxProject.loadFromLocalStorage().userField;
   // const userField = project.userField;
@@ -788,13 +829,8 @@ $('#injectionGo').on('click', function () {
   }
   });
 
-  $('#btnCntinueWithSinkSelection').on('click', function () {
-    calculateIndexForSelection();
-  });
 
-  $('#btnCntinueWithEnlargedSinkSelection').on('click', function () {
-    calculateIndexForSelection();
-  });
+
 
 let sinksVisible = true;
 let enlargedSinksVisible = true;
@@ -832,6 +868,8 @@ document.getElementById('toggleStreams').addEventListener('click', function () {
   }
   streamsVisible = !streamsVisible;
 });
+
+
 
 
 getUserFieldsFromDb(featureGroup);

@@ -16,40 +16,8 @@ from django.contrib.gis.geos import GEOSGeometry
 
 from .widgets import CustomRangeSliderWidget, CustomSingleSliderWidget,CustomSimpleSliderWidget, CustomDoubleSliderWidget
 
-# class SingleWidgetForm(forms.Form):
-#     distance_to_userfield = forms.FloatField(
-#         required=False,
-#         label="Distance to userfield (m)",
-#         widget=CustomSingleSliderWidget()
-#     )
 
-# class DoubleWidgetForm(forms.Form):
-#     double_slider = forms.FloatField(
-#         required=False,
-#         label="Distance to userfield (m)",
-#         widget=CustomRangeSliderWidget()
-#     )
 
-class DoubleSliderTestForm(forms.Form):
-    field_capacity = forms.IntegerField(
-        min_value=0, 
-        max_value=100, 
-        # initial=33, 
-        widget=CustomDoubleSliderWidget(attrs={
-            "data_range_min": 0,
-            "data_range_max": 100,
-            "data_cur_min": 10,
-            "data_cur_max": 80,
-            "units": "%",
-            
-        }),
-        label="Feldkapazität (%)",
-        help_text = (
-            "Die Feldkapazität ist das Wasservolumen das über längere Zeit entgegen der "
-            "Schwerkraft im Boden gehalten werden kann. Eine geringere Feldkapazität begünstigt "
-            "Versickerungsmaßnahmen."
-        )
-    )
   
 class SliderFilterForm(forms.Form):
     def __init__(self, *args, **kwargs):
@@ -239,11 +207,6 @@ class WeightingsForestForm(forms.Form):
             'forest-weighting-reset', 
             'Reset all', 
             css_class='btn-secondary reset-all'))
-
-
-
-        
-
 
 
 class WeightingsAgricultureForm(forms.Form):

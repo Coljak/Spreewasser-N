@@ -15,7 +15,7 @@ import math
 
 
 FIELD_UNITS = {
-    "area": "ha",
+    "area": "m²",
     "volume": "m³",
     "volume_construction_barrier": "m³",
     "volume_gained": "m³",
@@ -86,7 +86,7 @@ class SinkFilter(FilterSet):
     area = MinMaxRangeFilter(
         model=Sink4326, 
         field_name='area', 
-        label="Area (ha)",
+        label="Area (m²)",
         )
     volume = MinMaxRangeFilter(model=Sink4326, field_name='volume', label="Volume (m³)")
     depth = MinMaxRangeFilter(model=Sink4326, field_name='depth', label="Depth (m)")
@@ -133,7 +133,7 @@ class SinkFilter(FilterSet):
         form = SliderFilterForm
 
 class EnlargedSinkFilter(FilterSet):
-    area = MinMaxRangeFilter(model=EnlargedSink4326, field_name='area', label="Area (ha)")
+    area = MinMaxRangeFilter(model=EnlargedSink4326, field_name='area', label="Area (m²)")
     volume = MinMaxRangeFilter(model=EnlargedSink4326, field_name='volume', label="Volume (m³)")
     depth = MinMaxRangeFilter(model=EnlargedSink4326, field_name='depth', label="Depth (m)")
     volume_construction_barrier = MinMaxRangeFilter(model=EnlargedSink4326, field_name='volume_construction_barrier', label="Volume Construction Barrier (m³)")

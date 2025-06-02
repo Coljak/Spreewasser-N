@@ -33,5 +33,5 @@ urlpatterns = [
     path('toolbox/get_weighting_form/', views.get_weighting_forms, name='get_weighting_forms'),
     path('toolbox/calculate_index_for_selection/', views.calculate_index_for_selection, name='calculate_index_for_selection'),
     # path('toolbox/get_selected_sinks/', views.get_selected_sinks, name='get_selected_sinks'),
-    path('toolbox/test/', views.test, name='test'),
+    # path('toolbox/test/', views.test, name='test'),
 ]

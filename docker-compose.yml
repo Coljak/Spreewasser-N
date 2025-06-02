@@ -18,6 +18,7 @@ services:
         - DEV=true
     ports:
       - 8000:8000 
+      - 8888:8888
     volumes:
       - ./app:/app
       - ./app/klim4cast/data/netcdf:/app/klim4cast/data/netcdf 

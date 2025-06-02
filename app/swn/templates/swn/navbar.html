@@ -6,6 +6,7 @@
         <li class="mb-1"><a  class="nav-brand mb-2" href="{% url 'swn:swn_index' %}"><img src="{% static 'img/SpreeWasser-Logo.png' %}" height="60px" alt="SWN-Logo"/></a></li>
         {% if user.is_superuser %}
           <li><a  class="nav-link" href="{% url 'admin:index' %}">ADMIN</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'swn:thredds-catalog' %}">Thredds catalog</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'swn:bootstrap' %}">Bootstrap</a></li>
         {% endif %}
         {% if user.is_authenticated  %}    
@@ -26,8 +27,6 @@
         {% endif %}
 
         <li class="nav-item"><a class="nav-link" href="{% url 'klim4cast:timelapse-page' %}">Clim4Cast</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'swn:thredds-catalog' %}">Thredds catalog</a></li>
-        
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:acknowledgements' %}">Acknowledgements</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:impressum_information' %}">Impressum</a></li>
 

@@ -1,0 +1,5 @@
+infiltration_info_texts = {
+    'landuse': 'Im ausgewählten Gebiet liegen folgende Formen der Landnutzung vor, die als Versickerungsstandorte in Betracht kommen. Welche möchten Sie für die weitere Planung nutzen?',
+    'soil_suitability': 'Die Bewertung der Böden für Versickerungsmaßnahmen basiert auf den folgenden Kriterien. Anhängig von der Landnutzungsform werden diese unterschiedlich kombiniert und gewichtet um den Eignungssindex zu errechnen. Die Gewichtung kann angepasst und das Ergebnis gefiltert werden',
+    'natural_sinks': 'Natürliche Senken in der Landschaft können als Versickerungsstandorte genutzt werden. Der Verzicht auf künstliche Versickerungsstrukturen bietet die Möglichkeit den finanziellen und baulichen Aufwand von Maßnahmen zu reduzieren und die Eingliederung in das natürliche Umfeld zu erleichtern. Zur Anpassung an das Planungsvorhaben können die Senken entsprechend ihrer Proportionen selektiert werden.',
+    

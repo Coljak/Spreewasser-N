@@ -14,10 +14,10 @@
         <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabEnlargedSinks" aria-selected="false">Vergrößerte Senken</a>
     </li>
     <li class="nav-item infiltration">
-        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabWaterbodies" aria-selected="false">Gewässer</a>
+        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabWeightingForms" aria-selected="false">Gewichtung</a>
     </li>
     <li class="nav-item infiltration">
-        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabWeightingForms" aria-selected="false">Gewichtung</a>
+        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabWaterbodies" aria-selected="false">Gewässer</a>
     </li>
     <li class="nav-item infiltration">
         <a id="toolboxResultTab" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabToolboxResult">Result</a>
@@ -38,17 +38,20 @@
     <div id="tabSinks" class="tab-pane">
         <div class="card mb-3">
             <div class="card-body">
+                <h5 class="card-title">Filter Natürliche Senken als Versickerungsstandorte</h5>
                 <form method="POST" action="">
                     {% csrf_token %}
                     {% crispy sink_filter.form %}
-                    <button id="btnFilterSinks"type="submit" class="btn btn-primary">Filter Sinks</button>
+                    <button id="btnFilterSinks"type="submit" class="btn btn-primary">Senken anzeigen</button>
                 </form>
             </div>
         </div>
         <div id="cardSinkTable" class="card mb-3 d-none">
             <div class="card-body">
                 <div id="sink-table-container"></div>
-                <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3">Mit Auswahl fortfahren</button>
+                <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button>
+                <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button>
+
             </div>
         </div>
     </div>
@@ -56,10 +59,11 @@
     <div id="tabEnlargedSinks" class="tab-pane">
         <div class="card mb-3">
             <div class="card-body">
+                <h5 class="card-title">Filter Baulich modifizierte Senken als Versickerungsstandorte</h5>
                 <form method="POST" action="">
                     {% csrf_token %}
                     {% crispy enlarged_sink_filter.form %}
-                    <button id="btnFilterEnlargedSinks" type="submit" class="btn btn-primary">Filter Enlarged Sinks</button>
+                    <button id="btnFilterEnlargedSinks" type="submit" class="btn btn-primary">Senken anzeigen</button>
                 </form>
             </div>
         </div>
@@ -67,10 +71,11 @@
         <div id="cardEnlargedSinkTable"  class="card mb-3 d-none">
             <div class="card-body">
                 <div id="enlarged-sink-table-container"></div>
-                <button id="btnCntinueWithEnlargedSinkSelection" type="button" class="btn btn-primary mt-3">Mit Auswahl fortfahren</button>
+                <button id="btnCntinueWithEnlargedSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks ">Auswahl bewerten</button>
+                <button id="btnShowEnlargedSinkOutlines" type="button" class="btn btn-primary mt-3 show-enlarged-sink-outlines">Vergrößerte Senken anzeigen</button>
+                <button id="btnShowEmbankments" type="button" class="btn btn-primary mt-3 show-embankment-outlines">Verwallungsstrukturen anzeigen</button>
             </div>
         </div>
-
     </div>
 
     <div id="tabSinksSelection" class="tab-pane">

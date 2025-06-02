@@ -16,11 +16,11 @@ class ToolboxType(models.Model):
 
 
 
-class DigitalElevationModel10(models.Model):
-     name = models.CharField(max_length=100, null=True, blank=True)
-     elevation = models.FloatField(null=True, blank=True)
-     rast = gis_models.RasterField(srid=25833)
-     extent = gis_models.PolygonField(srid=25833, null=True, blank=True)
+# class DigitalElevationModel10(models.Model):
+#      name = models.CharField(max_length=100, null=True, blank=True)
+#      elevation = models.FloatField(null=True, blank=True)
+#      rast = gis_models.RasterField(srid=25833)
+#      extent = gis_models.PolygonField(srid=25833, null=True, blank=True)
 
 # gw_ezg
 class AboveGroundWaters(models.Model):
@@ -76,6 +76,9 @@ class UserField(models.Model):
         return self.name
     
 class SinkWeighting(models.Model):
+    """
+    User's weighting for a sink project
+    """
     general= models.FloatField(default=.2) 
     soil= models.FloatField(default=.8)
     field_capacity = models.FloatField(default=.33)
@@ -121,6 +124,9 @@ class InfiltrationProject(ToolboxProject):
 
 # DE: Injektion/ Qgis _injektion_diss_4326
 class OutlineInjection(gis_models.Model):
+    """
+    Area where injection projects can be evaluated
+    """
     name = models.CharField(max_length=64, null=True, blank=True)
     geom = gis_models.MultiPolygonField('Injection')
 
@@ -139,16 +145,6 @@ class OutlineSurfaceWater(gis_models.Model):
 class OutlineInfiltration(gis_models.Model):
     name = models.CharField(max_length=64, null=True, blank=True)
     geom = gis_models.MultiPolygonField('Infiltration')  
-
-# DE: Geste??/ Qgis: geste_diss_4326
-class OutlineGeste(gis_models.Model):
-    name = models.CharField(max_length=64, null=True, blank=True)
-    geom = gis_models.MultiPolygonField('Injection')
-
-    def __str__(self):
-                return self.name
-    
-
 
 
 class Wasserrueckhaltepotentiale(models.Model):
@@ -528,18 +524,27 @@ class EnlargedSink(models.Model):
             feasibilty_enlarged_sinks_index = self.feasibilty_enlarged_sinks_index,
         )
 
-class Feasability(models.Model): # soilstuff
+class Feasibility(models.Model): # soilstuff
+    # (100 - Ackerzahl) / 100 = index_feasibility 
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-    centroid = gis_models.PointField(srid=25833, null=True, blank=True)
-    shape_length = models.FloatField(null=True)
-    shape_area = models.FloatField(null=True)
-    veg_fe = models.CharField(max_length=100, null=True)
-    land_use = models.CharField(max_length=100, null=True)
-    type = models.CharField(max_length=100, null=True)
-    fie_as_num = models.FloatField(null=True)
-    index = models.FloatField(null=True)
+    veg_fe = models.CharField(max_length=100, null=True) # delete ??
+    landuse = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True)
+    soil_quality_index = models.IntegerField(null=True) # Ackerzahl
+    index_feasibility = models.FloatField(null=True)
 
+class FeasibilitySink(models.Model):
+    geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    feasibility = models.ForeignKey(Feasibility, on_delete=models.DO_NOTHING, null=True)
+    sink = models.ForeignKey(Sink4326, on_delete=models.DO_NOTHING, null=True)
+    area = models.FloatField(null=True, blank=True)
+    area_of_total = models.FloatField(null=True, blank=True)
 
+class FeasibilityEnlargedSink(models.Model):
+    geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    feasibility = models.ForeignKey(Feasibility, on_delete=models.DO_NOTHING, null=True)
+    enlarged_sink = models.ForeignKey(EnlargedSink4326, on_delete=models.DO_NOTHING, null=True)
+    area = models.FloatField(null=True, blank=True)
+    area_of_total = models.FloatField(null=True, blank=True)
 # Hydrology is the layer the sinks are intersected with for HydrologySinks and HydrologyEnlargedSinks. It is not used.
 class Hydrogeology(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
@@ -717,35 +722,32 @@ class SoilProperties(models.Model):
             self.centroid = self.geom.centroid  # Auto-generate centroid
         super().save(*args, **kwargs)
 
-    def get_soil_suitability(
-            self, 
-            weight_general=.2, 
-            weight_soil=.8, 
-            **kwargs
-            ):
-        if not kwargs:
-            weight_field_capacity = .33
-            weight_hydro_conduct_1m=.33
-            weight_hydro_conduct_2m=.33
-            weight_hydromorphy=.33
-            weight_soil_index=.33 # w_ag_soil
-            weight_soil_moisture_grassland = .25
-            if self.agricultural_landuse.name == 'grassland':
-                weight_field_capacity = .25
-                weight_soil_index = .25
-                weight_hydromorphy=.25
+    # def get_soil_suitability(self, **kwargs):
+    #     if not kwargs:
+    #         weight_general=.2
+    #         weight_soil=.8
+    #         weight_field_capacity = .33
+    #         weight_hydro_conduct_1m=.33
+    #         weight_hydro_conduct_2m=.33
+    #         weight_hydromorphy=.33
+    #         weight_soil_index=.33 # w_ag_soil
+    #         weight_soil_moisture_grassland = .25
+    #         if self.agricultural_landuse.name == 'grassland':
+    #             weight_field_capacity = .25
+    #             weight_soil_index = .25
+    #             weight_hydromorphy=.25
 
-        bool_general = (not self.nitrate_contamination) and (not self.waterlog)
-        # print('bool_general', bool_general)
-        index_soil = weight_field_capacity * self.fieldcapacity.rating_index + \
-            weight_hydro_conduct_1m * self.hydraulic_conductivity_1m_rating + \
-            weight_hydro_conduct_2m * self.hydraulic_conductivity_2m_rating + \
-            weight_hydromorphy * self.hydromorphy.rating_index + \
-            weight_soil_index * self.soil.rating_index + \
-            weight_soil_moisture_grassland * self.wet_grassland.rating_index
+    #     bool_general = (not self.nitrate_contamination) and (not self.waterlog)
+    #     # print('bool_general', bool_general)
+    #     index_soil = weight_field_capacity * self.fieldcapacity.rating_index + \
+    #         weight_hydro_conduct_1m * self.hydraulic_conductivity_1m_rating + \
+    #         weight_hydro_conduct_2m * self.hydraulic_conductivity_2m_rating + \
+    #         weight_hydromorphy * self.hydromorphy.rating_index + \
+    #         weight_soil_index * self.soil.rating_index + \
+    #         weight_soil_moisture_grassland * self.wet_grassland.rating_index
 
-        # print('index_soil', index_soil)
-        return round(((weight_general * self.groundwater_distance.rating_index + weight_soil * index_soil) * bool_general), 2)
+    #     # print('index_soil', index_soil)
+    #     return round(((weight_general * self.groundwater_distance.rating_index + weight_soil * index_soil) * bool_general), 2)
 
         
 # Intersection of SoilProperties and Sink4326
@@ -754,7 +756,7 @@ class SinkSoilProperties(models.Model):
     partial_sink_area = models.FloatField(blank=True, null=True)
     percent_of_total_area = models.FloatField(blank=True, null=True)
     soil_properties = models.ForeignKey(SoilProperties, on_delete=models.CASCADE, blank=True, null=True)
-    sink = models.ForeignKey(Sink4326, on_delete=models.CASCADE, null=True)
+    sink = models.ForeignKey(Sink4326, on_delete=models.CASCADE, null=True, related_name='sink_soil_properties')   
    
 
 # Intersection of SoilProperties and EnlargedSink4326
@@ -763,7 +765,7 @@ class EnlargedSinkSoilProperties(models.Model):
     partial_sink_area = models.FloatField(blank=True, null=True)
     percent_of_total_area = models.FloatField(blank=True, null=True)
     soil_properties = models.ForeignKey(SoilProperties, on_delete=models.DO_NOTHING, blank=True, null=True)
-    sink = models.ForeignKey(Sink4326, on_delete=models.CASCADE,  blank=True, null=True)
+    enlarged_sink = models.ForeignKey(EnlargedSink4326, on_delete=models.CASCADE,  blank=True, null=True, related_name='enlarged_sink_soil_properties')
    
 
 

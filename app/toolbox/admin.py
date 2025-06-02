@@ -50,7 +50,23 @@ class EnlargedSink4326Admin(LeafletGeoAdmin):
     default_lon = 10.0
     default_zoom = 6
 
+
+class SoilPropertiesAdmin(LeafletGeoAdmin):
+    list_display = ('id', 'nitrate_contamination', 'waterlog', 'groundwater_distance', 'hydraulic_conductivity_1m_rating', 'hydraulic_conductivity_2m_rating', 'fieldcapacity', 'agricultural_landuse', 'landuse')
+    list_filter = ['id', 'nitrate_contamination', 'waterlog', 'groundwater_distance', 'hydraulic_conductivity_1m_rating', 'hydraulic_conductivity_2m_rating', 'fieldcapacity', 'agricultural_landuse', 'landuse']
+    ORDERING = ['id']
+
+class SinkSoilPropertiesAdmin(ModelAdmin):
+    list_display = ('id', 'sink', 'soil_properties', 'percent_of_total_area')
+    # list_filter = ['percent_of_total_area']
+    ordering = ['sink']
+    search_fields = ['sink__id', 'soil_properties__id', 'percent_of_total_area']
+
+
+
 admin.site.register(models.Sink4326, Sink4326Admin)
 admin.site.register(models.EnlargedSink4326, EnlargedSink4326Admin)
 admin.site.register(models.Lake4326, Lake4326Admin)
 admin.site.register(models.Stream4326, Stream4326Admin)
+admin.site.register(models.SoilProperties, SoilPropertiesAdmin)
+admin.site.register(models.SinkSoilProperties, SinkSoilPropertiesAdmin)

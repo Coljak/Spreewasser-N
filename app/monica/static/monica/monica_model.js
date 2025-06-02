@@ -613,9 +613,12 @@ const createModal = (params) => {
             .then(data => {
                 document.getElementById('modalModifyParamsContent').innerHTML = data;
                 bindModalEventListeners(params.parameters);
+                $('#formModal').modal('show'); 
             })
             .catch(error => console.error('Error:', error));
         }   
+
+         
     } catch (error) {
         console.error('Error:', error);
     }
@@ -1024,6 +1027,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // TAB CROP ROTATION EVENT LISTENERS
     $('#cropRotation').on('click', (event) => {
+        const btnModifyParameters = event.target.closest('.modify-parameters');
         const rotationIndex = event.target.closest('.rotation').getAttribute('rotation-index');
         const project = MonicaProject.loadFromLocalStorage();
         console.log("EvenLister cropRotation click", project)
@@ -1048,10 +1052,10 @@ document.addEventListener('DOMContentLoaded', () => {
             event.target.closest('.card').remove();
             project.saveToLocalStorage();
 
-        } else if (event.target.classList.contains('modify-parameters')) {
+        } else if (btnModifyParameters) {
             console.log('modify-parameters clicked');
-            const parameters = event.target.dataset.parameters;
-            const value = event.target.closest('.rotation').querySelector('.select-parameters.' + parameters).value;
+            const parameters = btnModifyParameters.dataset.parameters;
+            const value = btnModifyParameters.closest('.rotation').querySelector('.select-parameters.' + parameters).value;
             const params = {
                 'parameters': parameters,
                 'parameters_id': value,
@@ -1059,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (value != '') {
                 createModal(params);
-                $('#formModal').modal('show');
+                // $('#formModal').modal('show');
 
             } else {
                 event.preventDefault();
@@ -1084,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         console.log('workstep...on change:', rotationIndex, workstepIndex, workstepType, name);
 
-        if (event.target.classList.contains('species-parameters')) {
+        if (event.target.closest('.species-parameters')) {
             console.log('if species-parameters', workstep)
             workstep.options.species = event.target.value;
             const cultivarSelector = event.target.closest('.rotation').querySelector('.select-parameters.cultivar-parameters');
@@ -1162,9 +1166,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('#tabSoil').on('click', (event) => {
         let params = {};
-        if (event.target.classList.contains('modify-parameters')) {
+        const btnModifyParameters = event.target.closest('.modify-parameters');
+        if (btnModifyParameters) {
             
-            const parameters = event.target.dataset.parameters;
+            const parameters = btnModifyParameters.dataset.parameters;
             const value = $('.form-select.' + parameters).val();
             
             params = {
@@ -1172,7 +1177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'parameters_id': value,
             }
             createModal(params);
-            $('#formModal').modal('show');    
+            // $('#formModal').modal('show');    
         } else if (event.target.classList.contains('recommended-soil-profile')) {
             const project = MonicaProject.loadFromLocalStorage();
             if (window.location.pathname.endsWith('/drought/') && project.userField) {
@@ -1184,6 +1189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                 }
                 createModal(params);
+                // $('#formModal').modal('show');
                 } catch {
                     handleAlerts({'success': false, 'message': 'Please provide a valid location'});
                 }
@@ -1197,6 +1203,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     createModal(params);
+                    // $('#formModal').modal('show');
                 } catch {
                     handleAlerts({'success': false, 'message': 'Please provide a valid location'});
                 }
@@ -1228,9 +1235,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     $('#tabProject').on('click', (event) => {
-        if (event.target.classList.contains('modify-parameters')) {
+        const btnModifyParameters = event.target.closest('.modify-parameters');
+        if (btnModifyParameters) {
             
-            const parameters = event.target.dataset.parameters;
+            const parameters = btnModifyParameters.dataset.parameters;
             const value = $('.form-select.' + parameters).val();
             
                 const params = {
@@ -1239,7 +1247,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 console.log('Create Modal', params)
                 createModal(params);      
-                $('#formModal').modal('show');    
+                // $('#formModal').modal('show');    
         } else if (event.target.classList.contains('monica-project')) {
             const projectId = $('#id_monica_project').val(); 
             const selecteprojectName = $('#id_monica_project option:selected').text()

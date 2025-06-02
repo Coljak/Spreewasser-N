@@ -315,7 +315,7 @@ class UserCropParametersSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="user-crop-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
+                        <button type="button" data-parameters="user-crop-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -381,7 +381,7 @@ class UserEnvironmentParametersSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="user-environment-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
+                        <button type="button" data-parameters="user-environment-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -427,7 +427,7 @@ class UserSoilMoistureInstanceSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="soil-moisture-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced" data-bs-target="#formModal">
+                        <button type="button" data-parameters="soil-moisture-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -520,7 +520,7 @@ class UserSoilOrganicInstanceSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="soil-organic-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
+                        <button type="button" data-parameters="soil-organic-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -586,7 +586,7 @@ class SoilTemperatureModuleInstanceSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="soil-temperature-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
+                        <button type="button" data-parameters="soil-temperature-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -630,7 +630,7 @@ class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="soil-transport-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
+                        <button type="button" data-parameters="soil-transport-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -743,7 +743,7 @@ class UserSimulationSettingsInstanceSelectionForm(forms.Form):
                 ), 
                 HTML(
                     """
-                        <button type="button" data-parameters="user-simulation-settings" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
+                        <button type="button" data-parameters="user-simulation-settings" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """
@@ -856,7 +856,7 @@ class WorkstepSowingForm(forms.ModelForm):
                 ),
                 HTML(
                 """
-                    <button type="button" data-parameters="species-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters species-parameters advanced" data-bs-target="#formModal">
+                    <button type="button" data-parameters="species-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters species-parameters advanced">
                     <span><i class="bi bi-pencil-square"></i></span>
                     </button>
                 """
@@ -869,7 +869,7 @@ class WorkstepSowingForm(forms.ModelForm):
                     css_class='col-11'
                 ),
                 HTML("""
-                        <button type="button" data-parameters="cultivar-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters cultivar-parameters advanced" data-bs-target="#formModal">
+                        <button type="button" data-parameters="cultivar-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters cultivar-parameters advanced">
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """),
@@ -882,7 +882,7 @@ class WorkstepSowingForm(forms.ModelForm):
                 ),
                 HTML(
                 """
-                    <button type="button" data-parameters="crop-residue-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters crop-residue-parameters advanced" data-bs-target="#formModal">
+                    <button type="button" data-parameters="crop-residue-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters crop-residue-parameters advanced">
                     <span><i class="bi bi-pencil-square"></i></span>
                     </button>
                 """
@@ -938,7 +938,7 @@ class WorkstepMineralFertilisationForm(forms.ModelForm):
                 row_content.append(
                     HTML(
                         """
-                            <button type="button" data-parameters="mineral-fertiliser-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced" data-bs-target="#formModal">
+                            <button type="button" data-parameters="mineral-fertiliser-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced">
                             <span><i class="bi bi-pencil-square"></i></span>
                             </button>
                         """
@@ -995,7 +995,7 @@ class WorkstepOrganicFertilisationForm(forms.ModelForm):
                 row_content.append(
                     HTML(
                         """
-                            <button type="button" data-parameters="organic-fertiliser-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced"  data-bs-target="#formModal">
+                            <button type="button" data-parameters="organic-fertiliser-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced">
                             <span><i class="bi bi-pencil-square"></i></span>
                             </button>
                         """

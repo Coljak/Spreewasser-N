@@ -817,50 +817,73 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
     Returns a list of dictionaries with sink_id, waterbody_type, waterbody_id, line (WKT), and length_m.
     """
     results = []
+    if sinks != [] and (lakes != [] or streams != []):
+        for sink in sinks:
+            sink_geom = shapely_shape(json.loads(sink.geom25833.geojson))
 
-    for sink in sinks:
-        sink_geom = shapely_shape(json.loads(sink.geom25833.geojson))
+            min_dist = float('inf')
+            closest_geom = None
+            waterbody_type = None
+            waterbody_id = None
 
-        min_dist = float('inf')
-        closest_geom = None
-        waterbody_type = None
-        waterbody_id = None
+            # Check lakes
+            for lake in lakes:
+                lake_geom = shapely_shape(json.loads(lake.geom25833.geojson))
+                dist = sink_geom.distance(lake_geom)
+                if dist < min_dist:
+                    min_dist = dist
+                    closest_geom = lake_geom
+                    waterbody_type = 'lake'
+                    waterbody_id = lake.id
 
-        # Check lakes
-        for lake in lakes:
-            lake_geom = shapely_shape(json.loads(lake.geom25833.geojson))
-            dist = sink_geom.distance(lake_geom)
-            if dist < min_dist:
-                min_dist = dist
-                closest_geom = lake_geom
-                waterbody_type = 'lake'
-                waterbody_id = lake.id
+            # Check streams
+            for stream in streams:
+                stream_geom = shapely_shape(json.loads(stream.geom25833.geojson))
+                dist = sink_geom.distance(stream_geom)
+                if dist < min_dist:
+                    min_dist = dist
+                    closest_geom = stream_geom
+                    waterbody_type = 'stream'
+                    waterbody_id = stream.id
 
-        # Check streams
-        for stream in streams:
-            stream_geom = shapely_shape(json.loads(stream.geom25833.geojson))
-            dist = sink_geom.distance(stream_geom)
-            if dist < min_dist:
-                min_dist = dist
-                closest_geom = stream_geom
-                waterbody_type = 'stream'
-                waterbody_id = stream.id
+            # Find nearest points and build LineString in EPSG:25833
+            nearest = nearest_points(sink_geom, closest_geom)
+            line = LineString([nearest[0].coords[0], nearest[1].coords[0]])
+            length_m = line.length  # Already in meters (EPSG:25833 is a projected CRS)
 
-        # Find nearest points and build LineString in EPSG:25833
-        nearest = nearest_points(sink_geom, closest_geom)
-        line = LineString([nearest[0].coords[0], nearest[1].coords[0]])
-        length_m = line.length  # Already in meters (EPSG:25833 is a projected CRS)
-
-        results.append({
-            'sink_id': sink.id,
-            'is_enlarged_sink': sink.__class__ == models.EnlargedSink4326,
-            'waterbody_type': waterbody_type,
-            'waterbody_id': waterbody_id,
-            'line': line.geojson,
-            'length_m': round(length_m, 2),
-        })
+            results.append({
+                'sink_id': sink.id,
+                'is_enlarged_sink': sink.__class__ == models.EnlargedSink4326,
+                'waterbody_type': waterbody_type,
+                'waterbody_id': waterbody_id,
+                'line': line.geojson,
+                'length_m': round(length_m, 2),
+            })
 
     return results
+
+def get_inlets(request):
+    project = json.loads(request.body)
+    print('Project:', project)
+
+    sinks = models.Sink4326.objects.filter(id__in=project['infiltration'].get('selected_sinks', []))
+    enlarged_sinks = models.EnlargedSink4326.objects.filter(id__in=project['infiltration'].get('selected_enlarged_sinks', []))
+    lakes = models.Lake4326.objects.filter(id__in=project['infiltration'].get('selected_lakes', []))
+    streams = models.Stream4326.objects.filter(id__in=project['infiltration'].get('selected_streams', []))
+
+    inlets_sinks = get_shortest_connection_lines_utm(sinks, lakes, streams)
+    inlets_enlarged_sinks = get_shortest_connection_lines_utm(enlarged_sinks, lakes, streams)
+    
+
+
+    return JsonResponse({
+        'inlets_sinks': inlets_sinks + inlets_enlarged_sinks,
+        'message': {
+            'success': True,
+            'message': f'Found {len(inlets_sinks)} pipes for sinks and {len(inlets_enlarged_sinks)} pipes for enlarged sinks.'
+        }
+    })
+
 
 def get_elevation_profile(line_geojson):
     """

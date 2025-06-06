@@ -495,17 +495,13 @@ function getSinks(sinkType, featureGroup) {
       // display card with table
       const tableCardId = sinkType === 'sink' ? 'cardSinkTable' : 'cardEnlargedSinkTable';
       const tableCard = document.getElementById(tableCardId);
-      console.log('selected_snks', selected_sinks);
       if (selected_sinks !== undefined && selected_sinks.length > 0) {
-        console.log('selected_sinks not undefined', selected_sinks);
         selected_sinks.forEach(sinkId => {
-          console.log(`Checking sink ${sinkId} for type ${sinkType}`);
           const checked = ids.includes(sinkId) ? true : false;
           const checkbox = document.querySelector(`.sink-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
-          console.log('Checkbox selector: ', `.sink-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
-          if (checkbox) {
-            console.log('Setting checkbox checked state:', checkbox, 'to', checked);
+          if (checkbox && checked) {
             checkbox.checked = checked;
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
           }
         })
       }
@@ -539,15 +535,10 @@ function getWaterBodies(waterbody, featureGroup){
     featureGroup.clearLayers();
 
     if (data.message.success) {
-      // Initialize marker cluster
-      // let markers = L.markerClusterGroup();
-      
-      
-      console.log(data.feature_collection.features.length)
+
       data.feature_collection.features.forEach(feature => {
         try {
-          // let coords = feature.properties.centroid; // Get the lat/lng coordinates
-          // let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
+
             let layer = L.geoJSON(feature, {
               style: {
                 color: 'purple',
@@ -690,6 +681,31 @@ $('#toolboxPanel').on('change',  function (event) {
     };
   });
 
+function getInlets() {
+    const project = ToolboxProject.loadFromLocalStorage();
+    fetch('get_inlets/', {
+      method: 'POST',
+      body: JSON.stringify(project),
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCSRFToken(),
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message.success) {
+        console.log('data', data);
+        // handleAlerts(data.message);
+;
+        data.inlets_sinks.forEach(inlet => {
+          console.log('inlet', inlet);
+        });
+      } else {
+        handleAlerts(data.message);
+      }
+  });
+};
+
 
 $('#toolboxPanel').on('click', function (event) {
   const $target = $(event.target);
@@ -709,6 +725,8 @@ $('#toolboxPanel').on('click', function (event) {
     console.log('ClassList contains  evaluate-selected-sinks');
     const project = ToolboxProject.loadFromLocalStorage();
     calculateIndexForSelection(project)
+  } else if ($target.attr('id') === 'btnGetInlets') {
+      getInlets(); 
   }
 }) 
 
@@ -907,6 +925,8 @@ document.getElementById('toggleStreams').addEventListener('click', function () {
   }
   streamsVisible = !streamsVisible;
 });
+
+
 
 
 

@@ -366,3 +366,55 @@ class WeightingsGrasslandForm(forms.Form):
 
         self.helper.add_input(Button('grassland-weighting-reset', 'Reset All', css_class='btn-secondary reset-all'))
         
+
+# For sinks and enlarged sinks
+class WeightingsInletOutletForm(forms.Form):
+    # index_1 default 70%
+    weighting_distance = forms.IntegerField(
+        min_value=0, 
+        max_value=100, 
+        widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_inlet_point_distance",
+            "name": "weighting_inlet_point_distance",
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 70,
+            "data_default_value": 70,
+            "units": "%",
+            
+        }),
+        label="Gewichtung Distanz (%)",
+        help_text = (
+            "Gewichtung des Bewertungsindexes der Distanz."
+        )
+    )
+    weighting_volume = forms.IntegerField(
+        min_value=0,
+        max_value=100,
+        widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_forest_hydraulic_conductivity_1m",
+            "name": "weighting_forest_hydraulic_conductivity_1m",
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 30,
+            "data_default_value": 30,
+            "units": "%",
+        }),
+        label="Gewichtung des Wasservolumens (%)",
+        help_text=(
+            "Gewichtung des Bewertungsindexes des Wasservolumens (welches ????)."
+        )
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'inlet_point-weighting-filter-form'
+        self.helper.form_class = 'form-horizontal weighting-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'inlet_point-weighting-reset', 
+            'Reset all', 
+            css_class='btn-secondary reset-all'))

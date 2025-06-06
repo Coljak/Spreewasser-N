@@ -1,6 +1,22 @@
 import { getGeolocation, handleAlerts, getCSRFToken, saveProject, observeDropdown,  setLanguage, populateDropdown } from '/static/shared/utils.js';
 
+function updateButtonState(project) {
+    console.log('updateButtonState', project);
+    if (document.getElementById("btnGetInlets")){
+        const hasSink = project.infiltration.selected_sinks.length > 0 || project.infiltration.selected_enlarged_sinks.length > 0;
+        const hasWaterbody = project.infiltration.selected_lakes.length > 0 || project.infiltration.selected_streams.length > 0;
 
+        const btn = document.getElementById("btnGetInlets"); // Adjust to your actual button ID
+        if (!(hasSink && hasWaterbody)) {
+            btn.classList.add('disabled');
+            console.log('!(hasSink && hasWaterbody)')
+        } else {
+            btn.classList.remove('disabled');
+            console.log('(hasSink && hasWaterbody)')
+        };
+    }
+    
+}
 
 export class Infiltration {
     constructor (infiltration = {}) {
@@ -16,7 +32,7 @@ export class Infiltration {
         this.sink_index_soil_max = infiltration.sink_index_soil_max ?? null;
         this.sink_land_use = infiltration.sink_land_use ?? [];
 
-        this.sink_selected = infiltration.sink_selected ?? [];
+        this.selected_sinks = infiltration.selected_sinks ?? [];
 
         this.enlarged_sink_area_min = infiltration.enlarged_sink_area_min ?? null;
         this.enlarged_sink_area_max = infiltration.enlarged_sink_area_max ?? null;
@@ -32,7 +48,7 @@ export class Infiltration {
         this.enlarged_sink_index_soil_max = infiltration.enlarged_sink_index_soil_max ?? null;
         this.enlarged_sink_land_use = infiltration.enlarged_sink_land_use ?? [];
 
-        this.enlarged_sink_selected = infiltration.enlarged_sink_selected ?? [];
+        this.selected_enlarged_sinks = infiltration.selected_enlarged_sinks ?? [];
 
         this.stream_min_surplus_volume_min = infiltration.stream_min_surplus_volume_min ?? null;
         this.stream_min_surplus_volume_max = infiltration.stream_min_surplus_volume_max ?? null;
@@ -54,6 +70,8 @@ export class Infiltration {
         this.lake_plus_days_max = infiltration.lake_plus_days_max ?? null;
         this.lake_distance_to_userfield = infiltration.lake_distance_to_userfield ?? 0;
 
+        this.selected_lakes = infiltration.selected_lakes ?? [];
+        this.selected_streams = infiltration.selected_streams ?? [];
         this.weighting_overall_usability = infiltration.weighting_overall_usability ?? 20;
         this.weighting_soil_index = infiltration.weighting_soil_index ?? 80;
 
@@ -92,6 +110,7 @@ export class ToolboxProject {
   // Save project to localStorage
   saveToLocalStorage() {
       localStorage.setItem('toolbox_project', this.toJson());
+      updateButtonState(this)
       console.log('saveToLocalStorage');
   }
 
@@ -106,6 +125,8 @@ export class ToolboxProject {
       return new ToolboxProject(json);
   }
 };
+
+
 
 
 

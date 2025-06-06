@@ -32,6 +32,4 @@ urlpatterns = [
     path('toolbox/load_infiltration_gui/<str:user_field_id>/', views.load_infiltration_gui, name='load_infiltration_gui'),
     path('toolbox/get_weighting_form/', views.get_weighting_forms, name='get_weighting_forms'),
     path('toolbox/calculate_index_for_selection/', views.calculate_index_for_selection, name='calculate_index_for_selection'),
-    # path('toolbox/get_selected_sinks/', views.get_selected_sinks, name='get_selected_sinks'),
-    # path('toolbox/test/', views.test, name='test'),
 ]

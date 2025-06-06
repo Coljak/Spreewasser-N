@@ -48,6 +48,7 @@ def get_buek_polygon_id_from_point_buek200(lat, lon):
     print('Time elapsed getting soil profile: ', datetime.now() - start)
     return polygon_id
 
+
 @api_view(['GET'])
 def get_buek_data_from_point(request, lat, lon):
     """
@@ -154,9 +155,6 @@ def get_profiles_from_point_buek200(request, lat, lon):
     return Response(response_dict)
 
 
-def get_soil_data_by_polygon_id(polygon_id):
-    soil_data = SoilProfileHorizon.objects.select_related('soilprofile').filter(soilprofile__polygon_id=polygon_id).order_by('soilprofile__area_percentage', 'obergrenze_m')
 
-    return soil_data
 
 

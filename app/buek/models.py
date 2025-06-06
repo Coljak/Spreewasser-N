@@ -165,8 +165,8 @@ class SoilProfile(models.Model):
         return hors, msg
     
     def get_horizons_json(self):
-        horizons =  SoilProfileHorizon.objects.filter(soilprofile=self)
-        horizons = horizons.filter(obergrenze_m__gte=0).order_by('horizont_nr')
+        horizons =  SoilProfileHorizon.objects.filter(soilprofile=self).order_by('horizont_nr')
+        # horizons = horizons.filter(obergrenze_m__gte=0).order_by('horizont_nr')
 
         return [horizon.to_json() for horizon in horizons]
 
@@ -217,13 +217,9 @@ class SoilProfileHorizon(models.Model):
         # TODO: can Monica actually handle the NULL values as '' or []?
         monica_json = {
             'Thickness': [round((self.untergrenze_m - self.obergrenze_m), 2), "m"],
-            'Sand': [round(self.ka5_texture_class.sand, 2) * 100, "%"] if self.ka5_texture_class else [],
-            'Clay': [round(self.ka5_texture_class.clay, 2) * 100, "%"] if self.ka5_texture_class else [],
+            'Sand': [round(self.ka5_texture_class.sand * 100, 1), "%"] if self.ka5_texture_class else [],
+            'Clay': [round(self.ka5_texture_class.clay * 100, 1), "%"] if self.ka5_texture_class else [],
             'pH': round(((self.ph_class.ph_lower_value + self.ph_class.ph_upper_value) / 2), 2) if self.ph_class else 4.5,
-            
-
-           
-
 
             # 'Sceleton': soil stone content, a fraction between 0 and 1
             # 'Lambda': soil water conductivity coefficient
@@ -240,9 +236,40 @@ class SoilProfileHorizon(models.Model):
             # TODO wiki: SoilOrganicCarbon 	% [0-100] ([kg C kg-1] * 100)  a percentage between 0 and 100 BUT it seems to be a percenteage
             # OR 'SoilOrganicMatter': 	kg OM kg-1 (fraction [0-1]) 	soil organic matter
             # 'SoilMoisturePercentFC': % [0-100] 	initial soil moisture in percent of field capacity
+            'FieldCapacity': [self.get_ptf1_fc() * 100, '%'],  # field capacity in percent
+            # 'SoilMoisturePercentWP': % [0-100] 	initial soil moisture in percent of permanent wilting point
+            'WiltingPoint': [self.get_ptf1_wp() * 100, '%'],  # permanent wilting point in percent
         }
   
         return monica_json
+
+    def get_ptf1_fc(self):
+        """
+        Returns the field capacity based on the PTF1 equation.
+        """
+        if self.ka5_texture_class and self.humus_class:
+            fc = (0.24490 - 0.1887 * (1 / (self.humus_class.corg + 1)) + 
+                  0.0045270 * self.ka5_texture_class.clay + 
+                  0.001535 * self.ka5_texture_class.silt +
+                  0.001442 * self.ka5_texture_class.silt * (1 / (self.humus_class.corg + 1)) - 
+                  0.0000511 * self.ka5_texture_class.silt * self.ka5_texture_class.clay +
+                  0.0008676 * self.ka5_texture_class.clay * (1 / (self.humus_class.corg + 1))) 
+            return round(fc, 4)
+        return None
+
+    def get_ptf1_wp(self):
+        """
+        Returns the permanent wilting point based on the PTF1 equation.
+        """
+        if self.ka5_texture_class and self.humus_class:
+            wp = (0.09878 + 0.002127 * self.ka5_texture_class.clay - 
+                  0.0008366 * self.ka5_texture_class.silt - 
+                  0.0767 * (1 / (self.humus_class.corg + 1)) + 
+                  0.00003853 * self.ka5_texture_class.silt * self.ka5_texture_class.clay + 
+                  0.00233 * self.ka5_texture_class.clay * (1 / (self.humus_class.corg + 1)) +
+                  0.0009498 * self.ka5_texture_class.silt * (1 / (self.humus_class.corg + 1))) 
+            return round(wp, 4)
+        return None
     
     class Meta:
         db_table = 'buek_soil_profile_horizon'

@@ -6,22 +6,23 @@ from . import forms
 from .filters import SinkFilter, EnlargedSinkFilter, LakeFilter, StreamFilter
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.gis.geos import GEOSGeometry, LineString
+from django.contrib.gis.measure import D
+from django.contrib.gis.db.models import PointField
+from django.contrib.gis.db.models.functions import Distance
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
-from django.contrib.gis.geos import GEOSGeometry
-from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
 from django.forms.models import model_to_dict
-from django.core.serializers import serialize
-from django.template.loader import render_to_string
-from django.db.models import Max, Min
-import json
-from django.core.serializers.json import DjangoJSONEncoder
-from datetime import datetime
-from django.db.models import F, Q
 
-from django.contrib.gis.db.models import PointField
+from django.template.loader import render_to_string
 from django.db import connection
-# Create your views here.
+from django.db.models import Max, Min, F, Q
+import json, requests
+from datetime import datetime
+
+from shapely.geometry import shape as shapely_shape
+from shapely.ops import nearest_points
+
 
 
 
@@ -157,6 +158,7 @@ def load_infiltration_gui(request, user_field_id):
     agriculture_weighting = forms.WeightingsAgricultureForm()
     grassland_weighting = forms.WeightingsGrasslandForm()
 
+
     html = render_to_string('toolbox/infiltration.html', {
         # 'sink_form': sink_form, 
         # 'enlarged_sink_form': enlarged_sink_form,
@@ -168,7 +170,7 @@ def load_infiltration_gui(request, user_field_id):
         'overall_weighting': overall_weighting,
         'forest_weighting': forest_weighting,
         'agriculture_weighting': agriculture_weighting,
-        'grassland_weighting': grassland_weighting,
+        'grassland_weighting': grassland_weighting, 
     }, request=request) 
 
     return JsonResponse({'html': html})
@@ -193,8 +195,6 @@ def add_range_filter(filters, obj, field,  model_field=None):
         filters &= Q(**{f"{model_field}__lte": max_val})
 
     return filters
-
-
 
 
 def filter_sinks(request):
@@ -261,8 +261,6 @@ def filter_sinks(request):
         }
         
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
-
-
 
 def filter_enlarged_sinks(request):
     try:
@@ -332,7 +330,6 @@ def filter_enlarged_sinks(request):
         }
 
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
-
 
 def filter_streams(request):
     try:
@@ -460,7 +457,6 @@ def filter_lakes(request):
         print('feature_collection:', feature_collection)
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
 
-
 def calculate_index_for_selection(request):
     """
     Takes the selected sinks and  calculates 
@@ -486,10 +482,9 @@ def calculate_index_for_selection(request):
         weighting_grassland_soil_water_ratio=int(project['infiltration'].get('weighting_grassland_soil_water_ratio', 25))/100
 
 
-        sink_ids = project['infiltration'].get('sink_selected', [])
+        sink_ids = project['infiltration'].get('selected_sinks', [])
         sinks = models.Sink4326.objects.filter(id__in=sink_ids)
-        enlarged_sink_ids = project['infiltration'].get('enlarged_sink_selected', [])
-        enlarged_sink_ids = project['infiltration'].get('enlarged_sink_selected', [])
+        enlarged_sink_ids = project['infiltration'].get('selected_enlarged_sinks', [])
         enlarged_sinks = models.EnlargedSink4326.objects.filter(id__in=enlarged_sink_ids)
         if sinks.count() == 0 and enlarged_sinks.count() == 0:
             return JsonResponse({'message': {'success': False, 'message': 'No sinks selected.'}})
@@ -612,7 +607,6 @@ def load_nuts_polygon(request, entity, polygon_id):
             }
             return JsonResponse(error_response, status=404)
         
-
 def load_toolbox_project(request, id):
 
     project = models.ToolboxProject.objects.get(pk=id)
@@ -651,15 +645,6 @@ def save_toolbox_project(request, project_id=None):
                 'project_name': project.name
                 })
     
-def load_toolbox_project(request, id):
-
-    project = models.ToolboxProject.objects.get(pk=id)
-    print("Toolbox Project: ", project)
-    if not project:
-        return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
-    else:
-        project_json = project.to_json()
-        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
 
 @login_required
 @csrf_protect
@@ -727,24 +712,6 @@ def update_user_field(request, id):
     else:
         return JsonResponse({'message': {'success': False, 'message': 'An error occurred updating the user field.'}})
 
-#TODO needed?
-def get_options(request, parameter):
-    dropdown_list = []
-    if parameter == 'toolbox-project':
-        toolbox_projects = models.ToolboxProject.objects.filter(user=request.user)
-        dropdown_list = [(project.id, project.name) for project in toolbox_projects]
-    return JsonResponse({'options': dropdown_list})
-        
-
-@login_required
-def get_field_project_modal(request, id):
-    # user_projects = models.SwnProject.objects.filter(Q(user_field__id=id) & Q(user_field_user=request.user))
-    user_projects = models.ToolboxProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user))
-    print('user_projects:', user_projects)
-    print('user_projects.values():', list(user_projects.values()))
-    
-    return JsonResponse({'projects': list(user_projects.values())})
-    
 @login_required
 # @csrf_protect
 def delete_user_field(request, id):
@@ -764,12 +731,31 @@ def delete_user_field(request, id):
         return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}}, status=400)
     
 
+#TODO needed?
+def get_options(request, parameter):
+    dropdown_list = []
+    if parameter == 'toolbox-project':
+        toolbox_projects = models.ToolboxProject.objects.filter(user=request.user)
+        dropdown_list = [(project.id, project.name) for project in toolbox_projects]
+    return JsonResponse({'options': dropdown_list})
+        
+
+@login_required
+def get_field_project_modal(request, id):
+    # user_projects = models.SwnProject.objects.filter(Q(user_field__id=id) & Q(user_field_user=request.user))
+    user_projects = models.ToolboxProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user))
+    print('user_projects:', user_projects)
+    print('user_projects.values():', list(user_projects.values()))
+    
+    return JsonResponse({'projects': list(user_projects.values())})
+    
+
 def get_weighting_forms(request):
     if request.method == 'POST':
         project = json.loads(request.body)
         print('Project:', project)
-        sinks = project['infiltration'].get('sink_selected', [])
-        enlarged_sinks = project['infiltration'].get('enlarged_sink_selected', [])
+        sinks = project['infiltration'].get('selected_sinks', [])
+        enlarged_sinks = project['infiltration'].get('selected_enlarged_sinks', [])
         
         land_use_values = {}
         if len(sinks) > 0:
@@ -824,4 +810,74 @@ def get_weighting_forms(request):
 
         return render(request, 'toolbox/weighting_tab.html', context)
 
-    
+
+def get_shortest_connection_lines_utm(sinks, lakes, streams):
+    """
+    Get the shortest connection line between the sinks and the nearest selected lake or stream.
+    Returns a list of dictionaries with sink_id, waterbody_type, waterbody_id, line (WKT), and length_m.
+    """
+    results = []
+
+    for sink in sinks:
+        sink_geom = shapely_shape(json.loads(sink.geom25833.geojson))
+
+        min_dist = float('inf')
+        closest_geom = None
+        waterbody_type = None
+        waterbody_id = None
+
+        # Check lakes
+        for lake in lakes:
+            lake_geom = shapely_shape(json.loads(lake.geom25833.geojson))
+            dist = sink_geom.distance(lake_geom)
+            if dist < min_dist:
+                min_dist = dist
+                closest_geom = lake_geom
+                waterbody_type = 'lake'
+                waterbody_id = lake.id
+
+        # Check streams
+        for stream in streams:
+            stream_geom = shapely_shape(json.loads(stream.geom25833.geojson))
+            dist = sink_geom.distance(stream_geom)
+            if dist < min_dist:
+                min_dist = dist
+                closest_geom = stream_geom
+                waterbody_type = 'stream'
+                waterbody_id = stream.id
+
+        # Find nearest points and build LineString in EPSG:25833
+        nearest = nearest_points(sink_geom, closest_geom)
+        line = LineString([nearest[0].coords[0], nearest[1].coords[0]])
+        length_m = line.length  # Already in meters (EPSG:25833 is a projected CRS)
+
+        results.append({
+            'sink_id': sink.id,
+            'is_enlarged_sink': sink.__class__ == models.EnlargedSink4326,
+            'waterbody_type': waterbody_type,
+            'waterbody_id': waterbody_id,
+            'line': line.geojson,
+            'length_m': round(length_m, 2),
+        })
+
+    return results
+
+def get_elevation_profile(line_geojson):
+    """
+    Gets an elevation profile in a 20m raster for a given line geometry.
+    Returns a list of dictionaries with {'dist': 20.0, 'nr': 1, 'x': 451082.0, 'y': 5758479.0, 'z': 60.7175178527832}.
+    """
+    start = datetime.datetime.now()
+    url = "https://isk.geobasis-bb.de/elevation/geojson/line"  
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url, headers=headers, data=json.dumps(line_geojson))
+
+    if response.status_code == 200:
+        elevation_data = response.json()
+        return {'success': True, 'data': elevation_data}
+    else:
+        return {'success': False, 'error': f'Error{response.status_code}: {response.text}'}
+

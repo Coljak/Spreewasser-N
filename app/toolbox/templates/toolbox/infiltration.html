@@ -6,6 +6,10 @@
     <li class="nav-item">
         <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Project</a>
     </li>
+
+    <li class="nav-item infiltration">
+        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabSoilProperties" aria-selected="false">Bodeneigenschaften</a>
+    </li>
     
     <li class="nav-item infiltration">
         <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabSinks" aria-selected="false">Senken</a>
@@ -34,6 +38,28 @@
             </div>
         </div>
     </div>
+
+    {% comment %} <div id="tabSoilProperties" class="tab-pane">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Filter Bodeneigenschaften</h5>
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    {% crispy soil_filter.form %}
+                    <button id="btnFilterSoilProperties"type="submit" class="btn btn-primary">Bodeneigenschaften anzeigen</button>
+                </form>
+            </div>
+        </div>
+        <div id="soilPropertiesTable" class="card mb-3 d-none">
+            <div class="card-body">
+                <div id="soil-properties-table-container"></div>
+                <button id="btnContinueWithSoilPropertiesSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button>
+                <button id="btnSoilProperties" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button>
+
+            </div>
+        </div>
+    </div> {% endcomment %}
+
 
     <div id="tabSinks" class="tab-pane">
         <div class="card mb-3">
@@ -110,6 +136,8 @@
                 </div> 
             </div>
         </div>
+        <button id="btnGetInlets" class="btn btn-primary mt-3">Einlass berechnen</button>
+        
     </div>
 
     <div id="tabWeightingForms" class="tab-pane">
@@ -147,6 +175,15 @@
                 </div>
             </div>
         </div>
+        {% comment %} <h2 class="title">Gewichtung der Einlasspunkte</h2>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Distanz und Volumen</h5>
+                <div class="card-body">
+                    {% crispy inlet_point_weighting %}            
+                </div>
+            </div>
+        </div> {% endcomment %}
         
     </div>
 

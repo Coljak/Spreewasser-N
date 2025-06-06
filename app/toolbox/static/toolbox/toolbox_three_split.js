@@ -270,7 +270,7 @@ function createSinkTableSettings(sinkType, indexVisible) {
     "searching": false,
     "columnDefs": [
       {
-        "targets": 0, // Select acheckbox
+        "targets": 0, // Select a checkbox
         "orderable": false,
         "searchable": false
       },
@@ -360,16 +360,25 @@ function getSinks(sinkType, featureGroup) {
   .then(response => response.json())
   .then(data => {
     featureGroup.clearLayers();
-    if (data.message.success) {
+    console.log('project', project);
+    console.log('project.infiltration', project.infiltration);
+    console.log('project.infiltration[`selected_${sinkType}s`]', project.infiltration[`selected_${sinkType}s`]);
 
+    const selected_sinks = project.infiltration[`selected_${sinkType}s`];
+    if (data.message.success) {
+      
+      project.infiltration[`selected_${sinkType}s`] = [];
+      
       // Initialize marker cluster
       let markers = L.markerClusterGroup();
-      // project[sinkType] = data.feature_collection;
-      project.saveToLocalStorage();
+      let ids = [];
+      
       // Iterate through features and add them to the cluster
       data.feature_collection.features.forEach(feature => {
+        ids.push(feature.properties.id);
           let coords = feature.coordinates; // Get the lat/lng coordinates
           let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
+
 
           // Create popup content with all properties
           let popupContent = `
@@ -410,8 +419,18 @@ function getSinks(sinkType, featureGroup) {
 
           // Add marker to cluster
           markers.addLayer(marker);
-      });
 
+          // Check if the sink is selected
+          // if (selected_sinks.includes(feature.properties.id)) {
+          //   // If selected, add to project selection
+          //   project.infiltration[`selected_${sinkType}s`].push(feature.properties.id);
+          //   // Add a class to the marker for styling
+          //   marker._icon.classList.add('selected-sink');
+          // } else {
+          //   marker._icon.classList.remove('selected-sink');
+          // }
+      });
+      project.saveToLocalStorage();
       // Add the cluster group to the map
       featureGroup.addLayer(markers);
 
@@ -447,7 +466,7 @@ function getSinks(sinkType, featureGroup) {
 
       data.feature_collection.features.forEach((feature, index) => {
         const p = feature.properties;
-
+        
         tableHTML += `
           <tr data-sink-id="${p.id}">
             <td><input type="checkbox" class="sink-select-checkbox" data-type=${sinkType} data-id="${p.id}"></td>
@@ -476,6 +495,20 @@ function getSinks(sinkType, featureGroup) {
       // display card with table
       const tableCardId = sinkType === 'sink' ? 'cardSinkTable' : 'cardEnlargedSinkTable';
       const tableCard = document.getElementById(tableCardId);
+      console.log('selected_snks', selected_sinks);
+      if (selected_sinks !== undefined && selected_sinks.length > 0) {
+        console.log('selected_sinks not undefined', selected_sinks);
+        selected_sinks.forEach(sinkId => {
+          console.log(`Checking sink ${sinkId} for type ${sinkType}`);
+          const checked = ids.includes(sinkId) ? true : false;
+          const checkbox = document.querySelector(`.sink-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
+          console.log('Checkbox selector: ', `.sink-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
+          if (checkbox) {
+            console.log('Setting checkbox checked state:', checkbox, 'to', checked);
+            checkbox.checked = checked;
+          }
+        })
+      }
       tableCard.classList.remove('d-none');
       
 
@@ -508,8 +541,8 @@ function getWaterBodies(waterbody, featureGroup){
     if (data.message.success) {
       // Initialize marker cluster
       // let markers = L.markerClusterGroup();
-      project[waterbody] = data.feature_collection;
-      project.saveToLocalStorage();
+      
+      
       console.log(data.feature_collection.features.length)
       data.feature_collection.features.forEach(feature => {
         try {
@@ -522,6 +555,7 @@ function getWaterBodies(waterbody, featureGroup){
                 fillOpacity: 0.5
               },
               onEachFeature: function (feature, layer) {
+                project.infiltration[`selected_${waterbody}`].push(feature.properties.id);
                 let popupContent = `
                    <b>Länge:</b> ${feature.properties.shape_length} m<br>
                    ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
@@ -553,10 +587,8 @@ function getWaterBodies(waterbody, featureGroup){
         console.log('Error processing feature:', feature.properties.id);
       }
       });
-
-      // Add the cluster group to the map
-      // featureGroup.addLayer(markers);
-      // map.fitBounds(featureGroup.getBounds());    
+      project.saveToLocalStorage();
+  
     }  else {
       handleAlerts(data.message);
     } 
@@ -619,7 +651,7 @@ $('#toolboxPanel').on('change',  function (event) {
     console.log('sinkType', sinkType);
     
     
-    const key = sinkType === 'sink' ? 'sink_selected' : 'enlarged_sink_selected';
+    const key = sinkType === 'sink' ? 'selected_sinks' : 'selected_enlarged_sinks';
     if (!allSelected) {
       project.infiltration[key] = [];
     }
@@ -635,7 +667,7 @@ $('#toolboxPanel').on('change',  function (event) {
     project.saveToLocalStorage();
   } else if ($target.hasClass('sink-select-checkbox')) {
     const sinkType = $target.data('type');
-    const key = sinkType === 'sink' ? 'sink_selected' : 'enlarged_sink_selected';
+    const key = sinkType === 'sink' ? 'selected_sinks' : 'selected_enlarged_sinks';
     console.log('sinkType', sinkType);
       if ($target.is(':checked')) {
         console.log("Selected sink:", $target.data('id'));

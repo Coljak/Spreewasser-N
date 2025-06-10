@@ -134,16 +134,16 @@ def load_infiltration_gui(request, user_field_id):
         return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
     
     user_field_geom = GEOSGeometry(user_field.geom)
-    sinks = models.Sink4326.objects.filter(
+    sinks = models.Sink.objects.filter(
         centroid__within=user_field.geom
     )
-    enlarged_sinks = models.EnlargedSink4326.objects.filter(
+    enlarged_sinks = models.EnlargedSink.objects.filter(
         centroid__within=user_field.geom
     )
-    streams = models.Stream4326.objects.filter(
+    streams = models.Stream.objects.filter(
         geom__within=user_field.geom
     )
-    lakes = models.Lake4326.objects.filter(
+    lakes = models.Lake.objects.filter(
         geom__within=user_field.geom
     )
 
@@ -205,7 +205,7 @@ def filter_sinks(request):
 
     user_field = models.UserField.objects.get(pk=project['userField'])
     geom = GEOSGeometry(user_field.geom)
-    sinks = models.Sink4326.objects.filter(geom__within=geom)
+    sinks = models.Sink.objects.filter(geom__within=geom)
     filters = Q()
     filters = add_range_filter(filters, project['infiltration'], 'sink_area', 'area')
     filters = add_range_filter(filters, project['infiltration'], 'sink_volume', 'volume')
@@ -270,7 +270,7 @@ def filter_enlarged_sinks(request):
 
     user_field = models.UserField.objects.get(pk=project['userField'])
     geom = GEOSGeometry(user_field.geom)
-    sinks = models.EnlargedSink4326.objects.filter(geom__within=geom)
+    sinks = models.EnlargedSink.objects.filter(geom__within=geom)
 
     filters = Q()
     filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_area', 'area')
@@ -346,9 +346,9 @@ def filter_streams(request):
         
         geom_25833 = geom_25833.buffer(distance)
         buffered_4326 = geom_25833.transform(4326, clone=True)
-        streams = models.Stream4326.objects.filter(geom__intersects=buffered_4326)
+        streams = models.Stream.objects.filter(geom__intersects=buffered_4326)
     else:
-        streams = models.Stream4326.objects.filter(geom__intersects=geom)
+        streams = models.Stream.objects.filter(geom__intersects=geom)
 
     filters = Q()
     filters = add_range_filter(filters, project['infiltration'], 'stream_min_surplus_volume', 'min_surplus_volume')
@@ -411,9 +411,9 @@ def filter_lakes(request):
         user_geom_25833 = user_field.geom.transform(25833, clone=True)
         buffer_25833 = user_geom_25833.buffer(distance)
         buffer_4326 = buffer_25833.transform(4326, clone=True)
-        lakes = models.Lake4326.objects.filter(geom__intersects=buffer_4326)
+        lakes = models.Lake.objects.filter(geom__intersects=buffer_4326)
     else:
-        lakes = models.Lake4326.objects.filter(geom__intersects=geom)
+        lakes = models.Lake.objects.filter(geom__intersects=geom)
 
     filter = Q()
     filter = add_range_filter(filter, project['infiltration'], 'lake_min_surplus', 'min_surplus_volume')
@@ -483,9 +483,9 @@ def calculate_index_for_selection(request):
 
 
         sink_ids = project['infiltration'].get('selected_sinks', [])
-        sinks = models.Sink4326.objects.filter(id__in=sink_ids)
+        sinks = models.Sink.objects.filter(id__in=sink_ids)
         enlarged_sink_ids = project['infiltration'].get('selected_enlarged_sinks', [])
-        enlarged_sinks = models.EnlargedSink4326.objects.filter(id__in=enlarged_sink_ids)
+        enlarged_sinks = models.EnlargedSink.objects.filter(id__in=enlarged_sink_ids)
         if sinks.count() == 0 and enlarged_sinks.count() == 0:
             return JsonResponse({'message': {'success': False, 'message': 'No sinks selected.'}})
 
@@ -760,7 +760,7 @@ def get_weighting_forms(request):
         land_use_values = {}
         if len(sinks) > 0:
             sinks = [int(sink) for sink in sinks]
-            queryset = models.Sink4326.objects.filter(id__in=sinks)
+            queryset = models.Sink.objects.filter(id__in=sinks)
             land_use_values = set(
                 queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
             ).union(
@@ -770,7 +770,7 @@ def get_weighting_forms(request):
             )
         if len(enlarged_sinks) > 0:
             enlarged_sinks = [int(sink) for sink in enlarged_sinks]
-            queryset = models.EnlargedSink4326.objects.filter(id__in=sinks)
+            queryset = models.EnlargedSink.objects.filter(id__in=sinks)
             land_use_values.union(set(
                     queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
                 ).union(
@@ -809,6 +809,61 @@ def get_weighting_forms(request):
         
 
         return render(request, 'toolbox/weighting_tab.html', context)
+
+
+
+def get_result_features(sinks, lakes, streams):
+    """
+    TODO: wich on eis better?
+    Same as get_shortest_connection_lines_utm but returns a list of features, but with all infos.
+    Get the shortest connection line between the sinks and the nearest selected lake or stream.
+    Returns a list of dictionaries with sink_id, waterbody_type, waterbody_id, line (WKT), and length_m.
+    """
+    results = []
+    if sinks != [] and (lakes != [] or streams != []):
+        for sink in sinks:
+            sink_geom = shapely_shape(json.loads(sink.geom25833.geojson))
+
+            min_dist = float('inf')
+            closest_geom = None
+            waterbody_type = None
+            waterbody_id = None
+
+            # Check lakes
+            for lake in lakes:
+                lake_geom = shapely_shape(json.loads(lake.geom25833.geojson))
+                dist = sink_geom.distance(lake_geom)
+                if dist < min_dist:
+                    min_dist = dist
+                    closest_geom = lake_geom
+                    waterbody_type = 'lake'
+                    waterbody_id = lake.id
+
+            # Check streams
+            for stream in streams:
+                stream_geom = shapely_shape(json.loads(stream.geom25833.geojson))
+                dist = sink_geom.distance(stream_geom)
+                if dist < min_dist:
+                    min_dist = dist
+                    closest_geom = stream_geom
+                    waterbody_type = 'stream'
+                    waterbody_id = stream.id
+
+            # Find nearest points and build LineString in EPSG:25833
+            nearest = nearest_points(sink_geom, closest_geom)
+            line = LineString([nearest[0].coords[0], nearest[1].coords[0]])
+            length_m = line.length  # Already in meters (EPSG:25833 is a projected CRS)
+
+            results.append({
+                'sink_id': sink.id,
+                'is_enlarged_sink': sink.__class__ == models.EnlargedSink,
+                'waterbody_type': waterbody_type,
+                'waterbody_id': waterbody_id,
+                'line': line.geojson,
+                'length_m': round(length_m, 2),
+            })
+
+    return results
 
 
 def get_shortest_connection_lines_utm(sinks, lakes, streams):
@@ -853,7 +908,7 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
 
             results.append({
                 'sink_id': sink.id,
-                'is_enlarged_sink': sink.__class__ == models.EnlargedSink4326,
+                'is_enlarged_sink': sink.__class__ == models.EnlargedSink,
                 'waterbody_type': waterbody_type,
                 'waterbody_id': waterbody_id,
                 'line': line.geojson,
@@ -866,23 +921,23 @@ def get_inlets(request):
     project = json.loads(request.body)
     print('Project:', project)
 
-    sinks = models.Sink4326.objects.filter(id__in=project['infiltration'].get('selected_sinks', []))
-    enlarged_sinks = models.EnlargedSink4326.objects.filter(id__in=project['infiltration'].get('selected_enlarged_sinks', []))
-    lakes = models.Lake4326.objects.filter(id__in=project['infiltration'].get('selected_lakes', []))
-    streams = models.Stream4326.objects.filter(id__in=project['infiltration'].get('selected_streams', []))
+    sinks = models.Sink.objects.filter(id__in=project['infiltration'].get('selected_sinks', []))
+    enlarged_sinks = models.EnlargedSink.objects.filter(id__in=project['infiltration'].get('selected_enlarged_sinks', []))
+    lakes = models.Lake.objects.filter(id__in=project['infiltration'].get('selected_lakes', []))
+    streams = models.Stream.objects.filter(id__in=project['infiltration'].get('selected_streams', []))
 
     inlets_sinks = get_shortest_connection_lines_utm(sinks, lakes, streams)
     inlets_enlarged_sinks = get_shortest_connection_lines_utm(enlarged_sinks, lakes, streams)
     
-
-
-    return JsonResponse({
+    response = {
         'inlets_sinks': inlets_sinks + inlets_enlarged_sinks,
         'message': {
             'success': True,
             'message': f'Found {len(inlets_sinks)} pipes for sinks and {len(inlets_enlarged_sinks)} pipes for enlarged sinks.'
         }
-    })
+    }
+    print(response)
+    return JsonResponse(response)
 
 
 def get_elevation_profile(line_geojson):

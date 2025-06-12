@@ -217,6 +217,9 @@ map.addLayer(lakesFeatureGroup);
 var streamsFeatureGroup = new L.FeatureGroup()
 map.addLayer(streamsFeatureGroup);
 
+var inletConnectionsFeatureGroup = L.featureGroup()
+map.addLayer(inletConnectionsFeatureGroup);
+
 // document.getElementById('toolbox-project-save').addEventListener('click', function () {
 //   const project = ToolboxProject.loadFromLocalStorage();
 
@@ -681,6 +684,56 @@ $('#toolboxPanel').on('change',  function (event) {
     };
   });
 
+const connectionLayerMap = {};
+
+function addToInletTable(inlet, connectionId) {
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${inlet.sink_id}</td>
+    <td>${inlet.is_enlarged_sink ? 'Yes' : 'No'}</td>
+    <td>${inlet.waterbody_type} (${inlet.waterbody_id})</td>
+    <td>${inlet.length_m}</td>
+    <td><button class="btn btn-sm btn-primary" data-id="${connectionId}" onclick="toggleConnection(this)">Hide</button></td>
+  `;
+
+  // On row click: update info card
+  row.addEventListener('click', () => {
+    updateInletInfoCard(inlet);
+  });
+
+  document.querySelector('#inlet-table tbody').appendChild(row);
+};
+
+function toggleConnection(button) {
+  const id = button.getAttribute('data-id');
+  const layer = connectionLayerMap[id];
+
+  if (map.hasLayer(layer)) {
+    map.removeLayer(layer);
+    button.textContent = 'Show';
+    button.classList.replace('btn-primary', 'btn-outline-secondary');
+  } else {
+    layer.addTo(inletConnectionsFeatureGroup);
+    button.textContent = 'Hide';
+    button.classList.replace('btn-outline-secondary', 'btn-primary');
+  }
+};
+
+function updateInletInfoCard(inlet) {
+  const card = document.getElementById('inlet-info-card');
+  card.innerHTML = `
+    <div class="card-body">
+      <h5 class="card-title">Sink ${inlet.sink_id} ${inlet.is_enlarged_sink ? '(Enlarged)' : ''}</h5>
+      <p class="card-text">
+        Connected to: ${inlet.waterbody_type} (ID ${inlet.waterbody_id})<br>
+        Distance: ${inlet.length_m} meters
+      </p>
+    </div>
+  `;
+  card.style.display = 'block';
+}
+
+
 function getInlets() {
     const project = ToolboxProject.loadFromLocalStorage();
     fetch('get_inlets/', {
@@ -699,7 +752,55 @@ function getInlets() {
 ;
         data.inlets_sinks.forEach(inlet => {
           console.log('inlet', inlet);
+
+          const connectionId = `${inlet.is_enlarged_sink ? 'enl' : 'sink'}_${inlet.sink_id}_${inlet.waterbody_type}_${inlet.waterbody_id}`;
+
+          // Create sink marker
+          const sinkLayer = L.geoJSON(inlet.sink_geom, {
+            pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+              radius: 6,
+              fillColor: '#ff5722',
+              color: '#000',
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.8
+            })
+          });
+
+          // Create line
+          const lineLayer = L.geoJSON(inlet.line, {
+            style: {
+              color: inlet.waterbody_type === 'lake' ? '#007bff' : '#28a745',
+              weight: 3,
+              dashArray: '4,4'
+            }
+          });
+
+          // Combine both into a LayerGroup
+          const group = L.layerGroup([sinkLayer, lineLayer]).addTo(inletConnectionsFeatureGroup);
+          connectionLayerMap[connectionId] = group;
+
+          addToInletTable(inlet, connectionId);  // builds a row in the table
+
+
+
+
         });
+  
+        // $('#navInfiltrationResult').removeClass('disabled').addClass('active').trigger('click');
+         const resultTab = document.getElementById('navInfiltrationResult');
+        resultTab.classList.remove('disabled');
+        resultTab.removeAttribute('aria-disabled');
+
+        // Activate the tab using Bootstrap's API
+        const tab = new bootstrap.Tab(resultTab);
+        tab.show();
+
+        map.removeLayer(sinkFeatureGroup);
+        map.removeLayer(enlargedSinkFeatureGroup);
+
+
+
       } else {
         handleAlerts(data.message);
       }
@@ -770,10 +871,10 @@ function calculateIndexForSelection(project) {
           const sinkId = key;
           document.querySelector(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`).textContent = data.enlarged_sinks[key].index_total;      
       });
+      $('#enlarged_sink-table').DataTable().destroy();
       const tableSettings = createSinkTableSettings(sinkType, true);
         $('#enlarged_sink-table').DataTable(tableSettings);
-      // enlargedSinkTable.destroy();
-      // enlargedSinkTable.DataTable();
+;
       };
     } else {
       handleAlerts(data.message);

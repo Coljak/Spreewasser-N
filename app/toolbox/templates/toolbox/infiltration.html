@@ -1,201 +1,195 @@
 {% load crispy_forms_tags %}
 {% load static %}
 
-<!-- Navigation -->
-<ul class="nav nav-tabs">
-    <li class="nav-item">
-        <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Project</a>
-    </li>
+<div id="divInfiltration">
+    <!-- Navigation -->
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Project</a>
+        </li>
 
-    <li class="nav-item infiltration">
-        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabSoilProperties" aria-selected="false">Bodeneigenschaften</a>
-    </li>
-    
-    <li class="nav-item infiltration">
-        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabSinks" aria-selected="false">Senken</a>
-    </li>
-    <li class="nav-item infiltration">
-        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabEnlargedSinks" aria-selected="false">Vergrößerte Senken</a>
-    </li>
-    <li class="nav-item infiltration">
-        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabWeightingForms" aria-selected="false">Gewichtung</a>
-    </li>
-    <li class="nav-item infiltration">
-        <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabWaterbodies" aria-selected="false">Gewässer</a>
-    </li>
-    <li class="nav-item infiltration">
-        <a id="toolboxResultTab" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabToolboxResult">Result</a>
-    </li>
-</ul>
+        <li class="nav-item infiltration">
+            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabSoilProperties" aria-selected="false">Bodeneigenschaften</a>
+        </li>
+        
+        <li class="nav-item infiltration">
+            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabSinks" aria-selected="false">Senken</a>
+        </li>
+        <li class="nav-item infiltration">
+            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabEnlargedSinks" aria-selected="false">Vergrößerte Senken</a>
+        </li>
+        <li class="nav-item infiltration">
+            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabWeightingForms" aria-selected="false">Gewichtung</a>
+        </li>
+        <li class="nav-item infiltration">
+            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabWaterbodies" aria-selected="false">Gewässer</a>
+        </li>
+        <li class="nav-item infiltration">
+            <a id="navInfiltrationResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabToolboxResult">Ergebnis</a>
+        </li>
+    </ul>
 
-<!-- Tab Content Wrapper -->
-<div class="tab-content" id="toolboxTabContent">
+    <!-- Tab Content Wrapper -->
+    <div class="tab-content" id="toolboxTabContent">
 
-    <div id="tabToolboxProject" class="tab-pane active show">
-        <div class="card mb-3">
-            <div class="card-body">
-                {{ project_select_form | crispy }}
+        <div id="tabToolboxProject" class="tab-pane active show">
+            <div class="card mb-3">
+                <div class="card-body">
+                    {{ project_select_form | crispy }}
+                </div>
             </div>
         </div>
-    </div>
 
-    {% comment %} <div id="tabSoilProperties" class="tab-pane">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Filter Bodeneigenschaften</h5>
-                <form method="POST" action="">
-                    {% csrf_token %}
-                    {% crispy soil_filter.form %}
-                    <button id="btnFilterSoilProperties"type="submit" class="btn btn-primary">Bodeneigenschaften anzeigen</button>
-                </form>
+
+
+
+        <div id="tabSinks" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Filter Natürliche Senken als Versickerungsstandorte</h5>
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy sink_filter.form %}
+                        <button id="btnFilterSinks"type="submit" class="btn btn-primary">Senken filtern</button>
+                    </form>
+                </div>
+            </div>
+            <div id="cardSinkTable" class="card mb-3 d-none">
+                <div class="card-body">
+                    <div id="sink-table-container"></div>
+                    <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button>
+                    {% comment %} <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button> {% endcomment %}
+
+                </div>
             </div>
         </div>
-        <div id="soilPropertiesTable" class="card mb-3 d-none">
-            <div class="card-body">
-                <div id="soil-properties-table-container"></div>
-                <button id="btnContinueWithSoilPropertiesSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button>
-                <button id="btnSoilProperties" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button>
 
+        <div id="tabEnlargedSinks" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Filter Baulich modifizierte Senken als Versickerungsstandorte</h5>
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy enlarged_sink_filter.form %}
+                        <button id="btnFilterEnlargedSinks" type="submit" class="btn btn-primary">Senken filtern</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="cardEnlargedSinkTable"  class="card mb-3 d-none">
+                <div class="card-body">
+                    <div id="enlarged-sink-table-container"></div>
+                    <button id="btnCntinueWithEnlargedSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks ">Auswahl bewerten</button>
+                    {% comment %} <button id="btnShowEnlargedSinkOutlines" type="button" class="btn btn-primary mt-3 show-enlarged-sink-outlines">Vergrößerte Senken anzeigen</button> {% endcomment %}
+                    <button id="btnShowEmbankments" type="button" class="btn btn-primary mt-3 show-embankment-outlines">Verwallungsstrukturen anzeigen</button>
+                </div>
             </div>
         </div>
-    </div> {% endcomment %}
 
-
-    <div id="tabSinks" class="tab-pane">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Filter Natürliche Senken als Versickerungsstandorte</h5>
-                <form method="POST" action="">
-                    {% csrf_token %}
-                    {% crispy sink_filter.form %}
-                    <button id="btnFilterSinks"type="submit" class="btn btn-primary">Senken anzeigen</button>
-                </form>
+        <div id="tabSinksSelection" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div id="sink-selection-table-container"></div>
+                    <button id="btnshowSinkSelection" type="button" class="btn btn-primary mt-3">Ausgewählte Senken Anzeigen</button>
+                </div>
             </div>
-        </div>
-        <div id="cardSinkTable" class="card mb-3 d-none">
-            <div class="card-body">
-                <div id="sink-table-container"></div>
-                <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button>
-                <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button>
-
-            </div>
-        </div>
-    </div>
-
-    <div id="tabEnlargedSinks" class="tab-pane">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Filter Baulich modifizierte Senken als Versickerungsstandorte</h5>
-                <form method="POST" action="">
-                    {% csrf_token %}
-                    {% crispy enlarged_sink_filter.form %}
-                    <button id="btnFilterEnlargedSinks" type="submit" class="btn btn-primary">Senken anzeigen</button>
-                </form>
-            </div>
+            
         </div>
         
-        <div id="cardEnlargedSinkTable"  class="card mb-3 d-none">
-            <div class="card-body">
-                <div id="enlarged-sink-table-container"></div>
-                <button id="btnCntinueWithEnlargedSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks ">Auswahl bewerten</button>
-                <button id="btnShowEnlargedSinkOutlines" type="button" class="btn btn-primary mt-3 show-enlarged-sink-outlines">Vergrößerte Senken anzeigen</button>
-                <button id="btnShowEmbankments" type="button" class="btn btn-primary mt-3 show-embankment-outlines">Verwallungsstrukturen anzeigen</button>
-            </div>
-        </div>
-    </div>
 
-    <div id="tabSinksSelection" class="tab-pane">
-        <div class="card mb-3">
-            <div class="card-body">
-                <div id="sink-selection-table-container"></div>
-                <button id="btnshowSinkSelection" type="button" class="btn btn-primary mt-3">Ausgewählte Senken Anzeigen</button>
+        <div id="tabWaterbodies" class="tab-pane">
+            <h2 class="title">Oberflächengewässer</h2>
+            <div class="card mb-3">
+                <div class="card-body">
+                    
+                    <h5 class="card-title">Fließgewässer</h5>
+                    <div class="card-body">
+                        {% crispy streams_form.form  %}
+                        <button id="btnFilterStreams" class="btn btn-primary mt-3">Flüsse anzeigen</button>
+                    </div>
+                </div>
             </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Stillgewässer</h5>
+                    <div class="card-body">
+                        {% crispy lakes_form.form %}
+                        <button id="btnFilterLakes" class="btn btn-primary mt-3">Seeen anzeigen</button>
+                    </div> 
+                </div>
+            </div>
+            <button id="btnGetInlets" class="btn btn-primary mt-3">Einlass berechnen</button>
+            
         </div>
-        
-    </div>
-    
 
-    <div id="tabWaterbodies" class="tab-pane">
-        <h2 class="title">Oberflächengewässer</h2>
-        <div class="card mb-3">
-            <div class="card-body">
-                
-                <h5 class="card-title">Fließgewässer</h5>
+        <div id="tabWeightingForms" class="tab-pane">
+            <h2 class="title">Gesamtgewichtung</h2>
+            <div class="card mb-3">
                 <div class="card-body">
-                    {% crispy streams_form.form  %}
-                    <button id="btnFilterStreams" class="btn btn-primary mt-3">Flüsse anzeigen</button>
+                    <h5 class="card-title">Gesamtgewichtung</h5>
+                    <div class="card-body">
+                        {% crispy overall_weighting %}            
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Stillgewässer</h5>
+            <h2 class="title">Gewichtung der Bodeneignung</h2>
+            <div class="card mb-3">
                 <div class="card-body">
-                    {% crispy lakes_form.form %}
-                    <button id="btnFilterLakes" class="btn btn-primary mt-3">Seeen anzeigen</button>
-                </div> 
+                    <h5 class="card-title">Gewichtung Ackerland</h5>
+                    <div class="card-body">
+                        {% crispy agriculture_weighting %}            
+                    </div>
+                </div>
             </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Gewichtung Wälder und diverse Vegetation</h5>
+                    <div class="card-body">
+                        {% crispy forest_weighting %}            
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Gewichtung Grasland</h5>
+                    <div class="card-body">
+                        {% crispy grassland_weighting %}            
+                    </div>
+                </div>
+            </div>
+            {% comment %} <h2 class="title">Gewichtung der Einlasspunkte</h2>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Distanz und Volumen</h5>
+                    <div class="card-body">
+                        {% crispy inlet_point_weighting %}            
+                    </div>
+                </div>
+            </div> {% endcomment %}
+            
         </div>
-        <button id="btnGetInlets" class="btn btn-primary mt-3">Einlass berechnen</button>
-        
-    </div>
 
-    <div id="tabWeightingForms" class="tab-pane">
-        <h2 class="title">Gesamtgewichtung</h2>
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Gesamtgewichtung</h5>
+        <div id="tabToolboxResult" class="tab-pane ">
+            <div class="card mb-3">
                 <div class="card-body">
-                    {% crispy overall_weighting %}            
+                    <h5 class="card-title">Ergebnis</h5>
+                    <table class="table table-hover" id="inlet-table">
+                        <thead>
+                            <tr>
+                            <th>Sink ID</th>
+                            <th>Enlarged</th>
+                            <th>Waterbody</th>
+                            <th>Length (m)</th>
+                            <th>Visible</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div id="inlet-info-card" class="card mt-3" style="display: none;"></div>
                 </div>
             </div>
         </div>
-        <h2 class="title">Gewichtung der Bodeneignung</h2>
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Gewichtung Ackerland</h5>
-                <div class="card-body">
-                    {% crispy agriculture_weighting %}            
-                </div>
-            </div>
-        </div>
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Gewichtung Wälder und diverse Vegetation</h5>
-                <div class="card-body">
-                    {% crispy forest_weighting %}            
-                </div>
-            </div>
-        </div>
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Gewichtung Grasland</h5>
-                <div class="card-body">
-                    {% crispy grassland_weighting %}            
-                </div>
-            </div>
-        </div>
-        {% comment %} <h2 class="title">Gewichtung der Einlasspunkte</h2>
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Distanz und Volumen</h5>
-                <div class="card-body">
-                    {% crispy inlet_point_weighting %}            
-                </div>
-            </div>
-        </div> {% endcomment %}
-        
-    </div>
 
-    <div id="tabToolboxResult" class="tab-pane ">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">tabToolboxResult</h5>
-                <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
-            </div>
-        </div>
     </div>
 
 </div>
-
-<!--

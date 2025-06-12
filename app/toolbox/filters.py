@@ -139,13 +139,13 @@ class MinMaxRangeFilter(RangeFilter):
 
 class SinkFilter(FilterSet):
     area = MinMaxRangeFilter(
-        model=SinkX, 
+        model=Sink, 
         field_name='area', 
         label="Area (m²)",
         )
-    volume = MinMaxRangeFilter(model=SinkX, field_name='volume', label="Volume (m³)")
-    depth = MinMaxRangeFilter(model=SinkX, field_name='depth', label="Depth (m)")
-    index_soil = MinMaxRangeFilter(model=SinkX, field_name='index_soil', label="Soil Index (%)")
+    volume = MinMaxRangeFilter(model=Sink, field_name='volume', label="Volume (m³)")
+    depth = MinMaxRangeFilter(model=Sink, field_name='depth', label="Depth (m)")
+    index_soil = MinMaxRangeFilter(model=Sink, field_name='index_soil', label="Soil Index (%)")
 
     land_use = MultipleChoiceFilter(
         label="Land Use",

@@ -2,20 +2,49 @@ import { getGeolocation, handleAlerts, getCSRFToken, saveProject, observeDropdow
 
 function updateButtonState(project) {
     console.log('updateButtonState', project);
-    if (document.getElementById("btnGetInlets")){
-        const hasSink = project.infiltration.selected_sinks.length > 0 || project.infiltration.selected_enlarged_sinks.length > 0;
-        const hasWaterbody = project.infiltration.selected_lakes.length > 0 || project.infiltration.selected_streams.length > 0;
+    if (document.getElementById("divInfiltration")){
+        
+        const hasSink = project.infiltration.selected_sinks.length > 0;
+        const hasEnlargedSink = project.infiltration.selected_enlarged_sinks.length > 0;
+        const hasStream = project.infiltration.selected_streams.length > 0;
+        const hasLake = project.infiltration.selected_lakes.length > 0;
+        
 
-        const btn = document.getElementById("btnGetInlets"); // Adjust to your actual button ID
-        if (!(hasSink && hasWaterbody)) {
-            btn.classList.add('disabled');
+        // Adjust to your actual button ID
+        if ((hasSink || hasEnlargedSink) && (hasLake || hasStream)) {
+            document.getElementById("btnGetInlets").classList.remove('disabled');
             console.log('!(hasSink && hasWaterbody)')
         } else {
-            btn.classList.remove('disabled');
+            document.getElementById("btnGetInlets").classList.add('disabled');
             console.log('(hasSink && hasWaterbody)')
         };
-    }
-    
+   
+        if (hasSink) {
+            document.getElementById("btnContinueWithSinkSelection").classList.remove('disabled');
+            // document.getElementById("btnShowSinkOutlines").classList.remove('disabled');
+
+            // document.getElementById("btnGetInlets").disabled = false;
+        }
+        else {
+            document.getElementById("btnContinueWithSinkSelection").classList.add('disabled');
+            // document.getElementById("btnShowSinkOutlines").classList.add('disabled');
+            // document.getElementById("btnGetInlets").disabled = true;
+        };
+
+        if (hasEnlargedSink) {
+            document.getElementById("btnCntinueWithEnlargedSinkSelection").classList.remove('disabled');
+            // document.getElementById("btnShowEnlargedSinkOutlines").classList.remove('disabled');
+            document.getElementById("btnShowEmbankments").classList.remove('disabled');
+            // document.getElementById("btnCntinueWithEnlargedSinkSelection").disabled = false;
+        }
+        else {
+            document.getElementById("btnCntinueWithEnlargedSinkSelection").classList.add('disabled');
+            // document.getElementById("btnShowEnlargedSinkOutlines").classList.add('disabled');
+            document.getElementById("btnShowEmbankments").classList.add('disabled');
+
+        };
+       
+     };
 }
 
 export class Infiltration {

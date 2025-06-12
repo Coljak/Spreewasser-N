@@ -273,6 +273,7 @@ const runSimulation = (monicaProject) => {
         }    
     })
     .then(() => {
+        #TODO: check if this is needed
         $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
     });
 };

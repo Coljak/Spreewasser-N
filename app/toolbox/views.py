@@ -21,9 +21,12 @@ import json, requests
 from datetime import datetime
 
 from shapely.geometry import shape as shapely_shape
-from shapely.ops import nearest_points
+from shapely.ops import nearest_points, transform
+from pyproj import Transformer
 
 
+
+transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 
 
 # not in use
@@ -204,8 +207,10 @@ def filter_sinks(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     user_field = models.UserField.objects.get(pk=project['userField'])
+    print('User_field-geom: ', user_field.geom)
     geom = GEOSGeometry(user_field.geom)
-    sinks = models.Sink.objects.filter(geom__within=geom)
+    print('geos geom, ', geom)
+    sinks = models.Sink.objects.filter(geom4326__within=geom)
     filters = Q()
     filters = add_range_filter(filters, project['infiltration'], 'sink_area', 'area')
     filters = add_range_filter(filters, project['infiltration'], 'sink_volume', 'volume')
@@ -270,7 +275,7 @@ def filter_enlarged_sinks(request):
 
     user_field = models.UserField.objects.get(pk=project['userField'])
     geom = GEOSGeometry(user_field.geom)
-    sinks = models.EnlargedSink.objects.filter(geom__within=geom)
+    sinks = models.EnlargedSink.objects.filter(geom4326__within=geom)
 
     filters = Q()
     filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_area', 'area')
@@ -812,59 +817,6 @@ def get_weighting_forms(request):
 
 
 
-def get_result_features(sinks, lakes, streams):
-    """
-    TODO: wich on eis better?
-    Same as get_shortest_connection_lines_utm but returns a list of features, but with all infos.
-    Get the shortest connection line between the sinks and the nearest selected lake or stream.
-    Returns a list of dictionaries with sink_id, waterbody_type, waterbody_id, line (WKT), and length_m.
-    """
-    results = []
-    if sinks != [] and (lakes != [] or streams != []):
-        for sink in sinks:
-            sink_geom = shapely_shape(json.loads(sink.geom25833.geojson))
-
-            min_dist = float('inf')
-            closest_geom = None
-            waterbody_type = None
-            waterbody_id = None
-
-            # Check lakes
-            for lake in lakes:
-                lake_geom = shapely_shape(json.loads(lake.geom25833.geojson))
-                dist = sink_geom.distance(lake_geom)
-                if dist < min_dist:
-                    min_dist = dist
-                    closest_geom = lake_geom
-                    waterbody_type = 'lake'
-                    waterbody_id = lake.id
-
-            # Check streams
-            for stream in streams:
-                stream_geom = shapely_shape(json.loads(stream.geom25833.geojson))
-                dist = sink_geom.distance(stream_geom)
-                if dist < min_dist:
-                    min_dist = dist
-                    closest_geom = stream_geom
-                    waterbody_type = 'stream'
-                    waterbody_id = stream.id
-
-            # Find nearest points and build LineString in EPSG:25833
-            nearest = nearest_points(sink_geom, closest_geom)
-            line = LineString([nearest[0].coords[0], nearest[1].coords[0]])
-            length_m = line.length  # Already in meters (EPSG:25833 is a projected CRS)
-
-            results.append({
-                'sink_id': sink.id,
-                'is_enlarged_sink': sink.__class__ == models.EnlargedSink,
-                'waterbody_type': waterbody_type,
-                'waterbody_id': waterbody_id,
-                'line': line.geojson,
-                'length_m': round(length_m, 2),
-            })
-
-    return results
-
 
 def get_shortest_connection_lines_utm(sinks, lakes, streams):
     """
@@ -904,20 +856,31 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
             # Find nearest points and build LineString in EPSG:25833
             nearest = nearest_points(sink_geom, closest_geom)
             line = LineString([nearest[0].coords[0], nearest[1].coords[0]])
+            line_geom = GEOSGeometry(line.wkt, srid=25833)
+            line_geom.transform(4326)
             length_m = line.length  # Already in meters (EPSG:25833 is a projected CRS)
 
-            results.append({
+            is_enlarged_sink = isinstance(sink, models.EnlargedSink)
+            result = {
                 'sink_id': sink.id,
-                'is_enlarged_sink': sink.__class__ == models.EnlargedSink,
+                'sink_geom': json.loads(sink.geom4326.geojson),
+                'is_enlarged_sink': is_enlarged_sink,
                 'waterbody_type': waterbody_type,
                 'waterbody_id': waterbody_id,
-                'line': line.geojson,
+                'line': json.loads(line_geom.geojson),
                 'length_m': round(length_m, 2),
-            })
+            }
+            if is_enlarged_sink:
+                
+                results['sink_embankment'] = sink.id
+
+            results.append(result)
+            
 
     return results
 
 def get_inlets(request):
+    # POST request
     project = json.loads(request.body)
     print('Project:', project)
 
@@ -928,6 +891,9 @@ def get_inlets(request):
 
     inlets_sinks = get_shortest_connection_lines_utm(sinks, lakes, streams)
     inlets_enlarged_sinks = get_shortest_connection_lines_utm(enlarged_sinks, lakes, streams)
+    
+    # inlets_sinks = get_result_features(sinks, lakes, streams)
+    # inlets_enlarged_sinks = get_result_features(enlarged_sinks, lakes, streams)
     
     response = {
         'inlets_sinks': inlets_sinks + inlets_enlarged_sinks,

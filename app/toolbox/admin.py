@@ -64,8 +64,8 @@ class SinkSoilPropertiesAdmin(ModelAdmin):
 
 
 
-admin.site.register(models.SinkX, SinkAdmin)
-admin.site.register(models.EnlargedSinkX, EnlargedSinkAdmin)
+# admin.site.register(models.Sink, SinkAdmin)
+# admin.site.register(models.EnlargedSink, EnlargedSinkAdmin)
 admin.site.register(models.Lake, LakeAdmin)
 admin.site.register(models.Stream, StreamAdmin)
 admin.site.register(models.SoilProperties, SoilPropertiesAdmin)

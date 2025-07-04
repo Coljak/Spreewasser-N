@@ -76,7 +76,7 @@ class UserField(models.Model):
 
         print('polygon_json ', polygon_json)
         self.soil_profile_polygon_ids = json.dumps(polygon_json)  # Convert to JSON string
-        self.save()
+        return self.soil_profile_polygon_ids
 
     def get_intersecting_soil_data_raster(self):
         userfield_geom = self.geom
@@ -90,7 +90,7 @@ class UserField(models.Model):
 
         print('polygon_json ', polygon_json)
         self.soil_profile_polygon_ids = json.dumps(polygon_json)  # Convert to JSON string
-        self.save()
+        return self.soil_profile_polygon_ids
 
     def get_weather_grid_points(self):
         """
@@ -117,7 +117,7 @@ class UserField(models.Model):
             weather_indices_list.append(dict)
         weather_indices_json = {'weather_indices': weather_indices_list}
         self.weather_grid_points = weather_indices_json
-        self.save()
+        
         print( 'weather_indices_json ', weather_indices_json)
         return weather_indices_json
     
@@ -128,12 +128,24 @@ class UserField(models.Model):
         userfield_geom = self.geom
         userfield_geom = GEOSGeometry(userfield_geom)
         centroid = userfield_geom.centroid
-        lat = centroid.y
-        lon = centroid.x
-        self.centroid_lat = lat
-        self.centroid_lon = lon
-        self.save()
-        return lon, lat
+        self.centroid_lat = centroid.y
+        self.centroid_lon = centroid.x
+        return centroid.x, centroid.y
+    
+    def save(self, *args, **kwargs):
+        """
+        Override the save method to ensure the geometry is set correctly
+        and to calculate the centroid.
+        """
+        if self.geom:
+            # Ensure geom is a GEOSGeometry object
+            if not isinstance(self.geom, GEOSGeometry):
+                self.geom = GEOSGeometry(self.geom)
+            # Calculate and set the centroid
+            self.get_centroid()
+        self.get_intersecting_soil_data()
+        self.get_weather_grid_points()
+        super().save(*args, **kwargs)
     
  
 

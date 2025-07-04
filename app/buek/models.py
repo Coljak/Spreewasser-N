@@ -220,6 +220,21 @@ class SoilProfileHorizon(models.Model):
             'Sand': [round(self.ka5_texture_class.sand * 100, 1), "%"] if self.ka5_texture_class else [],
             'Clay': [round(self.ka5_texture_class.clay * 100, 1), "%"] if self.ka5_texture_class else [],
             'pH': round(((self.ph_class.ph_lower_value + self.ph_class.ph_upper_value) / 2), 2) if self.ph_class else 4.5,
+            'KA5TextureClass': self.ka5_texture_class.ka5_soiltype if self.ka5_texture_class else '',
+            'SoilRawDensity': [self.bulk_density_class.raw_density_g_per_cm3 * 1000, "kg m-3"] if self.bulk_density_class else [],
+            'SoilOrganicCarbon': [round(self.humus_class.corg, 2), "%"] if self.humus_class else [],
+
+        }
+  
+        return monica_json
+    
+    def to_extended_json(self):
+        # TODO: can Monica actually handle the NULL values as '' or []?
+        monica_json = {
+            'Thickness': [round((self.untergrenze_m - self.obergrenze_m), 2), "m"],
+            'Sand': [round(self.ka5_texture_class.sand * 100, 1), "%"] if self.ka5_texture_class else [],
+            'Clay': [round(self.ka5_texture_class.clay * 100, 1), "%"] if self.ka5_texture_class else [],
+            'pH': round(((self.ph_class.ph_lower_value + self.ph_class.ph_upper_value) / 2), 2) if self.ph_class else 4.5,
 
             # 'Sceleton': soil stone content, a fraction between 0 and 1
             # 'Lambda': soil water conductivity coefficient
@@ -236,9 +251,9 @@ class SoilProfileHorizon(models.Model):
             # TODO wiki: SoilOrganicCarbon 	% [0-100] ([kg C kg-1] * 100)  a percentage between 0 and 100 BUT it seems to be a percenteage
             # OR 'SoilOrganicMatter': 	kg OM kg-1 (fraction [0-1]) 	soil organic matter
             # 'SoilMoisturePercentFC': % [0-100] 	initial soil moisture in percent of field capacity
-            'FieldCapacity': [self.get_ptf1_fc() * 100, '%'],  # field capacity in percent
+            'FieldCapacity': [self.get_ptf1_fc() * 100, '%'] if self.get_ptf1_fc() else None,  # field capacity in percent
             # 'SoilMoisturePercentWP': % [0-100] 	initial soil moisture in percent of permanent wilting point
-            'WiltingPoint': [self.get_ptf1_wp() * 100, '%'],  # permanent wilting point in percent
+            'WiltingPoint': [self.get_ptf1_wp() * 100, '%'] if self.get_ptf1_wp() else None,  # permanent wilting point in percent
         }
   
         return monica_json

@@ -4,10 +4,12 @@ import { MonicaProject, loadProjectFromDB, loadProjectToGui  } from '/static/mon
 import { ToolboxProject } from '/static/toolbox/toolbox.js';
 import { getCSRFToken, handleAlerts } from '/static/shared/utils.js';
 export class UserField {
-  constructor(name, id=null, userProjects=[]) {
+  constructor(name, id=null, lat=null, lon=null, userProjects=[]) {
     this.name = name;
     // this.layer = layer;
     this.id = id;
+    this.lat = lat;
+    this.lon = lon;
     this.userProjects = userProjects;
   }
 };
@@ -65,7 +67,8 @@ export const baseMaps = {
   };
 
   //Map with open street map,opentopo-map and arcgis satellite map
-export const map = enhanceMap(
+  // TODO change var back to const!!
+export var map = enhanceMap(
   new L.Map("map", {
     zoomSnap: 0.25,
     wheelPxPerZoomLevel: 500,
@@ -158,17 +161,17 @@ export function initializeMapEventlisteners (map, featureGroup, projectClass) {
     });
 };
 
-export function getSelectedUserField() {
-  const userFields = JSON.parse(localStorage.getItem('userFields') || '{}');
-  console.log('getSelectedUserField', userFields);
-  // Find the highlighted leafletId
-  const highlightedLeafletId = Object.keys(userFields).find(leafletId => {
-    const header = document.getElementById(`accordionHeader-${leafletId}`);
-    return header && header.classList.contains('highlight');
-  });
-  console.log('highlightedLeafletId', highlightedLeafletId);
-  return highlightedLeafletId? highlightedLeafletId : null;
-}
+// export function getSelectedUserField() {
+//   const userFields = JSON.parse(localStorage.getItem('userFields') || '{}');
+//   console.log('getSelectedUserField', userFields);
+//   // Find the highlighted leafletId
+//   const highlightedLeafletId = Object.keys(userFields).find(leafletId => {
+//     const header = document.getElementById(`accordionHeader-${leafletId}`);
+//     return header && header.classList.contains('highlight');
+//   });
+//   console.log('highlightedLeafletId', highlightedLeafletId);
+//   return highlightedLeafletId? highlightedLeafletId : null;
+// }
 
 
 
@@ -369,11 +372,11 @@ export function highlightLayer(leafletId, featureGroup) {
   });
 
   // remove highlight from all sidebar headers
-  const accordionHeaders = document.querySelectorAll("#accordionUserFields .accordion-header");
-  accordionHeaders.forEach(header => header.classList.remove("highlight"));
+  const listElements = document.querySelectorAll(".user-field-header");
+  listElements.forEach(header => header.classList.remove("highlight"));
 
   // toggle highlight on selected layer + header
-  const header = $(`#accordionHeader-${leafletId}`);
+  const header = $(`#accordion-${leafletId}`);
   const layer = featureGroup.getLayer(leafletId);
   
 
@@ -398,45 +401,114 @@ export function highlightLayer(leafletId, featureGroup) {
 }
 
 
+// export function selectUserField(userFieldId, project, featureGroup) {
+
+//   console.log("selectUserField featureGroup", featureGroup);
+
+//   if (project && project.userField && project.userField != userFieldId && project.id) {
+//     console.log('If action')
+//     let modal = document.getElementById('interactionModal');
+//     let modalInstance = new bootstrap.Modal(modal);
+//     document.getElementById('interactionModalTitle').innerHTML = "User Field Selection";
+//     document.getElementById('interactionModalText').innerHTML = "you are changing a Monica Project's user field.";
+//     $('#interactionModalOK').off('click').on('click', function () {
+//       const userField = getUserFields()[getLeafletIdByUserFieldId(userFieldId)];
+//       project['userField'] = userFieldId;
+//       project['latitude'] = userField.lat;
+//       project['longitude'] = userField.lon;
+//       project.saveToLocalStorage();
+//       highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
+//     }
+//     );
+//     modalInstance.show(); 
+//   } else if (project && (!project.userField || project.userField === '' || project.userField === undefined) && project.id) {
+//     console.log('If action')
+//     let modal = document.getElementById('interactionModal');
+//     let modalInstance = new bootstrap.Modal(modal);
+//     document.getElementById('interactionModalTitle').innerHTML = "User Field Selection";
+//     document.getElementById('interactionModalText').innerHTML = "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.";
+//     $('#interactionModalOK').off('click').on('click', function () {
+//       const userField = getUserFields()[getLeafletIdByUserFieldId(userFieldId)];
+//       project['userField'] = userFieldId;
+//       project['latitude'] = userField.lat;
+//       project['longitude'] = userField.lon;
+//       project.saveToLocalStorage();
+//       highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
+//     }
+//     );
+//     modalInstance.show(); 
+//   } else {
+
+//     // project.userField = userFieldId;
+//     // project.saveToLocalStorage();
+//     highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
+//     const userField = getUserFields()[getLeafletIdByUserFieldId(userFieldId)];
+//     console.log('selectUserField',userFieldId, userField);
+//     project['userField'] = userFieldId;
+//     project['latitude'] = userField.lat;
+//     project['longitude'] = userField.lon;
+//     project.saveToLocalStorage();
+//   };
+// };
+
 export function selectUserField(userFieldId, project, featureGroup) {
+    console.log("selectUserField featureGroup", featureGroup);
 
-  console.log("selectUserField featureGroup", featureGroup);
+    const leafletId = getLeafletIdByUserFieldId(userFieldId);
+    const userField = getUserFields()[leafletId];
+    highlightLayer(leafletId, featureGroup);
 
-  if (project && project.userField && project.userField != userFieldId && project.id) {
-    console.log('If action')
-    let modal = document.getElementById('interactionModal');
-    let modalInstance = new bootstrap.Modal(modal);
-    document.getElementById('interactionModalTitle').innerHTML = "User Field Selection";
-    document.getElementById('interactionModalText').innerHTML = "you are changing a Monica Project's user field.";
-    $('#interactionModalOK').off('click').on('click', function () {
-      project.userField = userFieldId;
-      project.saveToLocalStorage();
-      highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
-    }
+    const needsConfirmation = (
+        project && project.id &&
+        (
+            (project.userField && project.userField !== userFieldId) ||
+            (!project.userField || project.userField === '')
+        )
     );
-    modalInstance.show(); 
-  } else if (project && (!project.userField || project.userField === '' || project.userField === undefined) && project.id) {
-    console.log('If action')
-    let modal = document.getElementById('interactionModal');
-    let modalInstance = new bootstrap.Modal(modal);
-    document.getElementById('interactionModalTitle').innerHTML = "User Field Selection";
-    document.getElementById('interactionModalText').innerHTML = "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.";
-    $('#interactionModalOK').off('click').on('click', function () {
-      project.userField = userFieldId;
-      project.saveToLocalStorage();
-      highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
-    }
-    );
-    modalInstance.show(); 
-  } else {
 
-    // project.userField = userFieldId;
-    // project.saveToLocalStorage();
-    highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
-    project.userField = userFieldId;
+    if (needsConfirmation) {
+        const isChangingExisting = !!project.userField;
+
+        showUserFieldModal({
+            title: "User Field Selection",
+            text: isChangingExisting
+                ? "You are changing a Monica Project's user field."
+                : "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.",
+            onConfirm: () => {
+                applyUserFieldChange(project, userFieldId, userField, featureGroup);
+            }
+        });
+    } else if (project && project.id) {
+        applyUserFieldChange(project, userFieldId, userField, featureGroup);
+    }
+}
+
+function showUserFieldModal({ title, text, onConfirm }) {
+    const modal = document.getElementById('interactionModal');
+    const modalInstance = new bootstrap.Modal(modal);
+
+    document.getElementById('interactionModalTitle').innerHTML = title;
+    document.getElementById('interactionModalText').innerHTML = text;
+
+    $('#interactionModalOK')
+        .off('click')
+        .on('click', () => {
+            modalInstance.hide();
+            onConfirm();
+        });
+
+    modalInstance.show();
+}
+
+function applyUserFieldChange(project, userFieldId, userField, featureGroup) {
+    console.log('applyUserFieldChange', userFieldId, userField);
+    project['userField'] = userFieldId;
+    project['latitude'] = userField.lat;
+    project['longitude'] = userField.lon;
     project.saveToLocalStorage();
-  };
-};
+    highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
+}
+
 
 
 
@@ -485,7 +557,43 @@ function revertEdit(layer) {
   }
 }
 
+$('#toggleBottomFullscreen').on('click', function () {
+    const isFullscreen = $(this).find('i').hasClass('bi-fullscreen-exit');
 
+    if (isFullscreen) {
+      // Exit fullscreen - restore layout
+      $('.panel-top').css('height', '60%');
+      $('.panel-left').css('visibility', 'visible');
+      $('#main-navbar').show();
+      $('.leaflet-control-container').show(); 
+      $('#toggleBottomFullscreen').html('<i class="bi bi-arrows-fullscreen"></i>');
+    } else {
+      // Enter fullscreen mode - shrink top, hide left
+      $('.panel-top').css('height', '20%'); // or even '5%' if you want it smaller
+      $('.panel-left').css('visibility', 'hidden');
+            // hide the sidebar
+      $('#main-navbar').hide(); // hide the navbar
+      $('.leaflet-control-container').hide(); // hide Leaflet controls
+      map.invalidateSize()
+      const highlightedElement = $('#userFieldsAccordion').find('li.highlight')
+      if (highlightedElement.length > 0) {
+        console.log(highlightedElement)
+        
+        map.fitBounds(highlightedElement[0].layer.getBounds());
+      }
+      
+        
+
+        $('#toggleBottomFullscreen').html('<i class="bi bi-fullscreen-exit"></i>');
+      }
+
+    // Important: tell Leaflet to recalculate map size
+        // if (window.map) {
+        //   setTimeout(() => {
+        //     window.map.invalidateSize();
+        //   }, 300); // delay helps after layout shift
+        // }
+      });
 
 
 
@@ -506,6 +614,7 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
         } else if (switchInput.classList.contains("overlay-switch")) {
             handleOverlaySwitch(switchInput, overlayLayers, map);
         } else if (switchInput.classList.contains("user-field-switch")) {
+          console.log('switchInput: ', switchInput);
             toggleUserField(switchInput, getFeatureGroup());
         }
     });
@@ -514,26 +623,20 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
 
     sidebar.addEventListener("dblclick", (event) => {
       clearTimeout(clickTimeout); // prevent single click logic
-      if (event.target.classList.contains("user-field-header")) {
-        const listElement = event.target.closest(".accordion-item");
+      
+        const listElement = event.target.closest("li");
         map.fitBounds(listElement.layer.getBounds());
         console.log("DOUBLE CLICK");
-      }
+      
     });
 
     sidebar.addEventListener("click", (event) => {
+      console.log("sidebar click event", event.target.classList);
       const clickedElement = event.target;
       let featureGroup = getFeatureGroup()
   
-      if (clickedElement.classList.contains("user-field-header") || clickedElement.classList.contains("user-field-btn")) {
-        clearTimeout(clickTimeout);
-        clickTimeout = setTimeout(() => {
-          // clickTimeout = null;
-          const leafletId = clickedElement.getAttribute("leaflet-id");
-          console.log("user-field-header clicked", leafletId);
-          selectUserField(getUserFieldIdByLeafletId(leafletId), getProject(), featureGroup);
-        }, 250);
-      } else if (clickedElement.classList.contains("user-field-action")) {
+      
+      if (clickedElement.classList.contains("user-field-action")) {
         const leafletId = clickedElement.getAttribute("leaflet-id");
         console.log("user-field-action clicked", leafletId);
         let userFields = getUserFields();
@@ -618,6 +721,8 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
         } else if (clickedElement.classList.contains("field-project-add")) {
           $('#userFieldSelect').val(userField.id);
           if (window.location.pathname.endsWith('/drought/') || window.location.pathname.endsWith('/monica/')) {
+            localStorage.setItem('userFieldId', clickedElement.getAttribute('user-field-id'));
+
             
             $('#monicaProjectModal').modal('show');
           } else if (window.location.pathname.endsWith('/toolbox/')){
@@ -701,7 +806,15 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
 
         }
          else { return;}
-        }
+        } else {
+          const listEl = clickedElement.closest("li");
+        clearTimeout(clickTimeout);
+        clickTimeout = setTimeout(() => {
+          // clickTimeout = null;
+          const leafletId = listEl.getAttribute("leaflet-id");
+          console.log("user-field-header clicked", leafletId);
+          selectUserField(getUserFieldIdByLeafletId(leafletId), getProject(), featureGroup);
+        }, 250); }
       });
 
 };
@@ -709,8 +822,8 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
 
 function toggleUserField(switchInput,  map) {
     const leafletId = switchInput.getAttribute("leaflet-id");
-    const accordion = switchInput.closest(".accordion-item");
-    switchInput.checked ? map.addLayer(accordion.layer) : map.removeLayer(accordion.layer);
+    const listElement = switchInput.closest("li");
+    switchInput.checked ? map.addLayer(listElement.layer) : map.removeLayer(listElement.layer);
 
 };
 
@@ -826,6 +939,8 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
         const userField = new UserField(
           data.name,
           data.id,  
+          data.lat,
+          data.lon,
         );
         layer.remove(); // removes the drawn shape from map
         const newLayer = Object.values(layerGeoJson._layers)[0];
@@ -854,51 +969,59 @@ export function dismissPolygon(layer, modalInstance, featureGroup) {
   featureGroup.removeLayer(layer);
 };
 
+const tooltip = {
+  de: {
+    edit: "Feld bearbeiten",
+    createProject: "Projekt erstellen",
+    loadProject: "Projekt laden",
+    delete: "Project löschen",
+  }
+}
+
 
 export const addLayerToSidebar = (userField, layer) => {
     // new Accordion UserField style
-    const accordion = document.createElement("div");
-    accordion.setAttribute("class", "accordion-item");
+    const accordion = document.createElement("li");
+    accordion.setAttribute("class", "list-group-item user-field-header");
     accordion.setAttribute("id", `accordion-${userField.leafletId}`);
     accordion.setAttribute("leaflet-id", userField.leafletId);
     accordion.setAttribute("user-field-id", userField.id);
   
-    // Generate the full HTML for the accordion
-    accordion.innerHTML = `
-      <div 
-        class="accordion-header nested user-field-header d-flex align-items-center justify-content-between" 
-        id="accordionHeader-${userField.leafletId}" 
-        user-field-id="${userField.id}"
-        leaflet-id="${userField.leafletId}"
-      >
-        <span class="form-check form-switch h6">  
-          <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="fieldSwitch-${userField.leafletId}" checked>
-        </span>
-        
-          ${userField.name}
 
-        <span class="column col-4 field-btns-col">
-          <form id="deleteAndCalcForm-${userField.leafletId}">
-            <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
-              <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-project-add" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
-              <span><i class="bi bi-plus user-field-action field-project-add" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
-              <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}">
-              <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
-            </button>
-          </form>
-        </span>  
-      </div>
-      
-    `;
-    // adding the UserField to the HTML-list element
+    accordion.innerHTML = `
+  <div 
+    class="row" 
+    id="accordionHeader-${userField.leafletId}" 
+    user-field-id="${userField.id}"
+    leaflet-id="${userField.leafletId}"
+  >
+    <div class="form-check form-switch h6 col-7">  
+      <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="fieldSwitch-${userField.leafletId}" checked>
+      <label>${userField.name}</label>
+    </div>
+
+    <div class="field-btns-col col-5 d-flex justify-content-end">
+      <form id="deleteAndCalcForm-${userField.leafletId}" class="d-flex gap-1">
+        <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.edit}">
+          <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-project-add" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.createProject}">
+          <span><i class="bi bi-plus user-field-action field-project-add" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.loadProject}">
+          <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.delete}">
+          <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+        </button>
+      </form>
+    </div>  
+  </div>
+`;
+
     accordion.layer = layer;
-  
+    const userFieldsAccordion = document.getElementById("userFieldList");
+    // console.log("userFieldsAccordion", userFieldsAccordion);
     userFieldsAccordion.appendChild(accordion);
   };
 
@@ -937,10 +1060,12 @@ export async function getUserFieldsFromDb (featureGroup) {
       // console.log("getData, element: ", el);
       const userField = new UserField(
         el.name,
-        // layer,
-        el.id,
-        el.user_projects    
+        el.id,  
+        el.centroid_lat || null,
+        el.centroid_lon || null,
+        el.user_projects || [] // Ensure user_projects is an array
       );
+
       // Add the layer to the droughtFeatureGroup layer group
       // featureGroup.addLayer(layer);
       const newLayer = Object.values(layerGeoJson._layers)[0];

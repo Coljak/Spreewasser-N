@@ -141,6 +141,7 @@ export class Workstep {
     }
 };
 
+//TODO fix select dropdown for project. It does not load
 export async function loadProjectFromDB(project_id) {
     console.log('loadProjectFromDB id', project_id);
     return fetch('load-project/' + project_id + '/')
@@ -170,7 +171,7 @@ export const loadProjectToGui = (project) => {
     document.querySelector('#cropRotation').innerHTML = '';
     
     
-    $('#projectName').val(project.name);
+    project.name ? $('#monica-project-name').text(project.name) : $('#monica-project-name').text('Kein Projekt geladen');
     $('#projectDescription').val(project.description);
     $('#id_longitude').val(project.longitude);
     $('#id_latitude').val(project.latitude);

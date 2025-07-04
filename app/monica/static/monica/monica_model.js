@@ -141,7 +141,7 @@ function createChartDataset() {
             datasets.push({
                 yAxisID: 'y3',
                 label: `${resultTranslation.Mois_2} ${i}`,
-                data: msg.Mois_1,
+                data: msg.Mois_2,
                 borderWidth: 2,
                 borderColor: colors[i],
                 pointHitRadius: 10,
@@ -161,7 +161,7 @@ function createChartDataset() {
             datasets.push({
                 yAxisID: 'y4',
                 label: `${resultTranslation.SOC_1} ${i}`,
-                data: msg.Mois_1,
+                data: msg.SOC_1,
                 borderWidth: 2,
                 borderColor: colors[i],
                 pointHitRadius: 10,
@@ -273,7 +273,7 @@ const runSimulation = (monicaProject) => {
         }    
     })
     .then(() => {
-        #TODO: check if this is needed
+        //TODO: check if this is needed
         $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
     });
 };
@@ -434,10 +434,15 @@ const submitModalForm = (modalForm, modalAction) => {
     .catch(error => console.error('Error:', error));
 };
 
+let modalInitialized = false;
+
+
 // TODO refactor initiaizeSoilModal
 // TODO implement getSoilProfiles for swn - all poygon ids
 const initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
     console.log('initializeSoilModal',   systemUnitJson, landusageChoices);
+    if (modalInitialized) return;
+    modalInitialized = true;
     const landUsageField = document.getElementById('id_land_usage');
     const soilProfileField = document.getElementById('id_soil_profile');
     const horizonsField = document.getElementById('div_id_horizons');
@@ -543,6 +548,8 @@ const initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, l
         // console.log('selectableSystemUnits', selectableSystemUnits.sort());
     });
 
+    landUsageField.innerHTML = ''; // Clear existing options
+
     for (const key in landusageChoices) {
         const option = document.createElement('option');
         option.value = key;
@@ -601,6 +608,9 @@ const createModal = (params) => {
                 const landUsageChoices = JSON.parse(data.landusage_choices);
                 initializeSoilModal(polygonIds, null, systemUnitJson, landUsageChoices);
                 $('#modalManualSoilSelection').modal('show');
+                $('#modalManualSoilSelection').on('hidden.bs.modal', function () {
+                    modalInitialized = false;
+                });
  
             })
         } else {
@@ -637,10 +647,7 @@ const validateProject = (project) => {
     } else if (window.location.pathname.endsWith('/monica/') && (project.longitude === null || project.latitude === null)) {
         valid = false;
         handleAlerts({'success': false, 'message': 'Please provide a valid location'});
-    // } else if (project.name === null || project.name === '' || project.name === undefined || project.name === 'Default Project') {
-    //     document.querySelector('#projectName').focus()
-    //     valid = false;
-    //     handleAlerts({'success': false, 'message': 'Please provide a project name'});
+
     } else if (project.startDate === null || project.endDate === null || new Date(project.startDate) > new Date(project.endDate)) {
         valid = false;
         document.querySelector('a[href="#tabGeneralParameters"]').click();
@@ -1331,7 +1338,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     
         try {
-            project.userField = $('#userFieldSelect').val();
+            // project.userField = $('#userFieldSelect').val();
+            let userField = localStorage.getItem('userFieldId');
+            project.userField = userField ? userField : null;
         } catch (e) {
             console.log('UserField not found');
         }

@@ -258,7 +258,7 @@ def user_logout(request):
 def swn_dashboard(request):
     print("Request.user", request.user)
     user = request.user
-    user_fields = models.UserField.objects.filter(user=request.user.id)
+    
     context = monica_views.get_monica_forms(user)
 
     default_project = monica_views.create_default_project(user)
@@ -326,7 +326,7 @@ def get_user_fields(request):
         user_projects = models.SwnProject.objects.filter(user=request.user)
         ufs = []
         for user_field in user_fields:
-            uf = model_to_dict(user_field, fields=['id', 'user', 'name', 'geom_json'])
+            uf = model_to_dict(user_field, fields=['id', 'user', 'name', 'centroid_lat', 'centroid_lon', 'geom_json'])
             uf['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
             ufs.append(uf)
         # print('user_fields:', ufs)
@@ -381,9 +381,9 @@ def save_user_field(request):
                 
                 user_field.save()
             # TODO this should rather be a save method of UserField
-            user_field.get_centroid()
-            user_field.get_intersecting_soil_data()
-            user_field.get_weather_grid_points()
+            # user_field.get_centroid()
+            # user_field.get_intersecting_soil_data()
+            # user_field.get_weather_grid_points()
             
             return JsonResponse({'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
         
@@ -501,6 +501,7 @@ def save_swn_project(request, project_id=None):
         user = request.user
         
         project_data = json.loads(request.body)
+        print('project_data:', project_data)
         project = save_monica_project.save_project(project_data, user, project_class=models.SwnProject)
 
         return JsonResponse({

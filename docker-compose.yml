@@ -29,6 +29,8 @@ services:
       python3 manage.py runserver 0.0.0.0:8000"
         
     environment:
+      - DEV=true
+      
       - DB_HOST=db
       - DB_NAME=postgis
       - DB_USER=postgis

@@ -5,10 +5,7 @@
 
     <div id="project-info" class="card mb-3">
       <div class="card-body">
-        {% comment %} <h5 class="card-title">Projekt: <input type="text" id="projectName" placeholder="Kein Projekt geladen"/></h5> {% endcomment %}
-        
-        {% comment %} <input type="text" id="projectDescription" placeholder="Beschreibungescription"/> {% endcomment %}
-        
+                
         {% if project_select_form.fields.monica_project.choices %}
           <div>
               {% crispy project_select_form %}

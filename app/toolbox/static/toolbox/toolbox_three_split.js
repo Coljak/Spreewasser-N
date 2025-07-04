@@ -220,6 +220,8 @@ map.addLayer(streamsFeatureGroup);
 var inletConnectionsFeatureGroup = L.featureGroup()
 map.addLayer(inletConnectionsFeatureGroup);
 
+
+
 // document.getElementById('toolbox-project-save').addEventListener('click', function () {
 //   const project = ToolboxProject.loadFromLocalStorage();
 
@@ -239,33 +241,7 @@ document.getElementById('map').addEventListener('click', function (event) {
   }
 });
 
-  //   const project = ToolboxProject.loadFromLocalStorage();
-  //   let selectedSinks = project.infiltration[sinkType + '_selected'];
-  //   if (selectedSinks.includes(sinkId)) {
-      
-  //     selectedSinks = selectedSinks.filter(id => id !== sinkId);
-  //     project.infiltration[sinkType + '_selected'] = selectedSinks;
-      
-  //     console.log("Sink already selected:", sinkId);
-  //   } else {
-  //     console.log("Selected sink:", sinkId);
-      
-  //     selectedSinks.push(sinkId);
-      
-  //   } 
-  //   project.saveToLocalStorage();
-    
-  // }
 
-
-function selectSinkPopup(sinkId, sinkType) {
-}
-
-const showSinkOutline = function (sinkId) {
-  const project = ToolboxProject.loadFromLocalStorage();
-  console.log('project', project);
-  console.log('showSinkOutline sinkId', sinkId);
-}
 
 function createSinkTableSettings(sinkType, indexVisible) {
   return {
@@ -299,7 +275,7 @@ function createSinkTableSettings(sinkType, indexVisible) {
       },
       {
         "targets": 5, // Bodeneignung berechnet
-        "visible": false,
+        "visible": indexVisible,
         "orderable": true,
         "searchable": false
       },
@@ -336,12 +312,12 @@ function createSinkTableSettings(sinkType, indexVisible) {
         "orderable": true,
         "searchable": false
       },
-      {
-        "targets": 12,
-        "visible": indexVisible, // Total Sink Index
-        "orderable": true,
-        "searchable": false
-      }
+      // {
+      //   "targets": 12,
+      //   "visible": indexVisible, // Total Sink Index
+      //   "orderable": true,
+      //   "searchable": false
+      // }
     ]
   }
 }
@@ -418,20 +394,8 @@ function getSinks(sinkType, featureGroup) {
                 `)
                 .openOn(map);
         });
-        
-
           // Add marker to cluster
           markers.addLayer(marker);
-
-          // Check if the sink is selected
-          // if (selected_sinks.includes(feature.properties.id)) {
-          //   // If selected, add to project selection
-          //   project.infiltration[`selected_${sinkType}s`].push(feature.properties.id);
-          //   // Add a class to the marker for styling
-          //   marker._icon.classList.add('selected-sink');
-          // } else {
-          //   marker._icon.classList.remove('selected-sink');
-          // }
       });
       project.saveToLocalStorage();
       // Add the cluster group to the map
@@ -443,8 +407,7 @@ function getSinks(sinkType, featureGroup) {
       const tableContainer = document.getElementById(elId);
 
 
-      let tableHTML = `
-        
+      let tableHTML = ` 
         <table class="table table-bordered table-hover" id="${sinkType}-table">
           <caption>${sinkType === 'sink' ? 'Sinks' : 'Enlarged Sinks'}</caption>
           <thead>
@@ -453,7 +416,7 @@ function getSinks(sinkType, featureGroup) {
               <th>Tiefe (m)</th>
               <th>Fläche (m²)</th>
               <th>Volumen (m³)</th>
-              <th>Bodeneignung</th>
+              <th>Bodeneignung standard</th>
               <th>Bodeneignung berechnet</th>
               <th>Volumen Barriere</th>
               <th>Zusätzliches Volumen</th>
@@ -461,7 +424,6 @@ function getSinks(sinkType, featureGroup) {
               <th>Landnutzung 2</th>
               <th>Landnutzung 3</th>
               <th>Landnutzung 4</th>
-              <th>Index BE</th>
             </tr>
           </thead>
           <tbody>
@@ -477,14 +439,13 @@ function getSinks(sinkType, featureGroup) {
             <td>${p.area}</td>
             <td>${p.volume}</td>
             <td>${p.index_soil}</td>
-            <td class="index-soil" data-type=${sinkType} data-id="${p.id}"></td>
+            <td class="index-total" data-type=${sinkType} data-id="${p.id}"></td>
             <td>${p.volume_construction_barrier ?? '-'}</td>
             <td>${p.volume_gained ?? '-'}</td>
             <td>${p.land_use_1 ?? '-'}</td>
             <td>${p.land_use_2 ?? '-'}</td>
             <td>${p.land_use_3 ?? '-'}</td>
             <td>${p.land_use_4 ?? '-'}</td>
-            <td class="index-total" data-type=${sinkType} data-id="${p.id}"></td>
           </tr>
         `;
       });
@@ -509,8 +470,7 @@ function getSinks(sinkType, featureGroup) {
         })
       }
       tableCard.classList.remove('d-none');
-      
-
+    
     } else {
       handleAlerts(data.message);
     }
@@ -690,10 +650,13 @@ function addToInletTable(inlet, connectionId) {
   const row = document.createElement('tr');
   row.innerHTML = `
     <td>${inlet.sink_id}</td>
-    <td>${inlet.is_enlarged_sink ? 'Yes' : 'No'}</td>
-    <td>${inlet.waterbody_type} (${inlet.waterbody_id})</td>
+    <td>${inlet.is_enlarged_sink ? 'Ja' : 'Nein'}</td>
+    <td>${inlet.waterbody_type} ${inlet.waterbody_id}</td>
     <td>${inlet.length_m}</td>
-    <td><button class="btn btn-sm btn-primary" data-id="${connectionId}" onclick="toggleConnection(this)">Hide</button></td>
+    <td><button class="btn btn-sm btn-primary" data-id="${connectionId}"">Hide</button></td>
+    <td><button class="btn btn-sm btn-primary" data-id="${connectionId}">Zuleitung editieren</button></td>
+    <td><button class="btn btn-sm btn-primary" data-id="${connectionId}">Gewässer wählen</button></td>
+
   `;
 
   // On row click: update info card
@@ -798,8 +761,8 @@ function getInlets() {
 
         map.removeLayer(sinkFeatureGroup);
         map.removeLayer(enlargedSinkFeatureGroup);
-
-
+        map.addLayer(streamsFeatureGroup);
+        map.addLayer(lakesFeatureGroup);
 
       } else {
         handleAlerts(data.message);
@@ -810,7 +773,10 @@ function getInlets() {
 
 $('#toolboxPanel').on('click', function (event) {
   const $target = $(event.target);
-  if ($target.attr('id') === 'btnFilterSinks') {
+  if ($target.hasClass('toolbox-back-to-initial')) {
+    $('#toolboxButtons').removeClass('d-none');
+      $('#toolboxPanel').addClass('d-none');
+  } else if ($target.attr('id') === 'btnFilterSinks') {
     getSinks('sink', sinkFeatureGroup);
   
   } else if ($target.attr('id') === 'btnFilterEnlargedSinks') {
@@ -828,8 +794,47 @@ $('#toolboxPanel').on('click', function (event) {
     calculateIndexForSelection(project)
   } else if ($target.attr('id') === 'btnGetInlets') {
       getInlets(); 
+  } else if ($target.attr('id') === 'navInfiltrationSinks') {
+      map.addLayer(sinkFeatureGroup);
+  } else if ($target.attr('id') === 'navInfiltrationEnlargedSinks') {
+      map.addLayer(enlargedSinkFeatureGroup);
+  } else if ($target.attr('id') === 'navInfiltrationResult') {
+      map.removeLayer(sinkFeatureGroup);
+      map.removeLayer(enlargedSinkFeatureGroup);
+  } else if ($target.attr('id') === 'toggleSinks') {
+    if (map.hasLayer(sinkFeatureGroup)) {
+      map.removeLayer(sinkFeatureGroup);
+      $target.text('einblenden');
+    } else {
+        map.addLayer(sinkFeatureGroup);
+        $target.text('ausblenden');
+    }
+  } else if ($target.attr('id') === 'toggleEnlargedSinks') {
+    if (map.hasLayer(enlargedSinkFeatureGroup)) {
+      map.removeLayer(enlargedSinkFeatureGroup);
+      $target.text('einblenden');
+    } else {
+        map.addLayer(enlargedSinkFeatureGroup);
+        $target.text('ausblenden');
+    }
+  } else if ($target.attr('id') === 'toggleStreams') {
+    if (map.hasLayer(streamsFeatureGroup)) {
+      map.removeLayer(streamsFeatureGroup);
+      $target.text('einblenden');
+    } else {
+        map.addLayer(streamsFeatureGroup);
+        $target.text('ausblenden');
+    }
+  } else if ($target.attr('id') === 'toggleLakes') {
+    if (map.hasLayer(lakesFeatureGroup)) {
+      map.removeLayer(lakesFeatureGroup);
+      $target.text('einblenden');
+    } else {
+        map.addLayer(lakesFeatureGroup);
+        $target.text('ausblenden');
+    }
   }
-}) 
+}); 
 
 
 
@@ -853,11 +858,11 @@ function calculateIndexForSelection(project) {
       if (Object.keys(data.sinks).length !== 0) {
         let sinkType = 'sink';
         
-        sinkTable.column(12).visible(true);
+        sinkTable.column(5).visible(true);
         Object.keys(data.sinks).forEach(key => {
           const sinkId = key;
           console.log(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`)
-          document.querySelector(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`).textContent = data.sinks[key].index_total;    
+          document.querySelector(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`).textContent = `${data.sinks[key].index_total * 100} %`;    
         });
         $('#sink-table').DataTable().destroy();
         const tableSettings = createSinkTableSettings(sinkType, true);
@@ -866,10 +871,10 @@ function calculateIndexForSelection(project) {
       };
       if (Object.keys(data.enlarged_sinks).length !== 0) {
         let sinkType = 'enlarged_sink';
-        enlargedSinkTable.column(12).visible(true);
+        enlargedSinkTable.column(5).visible(true);
         Object.keys(data.enlarged_sinks).forEach(key => {
           const sinkId = key;
-          document.querySelector(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`).textContent = data.enlarged_sinks[key].index_total;      
+          document.querySelector(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`).textContent = `${data.enlarged_sinks[key].index_total * 100}%`;      
       });
       $('#enlarged_sink-table').DataTable().destroy();
       const tableSettings = createSinkTableSettings(sinkType, true);
@@ -883,7 +888,11 @@ function calculateIndexForSelection(project) {
 };
 
 
-$('#injectionGo').on('click', function () {
+
+
+
+function startInfiltration() {
+  console.log('start Infiltration')
   const userField = ToolboxProject.loadFromLocalStorage().userField;
   // const userField = project.userField;
   if (userField) {
@@ -891,7 +900,13 @@ $('#injectionGo').on('click', function () {
     fetch('load_infiltration_gui/' + userField + '/')
     .then(response => response.json())
     .then(data => {
+      if (!data.success) {
+        handleAlerts(data);
+        return;
+      }
         // Replace HTML content
+      $('#toolboxButtons').addClass('d-none');
+      $('#toolboxPanel').removeClass('d-none');
       $('#toolboxPanel').html(data.html);
     })
     .then(() => {
@@ -985,47 +1000,20 @@ $('#injectionGo').on('click', function () {
   } else {
     handleAlerts({ success: false, message: 'Please select a user field!' });
   }
-  });
+  };
+
+$('#infiltrationGo').on('click', () => {
+  console.log('Infiltration Go clicked');
+  startInfiltration()
+});
 
 
 
+// let sinksVisible = true;
+// let enlargedSinksVisible = true;
+// let lakesVisible = true;
+// let streamsVisible = true;
 
-let sinksVisible = true;
-let enlargedSinksVisible = true;
-let lakesVisible = true;
-let streamsVisible = true;
-document.getElementById('toggleSinks').addEventListener('click', function () {
-  if (sinksVisible) {
-      map.removeLayer(sinkFeatureGroup);
-  } else {
-      map.addLayer(sinkFeatureGroup);
-  }
-  sinksVisible = !sinksVisible;
-});
-document.getElementById('toggleEnlargedSinks').addEventListener('click', function () {
-  if (enlargedSinksVisible) {
-      map.removeLayer(enlargedSinkFeatureGroup);
-  } else {
-      map.addLayer(enlargedSinkFeatureGroup);
-  }
-  enlargedSinksVisible = !enlargedSinksVisible;
-});
-document.getElementById('toggleLakes').addEventListener('click', function () {
-  if (lakesVisible) {
-      map.removeLayer(lakesFeatureGroup);
-  } else {
-      map.addLayer(lakesFeatureGroup);
-  }
-  lakesVisible = !lakesVisible;
-});
-document.getElementById('toggleStreams').addEventListener('click', function () {
-  if (streamsVisible) {
-      map.removeLayer(streamsFeatureGroup);
-  } else {
-      map.addLayer(streamsFeatureGroup);
-  }
-  streamsVisible = !streamsVisible;
-});
 
 
 

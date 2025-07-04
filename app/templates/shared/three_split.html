@@ -36,8 +36,9 @@
 
     <!-- Bottom panel -->
     <div class="panel-bottom py-2" id="bottomPanel">
-      <button class="btn btn-outline-secondary btn-sm float-end" id="toggleBottomFullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
-      
+      <div class="d-flex ms-auto">
+        <button class="btn btn-outline-secondary btn-sm " id="toggleBottomFullscreen"><i class="bi bi-arrows-fullscreen justify-left"></i></button>
+      </div>
           {% block bottom_panel %}
           {% endblock bottom_panel %}
 

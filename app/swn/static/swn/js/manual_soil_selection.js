@@ -123,7 +123,7 @@ var initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, lan
         systemUnitField.dispatchEvent(new Event('change'));
         console.log('selectableSystemUnits', selectableSystemUnits.sort());
     });
-
+    landUsageField.innerHTML = ''; // Clear existing options
     for (const key in landusageChoices) {
         const option = document.createElement('option');
         option.value = key;

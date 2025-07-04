@@ -128,7 +128,7 @@ class OverallWeightingsForm(forms.Form):
         self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
         self.helper.add_input(Button(
             'overall-weighting-reset', 
-            'Reset all', 
+            'Reset', 
             css_class='btn-secondary reset-all'))
 
 
@@ -205,7 +205,7 @@ class WeightingsForestForm(forms.Form):
         self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
         self.helper.add_input(Button(
             'forest-weighting-reset', 
-            'Reset all', 
+            'Reset', 
             css_class='btn-secondary reset-all'))
 
 
@@ -275,7 +275,7 @@ class WeightingsAgricultureForm(forms.Form):
         self.helper.form_class = 'form-horizontal weighting-form'
         self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
         self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
-        self.helper.add_input(Button('agriculture-weighting-reset', 'Reset All', css_class='btn-secondary reset-all'))
+        self.helper.add_input(Button('agriculture-weighting-reset', 'Reset', css_class='btn-secondary reset-all'))
         
 
 class WeightingsGrasslandForm(forms.Form):
@@ -364,7 +364,7 @@ class WeightingsGrasslandForm(forms.Form):
         self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
         self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
 
-        self.helper.add_input(Button('grassland-weighting-reset', 'Reset All', css_class='btn-secondary reset-all'))
+        self.helper.add_input(Button('grassland-weighting-reset', 'Reset', css_class='btn-secondary reset-all'))
         
 
 # For sinks and enlarged sinks
@@ -416,5 +416,5 @@ class WeightingsInletOutletForm(forms.Form):
         self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
         self.helper.add_input(Button(
             'inlet_point-weighting-reset', 
-            'Reset all', 
+            'Reset', 
             css_class='btn-secondary reset-all'))

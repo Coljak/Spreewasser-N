@@ -24,6 +24,7 @@ import {
 } from '/static/shared/map_sidebar_utils.js';
 
 
+var userFieldStore = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Hide the coordinate form card from plain Monica

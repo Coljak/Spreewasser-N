@@ -143,40 +143,43 @@ def load_infiltration_gui(request, user_field_id):
     enlarged_sinks = models.EnlargedSink.objects.filter(
         centroid__within=user_field.geom
     )
-    streams = models.Stream.objects.filter(
-        geom__within=user_field.geom
-    )
-    lakes = models.Lake.objects.filter(
-        geom__within=user_field.geom
-    )
+    if sinks.count() > 0 or enlarged_sinks.count() > 0:
+        streams = models.Stream.objects.filter(
+            geom__within=user_field.geom
+        )
+        lakes = models.Lake.objects.filter(
+            geom__within=user_field.geom
+        )
 
-    lake_form = LakeFilter(request.GET, queryset=lakes)
-    stream_form = StreamFilter(request.GET, queryset=streams)
-    sink_form = SinkFilter(request.GET, queryset=sinks)
-    print("Queryset Sinks", sinks.count())
-    enlarged_sink_form = EnlargedSinkFilter(request.GET, queryset=enlarged_sinks)
+        lake_form = LakeFilter(request.GET, queryset=lakes)
+        stream_form = StreamFilter(request.GET, queryset=streams)
+        sink_form = SinkFilter(request.GET, queryset=sinks)
+        print("Queryset Sinks", sinks.count())
+        enlarged_sink_form = EnlargedSinkFilter(request.GET, queryset=enlarged_sinks)
 
-    overall_weighting = forms.OverallWeightingsForm()
-    forest_weighting = forms.WeightingsForestForm()
-    agriculture_weighting = forms.WeightingsAgricultureForm()
-    grassland_weighting = forms.WeightingsGrasslandForm()
+        overall_weighting = forms.OverallWeightingsForm()
+        forest_weighting = forms.WeightingsForestForm()
+        agriculture_weighting = forms.WeightingsAgricultureForm()
+        grassland_weighting = forms.WeightingsGrasslandForm()
 
 
-    html = render_to_string('toolbox/infiltration.html', {
-        # 'sink_form': sink_form, 
-        # 'enlarged_sink_form': enlarged_sink_form,
-        'project_select_form': project_select_form,
-        'sink_filter': sink_form,
-        'enlarged_sink_filter': enlarged_sink_form,
-        'streams_form': stream_form,
-        'lakes_form': lake_form,
-        'overall_weighting': overall_weighting,
-        'forest_weighting': forest_weighting,
-        'agriculture_weighting': agriculture_weighting,
-        'grassland_weighting': grassland_weighting, 
-    }, request=request) 
+        html = render_to_string('toolbox/infiltration.html', {
+            # 'sink_form': sink_form, 
+            # 'enlarged_sink_form': enlarged_sink_form,
+            'project_select_form': project_select_form,
+            'sink_filter': sink_form,
+            'enlarged_sink_filter': enlarged_sink_form,
+            'streams_form': stream_form,
+            'lakes_form': lake_form,
+            'overall_weighting': overall_weighting,
+            'forest_weighting': forest_weighting,
+            'agriculture_weighting': agriculture_weighting,
+            'grassland_weighting': grassland_weighting, 
+        }, request=request) 
 
-    return JsonResponse({'html': html})
+        return JsonResponse({'success': True, 'html': html})
+    else:
+        return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine Senken bekannt.'})
 
 
 def add_range_filter(filters, obj, field,  model_field=None):
@@ -871,8 +874,10 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
                 'length_m': round(length_m, 2),
             }
             if is_enlarged_sink:
+                if sink.sink_embankment.first():
+                    sink_embankment = sink.sink_embankment.first()
+                    result['sink_embankment'] = sink_embankment.to_feature()
                 
-                results['sink_embankment'] = sink.id
 
             results.append(result)
             

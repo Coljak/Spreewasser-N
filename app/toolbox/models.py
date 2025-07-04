@@ -6,6 +6,7 @@ from djgeojson.fields import PointField, PolygonField, MultiLineStringField, Mul
 from django.utils.timezone import now
 from buek.models import CorineLandCover2018
 from django.contrib.gis.db.models.functions import Transform
+import json
 class ToolboxType(models.Model):
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=255)
@@ -422,19 +423,32 @@ class EnlargedSinkEmbankment(models.Model):
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
     geom4326 = gis_models.MultiPolygonField(srid=4326, null=True, blank=True)
     centroid4326 = gis_models.PointField(srid=4326, null=True, blank=True)
-    enlarged_sink = models.ForeignKey(EnlargedSink, on_delete=models.DO_NOTHING, null=True, blank=True) 
+    enlarged_sink = models.ForeignKey(EnlargedSink, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='sink_embankment') 
 
     fid_sink = models.IntegerField()
     height = models.FloatField()
     plat_width = models.FloatField()
     volume = models.FloatField()
-    shape_length = models.FloatField()
-    shape_area = models.FloatField()
 
     def save(self, *args, **kwargs):
         if self.geom and not self.centroid:
             self.centroid = self.geom.centroid  # Auto-generate centroid
         super().save(*args, **kwargs)
+
+    def to_feature(self):
+        """
+        Convert the model instance to a GeoJSON feature.
+        """
+        return {
+            "type": "Feature",
+            "geometry": json.loads(self.geom4326.geojson),
+            "properties": {
+                "fid_sink": self.fid_sink,
+                "height": self.height,
+                "plat_width": self.plat_width,
+                "volume": self.volume,
+            }
+        }
 
 
 class GroundWaterDistanceClass(models.Model):

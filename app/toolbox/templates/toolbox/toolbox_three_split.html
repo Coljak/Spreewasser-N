@@ -39,14 +39,46 @@
 {% endblock left_panel %}
 
 {% block bottom_panel %}
-<button id="injectionGo" class="btn btn-primary mt-3">Injektion</button>
-<button id="toggleSinks" class="btn btn-primary mt-3">toggleSinks</button>
-<button id="toggleEnlargedSinks" class="btn btn-primary mt-3">toggleEnlargedSinks</button>
-<button id="toggleLakes" class="btn btn-primary mt-3">toggleLakes</button>
-<button id="toggleStreams" class="btn btn-primary mt-3">toggleStreams</button>
-<button id="btnSinkPolygons" class="btn btn-primary mt-3">Senken anzeigen</button>
-<button id="btnCalculateIndices" class="btn btn-primary mt-3">Indizes berechnen</button>
-<div id="toolboxPanel" class="overflow-auto"></div>
+
+<div id="toolboxButtons" class="overflow-auto row">
+    <card class="card mb-3 col-3">
+        <div class="card-header">
+            <button id="infiltrationGo" class="btn btn-outline-secondary mt-3">Grundwasseranreicherung durch Versickerung</button>
+        </div>
+        <div class="card-body">
+            <p>Das Tool bietet eine Auswahl von vorbewerteten Standorten zur Anreicherung des Grundwassers durch naturnahe und baulich angelegte Versickerungsmaßnahmen.</p>
+        </div>
+    </card>
+    <card class="card mb-3 col-3">
+        <div class="card-header">
+            <button id="injectionGo" class="btn btn-outline-secondary mt-3">Grundwasseranreicherung durch  Injektion</button>
+        </div>
+        <div class="card-body">
+            <p>Das Tool ermöglicht die Auswahl von Standorten zur Anreicherung des Grundwassers mittels Injektion in die tiefer gelegenen gespannten Grundwasserleiter.</p>
+        </div>
+    </card>
+    <card class="card mb-3 col-3">
+        <div class="card-header">
+            <button id="waterRetention" class="btn btn-outline-secondary mt-3">Ufernahe Renaturierung und Versickerung</button>
+        </div>
+        <div class="card-body">
+            <p>Das Tool bietet Möglichkeiten zur Auswahl von Standorten, die sich für Renaturierungs- und Versickerungsmaßnahmen in Ufernähe eignen. </p>
+        </div>
+    </card>
+    <card class="card mb-3 col-3">
+        <div class="card-header">
+            <button id="drainagge" class="btn btn-outline-secondary mt-3">Gesteuerte Drainagen</button>
+        </div>
+        <div class="card-body">
+            <p>Das Tool ermöglicht die Planung von Maßnahmen zum Wasserrückhalt durch den Einsatz von gesteuerten Drainagen.</p>
+        </div>
+    </card>
+    
+    
+</div>
+
+<div id="toolboxPanel" class="overflow-auto">
+</div>
 
 
 

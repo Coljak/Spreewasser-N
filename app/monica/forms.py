@@ -15,6 +15,7 @@ from django.utils.translation import gettext_lazy as _
 from utils.widgets import UnitInputWrapper
 
 from crispy_forms.layout import Field, Layout, Row, Column
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 
@@ -758,6 +759,8 @@ class WorkstepSelectorForm(forms.Form):
         ('organicFertilisationWorkstep', 'Organic Fertilisation'),
         ('tillageWorkstep', 'Tillage'),
         ('irrigationWorkstep', 'Irrigation'),
+        ('automaticHarvestWorkstep', 'Automatic Harvest'),
+        ('nDemandFertilizationWorkstep', 'N Demand Fertilisation'),
         )
     workstep_type = forms.ChoiceField(
         choices=WORKSTEP_CHOICES, 
@@ -1009,9 +1012,9 @@ class WorkstepOrganicFertilisationForm(forms.ModelForm):
         self.fields['amount'].widget = UnitInputWrapper(widget=self.fields['amount'].widget, unit='kg/ha ???')
 
 
-from django import forms
-from django.core.validators import MinValueValidator, MaxValueValidator
-from .models import WorkstepTillage
+
+
+
 
 class WorkstepTillageForm(forms.ModelForm):
     date = forms.DateField(
@@ -1134,6 +1137,109 @@ class WorkstepIrrigationForm(forms.ModelForm):
         self.fields['amount'].widget = UnitInputWrapper(widget=self.fields['amount'].widget, unit='mm')
 
 
+
+class WorkstepAutomaticHarvestForm(forms.ModelForm): 
+    after = forms.ChoiceField(
+        choices=[
+            ('maturity', 'Maturity'),
+            ('anthesis', 'Anthesis'),
+        ],
+        widget=forms.Select(attrs={
+            'class': 'form-control automatic-harvest-after select-parameters',
+            'workstep-type': 'automaticHarvestWorkstep'
+        })
+    )
+    n_demand = forms.FloatField(min_value=0.0, 
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control number-selector automatic-harvest-n-demand select-parameters',
+            'workstep-type': 'automaticHarvestWorkstep'
+        }))
+    
+    class Meta:
+        model = WorkstepAutomaticHarvest 
+        fields = ['date', 'min_percentage_asw', 'max_percentage_asw', 'max_3d_precip_sum', 'max_curr_day_precip']
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = get_parameters_form_helper()
+
+
+class WorkstepNDemandFertilizationForm(forms.ModelForm):
+
+    days = forms.IntegerField(
+        initial=7,  
+        validators=[
+            MinValueValidator(1, message="Days must be at least 1."),
+            MaxValueValidator(365, message="Days cannot exceed 365.")
+        ],
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': '1',
+            'max': '365',
+            'type': 'number',
+            'step': '1',
+            'pattern': '[0-9]*'
+        })
+    )
+    after = forms.ChoiceField(
+        choices=[
+            ('maturity', 'Maturity'),
+            ('anthesis', 'Anthesis'),
+            ('sowing', 'Sowing'),
+            ('harvest', 'Harvest'),
+        ],
+        widget=forms.Select(attrs={
+            'class': 'form-control automatic-harvest-after select-parameters',
+            'workstep-type': 'nDemandFertilizationWorkstep'
+        })
+    )
+    n_demand = forms.FloatField(min_value=0.0, 
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control number-selector n-demand select-parameters',
+            'workstep-type': 'nDemandFertilizationWorkstep'
+        }))
+    mineral_fertiliser = forms.ModelChoiceField(
+        queryset = MineralFertiliser.objects.all(),
+        label="Mineral Fertiliser",
+        widget=forms.Select(attrs={
+            'class': 'form-control mineral-fertiliser-selector select-parameters mineral-fertiliser-parameters',
+            'workstep-type': 'mineralFertilisationWorkstep'
+            }),
+    )
+
+    class Meta:
+        model = WorkstepNDemandFertilization   
+        fields = ['days', 'after', 'n_demand', 'depth']
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = get_parameters_form_helper()
+        for field_name in self.fields:
+            row_content = [
+
+                    Div(
+                        Field(field_name, wrapper_class='row'),
+                        css_class='col-11'
+                    ),     
+            ]
+            
+            if field_name == 'mineral_fertiliser':
+                row_content.append(
+                    HTML(
+                        """
+                            <button type="button" data-parameters="mineral-fertiliser-parameters" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters  advanced">
+                            <span><i class="bi bi-pencil-square"></i></span>
+                            </button>
+                        """
+                    )
+                )
+            self.helper.layout.append(
+                Row(
+                    *row_content
+                )
+            )
+        self.fields['n_demand'].widget = UnitInputWrapper(widget=self.fields['n_demand'].widget, unit='kg')
+        self.fields['depth'].widget = UnitInputWrapper(widget=self.fields['depth'].widget, unit='m')
 
 
 

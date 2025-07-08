@@ -439,6 +439,137 @@ let modalInitialized = false;
 
 // TODO refactor initiaizeSoilModal
 // TODO implement getSoilProfiles for swn - all poygon ids
+// const initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
+//     console.log('initializeSoilModal',   systemUnitJson, landusageChoices);
+//     if (modalInitialized) return;
+//     modalInitialized = true;
+//     const landUsageField = document.getElementById('id_land_usage');
+//     const soilProfileField = document.getElementById('id_soil_profile');
+//     const horizonsField = document.getElementById('div_id_horizons');
+//     const areaPercenteageField = document.getElementById('id_area_percentage');
+//     const systemUnitField = document.getElementById('id_system_unit');
+//     const table = document.getElementById('tableHorizons');
+
+//     let selectedSoilProfile = 0;
+
+//     soilProfileField.addEventListener('change', function() {
+        
+//         const selectedLandUsage = landUsageField.value;
+//         const selectedSystemUnit = systemUnitField.value;
+//         const selectedAreaPercenteage = areaPercenteageField.value;
+//         selectedSoilProfile = soilProfileField.value;
+        
+        
+//         const horizons = systemUnitJson[selectedLandUsage][selectedSystemUnit]['soil_profiles'][selectedAreaPercenteage][selectedSoilProfile]['horizons'];
+//         horizonsField.innerHTML = '<p class="text-start">Landuse: ' + selectedLandUsage + '</br>System unit: ' + selectedSystemUnit + '</br>Area percentage: ' + selectedAreaPercenteage + '</br>Soil profile: ' + selectedSoilProfile + '</p>';
+//         table.innerHTML = '';
+//         const headerRow = table.insertRow();
+//         headerRow.classList.add("table-dark")
+//         const headerCell = headerRow.insertCell();
+        
+//         headerCell.textContent = 'Horizonte';
+//         for (let horizon in horizons) {
+//             const headerCellHorizon = headerRow.insertCell();
+//             headerCellHorizon.textContent = horizon;
+//         }
+//         for (let key in horizons[1]) {
+//             const dataRow = table.insertRow();
+//             const dataRowHeaderCell  = dataRow.insertCell();
+//             dataRowHeaderCell.classList.add("table-dark")
+//             for (let horizon in horizons) {
+//                 dataRowHeaderCell.textContent = key;
+//                 const dataRowDataCell  = dataRow.insertCell();
+//                 let value = horizons[horizon][key];
+//                 if (typeof(value) === 'number') {
+//                     value = value.toFixed(2);
+//                 }
+//                 dataRowDataCell.textContent = value;   
+//             } 
+//         }
+//     });
+
+//     // Populate soil profile and area percenteage when land usage changes
+//     areaPercenteageField.addEventListener('change', function() {
+//         console.log('areaPercenteageField change event')
+//         const selectedLandUsage = landUsageField.value;
+//         const selectedSystemUnit = systemUnitField.value;
+//         const selectedAreaPercenteage = areaPercenteageField.value;
+
+//         const selectableSoilProfiles =  systemUnitJson[selectedLandUsage][selectedSystemUnit]['soil_profiles'][selectedAreaPercenteage];
+//         console.log('selectableSoilProfiles', selectableSoilProfiles);
+
+//         const profileOptions = new Object();
+//         let profileNo = 1;
+//         for (let soilprofile_id in selectableSoilProfiles) {
+            
+//             profileOptions[soilprofile_id] = 'Profil ' + profileNo;
+//             profileNo++;
+//         };
+//         // console.log('profileOptions', profileOptions);
+//         soilProfileField.innerHTML = '';
+//         for (const key in profileOptions) {
+//             const option = document.createElement('option');
+//             option.value = key;
+//             option.text = profileOptions[key];
+//             soilProfileField.appendChild(option);
+//         };
+//         soilProfileField.dispatchEvent(new Event('change'));
+    
+//     });
+
+//     systemUnitField.addEventListener('change', function() {
+//         console.log('systemUnitField change event');
+//         const selectedLandUsage = landUsageField.value;
+//         const selectedSystemUnit = systemUnitField.value;
+//         const selectableAreaPercentages =  systemUnitJson[selectedLandUsage][selectedSystemUnit]['area_percentages'].reverse();
+//         areaPercenteageField.innerHTML = '';
+//         selectableAreaPercentages.forEach(item => {
+//             areaPercenteageField.appendChild(new Option(item));
+//         });
+//         areaPercenteageField.dispatchEvent(new Event('change'));
+//     });
+
+//     landUsageField.addEventListener('change', function(){
+//         console.log('landUsageField change event')
+//         const selectedLandUsage = landUsageField.value;
+        
+//         const selectableSystemUnits =  new Array()
+//         for (let [key, value] of Object.entries(systemUnitJson[selectedLandUsage])){
+//             if (!selectableSystemUnits.includes(key)){
+//                 selectableSystemUnits.push(key);
+//             }}
+//             selectableSystemUnits.sort();
+//         systemUnitField.innerHTML = '';
+//         selectableSystemUnits.forEach(item => {
+//             systemUnitField.appendChild(new Option(item));
+//         });
+//         // trigger change event to update system unit
+//         systemUnitField.dispatchEvent(new Event('change'));
+//         // console.log('selectableSystemUnits', selectableSystemUnits.sort());
+//     });
+
+//     landUsageField.innerHTML = ''; // Clear existing options
+
+//     for (const key in landusageChoices) {
+//         const option = document.createElement('option');
+//         option.value = key;
+//         option.text = landusageChoices[key];
+//         landUsageField.appendChild(option);
+//     }
+    
+//     landUsageField.dispatchEvent(new Event('change'));
+
+//     const btnSelectSoilProfile = document.getElementById("btnSelectSoilProfile");
+//     btnSelectSoilProfile.addEventListener("click", function () {      
+//         const project = MonicaProject.loadFromLocalStorage();
+//         project.soilProfileType = "buekSoilProfile";
+//         project.soilProfileId = soilProfileField.value;
+//         // console.log('project.soilProfileId', project.soilProfileId);
+//         project.saveToLocalStorage();
+//     });
+
+// };
+
 const initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
     console.log('initializeSoilModal',   systemUnitJson, landusageChoices);
     if (modalInitialized) return;
@@ -590,7 +721,15 @@ const createModal = (params) => {
                 url = `/monica/${params.parameters}/${params.profile_landusage}/`;
             }
         }
-        if (params.lon) {
+        else if (params.parameters === 'select-soil-profile') {
+            if (window.location.pathname.endsWith('/drought/')) {
+                url = `/drought/${params.parameters}/${params.user_field}/`;
+                console.log(url)
+            } else {
+                url = `/monica/${params.parameters}/${params.lat}/${params.lon}/`;
+            }
+        }
+        else if (params.lon) {
             url += params.lat + '/' + params.lon + '/';
         }
 
@@ -1063,6 +1202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (btnModifyParameters) {
             console.log('modify-parameters clicked');
             const parameters = btnModifyParameters.dataset.parameters;
+            console.log('parameters', parameters);
             const value = btnModifyParameters.closest('.rotation').querySelector('.select-parameters.' + parameters).value;
             const params = {
                 'parameters': parameters,
@@ -1225,6 +1365,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 params = {
                 'parameters': 'select-soil-profile',
+                'user_field': project.userField,
                 'lon': project.longitude,
                 'lat': project.latitude
             }

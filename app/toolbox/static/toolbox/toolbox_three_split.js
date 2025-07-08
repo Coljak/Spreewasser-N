@@ -31,17 +31,6 @@ document.addEventListener("DOMContentLoaded", () => {
   project.saveToLocalStorage();
 
 
-  // $('#map').on('click', function (e) {
-  //   if (e.target.classList.contains('show-sink-outline')) {
-  //     const sinkId = e.target.getAttribute('sinkId');
-  //     console.log('sinkId', sinkId);
-  //   } else if (e.target.classList.contains('select-sink')) {
-  //       const sinkId = e.target.getAttribute('sinkId');
-  //       console.log('sinkId', sinkId);
-  //     }
-  // });
-
-
   // center map at geolocation
   getGeolocation()
     .then((position) => {
@@ -182,7 +171,7 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
 
 
 
-// swn-drought specific overlays
+// toolbox specific overlays
 var featureGroup = new L.FeatureGroup()
 map.addLayer(featureGroup);
 featureGroup.bringToFront();
@@ -269,55 +258,57 @@ function createSinkTableSettings(sinkType, indexVisible) {
         "searchable": false
       },
       {
-        "targets": 4, // Bodeneignung
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 5, // Bodeneignung berechnet
-        "visible": indexVisible,
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 6, // Volumen Barriere
+        "targets": 4, // Volumen Barriere
         "visible": sinkType === 'sink'? false : true, 
         "orderable": true,
         "searchable": false
       },
       {
-        "targets": 7, // Zusätzliches Volumen
+        "targets": 5, // Zusätzliches Volumen
         "visible": sinkType === 'sink'? false : true, 
         "orderable": true,
         "searchable": false
       },
       {
-        "targets": 8, // Landnutzung 1
+        "targets": 6, // Eignung Senkenproportionen
         "orderable": true,
         "searchable": false
       },
       {
-        "targets": 9, //Landnutzung 2
+        "targets": 7, // Bodeneignung 
         "orderable": true,
         "searchable": false
       },
       {
-        "targets": 10, //Landnutzung 3
+        "targets": 8, // Landnutzung
         "orderable": true,
         "searchable": false
       },
       {
-        "targets": 11,
-        "visible": sinkType === 'sink'? false : true, // Landnutzung 4
+        "targets": 9, // Bodenpunkte
         "orderable": true,
         "searchable": false
       },
-      // {
-      //   "targets": 12,
-      //   "visible": indexVisible, // Total Sink Index
-      //   "orderable": true,
-      //   "searchable": false
-      // }
+      {
+        "targets": 10, //Eignungsindex Ertragsverluste/ Feasibility
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 11, // Hydrogeologie
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 12, // Eignungsindex Hydrogeologie<
+        "orderable": true,
+        "searchable": false
+      },
+            {
+        "targets": 13, // Gesamteignung
+        "orderable": true,
+        "searchable": false
+      }
     ]
   }
 }
@@ -351,61 +342,8 @@ function getSinks(sinkType, featureGroup) {
       // Initialize marker cluster
       let markers = L.markerClusterGroup();
       let ids = [];
-      
-      // Iterate through features and add them to the cluster
-      data.feature_collection.features.forEach(feature => {
-        ids.push(feature.properties.id);
-          let coords = feature.coordinates; // Get the lat/lng coordinates
-          let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
-
-
-          // Create popup content with all properties
-          let popupContent = `
-              <b>Tiefe:</b> ${feature.properties.depth} m<br>
-              <b>Fläche:</b> ${feature.properties.area} m²<br>
-              <b>Volumen:</b> ${feature.properties.volume} m³<br>
-              <b>Bodeneignung:</b> ${feature.properties.index_soil}<br>
-              ${feature.properties.volume_gained ? `<b>Zusätzliches Volumen:</b> ${feature.properties.volume_gained}<br>` : ''}
-              ${feature.properties.volume_construction_barrier ? `<b>Volumen Barriere:</b> ${feature.properties.volume_construction_barrier}<br>` : ''}
-              <b>Landnuntzung 1:</b> ${feature.properties.land_use_1}<br>
-              ${feature.properties.land_use_2 ? `<b>Landnuntzung 2:</b> ${feature.properties.land_use_2}<br>` : ''}
-              ${feature.properties.land_use_3 ? `<b>Landnuntzung 3:</b> ${feature.properties.land_use_3}<br>` : ''}
-              ${feature.properties.land_use_4 ? `<b>Landnuntzung 4:</b> ${feature.properties.land_use_4}<br>` : ''}
-          `;
-
-
-          // Create a marker
-          let marker = L.marker(latlng).bindPopup(popupContent);
-          marker.on('mouseover', function () {
-            this.openPopup();
-          });
-
-          // Hide popup when not hovering
-          marker.on('mouseout', function () {
-              this.closePopup();
-          });
-          marker.on('contextmenu', function (event) {
-            L.popup()
-                .setLatLng(event.latlng)
-                .setContent(`
-                    <b>Sink Options</b><br>
-                    <button class="btn btn-outline-secondary show-sink-outline" data-type="${sinkType}" sinkId=${feature.properties.id}">Show Sink Outline</button>
-                    <button class="btn btn-outline-secondary select-sink" data-type="${sinkType}" sinkId="${feature.properties.id}">Toggle Sink selection</button>
-                `)
-                .openOn(map);
-        });
-          // Add marker to cluster
-          markers.addLayer(marker);
-      });
-      project.saveToLocalStorage();
-      // Add the cluster group to the map
-      featureGroup.addLayer(markers);
-
-
-      // Data Table
       const elId = sinkType === 'sink' ? 'sink-table-container' : 'enlarged-sink-table-container';  
       const tableContainer = document.getElementById(elId);
-
 
       let tableHTML = ` 
         <table class="table table-bordered table-hover" id="${sinkType}-table">
@@ -416,21 +354,62 @@ function getSinks(sinkType, featureGroup) {
               <th>Tiefe (m)</th>
               <th>Fläche (m²)</th>
               <th>Volumen (m³)</th>
-              <th>Bodeneignung standard</th>
-              <th>Bodeneignung berechnet</th>
               <th>Volumen Barriere</th>
               <th>Zusätzliches Volumen</th>
-              <th>Landnutzung 1</th>
-              <th>Landnutzung 2</th>
-              <th>Landnutzung 3</th>
-              <th>Landnutzung 4</th>
+              <th>Eignung Senkenproportionen</th>
+              <th>Bodeneignung</th>
+              <th>Landnutzung</th>
+              <th>Bodenpunkte</th>
+              <th>Eignungsindex Ertragsverluste</th>
+              <th>Hydrogeologie</th>
+              <th>Eignungsindex Hydrogeologie</th>
+              <th>Gesamteignung</th>
             </tr>
           </thead>
           <tbody>
       `;
-
-      data.feature_collection.features.forEach((feature, index) => {
+      
+      // Iterate through features and add them to the cluster
+      data.feature_collection.features.forEach(feature => {
         const p = feature.properties;
+        ids.push(p.id);
+        let coords = feature.coordinates; // Get the lat/lng coordinates
+        let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
+        // Create popup content with all properties
+        
+        let popupContent = `
+            <b>Tiefe:</b> ${p.depth} m<br>
+            <b>Fläche:</b> ${p.area} m²<br>
+            <b>Volumen:</b> ${p.volume} m³<br>
+            <b>Bodeneignung:</b> ${p.index_soil}<br>
+            ${p.volume_gained ? `<b>Zusätzliches Volumen:</b> ${p.volume_gained}<br>` : ''}
+            ${p.volume_construction_barrier ? `<b>Volumen Barriere:</b> ${p.volume_construction_barrier}<br>` : ''}
+            <b>Landnuntzung 1:</b> ${p.land_use_1}<br>
+            ${p.land_use_2 ? `<b>Landnuntzung 2:</b> ${p.land_use_2}<br>` : ''}
+            ${p.land_use_3 ? `<b>Landnuntzung 3:</b> ${p.land_use_3}<br>` : ''}
+            ${p.land_use_4 ? `<b>Landnuntzung 4:</b> ${p.land_use_4}<br>` : ''}
+        `;
+        // Create a marker
+        let marker = L.marker(latlng).bindPopup(popupContent);
+        marker.on('mouseover', function () {
+          this.openPopup();
+        });
+        // Hide popup when not hovering
+        marker.on('mouseout', function () {
+            this.closePopup();
+        });
+        marker.on('contextmenu', function (event) {
+          L.popup()
+              .setLatLng(event.latlng)
+              .setContent(`
+                  <b>Sink Options</b><br>
+                  <button class="btn btn-outline-secondary show-sink-outline" data-type="${sinkType}" sinkId=${p.id}">Show Sink Outline</button>
+                  <button class="btn btn-outline-secondary select-sink" data-type="${sinkType}" sinkId="${p.id}">Toggle Sink selection</button>
+              `)
+              .openOn(map);
+        });
+          // Add marker to cluster
+        
         
         tableHTML += `
           <tr data-sink-id="${p.id}">
@@ -438,18 +417,28 @@ function getSinks(sinkType, featureGroup) {
             <td>${p.depth}</td>
             <td>${p.area}</td>
             <td>${p.volume}</td>
-            <td>${p.index_soil}</td>
-            <td class="index-total" data-type=${sinkType} data-id="${p.id}"></td>
             <td>${p.volume_construction_barrier ?? '-'}</td>
             <td>${p.volume_gained ?? '-'}</td>
-            <td>${p.land_use_1 ?? '-'}</td>
-            <td>${p.land_use_2 ?? '-'}</td>
-            <td>${p.land_use_3 ?? '-'}</td>
-            <td>${p.land_use_4 ?? '-'}</td>
+            <td>${p.sink_proportion_evaluation}</td>
+            <td>${p.index_soil ?? '-'}</td>
+            <td>${p.land_use_1}${p.land_use_2 ? `, ${p.land_use_2}`: ''}${p.land_use_3 ? `, ${p.land_use_3}`: ''}${p.land_use_4 ? `, ${p.land_use_4}`: ''}</td>
+            <td>${p.soil_points ?? '-'}</td>
+            <td>${p.index_feasibility ?? '-'}</td>
+            <td>${p.hydrogeology ?? '-'}</td>
+            <td>${p.index_hydrogeology ?? '-'}</td>
+            <td class="index-total" data-type=${sinkType} data-id="${p.id}">${p.index_sink_total ?? '-'}</td>
+            
+            
           </tr>
         `;
       });
+      markers.addLayer(marker);
+      project.saveToLocalStorage();
+      // Add the cluster group to the map
+      featureGroup.addLayer(markers);
 
+
+      // Data Table
       tableHTML += `</tbody></table>`;
       tableContainer.innerHTML = tableHTML;
       const tableSettings = createSinkTableSettings(sinkType, false);
@@ -511,12 +500,15 @@ function getWaterBodies(waterbody, featureGroup){
               onEachFeature: function (feature, layer) {
                 project.infiltration[`selected_${waterbody}`].push(feature.properties.id);
                 let popupContent = `
-                   <b>Länge:</b> ${feature.properties.shape_length} m<br>
-                   ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
-                   <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume} m³<br>
-                   <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume} m³<br>
-                   <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume} m³<br>
-                   <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
+                  <h6><b> ${feature.properties.name}</b></h6>
+                  <b>Fließgewässer-ID:</b> ${feature.properties.fgw_id}<br>
+                  <b>Länge:</b> ${feature.properties.shape_length} m<br>
+                  ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
+                  <b>Ökologisch bedingter Mindestwasserabfluss:</b> ${feature.properties.minimum_environmental_flow ? `${feature.properties.minimum_environmental_flow} m³/s` : 'unbekannt'}<br>
+                  <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume} m³<br>
+                  <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume} m³<br>
+                  <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume} m³<br>
+                  <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
                  `;
                 layer.bindTooltip(popupContent);
                 layer.on('mouseover', function () {
@@ -553,10 +545,9 @@ function getWaterBodies(waterbody, featureGroup){
 
 $('#toolboxPanel').on('change',  function (event) {
   const $target = $(event.target);
+  const project = ToolboxProject.loadFromLocalStorage();
   // console.log('change event', $target);
   if ($target.hasClass('double-slider')) {
-
-    const project = ToolboxProject.loadFromLocalStorage();
     const inputName = $target.attr('name');
     const minName = inputName + '_min';
     const maxName = inputName + '_max'; 
@@ -564,42 +555,38 @@ $('#toolboxPanel').on('change',  function (event) {
     project.infiltration[minName] = inputVals[0];
     project.infiltration[maxName] = inputVals[1];
     project.saveToLocalStorage();
-  } else if ($target.hasClass('single-slider')) {
-
-    const project = ToolboxProject.loadFromLocalStorage();
+  } else if ($target.hasClass('single-slider')) {   
     const inputName = $target.attr('name'); 
     const inputVal = $target.val();
     project.infiltration[inputName] = inputVal;
     project.saveToLocalStorage();
   }else if ($target.hasClass('form-check-input')) {
-    // checkboxes
-    const project = ToolboxProject.loadFromLocalStorage();
+    // checkboxes 
     const inputId = $target.attr('id');
     const inputName = $target.attr('name');
     const inputPrefix = $target.attr('prefix');
     const inputValue = $target.attr('value');
     const inputChecked = $target.is(':checked');
 
-    
     const key = `${inputPrefix}_${inputName}`;
 
-  const index = project.infiltration[key].indexOf(inputValue);
+    const index = project.infiltration[key].indexOf(inputValue);
 
-  if (index > -1) {
-    // Value exists — remove it
-    project.infiltration[key] = project.infiltration[key].filter(
-      (v) => v !== inputValue
-    );
-    console.log('Checkbox unchecked:', inputId, '=', inputValue);
-  } else {
-    // Value does not exist — add it
-    project.infiltration[key].push(inputValue);
-    console.log('Checkbox checked:', inputId, '=', inputValue);
-  }
-  project.saveToLocalStorage();
+    if (index > -1) {
+      // Value exists — remove it
+      project.infiltration[key] = project.infiltration[key].filter(
+        (v) => v !== inputValue
+      );
+      console.log('Checkbox unchecked:', inputId, '=', inputValue);
+    } else {
+      // Value does not exist — add it
+      project.infiltration[key].push(inputValue);
+      console.log('Checkbox checked:', inputId, '=', inputValue);
+    }
+    project.saveToLocalStorage();
 
   } else if ($target.hasClass('sink-select-all-checkbox')) {
-    const project = ToolboxProject.loadFromLocalStorage();
+    
     const allSelected = $target.is(':checked');
     const sinkType = $target.data('type');
     console.log('sinkType', sinkType);
@@ -745,9 +732,6 @@ function getInlets() {
 
           addToInletTable(inlet, connectionId);  // builds a row in the table
 
-
-
-
         });
   
         // $('#navInfiltrationResult').removeClass('disabled').addClass('active').trigger('click');
@@ -788,10 +772,10 @@ $('#toolboxPanel').on('click', function (event) {
   } else if ($target.attr('id') === 'btnFilterLakes') {
     getWaterBodies('lakes', lakesFeatureGroup);
   
-  } else if ($target.hasClass('evaluate-selected-sinks')) {
-    console.log('ClassList contains  evaluate-selected-sinks');
-    const project = ToolboxProject.loadFromLocalStorage();
-    calculateIndexForSelection(project)
+  // } else if ($target.hasClass('evaluate-selected-sinks')) {
+  //   console.log('ClassList contains  evaluate-selected-sinks');
+  //   const project = ToolboxProject.loadFromLocalStorage();
+  //   calculateIndexForSelection(project)
   } else if ($target.attr('id') === 'btnGetInlets') {
       getInlets(); 
   } else if ($target.attr('id') === 'navInfiltrationSinks') {
@@ -996,7 +980,7 @@ function startInfiltration() {
         
         });
     })
-    .catch(error => console.error("Error fetching data:", error));
+    // .catch(error => console.error("Error fetching data:", error));
   } else {
     handleAlerts({ success: false, message: 'Please select a user field!' });
   }

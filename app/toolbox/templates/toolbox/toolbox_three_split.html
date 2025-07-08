@@ -24,7 +24,9 @@
 
 
 {% block right_panel %}
-        <div id="map" style="height: 100%; width: 100%"></div>
+        <div id="map" style="height: 100%; width: 100%">
+            
+        </div>
 {% endblock right_panel %}
 
 
@@ -58,12 +60,25 @@
         </div>
     </card>
     <card class="card mb-3 col-3">
-        <div class="card-header">
-            <button id="waterRetention" class="btn btn-outline-secondary mt-3">Ufernahe Renaturierung und Versickerung</button>
+      
+        <div class="dropdown">
+            <div class="card-header">
+                <button class="btn btn-outline-secondary mt-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Gewässertool
+                </button>
+            
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Oberflächengewässer</a></li>
+                    <li><a class="dropdown-item" href="#">Senken</a></li>
+                    <li><a class="dropdown-item" href="#">Gewässerentwicklungskonzepte</a></li>
+                    <li><a class="dropdown-item" href="#">Ehemalige Feuchtgebiete</a></li>
+                </ul>
+            </div>
         </div>
         <div class="card-body">
             <p>Das Tool bietet Möglichkeiten zur Auswahl von Standorten, die sich für Renaturierungs- und Versickerungsmaßnahmen in Ufernähe eignen. </p>
         </div>
+
     </card>
     <card class="card mb-3 col-3">
         <div class="card-header">

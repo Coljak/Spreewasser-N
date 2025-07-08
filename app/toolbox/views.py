@@ -136,7 +136,6 @@ def load_infiltration_gui(request, user_field_id):
     if user_field is None:
         return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
     
-    user_field_geom = GEOSGeometry(user_field.geom)
     sinks = models.Sink.objects.filter(
         centroid__within=user_field.geom
     )
@@ -203,6 +202,92 @@ def add_range_filter(filters, obj, field,  model_field=None):
     return filters
 
 
+def calculate_indices(sinks, project, sinkType='sink'):
+
+    weighting_overall_usability=int(project['infiltration'].get('weighting_overall_usability', 20))/100
+    weighting_soil_index=int(project['infiltration'].get('weighting_soil_index', 80))/100
+    weighting_forest_field_capacity = int(project['infiltration'].get('weighting_forest_field_capacity', 33.3))/100
+    weighting_forest_hydraulic_conductivity_1m= int(project['infiltration'].get('weighting_forest_hydraulic_conductivity_1m', 33.3))/100
+    weighting_forest_hydraulic_conductivity_2m= int(project['infiltration'].get('weighting_forest_hydraulic_conductivity_2m', 33.3))/100
+    weighting_agriculture_field_capacity = int(project['infiltration'].get('weighting_agriculture_field_capacity', 33.3))/100
+    weighting_agriculture_hydromorphy = int(project['infiltration'].get('weighting_agriculture_hydromorphy', 33.3))/100
+    weighting_agriculture_soil_type= int(project['infiltration'].get('weighting_agriculture_soil_type', 33.3))/100
+    weighting_grassland_field_capacity = int(project['infiltration'].get('weighting_grassland_field_capacity', 25))/100
+    weighting_grassland_hydromorphy = int(project['infiltration'].get('weighting_grassland_hydromorphy', 25))/100
+    weighting_grassland_soil_type = int(project['infiltration'].get('weighting_grassland_soil_type', 25))/100
+    weighting_grassland_soil_water_ratio=int(project['infiltration'].get('weighting_grassland_soil_water_ratio', 25))/100
+
+    sink_results = {}
+    for sink in sinks:
+        if sinkType == 'sink':
+            soil_properties = models.SinkSoilProperties.objects.filter(sink=sink).order_by('-percent_of_total_area')
+        elif sinkType == 'enlarged_sink':
+            soil_properties = models.EnlargedSinkSoilProperties.objects.filter(enlarged_sink=sink).order_by('-percent_of_total_area')
+        
+        
+        print(len(soil_properties))
+        sink_results[sink.id] = {
+            'soil_profiles': []
+            }
+        if len(soil_properties) > 0:
+            index_be_total = 0
+            for sp in soil_properties:
+                print(sp)
+                
+                index_1 = 0
+                index_2 = 0
+                
+                property_data = sp.soil_properties
+                bool_general = (not property_data.nitrate_contamination) and (not property_data.waterlog)
+                index_1 = bool_general * property_data.groundwater_distance.rating_index
+                print('index_1', index_1)
+                
+                
+                if property_data.agricultural_landuse.name == 'grassland': # id=1
+                    index_2 = \
+                        weighting_grassland_field_capacity * property_data.fieldcapacity.rating_index + \
+                        weighting_grassland_hydromorphy * property_data.hydromorphy.rating_index + \
+                        weighting_grassland_soil_type * property_data.soil_texture.rating_index + \
+                        weighting_grassland_soil_water_ratio * property_data.wet_grassland.rating_index
+
+                elif property_data.agricultural_landuse.name == 'no_agricultural_use': # id=2
+                    print('weighting_forest_field_capacity', weighting_forest_field_capacity)
+                    index_2 = \
+                        weighting_forest_field_capacity * property_data.fieldcapacity.rating_index + \
+                        weighting_forest_hydraulic_conductivity_1m * property_data.hydraulic_conductivity_1m_rating + \
+                        weighting_forest_hydraulic_conductivity_2m * property_data.hydraulic_conductivity_2m_rating
+
+                else: #id = 3, fields
+                    print('weighting_agriculture_hydromorphy', weighting_agriculture_hydromorphy)
+                    print('props.hydromorphy.rating_index', property_data.hydromorphy.rating_index)
+                    index_2 = \
+                        weighting_agriculture_field_capacity * property_data.fieldcapacity.rating_index + \
+                        weighting_agriculture_hydromorphy * property_data.hydromorphy.rating_index + \
+                        weighting_agriculture_soil_type * property_data.soil_texture.rating_index
+                        
+                print('index_2', index_2)
+                index_be = weighting_overall_usability * index_1 + weighting_soil_index * index_2
+                sink_results[sink.id]['soil_profiles'].append({
+                    'agricultural_landuse': property_data.agricultural_landuse.name,
+                    'soil_profile_percentage': round(sp.percent_of_total_area, 2),
+                    'groundwater_distance_rating_index': property_data.groundwater_distance.rating_index,
+                    'index_1': round(index_1, 2),
+                    'index_2': round(index_2, 2),
+                    'index_be': round(index_be, 2),
+                    })
+
+                index_be_total += index_be * sp.percent_of_total_area
+            sink_results[sink.id]['index_total'] = round(index_be_total, 2)
+
+            print('index_be_total', index_be_total)
+                
+        else:
+            print('error')
+
+    return sink_results
+
+
+
 def filter_sinks(request):
     try:
         project = json.loads(request.body)
@@ -219,10 +304,7 @@ def filter_sinks(request):
     filters = add_range_filter(filters, project['infiltration'], 'sink_volume', 'volume')
     filters = add_range_filter(filters, project['infiltration'], 'sink_depth', 'depth')
     filters = add_range_filter(filters, project['infiltration'], 'sink_index_soil', 'index_soil')
-    print("Sinks", sinks.count())
     sinks = sinks.filter(filters)
-    print("Sinks", sinks.count())
-
     
     land_use_values = project['infiltration'].get('sink_land_use', [])
     land_use_values = [int(value) for value in land_use_values if value.isdigit()]
@@ -242,6 +324,10 @@ def filter_sinks(request):
         return JsonResponse({'message': message})
     else:
         print("Sinks", sinks.count())
+
+        
+        
+        
         features = []
         for sink in sinks:
             centroid = sink.centroid
@@ -325,7 +411,7 @@ def filter_enlarged_sinks(request):
                 "land_use_1": sink.landuse_1.de if sink.landuse_1 else None,
                 "land_use_2": sink.landuse_2.de if sink.landuse_2 else None,
                 "land_use_3": sink.landuse_3.de if sink.landuse_3 else None,
-                "land_use_4": sink.landuse_4.de if sink.landuse_3 else None,
+                "land_use_4": sink.landuse_4.de if sink.landuse_4 else None,
             }
             features.append(geojson)
         feature_collection = {
@@ -382,11 +468,14 @@ def filter_streams(request):
             print('geojson:', geojson)
             geojson['properties'] = {
                 "id": stream.id,
+                "name": stream.name,
+                "minimum_environmental_flow": stream.minimum_environmental_flow,
+                "fgw_id": stream.fgw_id,
                 # "centroid": geom.centroid,
-                "shape_length": stream.shape_length,
-                "min_surplus_volume": stream.min_surplus_volume,
-                "mean_surplus_volume": stream.mean_surplus_volume,
-                "max_surplus_volume": stream.max_surplus_volume,
+                "shape_length": round(stream.shape_length, 2),
+                "min_surplus_volume": round(stream.min_surplus_volume, 2),
+                "mean_surplus_volume": round(stream.mean_surplus_volume, 2),
+                "max_surplus_volume": round(stream.max_surplus_volume, 2),
                 "plus_days": stream.plus_days,
             }
             features.append(geojson)
@@ -446,6 +535,7 @@ def filter_lakes(request):
             print('geojson:', geojson)
             geojson['properties'] = {
                 "id": lake.id,
+                "name": lake.name,
                 "min_surplus_volume": int(lake.min_surplus_volume),
                 "mean_surplus_volume": int(lake.mean_surplus_volume),
                 "max_surplus_volume": int(lake.max_surplus_volume),

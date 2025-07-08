@@ -106,6 +106,26 @@
     </div>
   </div>
 
+  <div class="card mb-3" id="automaticHarvestWorkstep-template">
+    <div class="card-body">
+      <form class="automatic-harvest-form">
+        <h5 class="card-title">Automatic Harvest Workstep</h5>
+        {% crispy workstep_automatic_harvest_form %}
+        <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card mb-3" id="nDemandFertilizationWorkstep-template">
+    <div class="card-body">
+      <form class="irrigation-form">
+        <h5 class="card-title">N-Demand Fertilization Workstep</h5>
+        {% crispy workstep_n_demand_fertilization_form %}
+        <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
+      </form>
+    </div>
+  </div>
+
 
 
   <div id="rotationTemplate">

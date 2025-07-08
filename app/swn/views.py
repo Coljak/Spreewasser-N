@@ -464,13 +464,13 @@ def manual_soil_selection(request, user_field_id):
     user_field = models.UserField.objects.get(id=user_field_id)
     soil_profile_polygon_ids = user_field.soil_profile_polygon_ids['buek_polygon_ids']
 
-    name = user_field.name
+    # name = user_field.name
     data_menu = monica_views.soil_profiles_from_polygon_ids(user_field.soil_profile_polygon_ids['buek_polygon_ids'])
-    data_menu['text'] = name
-    data_menu['id'] = user_field.id
+    # data_menu['text'] = name
+    # data_menu['id'] = user_field.id
 
     print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
-    return render(request, 'monica/modal_manual_soil_selection.html', data_menu)
+    return JsonResponse(data_menu)
 
 
 def recommended_soil_profile(request, profile_landusage, user_field_id):

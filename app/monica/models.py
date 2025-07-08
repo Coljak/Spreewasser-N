@@ -1640,11 +1640,81 @@ class WorkstepHarvest(Workstep):
         on_delete=models.CASCADE,
         related_name='workstep_harvest'
     )
+    
+    def to_json(self):
+        json_data = super().to_json()
+        json_data.update({
+            "type": "Harvest",
+        })
+        return json_data
+    
+class WorkstepAutomaticHarvest(Workstep):
+    rotation = models.ForeignKey(
+        Rotation,
+        on_delete=models.CASCADE,
+        related_name='workstep_automatic_harvest'
+    )
+    
+    min_percentage_asw = models.FloatField()
+    max_percentage_asw = models.FloatField()
+    max_3d_precip_sum = models.IntegerField(default=2)
+    max_curr_day_precip = models.FloatField(default=0.1, help_text="Maximum precipitation on the current day in mm")
+    harvest_time = models.CharField(
+        choices=[
+            ('maturity', 'Maturity'),
+            ('anthesis', 'Anthesis'),
+        ],
+        default='maturity',
+        help_text="The event after which the harvest is scheduled."
+    )
+    
+    def to_json(self):
+        
+        json_data = {
+            "type": "AutomaticHarvest", 
+            "latest-date": self.date,
+            "min-%-asw": self.min_percentage_asw,
+            "max-%-asw": self.max_percentage_asw,
+            "max-3d-precip-sum": self.max_3d_precip_sum,
+            "max-curr-day-precip": self.max_curr_day_precip,
+            "harvest-time": self.harvest_time,
+        }
+        return json_data
+    
+
+class WorkstepNDemandFertilization(Workstep):
+    rotation = models.ForeignKey(
+        Rotation,
+        on_delete=models.CASCADE,
+        related_name='workstep_n_emand_fertilization'
+    )
+    mineral_fertiliser = models.ForeignKey(MineralFertiliser, on_delete=models.CASCADE)
+    days = models.IntegerField()
+    after = models.CharField(
+        choices=[
+            ('sowing', 'Sowing'),
+            ('anthesis', 'Anthesis'),
+            ('maturity', 'Maturity'),
+        ],
+        default='sowing',
+        help_text="The event after which the fertilisation is scheduled."
+    )
+    depth = models.FloatField(
+        help_text="The depth at which the fertiliser is applied, in meters."
+    )
+    n_demand = models.FloatField(
+        help_text="The amount of nitrogen demand for fertilisation, in kg N/ha."
+    )
 
     def to_json(self):
         json_data = super().to_json()
         json_data.update({
-            "type": "Harvest"
+            "type": "NDemandFertilization",
+            "days": self.days,
+            "N-demand": [self.n_demand, "kg"],
+            "depth": [self.depth, "m"],
+            "after": self.after,
+            "partition": self.mineral_fertiliser.to_json()
         })
         return json_data
 

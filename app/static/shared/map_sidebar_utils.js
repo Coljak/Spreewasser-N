@@ -452,7 +452,7 @@ export function highlightLayer(leafletId, featureGroup) {
 // };
 
 export function selectUserField(userFieldId, project, featureGroup) {
-    console.log("selectUserField featureGroup", featureGroup);
+    console.log("selectUserField featureGroup", project);
 
     const leafletId = getLeafletIdByUserFieldId(userFieldId);
     const userField = getUserFields()[leafletId];
@@ -465,6 +465,7 @@ export function selectUserField(userFieldId, project, featureGroup) {
             (!project.userField || project.userField === '')
         )
     );
+    console.log('needsConfirmation', needsConfirmation, userFieldId, userField);
 
     if (needsConfirmation) {
         const isChangingExisting = !!project.userField;
@@ -478,7 +479,7 @@ export function selectUserField(userFieldId, project, featureGroup) {
                 applyUserFieldChange(project, userFieldId, userField, featureGroup);
             }
         });
-    } else if (project && project.id) {
+    } else  {
         applyUserFieldChange(project, userFieldId, userField, featureGroup);
     }
 }

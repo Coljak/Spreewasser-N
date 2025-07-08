@@ -12,20 +12,12 @@
         {% if user.is_authenticated  %}    
         {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:user_dashboard' %}">Spreewasser:N Tools</a></li> {% endcomment %}
         {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:toolbox_dashboard' %}">Toolbox</a></li> {% endcomment %}
-        <li class="nav-item"><a class="nav-link" href="{% url 'swn:swn_dashboard' %}">SWN</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'monica:monica_model' %}">Monica</a></li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Toolbox
-          </a>
-          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href="{% url 'toolbox:toolbox_dashboard' %}">Versickerung</a></li>
-            <li><a class="dropdown-item" href="">Infiltration</a></li>
-            <li><a class="dropdown-item" href="">Injektion</a></li>
-          </ul>
-        </li>
-        {% endif %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'swn:swn_dashboard' %}">SWN</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'monica:monica_model' %}">Monica</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:toolbox_dashboard' %}">Toolbox</a></li>
 
+        {% endif %}
+        
         <li class="nav-item"><a class="nav-link" href="{% url 'klim4cast:timelapse-page' %}">Clim4Cast</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:acknowledgements' %}">Acknowledgements</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'swn:impressum_information' %}">Impressum</a></li>

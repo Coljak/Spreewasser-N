@@ -49,19 +49,29 @@ def save_project(project_data, user, project_class=MonicaProject):
         
         # save the site
         try:
+            print('Monica Save Site')
+            print("data.get('latitude')", data.get('latitude'))
+            print("data.get('longitude')", data.get('longitude'))
+            print("data.get('altitude')", data.get('altitude', 0))
+            print("data.get('n_deposition')", data.get('n_deposition', 11))
+            print("data.get('soilProfileType')", data.get('soilProfileType'))
+
+
             project.monica_site.latitude = data.get('latitude')
+            
             project.monica_site.longitude = data.get('longitude')
             project.monica_site.altitude = data.get('altitude', 0)
             project.monica_site.n_deposition = data.get('n_deposition', 11)
-            soil_profile_source = data.get('soilProfileSource')
-            if soil_profile_source == 'buek':
-                soil_profile = SoilProfile.objects.get(pk=data.get('buekSoilProfileId'))
-            elif soil_profile_source == 'userSoilProfile':
+            soil_profile_type = data.get('soilProfileType')
+            if soil_profile_type == 'buekSoilProfile':
+                soil_profile = SoilProfile.objects.get(pk=data.get('soilProfileId'))
+            elif soil_profile_type == 'userSoilProfile':
                 soil_profile = UserSoilProfile.objects.get(pk=data.get('userSoilProfileId'))
             project.monica_site.soil_profile = soil_profile
             project.monica_site.save()
-        except:
-            errormessage = "Error saving soil profile."
+        except Exception as e:
+            print("Error saving MonicaSite:", e)
+
 
         # save the model setup
         # monica_model_setup = ModelSetup.objects.get(id=data.get('modelSetupId'))

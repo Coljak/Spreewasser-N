@@ -127,6 +127,8 @@ export class Rotation {
         this.mineralFertilisationWorkstep = existingRotation.mineralFertilisationWorkstep ?? [];
         this.organicFertilisationWorkstep = existingRotation.organicFertilisationWorkstep ?? [];
         this.irrigationWorkstep = existingRotation.irrigationWorkstep ?? [];
+        this.automaticHarvestWorkstep = existingRotation.automaticHarvestWorkstep ?? [];
+        this.nDemandFertilizationWorkstep = existingRotation.nDemandFertilizationWorkstep ?? [];
     }
 }
 

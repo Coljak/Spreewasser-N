@@ -190,7 +190,10 @@ class LanduseMap(models.Model):
 
 
 class Stream(models.Model):
-    # geom = gis_models.MultiLineStringField(srid=4326)
+    name = models.CharField(max_length=100, null=True, blank=True)
+    fgw_id = models.IntegerField(null=True, blank=True)  # ArcEGMO-ID des Fließgewässerabschnittes
+    # Ökologisch begründete Mindestwasserführung hergeleitet für den 3. BWZ ab 2021 (EZG x MOW / 1000)
+    minimum_environmental_flow = models.FloatField(null=True, blank=True) # - m³/s  -777 kein berichtspflichtiger OWK; -999 künstlicher OWK
     shape_length = models.FloatField()
     # id_source = models.IntegerField()
     min_surplus_volume = models.FloatField()
@@ -203,6 +206,10 @@ class Stream(models.Model):
 
 
 class Lake(models.Model):
+    name = models.CharField(max_length=100, null=True, blank=True)
+    fgw_id = models.IntegerField(null=True, blank=True)  # ArcEGMO-ID des Fließgewässerabschnittes
+    # Ökologisch begründete Mindestwasserführung hergeleitet für den 3. BWZ ab 2021 (EZG x MOW / 1000)
+    minimum_environmental_flow = models.FloatField(null=True, blank=True) # - m³/s  -777 kein berichtspflichtiger OWK; -999 künstlicher OWK
     geom = gis_models.MultiPolygonField(srid=4326)
     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     centroid = gis_models.PointField(srid=4326, null=True, blank=True)
@@ -249,8 +256,11 @@ class Sink(models.Model):
     land_use_2_percentage = models.FloatField(null=True)
     land_use_3_percentage = models.FloatField(null=True)
     index_soil = models.FloatField(null=True)
-    index_hydrology = models.FloatField(null=True)
-    feasibility_sinks_index = models.FloatField(null=True)
+    soil_points = models.CharField(max_length=16, null=True, blank=True) # number of soil points
+    index_feasibility = models.FloatField(null=True)
+    hydrogeology = models.CharField(max_length=255, null=True, blank=True) # related table
+    aquifer = models.ForeignKey('Aquifer', on_delete=models.DO_NOTHING, null=True, blank=True)
+    index_hydrogeology = models.FloatField(null=True, blank=True)
 
 
     # def save(self, *args, **kwargs):
@@ -271,10 +281,11 @@ class Sink(models.Model):
             "land_use_2": self.land_use_2,
             "land_use_3": self.land_use_3,
             "index_soil": self.index_soil,
-            "index_hydrology": self.index_hydrology,
             "shape_length": self.shape_length,
             "shape_area": self.shape_area,
-            "feasibility_sinks_index": self.feasibility_sinks_index,
+            "index_feasibility": self.index_feasibility,
+            "hydrogeology": self.hydrogeology,
+            "index_hydrogeology": self.index_hydrogeology,
         }
 
 
@@ -317,12 +328,40 @@ class EnlargedSink(models.Model):
     land_use_3_percentage = models.FloatField(null=True)
     land_use_4_percentage = models.FloatField(null=True)
     index_soil = models.FloatField(null=True)
-    index_hydrology = models.FloatField(null=True)
     shape_length = models.FloatField(null=True)
     shape_area = models.FloatField(null=True)
-    feasibilty_enlarged_sinks_index = models.FloatField(null=True)
-
+    soil_points = models.CharField(max_length=16, null=True, blank=True)
+    index_feasibility = models.FloatField(null=True)
+    hydrogeology = models.CharField(max_length=255, null=True, blank=True) # related table
+    aquifer = models.ForeignKey('Aquifer', on_delete=models.DO_NOTHING, null=True, blank=True) # related table
+    index_hydrogeology = models.FloatField(null=True, blank=True) # related table
 # Intersect of LandusMap and Sink
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "depth": round(self.depth, 2),
+            "area": round(self.area, 2),
+            "volume": round(self.volume, 2),
+            "index_1": self.index_1,
+            "index_2": self.index_2,
+            "index_3": self.index_3,
+            "land_use_1": self.land_use_1,
+            "land_use_2": self.land_use_2,
+            "land_use_3": self.land_use_3,
+            "land_use_4": self.land_use_4,
+            "index_soil": self.index_soil,
+            "shape_length": self.shape_length,
+            "shape_area": self.shape_area,
+            "index_feasibility": self.index_feasibility,
+            "hydrogeology": self.hydrogeology,
+            "index_hydrogeology": self.index_hydrogeology,
+        }
+
+class Aquifer(models.Model):
+    name = models.CharField(max_length=255, null=True, blank=True)
+    name_de = models.CharField(max_length=255, null=True, blank=True)
+    name_en = models.CharField(max_length=255, null=True, blank=True)
 class LanduseSink(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     sink = models.ForeignKey(Sink, on_delete=models.DO_NOTHING, null=True, related_name='sink_landuse')

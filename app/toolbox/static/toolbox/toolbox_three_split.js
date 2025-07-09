@@ -360,19 +360,33 @@ function getSinks(sinkType, featureGroup) {
               <th>Bodeneignung</th>
               <th>Landnutzung</th>
               <th>Bodenpunkte</th>
-              <th>Eignungsindex Ertragsverluste</th>
+              <th>Eignung Ertragsverluste</th>
               <th>Hydrogeologie</th>
-              <th>Eignungsindex Hydrogeologie</th>
-              <th>Gesamteignung</th>
+              <th>Eignung Hydrogeologie</th>
+              <th>Gesamteignung Senke</th>
             </tr>
           </thead>
           <tbody>
       `;
+      console.log('data', data);
+      const sink_indices = {}
       
       // Iterate through features and add them to the cluster
       data.feature_collection.features.forEach(feature => {
+
         const p = feature.properties;
         ids.push(p.id);
+        sink_indices[p.id] = {
+          index_sink_total: p.index_sink_total,
+          index_soil: p.index_soil,
+          index_proportions: p.index_proportions,
+          index_feasibility: p.index_feasibility,
+          index_hydrogeology: p.index_hydrogeology,
+          index_total: p.index_sink_total,
+        }
+
+
+
         let coords = feature.coordinates; // Get the lat/lng coordinates
         let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
         // Create popup content with all properties
@@ -391,6 +405,7 @@ function getSinks(sinkType, featureGroup) {
         `;
         // Create a marker
         let marker = L.marker(latlng).bindPopup(popupContent);
+        
         marker.on('mouseover', function () {
           this.openPopup();
         });
@@ -408,6 +423,7 @@ function getSinks(sinkType, featureGroup) {
               `)
               .openOn(map);
         });
+        markers.addLayer(marker);
           // Add marker to cluster
         
         
@@ -419,20 +435,20 @@ function getSinks(sinkType, featureGroup) {
             <td>${p.volume}</td>
             <td>${p.volume_construction_barrier ?? '-'}</td>
             <td>${p.volume_gained ?? '-'}</td>
-            <td>${p.sink_proportion_evaluation}</td>
+            <td>${p.index_proportions}</td>
             <td>${p.index_soil ?? '-'}</td>
             <td>${p.land_use_1}${p.land_use_2 ? `, ${p.land_use_2}`: ''}${p.land_use_3 ? `, ${p.land_use_3}`: ''}${p.land_use_4 ? `, ${p.land_use_4}`: ''}</td>
             <td>${p.soil_points ?? '-'}</td>
             <td>${p.index_feasibility ?? '-'}</td>
             <td>${p.hydrogeology ?? '-'}</td>
             <td>${p.index_hydrogeology ?? '-'}</td>
-            <td class="index-total" data-type=${sinkType} data-id="${p.id}">${p.index_sink_total ?? '-'}</td>
+            <td class="index-total" data-type=${sinkType} data-id="${p.id}"><b>${p.index_sink_total ?? '-'}</b></td>
             
             
           </tr>
         `;
       });
-      markers.addLayer(marker);
+      localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
       project.saveToLocalStorage();
       // Add the cluster group to the map
       featureGroup.addLayer(markers);
@@ -638,18 +654,36 @@ function addToInletTable(inlet, connectionId) {
   row.innerHTML = `
     <td>${inlet.sink_id}</td>
     <td>${inlet.is_enlarged_sink ? 'Ja' : 'Nein'}</td>
-    <td>${inlet.waterbody_type} ${inlet.waterbody_id}</td>
+    <td>${inlet.index_sink_total ?? inlet.index_sink_total}</td>
+    <td>${inlet.waterbody_type} ${inlet.waterbody_id}: ${inlet.waterbody_name}</td>
     <td>${inlet.length_m}</td>
-    <td><button class="btn btn-sm btn-primary" data-id="${connectionId}"">Hide</button></td>
-    <td><button class="btn btn-sm btn-primary" data-id="${connectionId}">Zuleitung editieren</button></td>
-    <td><button class="btn btn-sm btn-primary" data-id="${connectionId}">Gewässer wählen</button></td>
+    <td>${inlet.rating_connection ?? inlet.rating_connection}</td>
+    <td>${inlet.index_sink_total ?? inlet.index_sink_total}</td>
+    <td><button class="btn btn-sm btn-primary result-aquifer-recharge hide-connection" data-id="${connectionId}"">Hide</button></td>
+    <td><button class="btn btn-sm btn-primary result-aquifer-recharge edit-connection" data-id="${connectionId}">Zuleitung editieren</button></td>
+    <td><button class="btn btn-sm btn-primary result-aquifer-recharge choose-waterbody" data-id="${connectionId}">Gewässer wählen</button></td>
 
   `;
 
   // On row click: update info card
-  row.addEventListener('click', () => {
+  row.addEventListener('click', (e) => {
     updateInletInfoCard(inlet);
-  });
+    if (e.target.classList.contains('result-aquifer-recharge')) {
+      if (e.target.classList.contains('hide-connection')) {
+        toggleConnection(e.target);
+      } else if (e.target.classList.contains('edit-connection')) {
+        editConnection(e.target);
+      } else if (e.target.classList.contains('choose-waterbody')) {
+        openUserFieldNameModal({
+          title: 'Gewässer auswählen',
+          buttonText: 'Gewässer auswählen',
+          onSubmit: (userFieldName) => {
+            console.log('Selected user field name:', userFieldName);
+          }
+        });
+      }
+    }
+}   );
 
   document.querySelector('#inlet-table tbody').appendChild(row);
 };
@@ -658,26 +692,46 @@ function toggleConnection(button) {
   const id = button.getAttribute('data-id');
   const layer = connectionLayerMap[id];
 
+  if (!layer) {
+    console.warn(`No layer found for connectionId: ${id}`);
+    return;
+  }
+
   if (map.hasLayer(layer)) {
     map.removeLayer(layer);
     button.textContent = 'Show';
     button.classList.replace('btn-primary', 'btn-outline-secondary');
   } else {
-    layer.addTo(inletConnectionsFeatureGroup);
+    console.log('Trying to show layer again...');
+    console.log('Map has layer already?', map.hasLayer(layer));
+    
+    // TODO : this is not correct!!! The layer needs to be added to the inletConnectionsFeatureGroup, not directly to the map
+    layer.addTo(map);
+    // inletConnectionsFeatureGroup.addLayer(layer);  // ← correct way to add
+    // if (!map.hasLayer(inletConnectionsFeatureGroup)) {
+    //   map.addLayer(inletConnectionsFeatureGroup);
+    // }
     button.textContent = 'Hide';
     button.classList.replace('btn-outline-secondary', 'btn-primary');
   }
-};
+}
+
 
 function updateInletInfoCard(inlet) {
   const card = document.getElementById('inlet-info-card');
   card.innerHTML = `
-    <div class="card-body">
-      <h5 class="card-title">Sink ${inlet.sink_id} ${inlet.is_enlarged_sink ? '(Enlarged)' : ''}</h5>
-      <p class="card-text">
-        Connected to: ${inlet.waterbody_type} (ID ${inlet.waterbody_id})<br>
-        Distance: ${inlet.length_m} meters
-      </p>
+    <div class="row">
+      <div class="card-body col-6">
+        <h5 class="card-title">Sink ${inlet.sink_id} ${inlet.is_enlarged_sink ? '(Enlarged)' : ''}</h5>
+        <p class="card-text">
+          Connected to: ${inlet.waterbody_type} (ID ${inlet.waterbody_id})<br>
+          Distance: ${inlet.length_m} meters
+        </p>
+      </div>
+      <div class="card-body col-6">
+        <h5 class="card-title">Tägliches Anreicherungsvolumen </h5>
+        <img src="/static/toolbox/anreicherung.jpg" alt="Inlet" class="img-fluid rounded" style="max-height: 500px;" />
+      </div>
     </div>
   `;
   card.style.display = 'block';
@@ -699,9 +753,19 @@ function getInlets() {
       if (data.message.success) {
         console.log('data', data);
         // handleAlerts(data.message);
+
+        const enlarged_sink_indices = JSON.parse(localStorage.getItem('enlarged_sink_indices')) || {};
+        const sink_indices = JSON.parse(localStorage.getItem('sink_indices')) || {};
 ;
         data.inlets_sinks.forEach(inlet => {
           console.log('inlet', inlet);
+
+          if (inlet.is_enlarged_sink) {
+            inlet.index_sink_total = enlarged_sink_indices[inlet.sink_id]?.index_total || 0;
+          }
+          else {
+            inlet.index_sink_total = sink_indices[inlet.sink_id]?.index_total || 0;
+          }
 
           const connectionId = `${inlet.is_enlarged_sink ? 'enl' : 'sink'}_${inlet.sink_id}_${inlet.waterbody_type}_${inlet.waterbody_id}`;
 
@@ -822,54 +886,54 @@ $('#toolboxPanel').on('click', function (event) {
 
 
 
-function calculateIndexForSelection(project) {
+// function calculateIndexForSelection(project) {
   
-  fetch('calculate_index_for_selection/', {
-    method: 'POST',
-    body: JSON.stringify(project),
-    headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCSRFToken(),
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.message.success) {
-      console.log('data', data);
-      handleAlerts(data.message);
-      const sinkTable = $('#sink-table').DataTable();
-      const enlargedSinkTable = $('#enlarged_sink-table').DataTable();
-      if (Object.keys(data.sinks).length !== 0) {
-        let sinkType = 'sink';
+//   fetch('calculate_index_for_selection/', {
+//     method: 'POST',
+//     body: JSON.stringify(project),
+//     headers: {
+//         'Content-Type': 'application/json',
+//         'X-CSRFToken': getCSRFToken(),
+//     }
+//   })
+//   .then(response => response.json())
+//   .then(data => {
+//     if (data.message.success) {
+//       console.log('data', data);
+//       handleAlerts(data.message);
+//       const sinkTable = $('#sink-table').DataTable();
+//       const enlargedSinkTable = $('#enlarged_sink-table').DataTable();
+//       if (Object.keys(data.sinks).length !== 0) {
+//         let sinkType = 'sink';
         
-        sinkTable.column(5).visible(true);
-        Object.keys(data.sinks).forEach(key => {
-          const sinkId = key;
-          console.log(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`)
-          document.querySelector(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`).textContent = `${data.sinks[key].index_total * 100} %`;    
-        });
-        $('#sink-table').DataTable().destroy();
-        const tableSettings = createSinkTableSettings(sinkType, true);
-        $('#sink-table').DataTable(tableSettings);
+//         sinkTable.column(5).visible(true);
+//         Object.keys(data.sinks).forEach(key => {
+//           const sinkId = key;
+//           console.log(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`)
+//           document.querySelector(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`).textContent = `${data.sinks[key].index_total * 100} %`;    
+//         });
+//         $('#sink-table').DataTable().destroy();
+//         const tableSettings = createSinkTableSettings(sinkType, true);
+//         $('#sink-table').DataTable(tableSettings);
 
-      };
-      if (Object.keys(data.enlarged_sinks).length !== 0) {
-        let sinkType = 'enlarged_sink';
-        enlargedSinkTable.column(5).visible(true);
-        Object.keys(data.enlarged_sinks).forEach(key => {
-          const sinkId = key;
-          document.querySelector(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`).textContent = `${data.enlarged_sinks[key].index_total * 100}%`;      
-      });
-      $('#enlarged_sink-table').DataTable().destroy();
-      const tableSettings = createSinkTableSettings(sinkType, true);
-        $('#enlarged_sink-table').DataTable(tableSettings);
-;
-      };
-    } else {
-      handleAlerts(data.message);
-    }
-  });
-};
+//       };
+//       if (Object.keys(data.enlarged_sinks).length !== 0) {
+//         let sinkType = 'enlarged_sink';
+//         enlargedSinkTable.column(5).visible(true);
+//         Object.keys(data.enlarged_sinks).forEach(key => {
+//           const sinkId = key;
+//           document.querySelector(`td[data-id="${sinkId}"][data-type="${sinkType}"].index-total`).textContent = `${data.enlarged_sinks[key].index_total * 100}%`;      
+//       });
+//       $('#enlarged_sink-table').DataTable().destroy();
+//       const tableSettings = createSinkTableSettings(sinkType, true);
+//         $('#enlarged_sink-table').DataTable(tableSettings);
+// ;
+//       };
+//     } else {
+//       handleAlerts(data.message);
+//     }
+//   });
+// };
 
 
 

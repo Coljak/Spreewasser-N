@@ -19,30 +19,30 @@ function updateButtonState(project) {
             console.log('(hasSink && hasWaterbody)')
         };
    
-        if (hasSink) {
-            document.getElementById("btnContinueWithSinkSelection").classList.remove('disabled');
-            // document.getElementById("btnShowSinkOutlines").classList.remove('disabled');
+        // if (hasSink) {
+        //     document.getElementById("btnContinueWithSinkSelection").classList.remove('disabled');
+        //     // document.getElementById("btnShowSinkOutlines").classList.remove('disabled');
 
-            // document.getElementById("btnGetInlets").disabled = false;
-        }
-        else {
-            document.getElementById("btnContinueWithSinkSelection").classList.add('disabled');
-            // document.getElementById("btnShowSinkOutlines").classList.add('disabled');
-            // document.getElementById("btnGetInlets").disabled = true;
-        };
+        //     // document.getElementById("btnGetInlets").disabled = false;
+        // }
+        // else {
+        //     document.getElementById("btnContinueWithSinkSelection").classList.add('disabled');
+        //     // document.getElementById("btnShowSinkOutlines").classList.add('disabled');
+        //     // document.getElementById("btnGetInlets").disabled = true;
+        // };
 
-        if (hasEnlargedSink) {
-            document.getElementById("btnCntinueWithEnlargedSinkSelection").classList.remove('disabled');
-            // document.getElementById("btnShowEnlargedSinkOutlines").classList.remove('disabled');
-            document.getElementById("btnShowEmbankments").classList.remove('disabled');
-            // document.getElementById("btnCntinueWithEnlargedSinkSelection").disabled = false;
-        }
-        else {
-            document.getElementById("btnCntinueWithEnlargedSinkSelection").classList.add('disabled');
-            // document.getElementById("btnShowEnlargedSinkOutlines").classList.add('disabled');
-            document.getElementById("btnShowEmbankments").classList.add('disabled');
+        // if (hasEnlargedSink) {
+        //     document.getElementById("btnCntinueWithEnlargedSinkSelection").classList.remove('disabled');
+        //     // document.getElementById("btnShowEnlargedSinkOutlines").classList.remove('disabled');
+        //     document.getElementById("btnShowEmbankments").classList.remove('disabled');
+        //     // document.getElementById("btnCntinueWithEnlargedSinkSelection").disabled = false;
+        // }
+        // else {
+        //     document.getElementById("btnCntinueWithEnlargedSinkSelection").classList.add('disabled');
+        //     // document.getElementById("btnShowEnlargedSinkOutlines").classList.add('disabled');
+        //     document.getElementById("btnShowEmbankments").classList.add('disabled');
 
-        };
+        // };
        
      };
 }

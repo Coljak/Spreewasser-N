@@ -242,7 +242,7 @@ class Sink(models.Model):
     shape_length = models.FloatField(null=True)
     index_1 = models.FloatField(null=True)
     index_2 = models.FloatField(null=True)
-    index_3 = models.FloatField(null=True)
+    index_proportions = models.FloatField(null=True)
     land_use_1 = models.CharField(max_length=100, null=True)
     landuse_1 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='sink_landuse_1')
     # landuse_1_fk = models.IntegerField(null=True, blank=True) 
@@ -257,8 +257,8 @@ class Sink(models.Model):
     land_use_3_percentage = models.FloatField(null=True)
     index_soil = models.FloatField(null=True)
     soil_points = models.CharField(max_length=16, null=True, blank=True) # number of soil points
-    index_feasibility = models.FloatField(null=True)
-    hydrogeology = models.CharField(max_length=255, null=True, blank=True) # related table
+    index_feasibility = models.FloatField(null=True) # Eval of soil points
+    hydrogeology_text = models.CharField(max_length=255, null=True, blank=True) # related table
     aquifer = models.ForeignKey('Aquifer', on_delete=models.DO_NOTHING, null=True, blank=True)
     index_hydrogeology = models.FloatField(null=True, blank=True)
 
@@ -310,7 +310,7 @@ class EnlargedSink(models.Model):
     construction_efficiciency = models.FloatField(null=True)
     index_1 = models.FloatField(null=True)
     index_2 = models.FloatField(null=True)
-    index_3 = models.FloatField(null=True)
+    index_proportions = models.FloatField(null=True)
     land_use_1 = models.CharField(max_length=100, null=True)
     landuse_1 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='enlarged_sink_landuse_1')
     # land_use_1_fk = models.IntegerField(null=True, blank=True)
@@ -332,7 +332,7 @@ class EnlargedSink(models.Model):
     shape_area = models.FloatField(null=True)
     soil_points = models.CharField(max_length=16, null=True, blank=True)
     index_feasibility = models.FloatField(null=True)
-    hydrogeology = models.CharField(max_length=255, null=True, blank=True) # related table
+    hydrogeology_text = models.CharField(max_length=255, null=True, blank=True) # related table
     aquifer = models.ForeignKey('Aquifer', on_delete=models.DO_NOTHING, null=True, blank=True) # related table
     index_hydrogeology = models.FloatField(null=True, blank=True) # related table
 # Intersect of LandusMap and Sink

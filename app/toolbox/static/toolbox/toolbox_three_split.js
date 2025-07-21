@@ -1,6 +1,7 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
 import { ToolboxProject, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
-import {initializeSliders} from '/static/toolbox/custom_slider.js';
+import {initializeSliders} from '/static/toolbox/double_slider.js';
+import { initializeInfiltration } from '/static/toolbox/infiltration.js';
 import { 
   projectRegion, 
   baseMaps, 
@@ -222,91 +223,9 @@ function startInfiltration() {
       $('#toolboxPanel').html(data.html);
     })
     .then(() => {
-      initializeSliders();
-      $('input[type="checkbox"][name="land_use"]').prop('checked', true);
-      $('input[type="checkbox"][name="land_use"]').trigger('change');
+      initializeInfiltration();
+      // initializeSliders();
 
-      
-      const forms = document.querySelectorAll('.weighting-form')
-      forms.forEach(form => {
-        
-        const sliderList = form.querySelectorAll('input.single-slider');
-        const length = sliderList.length;
-          
-        const sliderObj = {};
-        let index = 0;
-        sliderList.forEach(slider => {
-          sliderObj[index] = {
-            'val': slider.value,
-            'name': slider.name,
-            'slider': slider
-          };
-          index++;
-        });
-        
-        sliderList.forEach(slider => {
-          slider.addEventListener('change', function (e) {
-            const project = ToolboxProject.loadFromLocalStorage();
-            const changedSlider = e.target;
-   
-            const startIndex = Object.keys(sliderObj).find(
-              key => sliderObj[key].slider === changedSlider
-            );
-            // let changedSlider = sliderObj[startIndex].slider;
-            const newVal = parseInt(changedSlider.value);
-            let diff = newVal - sliderObj[startIndex].val;
-            
-            sliderObj[startIndex].val = newVal;
-            project.infiltration[changedSlider.name] = sliderObj[startIndex].val;
-            console.log("Slider ", startIndex, "new value", newVal, "diff", diff);
-
-            let remainingDiff = diff;
-            
-            let nextIndex = (parseInt(startIndex) + 1) % length;
-            while (remainingDiff !== 0) {
-
-            let sObj = sliderObj[nextIndex];
-            let slider = sObj.slider;
-            let currentVal = parseInt(slider.value);
-            let newVal = currentVal - remainingDiff;
-        
-            // Clamp between 0 and 100
-            if (newVal < 0) {
-              remainingDiff = - newVal; 
-              newVal = 0;
-            } else if (newVal > 100) {
-              remainingDiff = newVal - 100;
-              newVal = 100;
-            } else {
-              remainingDiff = 0;
-            }
-            sObj.val = newVal;
-            project.infiltration[sObj.name] = newVal;
-            slider.value = newVal;
-            slider.dispatchEvent(new Event('input', { bubbles: true }));
-        
-            nextIndex = (nextIndex + 1) % length;
-
-            if (nextIndex == startIndex) break;
-          }
-          project.saveToLocalStorage();
-          });
-        });
-
-        const resetBtn = form.querySelector('input.reset-all');
-        resetBtn.addEventListener('click', function (e) {
-          let project = ToolboxProject.loadFromLocalStorage();
-          // const sliderList = form.querySelectorAll('input.single-slider');
-          Object.keys(sliderObj).forEach(idx => {
-            sliderObj[idx].slider.value = parseFloat(sliderObj[idx].slider.dataset.defaultValue);
-            sliderObj[idx].slider.dispatchEvent(new Event('input'));
-            sliderObj[idx].val = parseFloat(sliderObj[idx].slider.dataset.defaultValue);
-          });
-          project.saveToLocalStorage();
-        });
-
-        
-        });
     })
     // .catch(error => console.error("Error fetching data:", error));
   } else {

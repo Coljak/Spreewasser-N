@@ -16,6 +16,13 @@ export function initializeSliders() {
           maxLabel.text(event.value[1] + sliderUnit);
       });
 
+      slider.on('click', function (event) {
+          minLabel.text(event.value[0] + sliderUnit);
+          maxLabel.text(event.value[1] + sliderUnit);
+      });
+
+
+
       // Find the corresponding `.slider-horizontal` generated element and apply width class
       $input.siblings(".slider-horizontal").addClass("w-100");
 

@@ -83,59 +83,6 @@ class MinMaxRangeFilter(RangeFilter):
 
 
 
-# class SoilPropertiesFilter(FilterSet):
-#     land_use = MultipleChoiceFilter(
-#         label="Landnutzung",
-#         choices=[],  # Will be set in __init__
-#         widget=forms.CheckboxSelectMultiple,
-#     )
-#     nitrate_contamination = forms.CheckboxSelect(
-#         label="Nitratbestet",
-#         field_name = 'nitrate_contamination', 
-#     )
-#     waterlog = forms.CheckboxSelect(
-#         label="Staunässe",
-#         field_name = 'waterlog', 
-#     )
-
-
-    
-#     def __init__(self, *args, queryset=None, **kwargs):
-#         super().__init__(*args, queryset=queryset, **kwargs)
-
-#         if queryset is not None:
-#             land_use_ids = set(
-#                 queryset.exclude(landuse_1__isnull=True).values_list('landuse_1', flat=True)
-#             ).union(
-#                 queryset.exclude(landuse_2__isnull=True).values_list('landuse_2', flat=True)
-#             ).union(
-#                 queryset.exclude(landuse_3__isnull=True).values_list('landuse_3', flat=True)
-#             )
-
-#             land_uses = Landuse.objects.filter(id__in=land_use_ids)
-#             choices = sorted([(lu.id, lu.de or f"Landuse {lu.id}") for lu in land_uses])
-#             self.filters['land_use'].extra['choices'] = choices
-#             # choices = sorted([(lu, lu) for lu in land_use_values])
-#             # self.filters['land_use'].extra['choices'] = choices
-
-
-#         for name, filter_ in self.filters.items():
-#             if isinstance(filter_, MinMaxRangeFilter):
-#                 filter_.queryset_for_bounds = queryset
-#                 filter_.set_bounds()
-
-#         prefix = 'sink'
-#         for name, field in self.form.fields.items():
-#             field.widget.attrs['id'] = f"{prefix}_{name}"
-#             field.widget.attrs['name'] = f"{prefix}_{name}"
-#             field.widget.attrs['prefix'] = prefix
-
-
-#     class Meta:
-#         model = Sink
-#         fields = ['area', 'volume', 'depth', 'index_soil', 'land_use']
-#         form = SliderFilterForm
-
 
 class SinkFilter(FilterSet):
     area = MinMaxRangeFilter(

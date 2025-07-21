@@ -539,6 +539,7 @@ def filter_sinks(request):
         }
         print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
+    
 
 def filter_enlarged_sinks(request):
     try:

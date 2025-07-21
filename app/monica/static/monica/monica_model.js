@@ -1008,7 +1008,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'Yield': true,
             'Irrig': true,
             // 'organ': false,
-            'AbBiom': true,
+            'AbBiom': false,
             'PASW_AVG': true,
             // 'PASW_2': true,
             // 'PASW_3': true,

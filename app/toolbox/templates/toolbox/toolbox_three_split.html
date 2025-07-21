@@ -45,7 +45,7 @@
 <div id="toolboxButtons" class="overflow-auto row">
     <card class="card mb-3 col-3">
         <div class="card-header">
-            <button id="infiltrationGo" class="btn btn-outline-secondary mt-3">Grundwasseranreicherung durch Versickerung</button>
+            <button id="startInfiltration" class="btn btn-outline-secondary mt-3"><b>Grundwasseranreicherung durch Versickerung</b></button>
         </div>
         <div class="card-body">
             <p>Das Tool bietet eine Auswahl von vorbewerteten Standorten zur Anreicherung des Grundwassers durch naturnahe und baulich angelegte Versickerungsmaßnahmen.</p>
@@ -53,7 +53,7 @@
     </card>
     <card class="card mb-3 col-3">
         <div class="card-header">
-            <button id="injectionGo" class="btn btn-outline-secondary mt-3">Grundwasseranreicherung durch  Injektion</button>
+            <button id="startInjection" class="btn btn-outline-secondary mt-3"><b>Grundwasseranreicherung durch  Injektion</b></button>
         </div>
         <div class="card-body">
             <p>Das Tool ermöglicht die Auswahl von Standorten zur Anreicherung des Grundwassers mittels Injektion in die tiefer gelegenen gespannten Grundwasserleiter.</p>
@@ -64,14 +64,14 @@
         <div class="dropdown">
             <div class="card-header">
                 <button class="btn btn-outline-secondary mt-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Gewässertool
+                    <b>Gewässertool</b>
                 </button>
             
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="#">Oberflächengewässer</a></li>
-                    <li><a class="dropdown-item" href="#">Senken</a></li>
-                    <li><a class="dropdown-item" href="#">Gewässerentwicklungskonzepte</a></li>
-                    <li><a class="dropdown-item" href="#">Ehemalige Feuchtgebiete</a></li>
+                    <li><a id="startSurfaceWaters" class="dropdown-item" href="#">Oberflächengewässer</a></li>
+                    <li><a id="startSiekerSinks" class="dropdown-item" href="#">Senken</a></li>
+                    <li><a id="startWaterDevelopment" class="dropdown-item" href="#">Gewässerentwicklungskonzepte</a></li>
+                    <li><a id="startFormerWetlands" class="dropdown-item" href="#">Ehemalige Feuchtgebiete</a></li>
                 </ul>
             </div>
         </div>
@@ -82,7 +82,7 @@
     </card>
     <card class="card mb-3 col-3">
         <div class="card-header">
-            <button id="drainagge" class="btn btn-outline-secondary mt-3">Gesteuerte Drainagen</button>
+            <button id="startDrainage" class="btn btn-outline-secondary mt-3"><b>Gesteuerte Drainagen</b></button>
         </div>
         <div class="card-body">
             <p>Das Tool ermöglicht die Planung von Maßnahmen zum Wasserrückhalt durch den Einsatz von gesteuerten Drainagen.</p>

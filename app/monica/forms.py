@@ -1209,7 +1209,7 @@ class WorkstepNDemandFertilizationForm(forms.ModelForm):
 
     class Meta:
         model = WorkstepNDemandFertilization   
-        fields = ['days', 'after', 'n_demand', 'depth']
+        fields = ['date','days', 'after', 'n_demand', 'depth']
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)

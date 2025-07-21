@@ -23,24 +23,23 @@
           $('.panel-top').css('height', startHeightTop + deltaY + 'px');
           $('.panel-bottom').css('height', startHeightBottom - deltaY + 'px');
 
-          if (window.map) {
-            console.log('Resizing map due to corner resize');
-            clearTimeout(window.mapResizeTimeout);
-            window.mapResizeTimeout = setTimeout(() => {
-              window.map.invalidateSize();
-            }, 100);
-          }
+          // if (window.map) {
+          //   console.log('Resizing map due to corner resize');
+          //   clearTimeout(window.mapResizeTimeout);
+          //   window.mapResizeTimeout = setTimeout(() => {
+          //     window.map.invalidateSize();
+          //   }, 100);
+          // }
 
         });
     
         $(document).on('mouseup.cornerResize', function () {
           $(document).off('.cornerResize');
+          
         });
       });
 
     
-
-
     $(".panel-left").resizable({
       handleSelector: ".vertical-splitter",
       resizeHeight: false
@@ -51,19 +50,6 @@
       handleSelector: ".horizontal-splitter",
       resizeWidth: false
     });
-
-    // $('#toggleBottomFullscreen').on('click', function () {
-    //   if ($('.panel-top').css('height') === '0px') {
-    //     console.log('full');
-    //     $('.panel-top').css('height', '60%');
-    //     $('#toggleBottomFullscreen').html('<i class="bi bi-arrows-fullscreen"></i>');
-    //   } else {
-    //     $('.panel-top').css('height', '0%');
-    //     $('#toggleBottomFullscreen').html('<i class="bi bi-fullscreen-exit"></i>');
-    //   }
-    // });
-
-  
 
   
     $('#reopenBottomPanelButton').on('click', function () {

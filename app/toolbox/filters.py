@@ -145,7 +145,7 @@ class SinkFilter(FilterSet):
         )
     volume = MinMaxRangeFilter(model=Sink, field_name='volume', label="Volume (m³)")
     depth = MinMaxRangeFilter(model=Sink, field_name='depth', label="Depth (m)")
-    index_soil = MinMaxRangeFilter(model=Sink, field_name='index_soil', label="Soil Index (%)")
+    # index_soil = MinMaxRangeFilter(model=Sink, field_name='index_soil', label="Soil Index (%)")
 
     land_use = MultipleChoiceFilter(
         label="Land Use",
@@ -188,7 +188,7 @@ class SinkFilter(FilterSet):
 
     class Meta:
         model = Sink
-        fields = ['area', 'volume', 'depth', 'index_soil', 'land_use']
+        fields = ['area', 'volume', 'depth',  'land_use']
         form = SliderFilterForm
 
 class EnlargedSinkFilter(FilterSet):
@@ -197,7 +197,7 @@ class EnlargedSinkFilter(FilterSet):
     depth = MinMaxRangeFilter(model=EnlargedSink, field_name='depth', label="Depth (m)")
     volume_construction_barrier = MinMaxRangeFilter(model=EnlargedSink, field_name='volume_construction_barrier', label="Volume Construction Barrier (m³)")
     volume_gained = MinMaxRangeFilter(model=EnlargedSink, field_name='volume_gained', label="Volume Gained (m³)")
-    index_soil = MinMaxRangeFilter(model=EnlargedSink, field_name='index_soil', label="Soil Index (%)")
+    # index_soil = MinMaxRangeFilter(model=EnlargedSink, field_name='index_soil', label="Soil Index (%)")
 
     # Placeholder for land_use — choices will be set dynamically
     land_use = MultipleChoiceFilter(
@@ -240,7 +240,7 @@ class EnlargedSinkFilter(FilterSet):
 
     class Meta:
         model = EnlargedSink
-        fields = ['area', 'volume', 'depth', 'volume_construction_barrier', 'volume_gained', 'index_soil', 'land_use']
+        fields = ['area', 'volume', 'depth', 'volume_construction_barrier', 'volume_gained',  'land_use']
         form = SliderFilterForm
 
 

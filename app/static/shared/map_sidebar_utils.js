@@ -63,6 +63,9 @@ export const baseMaps = {
     position: "bottomright",
   }).addTo(map);
 
+  window.addEventListener('resize', () => {
+    map.invalidateSize();
+  });
   return map;
   };
 
@@ -568,6 +571,8 @@ $('#toggleBottomFullscreen').on('click', function () {
       $('#main-navbar').show();
       $('.leaflet-control-container').show(); 
       $('#toggleBottomFullscreen').html('<i class="bi bi-arrows-fullscreen"></i>');
+      map.invalidateSize();
+
     } else {
       // Enter fullscreen mode - shrink top, hide left
       $('.panel-top').css('height', '20%'); // or even '5%' if you want it smaller

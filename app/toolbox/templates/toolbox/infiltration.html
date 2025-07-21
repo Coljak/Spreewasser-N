@@ -90,7 +90,7 @@
                     <div id="enlarged-sink-table-container"></div>
                     {% comment %} <button id="btnCntinueWithEnlargedSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks ">Auswahl bewerten</button> {% endcomment %}
                     {% comment %} <button id="btnShowEnlargedSinkOutlines" type="button" class="btn btn-primary mt-3 show-enlarged-sink-outlines">Vergrößerte Senken anzeigen</button> {% endcomment %}
-                    <button id="btnShowEmbankments" type="button" class="btn btn-primary mt-3 show-embankment-outlines">Verwallungsstrukturen anzeigen</button>
+                    {% comment %} <button id="btnShowEmbankments" type="button" class="btn btn-primary mt-3 show-embankment-outlines">Verwallungsstrukturen anzeigen</button> {% endcomment %}
                 </div>
             </div>
         </div>
@@ -131,7 +131,7 @@
         </div>
 
         <div id="tabWeightingForms" class="tab-pane">
-            <h2 class="title">Gesamtgewichtung</h2>
+            <h2 class="title">Gewichtung der Senkeneigenschaften</h2>
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Gesamtgewichtung</h5>
@@ -140,10 +140,10 @@
                     </div>
                 </div>
             </div>
-            <h2 class="title">Gewichtung der Bodeneignung</h2>
+            
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Gewichtung Ackerland</h5>
+                    <h5 class="card-title">Gewichtung der Bodeneignung bei Ackerland</h5>
                     <div class="card-body">
                         {% crispy agriculture_weighting %}            
                     </div>
@@ -151,7 +151,7 @@
             </div>
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Gewichtung Wälder und diverse Vegetation</h5>
+                    <h5 class="card-title">Gewichtung der Bodeneignung bei Wäldern und diverser Vegetation</h5>
                     <div class="card-body">
                         {% crispy forest_weighting %}            
                     </div>
@@ -159,7 +159,7 @@
             </div>
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Gewichtung Grasland</h5>
+                    <h5 class="card-title">Gewichtung der Bodeneignung bei Grasland</h5>
                     <div class="card-body">
                         {% crispy grassland_weighting %}            
                     </div>
@@ -189,7 +189,7 @@
                             <th>Senkeneignung</th>
                             <th>Wasserkörper</th>
                             <th>Länge Zuleitung(m)</th>
-                            <th>Bewertung Zuleitung</th>
+                            <th>Eignung Zuleitung</th>
                             <th>Gesamtbewertung</th>
                             <th></th>
                             <th></th>

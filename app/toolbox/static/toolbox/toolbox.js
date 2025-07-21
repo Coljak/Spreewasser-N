@@ -57,8 +57,8 @@ export class Infiltration {
         this.sink_volume_max = infiltration.sink_volume_max ?? null;
         this.sink_depth_min = infiltration.sink_depth_min ?? null;
         this.sink_depth_max = infiltration.sink_depth_max ?? null;
-        this.sink_index_soil_min = infiltration.sink_index_soil_min ?? null;
-        this.sink_index_soil_max = infiltration.sink_index_soil_max ?? null;
+        // this.sink_index_soil_min = infiltration.sink_index_soil_min ?? null;
+        // this.sink_index_soil_max = infiltration.sink_index_soil_max ?? null;
         this.sink_land_use = infiltration.sink_land_use ?? [];
 
         this.selected_sinks = infiltration.selected_sinks ?? [];
@@ -73,8 +73,8 @@ export class Infiltration {
         this.enlarged_sink_volume_construction_barrier_max = infiltration.enlarged_sink_volume_construction_barrier_max ?? null;
         this.enlarged_sink_volume_gained_min = infiltration.enlarged_sink_volume_gained_min ?? null;
         this.enlarged_sink_volume_gained_max = infiltration.enlarged_sink_volume_gained_max ?? null;
-        this.enlarged_sink_index_soil_min = infiltration.enlarged_sink_index_soil_min ?? null;
-        this.enlarged_sink_index_soil_max = infiltration.enlarged_sink_index_soil_max ?? null;
+        // this.enlarged_sink_index_soil_min = infiltration.enlarged_sink_index_soil_min ?? null;
+        // this.enlarged_sink_index_soil_max = infiltration.enlarged_sink_index_soil_max ?? null;
         this.enlarged_sink_land_use = infiltration.enlarged_sink_land_use ?? [];
 
         this.selected_enlarged_sinks = infiltration.selected_enlarged_sinks ?? [];

@@ -125,7 +125,7 @@ def toolbox_dashboard(request):
     return render(request, 'toolbox/toolbox_three_split.html', context)
 
 
-
+########## ZALF TOOLBOX ########################
 
 def load_infiltration_gui(request, user_field_id):
     if user_field_id == "null":
@@ -471,7 +471,7 @@ def filter_sinks(request):
     filters = add_range_filter(filters, project['infiltration'], 'sink_area', 'area')
     filters = add_range_filter(filters, project['infiltration'], 'sink_volume', 'volume')
     filters = add_range_filter(filters, project['infiltration'], 'sink_depth', 'depth')
-    filters = add_range_filter(filters, project['infiltration'], 'sink_index_soil', 'index_soil')
+    # filters = add_range_filter(filters, project['infiltration'], 'sink_index_soil', 'index_soil')
     sinks = sinks.filter(filters)
     
     land_use_values = project['infiltration'].get('sink_land_use', [])
@@ -515,17 +515,17 @@ def filter_sinks(request):
                 "depth": round(sink.depth, 2),
                 "area": round(sink.area, 2),
                 "volume": round(sink.volume, 2),
-                "index_proportions": str(round(sink.index_proportions * 100, 1)) + '%',
-                "index_soil": str(round(sink.index_soil * 100, 1)) + "%",
+                "index_proportions": round(sink.index_proportions * 100, 1),
+                "index_soil": round(sink.index_soil * 100, 1),
                 "land_use_1": sink.landuse_1.de,
                 "land_use_2": sink.landuse_2.de if sink.landuse_2 else None,
                 "land_use_3": sink.landuse_3.de if sink.landuse_3 else None,
-                "index_soil": str(round(index_soil * 100, 1)) + "%",
+                "index_soil": round(index_soil * 100, 1),
                 "soil_points": sink.soil_points,
-                "index_feasibility": str(round(sink.index_feasibility * 100, 1)) + '%' if sink.index_feasibility else None,
+                "index_feasibility": round(sink.index_feasibility * 100, 1) if sink.index_feasibility else None,
                 "hydrogeology": sink.aquifer.name_de if sink.aquifer else None,
-                "index_hydrogeology": str(sink.index_hydrogeology * 100) + '%' if sink.index_hydrogeology else None,
-                "index_sink_total": str(index_sink_total) + '%'
+                "index_hydrogeology": sink.index_hydrogeology * 100 if sink.index_hydrogeology else None,
+                "index_sink_total": index_sink_total
 
             }
             features.append(geojson)
@@ -556,7 +556,7 @@ def filter_enlarged_sinks(request):
     filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_depth', 'depth')
     filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_volume_construction_barrier', 'volume_construction_barrier')
     filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_volume_gained', 'volume_gained')
-    filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_index_soil', 'index_soil')
+    # filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_index_soil', 'index_soil')
     sinks = sinks.filter(filters)
 
 
@@ -602,17 +602,17 @@ def filter_enlarged_sinks(request):
                 "volume": round(sink.volume, 2),
                 "volume_construction_barrier": round(sink.volume_construction_barrier, 2),
                 "volume_gained": round(sink.volume_gained, 2),
-                "index_proportions": str(round(sink.index_proportions * 100, 1)) + '%',
+                "index_proportions": round(sink.index_proportions * 100, 1),
                 "land_use_1": sink.landuse_1.de,
                 "land_use_2": sink.landuse_2.de if sink.landuse_2 else None,
                 "land_use_3": sink.landuse_3.de if sink.landuse_3 else None,
                 "land_use_4": sink.landuse_4.de if sink.landuse_4 else None,
-                "index_soil": str(round(index_soil * 100, 1)) + "%",
+                "index_soil": round(index_soil * 100, 1),
                 "soil_points": sink.soil_points,
-                "index_feasibility": str(round(sink.index_feasibility * 100, 1)) + '%' if sink.index_feasibility else None,
+                "index_feasibility": round(sink.index_feasibility * 100, 1) if sink.index_feasibility else None,
                 "hydrogeology": sink.aquifer.name_de if sink.aquifer else None,
-                "index_hydrogeology": str(sink.index_hydrogeology * 100) + '%' if sink.index_hydrogeology else None,
-                "index_sink_total": str(index_sink_total) + '%'
+                "index_hydrogeology": sink.index_hydrogeology * 100 if sink.index_hydrogeology else None,
+                "index_sink_total": index_sink_total
 
             }
             features.append(geojson)
@@ -757,125 +757,6 @@ def filter_lakes(request):
         print('feature_collection:', feature_collection)
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
 
-# def calculate_index_for_selection(request):
-#     """
-#     Takes the selected sinks and  calculates 
-#     """
-#     if request.method == 'POST':
-#         try:
-#             project = json.loads(request.body)
-#         except json.JSONDecodeError:
-#             return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        
-#         # get weightings from the project
-#         weighting_overall_usability=int(project['infiltration'].get('weighting_overall_usability', 20))/100
-#         weighting_soil_index=int(project['infiltration'].get('weighting_soil_index', 80))/100
-#         weighting_forest_field_capacity = int(project['infiltration'].get('weighting_forest_field_capacity', 33.3))/100
-#         weighting_forest_hydraulic_conductivity_1m= int(project['infiltration'].get('weighting_forest_hydraulic_conductivity_1m', 33.3))/100
-#         weighting_forest_hydraulic_conductivity_2m= int(project['infiltration'].get('weighting_forest_hydraulic_conductivity_2m', 33.3))/100
-#         weighting_agriculture_field_capacity = int(project['infiltration'].get('weighting_agriculture_field_capacity', 33.3))/100
-#         weighting_agriculture_hydromorphy = int(project['infiltration'].get('weighting_agriculture_hydromorphy', 33.3))/100
-#         weighting_agriculture_soil_type= int(project['infiltration'].get('weighting_agriculture_soil_type', 33.3))/100
-#         weighting_grassland_field_capacity = int(project['infiltration'].get('weighting_grassland_field_capacity', 25))/100
-#         weighting_grassland_hydromorphy = int(project['infiltration'].get('weighting_grassland_hydromorphy', 25))/100
-#         weighting_grassland_soil_type = int(project['infiltration'].get('weighting_grassland_soil_type', 25))/100
-#         weighting_grassland_soil_water_ratio=int(project['infiltration'].get('weighting_grassland_soil_water_ratio', 25))/100
-
-
-#         sink_ids = project['infiltration'].get('selected_sinks', [])
-#         sinks = models.Sink.objects.filter(id__in=sink_ids)
-#         enlarged_sink_ids = project['infiltration'].get('selected_enlarged_sinks', [])
-#         enlarged_sinks = models.EnlargedSink.objects.filter(id__in=enlarged_sink_ids)
-#         if sinks.count() == 0 and enlarged_sinks.count() == 0:
-#             return JsonResponse({'message': {'success': False, 'message': 'No sinks selected.'}})
-
-#         def calculate_indices(sinks, sinkType='sink'):
-#             sink_results = {}
-#             for sink in sinks:
-#                 if sinkType == 'sink':
-#                     soil_properties = models.SinkSoilProperties.objects.filter(sink=sink).order_by('-percent_of_total_area')
-#                 elif sinkType == 'enlarged_sink':
-#                     soil_properties = models.EnlargedSinkSoilProperties.objects.filter(enlarged_sink=sink).order_by('-percent_of_total_area')
-                
-                
-#                 print(len(soil_properties))
-#                 sink_results[sink.id] = {
-#                     'soil_profiles': []
-#                     }
-#                 if len(soil_properties) > 0:
-#                     index_be_total = 0
-#                     for sp in soil_properties:
-#                         print(sp)
-                        
-#                         index_1 = 0
-#                         index_2 = 0
-                        
-#                         property_data = sp.soil_properties
-#                         bool_general = (not property_data.nitrate_contamination) and (not property_data.waterlog)
-#                         index_1 = bool_general * property_data.groundwater_distance.rating_index
-#                         print('index_1', index_1)
-                        
-                        
-#                         if property_data.agricultural_landuse.name == 'grassland': # id=1
-#                             index_2 = \
-#                                 weighting_grassland_field_capacity * property_data.fieldcapacity.rating_index + \
-#                                 weighting_grassland_hydromorphy * property_data.hydromorphy.rating_index + \
-#                                 weighting_grassland_soil_type * property_data.soil_texture.rating_index + \
-#                                 weighting_grassland_soil_water_ratio * property_data.wet_grassland.rating_index
-
-#                         elif property_data.agricultural_landuse.name == 'no_agricultural_use': # id=2
-#                             print('weighting_forest_field_capacity', weighting_forest_field_capacity)
-#                             index_2 = \
-#                                 weighting_forest_field_capacity * property_data.fieldcapacity.rating_index + \
-#                                 weighting_forest_hydraulic_conductivity_1m * property_data.hydraulic_conductivity_1m_rating + \
-#                                 weighting_forest_hydraulic_conductivity_2m * property_data.hydraulic_conductivity_2m_rating
-
-#                         else: #id = 3, fields
-#                             print('weighting_agriculture_hydromorphy', weighting_agriculture_hydromorphy)
-#                             print('props.hydromorphy.rating_index', property_data.hydromorphy.rating_index)
-#                             index_2 = \
-#                                 weighting_agriculture_field_capacity * property_data.fieldcapacity.rating_index + \
-#                                 weighting_agriculture_hydromorphy * property_data.hydromorphy.rating_index + \
-#                                 weighting_agriculture_soil_type * property_data.soil_texture.rating_index
-                                
-#                         print('index_2', index_2)
-#                         index_be = weighting_overall_usability * index_1 + weighting_soil_index * index_2
-#                         sink_results[sink.id]['soil_profiles'].append({
-#                             'agricultural_landuse': property_data.agricultural_landuse.name,
-#                             'soil_profile_percentage': round(sp.percent_of_total_area, 2),
-#                             'groundwater_distance_rating_index': property_data.groundwater_distance.rating_index,
-#                             'index_1': round(index_1, 2),
-#                             'index_2': round(index_2, 2),
-#                             'index_be': round(index_be, 2),
-#                             })
-
-#                         index_be_total += index_be * sp.percent_of_total_area
-#                     sink_results[sink.id]['index_total'] = round(index_be_total, 2)
-
-#                     print('index_be_total', index_be_total)
-                        
-#                 else:
-#                     print('error')
-            
-#             return sink_results
-
-
-#         sink_results = calculate_indices(sinks)
-#         enlarged_sink_results = calculate_indices(enlarged_sinks, sinkType='enlarged_sink')
-#         # Perform calculations here
-
-
-#         # Create a response dictionary with the calculated values
-#         response_data = {
-#             'message': {
-#                 'success': True,
-#                 'message': f'Calculated index for selected sinks.'
-#             },
-#             'sinks': sink_results,
-#             'enlarged_sinks': enlarged_sink_results,
-#         }
-
-#         return JsonResponse(response_data)
 
 def load_nuts_polygon(request, entity, polygon_id):
     if request.method == 'GET':
@@ -1157,12 +1038,12 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
             line_geom.transform(4326)
             length_m = line.length  # Already in meters (EPSG:25833 is a projected CRS)
 
-            if length_m >= 1000:
-                rating_length = 5
-            elif length_m > 2000:
+            if length_m >= 2000:
                 rating_length = 0
+            elif length_m >= 1000:
+                rating_length = 5
             else:
-                rating_length = int(100 - (1000 - length_m)/10)
+                rating_length = int((1000 - length_m)/10)
 
             is_enlarged_sink = isinstance(sink, models.EnlargedSink)
             result = {
@@ -1174,8 +1055,8 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
                 'waterbody_name': waterbody_name,
                 'line': json.loads(line_geom.geojson),
                 'length_m': round(length_m, 2),
-                'rating_connection': str(rating_length) + '%',
-                'index_total': str(rating_length) + '%'
+                'rating_connection': rating_length,
+                'index_total': rating_length
             }
             if is_enlarged_sink:
                 if sink.sink_embankment.first():
@@ -1233,4 +1114,63 @@ def get_elevation_profile(line_geojson):
         return {'success': True, 'data': elevation_data}
     else:
         return {'success': False, 'error': f'Error{response.status_code}: {response.text}'}
+    
+
+
+
+def load_surface_water_gui(request, user_field_id):
+    if user_field_id == "null":
+        user_field_id = None
+    else:
+        user_field_id = int(user_field_id)
+    project_select_form = forms.ToolboxProjectSelectionForm()
+    user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
+    if user_field is None:
+        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
+    
+    sinks = models.Sink.objects.filter(
+        centroid__within=user_field.geom
+    )
+    enlarged_sinks = models.EnlargedSink.objects.filter(
+        centroid__within=user_field.geom
+    )
+    if sinks.count() > 0 or enlarged_sinks.count() > 0:
+        streams = models.Stream.objects.filter(
+            geom__within=user_field.geom
+        )
+        lakes = models.Lake.objects.filter(
+            geom__within=user_field.geom
+        )
+
+        lake_form = LakeFilter(request.GET, queryset=lakes)
+        stream_form = StreamFilter(request.GET, queryset=streams)
+        sink_form = SinkFilter(request.GET, queryset=sinks)
+        print("Queryset Sinks", sinks.count())
+        enlarged_sink_form = EnlargedSinkFilter(request.GET, queryset=enlarged_sinks)
+
+        overall_weighting = forms.OverallWeightingsForm()
+        forest_weighting = forms.WeightingsForestForm()
+        agriculture_weighting = forms.WeightingsAgricultureForm()
+        grassland_weighting = forms.WeightingsGrasslandForm()
+
+
+        html = render_to_string('toolbox/infiltration.html', {
+            # 'sink_form': sink_form, 
+            # 'enlarged_sink_form': enlarged_sink_form,
+            'project_select_form': project_select_form,
+            'sink_filter': sink_form,
+            'enlarged_sink_filter': enlarged_sink_form,
+            'streams_form': stream_form,
+            'lakes_form': lake_form,
+            'overall_weighting': overall_weighting,
+            'forest_weighting': forest_weighting,
+            'agriculture_weighting': agriculture_weighting,
+            'grassland_weighting': grassland_weighting, 
+        }, request=request) 
+
+        return JsonResponse({'success': True, 'html': html})
+    else:
+        return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine Senken bekannt.'})
+
+
 

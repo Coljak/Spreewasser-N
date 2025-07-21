@@ -548,7 +548,7 @@ def create_automatic_irrigation_envs(envs, data):
     simulation_settings = [
         # UserSimulationSettings.objects.get(id=30).to_json(),
         monica_models.UserSimulationSettings.objects.get(id=31).to_json(),
-        monica_models.UserSimulationSettings.objects.get(id=32).to_json()
+        # monica_models.UserSimulationSettings.objects.get(id=32).to_json()
     ]
     for sim in simulation_settings:
         # sim["AutoIrrigationParams"]["startDate"] = today.strftime('%Y-%m-%d')

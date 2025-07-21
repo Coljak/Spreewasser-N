@@ -2,8 +2,6 @@
 This script belongs to the timelapse page. It is using leaflet.timeDimension
 https://github.com/socib/Leaflet.TimeDimension/blob/master/README.md#lcontroltimedimension
 and the bootstrap datepicker https://bootstrap-datepicker.readthedocs.io/en/latest/
-
-This javaScript is the derived from map_thredds....js in the django app swn
 */
 const palettes = [ "default", "default-inv", "div-BrBG", "div-BrBG-inv", "div-BuRd", "div-BuRd-inv", "div-BuRd2", "div-BuRd2-inv", "div-PRGn", "div-PRGn-inv", "div-PiYG", "div-PiYG-inv", "div-PuOr", "div-PuOr-inv", "div-RdBu", "div-RdBu-inv", "div-RdGy", "div-RdGy-inv", "div-RdYlBu", "div-RdYlBu-inv", "div-RdYlGn", "div-RdYlGn-inv", "div-Spectral", "div-Spectral-inv", "psu-inferno", "psu-inferno-inv", "psu-magma", "psu-magma-inv", "psu-plasma", "psu-plasma-inv", "psu-viridis", "psu-viridis-inv", "seq-BkBu", "seq-BkBu-inv", "seq-BkGn", "seq-BkGn-inv", "seq-BkRd", "seq-BkRd-inv", "seq-BkYl", "seq-BkYl-inv", "seq-BlueHeat", "seq-BlueHeat-inv", "seq-Blues", "seq-Blues-inv", "seq-BuGn", "seq-BuGn-inv", "seq-BuPu", "seq-BuPu-inv", "seq-BuYl", "seq-BuYl-inv", "seq-GnBu", "seq-GnBu-inv", "seq-Greens", "seq-Greens-inv", "seq-Greys", "seq-Greys-inv", "seq-GreysRev", "seq-GreysRev-inv", "seq-Heat", "seq-Heat-inv", "seq-OrRd", "seq-OrRd-inv", "seq-Oranges", "seq-Oranges-inv", "seq-PuBu", "seq-PuBu-inv", "seq-PuBuGn", "seq-PuBuGn-inv", "seq-PuRd", "seq-PuRd-inv", "seq-Purples", "seq-Purples-inv", "seq-RdPu", "seq-RdPu-inv", "seq-Reds", "seq-Reds-inv", "seq-YlGn", "seq-YlGn-inv", "seq-YlGnBu", "seq-YlGnBu-inv", "seq-YlOrBr", "seq-YlOrBr-inv", "seq-YlOrRd", "seq-YlOrRd-inv", "seq-cubeYF", "seq-cubeYF-inv", "x-Ncview", "x-Ncview-inv", "x-Occam", "x-Occam-inv", "x-Rainbow", "x-Rainbow-inv", "x-Sst", "x-Sst-inv",]
 
@@ -38,55 +36,27 @@ const palette_and_min_max = {
         'style': 'default-scalar/div-RdYlBu-inv',
         'valueRange': '-30, 40',
     },
-    'AWD_0-40cm': {
+    'awd': {
         'style': 'default-scalar/div-BrBG',
         'valueRange': '-80, 80',
     },
-    'AWD_0-100cm': {
-        'style': 'default-scalar/div-BrBG',
-        'valueRange': '-80, 80',
-    },
-    'AWD_0-200cm': {
-        'style': 'default-scalar/div-BrBG',
-        'valueRange': '-80, 80',
-    },
-    'AWP_0-40cm': {
+    'awp': {
         'style': 'default-scalar/seq-Heat-inv',
         'valueRange': '0, 100',
     },
-    'AWP_0-100cm': {
-        'style': 'default-scalar/seq-Heat-inv',
-        'valueRange': '0, 100',
-    },
-    'AWP_0-200cm': {
-        'style': 'default-scalar/seq-Heat-inv',
-        'valueRange': '0, 100',
-    },
-    'AWR_0-40cm': {
+    'awr': {
         'style': 'default-scalar/div-BrBG',
         'valueRange': '0, 100',
     },
-    'AWR_0-100cm': {
-        'style': 'default-scalar/div-BrBG',
-        'valueRange': '0, 100',
-    },
-    'AWR_0-200cm': {
-        'style': 'default-scalar/div-BrBG',
-        'valueRange': '0, 100',
-    },
-    'DFM10H': {
+    'dfm10h': {
         'style': 'default-scalar/div-RdYlGn-inv',
         'valueRange': '0, 100',
     },
-    'FWI_GenZ': {
+    'fwi': {
         'style': 'default-scalar/div-RdYlBu-inv',
         'valueRange': '1, 6',
     },
-    'HI': {
-        'style': 'default-scalar/seq-Heat-inv',
-        'valueRange': '0, 60',
-    },    
-    'UTCI': {
+    'utci': {
         'style': 'default-scalar/seq-Heat-inv',
         'valueRange': '0, 60',
     },
@@ -94,7 +64,17 @@ const palette_and_min_max = {
 
 
 var ncmlMetadata;
+// TODO the lower and upper range is only for development purposes, also the style selector will not be needed in the final version
+var lowerRangeinput = document.getElementById('lowerRange');
+var upperRangeinput = document.getElementById('upperRange');
+var styleSelector = document.getElementById('styleSelector');
 
+// add all possible styles to the styleSelector
+palettes.forEach(palette => {
+    var option = document.createElement("option");
+    option.text = palette;
+    styleSelector.add(option);
+});
 
 
 // Format the yyyy-mm-dd date to dd/mm/yyyy as required for the bootstrap-datepicker
@@ -109,7 +89,7 @@ const dateFormatter = function(date) {
 const formatDatePicker = function(startDate, endDate) {
     $('.input-daterange').datepicker({
         language: 'de-DE',
-        format: "dd.mm.yyyy",
+        format: "dd/mm/yyyy",
         startDate: startDate,
         endDate: endDate,
         weekStart: 1,
@@ -132,13 +112,16 @@ loadNetCDFButton.addEventListener('click', function() {
     catch (error) {console.log('Deleting old time dimension items failed')  }
         
     $('.info').remove();
-    var netCdf = datasetSelector.value;
-    var startDate = $('#startDatePicker').datepicker('getDate');
-    var endDate = $('#endDatePicker').datepicker('getDate');
-    var variable = netcdfVariableSelector.value;
+    var netCdf = 'zalf_pr_amber_2022_v1-0_cf_v6.nc';
+    var startDate = new Date('01-01-2022');
+    var endDate = new Date('12-31-2022');
+    var variable = 'pr';
     console.log('startDate', startDate);
     console.log('endDate', endDate);
-    let style = palette_and_min_max[variable].style;
+    let style;
+    if (styleSelector.value == 'default') {
+        style = palette_and_min_max[variable].style;
+    } else { style = 'default-scalar/'+ styleSelector.value; }
     params = {
         'netCdf': netCdf,
         'variable': variable,
@@ -153,7 +136,46 @@ loadNetCDFButton.addEventListener('click', function() {
     map.timeDimension.setCurrentTimeIndex(0);
 })
 
+document.addEventListener('DOMContentLoaded', function() {
 
+    // Get the meatdata of the chosen dataset and update the variable selector
+    datasetSelector.addEventListener('change', (event) => {
+        $('.input-daterange').datepicker('destroy');
+        netcdfVariableSelector.innerHTML = '';
+        
+        const dataset = event.target.value;
+        console.log('dataset', dataset);
+        fetch(`/Thredds/get_ncml_metadata/${dataset}`)
+            .then(response => response.text())
+            .then(data => {
+                console.log('data', data);
+                var data_json = JSON.parse(data);
+                console.log('data_json', data_json);
+
+                // formatting the start and end date of the dataset for the datepicker
+                var formattedStartDate = dateFormatter(data_json.global_attributes.time_coverage_start_ymd);
+                var formattedEndDate = dateFormatter(data_json.global_attributes.time_coverage_end_ymd);
+                formatDatePicker(formattedStartDate, formattedEndDate)
+
+                Object.keys(data_json.variables).forEach(variable => {
+                    console.log(variable);
+                    var option = document.createElement("option");
+                                    option.text = variable;
+                                    netcdfVariableSelector.add(option);
+                });
+                var selectedVariable = netcdfVariableSelector.value;
+                lowerRangeinput.value = data_json.variables[selectedVariable].attributes.minimum_value;
+                upperRangeinput.value = data_json.variables[selectedVariable].attributes.maximum_value;
+
+                attribution = data_json.variables[selectedVariable].attributes.long_name;
+                ncmlMetadata = data_json;
+
+
+                return data;
+            })
+        // initializeWms(dataset, style);
+    }); 
+});
 
 
 
@@ -180,8 +202,7 @@ function createBaseMap() {
         },
         contextmenu: true,
         contextmenuWidth: 140,
-        contextmenuItems: [
-            {
+        contextmenuItems: [{
             text: 'Show coordinates',
             callback: showCoordinates
         },
@@ -191,97 +212,16 @@ function createBaseMap() {
         }],
         center: [51.0, 10.0]
     });
-    window.addEventListener('resize', () => {
-        map.invalidateSize();
-    });
 
     return map;
 };
 function showCoordinates (e) {
-    alert(`Länge: ${e.latlng.lat}, Breite: ${e.latlng.lng}`);
+    alert(e.latlng);
 };
-
-function createChart(data) {
-    
-    let modalTile = document.getElementById('clim4castChartTitle');
-    modalTile.innerHTML = `${data.long_name} at ${data.latitude.toFixed(2)}, ${data.longitude.toFixed(2)}`;
-
-    // Ensure that the modal is shown before attempting to create the chart
-    let chartDiv = document.getElementById('clim4castChartDiv');
-    console.log(chartDiv);
-
-  
-
-    // Add a small delay before creating the chart to make sure the modal (and canvas) is fully visible
-    setTimeout(function() {
-        const chart = new Chart(chartDiv, {
-            type: "line",
-            data: {
-                labels: data.dates, // the date labels
-                datasets: [{
-                    label: `${data.long_name} ${data.units}`,
-                    data: data.values,
-                    borderColor: 'rgba(75, 192, 192, 1)', // Set color for the line
-                    fill: false // Set whether the area under the line should be filled
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'right' // Position of the legend
-                    }
-                },
-                scales: {
-                    x: {
-                        type: 'category',
-                        labels: data.dates, // the dates as labels on the x-axis
-                        title: {
-                            display: true,
-                            text: 'Dates'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: `${data.units}`
-                        }
-                    }
-                }
-            },
-        });
-
-        chart.update();
-    }, 200);  // Delay of 200ms (adjust if necessary)
-
-};
-
-
 
 function showData (e) {
-    let nc = datasetSelector.value;
-    let variable = netcdfVariableSelector.value;
-
-    // Optionally, add a loading spinner here instead of the text message
-
-    fetch(`/klim4cast/get_data/${nc}/${variable}/${e.latlng.lat}/${e.latlng.lng}`)
-    .then(response => response.json())
-    .then(data => {
-        console.log('data', data);
-
-        // Create the chart
-        createChart(data);
-
-        // Hide the loading message and show the modal
-        
-    })
-    .catch(error => {
-        console.error("Error fetching data: ", error);
-        modalBody.innerHTML = "<p>Error loading data.</p>";
-    });
+    alert(e.latlng, 'data will be shown at this point');
 };
-
-
 
 
 // Function to create WMS layer
@@ -321,13 +261,7 @@ function createLegendControl(legendUrl) {
 };
 
 // Main function to initialize the map
-const map = createBaseMap();
-map.addEventListener('click', function(e) {
-    console.log('MAP CLICKED');
-    var lat = e.latlng.lat;
-    var lng = e.latlng.lng;
-    console.log('You clicked the map at: ' + lat + ', ' + lng);
-});
+
 map.timeDimension.on('availabletimeschanged', function() {
     console.log('timeloading', );
         map.timeDimension.setCurrentTimeIndex(0);
@@ -342,16 +276,22 @@ let legendControl;
 
 async function initializeWms(params) {
     console.log('InitializeWms params', params);
-
+    try {
+        // map.timeDimension.unregisterSyncedLayer(timeDimensionWmsLayer);
+        console.log('timeDimensionWmsLayer unregistered');
+    } catch (error) {console.log('Deleting old time dimension items failed')  }
      try {
         map.removeLayer(timeDimensionWmsLayer);
         console.log('timeDimensionWmsLayer removed');
      } catch (error) {console.log('Deleting old time dimension items failed')  }
 
-    const wmsUrl = `/klim4cast/Timelapse/Thredds/wms/${params.netCdf}`;
+    const wmsUrl = `/Thredds/wms/${params.netCdf}`;
     
     const colorscaleRange = palette_and_min_max[params.variable].valueRange;
-    const attribution = ncmlMetadata.global_attributes.title;    
+    const attribution = ncmlMetadata.global_attributes.title;
+    console.log('attribution', attribution, 'colorscaleRange', colorscaleRange, 'layerName', params.variable, 'params.style', params.style);
+
+    
     const legendUrl = `${wmsUrl}?request=GetLegendGraphic&PALETTE=default&LAYERS=${params.variable}&transparent=TRUE&&colorscalerange=${colorscaleRange}&numcolorbands=100&styles=${params.style}`;
 
     legendControl = createLegendControl(legendUrl);
@@ -373,44 +313,3 @@ async function initializeWms(params) {
     
     
 };
-
-document.addEventListener('DOMContentLoaded', function() {
-
-    // Get the metadata of the chosen dataset and update the variable selector
-    // datasetSelector.addEventListener('change', (event) => {
-        $('.input-daterange').datepicker('destroy');
-        netcdfVariableSelector.innerHTML = '';
-        
-        // const dataset = event.target.value;
-        const dataset = datasetSelector.value;
-        console.log('dataset', dataset);
-        fetch(`/klim4cast/get_ncml_metadata/${dataset}`)
-            .then(response => response.text())
-            .then(data => {
-                console.log('data', data);
-                var data_json = JSON.parse(data);
-                console.log('data_json', data_json);
-
-                // formatting the start and end date of the dataset for the datepicker
-                var formattedStartDate = dateFormatter(data_json.global_attributes.time_coverage_start_ymd);
-                var formattedEndDate = dateFormatter(data_json.global_attributes.time_coverage_end_ymd);
-                // formatDatePicker(formattedStartDate, formattedEndDate)
-
-                Object.keys(data_json.variables).forEach(variable => {
-                    console.log(variable);
-                    var option = document.createElement("option");
-                                    option.text = data_json.variables[variable].attributes.description;
-                                    option.value = variable;
-                                    netcdfVariableSelector.add(option);
-                });
-                var selectedVariable = netcdfVariableSelector.value;
-
-                attribution = data_json.variables[selectedVariable].attributes.long_name;
-                ncmlMetadata = data_json;
-
-
-                return data;
-            })
-
-    // }); 
-});

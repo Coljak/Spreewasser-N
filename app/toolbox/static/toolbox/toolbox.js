@@ -18,36 +18,10 @@ function updateButtonState(project) {
             document.getElementById("btnGetInlets").classList.add('disabled');
             console.log('(hasSink && hasWaterbody)')
         };
-   
-        // if (hasSink) {
-        //     document.getElementById("btnContinueWithSinkSelection").classList.remove('disabled');
-        //     // document.getElementById("btnShowSinkOutlines").classList.remove('disabled');
+    }
+};
 
-        //     // document.getElementById("btnGetInlets").disabled = false;
-        // }
-        // else {
-        //     document.getElementById("btnContinueWithSinkSelection").classList.add('disabled');
-        //     // document.getElementById("btnShowSinkOutlines").classList.add('disabled');
-        //     // document.getElementById("btnGetInlets").disabled = true;
-        // };
-
-        // if (hasEnlargedSink) {
-        //     document.getElementById("btnCntinueWithEnlargedSinkSelection").classList.remove('disabled');
-        //     // document.getElementById("btnShowEnlargedSinkOutlines").classList.remove('disabled');
-        //     document.getElementById("btnShowEmbankments").classList.remove('disabled');
-        //     // document.getElementById("btnCntinueWithEnlargedSinkSelection").disabled = false;
-        // }
-        // else {
-        //     document.getElementById("btnCntinueWithEnlargedSinkSelection").classList.add('disabled');
-        //     // document.getElementById("btnShowEnlargedSinkOutlines").classList.add('disabled');
-        //     document.getElementById("btnShowEmbankments").classList.add('disabled');
-
-        // };
-       
-     };
-}
-
-export class Infiltration {
+class Infiltration {
     constructor (infiltration = {}) {
         this.id = infiltration.id ?? null;
 
@@ -57,8 +31,6 @@ export class Infiltration {
         this.sink_volume_max = infiltration.sink_volume_max ?? null;
         this.sink_depth_min = infiltration.sink_depth_min ?? null;
         this.sink_depth_max = infiltration.sink_depth_max ?? null;
-        // this.sink_index_soil_min = infiltration.sink_index_soil_min ?? null;
-        // this.sink_index_soil_max = infiltration.sink_index_soil_max ?? null;
         this.sink_land_use = infiltration.sink_land_use ?? [];
 
         this.selected_sinks = infiltration.selected_sinks ?? [];
@@ -73,8 +45,6 @@ export class Infiltration {
         this.enlarged_sink_volume_construction_barrier_max = infiltration.enlarged_sink_volume_construction_barrier_max ?? null;
         this.enlarged_sink_volume_gained_min = infiltration.enlarged_sink_volume_gained_min ?? null;
         this.enlarged_sink_volume_gained_max = infiltration.enlarged_sink_volume_gained_max ?? null;
-        // this.enlarged_sink_index_soil_min = infiltration.enlarged_sink_index_soil_min ?? null;
-        // this.enlarged_sink_index_soil_max = infiltration.enlarged_sink_index_soil_max ?? null;
         this.enlarged_sink_land_use = infiltration.enlarged_sink_land_use ?? [];
 
         this.selected_enlarged_sinks = infiltration.selected_enlarged_sinks ?? [];
@@ -101,9 +71,9 @@ export class Infiltration {
 
         this.selected_lakes = infiltration.selected_lakes ?? [];
         this.selected_streams = infiltration.selected_streams ?? [];
+
         this.weighting_overall_usability = infiltration.weighting_overall_usability ?? 20;
         this.weighting_soil_index = infiltration.weighting_soil_index ?? 80;
-
 
         this.weighting_forest_field_capacity = infiltration.weighting_forest_field_capacity ?? 33;
         this.weighting_forest_hydraulic_conductivity_1m = infiltration.weighting_forest_hydraulic_conductivity_1m ?? 33;
@@ -156,11 +126,6 @@ export class ToolboxProject {
 };
 
 
-
-
-
-
-
 export const updateDropdown = (parameterType, newId) => {
     
     // the absolute path is needed because most options are exclusively from /monica
@@ -182,7 +147,6 @@ export const updateDropdown = (parameterType, newId) => {
         })
         .catch(error => console.log('Error in updateDropdown', error));
 };
-
 
 
 export async function toolboxSinks() {

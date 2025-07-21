@@ -812,7 +812,7 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
 
         }
          else { return;}
-        } else {
+        } else if (clickedElement.closest("li") && clickedElement.closest("li").hasAttribute("leaflet-id")) {
           const listEl = clickedElement.closest("li");
         clearTimeout(clickTimeout);
         clickTimeout = setTimeout(() => {

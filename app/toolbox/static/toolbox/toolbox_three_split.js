@@ -1,7 +1,6 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
 import { ToolboxProject, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
-// import {initializeSliders} from '/static/toolbox/custom_slider.js';
-import {initializeSliders} from '/static/toolbox/double_slider.js';
+import {initializeSliders} from '/static/toolbox/custom_slider.js';
 import { 
   projectRegion, 
   baseMaps, 
@@ -22,8 +21,6 @@ import {
   handleSaveUserField,
   dismissPolygon,
 } from '/static/shared/map_sidebar_utils.js';
-import { sinkFeatureGroup, enlargedSinkFeatureGroup, lakesFeatureGroup, getWaterBodies, streamsFeatureGroup, inletConnectionsFeatureGroup, createSinkTableSettings, getSinks, addToInletTable, getInlets, updateInletInfoCard, toggleConnection, startInfiltration } from '/static/toolbox/infiltration.js';
-
 
 document.addEventListener("DOMContentLoaded", () => {
   // Hide the coordinate form card from plain Monica
@@ -157,16 +154,16 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
 
 
 
-  const overlayLayers = {
-    "demOverlay": demOverlay,
-    "projectRegion": projectRegion,
-    "toolboxOverlaySoil": toolboxOverlaySoil,
-    "toolboxOverlaySinks": toolboxOverlaySinks,
-    "toolboxOutlineInjection": toolboxOutlineInjection,
-    "toolboxOutlineSurfaceWater": toolboxOutlineSurfaceWater,
-    "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
-    "sinks": toolboxSinks,
-  };
+const overlayLayers = {
+  "demOverlay": demOverlay,
+  "projectRegion": projectRegion,
+  "toolboxOverlaySoil": toolboxOverlaySoil,
+  "toolboxOverlaySinks": toolboxOverlaySinks,
+  "toolboxOutlineInjection": toolboxOutlineInjection,
+  "toolboxOutlineSurfaceWater": toolboxOutlineSurfaceWater,
+  "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
+  "sinks": toolboxSinks,
+};
 
 
 
@@ -194,11 +191,7 @@ createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});
 createBaseLayerSwitchGroup(baseMaps, map);
 
 
-map.addLayer(sinkFeatureGroup);
-map.addLayer(enlargedSinkFeatureGroup);
-map.addLayer(lakesFeatureGroup);
-map.addLayer(streamsFeatureGroup);
-map.addLayer(inletConnectionsFeatureGroup);
+
 
 
 
@@ -208,186 +201,118 @@ map.addLayer(inletConnectionsFeatureGroup);
 //   saveProject(project);
 // });
 
-// TODO I tttttttttthink      this is not working!
-document.getElementById('map').addEventListener('click', function (event) {
-  if (event.target.classList.contains('select-sink')) {
-    const sinkId = event.target.getAttribute('sinkId');
-    const sinkType = event.target.getAttribute('data-type');
-    console.log('sinkId', sinkId);
-    console.log('sinkType', sinkType);
-
-    const checkbox = document.querySelector(`.sink-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
-    checkbox.checked = !checkbox.checked;
-    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-});
 
 
-
-
-$('#toolboxPanel').on('change',  function (event) {
-  const $target = $(event.target);
-  const project = ToolboxProject.loadFromLocalStorage();
-  // console.log('change event', $target);
-  if ($target.hasClass('double-slider')) {
-    const inputName = $target.attr('name');
-    const minName = inputName + '_min';
-    const maxName = inputName + '_max'; 
-    const inputVals = $target.val().split(',');
-    project.infiltration[minName] = inputVals[0];
-    project.infiltration[maxName] = inputVals[1];
-    project.saveToLocalStorage();
-  } else if ($target.hasClass('single-slider')) {   
-    const inputName = $target.attr('name'); 
-    const inputVal = $target.val();
-    project.infiltration[inputName] = inputVal;
-    project.saveToLocalStorage();
-  }else if ($target.hasClass('form-check-input')) {
-    // checkboxes 
-    const inputId = $target.attr('id');
-    const inputName = $target.attr('name');
-    const inputPrefix = $target.attr('prefix');
-    const inputValue = $target.attr('value');
-    const inputChecked = $target.is(':checked');
-
-    const key = `${inputPrefix}_${inputName}`;
-
-    const index = project.infiltration[key].indexOf(inputValue);
-
-    if (index > -1) {
-      // Value exists — remove it
-      project.infiltration[key] = project.infiltration[key].filter(
-        (v) => v !== inputValue
-      );
-      console.log('Checkbox unchecked:', inputId, '=', inputValue);
-    } else {
-      // Value does not exist — add it
-      project.infiltration[key].push(inputValue);
-      console.log('Checkbox checked:', inputId, '=', inputValue);
-    }
-    project.saveToLocalStorage();
-
-  } else if ($target.hasClass('sink-select-all-checkbox')) {
-    
-    const allSelected = $target.is(':checked');
-    const sinkType = $target.data('type');
-    console.log('sinkType', sinkType);
-    
-    
-    const key = sinkType === 'sink' ? 'selected_sinks' : 'selected_enlarged_sinks';
-    if (!allSelected) {
-      project.infiltration[key] = [];
-    }
-    $(`.sink-select-checkbox[data-type="${sinkType}"]`).each(function(){
-      const $checkbox = $(this);
-      $checkbox.prop('checked', allSelected);
-      const sinkId = $checkbox.data('id');
-      if (allSelected) {
-        console.log("Selected sink:", sinkId);
-        project.infiltration[key].push(sinkId);
-      } 
-    })
-    project.saveToLocalStorage();
-  } else if ($target.hasClass('sink-select-checkbox')) {
-    const sinkType = $target.data('type');
-    const key = sinkType === 'sink' ? 'selected_sinks' : 'selected_enlarged_sinks';
-    console.log('sinkType', sinkType);
-      if ($target.is(':checked')) {
-        console.log("Selected sink:", $target.data('id'));
-        const project= ToolboxProject.loadFromLocalStorage();
-        project.infiltration[key].push($target.data('id'));
-        project.saveToLocalStorage();
-
-      } else {
-        const sinkId = $target.data('id');
-        console.log("Selected sink:", sinkId);
-        const project= ToolboxProject.loadFromLocalStorage();
-        const index = project.infiltration[key].indexOf(sinkId);
-        if (index > -1) {
-          project.infiltration[key].splice(index, 1);
-        }
-        project.saveToLocalStorage();
+function startInfiltration() {
+  console.log('start Infiltration')
+  const userField = ToolboxProject.loadFromLocalStorage().userField;
+  // const userField = project.userField;
+  if (userField) {
+  
+    fetch('load_infiltration_gui/' + userField + '/')
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        handleAlerts(data);
+        return;
       }
+        // Replace HTML content
+      $('#toolboxButtons').addClass('d-none');
+      $('#toolboxPanel').removeClass('d-none');
+      $('#toolboxPanel').html(data.html);
+    })
+    .then(() => {
+      initializeSliders();
+      $('input[type="checkbox"][name="land_use"]').prop('checked', true);
+      $('input[type="checkbox"][name="land_use"]').trigger('change');
 
-      // You can trigger your map sink selection logic here
-    };
-  });
+      
+      const forms = document.querySelectorAll('.weighting-form')
+      forms.forEach(form => {
+        
+        const sliderList = form.querySelectorAll('input.single-slider');
+        const length = sliderList.length;
+          
+        const sliderObj = {};
+        let index = 0;
+        sliderList.forEach(slider => {
+          sliderObj[index] = {
+            'val': slider.value,
+            'name': slider.name,
+            'slider': slider
+          };
+          index++;
+        });
+        
+        sliderList.forEach(slider => {
+          slider.addEventListener('change', function (e) {
+            const project = ToolboxProject.loadFromLocalStorage();
+            const changedSlider = e.target;
+   
+            const startIndex = Object.keys(sliderObj).find(
+              key => sliderObj[key].slider === changedSlider
+            );
+            // let changedSlider = sliderObj[startIndex].slider;
+            const newVal = parseInt(changedSlider.value);
+            let diff = newVal - sliderObj[startIndex].val;
+            
+            sliderObj[startIndex].val = newVal;
+            project.infiltration[changedSlider.name] = sliderObj[startIndex].val;
+            console.log("Slider ", startIndex, "new value", newVal, "diff", diff);
 
+            let remainingDiff = diff;
+            
+            let nextIndex = (parseInt(startIndex) + 1) % length;
+            while (remainingDiff !== 0) {
 
+            let sObj = sliderObj[nextIndex];
+            let slider = sObj.slider;
+            let currentVal = parseInt(slider.value);
+            let newVal = currentVal - remainingDiff;
+        
+            // Clamp between 0 and 100
+            if (newVal < 0) {
+              remainingDiff = - newVal; 
+              newVal = 0;
+            } else if (newVal > 100) {
+              remainingDiff = newVal - 100;
+              newVal = 100;
+            } else {
+              remainingDiff = 0;
+            }
+            sObj.val = newVal;
+            project.infiltration[sObj.name] = newVal;
+            slider.value = newVal;
+            slider.dispatchEvent(new Event('input', { bubbles: true }));
+        
+            nextIndex = (nextIndex + 1) % length;
 
+            if (nextIndex == startIndex) break;
+          }
+          project.saveToLocalStorage();
+          });
+        });
 
+        const resetBtn = form.querySelector('input.reset-all');
+        resetBtn.addEventListener('click', function (e) {
+          let project = ToolboxProject.loadFromLocalStorage();
+          // const sliderList = form.querySelectorAll('input.single-slider');
+          Object.keys(sliderObj).forEach(idx => {
+            sliderObj[idx].slider.value = parseFloat(sliderObj[idx].slider.dataset.defaultValue);
+            sliderObj[idx].slider.dispatchEvent(new Event('input'));
+            sliderObj[idx].val = parseFloat(sliderObj[idx].slider.dataset.defaultValue);
+          });
+          project.saveToLocalStorage();
+        });
 
-
-
-
-$('#toolboxPanel').on('click', function (event) {
-  const $target = $(event.target);
-  if ($target.hasClass('toolbox-back-to-initial')) {
-    $('#toolboxButtons').removeClass('d-none');
-      $('#toolboxPanel').addClass('d-none');
-  } else if ($target.attr('id') === 'btnFilterSinks') {
-    getSinks('sink', sinkFeatureGroup);
-  
-  } else if ($target.attr('id') === 'btnFilterEnlargedSinks') {
-    getSinks('enlarged_sink', enlargedSinkFeatureGroup);
-  
-  } else if ($target.attr('id') === 'btnFilterStreams') {
-    getWaterBodies('streams', streamsFeatureGroup);
-  
-  } else if ($target.attr('id') === 'btnFilterLakes') {
-    getWaterBodies('lakes', lakesFeatureGroup);
-  
-  // } else if ($target.hasClass('evaluate-selected-sinks')) {
-  //   console.log('ClassList contains  evaluate-selected-sinks');
-  //   const project = ToolboxProject.loadFromLocalStorage();
-  //   calculateIndexForSelection(project)
-  } else if ($target.attr('id') === 'btnGetInlets') {
-      getInlets(); 
-  } else if ($target.attr('id') === 'navInfiltrationSinks') {
-      map.addLayer(sinkFeatureGroup);
-  } else if ($target.attr('id') === 'navInfiltrationEnlargedSinks') {
-      map.addLayer(enlargedSinkFeatureGroup);
-  } else if ($target.attr('id') === 'navInfiltrationResult') {
-      map.removeLayer(sinkFeatureGroup);
-      map.removeLayer(enlargedSinkFeatureGroup);
-  } else if ($target.attr('id') === 'toggleSinks') {
-    if (map.hasLayer(sinkFeatureGroup)) {
-      map.removeLayer(sinkFeatureGroup);
-      $target.text('einblenden');
-    } else {
-        map.addLayer(sinkFeatureGroup);
-        $target.text('ausblenden');
-    }
-  } else if ($target.attr('id') === 'toggleEnlargedSinks') {
-    if (map.hasLayer(enlargedSinkFeatureGroup)) {
-      map.removeLayer(enlargedSinkFeatureGroup);
-      $target.text('einblenden');
-    } else {
-        map.addLayer(enlargedSinkFeatureGroup);
-        $target.text('ausblenden');
-    }
-  } else if ($target.attr('id') === 'toggleStreams') {
-    if (map.hasLayer(streamsFeatureGroup)) {
-      map.removeLayer(streamsFeatureGroup);
-      $target.text('einblenden');
-    } else {
-        map.addLayer(streamsFeatureGroup);
-        $target.text('ausblenden');
-    }
-  } else if ($target.attr('id') === 'toggleLakes') {
-    if (map.hasLayer(lakesFeatureGroup)) {
-      map.removeLayer(lakesFeatureGroup);
-      $target.text('einblenden');
-    } else {
-        map.addLayer(lakesFeatureGroup);
-        $target.text('ausblenden');
-    }
+        
+        });
+    })
+    // .catch(error => console.error("Error fetching data:", error));
+  } else {
+    handleAlerts({ success: false, message: 'Please select a user field!' });
   }
-}); 
-
-
-
-
+};
 
 $('#startInfiltration').on('click', () => {
   console.log('startInfiltration clicked');

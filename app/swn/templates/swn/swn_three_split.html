@@ -117,11 +117,8 @@
         const droughtUrl = "{% static 'data/4326_reprojected_3857.png' %}" ;   
         const project_region = {{ project_region|safe }} ;
         const runSimulationUrl = "{% url 'swn:run_simulation' %}";
-        {% comment %} const loadNutsUrl = "{% url 'swn:load_nuts_polygon' %}"; {% endcomment %}
         const saveProjectUrl = "{% url 'swn:save-project' %}";
-
         const defaultProject = {{ default_project|safe }};
-
         const getUserFieldsUrl = "{% url 'swn:get-user-fields' %}";
         const saveUrl = "{% url 'swn:save-user-field' %}";
 

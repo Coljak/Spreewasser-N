@@ -66,6 +66,15 @@ class PHClass(models.Model):
     class Meta:
         db_table = 'buek_ph_class'
 
+class SomeOleClass(models.Model):
+    a = models.CharField(max_length=255, null=True, blank=True)
+    b = models.CharField(max_length=255, null=True, blank=True)
+    c = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return self.a
+    
+
 
 class BuekPolygon(models.Model):
     polygon_id = models.BigIntegerField(primary_key=True)

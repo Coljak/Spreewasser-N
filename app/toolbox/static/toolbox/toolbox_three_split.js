@@ -154,6 +154,82 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
 });
 
 
+const markers = L.markerClusterGroup({
+    iconCreateFunction: function (cluster) {
+    const count = cluster.getChildCount();
+
+    const html = `
+      <div class="custom-cluster-icon">
+        <img src="/static/images/water-level-circle_green_small.png" alt="icon" />
+        <span class="count">${count}</span>
+      </div>
+    `;
+
+    return L.divIcon({
+      html: html,
+      className: 'water-level-cluster-wrapper',
+    });
+  }
+
+});
+
+
+const waterLevelIcon = L.icon({
+  iconUrl: '/static/images/water-level-circle_blue_small.png',
+  iconSize: [30, 30], // size of the icon
+  iconAnchor: [15, 15], // point of the icon which will correspond to marker's location
+  popupAnchor: [0, 0] // point from which the popup should open relative to the iconAnchor
+});
+//https://www.pegelonline.wsv.de/webservice/dokuRestapi
+fetch('https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json?includeTimeseries=true&includeCurrentMeasurement=true') // Replace with your actual API
+  .then(response => response.json())
+  .then(data => {
+    data.forEach(station => {
+      if (station.latitude && station.longitude) {
+        const marker = new L.Marker([station.latitude, station.longitude], {
+          icon: waterLevelIcon,
+          title: station.shortname || station.name // Use shortname or name as title
+        });
+
+        // Create tooltip content
+        const tooltipContent = `
+          <strong>${station.shortname}</strong><br>
+          Nummer: ${station.number}<br>
+          Behörde: ${station.agency}<br>
+          Gewässer: ${station.water?.shortname || 'N/A'}</br>
+          Flusskilometer: ${station.km || 'N/A'}<br>
+          Aktuelle Messung: ${station.timeseries[0].currentMeasurement?.value || 'N/A'} ${station.timeseries[0]?.unit || ''}<br>
+          Wasserstand: ${station.timeseries[0].currentMeasurement?.stateMnwMhw || 'N/A'},  ${station.timeseries[0].currentMeasurement?.stateNswHsw || ''}<br>
+          <a href="https://www.pegelonline.wsv.de/charts/OnlineVisualisierungGanglinie?pegeluuid=${station.uuid}&imgBreite=450&pegelkennwerte=HSW,GLW&dauer=300" target="_blank">Details</a><br>
+          <a href="https://www.pegelonline.wsv.de/webservices/zeitreihe/visualisierung?pegeluuid=${station.uuid}" target="_blank">Zeitreihe</a>
+        `;
+
+        marker.bindPopup(tooltipContent);
+        marker.bindTooltip(tooltipContent, {
+          permanent: false,
+          direction: 'top',
+          className: 'water-level-tooltip'
+        });
+        marker.on('click', function () {
+
+            marker.openPopup();
+
+        });
+        marker.on('mouseover', function () {
+          marker.openTooltip();
+        });
+        marker.on('mouseout', function () {
+          marker.closeTooltip();
+        });
+        markers.addLayer(marker);
+        ;
+      }
+    });
+  })
+  .catch(error => {
+    console.error('Error fetching data:', error);
+  });
+  // markers.addTo(map);
 
 const overlayLayers = {
   "demOverlay": demOverlay,
@@ -164,6 +240,7 @@ const overlayLayers = {
   "toolboxOutlineSurfaceWater": toolboxOutlineSurfaceWater,
   "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
   "sinks": toolboxSinks,
+  "waterLevels": markers,
 };
 
 

@@ -30,22 +30,6 @@ import pandas as pd
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 
 
-# not in use
-def get_elevations_for_line(line_geom):
-    sql = """
-    SELECT
-      ST_Value(rast, 1, pt.geom) AS elevation,
-      ST_AsText(pt.geom) AS point
-    FROM (
-      SELECT (ST_DumpPoints(ST_Segmentize(ST_GeomFromText(%s, 25833), 1))).geom
-    ) pt,
-    dem
-    WHERE ST_Intersects(rast, pt.geom);
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(sql, [line_geom.wkt])
-        return cursor.fetchall()
-
 
 def create_default_project(user):
     """
@@ -124,6 +108,138 @@ def toolbox_dashboard(request):
 
     return render(request, 'toolbox/toolbox_three_split.html', context)
 
+def load_toolbox_project(request, id):
+
+    project = models.ToolboxProject.objects.get(pk=id)
+    print("Toolbox Project: ", project)
+    if not project:
+        return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
+    else:
+        project_json = project.to_json()
+        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
+
+
+def save_toolbox_project(request, project_id=None):
+    print("CREATE Toolbox PROJECT\n", request.POST)
+    if request.method == 'POST':
+        user = request.user
+        
+        project_data = json.loads(request.body)
+        toolbox_type = models.ToolboxType.objects.get(pk=project_data['toolboxType'])
+        user_field = models.UserField.objects.get(pk=project_data['userField'])
+
+        project = models.ToolboxProject.objects.create(
+            name=project_data['name'],
+            user=user,
+            toolbox_type=toolbox_type,
+            user_field=user_field,
+            description=project_data['description']
+        )
+        project.save()
+
+        return JsonResponse({
+            'message': {
+                'success': True, 
+                'message': f'Project {project.name} saved'
+                }, 
+                'project_id': project.id, 
+                'project_name': project.name
+                })
+    
+
+@login_required
+@csrf_protect
+def save_user_field(request):
+    print('Request:', request, request.user, request.method, request.body)
+    if request.method == 'POST':
+
+        if not request.headers.get('X-Csrftoken') == request.COOKIES.get('csrftoken'):
+            
+            return HttpResponseBadRequest('Invalid CSRF token')
+        else:
+            body = json.loads(request.body)
+            name = body['name']
+            geom = json.loads(body['geom'])
+            geos = GEOSGeometry(body['geom'], srid=4326)
+            user = request.user
+            user_field = None
+            if body['id']:
+                # Update existing UserField
+                user_field = models.UserField.objects.get(id=body['id'])
+                user_field.name = name
+                user_field.geom_json = geom
+                user_field.geom = geos
+                
+                user_field.save()
+            else:
+                user_field = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
+                
+                user_field.save()
+
+            
+            return JsonResponse({'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
+        
+    else:
+        return HttpResponseRedirect('toolbox:toolbox_dashboard')
+
+@login_required
+def get_user_fields(request):
+    if request.method == "GET":
+        user_fields = models.UserField.objects.filter(user=request.user)
+        user_projects = models.ToolboxProject.objects.filter(user=request.user)
+        ufs = []
+        for user_field in user_fields:
+            uf = model_to_dict(user_field, fields=['id', 'user', 'name', 'geom_json'])
+            uf['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
+            ufs.append(uf)
+        # print('user_fields:', ufs)
+    return JsonResponse({'user_fields': ufs})
+
+@login_required
+def update_user_field(request, id):
+    if request.method == 'POST':
+        body = json.loads(request.body)
+        name = body['name']
+        geom = json.loads(body['geom'])
+        geos = GEOSGeometry(body['geom'])
+        # geos.transform(25833)
+        user_field = models.UserField.objects.get(id=id)
+        user_field.name = name
+        user_field.geom_json = geom
+        user_field.geom = geos
+        user_field.save()
+        
+        return JsonResponse({'message': {'success': True, 'message': 'User field updated.'},'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
+    else:
+        return JsonResponse({'message': {'success': False, 'message': 'An error occurred updating the user field.'}})
+
+@login_required
+# @csrf_protect
+def delete_user_field(request, id):
+    if request.method == 'POST' and request.user.is_authenticated:
+        try:
+            user_field = models.UserField.objects.get(id=id)
+
+            if user_field.user == request.user:
+                user_field.delete()
+                return JsonResponse({'message': {'success': True, 'message': 'Field deleted'}})
+            else:
+                return JsonResponse({'message': {'success': False, 'message': 'You do not have permission to delete this field'}}, status=403)
+
+        except models.UserField.DoesNotExist:
+            return JsonResponse({'message': {'success': False, 'message': 'Field not found'}}, status=404)
+    else:
+        return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}}, status=400)
+    
+
+@login_required
+def get_field_project_modal(request, id):
+    # user_projects = models.SwnProject.objects.filter(Q(user_field__id=id) & Q(user_field_user=request.user))
+    user_projects = models.ToolboxProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user))
+    print('user_projects:', user_projects)
+    print('user_projects.values():', list(user_projects.values()))
+    
+    return JsonResponse({'projects': list(user_projects.values())})
 
 ########## ZALF TOOLBOX ########################
 
@@ -201,177 +317,6 @@ def add_range_filter(filters, obj, field,  model_field=None):
         filters &= Q(**{f"{model_field}__lte": max_val})
 
     return filters
-
-def calculate_indices_single(
-        sink, 
-        weighting_overall_usability,
-        weighting_soil_index,
-        weighting_forest_field_capacity,
-        weighting_forest_hydraulic_conductivity_1m,
-        weighting_forest_hydraulic_conductivity_2m,
-        weighting_agriculture_field_capacity,
-        weighting_agriculture_hydromorphy,
-        weighting_agriculture_soil_type,
-        weighting_grassland_field_capacity,
-        weighting_grassland_hydromorphy,
-        weighting_grassland_soil_type ,
-        weighting_grassland_soil_water_ratio,
-        sinkType,
-        ):
- 
-    sink_results = {}
-
-    if sinkType == 'sink':
-        soil_properties = models.SinkSoilProperties.objects.filter(sink=sink)\
-            .select_related('soil_properties__groundwater_distance',
-                            'soil_properties__agricultural_landuse',
-                            'soil_properties__fieldcapacity',
-                            'soil_properties__hydromorphy',
-                            'soil_properties__soil_texture',
-                            'soil_properties__wet_grassland')\
-            .order_by('-percent_of_total_area')
-    elif sinkType == 'enlarged_sink':
-        soil_properties = models.EnlargedSinkSoilProperties.objects.filter(enlarged_sink=sink).order_by('-percent_of_total_area')
-    
-    
-    sink_results[sink.id] = {
-        'soil_profiles': []
-        }
-    if len(soil_properties) > 0:
-        index_be_total = 0
-        for sp in soil_properties:
-            
-            index_1 = 0
-            index_2 = 0
-            
-            property_data = sp.soil_properties
-            bool_general = (not property_data.nitrate_contamination) and (not property_data.waterlog)
-            index_1 = bool_general * property_data.groundwater_distance.rating_index
-            
-            landuse = property_data.agricultural_landuse.name
-            if landuse == 'grassland': # id=1
-                index_2 = \
-                    weighting_grassland_field_capacity * property_data.fieldcapacity.rating_index + \
-                    weighting_grassland_hydromorphy * property_data.hydromorphy.rating_index + \
-                    weighting_grassland_soil_type * property_data.soil_texture.rating_index + \
-                    weighting_grassland_soil_water_ratio * property_data.wet_grassland.rating_index
-
-            elif landuse == 'no_agricultural_use': # id=2
-                
-                index_2 = \
-                    weighting_forest_field_capacity * property_data.fieldcapacity.rating_index + \
-                    weighting_forest_hydraulic_conductivity_1m * property_data.hydraulic_conductivity_1m_rating + \
-                    weighting_forest_hydraulic_conductivity_2m * property_data.hydraulic_conductivity_2m_rating
-
-            else: #id = 3, fields
-                index_2 = \
-                    weighting_agriculture_field_capacity * property_data.fieldcapacity.rating_index + \
-                    weighting_agriculture_hydromorphy * property_data.hydromorphy.rating_index + \
-                    weighting_agriculture_soil_type * property_data.soil_texture.rating_index
-                    
-            index_be = weighting_overall_usability * index_1 + weighting_soil_index * index_2
-
-
-            index_be_total += index_be * sp.percent_of_total_area
-            
-    else:
-        return 0
-
-    return round(index_be_total, 3)
-
-
-##### TODO indeices and other information not yet in table!!!!
-def calculate_indices(sinks, project, sinkType='sink'):
-
-    weighting_overall_usability=int(project['infiltration'].get('weighting_overall_usability', 20))/100
-    weighting_soil_index=int(project['infiltration'].get('weighting_soil_index', 80))/100
-    weighting_forest_field_capacity = int(project['infiltration'].get('weighting_forest_field_capacity', 33.3))/100
-    weighting_forest_hydraulic_conductivity_1m= int(project['infiltration'].get('weighting_forest_hydraulic_conductivity_1m', 33.3))/100
-    weighting_forest_hydraulic_conductivity_2m= int(project['infiltration'].get('weighting_forest_hydraulic_conductivity_2m', 33.3))/100
-    weighting_agriculture_field_capacity = int(project['infiltration'].get('weighting_agriculture_field_capacity', 33.3))/100
-    weighting_agriculture_hydromorphy = int(project['infiltration'].get('weighting_agriculture_hydromorphy', 33.3))/100
-    weighting_agriculture_soil_type= int(project['infiltration'].get('weighting_agriculture_soil_type', 33.3))/100
-    weighting_grassland_field_capacity = int(project['infiltration'].get('weighting_grassland_field_capacity', 25))/100
-    weighting_grassland_hydromorphy = int(project['infiltration'].get('weighting_grassland_hydromorphy', 25))/100
-    weighting_grassland_soil_type = int(project['infiltration'].get('weighting_grassland_soil_type', 25))/100
-    weighting_grassland_soil_water_ratio=int(project['infiltration'].get('weighting_grassland_soil_water_ratio', 25))/100
-
-    sink_results = {}
-    for sink in sinks:
-        if sinkType == 'sink':
-            soil_properties = models.SinkSoilProperties.objects.filter(sink=sink)\
-                .select_related('soil_properties__groundwater_distance',
-                                'soil_properties__agricultural_landuse',
-                                'soil_properties__fieldcapacity',
-                                'soil_properties__hydromorphy',
-                                'soil_properties__soil_texture',
-                                'soil_properties__wet_grassland')\
-                .order_by('-percent_of_total_area')
-        elif sinkType == 'enlarged_sink':
-            soil_properties = models.EnlargedSinkSoilProperties.objects.filter(enlarged_sink=sink).order_by('-percent_of_total_area')
-        
-        
-        print(len(soil_properties))
-        sink_results[sink.id] = {
-            'soil_profiles': []
-            }
-        if len(soil_properties) > 0:
-            index_be_total = 0
-            for sp in soil_properties:
-                print(sp)
-                
-                index_1 = 0
-                index_2 = 0
-                
-                property_data = sp.soil_properties
-                bool_general = (not property_data.nitrate_contamination) and (not property_data.waterlog)
-                index_1 = bool_general * property_data.groundwater_distance.rating_index
-                print('index_1', index_1)
-                
-                
-                if property_data.agricultural_landuse.name == 'grassland': # id=1
-                    index_2 = \
-                        weighting_grassland_field_capacity * property_data.fieldcapacity.rating_index + \
-                        weighting_grassland_hydromorphy * property_data.hydromorphy.rating_index + \
-                        weighting_grassland_soil_type * property_data.soil_texture.rating_index + \
-                        weighting_grassland_soil_water_ratio * property_data.wet_grassland.rating_index
-
-                elif property_data.agricultural_landuse.name == 'no_agricultural_use': # id=2
-                    print('weighting_forest_field_capacity', weighting_forest_field_capacity)
-                    index_2 = \
-                        weighting_forest_field_capacity * property_data.fieldcapacity.rating_index + \
-                        weighting_forest_hydraulic_conductivity_1m * property_data.hydraulic_conductivity_1m_rating + \
-                        weighting_forest_hydraulic_conductivity_2m * property_data.hydraulic_conductivity_2m_rating
-
-                else: #id = 3, fields
-                    print('weighting_agriculture_hydromorphy', weighting_agriculture_hydromorphy)
-                    print('props.hydromorphy.rating_index', property_data.hydromorphy.rating_index)
-                    index_2 = \
-                        weighting_agriculture_field_capacity * property_data.fieldcapacity.rating_index + \
-                        weighting_agriculture_hydromorphy * property_data.hydromorphy.rating_index + \
-                        weighting_agriculture_soil_type * property_data.soil_texture.rating_index
-                        
-                print('index_2', index_2)
-                index_be = weighting_overall_usability * index_1 + weighting_soil_index * index_2
-                sink_results[sink.id]['soil_profiles'].append({
-                    'agricultural_landuse': property_data.agricultural_landuse.name,
-                    'soil_profile_percentage': round(sp.percent_of_total_area, 2),
-                    'groundwater_distance_rating_index': property_data.groundwater_distance.rating_index,
-                    'index_1': round(index_1, 2),
-                    'index_2': round(index_2, 2),
-                    'index_be': round(index_be, 2),
-                    })
-
-                index_be_total += index_be * sp.percent_of_total_area
-            sink_results[sink.id]['index_total'] = round(index_be_total, 2)
-
-            print('index_be_total', index_be_total)
-                
-        else:
-            print('error')
-
-    return sink_results
-
 
 
 def calculate_indices_df(sinks, project, sink_type='sink'):
@@ -789,129 +734,6 @@ def load_nuts_polygon(request, entity, polygon_id):
             }
             return JsonResponse(error_response, status=404)
         
-def load_toolbox_project(request, id):
-
-    project = models.ToolboxProject.objects.get(pk=id)
-    print("Toolbox Project: ", project)
-    if not project:
-        return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
-    else:
-        project_json = project.to_json()
-        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
-
-
-def save_toolbox_project(request, project_id=None):
-    print("CREATE Toolbox PROJECT\n", request.POST)
-    if request.method == 'POST':
-        user = request.user
-        
-        project_data = json.loads(request.body)
-        toolbox_type = models.ToolboxType.objects.get(pk=project_data['toolboxType'])
-        user_field = models.UserField.objects.get(pk=project_data['userField'])
-
-        project = models.ToolboxProject.objects.create(
-            name=project_data['name'],
-            user=user,
-            toolbox_type=toolbox_type,
-            user_field=user_field,
-            description=project_data['description']
-        )
-        project.save()
-
-        return JsonResponse({
-            'message': {
-                'success': True, 
-                'message': f'Project {project.name} saved'
-                }, 
-                'project_id': project.id, 
-                'project_name': project.name
-                })
-    
-
-@login_required
-@csrf_protect
-def save_user_field(request):
-    print('Request:', request, request.user, request.method, request.body)
-    if request.method == 'POST':
-
-        if not request.headers.get('X-Csrftoken') == request.COOKIES.get('csrftoken'):
-            
-            return HttpResponseBadRequest('Invalid CSRF token')
-        else:
-            body = json.loads(request.body)
-            name = body['name']
-            geom = json.loads(body['geom'])
-            geos = GEOSGeometry(body['geom'], srid=4326)
-            user = request.user
-            user_field = None
-            if body['id']:
-                # Update existing UserField
-                user_field = models.UserField.objects.get(id=body['id'])
-                user_field.name = name
-                user_field.geom_json = geom
-                user_field.geom = geos
-                
-                user_field.save()
-            else:
-                user_field = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
-                
-                user_field.save()
-
-            
-            return JsonResponse({'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
-        
-    else:
-        return HttpResponseRedirect('toolbox:toolbox_dashboard')
-
-@login_required
-def get_user_fields(request):
-    if request.method == "GET":
-        user_fields = models.UserField.objects.filter(user=request.user)
-        user_projects = models.ToolboxProject.objects.filter(user=request.user)
-        ufs = []
-        for user_field in user_fields:
-            uf = model_to_dict(user_field, fields=['id', 'user', 'name', 'geom_json'])
-            uf['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
-            ufs.append(uf)
-        # print('user_fields:', ufs)
-    return JsonResponse({'user_fields': ufs})
-
-@login_required
-def update_user_field(request, id):
-    if request.method == 'POST':
-        body = json.loads(request.body)
-        name = body['name']
-        geom = json.loads(body['geom'])
-        geos = GEOSGeometry(body['geom'])
-        # geos.transform(25833)
-        user_field = models.UserField.objects.get(id=id)
-        user_field.name = name
-        user_field.geom_json = geom
-        user_field.geom = geos
-        user_field.save()
-        
-        return JsonResponse({'message': {'success': True, 'message': 'User field updated.'},'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
-    else:
-        return JsonResponse({'message': {'success': False, 'message': 'An error occurred updating the user field.'}})
-
-@login_required
-# @csrf_protect
-def delete_user_field(request, id):
-    if request.method == 'POST' and request.user.is_authenticated:
-        try:
-            user_field = models.UserField.objects.get(id=id)
-
-            if user_field.user == request.user:
-                user_field.delete()
-                return JsonResponse({'message': {'success': True, 'message': 'Field deleted'}})
-            else:
-                return JsonResponse({'message': {'success': False, 'message': 'You do not have permission to delete this field'}}, status=403)
-
-        except models.UserField.DoesNotExist:
-            return JsonResponse({'message': {'success': False, 'message': 'Field not found'}}, status=404)
-    else:
-        return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}}, status=400)
-    
 
 #TODO needed?
 def get_options(request, parameter):
@@ -921,15 +743,6 @@ def get_options(request, parameter):
         dropdown_list = [(project.id, project.name) for project in toolbox_projects]
     return JsonResponse({'options': dropdown_list})
         
-
-@login_required
-def get_field_project_modal(request, id):
-    # user_projects = models.SwnProject.objects.filter(Q(user_field__id=id) & Q(user_field_user=request.user))
-    user_projects = models.ToolboxProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user))
-    print('user_projects:', user_projects)
-    print('user_projects.values():', list(user_projects.values()))
-    
-    return JsonResponse({'projects': list(user_projects.values())})
     
 
 def get_weighting_forms(request):
@@ -991,8 +804,6 @@ def get_weighting_forms(request):
         
 
         return render(request, 'toolbox/weighting_tab.html', context)
-
-
 
 
 def get_shortest_connection_lines_utm(sinks, lakes, streams):
@@ -1070,6 +881,7 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
 
     return results
 
+
 def get_inlets(request):
     # POST request
     project = json.loads(request.body)
@@ -1116,8 +928,24 @@ def get_elevation_profile(line_geojson):
     else:
         return {'success': False, 'error': f'Error{response.status_code}: {response.text}'}
     
+# not in use
+def get_elevations_for_line(line_geom):
+    sql = """
+    SELECT
+      ST_Value(rast, 1, pt.geom) AS elevation,
+      ST_AsText(pt.geom) AS point
+    FROM (
+      SELECT (ST_DumpPoints(ST_Segmentize(ST_GeomFromText(%s, 25833), 1))).geom
+    ) pt,
+    dem
+    WHERE ST_Intersects(rast, pt.geom);
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [line_geom.wkt])
+        return cursor.fetchall()
 
 
+###### Zalf infiltration end #################################
 
 def load_surface_water_gui(request, user_field_id):
     if user_field_id == "null":

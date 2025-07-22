@@ -28,6 +28,10 @@ const lakesFeatureGroup = new L.FeatureGroup()
 const streamsFeatureGroup = new L.FeatureGroup()
 const inletConnectionsFeatureGroup = L.featureGroup()
 
+//TODO: this is not pretty
+const connectionLayerMap = {};
+
+
 function createSinkTableSettings(sinkType, indexVisible) {
   return {
     "order": [[1, "asc"]],
@@ -450,7 +454,7 @@ function getInlets() {
           const group = L.layerGroup([sinkLayer, lineLayer]).addTo(inletConnectionsFeatureGroup);
           connectionLayerMap[connectionId] = group;
 
-          addToInletTable(inlet, /);  // builds a row in the table
+          addToInletTable(inlet, connectionId);  // builds a row in the table
 
         });
   
@@ -494,7 +498,6 @@ function updateInletInfoCard(inlet) {
   card.style.display = 'block';
 }
 
-const connectionLayerMap = {};
 function toggleConnection(button) {
   
   const id = button.getAttribute('data-id');

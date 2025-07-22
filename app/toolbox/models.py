@@ -148,23 +148,7 @@ class OutlineInfiltration(gis_models.Model):
     geom = gis_models.MultiPolygonField('Infiltration')  
 
 
-class Wasserrueckhaltepotentiale(models.Model):
-    geom = gis_models.MultiPolygonField(srid=4326)
-    typ = models.CharField(max_length=100, null=True)
-    anmerkung = models.CharField(max_length=255, null=True)
-    dokument1 = models.CharField(max_length=255, null=True)
-    derzeitige_nutzung = models.CharField(max_length=255, null=True)
-    quelle_1 = models.CharField(max_length=255, null=True)
-    quelle_2 = models.CharField(max_length=255, null=True)
-    quelle_3 = models.CharField(max_length=255, null=True)
-    massnahmen_id = models.CharField(max_length=100, null=True)  
-    gewaesserverwaltung = models.CharField(max_length=255, null=True)
-    gewaesser_name = models.CharField(max_length=255, null=True)
-    flaeche_m2 = models.FloatField(null=True)
-    kartenquelle = models.CharField(max_length=255, null=True)
 
-    def __str__(self):
-         return self.gewaesser_name + ' ' + self.flaeche_m2
     
 
 ### ---- 2024-12-02 ---- ###
@@ -187,8 +171,6 @@ class LanduseMap(models.Model):
     geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
 
 
-
-
 class Stream(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
     fgw_id = models.IntegerField(null=True, blank=True)  # ArcEGMO-ID des Fließgewässerabschnittes
@@ -202,8 +184,6 @@ class Stream(models.Model):
     plus_days = models.IntegerField()
     geom = gis_models.LineStringField(srid=4326, null=True, blank=True)
     geom25833 = gis_models.MultiLineStringField(srid=25833, null=True, blank=True)
-
-
 
 class Lake(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
@@ -226,8 +206,6 @@ class Lake(models.Model):
         if self.geom and not self.centroid:
             self.centroid = self.geom.centroid  # Auto-generate centroid
         super().save(*args, **kwargs)
-
-    
 
 class Sink(models.Model):
     #id = models.IntegerField(primary_key=True)
@@ -287,8 +265,6 @@ class Sink(models.Model):
             "hydrogeology": self.hydrogeology,
             "index_hydrogeology": self.index_hydrogeology,
         }
-
-
 
 
 class EnlargedSink(models.Model): 
@@ -362,6 +338,7 @@ class Aquifer(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     name_de = models.CharField(max_length=255, null=True, blank=True)
     name_en = models.CharField(max_length=255, null=True, blank=True)
+
 class LanduseSink(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     sink = models.ForeignKey(Sink, on_delete=models.DO_NOTHING, null=True, related_name='sink_landuse')
@@ -373,8 +350,6 @@ class LanduseSink(models.Model):
 
     def __str__(self):
         return f"{self.sink.id} - {self.landuse.name} ({self.percentage}%)"
-    
-
     
 # Intersect of LandusMap and EnlargedSink
 class LanduseEnlargedSink(models.Model):
@@ -390,8 +365,6 @@ class LanduseEnlargedSink(models.Model):
         return f"{self.sink.id} - {self.landuse.name} ({self.percentage}%)"
 
 
-
-
 class Feasibility(models.Model): # soilstuff
     # (100 - Ackerzahl) / 100 = index_feasibility 
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
@@ -402,22 +375,6 @@ class Feasibility(models.Model): # soilstuff
     soil_quality_index = models.IntegerField(null=True) # Ackerzahl
     index_feasibility = models.FloatField(null=True)
 
-class FeasibilitySink(models.Model):
-    geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-    feasibility = models.ForeignKey(Feasibility, on_delete=models.DO_NOTHING, null=True)
-    sink = models.ForeignKey(Sink, on_delete=models.DO_NOTHING, null=True)
-    
-    area = models.FloatField(null=True, blank=True)
-    area_of_total = models.FloatField(null=True, blank=True)
-
-class FeasibilityEnlargedSink(models.Model):
-    geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-    feasibility = models.ForeignKey(Feasibility, on_delete=models.DO_NOTHING, null=True)
-    enlarged_sink = models.ForeignKey(EnlargedSink, on_delete=models.DO_NOTHING, null=True)
-
-    area = models.FloatField(null=True, blank=True)
-    area_of_total = models.FloatField(null=True, blank=True)
-# Hydrology is the layer the sinks are intersected with for HydrologySinks and HydrologyEnlargedSinks. It is not used.
 class Hydrogeology(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
@@ -427,8 +384,6 @@ class Hydrogeology(models.Model):
     shape_length = models.FloatField()
     shape_area = models.FloatField()
 
-
-# splits some sinks into two categories
 class HydrogeologySinks(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833)
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
@@ -455,8 +410,6 @@ class HydrogeologyEnlargedSinks(models.Model):
             self.centroid = self.geom.centroid  # Auto-generate centroid
         super().save(*args, **kwargs)
 
-
-# for enlarged sinks
 class EnlargedSinkEmbankment(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833)
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
@@ -489,7 +442,7 @@ class EnlargedSinkEmbankment(models.Model):
             }
         }
 
-
+#### ende ######
 class GroundWaterDistanceClass(models.Model):
     upper_limit = models.FloatField(null=True)
     lower_limit = models.FloatField(null=True)
@@ -616,9 +569,6 @@ class SinkSoilProperties(models.Model):
     soil_properties = models.ForeignKey(SoilProperties, on_delete=models.DO_NOTHING, blank=True, null=True)
     sink = models.ForeignKey(Sink, on_delete=models.DO_NOTHING, null=True, related_name='sink_soil_properties')   
     sink_fid = models.IntegerField(null=True, blank=True)  # former fid_sink
-
-   
-
 # Intersection of SoilProperties and EnlargedSink
 class EnlargedSinkSoilProperties(models.Model):
     geom = gis_models.GeometryField(srid=4326, blank=True, null=True)
@@ -628,10 +578,217 @@ class EnlargedSinkSoilProperties(models.Model):
     enlarged_sink = models.ForeignKey(EnlargedSink, on_delete=models.DO_NOTHING,  blank=True, null=True, related_name='enlarged_sink_soil_properties')
 
 
+####################### SIEKER ########################
+class SiekerLake(models.Model):
+    geb_kz = models.CharField(max_length=255, null=True, blank=True)
+    see_name = models.CharField(max_length=255, null=True, blank=True)
+    objart = models.CharField(max_length=255, null=True, blank=True)
+    geo_quelle = models.CharField(max_length=255, null=True, blank=True)
+    see_alias = models.CharField(max_length=255, null=True, blank=True)
+    stand = models.DateField(null=True, blank=True)
+    ms_cd_lw = models.CharField(max_length=255, null=True, blank=True)
+    cd_ls = models.CharField(max_length=255, null=True, blank=True)
+    wrrl_pg = models.CharField(max_length=255, null=True, blank=True)
+    wa_cd = models.CharField(max_length=255, null=True, blank=True)
+    genese = models.CharField(max_length=255, null=True, blank=True)
+    gis_id = models.IntegerField(null=True, blank=True)
+    wrrl = models.IntegerField(null=True, blank=True)
+    badesee = models.IntegerField(null=True, blank=True)
+    quelldat = models.DateField(null=True, blank=True)
+    jp_id = models.CharField(max_length=255, null=True, blank=True)
+    area_gis = models.FloatField(null=True, blank=True)
+    area_gis_h = models.FloatField(null=True, blank=True)
+    umfang_gis = models.FloatField(null=True, blank=True)
+    see_kz = models.CharField(max_length=255, null=True, blank=True)
+    shape_area = models.FloatField(null=True, blank=True)
+    shape_len = models.FloatField(null=True, blank=True)
+    geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
 
 
-'''
-Sollte nicht Ziel der Toolbox sein, den User:innen zwar den kürzesten Weg zu zeigen, und dennoch die Möglichkeit zur Verschiebung der Ein- und Auslasspunkte zu überlassen?
-Nach welchen Krterien wurden diese PUNKTE gefunden? Wie werden passende Wasserzuleiter gefunden? Könnte man nicht ggf. einen anderen Zuleiter finden?
-Wird das Gefälle bisher berücksichtigt?
-'''
+class SiekerGewnet(models.Model):
+    geom = gis_models.MultiLineStringField(srid=25833, null=True, blank=True)
+    obectid = models.IntegerField(null=True, blank=True)
+    w_gn1 = models.CharField(max_length=255, null=True, blank=True)
+    w_gn2 = models.CharField(max_length=255, null=True, blank=True)
+    w_gn3 = models.CharField(max_length=255, null=True, blank=True)
+    w_gn_lgb = models.CharField(max_length=255, null=True, blank=True)
+    w_wdm = models.IntegerField(null=True, blank=True)
+    w_ofl = models.IntegerField(null=True, blank=True)
+    w_ezg_kl = models.IntegerField(null=True, blank=True)
+    w_achse = models.IntegerField(null=True, blank=True)
+    w_gwk = models.CharField(max_length=255, null=True, blank=True)
+    w_gbk = models.CharField(max_length=255, null=True, blank=True)
+    w_sfk_lg = models.CharField(max_length=255, null=True, blank=True)
+    w_id = models.IntegerField(null=True, blank=True)
+    length = models.FloatField(null=True, blank=True)
+    shape_leng = models.FloatField(null=True, blank=True)
+
+
+
+class SiekerLargeLake(models.Model):
+	geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+	name = models.CharField(max_length=100, null=True, blank=True)
+	stand = models.DateField(null=True, blank=True)
+	wrrl_pg = models.CharField(max_length=100, null=True, blank=True)
+	genese = models.CharField(max_length=100, null=True, blank=True)
+	wrrl = models.IntegerField(null=True, blank=True)
+	badesee = models.IntegerField(null=True, blank=True)
+	quelldat = models.DateField(null=True, blank=True)
+	area_m2 = models.IntegerField(null=True, blank=True)
+	area_ha = models.FloatField(null=True, blank=True)
+	vol_mio_m3 = models.FloatField(null=True, blank=True)
+	ezg_km2 = models.FloatField(null=True, blank=True)
+	d_max_m = models.IntegerField(null=True, blank=True)
+	verweilt = models.CharField(max_length=100, null=True, blank=True)
+	t_cm_per_a = models.FloatField(null=True, blank=True)
+	seetyp = models.IntegerField(null=True, blank=True)
+	seetyp_txt = models.CharField(max_length=100, null=True, blank=True)
+
+                             
+class EZG(models.Model):
+	geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+	kennzahl = models.CharField(max_length=100, null=True, blank=True)
+	gewaesser = models.CharField(max_length=100, null=True, blank=True)
+	gew_alias = models.CharField(max_length=100, null=True, blank=True)
+	gew_kennz = models.CharField(max_length=100, null=True, blank=True)
+	beschr_von = models.CharField(max_length=100, null=True, blank=True)
+	beschr_bis = models.CharField(max_length=100, null=True, blank=True)
+	lage = models.CharField(max_length=100, null=True, blank=True)
+	land = models.CharField(max_length=100, null=True, blank=True)
+	ordnung = models.CharField(max_length=100, null=True, blank=True)
+	fl_art = models.CharField(max_length=100, null=True, blank=True)
+	wrrl_kr = models.CharField(max_length=100, null=True, blank=True)
+	area_qkm = models.FloatField(null=True, blank=True)
+	area_ha = models.FloatField(null=True, blank=True)
+	ezg_id = models.IntegerField(null=True, blank=True)
+	bemerkung = models.CharField(max_length=100, null=True, blank=True)
+	wrrl_fge = models.CharField(max_length=100, null=True, blank=True)
+	wrrl_bg = models.CharField(max_length=100, null=True, blank=True)
+	shape_area = models.FloatField(null=True, blank=True)
+	shape_len = models.FloatField(null=True, blank=True)
+class SiekerWaterLevel(models.Model):
+    geom = gis_models.PointField(srid=25833, null=True, blank=True)
+    messstelle = models.CharField(max_length=100, null=True, blank=True)
+    t_d = models.IntegerField(null=True, blank=True)  
+    t_a = models.FloatField(null=True, blank=True)
+    # startdatum = models.CharField(max_length=100, null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    # enddatum = models.CharField(max_length=100, null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    min_cm = models.IntegerField(null=True, blank=True)  
+    max_cm = models.IntegerField(null=True, blank=True)  
+    mw_10_19 = models.FloatField(null=True, blank=True)  
+    mw_90_99 = models.FloatField(null=True, blank=True)  
+    stdev_cm = models.FloatField(null=True, blank=True)  
+    twenty_yr_trend = models.FloatField(null=True, blank=True)
+    pkz = models.CharField(max_length=100, null=True, blank=True)
+    pegelname = models.CharField(max_length=100, null=True, blank=True)
+    gewaesser = models.CharField(max_length=100, null=True, blank=True)
+    pegelart = models.CharField(max_length=100, null=True, blank=True)  
+    mess_w = models.CharField(max_length=100, null=True, blank=True)
+    mess_q = models.CharField(max_length=100, null=True, blank=True)
+    soll_w = models.CharField(max_length=100, null=True, blank=True)
+    soll_q = models.CharField(max_length=100, null=True, blank=True)
+    region = models.CharField(max_length=100, null=True, blank=True)
+    hwmp = models.IntegerField(null=True, blank=True)  
+    dgjp = models.IntegerField(null=True, blank=True)  
+    gwk = models.CharField(max_length=100, null=True, blank=True)
+    gbk = models.CharField(max_length=100, null=True, blank=True)
+    a_ezg = models.FloatField(null=True, blank=True)
+    bemerkung = models.CharField(max_length=100, null=True, blank=True)
+    anfrage = models.CharField(max_length=100, null=True, blank=True)
+    stat = models.CharField(max_length=100, null=True, blank=True)
+    ent_quell = models.IntegerField(null=True, blank=True)  
+    ent_muend = models.IntegerField(null=True, blank=True)  
+    diff_cm = models.IntegerField(null=True, blank=True)  
+    bilddatei = models.CharField(max_length=100, null=True, blank=True)
+
+class SiekerSink(models.Model):
+	geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+	fid = models.FloatField(null=True, blank=True)
+	volume = models.FloatField(null=True, blank=True)
+	area = models.FloatField(null=True, blank=True)
+	sink_depth = models.FloatField(null=True, blank=True)
+	max_elevation = models.FloatField(null=True, blank=True)
+	min_elevation = models.FloatField(null=True, blank=True)
+	urbanarea = models.CharField(max_length=100, null=True, blank=True)
+	urbanarea_percent = models.FloatField(null=True, blank=True)
+	wetlands = models.CharField(max_length=100, null=True, blank=True)
+	wetlands_percent = models.FloatField(null=True, blank=True)
+	avg_depth = models.FloatField(null=True, blank=True)
+	distance_t = models.FloatField(null=True, blank=True)
+	dist_lake = models.CharField(max_length=100, null=True, blank=True)
+	umsetzbark = models.CharField(max_length=100, null=True, blank=True)
+	waterdist = models.CharField(max_length=100, null=True, blank=True)
+
+class LanduseCLC2018(models.Model):
+    geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    fid = models.FloatField(null=True, blank=True)
+    objectid= models.FloatField(null=True, blank=True)
+    clc18 = models.CharField(max_length=50, null=True, blank=True)  # CLC code
+    shape_leng = models.FloatField(null=True, blank=True)
+    shape_area = models.FloatField(null=True, blank=True)
+    name_de = models.CharField(max_length=150, null=True, blank=True)
+
+class GekRetention(models.Model):
+	geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+	dokument = models.CharField(max_length=100, null=True, blank=True)
+	derz_nutzu = models.CharField(max_length=100, null=True, blank=True)
+	quelle_1 = models.CharField(max_length=100, null=True, blank=True)
+	quelle_2 = models.CharField(max_length=100, null=True, blank=True)
+	gew_u_ver = models.CharField(max_length=100, null=True, blank=True)
+	gew_name = models.CharField(max_length=100, null=True, blank=True)
+	pabschnitt = models.CharField(max_length=100, null=True, blank=True)
+	hrsg = models.CharField(max_length=100, null=True, blank=True)
+	ersch_jahr = models.CharField(max_length=100, null=True, blank=True)
+	link = models.CharField(max_length=100, null=True, blank=True)
+	mnt_1_id = models.CharField(max_length=100, null=True, blank=True)
+	anz_1 = models.FloatField(null=True, blank=True)
+	besch_1 = models.CharField(max_length=255, null=True, blank=True)
+	prio_1 = models.CharField(max_length=100, null=True, blank=True)
+	kosten_1 = models.CharField(max_length=100, null=True, blank=True)
+	mnt_id_2 = models.CharField(max_length=100, null=True, blank=True)
+	mnt_id_3 = models.CharField(max_length=100, null=True, blank=True)
+	mnt_id_4 = models.CharField(max_length=100, null=True, blank=True)
+	mnt_id_5 = models.CharField(max_length=100, null=True, blank=True)
+	mnt_id_6 = models.CharField(max_length=100, null=True, blank=True)
+	anz_2 = models.FloatField(null=True, blank=True)
+	anz_3 = models.FloatField(null=True, blank=True)
+	anz_4 = models.FloatField(null=True, blank=True)
+	anz_5 = models.FloatField(null=True, blank=True)
+	anz_6 = models.FloatField(null=True, blank=True)
+	massn_insg= models.FloatField(null=True, blank=True)
+	besch_2 = models.CharField(max_length=255, null=True, blank=True)
+	besch_3 = models.CharField(max_length=255, null=True, blank=True)
+	besch_4 = models.CharField(max_length=255, null=True, blank=True)
+	besch_5 = models.CharField(max_length=255, null=True, blank=True)
+	besch_6 = models.CharField(max_length=255, null=True, blank=True)
+	prio_2 = models.CharField(max_length=100, null=True, blank=True)
+	prio_3 = models.CharField(max_length=100, null=True, blank=True)
+	prio_4 = models.CharField(max_length=100, null=True, blank=True)
+	prio_5 = models.CharField(max_length=100, null=True, blank=True)
+	prio_6 = models.CharField(max_length=100, null=True, blank=True)
+	kosten_2 = models.CharField(max_length=100, null=True, blank=True)
+	kosten_3 = models.CharField(max_length=100, null=True, blank=True)
+	kosten_4 = models.CharField(max_length=100, null=True, blank=True)
+	kosten_5 = models.CharField(max_length=100, null=True, blank=True)
+	kosten_6 = models.CharField(max_length=100, null=True, blank=True)
+	datum_zugr = models.CharField(max_length=100, null=True, blank=True)
+	
+
+
+# Historische >Rückhalteräume
+class HistoricalWetlands(models.Model):
+	geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+	anmerkung = models.CharField(max_length=100, null=True, blank=True)
+	derz_nutzu = models.CharField(max_length=100, null=True, blank=True)
+	quelle_1 = models.CharField(max_length=100, null=True, blank=True)
+	quelle_2 = models.CharField(max_length=100, null=True, blank=True)
+	gew_u_ver = models.CharField(max_length=100, null=True, blank=True)
+	gew_name = models.CharField(max_length=100, null=True, blank=True)
+	dokument1 = models.CharField(max_length=100, null=True, blank=True)
+	flaeche_m2 = models.IntegerField(null=True, blank=True)
+	quelle_3 = models.CharField(max_length=100, null=True, blank=True)
+	waseransch = models.CharField(max_length=100, null=True, blank=True)
+	feucht_per = models.FloatField(null=True, blank=True)
+	umsetzbkt = models.CharField(max_length=100, null=True, blank=True)

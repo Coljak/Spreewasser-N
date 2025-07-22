@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
     <link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.css' %}" />
 	<link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.Default.css' %}" />
+    <link rel="stylesheet" href="{% static 'toolbox/toolbox.css' %}" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 
 
@@ -68,14 +69,23 @@
             
                 <ul class="dropdown-menu">
                     <li><a id="startSurfaceWaters" class="dropdown-item" href="#">Oberflächengewässer</a></li>
-                    <li><a id="startSiekerSinks" class="dropdown-item" href="#">Senken</a></li>
+                    <li><a id="startSiekerSinks" class="dropdown-item" href="#">Gewässernahe Senken</a></li>
                     <li><a id="startWaterDevelopment" class="dropdown-item" href="#">Gewässerentwicklungskonzepte</a></li>
                     <li><a id="startFormerWetlands" class="dropdown-item" href="#">Ehemalige Feuchtgebiete</a></li>
                 </ul>
             </div>
         </div>
         <div class="card-body">
-            <p>Das Tool bietet Möglichkeiten zur Auswahl von Standorten, die sich für Renaturierungs- und Versickerungsmaßnahmen in Ufernähe eignen. </p>
+            <p>Das Tool bietet Möglichkeiten zur Auswahl von Standorten, die sich für Renaturierungs- und Versickerungsmaßnahmen in Ufernähe eignen.
+            Hierbei können Sie zwischen vier verschiedenen Speichermethoden wählen:
+                <ul>
+                    <li>In Oberflächengewässern</li>
+                    <li>In topographischen Senken</li>
+                    <li>In von Gewässerentwicklungskonzepten (GEK) ausgewiesenen Bereichen</li>
+                    <li>In ehemaligen Feuchtgebietenn</li>
+                </ul>
+            </p>
+        
         </div>
 
     </card>

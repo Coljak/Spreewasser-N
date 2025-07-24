@@ -2,6 +2,9 @@ import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFTok
 import { ToolboxProject, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { initializeInfiltration } from '/static/toolbox/infiltration.js';
+import { initializeSiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters.js';
+import { initializeSiekerSink } from '/static/toolbox/sieker_sink.js';
+initializeSiekerSink
 import { 
   projectRegion, 
   baseMaps, 
@@ -225,10 +228,13 @@ fetch('https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json?incl
         ;
       }
     });
+    return markers
   })
   .catch(error => {
     console.error('Error fetching data:', error);
   });
+
+  
   // markers.addTo(map);
 
 const overlayLayers = {
@@ -310,6 +316,75 @@ function startInfiltration() {
   }
 };
 
+
+// Sieker
+function startSurfaceWaters() {
+  console.log('startSurfaceWaters')
+  const userField = ToolboxProject.loadFromLocalStorage().userField;
+  let layers = {}
+  // const userField = project.userField;
+  if (userField) {
+  
+    fetch('load_surface_waters_gui/' + userField + '/')
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        handleAlerts(data);
+        return;
+      }
+        // Replace HTML content
+      $('#toolboxButtons').addClass('d-none');
+      $('#toolboxPanel').removeClass('d-none');
+      $('#toolboxPanel').html(data.html);
+      layers = data.layers || {};
+    })
+    .then(() => {
+      initializeSiekerSurfaceWaters(layers);
+      // initializeSliders();
+
+    })
+    // .catch(error => console.error("Error fetching data:", error));
+  } else {
+    handleAlerts({ success: false, message: 'Please select a user field!' });
+  }
+};
+
+
+function startSiekerSinks() {
+  console.log('start Infiltration')
+  const userField = ToolboxProject.loadFromLocalStorage().userField;
+  // const userField = project.userField;
+  if (userField) {
+  
+    fetch('load_sieker_sink_gui/' + userField + '/')
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        handleAlerts(data);
+        return;
+      }
+        // Replace HTML content
+      $('#toolboxButtons').addClass('d-none');
+      $('#toolboxPanel').removeClass('d-none');
+      $('#toolboxPanel').html(data.html);
+    })
+    .then(() => {
+      initializeSiekerSink();
+      // initializeSliders();
+
+    })
+    // .catch(error => console.error("Error fetching data:", error));
+  } else {
+    handleAlerts({ success: false, message: 'Please select a user field!' });
+  }
+};
+
+
+
+
+
+
+
 $('#startInfiltration').on('click', () => {
   console.log('startInfiltration clicked');
   startInfiltration()
@@ -320,11 +395,11 @@ $('#startInjection').on('click', () => {
 });
 $('#startSurfaceWaters').on('click', () => {
   console.log('startSurfaceWaters clicked');
-  // startSurfaceWaters()
+  startSurfaceWaters()
 });
 $('#startSiekerSinks').on('click', () => {
   console.log('startSiekerSinks clicked');
-  // startSiekerSinks()
+  startSiekerSinks()
 });
 $('#startWaterDevelopment').on('click', () => {
   console.log('startWaterDevelopment clicked');

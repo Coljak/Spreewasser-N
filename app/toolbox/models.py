@@ -364,7 +364,6 @@ class LanduseEnlargedSink(models.Model):
     def __str__(self):
         return f"{self.sink.id} - {self.landuse.name} ({self.percentage}%)"
 
-
 class Feasibility(models.Model): # soilstuff
     # (100 - Ackerzahl) / 100 = index_feasibility 
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
@@ -456,7 +455,6 @@ class GroundWaterDistanceClass(models.Model):
         if self.lower_limit:
             limits.append(f"< {self.lower_limit} m")
         return ", ".join(limits) if limits else "no data"
-
 
 class FieldCapacity(models.Model):
     MIN_VOL_CHOICES = [
@@ -579,21 +577,24 @@ class EnlargedSinkSoilProperties(models.Model):
 
 
 ####################### SIEKER ########################
+# Seen25
 class SiekerLake(models.Model):
-    geb_kz = models.CharField(max_length=255, null=True, blank=True)
-    see_name = models.CharField(max_length=255, null=True, blank=True)
-    objart = models.CharField(max_length=255, null=True, blank=True)
+    geb_kz_int = models.BigIntegerField(null=True, blank=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    object_type = models.IntegerField(null=True, blank=True) # objart
     geo_quelle = models.CharField(max_length=255, null=True, blank=True)
     see_alias = models.CharField(max_length=255, null=True, blank=True)
     stand = models.DateField(null=True, blank=True)
-    ms_cd_lw = models.CharField(max_length=255, null=True, blank=True)
-    cd_ls = models.CharField(max_length=255, null=True, blank=True)
+    # ms_cd_lw = models.CharField(max_length=255, null=True, blank=True)
+    cd_ls = models.CharField(max_length=255, null=True, blank=True) # info includes ms_cd_lw
     wrrl_pg = models.CharField(max_length=255, null=True, blank=True)
-    wa_cd = models.CharField(max_length=255, null=True, blank=True)
+    # wa_cd = models.CharField(max_length=255, null=True, blank=True)
+    wa_cd_int = models.IntegerField(null=True, blank=True) # wa_cd_int
     genese = models.CharField(max_length=255, null=True, blank=True)
     gis_id = models.IntegerField(null=True, blank=True)
     wrrl = models.IntegerField(null=True, blank=True)
     badesee = models.IntegerField(null=True, blank=True)
+    bathing_lake = models.BooleanField(default=False) # badesee
     quelldat = models.DateField(null=True, blank=True)
     jp_id = models.CharField(max_length=255, null=True, blank=True)
     area_gis = models.FloatField(null=True, blank=True)
@@ -602,11 +603,14 @@ class SiekerLake(models.Model):
     see_kz = models.CharField(max_length=255, null=True, blank=True)
     shape_area = models.FloatField(null=True, blank=True)
     shape_len = models.FloatField(null=True, blank=True)
-    geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    # geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
 
-
+# gewnet25
 class SiekerGewnet(models.Model):
-    geom = gis_models.MultiLineStringField(srid=25833, null=True, blank=True)
+    # geom25833 = gis_models.MultiLineStringField(srid=25833, null=True, blank=True)
+    geom25833 = gis_models.LineStringField(srid=25833, null=True, blank=True)
+    geom4326 = gis_models.LineStringField(srid=4326, null=True, blank=True)
     obectid = models.IntegerField(null=True, blank=True)
     w_gn1 = models.CharField(max_length=255, null=True, blank=True)
     w_gn2 = models.CharField(max_length=255, null=True, blank=True)
@@ -626,48 +630,80 @@ class SiekerGewnet(models.Model):
 
 
 class SiekerLargeLake(models.Model):
-	geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-	name = models.CharField(max_length=100, null=True, blank=True)
-	stand = models.DateField(null=True, blank=True)
-	wrrl_pg = models.CharField(max_length=100, null=True, blank=True)
-	genese = models.CharField(max_length=100, null=True, blank=True)
-	wrrl = models.IntegerField(null=True, blank=True)
-	badesee = models.IntegerField(null=True, blank=True)
-	quelldat = models.DateField(null=True, blank=True)
-	area_m2 = models.IntegerField(null=True, blank=True)
-	area_ha = models.FloatField(null=True, blank=True)
-	vol_mio_m3 = models.FloatField(null=True, blank=True)
-	ezg_km2 = models.FloatField(null=True, blank=True)
-	d_max_m = models.IntegerField(null=True, blank=True)
-	verweilt = models.CharField(max_length=100, null=True, blank=True)
-	t_cm_per_a = models.FloatField(null=True, blank=True)
-	seetyp = models.IntegerField(null=True, blank=True)
-	seetyp_txt = models.CharField(max_length=100, null=True, blank=True)
 
+    geom25833 = gis_models.PolygonField(srid=25833, null=True, blank=True)
+    geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
+    stand = models.DateField(null=True, blank=True)
+    wrrl_pg = models.CharField(max_length=100, null=True, blank=True)
+    genese = models.CharField(max_length=100, null=True, blank=True)
+    wrrl = models.IntegerField(null=True, blank=True)
+    badesee = models.IntegerField(null=True, blank=True)
+    quelldat = models.DateField(null=True, blank=True)
+    area_m2 = models.IntegerField(null=True, blank=True)
+    area_ha = models.FloatField(null=True, blank=True)
+    vol_mio_m3 = models.FloatField(null=True, blank=True)
+    ezg_km2 = models.FloatField(null=True, blank=True)
+    d_max_m = models.IntegerField(null=True, blank=True)
+    verweilt = models.CharField(max_length=100, null=True, blank=True)
+    t_cm_per_a = models.FloatField(null=True, blank=True)
+    seetyp = models.IntegerField(null=True, blank=True)
+    seetyp_txt = models.CharField(max_length=100, null=True, blank=True)
+
+    def to_feature(self):
+        """
+        Convert the model instance to a GeoJSON feature.
+        """
+        geojson = json.loads(self.geom4326.geojson) if self.geom4326 else None
+        geojson['properties'] = {
+                'id': self.id,
+                "name": self.name,
+                "stand": self.stand.isoformat() if self.stand else None,
+                "wrrl_pg": self.wrrl_pg,
+                "genese": self.genese,
+                "wrrl": self.wrrl,
+                "badesee": self.badesee,
+                "quelldat": self.quelldat.isoformat() if self.quelldat else None,
+                "area_m2": round(self.area_m2) if self.area_m2 else None,
+                "area_ha": round(self.area_ha, 1) if self.area_ha else None,
+                "vol_mio_m3": round(self.vol_mio_m3) if self.vol_mio_m3 else None,
+                "ezg_km2": self.ezg_km2,
+                "d_max_m": self.d_max_m,
+                "verweilt": self.verweilt,
+                "t_cm_per_a": self.t_cm_per_a,
+                "seetyp": self.seetyp,
+                "seetyp_txt": self.seetyp_txt
+            }
+
+        return geojson
+    
                              
 class EZG(models.Model):
-	geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-	kennzahl = models.CharField(max_length=100, null=True, blank=True)
-	gewaesser = models.CharField(max_length=100, null=True, blank=True)
-	gew_alias = models.CharField(max_length=100, null=True, blank=True)
-	gew_kennz = models.CharField(max_length=100, null=True, blank=True)
-	beschr_von = models.CharField(max_length=100, null=True, blank=True)
-	beschr_bis = models.CharField(max_length=100, null=True, blank=True)
-	lage = models.CharField(max_length=100, null=True, blank=True)
-	land = models.CharField(max_length=100, null=True, blank=True)
-	ordnung = models.CharField(max_length=100, null=True, blank=True)
-	fl_art = models.CharField(max_length=100, null=True, blank=True)
-	wrrl_kr = models.CharField(max_length=100, null=True, blank=True)
-	area_qkm = models.FloatField(null=True, blank=True)
-	area_ha = models.FloatField(null=True, blank=True)
-	ezg_id = models.IntegerField(null=True, blank=True)
-	bemerkung = models.CharField(max_length=100, null=True, blank=True)
-	wrrl_fge = models.CharField(max_length=100, null=True, blank=True)
-	wrrl_bg = models.CharField(max_length=100, null=True, blank=True)
-	shape_area = models.FloatField(null=True, blank=True)
-	shape_len = models.FloatField(null=True, blank=True)
+    geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
+    geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
+    kennzahl = models.CharField(max_length=100, null=True, blank=True)
+    gewaesser = models.CharField(max_length=100, null=True, blank=True)
+    gew_alias = models.CharField(max_length=100, null=True, blank=True)
+    gew_kennz = models.CharField(max_length=100, null=True, blank=True)
+    beschr_von = models.CharField(max_length=100, null=True, blank=True)
+    beschr_bis = models.CharField(max_length=100, null=True, blank=True)
+    lage = models.CharField(max_length=100, null=True, blank=True)
+    land = models.CharField(max_length=100, null=True, blank=True)
+    ordnung = models.CharField(max_length=100, null=True, blank=True)
+    fl_art = models.CharField(max_length=100, null=True, blank=True)
+    wrrl_kr = models.CharField(max_length=100, null=True, blank=True)
+    area_qkm = models.FloatField(null=True, blank=True)
+    area_ha = models.FloatField(null=True, blank=True)
+    ezg_id = models.IntegerField(null=True, blank=True)
+    bemerkung = models.CharField(max_length=100, null=True, blank=True)
+    wrrl_fge = models.CharField(max_length=100, null=True, blank=True)
+    wrrl_bg = models.CharField(max_length=100, null=True, blank=True)
+    shape_area = models.FloatField(null=True, blank=True)
+    shape_len = models.FloatField(null=True, blank=True)
 class SiekerWaterLevel(models.Model):
-    geom = gis_models.PointField(srid=25833, null=True, blank=True)
+    geom25833 = gis_models.PointField(srid=25833, null=True, blank=True)
+    geom4326 = gis_models.PointField(srid=4326, null=True, blank=True)
     messstelle = models.CharField(max_length=100, null=True, blank=True)
     t_d = models.IntegerField(null=True, blank=True)  
     t_a = models.FloatField(null=True, blank=True)
@@ -703,26 +739,75 @@ class SiekerWaterLevel(models.Model):
     diff_cm = models.IntegerField(null=True, blank=True)  
     bilddatei = models.CharField(max_length=100, null=True, blank=True)
 
+    def to_feature(self):
+        """
+        Convert the model instance to a GeoJSON feature.
+        """
+        return {
+            "type": "Feature",
+            "geometry": json.loads(self.geom4326.geojson) if self.geom4326 else None,
+            "properties": {
+                "messstelle": self.messstelle,
+                "t_d": self.t_d,
+                "t_a": self.t_a,
+                "start_date": self.start_date.isoformat() if self.start_date else None,
+                "end_date": self.end_date.isoformat() if self.end_date else None,
+                "min_cm": self.min_cm,
+                "max_cm": self.max_cm,
+                "mw_10_19": self.mw_10_19,
+                "mw_90_99": self.mw_90_99,
+                "stdev_cm": self.stdev_cm,
+                "twenty_yr_trend": self.twenty_yr_trend,
+                "pkz": self.pkz,
+                "pegelname": self.pegelname,
+                "gewaesser": self.gewaesser,
+                "pegelart": self.pegelart,
+                "mess_w": self.mess_w,
+                "mess_q": self.mess_q,
+                "soll_w": self.soll_w,
+                "soll_q": self.soll_q,
+                "region": self.region,
+                "hwmp": self.hwmp,
+                "dgjp": self.dgjp,
+                "gwk": self.gwk,
+                "gbk": self.gbk,
+                "a_ezg": self.a_ezg,
+                "bemerkung": self.bemerkung,
+                "anfrage": self.anfrage,
+                "stat": self.stat,
+                "ent_quell": self.ent_quell,
+                "ent_muend": self.ent_muend,
+                "diff_cm": self.diff_cm,
+                # "bilddatei":+self.bilddatei
+            }
+        }
+
 class SiekerSink(models.Model):
-	geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-	fid = models.FloatField(null=True, blank=True)
-	volume = models.FloatField(null=True, blank=True)
-	area = models.FloatField(null=True, blank=True)
-	sink_depth = models.FloatField(null=True, blank=True)
-	max_elevation = models.FloatField(null=True, blank=True)
-	min_elevation = models.FloatField(null=True, blank=True)
-	urbanarea = models.CharField(max_length=100, null=True, blank=True)
-	urbanarea_percent = models.FloatField(null=True, blank=True)
-	wetlands = models.CharField(max_length=100, null=True, blank=True)
-	wetlands_percent = models.FloatField(null=True, blank=True)
-	avg_depth = models.FloatField(null=True, blank=True)
-	distance_t = models.FloatField(null=True, blank=True)
-	dist_lake = models.CharField(max_length=100, null=True, blank=True)
-	umsetzbark = models.CharField(max_length=100, null=True, blank=True)
-	waterdist = models.CharField(max_length=100, null=True, blank=True)
+    geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
+    geom_remaining = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
+    centroid = gis_models.PointField(srid=4326, null=True, blank=True)
+    fid = models.FloatField(null=True, blank=True)
+    volume = models.FloatField(null=True, blank=True)
+    area = models.FloatField(null=True, blank=True)
+    sink_depth = models.FloatField(null=True, blank=True)
+    max_elevation = models.FloatField(null=True, blank=True)
+    min_elevation = models.FloatField(null=True, blank=True)
+    urbanarea = models.CharField(max_length=100, null=True, blank=True)
+    urbanarea_percent = models.FloatField(null=True, blank=True)
+    wetlands = models.CharField(max_length=100, null=True, blank=True)
+    wetlands_percent = models.FloatField(null=True, blank=True)
+    avg_depth = models.FloatField(null=True, blank=True)
+    distance_t = models.FloatField(null=True, blank=True)
+    dist_lake = models.CharField(max_length=100, null=True, blank=True)
+    umsetzbark = models.CharField(max_length=100, null=True, blank=True)
+    waterdist = models.CharField(max_length=100, null=True, blank=True)
 
 class LanduseCLC2018(models.Model):
-    geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
+    geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
     fid = models.FloatField(null=True, blank=True)
     objectid= models.FloatField(null=True, blank=True)
     clc18 = models.CharField(max_length=50, null=True, blank=True)  # CLC code
@@ -731,64 +816,88 @@ class LanduseCLC2018(models.Model):
     name_de = models.CharField(max_length=150, null=True, blank=True)
 
 class GekRetention(models.Model):
-	geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-	dokument = models.CharField(max_length=100, null=True, blank=True)
-	derz_nutzu = models.CharField(max_length=100, null=True, blank=True)
-	quelle_1 = models.CharField(max_length=100, null=True, blank=True)
-	quelle_2 = models.CharField(max_length=100, null=True, blank=True)
-	gew_u_ver = models.CharField(max_length=100, null=True, blank=True)
-	gew_name = models.CharField(max_length=100, null=True, blank=True)
-	pabschnitt = models.CharField(max_length=100, null=True, blank=True)
-	hrsg = models.CharField(max_length=100, null=True, blank=True)
-	ersch_jahr = models.CharField(max_length=100, null=True, blank=True)
-	link = models.CharField(max_length=100, null=True, blank=True)
-	mnt_1_id = models.CharField(max_length=100, null=True, blank=True)
-	anz_1 = models.FloatField(null=True, blank=True)
-	besch_1 = models.CharField(max_length=255, null=True, blank=True)
-	prio_1 = models.CharField(max_length=100, null=True, blank=True)
-	kosten_1 = models.CharField(max_length=100, null=True, blank=True)
-	mnt_id_2 = models.CharField(max_length=100, null=True, blank=True)
-	mnt_id_3 = models.CharField(max_length=100, null=True, blank=True)
-	mnt_id_4 = models.CharField(max_length=100, null=True, blank=True)
-	mnt_id_5 = models.CharField(max_length=100, null=True, blank=True)
-	mnt_id_6 = models.CharField(max_length=100, null=True, blank=True)
-	anz_2 = models.FloatField(null=True, blank=True)
-	anz_3 = models.FloatField(null=True, blank=True)
-	anz_4 = models.FloatField(null=True, blank=True)
-	anz_5 = models.FloatField(null=True, blank=True)
-	anz_6 = models.FloatField(null=True, blank=True)
-	massn_insg= models.FloatField(null=True, blank=True)
-	besch_2 = models.CharField(max_length=255, null=True, blank=True)
-	besch_3 = models.CharField(max_length=255, null=True, blank=True)
-	besch_4 = models.CharField(max_length=255, null=True, blank=True)
-	besch_5 = models.CharField(max_length=255, null=True, blank=True)
-	besch_6 = models.CharField(max_length=255, null=True, blank=True)
-	prio_2 = models.CharField(max_length=100, null=True, blank=True)
-	prio_3 = models.CharField(max_length=100, null=True, blank=True)
-	prio_4 = models.CharField(max_length=100, null=True, blank=True)
-	prio_5 = models.CharField(max_length=100, null=True, blank=True)
-	prio_6 = models.CharField(max_length=100, null=True, blank=True)
-	kosten_2 = models.CharField(max_length=100, null=True, blank=True)
-	kosten_3 = models.CharField(max_length=100, null=True, blank=True)
-	kosten_4 = models.CharField(max_length=100, null=True, blank=True)
-	kosten_5 = models.CharField(max_length=100, null=True, blank=True)
-	kosten_6 = models.CharField(max_length=100, null=True, blank=True)
-	datum_zugr = models.CharField(max_length=100, null=True, blank=True)
+    geom25833 = gis_models.PolygonField(srid=25833, null=True, blank=True)
+    geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
+    dokument = models.CharField(max_length=100, null=True, blank=True)
+    derz_nutzu = models.CharField(max_length=100, null=True, blank=True)
+    quelle_1 = models.CharField(max_length=100, null=True, blank=True)
+    quelle_2 = models.CharField(max_length=100, null=True, blank=True)
+    gew_u_ver = models.CharField(max_length=100, null=True, blank=True)
+    gew_name = models.CharField(max_length=100, null=True, blank=True)
+    pabschnitt = models.CharField(max_length=100, null=True, blank=True)
+    hrsg = models.CharField(max_length=100, null=True, blank=True)
+    ersch_jahr = models.CharField(max_length=100, null=True, blank=True)
+    link = models.CharField(max_length=100, null=True, blank=True)
+    mnt_1_id = models.CharField(max_length=100, null=True, blank=True)
+    anz_1 = models.FloatField(null=True, blank=True)
+    besch_1 = models.CharField(max_length=255, null=True, blank=True)
+    prio_1 = models.CharField(max_length=100, null=True, blank=True)
+    kosten_1 = models.CharField(max_length=100, null=True, blank=True)
+    mnt_id_2 = models.CharField(max_length=100, null=True, blank=True)
+    mnt_id_3 = models.CharField(max_length=100, null=True, blank=True)
+    mnt_id_4 = models.CharField(max_length=100, null=True, blank=True)
+    mnt_id_5 = models.CharField(max_length=100, null=True, blank=True)
+    mnt_id_6 = models.CharField(max_length=100, null=True, blank=True)
+    anz_2 = models.FloatField(null=True, blank=True)
+    anz_3 = models.FloatField(null=True, blank=True)
+    anz_4 = models.FloatField(null=True, blank=True)
+    anz_5 = models.FloatField(null=True, blank=True)
+    anz_6 = models.FloatField(null=True, blank=True)
+    massn_insg= models.FloatField(null=True, blank=True)
+    besch_2 = models.CharField(max_length=255, null=True, blank=True)
+    besch_3 = models.CharField(max_length=255, null=True, blank=True)
+    besch_4 = models.CharField(max_length=255, null=True, blank=True)
+    besch_5 = models.CharField(max_length=255, null=True, blank=True)
+    besch_6 = models.CharField(max_length=255, null=True, blank=True)
+    prio_2 = models.CharField(max_length=100, null=True, blank=True)
+    prio_3 = models.CharField(max_length=100, null=True, blank=True)
+    prio_4 = models.CharField(max_length=100, null=True, blank=True)
+    prio_5 = models.CharField(max_length=100, null=True, blank=True)
+    prio_6 = models.CharField(max_length=100, null=True, blank=True)
+    kosten_2 = models.CharField(max_length=100, null=True, blank=True)
+    kosten_3 = models.CharField(max_length=100, null=True, blank=True)
+    kosten_4 = models.CharField(max_length=100, null=True, blank=True)
+    kosten_5 = models.CharField(max_length=100, null=True, blank=True)
+    kosten_6 = models.CharField(max_length=100, null=True, blank=True)
+    datum_zugr = models.CharField(max_length=100, null=True, blank=True)
 	
 
 
 # Historische >Rückhalteräume
 class HistoricalWetlands(models.Model):
-	geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-	anmerkung = models.CharField(max_length=100, null=True, blank=True)
-	derz_nutzu = models.CharField(max_length=100, null=True, blank=True)
-	quelle_1 = models.CharField(max_length=100, null=True, blank=True)
-	quelle_2 = models.CharField(max_length=100, null=True, blank=True)
-	gew_u_ver = models.CharField(max_length=100, null=True, blank=True)
-	gew_name = models.CharField(max_length=100, null=True, blank=True)
-	dokument1 = models.CharField(max_length=100, null=True, blank=True)
-	flaeche_m2 = models.IntegerField(null=True, blank=True)
-	quelle_3 = models.CharField(max_length=100, null=True, blank=True)
-	waseransch = models.CharField(max_length=100, null=True, blank=True)
-	feucht_per = models.FloatField(null=True, blank=True)
-	umsetzbkt = models.CharField(max_length=100, null=True, blank=True)
+    geom25833 = gis_models.PolygonField(srid=25833, null=True, blank=True)
+    geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
+    anmerkung = models.CharField(max_length=100, null=True, blank=True)
+    derz_nutzu = models.CharField(max_length=100, null=True, blank=True)
+    quelle_1 = models.CharField(max_length=100, null=True, blank=True)
+    quelle_2 = models.CharField(max_length=100, null=True, blank=True)
+    gew_u_ver = models.CharField(max_length=100, null=True, blank=True)
+    gew_name = models.CharField(max_length=100, null=True, blank=True)
+    dokument1 = models.CharField(max_length=100, null=True, blank=True)
+    flaeche_m2 = models.IntegerField(null=True, blank=True)
+    quelle_3 = models.CharField(max_length=100, null=True, blank=True)
+    waseransch = models.CharField(max_length=100, null=True, blank=True)
+    feucht_per = models.FloatField(null=True, blank=True)
+    umsetzbkt = models.CharField(max_length=100, null=True, blank=True)
+
+
+class SinkDifference(models.Model):
+    geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
+    geom_remaining = gis_models.PolygonField(srid=25833, null=True, blank=True)
+    geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
+    fid = models.FloatField(null=True, blank=True)
+    volume = models.FloatField(null=True, blank=True)
+    area = models.FloatField(null=True, blank=True)
+    sink_depth = models.FloatField(null=True, blank=True)
+    max_elevation = models.FloatField(null=True, blank=True)
+    min_elevation = models.FloatField(null=True, blank=True)
+    urbanarea = models.CharField(max_length=100, null=True, blank=True)
+    urbanarea_percent = models.FloatField(null=True, blank=True)
+    wetlands = models.CharField(max_length=100, null=True, blank=True)
+    wetlands_percent = models.FloatField(null=True, blank=True)
+    avg_depth = models.FloatField(null=True, blank=True)
+    distance_t = models.FloatField(null=True, blank=True)
+    dist_lake = models.CharField(max_length=100, null=True, blank=True)
+    umsetzbark = models.CharField(max_length=100, null=True, blank=True)
+    waterdist = models.CharField(max_length=100, null=True, blank=True)

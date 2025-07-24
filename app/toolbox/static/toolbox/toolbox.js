@@ -90,6 +90,47 @@ class Infiltration {
 
     }
 };
+
+
+class SiekerSink {
+    constructor (siekerSink = {}) {
+        this.id = siekerSink.id ?? null;
+
+        this.sink_depth_min = siekerSink.sink_depth_min ?? null;
+        this.sink_depth_max = siekerSink.sink_depth_max ?? null;
+        this.sink_avg_depth_min = siekerSink.sink_avg_depth_min ?? null;
+        this.sink_avg_depth_max = siekerSink.sink_avg_depth_max ?? null;
+
+        this.sink_max_elevation_min = siekerSink.sink_max_elevation_min ?? null;
+        this.sink_max_elevation_max = siekerSink.sink_max_elevation_max ?? null;
+        this.sink_min_elevation_min = siekerSink.sink_min_elevation_min ?? null;
+        this.sink_min_elevation_max = siekerSink.sink_min_elevation_max ?? null;
+        this.sink_urbanarea_percent_min = siekerSink.sink_urbanarea_percent_min ?? null;
+        this.sink_urbanarea_percent_max = siekerSink.sink_urbanarea_percent_max ?? null;
+        this.sink_wetlands_percent_min = siekerSink.sink_wetlands_percent_min ?? null;
+        this.sink_wetlands_percent_max = siekerSink.sink_wetlands_percent_max ?? null;
+
+        this.sink_distance_t_min = siekerSink.sink_distance_t_min ?? null;
+        this.sink_distance_t_max = siekerSink.sink_distance_t_max ?? null;
+        this.sink_dist_lake_min = siekerSink.sink_dist_lake_min ?? null;
+        this.sink_dist_lake_max = siekerSink.sink_dist_lake_max ?? null;
+
+        this.sink_waterdist_min = siekerSink.sink_waterdist_min ?? null;
+        this.sink_waterdist_max = siekerSink.sink_waterdist_max ?? null;
+        this.sink_umsetzbark_min = siekerSink.sink_umsetzbark_min ?? null;
+        this.sink_umsetzbark_max = siekerSink.sink_umsetzbark_max ?? null;
+        this.feasibility = siekerSink.feasibility ?? [];
+
+        this.selected_sinks = siekerSink.selected_sinks ?? [];
+
+    }
+};
+
+
+
+
+
+
 export class ToolboxProject {
   constructor (project = {}) {
     this.id = project.id ?? null;
@@ -99,6 +140,7 @@ export class ToolboxProject {
     this.userField = project.userField ?? null;
     this.toolboxType = project.toolboxType ?? 1;
     this.infiltration = new Infiltration(project.infiltration) ?? new Infiltration();
+    this.siekerSink = new SiekerSink(project.siekerSink) ?? new SiekerSink();
   }
 
     // Convert instance to JSON for storage

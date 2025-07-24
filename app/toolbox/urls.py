@@ -33,4 +33,10 @@ urlpatterns = [
     path('toolbox/get_weighting_form/', views.get_weighting_forms, name='get_weighting_forms'),
     # path('toolbox/calculate_index_for_selection/', views.calculate_index_for_selection, name='calculate_index_for_selection'),
     path('toolbox/get_inlets/', views.get_inlets, name='get_inlets'),
+    #### Sieker ####
+    # Surface Waters
+    path('toolbox/load_surface_waters_gui/<int:user_field_id>/', views.sieker_surface_waters, name='sieker_surface_waters'),
+    path('toolbox/load_sieker_sink_gui/<str:user_field_id>/', views.load_sieker_sink_gui, name='load_sieker_sink_gui'),
+    path('toolbox/filter_sieker_sinks/', views.filter_sieker_sinks, name='filter_sieker_sinks'),
+
 ]

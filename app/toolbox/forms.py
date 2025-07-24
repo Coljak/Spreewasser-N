@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.db.models import Max, Min
 from .models import *
-from . import widgets
+# from .utils import widgets
 from django.db.models import Q
 from toolbox.models import * #, SinksWithLandUseAndSoilProperties
 from django.core import validators
@@ -14,7 +14,7 @@ from django_filters.fields import RangeField
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.gis.geos import GEOSGeometry
 
-from .widgets import CustomRangeSliderWidget, CustomSingleSliderWidget,CustomSimpleSliderWidget, CustomDoubleSliderWidget
+from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget,CustomSimpleSliderWidget, CustomDoubleSliderWidget
 
 
 

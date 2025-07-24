@@ -8,7 +8,7 @@ from django_filters.fields import RangeField
 from django import forms
 from .models import *
 from .forms import SliderFilterForm
-from .widgets import CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget
+from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget
 import math
 # from django_filters import FloatFilter
 
@@ -284,3 +284,43 @@ class LakeFilter(FilterSet):
         fields = ['min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days']
         form = SliderFilterForm
 
+
+
+class SiekerSinkFilter(FilterSet):
+    area = MinMaxRangeFilter(
+        model=Sink, 
+        field_name='area', 
+        label="Fläche (m²)",
+        )
+    volume = MinMaxRangeFilter(model=SiekerSink, field_name='volume', label="Volumen (m³)")
+    sink_depth = MinMaxRangeFilter(model=SiekerSink, field_name='sink_depth', label="Depth (m)")
+    avg_depth = MinMaxRangeFilter(model=SiekerSink, field_name='avg_depth', label="Average Depth (m)")
+    urbanarea_percent = MinMaxRangeFilter(model=SiekerSink, field_name='urbanarea_percent', label="Urban Area (%)")
+    wetlands_percent = MinMaxRangeFilter(model=SiekerSink, field_name='wetlands_percent', label="Wetlands Area (%)")
+   
+    feasibility = MultipleChoiceFilter(
+        label="Umsetzbarkeit",
+        choices=[('leicht', 'leicht'), ('mittel', 'mittel'), ('schwierig', 'schwierig')],  # Will be set in __init__
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    
+    def __init__(self, *args, queryset=None, **kwargs):
+        super().__init__(*args, queryset=queryset, **kwargs)
+
+        for name, filter_ in self.filters.items():
+            if isinstance(filter_, MinMaxRangeFilter):
+                filter_.queryset_for_bounds = queryset
+                filter_.set_bounds()
+
+        prefix = 'sieker-sink'
+        for name, field in self.form.fields.items():
+            field.widget.attrs['id'] = f"{prefix}_{name}"
+            field.widget.attrs['name'] = f"{prefix}_{name}"
+            field.widget.attrs['prefix'] = prefix
+
+
+    class Meta:
+        model = SiekerSink
+        fields = ['volume', 'sink_depth', 'avg_depth', 'urbanarea_percent', 'wetlands_percent']
+        form = SliderFilterForm

@@ -74,7 +74,9 @@ export const baseMaps = {
 export var map = enhanceMap(
   new L.Map("map", {
     zoomSnap: 0.25,
-    wheelPxPerZoomLevel: 500,
+    wheelPxPerZoomLevel: 250,
+    maxZoom: 18,
+    minZoom: 3,
     inertia: true,
     tapHold: true,
   }).addLayer(osm)

@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from .models import *
+from . import models
 
 
 
 class MapSoilCLCSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MapSoilCLC
+        model = models.MapSoilCLC
         fields = ['polygon_id', 'tkle_nr', 'clc_code', 
                   'soilprofile', 'clc_code', 'bias_21_soilprofile', 
                   'bias_21_clc_code', 'bias_23_soilprofile', 'bias_23_clc_code',
@@ -13,27 +13,27 @@ class MapSoilCLCSerializer(serializers.ModelSerializer):
         
 class SoilProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SoilProfile
+        model = models.SoilProfile
         fields = '__all__'
         depth = 1
 class Ka5TextureClassSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Ka5TextureClass
+        model = models.Ka5TextureClass
         fields = ['ka5_soiltype', 'clay', 'silt', 'sand']
 
 class HumusClassSerializer(serializers.ModelSerializer):
     class Meta:
-        model = HumusClass
+        model = models.HumusClass
         fields = ['corg']
 
 class PHClassSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PHClass
+        model = models.PHClass
         fields = ['ph_lower_value', 'ph_upper_value']
 
 class BulkDensityClassSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BulkDensityClass
+        model = models.BulkDensityClass
         fields = ['raw_density_g_per_cm3']
 
 class SoilProfileHorizonSerializer(serializers.ModelSerializer):
@@ -46,7 +46,7 @@ class SoilProfileHorizonSerializer(serializers.ModelSerializer):
     ptf1_wp = serializers.SerializerMethodField()
 
     class Meta:
-        model = SoilProfileHorizon
+        model = models.SoilProfileHorizon
         fields = [
             'id',
             'soilprofile',

@@ -6,7 +6,7 @@ from django.db.models import Q
 from django_filters.filters import RangeFilter, ChoiceFilter, MultipleChoiceFilter, NumberFilter
 from django_filters.fields import RangeField
 from django import forms
-from .models import *
+from . import models
 from .forms import SliderFilterForm
 from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget
 import math
@@ -86,13 +86,13 @@ class MinMaxRangeFilter(RangeFilter):
 
 class SinkFilter(FilterSet):
     area = MinMaxRangeFilter(
-        model=Sink, 
+        model=models.Sink, 
         field_name='area', 
         label="Area (m²)",
         )
-    volume = MinMaxRangeFilter(model=Sink, field_name='volume', label="Volume (m³)")
-    depth = MinMaxRangeFilter(model=Sink, field_name='depth', label="Depth (m)")
-    # index_soil = MinMaxRangeFilter(model=Sink, field_name='index_soil', label="Soil Index (%)")
+    volume = MinMaxRangeFilter(model=models.Sink, field_name='volume', label="Volume (m³)")
+    depth = MinMaxRangeFilter(model=models.Sink, field_name='depth', label="Depth (m)")
+    # index_soil = MinMaxRangeFilter(model=models.Sink, field_name='index_soil', label="Soil Index (%)")
 
     land_use = MultipleChoiceFilter(
         label="Land Use",
@@ -134,17 +134,17 @@ class SinkFilter(FilterSet):
 
 
     class Meta:
-        model = Sink
+        model = models.Sink
         fields = ['area', 'volume', 'depth',  'land_use']
         form = SliderFilterForm
 
 class EnlargedSinkFilter(FilterSet):
-    area = MinMaxRangeFilter(model=EnlargedSink, field_name='area', label="Area (m²)")
-    volume = MinMaxRangeFilter(model=EnlargedSink, field_name='volume', label="Volume (m³)")
-    depth = MinMaxRangeFilter(model=EnlargedSink, field_name='depth', label="Depth (m)")
-    volume_construction_barrier = MinMaxRangeFilter(model=EnlargedSink, field_name='volume_construction_barrier', label="Volume Construction Barrier (m³)")
-    volume_gained = MinMaxRangeFilter(model=EnlargedSink, field_name='volume_gained', label="Volume Gained (m³)")
-    # index_soil = MinMaxRangeFilter(model=EnlargedSink, field_name='index_soil', label="Soil Index (%)")
+    area = MinMaxRangeFilter(model=models.EnlargedSink, field_name='area', label="Area (m²)")
+    volume = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume', label="Volume (m³)")
+    depth = MinMaxRangeFilter(model=models.EnlargedSink, field_name='depth', label="Depth (m)")
+    volume_construction_barrier = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume_construction_barrier', label="Volume Construction Barrier (m³)")
+    volume_gained = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume_gained', label="Volume Gained (m³)")
+    # index_soil = MinMaxRangeFilter(model=models.EnlargedSink, field_name='index_soil', label="Soil Index (%)")
 
     # Placeholder for land_use — choices will be set dynamically
     land_use = MultipleChoiceFilter(
@@ -186,17 +186,17 @@ class EnlargedSinkFilter(FilterSet):
             field.widget.attrs['prefix'] = prefix
 
     class Meta:
-        model = EnlargedSink
+        model = models.EnlargedSink
         fields = ['area', 'volume', 'depth', 'volume_construction_barrier', 'volume_gained',  'land_use']
         form = SliderFilterForm
 
 
 
 class StreamFilter(FilterSet):
-    min_surplus_volume = MinMaxRangeFilter(model=Stream, field_name='min_surplus_volume', label="Min Surplus Volume (m³)")
-    mean_surplus_volume = MinMaxRangeFilter(model=Stream, field_name='mean_surplus_volume', label="Mean Surplus Volume (m³)")
-    max_surplus_volume = MinMaxRangeFilter(model=Stream, field_name='max_surplus_volume', label="Max Surplus Volume (m³)")
-    plus_days = MinMaxRangeFilter(model=Stream, field_name='plus_days', label="Surplus Days")
+    min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Min Surplus Volume (m³)")
+    mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mean Surplus Volume (m³)")
+    max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Max Surplus Volume (m³)")
+    plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Surplus Days")
 
     distance_to_userfield = NumberFilter(
         label="Distance to userfield (m)",
@@ -235,15 +235,15 @@ class StreamFilter(FilterSet):
 
 
     class Meta:
-        model = Stream
+        model = models.Stream
         fields = ['min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days']
         form = SliderFilterForm
 
 class LakeFilter(FilterSet):
-    min_surplus_volume = MinMaxRangeFilter(model=Stream, field_name='min_surplus_volume', label="Min Surplus Volume (m³)")
-    mean_surplus_volume = MinMaxRangeFilter(model=Stream, field_name='mean_surplus_volume', label="Mean Surplus Volume (m³)")
-    max_surplus_volume = MinMaxRangeFilter(model=Stream, field_name='max_surplus_volume', label="Max Surplus Volume (m³)")
-    plus_days = MinMaxRangeFilter(model=Stream, field_name='plus_days', label="Surplus Days")
+    min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Min Surplus Volume (m³)")
+    mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mean Surplus Volume (m³)")
+    max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Max Surplus Volume (m³)")
+    plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Surplus Days")
    
     distance_to_userfield = NumberFilter(
         label="Distance to userfield (m)",
@@ -280,23 +280,67 @@ class LakeFilter(FilterSet):
             field.widget.attrs['prefix'] = prefix
 
     class Meta:
-        model = Lake
+        model = models.Lake
         fields = ['min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days']
         form = SliderFilterForm
 
 
 
+## Toolbox Sieker Surface Waters
+class SiekerLargeLakeFilter(FilterSet):
+    area_ha = MinMaxRangeFilter(
+        model=models.SiekerLargeLake, 
+        field_name='area_ha', 
+        label="Fläche (ha)",
+        )
+    volume = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='vol_mio_m3', label="Volumen (Mio m³)")
+    d_max_m = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='d_max_m', label="Max. Tiefe (m)")
+
+    badesee = ChoiceFilter(
+        label="Badesee",
+        choices=[('all', 'Alle'), ('yes', 'Ja'), ('no', 'Nein')],
+        method='filter_bathing_lake',
+        widget=forms.RadioSelect,
+    )
+
+    def filter_bathing_lake(self, queryset, name, value):
+        if value == 'yes':
+            return queryset.filter(badesee=True)
+        elif value == 'no':
+            return queryset.filter(badesee=False)
+        return queryset
+
+    def __init__(self, *args, queryset=None, **kwargs):
+        super().__init__(*args, queryset=queryset, **kwargs)
+
+        for name, filter_ in self.filters.items():
+            if isinstance(filter_, MinMaxRangeFilter):
+                filter_.queryset_for_bounds = queryset
+                filter_.set_bounds()
+
+        prefix = 'sieker-large-lake'
+        for name, field in self.form.fields.items():
+            field.widget.attrs['id'] = f"{prefix}_{name}"
+            field.widget.attrs['name'] = f"{prefix}_{name}"
+            field.widget.attrs['prefix'] = prefix
+    class Meta:
+        model = models.SiekerLargeLake
+        fields = ['area_ha', 'vol_mio_m3', 'd_max_m', 'badesee']
+        form = SliderFilterForm
+    
+
+## Toolbox Sieker Sinks
 class SiekerSinkFilter(FilterSet):
     area = MinMaxRangeFilter(
-        model=Sink, 
+        model=models.Sink, 
         field_name='area', 
         label="Fläche (m²)",
         )
-    volume = MinMaxRangeFilter(model=SiekerSink, field_name='volume', label="Volumen (m³)")
-    sink_depth = MinMaxRangeFilter(model=SiekerSink, field_name='sink_depth', label="Depth (m)")
-    avg_depth = MinMaxRangeFilter(model=SiekerSink, field_name='avg_depth', label="Average Depth (m)")
-    urbanarea_percent = MinMaxRangeFilter(model=SiekerSink, field_name='urbanarea_percent', label="Urban Area (%)")
-    wetlands_percent = MinMaxRangeFilter(model=SiekerSink, field_name='wetlands_percent', label="Wetlands Area (%)")
+    volume = MinMaxRangeFilter(model=models.SiekerSink, field_name='volume', label="Volumen (m³)")
+    sink_depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='sink_depth', label="Depth (m)")
+    avg_depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='avg_depth', label="Average Depth (m)")
+    urbanarea_percent = MinMaxRangeFilter(model=models.SiekerSink, field_name='urbanarea_percent', label="Urban Area (%)")
+    wetlands_percent = MinMaxRangeFilter(model=models.SiekerSink, field_name='wetlands_percent', label="Wetlands Area (%)")
    
     feasibility = MultipleChoiceFilter(
         label="Umsetzbarkeit",
@@ -321,6 +365,6 @@ class SiekerSinkFilter(FilterSet):
 
 
     class Meta:
-        model = SiekerSink
+        model = models.SiekerSink
         fields = ['volume', 'sink_depth', 'avg_depth', 'urbanarea_percent', 'wetlands_percent']
         form = SliderFilterForm

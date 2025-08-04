@@ -643,10 +643,10 @@ class SiekerLargeLake(models.Model):
     area_m2 = models.IntegerField(null=True, blank=True)
     area_ha = models.FloatField(null=True, blank=True)
     vol_mio_m3 = models.FloatField(null=True, blank=True)
-    ezg_km2 = models.FloatField(null=True, blank=True)
-    d_max_m = models.IntegerField(null=True, blank=True)
+    ezg_km2 = models.FloatField(null=True, blank=True) # Einzugsgebiet in km²
+    d_max_m = models.IntegerField(null=True, blank=True) # max depth of lake in m
     verweilt = models.CharField(max_length=100, null=True, blank=True)
-    t_cm_per_a = models.FloatField(null=True, blank=True)
+    t_cm_per_a = models.FloatField(null=True, blank=True) # annual trend of next level
     seetyp = models.IntegerField(null=True, blank=True)
     seetyp_txt = models.CharField(max_length=100, null=True, blank=True)
 

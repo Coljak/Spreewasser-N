@@ -1,11 +1,10 @@
 from django.shortcuts import render
-from . import models
 from swn import models as swn_models
 from swn import forms as swn_forms
 from swn.views import load_nuts_polygon
-from . import forms
-from .filters import SinkFilter, EnlargedSinkFilter, LakeFilter, StreamFilter, SiekerSinkFilter
+from . import forms, models
 
+from .filters import SiekerLargeLakeFilter, SinkFilter, EnlargedSinkFilter, StreamFilter, LakeFilter
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry, LineString
 from django.contrib.gis.measure import D
@@ -935,6 +934,8 @@ def sieker_surface_waters(request, user_field_id):
 
     if lakes.count() > 0:
         project_select_form = forms.ToolboxProjectSelectionForm()
+        sieker_lake_filter = SiekerLargeLakeFilter()
+
         water_levels = models.SiekerWaterLevel.objects.filter(
             geom4326__within=user_field.geom
         )
@@ -956,13 +957,76 @@ def sieker_surface_waters(request, user_field_id):
         html = render_to_string('toolbox/sieker_surface_waters.html', {
             # 'sink_form': sink_form, 
             # 'enlarged_sink_form': enlarged_sink_form,
-            'project_select_form': project_select_form,       
+            'project_select_form': project_select_form,
+            'sieker_lake_filter': sieker_lake_filter,      
         }, request=request) 
 
         return JsonResponse({'success': True, 'layers': layers , 'html': html,})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet befinden sich keine geeigneten Seen.'})
 
+
+
+    
+## Sieker Oberflächengewässer / Large Lakes / Surface Waters
+def filter_sieker_large_lakes(request):
+    try:
+        project = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    user_field = models.UserField.objects.get(pk=project['userField'])
+    geom = GEOSGeometry(user_field.geom)
+
+    distance = int(project['infiltration'].get('lake_distance_to_userfield', 0))
+    lakes = None
+    if distance > 0:
+        # Transform to EPSG:25833 (meters) and add the buffer
+        user_geom_25833 = user_field.geom.transform(25833, clone=True)
+        buffer_25833 = user_geom_25833.buffer(distance)
+        buffer_4326 = buffer_25833.transform(4326, clone=True)
+        lakes = models.SiekerLargeLake.objects.filter(Q(geom__intersects=buffer_4326) | Q(geom__within=buffer_4326))
+    else:
+        lakes = models.SiekerLargeLake.objects.filter(Q(geom__intersects=geom) | Q(geom__within=geom))
+
+    filter = Q()
+    filter = add_range_filter(filter, project['siekerLake'], 'lake_volume', 'area_ha')
+    filter = add_range_filter(filter, project['siekerLake'], 'lake_volume', 'vol_mio_m3')
+    filter = add_range_filter(filter, project['siekerLake'], 'lake_max_depth', 'd_max_m')
+    lakes = lakes.filter(filter)
+
+    badesee_filter = Q()
+    badesee_value = project['siekerLake'].get('badesee', 'all')
+    if badesee_value == 'yes':
+        badesee_filter = Q(badesee=True)
+    elif badesee_value == 'no':
+        badesee_filter = Q(badesee=False)
+    
+    lakes = lakes.filter(badesee_filter)
+
+    print("COUNT(Lakes)", lakes.count())
+
+    if lakes.count() == 0:
+        message = {
+            'success': False, 
+            'message': f'No lakes found in the search area.'
+        }
+        return JsonResponse({'message': {'success': False, 'message': 'No lakes found.'}})
+    else:
+        features = []
+        for lake in lakes:
+            features.append(lake.to_feature())
+        feature_collection = {
+            "type": "FeatureCollection",
+            "features": features,
+            }
+        message = {
+            'success': True, 
+            'message': 'Keine Seen im Suchgebiet entsprechen den Filterkriterien.'
+        }
+        print('feature_collection:', feature_collection)
+        return JsonResponse({'feature_collection': feature_collection, 'message': message})
+        
 
 ##### Sieker Sinks ######
    

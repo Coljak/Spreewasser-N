@@ -2,10 +2,10 @@ from django import forms
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.db.models import Max, Min
-from .models import *
+from . import models
 # from .utils import widgets
 from django.db.models import Q
-from toolbox.models import * #, SinksWithLandUseAndSoilProperties
+
 from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
@@ -43,19 +43,19 @@ class ToolboxProjectSelectionForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields['toolbox_project'].choices = [
             # print(instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
-            (instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
+            (instance.id, instance.name) for instance in models.ToolboxProject.objects.filter(Q(user=user))
         ]
 
 
 
 class ToolboxProjectForm(forms.Form):
     user_field = forms.ModelChoiceField(
-        queryset=UserField.objects.all(),
+        queryset=models.UserField.objects.all(),
         label='Field',
         widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'user-field-dropdown'}),
     )
     project_type = forms.ModelChoiceField(
-        queryset = ToolboxType.objects.all(),
+        queryset = models.ToolboxType.objects.all(),
         label='Project Type',
         empty_label=None,
         widget=forms.Select(attrs={'id': 'projectTypeSelect', 'class': 'project-type-dropdown'}),
@@ -76,7 +76,7 @@ class ToolboxProjectForm(forms.Form):
     )
 
     class Meta:
-        model = ToolboxProject
+        model = models.ToolboxProject
         exclude = ['id', 'user']
 
 class OverallWeightingsForm(forms.Form):

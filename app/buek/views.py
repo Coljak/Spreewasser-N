@@ -8,7 +8,7 @@ from rest_framework import status
 
 from .serializers import SoilProfileSerializer, MapSoilCLCSerializer
 from datetime import datetime
-from .models import *
+from . import models
 
 
 
@@ -38,7 +38,7 @@ def get_buek_polygon_id_from_point_buek200(lat, lon):
     lon = float(lon)
     start = datetime.now()
     # Get the soil data from the BUEK200 database
-    polygon_id = Buek200.objects.filter(geom__contains=Point(lon, lat))
+    polygon_id = models.Buek200.objects.filter(geom__contains=Point(lon, lat))
     if len (polygon_id) == 0:
         return {'error': 'No data found for the given coordinates'}
     else:
@@ -61,7 +61,7 @@ def get_buek_data_from_point(request, lat, lon):
     lon = float(lon)
     start = datetime.now()
     # Get the soil data from the BUEK200 database
-    polygon = MapSoilCLC.objects.filter(geom__contains=Point(lon, lat))
+    polygon = models.MapSoilCLC.objects.filter(geom__contains=Point(lon, lat))
     if len (polygon) == 0:
         return Response(
             {'error': 'No data found for the given coordinates'},
@@ -87,7 +87,7 @@ def get_soil_profile(profile_type, lat, lon):
     lat = float(lat)
     lon = float(lon)
 
-    polygon = MapSoilCLC.objects.filter(geom__contains=Point(lon, lat))[0]
+    polygon = models.MapSoilCLC.objects.filter(geom__contains=Point(lon, lat))[0]
     soil_data = {}
     # TODO: Deal with error messages (_)
     if profile_type == 'general':
@@ -140,14 +140,14 @@ def get_profiles_from_point_buek200(request, lat, lon):
     lon = float(lon)
     start = datetime.now()
     # Get the soil data from the BUEK200 database
-    polygon_id = Buek200.objects.filter(geom__contains=Point(lon, lat))
+    polygon_id = models.Buek200.objects.filter(geom__contains=Point(lon, lat))
     if len (polygon_id) == 0:
         return {'error': 'No data found for the given coordinates'}
     else:
         # the case where the coordinates are on the borders of more than one polygon returns only the first polygon's id 
         polygon_id = polygon_id[0].polygon_id
     
-    soil_data = SoilProfile.objects.filter(polygon_id=polygon_id)
+    soil_data = models.SoilProfile.objects.filter(polygon_id=polygon_id)
     # soil_serializer = SoilProfileSerializer(soil_data, many=True)
     response_dict = [soil.get_horizons_json() for soil in soil_data ]
     

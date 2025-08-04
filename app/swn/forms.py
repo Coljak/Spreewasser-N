@@ -4,7 +4,7 @@ from django import forms
 from django.db.models import Q
 from django.contrib.auth.models import User
 
-from swn.models import *
+from . import models
 from buek.models import SoilProfile, BuekPolygon, SoilProfileHorizon
 from monica.models import MonicaProject, ModelSetup
 from django.core import validators
@@ -29,7 +29,7 @@ class RegistrationForm(UserCreationForm):
 
 class UserFieldForm(forms.ModelForm):
     class Meta:
-        model = UserField
+        model = models.UserField
         fields = ('name',)
         widgets = {
             'name': forms.TextInput(attrs={'id': 'fieldNameInput'}),
@@ -60,9 +60,9 @@ class SwnProjectSelectionForm(forms.Form):
 
 # Todo make this a ModelForm, model = NUTS5000_N3 ?
 class PolygonSelectionForm(forms.Form):
-    state_choices = sorted([(state.id, state.nuts_name) for state in NUTS5000_N1.objects.all()], key=lambda x: x[1])
-    district_choices = sorted([(district.id, district.nuts_name) for district in NUTS5000_N2.objects.all()], key=lambda x: x[1])
-    county_choices = sorted([(county.id, county.nuts_name) for county in NUTS5000_N3.objects.all()], key=lambda x: x[1])
+    state_choices = sorted([(state.id, state.nuts_name) for state in models.NUTS5000_N1.objects.all()], key=lambda x: x[1])
+    district_choices = sorted([(district.id, district.nuts_name) for district in models.NUTS5000_N2.objects.all()], key=lambda x: x[1])
+    county_choices = sorted([(county.id, county.nuts_name) for county in models.NUTS5000_N3.objects.all()], key=lambda x: x[1])
 
     states = forms.MultipleChoiceField(
         # queryset= NUTS5000_N1.objects,
@@ -95,7 +95,7 @@ class PolygonSelectionForm(forms.Form):
 
 class SwnProjectForm(monica_forms.MonicaProjectForm):
     user_field = forms.ModelChoiceField(
-        queryset=UserField.objects.all(),
+        queryset=models.UserField.objects.all(),
         label='Field',
         widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'user-field-dropdown'}),
     )
@@ -103,7 +103,7 @@ class SwnProjectForm(monica_forms.MonicaProjectForm):
         super().__init__(*args, **kwargs)
         if user is not None:
             self.fields['user_field'].choices = [
-                (instance.id, instance.name) for instance in UserField.objects.filter(Q(user=user)).order_by('name')
+                (instance.id, instance.name) for instance in models.UserField.objects.filter(Q(user=user)).order_by('name')
             ]
             monica_projects = MonicaProject.objects.filter(Q(user=user))
             mp = [( monica_project.monica_model_setup.id, monica_project.name) for monica_project in monica_projects]

@@ -7,23 +7,16 @@
         <li class="nav-item">
             <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersProject" aria-selected="true">Project</a>
         </li>
+    
         <li class="nav-item sieker-surface-waters">
-            <a id="navSiekerSurfaceWatersWeightingForms" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerLakes" aria-selected="false"
-            data-toggle="tooltip" data-placement="top" title="Erklärung zur Gewichtung Erklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur Gewichtung"
-            >Seen</a>
+            <a id="navSiekerSurfaceWatersLakes" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersLakes" aria-selected="false">Seen</a>
         </li>
         <li class="nav-item sieker-surface-waters">
-            <a id="navSiekerSurfaceWatersSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabLevels" aria-selected="false">Wasser Pegel</a>
+            <a id="navSiekerSurfaceWatersLevels" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersLevels" aria-selected="false">Pegelzeitreihen</a>
         </li>
+
         <li class="nav-item sieker-surface-waters">
-            <a id="navSiekerSurfaceWatersEnlargedSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabEnlargedSinks" aria-selected="false">Vergrößerte Senken</a>
-        </li>
-        
-        <li class="nav-item sieker-surface-waters">
-            <a id="navSiekerSurfaceWatersWaterbodies" class="toolbox nav-link" data-bs-toggle="tab" href="#tabWaterbodies" aria-selected="false">Gewässer</a>
-        </li>
-        <li class="nav-item sieker-surface-waters">
-            <a id="navSiekerSurfaceWatersResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabToolboxResult">Ergebnis</a>
+            <a id="navSiekerSurfaceWatersResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersResult">Ergebnis</a>
         </li>
     </ul>
 
@@ -44,7 +37,32 @@
 
 
 
-        <div id="tabLevels" class="tab-pane">
+        <div id="tabSiekerSurfaceWatersLakes" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Filter seen</h5>
+                        <button id="toggleSiekerLakes" class="btn btn-secondary">ausblenden</button>                                                                                             
+                    </div>
+                    
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy sieker_lake_filter.form %}
+                        <button id="btnFilterSiekerLakes"type="submit" class="btn btn-primary">Seen filtern und bewerten</button>
+                    </form>
+                </div>
+            </div>
+            <div id="cardSiekerLakeTable" class="card mb-3 d-none">
+                <div class="card-body">
+                    <div id="sieker-lake-table-container"></div>
+                    {% comment %} <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button> {% endcomment %}
+                    {% comment %} <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button> {% endcomment %}
+
+                </div>
+            </div>
+        </div>
+
+        <div id="tabSiekerSurfaceWatersLevels" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
@@ -69,113 +87,10 @@
             </div>
         </div>
 
-        <div id="tabEnlargedSinks" class="tab-pane">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title">Filter Baulich modifizierte Senken als Versickerungsstandorte</h5>
-                        <button id="toggleEnlargedSinks" class="btn btn-secondary">ausblenden</button>                                                                                             
-                    </div>
-                    
-                    <form method="POST" action="">
-                        {% csrf_token %}
-                        {% comment %} {% crispy enlarged_sink_filter.form %} {% endcomment %}
-                        <button id="btnFilterEnlargedSinks" type="submit" class="btn btn-primary">Senken filtern und bewerten</button>
-                    </form>
-                </div>
-            </div>
-            
-            <div id="cardEnlargedSinkTable"  class="card mb-3 d-none">
-                <div class="card-body">
-                    <div id="enlarged-sink-table-container"></div>
-                    {% comment %} <button id="btnCntinueWithEnlargedSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks ">Auswahl bewerten</button> {% endcomment %}
-                    {% comment %} <button id="btnShowEnlargedSinkOutlines" type="button" class="btn btn-primary mt-3 show-enlarged-sink-outlines">Vergrößerte Senken anzeigen</button> {% endcomment %}
-                    <button id="btnShowEmbankments" type="button" class="btn btn-primary mt-3 show-embankment-outlines">Verwallungsstrukturen anzeigen</button>
-                </div>
-            </div>
-        </div>
+
 
         
-        
 
-        <div id="tabWaterbodies" class="tab-pane">
-            <h2 class="title">Oberflächengewässer</h2>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title mb-0">Fließgewässer</h5>
-                        <button id="toggleStreams" class="btn btn-secondary">ausblenden</button>                                                                                             
-                    </div>
-
-                    
-                    <div class="card-body">
-                        {% comment %} {% crispy streams_form.form  %} {% endcomment %}
-                        <button id="btnFilterStreams" class="btn btn-primary mt-3">Flüsse anzeigen</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title">Stillgewässer</h5>
-                        <button id="toggleStreams" class="btn btn-secondary">ausblenden</button>                                                                                             
-                    </div>
-                    
-
-                    <div class="card-body">
-                        {% comment %} {% crispy lakes_form.form %} {% endcomment %}
-                        <button id="btnFilterLakes" class="btn btn-primary mt-3">Seen anzeigen</button>
-                    </div> 
-                </div>
-            </div>
-        </div>
-
-        <div id="tabSiekerLakes" class="tab-pane">
-            <h2 class="title">Gesamtgewichtung</h2>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Gesamtgewichtung</h5>
-                    <div class="card-body">
-                        {% comment %} {% crispy overall_weighting %}             {% endcomment %}
-                    </div>
-                </div>
-            </div>
-            <h2 class="title">Gewichtung der Bodeneignung</h2>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Gewichtung Ackerland</h5>
-                    <div class="card-body">
-                        {% comment %} {% crispy agriculture_weighting %}             {% endcomment %}
-                    </div>
-                </div>
-            </div>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Gewichtung Wälder und diverse Vegetation</h5>
-                    <div class="card-body">
-                        {% comment %} {% crispy forest_weighting %}             {% endcomment %}
-                    </div>
-                </div>
-            </div>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Gewichtung Grasland</h5>
-                    <div class="card-body">
-                        {% comment %} {% crispy grassland_weighting %}             {% endcomment %}
-                    </div>
-                </div>
-            </div>
-            {% comment %} <h2 class="title">Gewichtung der Einlasspunkte</h2>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Distanz und Volumen</h5>
-                    <div class="card-body">
-                        {% crispy inlet_point_weighting %}            
-                    </div>
-                </div>
-            </div> {% endcomment %}
-            
-        </div>
 
         <div id="tabSiekerSurfaceWatersResult" class="tab-pane ">
             <div class="card mb-3">
@@ -202,7 +117,7 @@
                 </div>
             </div>
         </div>
-        <button id="btnGetInlets" class="btn btn-primary mt-3">Ergebnis berechnen</button>
+        
 
     </div>
 

@@ -35,7 +35,9 @@ export function initializeSiekerSurfaceWaters(layers) {
     console.log("Initializing Sieker surface waters...", layers);
     map.eachLayer(function(layer) {
         // console.log(layer.toolTag);
-        if (layer.toolTag !== 'sieker-surface-waters') {
+        if (
+            layer.toolTag === 'infiltration' ||
+            layer.toolTag === 'sieker-sink') {
             map.removeLayer(layer);
         }
     });
@@ -68,18 +70,27 @@ export function initializeSiekerSurfaceWaters(layers) {
                 L.popup()
                     .setLatLng(event.latlng)
                     .setContent(`
-                        <b>Sink Options</b><br>
-                        
-                        <button class="btn btn-outline-secondary select-${waterbody}" ${waterbody}Id=${feature.properties.id}">Select Waterbody</button>
+                    <h6><b> ${feature.properties.name}</b></h6>
+                    <button class="btn btn-outline-secondary select-sieker-lake" data-sieker-lake-id=${feature.properties.id}">Auswählen</button>
                     `)
                     .openOn(map);
+
+                        // Delay attaching event listener until DOM is rendered
+            setTimeout(() => {
+                const button = document.querySelector('.select-sieker-lake');
+                if (button) {
+                    button.addEventListener('click', () => {
+                        map.closePopup(); 
+                        // TODO: select lake from table
+                        const lakeId = button.getAttribute('data-sieker-lake-id');
+                        console.log('Selected lake ID:', lakeId);
+                        // ...your code here...
+                    });
+                }
+            }, 0);
+
                     });
         layer.addTo(lakesFeatureGroup);
-
-    //     
-    // } catch {
-    // console.log('Error processing feature:', feature.properties.id);
-    // }
     });
     // lakesFeatureGroup.addTo(map);
     // project.saveToLocalStorage();

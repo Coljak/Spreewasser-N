@@ -337,11 +337,14 @@ function startSurfaceWaters() {
       $('#toolboxPanel').removeClass('d-none');
       $('#toolboxPanel').html(data.html);
       layers = data.layers || {};
+      return layers;
     })
-    .then(() => {
-      initializeSiekerSurfaceWaters(layers);
-      // initializeSliders();
-
+    .then((layers) => {
+      if (!layers || Object.keys(layers).length === 0) { 
+        return;
+      } else {
+        initializeSiekerSurfaceWaters(layers);
+      }
     })
     // .catch(error => console.error("Error fetching data:", error));
   } else {

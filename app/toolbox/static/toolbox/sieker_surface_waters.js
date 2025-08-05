@@ -28,7 +28,54 @@ lakesFeatureGroup.toolTag = 'sieker-surface-waters'
 const waterLevelsFeatureGroup = new L.FeatureGroup();
 waterLevelsFeatureGroup.toolTag = 'sieker-surface-waters'
 
-
+function createSiekerLargeLakeTableSettings() {
+  return {
+    "order": [[1, "asc"]],
+    "searching": false,
+    "columnDefs": [
+      {
+        "targets": 0, // Select a checkbox
+        "orderable": false,
+        "searchable": false
+      },
+      {
+        "targets": 1, // Name
+        "orderable": true,
+        "searchable": true
+      },
+      {
+        "targets": 2, // Stand
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 3, // Badesee
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 4, // Area ha
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 5, // Volumen vol_mio_m3
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 6, // Einzugsgebiet in km²
+        "orderable": true,
+        "searchable": false
+      },
+      {
+        "targets": 7, // Max Tiefe d_max_m 
+        "orderable": true,
+        "searchable": false
+      },
+    ]
+  }
+};
 
 
 export function initializeSiekerSurfaceWaters(layers) {
@@ -41,14 +88,30 @@ export function initializeSiekerSurfaceWaters(layers) {
             map.removeLayer(layer);
         }
     });
-
+    initializeSliders();
     // add lakes and water levels
+    const tableContainer = document.getElementById('sieker-lake-table-container');
 
+    let tableHTML = ` 
+    <table class="table table-bordered table-hover" id="sieker-large-lake-table">
+        <caption>Große Seen</caption>
+        <thead>
+        <tr>
+            <th><input type="checkbox" class="sieker-large-lake-select-all-checkbox" data-type="sieker-large-lake">Select all</th>
+            <th>Name</th>
+            <th>Stand</th>
+            <th>Badesee</th>
+            <th>Fläche (ha)</th>
+            <th>Volumen (Mio. m³)</th>
+            <th>Einzugsgebiet (km²)</th>
+            <th>Max. Tiefe (m)</th>
+        </tr>
+        </thead>
+        <tbody>
+    `;
 
     layers.lakes.features.forEach(feature => {
-    // try {
-    console.log('feature:', feature);
-
+        // Polygons and Popups
         let layer = L.geoJSON(feature, {
             style: {
             color: 'purple',
@@ -89,15 +152,76 @@ export function initializeSiekerSurfaceWaters(layers) {
                 }
             }, 0);
 
-                    });
+        });
         layer.addTo(lakesFeatureGroup);
+
+        // Add to table
+        tableHTML += `
+            <tr>
+                <td><input type="checkbox" class="sieker-large-lake-checkbox" data-sieker-lake-id="${feature.properties.id}"></td>
+                <td>${feature.properties.name}</td>
+                <td>${feature.properties.stand}</td>
+                <td>${feature.properties.badesee ? 'Ja' : 'Nein'}</td>
+                <td>${feature.properties.area_ha}</td>
+                <td>${feature.properties.vol_mio_m3 ? feature.vol_mio_m3 : '--'}</td>
+                <td>${feature.properties.einzugsgebiet_km2 ? feature.properties.einzugsgebiet_km2 : '--'}</td>
+                <td>${feature.properties.d_max_m ? feature.properties.d_max_m : '--'}</td>
+            </tr>`;
+
+          
     });
-    // lakesFeatureGroup.addTo(map);
-    // project.saveToLocalStorage();
-  
+    tableHTML += `</tbody></table>`;
+    tableContainer.innerHTML = tableHTML;
+    const tableSettings = createSiekerLargeLakeTableSettings();
+    $('#sieker-large-lake-table').DataTable(tableSettings);
 
+    layers.water_levels.features.forEach(feature => {
+        // Polygons and Popups
+        let levelLayer = L.geoJSON(feature, {
+            style: {
+            color: 'green',
+            weight: 2,
+            fillOpacity: 0.5
+            },
+            onEachFeature: function (feature, levelLayer) {
+            // project.infiltration[`selected_${waterbody}`].push(feature.properties.id);
+            let popupContent = `
+                <h6><b> ${feature.properties.pegelname}</b></h6>
+                Zeitraum: ${feature.properties.start_date} - ${feature.properties.end_date}<br>
+                Tage: ${feature.properties.t_d}<br>
+                Jahre: ${feature.properties.t_a.toFixed(1)}<br>
+                Min.: ${feature.properties.min_cm} cm<br>
+                Max.: ${feature.properties.max_cm} cm<br>
+                Mittel: ${feature.properties.mean_wl} m<br>
+                `;
+            levelLayer.bindTooltip(popupContent);
+            levelLayer.on('mouseover', function () {
+                this.openPopup();
+            });
+            }
+        })
+        levelLayer.on('contextmenu', function (event) {
+                L.popup()
+                    .setLatLng(event.latlng)
+                    .setContent(`
+                    <h6><b> ${feature.properties.pegelname}</b></h6>
+                    <button class="btn btn-outline-secondary select-sieker-water-level" data-sieker-water-level-id=${feature.properties.id}">Auswählen</button>
+                    `)
+                    .openOn(map);
 
-
+                        // Delay attaching event listener until DOM is rendered
+            setTimeout(() => {
+                const button = document.querySelector('.select-sieker-water-level');
+                if (button) {
+                    button.addEventListener('click', () => {
+                        map.closePopup();
+                    });
+                }
+            }, 0 );
+        });
+        levelLayer.addTo(waterLevelsFeatureGroup);
+        console.log('levelLayer: ', levelLayer);
+    });
 
     $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);

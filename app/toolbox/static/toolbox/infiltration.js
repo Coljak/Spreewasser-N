@@ -116,7 +116,7 @@ function createSinkTableSettings(sinkType, indexVisible) {
       }
     ]
   }
-}
+};
 
 function getSinks(sinkType, featureGroup) {
   let url = 'filter_sinks/';

@@ -4,7 +4,7 @@ from swn import forms as swn_forms
 from swn.views import load_nuts_polygon
 from . import forms, models
 
-from .filters import SiekerLargeLakeFilter, SinkFilter, EnlargedSinkFilter, StreamFilter, LakeFilter
+from .filters import SiekerLargeLakeFilter, SinkFilter, EnlargedSinkFilter, StreamFilter, LakeFilter, SiekerSinkFilter
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry, LineString
 from django.contrib.gis.measure import D
@@ -934,7 +934,7 @@ def sieker_surface_waters(request, user_field_id):
 
     if lakes.count() > 0:
         project_select_form = forms.ToolboxProjectSelectionForm()
-        sieker_lake_filter = SiekerLargeLakeFilter()
+        sieker_lake_filter = SiekerLargeLakeFilter(request.GET, queryset=lakes)
 
         water_levels = models.SiekerWaterLevel.objects.filter(
             geom4326__within=user_field.geom

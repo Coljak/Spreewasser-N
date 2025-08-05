@@ -114,7 +114,7 @@ class SinkFilter(FilterSet):
                 queryset.exclude(landuse_3__isnull=True).values_list('landuse_3', flat=True)
             )
 
-            land_uses = Landuse.objects.filter(id__in=land_use_ids)
+            land_uses = models.Landuse.objects.filter(id__in=land_use_ids)
             choices = sorted([(lu.id, lu.de or f"Landuse {lu.id}") for lu in land_uses])
             self.filters['land_use'].extra['choices'] = choices
             # choices = sorted([(lu, lu) for lu in land_use_values])
@@ -168,7 +168,7 @@ class EnlargedSinkFilter(FilterSet):
                 queryset.exclude(landuse_4__isnull=True).values_list('landuse_4', flat=True)
             )
 
-            land_uses = Landuse.objects.filter(id__in=land_use_ids)
+            land_uses = models.Landuse.objects.filter(id__in=land_use_ids)
             choices = sorted([(lu.id, lu.de or f"Landuse {lu.id}") for lu in land_uses])
             self.filters['land_use'].extra['choices'] = choices
 
@@ -262,7 +262,7 @@ class LakeFilter(FilterSet):
    
 
     def filter_distance_placeholder(self, queryset, name, value):
-        # We don’t filter here – this is just a placeholder.
+        # this is just a placeholder.
         return queryset
     
     def __init__(self, *args, queryset=None, **kwargs):
@@ -288,19 +288,14 @@ class LakeFilter(FilterSet):
 
 ## Toolbox Sieker Surface Waters
 class SiekerLargeLakeFilter(FilterSet):
-    area_ha = MinMaxRangeFilter(
-        model=models.SiekerLargeLake, 
-        field_name='area_ha', 
-        label="Fläche (ha)",
-        )
-    volume = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='vol_mio_m3', label="Volumen (Mio m³)")
+    area_ha = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='area_ha', label="Fläche (ha)")
+    vol_mio_m3 = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='vol_mio_m3', label="Volumen (Mio m³)")
     d_max_m = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='d_max_m', label="Max. Tiefe (m)")
-
-    badesee = ChoiceFilter(
+    badesee = MultipleChoiceFilter(
         label="Badesee",
-        choices=[('all', 'Alle'), ('yes', 'Ja'), ('no', 'Nein')],
+        choices=[('yes', 'Ja'), ('no', 'Nein')],
         method='filter_bathing_lake',
-        widget=forms.RadioSelect,
+        widget=forms.CheckboxSelectMultiple,
     )
 
     def filter_bathing_lake(self, queryset, name, value):

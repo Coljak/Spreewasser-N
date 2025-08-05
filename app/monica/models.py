@@ -51,7 +51,7 @@ class CultivarParameters(models.Model):
     frost_hardening = models.FloatField()
     heat_sum_irrigation_end = models.FloatField()
     heat_sum_irrigation_start = models.FloatField()
-    is_winter_crop = models.BooleanField(blank=True, null=True, default=False)
+    is_winter_crop = models.BooleanField(blank=True, default=False)
     lt50_cultivar = models.FloatField()
     latest_harvest_doy = models.IntegerField()
     low_temperature_exposure = models.FloatField()

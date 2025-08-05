@@ -25,7 +25,20 @@
     border-radius: 2%;
   }
 
-  .sidebar-content .accordion-button:nth-child(1).collapsed {
+  .sidebar-content .accordion-button {
+    background-color: var(--bs-secondary-bg-subtle);
+    border: var(--bs-secondary) 2px solid;
+    border-radius: 5px !important;
+  }
+  
+  .sidebar-content .accordion-button:not(.collapsed) {
+    border: var(--bs-primary) 2px solid;
+    background-color: var(--bs-primary-bg-subtle);
+    border-radius: 5px;
+  }
+
+
+    /* .sidebar-content .accordion-button:nth-child(1).collapsed {
     background-color: var(--bs-secondary-bg-subtle);
     border: var(--bs-secondary) 2px solid;
     border-radius: 5px !important;
@@ -36,18 +49,10 @@
     border: var(--bs-primary) 2px solid;
     background-color: var(--bs-primary-bg-subtle);
     border-radius: 5px;
-  }
+  } */
 
 /* 
-  .leaflet-sidebar-pane {
-    padding: 0;
-  } */
 
-  /* .sidebar-header {
-    border: var(--bs-primary) 2px solid;
-    border-radius: 5;
-    
-  } */
 
 /* Leaflet Polygons */
 .leaflet-interactive {

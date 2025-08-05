@@ -1,6 +1,4 @@
-/* html, body, #map-container {
-    height: 100%;
-  } */
+
   .highlight {
     background-color: var(--bs-success);
     border-width: 2px;
@@ -40,90 +38,37 @@
     border-radius: 5px;
   }
 
-  /* .leaflet-sidebar-tabs {
-    border-right: 2px solid rgba(0,0,0,.2);
-  } */
-
+/* 
   .leaflet-sidebar-pane {
     padding: 0;
-  }
+  } */
 
-  .sidebar-header {
-
-    /* background-color: var(--bs-primary); */
-    border: var(--bs-prinary) 2px solid;
+  /* .sidebar-header {
+    border: var(--bs-primary) 2px solid;
     border-radius: 5;
     
-  }
+  } */
 
-
-  .leaflet-interactive {
-    stroke: var(--bs-primary);
-    fill: transparent
-    /* fill: var(--bs-secondary-bg-subtle);
-    fill-opacity: 0.2;  */
+/* Leaflet Polygons */
+.leaflet-interactive {
+    fill: none;
+    stroke-width: 3px;
   } 
-  .leaflet-interactive.highlight {
+
+.leaflet-interactive.user-field {
+    stroke: var(--bs-gray-600);
+  } 
+.leaflet-interactive.user-field.highlight {
     stroke: var(--bs-success);
-    fill: transparent;
-    /* fill: var(--bs-secondary-bg-subtle);
-    fill-opacity: 0.2;  */
+
   } 
 
-  .sidebar-list .list-group-item {
-    border-radius: 0%;
-  }
+
 
   .form-check {
     margin-bottom: 0%;
   }
 
-  .accordion-collapse {
-    padding-left: 3%;
-    border-left: var(--bs-list-group-border-width) solid var(--bs-list-group-border-color) !important;
-  }
-/* 
-  .accordion-header {
-    border: var(--bs-list-group-border-width) solid var(--bs-list-group-border-color);
-
-  } */
-  .accordion-header.nested {
-    border-bottom: 2px black !important;
-   
-  }
-  .accordion-body {
-    border-top: 2px black !important;
-    
-  }
-
-  /* .accordion-header:hover {
-    background-color: var(--bs-accordion-active-bg);
-  } */
-
-  
-
-  .accordion-flush .accordion-item:last-child {
-    border-bottom: var(--bs-accordion-border-width) solid var(--bs-accordion-border-color);
-  }
-  /* .accordion-item:last-of-type {
-    border-bottom: 5px solid rgba(0,0,0,1);
-  } */
-
-  .accordion-header.nested {
-    padding-right: 3%;
-    padding-left: 7%;
-  }
-  .accordion-header.nested.highlight:hover {
-    
-  }
-
-  /* a-buttons in the sidebar under user fields */
-  .accordion-button.nested  {
-  border-color: transparent !important;
-  background-color: transparent !important;
-  outline: 0;
-  box-shadow: none !important;
-}
   
 .accordion-button:focus{
   /* background-color: transparent; */
@@ -133,25 +78,14 @@
   }
 
 
-  /* .accordion-collapse {
-    --bs-accordion-body-padding-x: 0;
-    --bs-accordion-body-padding-y: 0;
-  } */
-  
-  /* #accordionUserFields {
-    --bs-accordion-body-padding-x: 0;
-    --bs-accordion-body-padding-y: 0;
-    border-left: var(--bs-border-width) solid var(--bs-border-color) !important;
-  }
-   */
 
-  .form-check-input:focus {
+.form-check-input:focus {
     outline: 0;
     box-shadow: none !important;
   }
 
   
-  .initials {
+.initials {
     font-size: calc(var(--avatar-size) / 2);
     line-height: 1;
     position: relative;

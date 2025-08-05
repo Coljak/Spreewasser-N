@@ -162,21 +162,9 @@ export function initializeMapEventlisteners (map, featureGroup, projectClass) {
       }
       let project = projectClass.loadFromLocalStorage();
       selectUserField(userFieldId, project, featureGroup);
-      // highlightPolygon(event.layer)
     });
 };
 
-// export function getSelectedUserField() {
-//   const userFields = JSON.parse(localStorage.getItem('userFields') || '{}');
-//   console.log('getSelectedUserField', userFields);
-//   // Find the highlighted leafletId
-//   const highlightedLeafletId = Object.keys(userFields).find(leafletId => {
-//     const header = document.getElementById(`accordionHeader-${leafletId}`);
-//     return header && header.classList.contains('highlight');
-//   });
-//   console.log('highlightedLeafletId', highlightedLeafletId);
-//   return highlightedLeafletId? highlightedLeafletId : null;
-// }
 
 
 
@@ -406,56 +394,6 @@ export function highlightLayer(leafletId, featureGroup) {
 }
 
 
-// export function selectUserField(userFieldId, project, featureGroup) {
-
-//   console.log("selectUserField featureGroup", featureGroup);
-
-//   if (project && project.userField && project.userField != userFieldId && project.id) {
-//     console.log('If action')
-//     let modal = document.getElementById('interactionModal');
-//     let modalInstance = new bootstrap.Modal(modal);
-//     document.getElementById('interactionModalTitle').innerHTML = "User Field Selection";
-//     document.getElementById('interactionModalText').innerHTML = "you are changing a Monica Project's user field.";
-//     $('#interactionModalOK').off('click').on('click', function () {
-//       const userField = getUserFields()[getLeafletIdByUserFieldId(userFieldId)];
-//       project['userField'] = userFieldId;
-//       project['latitude'] = userField.lat;
-//       project['longitude'] = userField.lon;
-//       project.saveToLocalStorage();
-//       highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
-//     }
-//     );
-//     modalInstance.show(); 
-//   } else if (project && (!project.userField || project.userField === '' || project.userField === undefined) && project.id) {
-//     console.log('If action')
-//     let modal = document.getElementById('interactionModal');
-//     let modalInstance = new bootstrap.Modal(modal);
-//     document.getElementById('interactionModalTitle').innerHTML = "User Field Selection";
-//     document.getElementById('interactionModalText').innerHTML = "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.";
-//     $('#interactionModalOK').off('click').on('click', function () {
-//       const userField = getUserFields()[getLeafletIdByUserFieldId(userFieldId)];
-//       project['userField'] = userFieldId;
-//       project['latitude'] = userField.lat;
-//       project['longitude'] = userField.lon;
-//       project.saveToLocalStorage();
-//       highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
-//     }
-//     );
-//     modalInstance.show(); 
-//   } else {
-
-//     // project.userField = userFieldId;
-//     // project.saveToLocalStorage();
-//     highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
-//     const userField = getUserFields()[getLeafletIdByUserFieldId(userFieldId)];
-//     console.log('selectUserField',userFieldId, userField);
-//     project['userField'] = userFieldId;
-//     project['latitude'] = userField.lat;
-//     project['longitude'] = userField.lon;
-//     project.saveToLocalStorage();
-//   };
-// };
-
 export function selectUserField(userFieldId, project, featureGroup) {
     console.log("selectUserField featureGroup", project);
 
@@ -517,19 +455,6 @@ function applyUserFieldChange(project, userFieldId, userField, featureGroup) {
 
 
 
-
-
-// function revertEdit(layer) {
-//   // reset an edited layer 
-//   if (layer._originalLatLngs) {
-//     layer.setLatLngs(layer._originalLatLngs);
-//     layer.editing.disable();
-//     delete layer._originalLatLngs;
-//     console.log("Edits reverted.");
-//     return layer;
-//   }
-// }
-
 function revertEdit(layer) {
   if (layer._originalLatLngs) {
     const original = L.LatLngUtil.cloneLatLngs(layer._originalLatLngs);
@@ -563,6 +488,7 @@ function revertEdit(layer) {
   }
 }
 
+// TODO: move this to three_split.js
 $('#toggleBottomFullscreen').on('click', function () {
     const isFullscreen = $(this).find('i').hasClass('bi-fullscreen-exit');
 
@@ -831,8 +757,7 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
 function toggleUserField(switchInput,  map) {
     const leafletId = switchInput.getAttribute("leaflet-id");
     const listElement = switchInput.closest("li");
-    switchInput.checked ? map.addLayer(listElement.layer) : map.removeLayer(listElement.layer);
-
+    switchInput.checked ? map.addLayer(listElement.layer) : map.removeLayer(listElement.layer)
 };
 
 // Save a newly created userField in DB
@@ -995,37 +920,38 @@ export const addLayerToSidebar = (userField, layer) => {
     accordion.setAttribute("leaflet-id", userField.leafletId);
     accordion.setAttribute("user-field-id", userField.id);
   
-
     accordion.innerHTML = `
-  <div 
-    class="row" 
-    id="accordionHeader-${userField.leafletId}" 
-    user-field-id="${userField.id}"
-    leaflet-id="${userField.leafletId}"
-  >
-    <div class="form-check form-switch h6 col-7">  
-      <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="fieldSwitch-${userField.leafletId}" checked>
-      <label>${userField.name}</label>
-    </div>
+      <div 
+        class="d-flex justify-content-between align-items-center" 
+        id="accordionHeader-${userField.leafletId}" 
+        user-field-id="${userField.id}"
+        leaflet-id="${userField.leafletId}"
+      >
+        <div class="form-check form-switch h6">  
+          <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" id="fieldSwitch-${userField.leafletId}" checked>
+          <label>${userField.name}</label>
+        </div>
 
-    <div class="field-btns-col col-5 d-flex justify-content-end">
-      <form id="deleteAndCalcForm-${userField.leafletId}" class="d-flex gap-1">
-        <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.edit}">
-          <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
-        </button>
-        <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-project-add" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.createProject}">
-          <span><i class="bi bi-plus user-field-action field-project-add" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
-        </button>
-        <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.loadProject}">
-          <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
-        </button>
-        <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.delete}">
-          <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
-        </button>
-      </form>
-    </div>  
-  </div>
-`;
+        <div class="d-flex gap-1">
+          <form id="deleteAndCalcForm-${userField.leafletId}" class="d-flex gap-1">
+            <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.edit}">
+              <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-project-add" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.createProject}">
+              <span><i class="bi bi-plus user-field-action field-project-add" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.loadProject}">
+              <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.delete}">
+              <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+            </button>
+          </form>
+        </div>  
+      </div>
+    `;
+
+    
 
     accordion.layer = layer;
     const userFieldsAccordion = document.getElementById("userFieldList");
@@ -1053,12 +979,7 @@ export async function getUserFieldsFromDb (featureGroup) {
     userFieldsDb.forEach((el) => {
       // var layer = L.geoJSON(el.geom_json);
       let layerGeoJson = L.geoJson(el.geom_json, {
-        style: {
-          color: "#ffaa00",
-          fillColor: "#000000",
-          fillOpacity: 0.5,
-          weight: 2,
-        },
+        className: 'user-field',
         onEachFeature: function (feature, layer) {
           layer.bindTooltip(el.name);
           featureGroup.addLayer(layer);

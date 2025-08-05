@@ -90,6 +90,54 @@ export function initializeSiekerSurfaceWaters(layers) {
     });
     initializeSliders();
     // add lakes and water levels
+
+
+    let layer = L.geoJSON(layers.lakes,  {
+        style: {
+        color: 'purple',
+        weight: 2,
+        fillOpacity: 0.5
+        },
+        onEachFeature: function (feature, layer) {
+        // project.infiltration[`selected_${waterbody}`].push(feature.properties.id);
+            let popupContent = `
+                <h6><b> ${feature.properties.name}</b></h6>
+                `;
+            layer.bindTooltip(popupContent);
+            layer.on('mouseover', function () {
+                this.openPopup();
+            });
+            layer.on('contextmenu', function (event) {
+                L.popup()
+                    .setLatLng(event.latlng)
+                    .setContent(`
+                    <h6><b> ${feature.properties.name}</b></h6>
+                    <button class="btn btn-outline-secondary select-sieker-lake" data-sieker-lake-id=${feature.properties.id}">Auswählen</button>
+                    `)
+                    .openOn(map);
+
+                        // Delay attaching event listener until DOM is rendered
+                setTimeout(() => {
+                    const button = document.querySelector('.select-sieker-lake');
+                    if (button) {
+                        button.addEventListener('click', () => {
+                            map.closePopup(); 
+                            // TODO: select lake from table
+                            const lakeId = button.getAttribute('data-sieker-lake-id');
+                            console.log('Selected lake ID:', lakeId);
+                            // ...your code here...
+                        });
+                    }
+                }, 0);
+            });
+
+        }
+    });
+        
+    layer.addTo(lakesFeatureGroup);
+    layer.bringToFront();
+        //------------------------
+
     const tableContainer = document.getElementById('sieker-lake-table-container');
 
     let tableHTML = ` 
@@ -109,51 +157,7 @@ export function initializeSiekerSurfaceWaters(layers) {
         </thead>
         <tbody>
     `;
-
     layers.lakes.features.forEach(feature => {
-        // Polygons and Popups
-        let layer = L.geoJSON(feature, {
-            style: {
-            color: 'purple',
-            weight: 2,
-            fillOpacity: 0.5
-            },
-            onEachFeature: function (feature, layer) {
-            // project.infiltration[`selected_${waterbody}`].push(feature.properties.id);
-            let popupContent = `
-                <h6><b> ${feature.properties.name}</b></h6>
-                `;
-            layer.bindTooltip(popupContent);
-            layer.on('mouseover', function () {
-                this.openPopup();
-            });
-            }
-        })
-        layer.on('contextmenu', function (event) {
-                L.popup()
-                    .setLatLng(event.latlng)
-                    .setContent(`
-                    <h6><b> ${feature.properties.name}</b></h6>
-                    <button class="btn btn-outline-secondary select-sieker-lake" data-sieker-lake-id=${feature.properties.id}">Auswählen</button>
-                    `)
-                    .openOn(map);
-
-                        // Delay attaching event listener until DOM is rendered
-            setTimeout(() => {
-                const button = document.querySelector('.select-sieker-lake');
-                if (button) {
-                    button.addEventListener('click', () => {
-                        map.closePopup(); 
-                        // TODO: select lake from table
-                        const lakeId = button.getAttribute('data-sieker-lake-id');
-                        console.log('Selected lake ID:', lakeId);
-                        // ...your code here...
-                    });
-                }
-            }, 0);
-
-        });
-        layer.addTo(lakesFeatureGroup);
 
         // Add to table
         tableHTML += `
@@ -170,6 +174,8 @@ export function initializeSiekerSurfaceWaters(layers) {
 
           
     });
+
+   
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
     const tableSettings = createSiekerLargeLakeTableSettings();

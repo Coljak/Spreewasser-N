@@ -7,7 +7,6 @@ import {
   map, 
   initializeMapEventlisteners, 
   initializeDrawControl,
-  createBaseLayerSwitchGroup, 
   openUserFieldNameModal,
   createNUTSSelectors,
   changeBasemap, 
@@ -20,6 +19,7 @@ import {
   selectUserField,
   handleSaveUserField,
   dismissPolygon,
+  removeLegendFromMap,
 } from '/static/shared/map_sidebar_utils.js';
 
 const sinkFeatureGroup = new L.FeatureGroup()
@@ -190,6 +190,9 @@ function getSinks(sinkType, featureGroup) {
           index_total: p.index_sink_total,
         }
 
+        let colorHue = p.index_sink_total * 1.2;
+        let color = `hsl(${colorHue}, 70%, 50%)`;
+
 
 
         let coords = feature.coordinates; // Get the lat/lng coordinates
@@ -209,7 +212,17 @@ function getSinks(sinkType, featureGroup) {
             ${p.land_use_4 ? `<b>Landnuntzung 4:</b> ${p.land_use_4}<br>` : ''}
         `;
         // Create a marker
-        let marker = L.marker(latlng).bindPopup(popupContent);
+        let marker = L.circleMarker(latlng, {
+          radius: 5,
+          stroke: true,
+          fill: true,
+          fillColor: color,
+          color: 'black',
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.8,
+          className: 'circle-marker'
+        }).bindPopup(popupContent);
         
         marker.on('mouseover', function () {
           this.openPopup();
@@ -232,6 +245,8 @@ function getSinks(sinkType, featureGroup) {
           // Add marker to cluster
         
         
+
+        
         tableHTML += `
           <tr data-sink-id="${p.id}">
             <td><input type="checkbox" class="sink-select-checkbox" data-type=${sinkType} data-id="${p.id}"></td>
@@ -247,9 +262,9 @@ function getSinks(sinkType, featureGroup) {
             <td>${p.index_feasibility ?? '-'}%</td>
             <td>${p.hydrogeology ?? '-'}</td>
             <td>${p.index_hydrogeology ?? '-'}%</td>
-            <td class="index-total" data-type=${sinkType} data-id="${p.id}"><b>${p.index_sink_total ?? '-'}</b></td>
-            
-            
+            <td class="index-total" data-type=${sinkType} data-id="${p.id}" style= "background-color: ${color}"><b>${p.index_sink_total ?? '-'}</b></td>
+
+
           </tr>
         `;
       });
@@ -534,12 +549,13 @@ function toggleConnection(button) {
 }
 
 export function initializeInfiltration() {
+  removeLegendFromMap(map);
   map.eachLayer(function(layer) {
         console.log(layer.toolTag);
-        if (layer.toolTag === 'sieker-surface-waters') {
+        if (layer.toolTag && layer.toolTag !== 'infiltration') {
             map.removeLayer(layer);
         }
-        });
+      });
   console.log('Initialize Infiltraion');
   map.addLayer(sinkFeatureGroup);
   map.addLayer(enlargedSinkFeatureGroup);

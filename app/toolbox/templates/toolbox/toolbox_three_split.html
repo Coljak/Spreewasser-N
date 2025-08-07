@@ -17,8 +17,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
     <link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.css' %}" />
 	<link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.Default.css' %}" />
-    <link rel="stylesheet" href="{% static 'toolbox/toolbox.css' %}" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.legend.css' %}" />
+    <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
+    <link rel="stylesheet" href="{% static 'toolbox/toolbox.css' %}" />
+    
 
 
 {% endblock css %} 
@@ -152,6 +155,7 @@
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.markercluster-src.js' %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/bootstrap-slider.min.js" integrity="sha512-f0VlzJbcEB6KiW8ZVtL+5HWPDyW1+nJEjguZ5IVnSQkvZbwBt2RfCBY0CBO1PsMAqxxrG4Di6TfsCPP3ZRwKpA==" crossorigin="anonymous"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.legend.js' %}"></script>
     <script type="module" src="{% static 'toolbox/toolbox_three_split.js' %}" ></script>
 {% endblock %}
 

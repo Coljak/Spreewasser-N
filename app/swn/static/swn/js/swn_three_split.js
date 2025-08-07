@@ -7,7 +7,7 @@ import {
   map, 
   initializeMapEventlisteners, 
   initializeDrawControl,
-  createBaseLayerSwitchGroup, 
+  // createBaseLayerSwitchGroup, 
   openUserFieldNameModal,
   createNUTSSelectors,
   changeBasemap, 
@@ -39,6 +39,14 @@ document.addEventListener("DOMContentLoaded", () => {
     .catch((error) => {
         console.error(error.message);
         handleAlerts({ success: false, message: error.message });
+
+        // Fallback: center map on projectRegion if geolocation fails
+      if (typeof projectRegion !== 'undefined' && projectRegion.getBounds) {
+        map.fitBounds(projectRegion.getBounds());
+      } else {
+        // Optional hard fallback if projectRegion is not defined
+        map.setView([52.40, 14.174], 10);
+      }
     });
 
 
@@ -91,16 +99,17 @@ initializeSidebarEventHandler({
 createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});
 
 // sidebar Base Layers
-createBaseLayerSwitchGroup(baseMaps, map);
+// createBaseLayerSwitchGroup(baseMaps, map);
 
-
-// document.getElementById('monica-project-save').addEventListener('click', function () {
-//   const project = MonicaProject.loadFromLocalStorage();
-
-//   saveProject(project);
-// });
 
 
 getUserFieldsFromDb(featureGroup);
+if (projectRegionSwitch) {
+    projectRegionSwitch.checked = true;
+
+    // Dispatch a native 'change' event
+    const event = new Event('change', { bubbles: true });
+    projectRegionSwitch.dispatchEvent(event);
+  }
 
 });

@@ -22,10 +22,15 @@ export function getGeolocation() {
                 (error) => {
                     // Error callback
                     reject(new Error("Error getting geolocation: " + error.message));
+                    
                 }
             );
         } else {
-            reject(new Error("Geolocation is not supported by this browser."));
+            // reject(new Error("Geolocation is not supported by this browser."));
+            return {
+                latitude: 52.40,
+                longitude: 14.174,
+            };
         }
     });
 };

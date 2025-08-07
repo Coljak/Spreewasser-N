@@ -16,8 +16,7 @@ export class UserField {
 
 
 const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-const osmAttrib =
-  '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 export const osm = L.tileLayer(osmUrl, { maxZoom: 18, attribution: osmAttrib });
 
 const satelliteUrl =
@@ -42,8 +41,6 @@ export const projectRegion = new L.geoJSON(project_region, {
 });
 
 
-
-
 // basemaps
 export const baseMaps = {
     "Open Street Maps": osm,
@@ -51,13 +48,17 @@ export const baseMaps = {
     Topomap: topo,
   };
 
- export function enhanceMap (map) {
+export function enhanceMap (map) {
   
   $(".leaflet-control-zoom").append(
     '<a class="leaflet-control-home" href="#" role="button" title="Project area" aria-label="Project area"><i class="bi bi-bullseye"></i></a>',
     '<a class="leaflet-control-geolocation" href="#" role="button" title="My location" aria-label="User location"><i class="bi bi-geo"></i></a>'
   );
 
+  const baseMapSwitches = L.control.layers(baseMaps, null, { 
+    collapsed: true,
+    position: "topleft"
+   }).addTo(map);
 
   const mapScale = new L.control.scale({
     position: "bottomright",
@@ -82,6 +83,39 @@ export var map = enhanceMap(
   }).addLayer(osm)
 );
 
+export function getCircleMarkerSettings (fillColor) {
+  return {
+    radius: 5,
+    type: 'circle',
+    weight: 2,
+    fillOpacity: 1,
+    color: 'black',
+    fillColor: fillColor
+  };
+};
+
+export function getLegendItem (label, markerSettings) {
+  return {
+    label: label,
+    ...markerSettings
+  };
+};
+
+export function getLegendSettings (title, legendItems) {
+  return {
+    position: 'bottomright',
+    collapsed: false,
+    title: title,
+    legends: legendItems
+  };
+};
+
+export function removeLegendFromMap(map) {      
+  const existingLegend = document.querySelector('.leaflet-legend');
+      if (existingLegend) {
+        map.removeControl(existingLegend);
+      }
+};
 
 export function openUserFieldNameModal(layer, featureGroup) {
   // Set the modal content (e.g., name input)
@@ -96,6 +130,7 @@ export function openUserFieldNameModal(layer, featureGroup) {
   modal.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModa, featureGroup);
 };
 
+
 export function initializeDrawControl(map, featureGroup) {
   const drawControl = new L.Control.Draw({
     position: "topright",
@@ -106,6 +141,8 @@ export function initializeDrawControl(map, featureGroup) {
     draw: {
       circlemarker: false,
       polyline: false,
+      circle: false,
+      marker: false,
       polygon: {
         shapeOptions: {
           color: "#000000",
@@ -117,6 +154,7 @@ export function initializeDrawControl(map, featureGroup) {
   });
   map.addControl(drawControl);
 };
+
 
 export function initializeMapEventlisteners (map, featureGroup, projectClass) {
     const chrosshair = document.getElementsByClassName("leaflet-control-home")[0];
@@ -166,11 +204,6 @@ export function initializeMapEventlisteners (map, featureGroup, projectClass) {
 };
 
 
-
-
-
-
-
 // Baselayers
 export function changeBasemap(basemapSwitch, baseMaps, map) {
     console.log("changeBasemap", basemapSwitch);
@@ -188,39 +221,39 @@ export function changeBasemap(basemapSwitch, baseMaps, map) {
             switchInput.checked = false;
         }
     });
-}
-
-
-export function createBaseLayerSwitchGroup(baseMaps, map) {
-    const baseLayerControlList = document.getElementById("baseLayerList");
-    let html = "";
-
-    // Generate HTML for base layer switches
-    Object.keys(baseMaps).forEach((basemapName) => {
-        html += `
-            <li class="list-group-item">
-                <div class="col form-check form-switch">
-                    <input 
-                        type="radio" 
-                        class="form-check-input user-field-switch basemap-switch" 
-                        data-basemap="${basemapName}">
-                    <label>${basemapName}</label>
-                </div>
-            </li>
-        `;
-    });
-
-    // Insert the generated HTML
-    baseLayerControlList.innerHTML = html;
-    baseLayerCollapse.appendChild(baseLayerControlList);
-
-    // Set initial basemap
-    const initialBasemapSwitch = baseLayerControlList.querySelector(".basemap-switch");
-    if (initialBasemapSwitch) {
-        initialBasemapSwitch.checked = true;
-        changeBasemap(initialBasemapSwitch, baseMaps, map);
-    }
 };
+
+
+// export function createBaseLayerSwitchGroup(baseMaps, map) {
+//     const baseLayerControlList = document.getElementById("baseLayerList");
+//     let html = "";
+
+//     // Generate HTML for base layer switches
+//     Object.keys(baseMaps).forEach((basemapName) => {
+//         html += `
+//             <li class="list-group-item">
+//                 <div class="col form-check form-switch">
+//                     <input 
+//                         type="radio" 
+//                         class="form-check-input user-field-switch basemap-switch" 
+//                         data-basemap="${basemapName}">
+//                     <label>${basemapName}</label>
+//                 </div>
+//             </li>
+//         `;
+//     });
+
+//     // Insert the generated HTML
+//     baseLayerControlList.innerHTML = html;
+//     baseLayerCollapse.appendChild(baseLayerControlList);
+
+//     // Set initial basemap
+//     const initialBasemapSwitch = baseLayerControlList.querySelector(".basemap-switch");
+//     if (initialBasemapSwitch) {
+//         initialBasemapSwitch.checked = true;
+//         changeBasemap(initialBasemapSwitch, baseMaps, map);
+//     }
+// };
 
 // Overlays
 function handleOverlaySwitch(switchInput, overlayLayers, map) {
@@ -330,8 +363,7 @@ export function createNUTSSelectors({getFeatureGroup}) {
       }
     }); 
   });
-  
-  };
+};
   
 
 export function getUserFields() {
@@ -391,7 +423,7 @@ export function highlightLayer(leafletId, featureGroup) {
       }
     }
   }
-}
+};
 
 
 export function selectUserField(userFieldId, project, featureGroup) {
@@ -425,7 +457,8 @@ export function selectUserField(userFieldId, project, featureGroup) {
     } else  {
         applyUserFieldChange(project, userFieldId, userField, featureGroup);
     }
-}
+};
+
 
 function showUserFieldModal({ title, text, onConfirm }) {
     const modal = document.getElementById('interactionModal');
@@ -515,21 +548,9 @@ $('#toggleBottomFullscreen').on('click', function () {
         
         map.fitBounds(highlightedElement[0].layer.getBounds());
       }
-      
-        
-
         $('#toggleBottomFullscreen').html('<i class="bi bi-fullscreen-exit"></i>');
       }
-
-    // Important: tell Leaflet to recalculate map size
-        // if (window.map) {
-        //   setTimeout(() => {
-        //     window.map.invalidateSize();
-        //   }, 300); // delay helps after layout shift
-        // }
-      });
-
-
+    });
 
 
 // TODO rename to MapEventhandler
@@ -750,7 +771,6 @@ export function initializeSidebarEventHandler({projectClass, sidebar, map, baseM
           selectUserField(getUserFieldIdByLeafletId(leafletId), getProject(), featureGroup);
         }, 250); }
       });
-
 };
 
 
@@ -817,7 +837,7 @@ export function updateUserField(userField, layer) {
     });
   });
 
-}
+};
 
 function updateFieldSelectorOption(userField, fieldSelector) {  
   const option = document.createElement("option");
@@ -1011,9 +1031,5 @@ export async function getUserFieldsFromDb (featureGroup) {
     console.log(error);
   });
 };
-
-
-
-
 
 

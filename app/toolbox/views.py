@@ -427,7 +427,7 @@ def filter_sinks(request):
         (Q(landuse_3__in=land_use_values) |
         Q(landuse_3__isnull=True))
         )
-    sinks = sinks.filter(land_use_filter)
+    # sinks = sinks.filter(land_use_filter)
     print("Sinks LAND USE FILTERED:", sinks.count())
     if sinks.count() == 0:
         message = {
@@ -1089,7 +1089,7 @@ def filter_sieker_sinks(request):
     feasibility = project['siekerSink'].get('feasibility', [])
     feasibility = (Q(umsetzbark__in=feasibility))
     sinks = sinks.filter(feasibility)
-    print("Sinks LAND USE FILTERED:", sinks.count())
+    print("Sieker Sinks LAND USE FILTERED:", sinks.count())
     if sinks.count() == 0:
         message = {
             'success': False, 

@@ -103,40 +103,6 @@ class MonicaProjectForm(forms.Form):
         )
 
 
-# Use a base class to apply this callback to all forms
-# class ParametersModelForm(forms.ModelForm):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         for field in self.fields.values():
-#             print(field.widget)
-#             if isinstance(field.widget, forms.BooleanField):
-#             #     # Keep BooleanFields as regular stacked checkboxes
-#                 self.helper = FormHelper()
-#                 self.helper.form_method = "post"
-#                 self.helper.layout = Layout(
-#                     Field(field.name, css_class='form-check-input mb-3')
-#                 )   
-
-#             else:
-#             #     # Set label/field alignment only for non-Boolean fields
-#             #     layout_fields.append(Field(field_name))
-#                 if isinstance(field.widget, forms.Textarea):
-#                     field.widget = SingleRowTextarea()
-#                 # for field_name, field in self.fields.items():
-                
-
-#                 self.helper = FormHelper()
-#                 self.helper.form_method = "post"
-#                 self.helper.label_class = 'col-5 col-form-label'
-#                 self.helper.field_class = 'col-7'
-
-#                 # Optional: Automatically generate a layout with all fields, each wrapped in a row
-#                 self.helper.layout = Layout(
-#                     *[
-#                         Field(field_name, wrapper_class='row')
-#                         for field_name in self.fields
-#                     ]
-#                 )
 class ParametersModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

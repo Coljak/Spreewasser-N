@@ -31,10 +31,6 @@ position: relative;
 top: calc(var(--avatar-size) / 4); /* 25% of parent */
 }
 
-/* Leaflet */
-/* .leaflet-container a {
-	color: var(--bs-primary) !important;
-	} */
    /* Add this to your base.css or styles.css */
 #alert-box {
   position: sticky;

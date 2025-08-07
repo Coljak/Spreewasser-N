@@ -1,13 +1,11 @@
 import { MonicaProject,  loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica_model.js';
 import { getGeolocation, handleAlerts, getCSRFToken, saveProject } from '/static/shared/utils.js';
-// import { projectRegion, baseMaps, map, initializeMapEventlisteners, initializeDrawControl } from '/static/shared/map_utils.js';
 import { 
   projectRegion, 
   baseMaps, 
   map, 
   initializeMapEventlisteners, 
   initializeDrawControl,
-  createBaseLayerSwitchGroup, 
   openUserFieldNameModal,
   createNUTSSelectors,
   changeBasemap, 
@@ -82,7 +80,7 @@ const overlayLayers = {
 
 initializeMapEventlisteners(map, featureGroup, MonicaProject);
 initializeDrawControl(map, featureGroup);
-createBaseLayerSwitchGroup(baseMaps, map);
+// createBaseLayerSwitchGroup(baseMaps, map);
 initializeSidebarEventHandler({
   sidebar: document.querySelector(".sidebar-content"),
   map,

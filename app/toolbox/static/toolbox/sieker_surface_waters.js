@@ -7,7 +7,6 @@ import {
   map, 
   initializeMapEventlisteners, 
   initializeDrawControl,
-  createBaseLayerSwitchGroup, 
   openUserFieldNameModal,
   createNUTSSelectors,
   changeBasemap, 
@@ -20,7 +19,13 @@ import {
   selectUserField,
   handleSaveUserField,
   dismissPolygon,
+  getCircleMarkerSettings,
+  getLegendItem,
+  getLegendSettings,
+  removeLegendFromMap,
 } from '/static/shared/map_sidebar_utils.js';
+
+
 
 
 const lakesFeatureGroup = new L.FeatureGroup();
@@ -80,14 +85,12 @@ function createSiekerLargeLakeTableSettings() {
 
 export function initializeSiekerSurfaceWaters(layers) {
     console.log("Initializing Sieker surface waters...", layers);
+    removeLegendFromMap(map);
     map.eachLayer(function(layer) {
-        // console.log(layer.toolTag);
-        if (
-            layer.toolTag === 'infiltration' ||
-            layer.toolTag === 'sieker-sink') {
+        if (layer.toolTag && layer.toolTag !== 'sieker-surface-waters') {
             map.removeLayer(layer);
         }
-    });
+        });
     initializeSliders();
     // add lakes and water levels
 
@@ -145,7 +148,7 @@ export function initializeSiekerSurfaceWaters(layers) {
         <caption>Große Seen</caption>
         <thead>
         <tr>
-            <th><input type="checkbox" class="sieker-large-lake-select-all-checkbox" data-type="sieker-large-lake">Select all</th>
+            <th><input type="checkbox" class="sieker-large-lake-select-all-checkbox" data-type="sieker_large_lake">Select all</th>
             <th>Name</th>
             <th>Stand</th>
             <th>Badesee</th>
@@ -174,12 +177,61 @@ export function initializeSiekerSurfaceWaters(layers) {
 
           
     });
-
-   
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
     const tableSettings = createSiekerLargeLakeTableSettings();
     $('#sieker-large-lake-table').DataTable(tableSettings);
+
+    console.log('layers.water_levels: ', layers.water_levels);
+    // Add water_levels points
+    const waterLevelsCircleMarkerSettings = getCircleMarkerSettings('azure');
+    let waterLevels = L.geoJSON(layers.water_levels, {
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, waterLevelsCircleMarkerSettings);
+        },
+        onEachFeature: function (feature, layer) {
+            let popupContent = `
+                <h6><b> ${feature.properties.pegelname}</b></h6>
+                Zeitraum: ${feature.properties.start_date} - ${feature.properties.end_date}<br>
+                Tage: ${feature.properties.t_d}<br>
+                Jahre: ${feature.properties.t_a.toFixed(1)}<br>
+                Min.: ${feature.properties.min_cm} cm<br>
+                Max.: ${feature.properties.max_cm} cm<br>
+                Mittel: ${feature.properties.mean_wl} m<br>
+            `;
+            layer.bindTooltip(popupContent);
+            layer.on('mouseover', function () {
+                this.openPopup();
+            });
+            layer.on('contextmenu', function (event) {
+                L.popup()
+                    .setLatLng(event.latlng)
+                    .setContent(`
+                    <h6><b> ${feature.properties.pegelname}</b></h6>
+                    <button class="btn btn-outline-secondary select-sieker-water-level" data-sieker-water-level-id=${feature.properties.id}">Auswählen</button>
+                    `)
+                    .openOn(map);   
+            });
+
+            // Delay attaching event listener until DOM is rendered
+            setTimeout(() => {
+                const button = document.querySelector('.select-sieker-water-level');
+                if (button) {
+                    button.addEventListener('click', () => {
+                        map.closePopup();
+                    });
+                }
+            }, 0);
+        }
+    });
+
+    waterLevels.addTo(waterLevelsFeatureGroup);
+
+
+
+
+            
+
 
     layers.water_levels.features.forEach(feature => {
         // Polygons and Popups
@@ -240,6 +292,26 @@ export function initializeSiekerSurfaceWaters(layers) {
 
 
     map.addLayer(lakesFeatureGroup);
-    // map.addLayer(waterLevelsFeatureGroup);
+    map.addLayer(waterLevelsFeatureGroup);
+
+    document.getElementById('toggleSiekerLevels').addEventListener('click', function() {
+        if (map.hasLayer(waterLevelsFeatureGroup)) {
+            map.removeLayer(waterLevelsFeatureGroup);
+            this.textContent = 'Pegel anzeigen';
+        } else {
+            map.addLayer(waterLevelsFeatureGroup);
+            this.textContent = 'Pegel ausblenden';
+        }
+    });
+
+    document.getElementById('toggleSiekerLakes').addEventListener('click', function() {
+        if (map.hasLayer(lakesFeatureGroup)) {
+            map.removeLayer(lakesFeatureGroup);
+            this.textContent = 'Seen anzeigen';
+        } else {
+            map.addLayer(lakesFeatureGroup);
+            this.textContent = 'Seen ausblenden';
+        }
+    });
 
 };

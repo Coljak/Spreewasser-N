@@ -24,6 +24,13 @@ FIELD_UNITS = {
     "mean_surplus_volume": "m³",
     "depth": "m",
     "index_soil": "%",
+    'sink_depth': "m",
+    'avg_depth': "m",
+    'urbanarea_percent': "%",
+    'wetlands_percent': "%",
+    'd_max_m': "m",
+    'vol_mio_m3': "Mio m³",
+    'area_ha': "ha",
 }
 class MinMaxRangeFilter(RangeFilter):
     def __init__(self, *args, model=None, field_name=None, widget=None, **kwargs):
@@ -59,6 +66,7 @@ class MinMaxRangeFilter(RangeFilter):
                 min_val, max_val = min(int_values), max(int_values)
             else:
                 min_val, max_val = 0, 100
+
         else:
             agg = qs.aggregate(min_val=Min(self.field_name), max_val=Max(self.field_name))
 
@@ -339,7 +347,7 @@ class SiekerSinkFilter(FilterSet):
    
     feasibility = MultipleChoiceFilter(
         label="Umsetzbarkeit",
-        choices=[('leicht', 'leicht'), ('mittel', 'mittel'), ('schwierig', 'schwierig')],  # Will be set in __init__
+        choices=[('leicht', 'leicht'), ('mittel', 'mittel'), ('schwierig', 'schwierig')],  
         widget=forms.CheckboxSelectMultiple,
     )
 
@@ -352,7 +360,7 @@ class SiekerSinkFilter(FilterSet):
                 filter_.queryset_for_bounds = queryset
                 filter_.set_bounds()
 
-        prefix = 'sieker-sink'
+        prefix = 'sieker_sink'
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f"{prefix}_{name}"
             field.widget.attrs['name'] = f"{prefix}_{name}"

@@ -65,14 +65,6 @@ class PHClass(models.Model):
      
     class Meta:
         db_table = 'buek_ph_class'
-
-class SomeOleClass(models.Model):
-    a = models.CharField(max_length=255, null=True, blank=True)
-    b = models.CharField(max_length=255, null=True, blank=True)
-    c = models.IntegerField(null=True, blank=True)
-
-    def __str__(self):
-        return self.a
     
 
 
@@ -120,6 +112,17 @@ class CorineLandCover2018(models.Model):
     
     class Meta:
         db_table = 'buek_corine_land_cover_2018'
+
+class CLCMap2018(models.Model):
+    """
+    This model is used to store the original CLC 2018 map data.
+    """
+    
+    geom = gis_models.MultiPolygonField(srid=4326)
+    corine_landcover_code = models.ForeignKey(CorineLandCover2018, on_delete=models.CASCADE, null=True, blank=True)
+    code_18 = models.CharField(max_length=255, null=True, blank=True)
+    fid = models.IntegerField(null=True, blank=True)
+    objectid = models.IntegerField(null=True, blank=True)
 
 class SoilProfile(models.Model):
     polygon = models.ForeignKey(BuekPolygon, on_delete=models.CASCADE, null=True, blank=True)

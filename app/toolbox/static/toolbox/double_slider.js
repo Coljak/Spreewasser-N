@@ -16,9 +16,9 @@ export function initializeSliders() {
           maxLabel.text(event.value[1] + sliderUnit);
       });
 
-      slider.on('click', function (event) {
-          minLabel.text(event.value[0] + sliderUnit);
-          maxLabel.text(event.value[1] + sliderUnit);
+      slider.on('change', function (event) {
+          minLabel.text(event.value.newValue[0] + sliderUnit);
+          maxLabel.text(event.value.newValue[1] + sliderUnit);
       });
 
 

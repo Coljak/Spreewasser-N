@@ -92,11 +92,11 @@
     overflow-y: auto; /* Add scrolling to the table when necessary */
   }
 
-  .leaflet-draw-custom-edit {
+  /* .leaflet-draw-custom-edit {
     
     background-position: 100% 100%;
     background-repeat: no-repeat;
 
-  }
+  } */
 
 

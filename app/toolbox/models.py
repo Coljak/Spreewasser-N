@@ -441,7 +441,7 @@ class EnlargedSinkEmbankment(models.Model):
             }
         }
 
-#### ende ######
+
 class GroundWaterDistanceClass(models.Model):
     upper_limit = models.FloatField(null=True)
     lower_limit = models.FloatField(null=True)
@@ -627,8 +627,6 @@ class SiekerGewnet(models.Model):
     length = models.FloatField(null=True, blank=True)
     shape_leng = models.FloatField(null=True, blank=True)
 
-
-
 class SiekerLargeLake(models.Model):
 
     geom25833 = gis_models.PolygonField(srid=25833, null=True, blank=True)
@@ -676,8 +674,7 @@ class SiekerLargeLake(models.Model):
             }
 
         return geojson
-    
-                             
+                               
 class EZG(models.Model):
     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
@@ -815,52 +812,38 @@ class LanduseCLC2018(models.Model):
     shape_area = models.FloatField(null=True, blank=True)
     name_de = models.CharField(max_length=150, null=True, blank=True)
 
+
+#GEK_Rueckhalteräume
 class GekRetention(models.Model):
     geom25833 = gis_models.PolygonField(srid=25833, null=True, blank=True)
     geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
     dokument = models.CharField(max_length=100, null=True, blank=True)
-    derz_nutzu = models.CharField(max_length=100, null=True, blank=True)
-    quelle_1 = models.CharField(max_length=100, null=True, blank=True)
+    current_landusage = models.CharField(max_length=100, null=True, blank=True) # derz_nutzu
+    quelle_1 = models.CharField(max_length=100, null=True, blank=True) # obsolete, always 'GEK'
     quelle_2 = models.CharField(max_length=100, null=True, blank=True)
     gew_u_ver = models.CharField(max_length=100, null=True, blank=True)
     gew_name = models.CharField(max_length=100, null=True, blank=True)
-    pabschnitt = models.CharField(max_length=100, null=True, blank=True)
-    hrsg = models.CharField(max_length=100, null=True, blank=True)
+    pabschnitt = models.CharField(max_length=100, null=True, blank=True) # Planungsabschnitt entlang des Gewässers
+    hrsg = models.CharField(max_length=100, null=True, blank=True) # 'Bundesanstalt für Gewässerkunde'
     ersch_jahr = models.CharField(max_length=100, null=True, blank=True)
     link = models.CharField(max_length=100, null=True, blank=True)
-    mnt_1_id = models.CharField(max_length=100, null=True, blank=True)
-    anz_1 = models.FloatField(null=True, blank=True)
-    besch_1 = models.CharField(max_length=255, null=True, blank=True)
-    prio_1 = models.CharField(max_length=100, null=True, blank=True)
-    kosten_1 = models.CharField(max_length=100, null=True, blank=True)
-    mnt_id_2 = models.CharField(max_length=100, null=True, blank=True)
-    mnt_id_3 = models.CharField(max_length=100, null=True, blank=True)
-    mnt_id_4 = models.CharField(max_length=100, null=True, blank=True)
-    mnt_id_5 = models.CharField(max_length=100, null=True, blank=True)
-    mnt_id_6 = models.CharField(max_length=100, null=True, blank=True)
-    anz_2 = models.FloatField(null=True, blank=True)
-    anz_3 = models.FloatField(null=True, blank=True)
-    anz_4 = models.FloatField(null=True, blank=True)
-    anz_5 = models.FloatField(null=True, blank=True)
-    anz_6 = models.FloatField(null=True, blank=True)
     massn_insg= models.FloatField(null=True, blank=True)
-    besch_2 = models.CharField(max_length=255, null=True, blank=True)
-    besch_3 = models.CharField(max_length=255, null=True, blank=True)
-    besch_4 = models.CharField(max_length=255, null=True, blank=True)
-    besch_5 = models.CharField(max_length=255, null=True, blank=True)
-    besch_6 = models.CharField(max_length=255, null=True, blank=True)
-    prio_2 = models.CharField(max_length=100, null=True, blank=True)
-    prio_3 = models.CharField(max_length=100, null=True, blank=True)
-    prio_4 = models.CharField(max_length=100, null=True, blank=True)
-    prio_5 = models.CharField(max_length=100, null=True, blank=True)
-    prio_6 = models.CharField(max_length=100, null=True, blank=True)
-    kosten_2 = models.CharField(max_length=100, null=True, blank=True)
-    kosten_3 = models.CharField(max_length=100, null=True, blank=True)
-    kosten_4 = models.CharField(max_length=100, null=True, blank=True)
-    kosten_5 = models.CharField(max_length=100, null=True, blank=True)
-    kosten_6 = models.CharField(max_length=100, null=True, blank=True)
     datum_zugr = models.CharField(max_length=100, null=True, blank=True)
+
+
+
 	
+
+class GEKMeasures(models.Model):
+    description_de = models.CharField(max_length=255, null=True, blank=True)
+class GekRetentionMeasure(models.Model):
+    gek_retention = models.ForeignKey(GekRetention, on_delete=models.CASCADE, related_name='measures')
+    gek_measure = models.ForeignKey(GEKMeasures, on_delete=models.CASCADE, null=True, blank=True)
+    anz = models.FloatField(null=True, blank=True)
+    besch = models.CharField(max_length=255, null=True, blank=True)
+    prio = models.CharField(max_length=100, null=True, blank=True)
+    kosten = models.CharField(max_length=100, null=True, blank=True)
+    measure_number = models.IntegerField(null=True, blank=True)  # To differentiate between multiple measures
 
 
 # Historische >Rückhalteräume

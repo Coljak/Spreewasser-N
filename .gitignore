@@ -177,6 +177,7 @@ data_temp/
 database/
 notes/
 geoserver/
+model_exports/
 
 # Django stuff
 migrations/

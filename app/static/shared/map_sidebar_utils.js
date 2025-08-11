@@ -132,11 +132,86 @@ export function openUserFieldNameModal(layer, featureGroup) {
 
 
 export function initializeDrawControl(map, featureGroup) {
+  
+
+    // L.drawLocal.draw.toolbar = {
+    //       // #TODO: this should be reorganized where actions are nested in actions
+    //       // ex: actions.undo  or actions.cancel
+    //       actions: {
+    //         title: 'Zeichnen beenden',
+    //         text: 'Beenden'
+    //       },
+    //       finish: {
+    //         title: 'Zeichnen beenden',
+    //         text: 'Beenden'
+    //       },
+    //       undo: {
+    //         title: 'Delete last point drawn',
+    //         text: 'Delete last point'
+    //       },
+    //       buttons: {
+    //         polyline: 'Zeichne eine Polyline',
+    //         polygon: 'Zeichne ein Polygon',
+    //         rectangle: 'Zeichne ein Rechteck',
+    //         circle: 'Zeichne einen Kreis',
+    //         marker: 'Zeichne einen Marker',
+    //         circlemarker: 'Zeichne einen Kreis-Marker'
+    //       }
+    //     }
+    // L.drawLocal.draw.handlers.polygon.tooltip = {
+    //           start: 'Klicken, um mit dem Zeichnen zu beginnen.',
+    //           cont: 'Klicken, um das Zeichnen der Form fortzusetzen.',
+    //           end: 'Klicken Sie auf den ersten Punkt, um diese Form zu schließen.'
+    //         }
+          
+    // L.drawLocal.draw.handlers.rectangle.tooltip = {
+    //     start: 'Klicken und ziehen.'
+    //   }
+          
+        
+      
+    //   edit: {
+    //     toolbar: {
+    //       actions: {
+    //         save: {
+    //           title: 'Save changes',
+    //           text: 'Save'
+    //         },
+    //         cancel: {
+    //           title: 'Cancel editing, discards all changes',
+    //           text: 'Cancel'
+    //         },
+    //         clearAll: {
+    //           title: 'Clear all layers',
+    //           text: 'Clear All'
+    //         }
+    //       },
+    //       buttons: {
+    //         edit: 'Edit layers',
+    //         editDisabled: 'No layers to edit',
+    //         remove: 'Delete layers',
+    //         removeDisabled: 'No layers to delete'
+    //       }
+    //     },
+    //     handlers: {
+    //       edit: {
+    //         tooltip: {
+    //           text: 'Drag handles or markers to edit features.',
+    //           subtext: 'Click cancel to undo changes.'
+    //         }
+    //       },
+    //     }
+    //   }
+    // };
+
+
+
   const drawControl = new L.Control.Draw({
     position: "topright",
     edit: {
       featureGroup: featureGroup,
       edit: false,
+      remove: false,
     },
     draw: {
       circlemarker: false,
@@ -144,15 +219,15 @@ export function initializeDrawControl(map, featureGroup) {
       circle: false,
       marker: false,
       polygon: {
-        shapeOptions: {
-          color: "#000000",
-        },
         allowIntersection: false,
         showArea: true,
+        metric: true
       },
     },
   });
   map.addControl(drawControl);
+
+
 };
 
 

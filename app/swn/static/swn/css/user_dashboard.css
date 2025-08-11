@@ -5,6 +5,11 @@
     border-color: var(--bs-success);
 
   }
+
+  /* avoid chromium default focus*/
+  .leaflet-interactive:focus {
+    outline: none;
+  }
   
   .leaflet-container {
     box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);

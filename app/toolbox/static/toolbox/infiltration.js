@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
+import { ToolboxProject,  updateDropdown } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 
@@ -646,6 +646,7 @@ export function initializeInfiltration() {
     
     });
 
+    $('toolboxPanel').off('change'); // Remove any previous change event handlers
     $('#toolboxPanel').on('change',  function (event) {
     const $target = $(event.target);
     const project = ToolboxProject.loadFromLocalStorage();

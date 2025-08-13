@@ -3,11 +3,12 @@ from django_filters import FilterSet
 from django.db.models import Min, Max
 from django.db.models import Q
 # from django_filters import FloatFilter
-from django_filters.filters import RangeFilter, ChoiceFilter, MultipleChoiceFilter, NumberFilter
+from django_filters.filters import RangeFilter, ChoiceFilter, MultipleChoiceFilter, ModelMultipleChoiceFilter, NumberFilter
 from django_filters.fields import RangeField
 from django import forms
 from . import models
 from .forms import SliderFilterForm
+import json
 from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget
 import math
 # from django_filters import FloatFilter
@@ -31,14 +32,15 @@ FIELD_UNITS = {
     'd_max_m': "m",
     'vol_mio_m3': "Mio m³",
     'area_ha': "ha",
+    'costs': '€',
 }
 class MinMaxRangeFilter(RangeFilter):
-    def __init__(self, *args, model=None, field_name=None, widget=None, **kwargs):
+    def __init__(self, *args, model=None, field_name=None, widget=None, queryset=None, **kwargs):
         
         self.model = model
         self.field_name = field_name
         self.units = FIELD_UNITS.get(field_name, "")
-        self.queryset_for_bounds = None  # to be set in FilterSet
+        self.queryset_for_bounds = queryset  # to be set in FilterSet
         if widget is None:
             widget = CustomDoubleSliderWidget()
         super().__init__(widget=widget, *args, **kwargs)
@@ -371,3 +373,137 @@ class SiekerSinkFilter(FilterSet):
         model = models.SiekerSink
         fields = ['volume', 'sink_depth', 'avg_depth', 'urbanarea_percent', 'wetlands_percent']
         form = SliderFilterForm
+
+
+class GekRetentionFilter(FilterSet):
+    costs = MinMaxRangeFilter(
+        model=models.GekRetentionMeasure, 
+        field_name='costs', 
+        label="Kosten",
+        method='filter_by_costs',
+    )
+    
+    # Landuse filter
+    landuse = MultipleChoiceFilter(
+        choices = [],
+        widget=forms.CheckboxSelectMultiple,
+        label="Landnutzung",
+        method="filter_by_landuse"
+    )
+
+    priority_labels = dict(
+    models.GekPriority.objects
+    .values_list("priority_level", "description_de")
+    .distinct()
+    .order_by("priority_level")
+    )
+    print(priority_labels)
+
+    prio_labels = json.dumps(priority_labels, ensure_ascii=False)
+    print(prio_labels)
+
+    priority = NumberFilter(
+        label="Priorität",
+        method='filter_priorities',
+        widget=CustomSimpleSliderWidget(attrs = {
+            "id": "gek_priority",
+            "name": "gek_priority",
+            "prefix": "gek",
+            "data_range_min": 4,
+            "data_range_max": 8,
+            "string_label": True,
+            "data_cur_val": 4,
+            # "units": "m",
+            "class": "hiddeninput",
+        }) 
+    )
+
+    class Meta:
+        model = models.GekRetention
+        fields = ['costs', 'landuse']
+        # Use the custom slider form for the range filter
+        form = SliderFilterForm
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Limit landuse choices to the current queryset
+        landuses = (
+            models.GekLanduse.objects
+            .filter(gek_retention__in=self.queryset)
+            .values_list('clc_landuse__label_level_2', flat=True)
+            .distinct()
+        )
+        self.filters['landuse'].extra['choices'] = [(lu, lu) for lu in landuses if lu]
+
+        measures_qs = models.GekRetentionMeasure.objects.filter(
+            gek_retention__in=self.queryset
+        )
+        self.filters['costs'].queryset_for_bounds = measures_qs
+        self.filters['costs'].set_bounds()
+
+        min_priority = measures_qs.aggregate(Min('priority__priority_level'))['priority__priority_level__min']
+        max_priority = models.GekPriority.objects.aggregate(Max('priority_level'))['priority_level__max']
+        priorities = models.GekPriority.objects.values_list("priority_level", "description_de").distinct().order_by("priority_level")
+        if min_priority is not None:
+            desc_map = dict(priorities)
+            # Set widget attributes dynamically
+            slider = self.filters['priority'].field.widget
+            slider.attrs["data_range_min"] = min_priority
+            slider.attrs["data_range_max"] = max_priority
+            slider.attrs["data_cur_val"] = min_priority
+
+            # Store mapping so JS can display description instead of numbers
+            # e.g. {1: "Sehr hoch", 2: "Hoch", ...}
+            slider.attrs["data_labels"] = desc_map
+        
+
+    def filter_priorities(self, queryset, name, value):
+        """
+        Filter by priority level.
+        `value` is the selected priority level (4, 5, 6, 7, or 8).
+        """
+        if value is None:
+            return queryset
+
+        # Convert value to integer if it's a string
+        try:
+            value = int(value)
+        except ValueError:
+            return queryset
+
+        # Filter by priority level
+        return queryset.filter(measures__priority__priority_level=value).distinct()
+
+    def filter_by_landuse(self, queryset, name, value):
+        # value is a list of selected landuse strings
+        return queryset.filter(landuses__clc_landuse__label_level_2__in=value).distinct()
+    
+    def filter_by_costs(self, queryset, name, value):
+        """
+        `queryset` is a GekRetention queryset.
+        `value` is a 2-tuple or an object with .start/.stop from RangeFilter.
+        """
+        if not value:
+            return queryset
+
+        # support both tuple and .start/.stop
+        if hasattr(value, 'start') or hasattr(value, 'stop'):
+            min_val = getattr(value, 'start', None)
+            max_val = getattr(value, 'stop', None)
+        else:
+            try:
+                min_val, max_val = value
+            except Exception:
+                return queryset
+
+        q = {}
+        if min_val is not None:
+            q['measures__costs__gte'] = min_val
+        if max_val is not None:
+            q['measures__costs__lte'] = max_val
+
+        if not q:
+            return queryset
+
+        return queryset.filter(**q).distinct()

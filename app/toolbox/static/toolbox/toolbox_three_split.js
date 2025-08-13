@@ -4,6 +4,7 @@ import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { initializeInfiltration } from '/static/toolbox/infiltration.js';
 import { initializeSiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters.js';
 import { initializeSiekerSink } from '/static/toolbox/sieker_sink.js';
+import {initializeSiekerGek } from '/static/toolbox/sieker_gek.js';
 initializeSiekerSink
 import { 
   projectRegion, 
@@ -387,6 +388,43 @@ function startSiekerSinks() {
 
 
 
+function startSiekerGeks() {
+  console.log('start Gek')
+  const userField = ToolboxProject.loadFromLocalStorage().userField;
+  let layers = {}
+  // const userField = project.userField;
+  if (userField) {
+  
+    fetch('load_sieker_gek_gui/' + userField + '/')
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        handleAlerts(data);
+        return;
+      }
+        // Replace HTML content
+      $('#toolboxButtons').addClass('d-none');
+      $('#toolboxPanel').removeClass('d-none');
+      $('#toolboxPanel').html(data.html);
+      const feature_collection = data.gek_retention  || {};
+      const sliderLabels = data.slider_labels;
+      return [feature_collection, sliderLabels];
+    })
+    .then(([feature_collection, sliderLabels]) => {
+      if (!feature_collection || Object.keys(feature_collection).length === 0) { 
+        return;
+      } else {
+        initializeSiekerGek([feature_collection, sliderLabels]);
+      }
+    })
+    // .catch(error => console.error("Error fetching data:", error));
+  } else {
+    handleAlerts({ success: false, message: 'Please select a user field!' });
+  }
+};
+
+
+
 
 
 
@@ -408,8 +446,8 @@ $('#startSiekerSinks').on('click', () => {
   startSiekerSinks()
 });
 $('#startWaterDevelopment').on('click', () => {
-  console.log('startWaterDevelopment clicked');
-  // startWaterDevelopment()
+  console.log('startGek clicked');
+  startSiekerGeks()
 });
 $('#startFormerWetlands').on('click', () => {
   console.log('startFormerWetlands clicked');

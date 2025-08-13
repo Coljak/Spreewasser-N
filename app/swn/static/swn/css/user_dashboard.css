@@ -68,6 +68,23 @@
 
   } 
 
+/* Default */
+.polygon {
+    stroke: var(--bs-primary);  /* border color */
+    fill: var(--bs-primary);    /* fill color */
+}
+
+/* Hover effect */
+.polygon:hover {
+    stroke: var(--bs-warning);
+    fill: var(--bs-warning);
+}
+
+/* Clicked state (you'll need to toggle a class in JS) */
+.polygon.clicked {
+    stroke: var(--bs-success);
+    fill: var(--bs-success);
+}
 
 
   /* .form-check {

@@ -2,15 +2,16 @@ import { getGeolocation } from '/static/shared/utils.js';
 import { MonicaProject, loadProjectFromDB, loadProjectToGui  } from '/static/monica/monica.js';
 
 import { ToolboxProject } from '/static/toolbox/toolbox.js';
-import { getCSRFToken, handleAlerts } from '/static/shared/utils.js';
+import { getCSRFToken, handleAlerts, getBsColor } from '/static/shared/utils.js';
 export class UserField {
-  constructor(name, id=null, lat=null, lon=null, userProjects=[]) {
+  constructor(name, id=null, lat=null, lon=null, userProjects=[], properties={} ) {
     this.name = name;
     // this.layer = layer;
     this.id = id;
     this.lat = lat;
     this.lon = lon;
     this.userProjects = userProjects;
+    this.properties = properties;
   }
 };
 
@@ -299,36 +300,6 @@ export function changeBasemap(basemapSwitch, baseMaps, map) {
 };
 
 
-// export function createBaseLayerSwitchGroup(baseMaps, map) {
-//     const baseLayerControlList = document.getElementById("baseLayerList");
-//     let html = "";
-
-//     // Generate HTML for base layer switches
-//     Object.keys(baseMaps).forEach((basemapName) => {
-//         html += `
-//             <li class="list-group-item">
-//                 <div class="col form-check form-switch">
-//                     <input 
-//                         type="radio" 
-//                         class="form-check-input user-field-switch basemap-switch" 
-//                         data-basemap="${basemapName}">
-//                     <label>${basemapName}</label>
-//                 </div>
-//             </li>
-//         `;
-//     });
-
-//     // Insert the generated HTML
-//     baseLayerControlList.innerHTML = html;
-//     baseLayerCollapse.appendChild(baseLayerControlList);
-
-//     // Set initial basemap
-//     const initialBasemapSwitch = baseLayerControlList.querySelector(".basemap-switch");
-//     if (initialBasemapSwitch) {
-//         initialBasemapSwitch.checked = true;
-//         changeBasemap(initialBasemapSwitch, baseMaps, map);
-//     }
-// };
 
 // Overlays
 function handleOverlaySwitch(switchInput, overlayLayers, map) {
@@ -942,7 +913,7 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
             userFields = JSON.parse(localStorage.getItem('userFields'));
           } catch { ; }
 
-  if (fieldName !== "") {
+  if (fieldName.split(' ').join('') !== "") {
     if (Object.values(userFields).some((uf) => uf.name === fieldName)) {
       handleAlerts({'success': false, 'message': `Please change the name since "${fieldName}" already exists.`});
       setTimeout(() => {
@@ -969,6 +940,7 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
           data.id,  
           data.lat,
           data.lon,
+          data.properties ? data.properties : {},
         );
         layer.remove(); // removes the drawn shape from map
         const newLayer = Object.values(layerGeoJson._layers)[0];
@@ -982,11 +954,14 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
       })
 
       fieldNameInput.value = '';
+      bootstrapModal.hide();
     }
   } else {
+
     alert("This field cannot be empty. Please enter a name!");
+    fieldNameInput.value = '';
   }
-  bootstrapModal.hide();
+  
 };
 
 
@@ -1087,7 +1062,8 @@ export async function getUserFieldsFromDb (featureGroup) {
         el.id,  
         el.centroid_lat || null,
         el.centroid_lon || null,
-        el.user_projects || [] // Ensure user_projects is an array
+        el.user_projects || [], // Ensure user_projects is an array
+        el.properties || {}
       );
 
       // Add the layer to the droughtFeatureGroup layer group

@@ -159,3 +159,10 @@ export function observeDropdown (selector, callback) {
 
     observer.observe(dropdown, { childList: true });
 };
+
+export function getBsColor(varName) {
+    return getComputedStyle(document.documentElement)
+        .getPropertyValue(varName)
+        .trim();
+};
+

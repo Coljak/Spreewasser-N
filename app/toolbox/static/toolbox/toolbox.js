@@ -92,12 +92,12 @@ export class Infiltration {
     }
          // Save project to localStorage
     saveToLocalStorage() {
-        localStorage.setItem('toolbox_infiltration', this.toJson());
+        localStorage.setItem('projectInfiltration', this.toJson());
     }
 
     // Load project from localStorage
     static loadFromLocalStorage() {
-        const storedProject = localStorage.getItem('toolbox_infiltration');
+        const storedProject = localStorage.getItem('projectInfiltration');
         return storedProject ? ToolboxProject.fromJson(JSON.parse(storedProject)) : null;
     }
 
@@ -140,12 +140,12 @@ export class SiekerSink {
     }
         // Save project to localStorage
     saveToLocalStorage() {
-        localStorage.setItem('toolbox_sieker_sink', this.toJson());
+        localStorage.setItem('projectSiekerSink', this.toJson());
     }
 
     // Load project from localStorage
     static loadFromLocalStorage() {
-        const storedProject = localStorage.getItem('toolbox_sieker_sink');
+        const storedProject = localStorage.getItem('projectSiekerSink');
         return storedProject ? ToolboxProject.fromJson(JSON.parse(storedProject)) : null;
     }
 };
@@ -159,12 +159,32 @@ export class SiekerSurfaceWaters {
 
     // Save project to localStorage
     saveToLocalStorage() {
-        localStorage.setItem('toolbox_surface_waters', this.toJson());
+        localStorage.setItem('projectSiekerSurfaceWaters', this.toJson());
     }
 
     // Load project from localStorage
     static loadFromLocalStorage() {
-        const storedProject = localStorage.getItem('toolbox_surface_waters');
+        const storedProject = localStorage.getItem('projectSiekerSurfaceWaters');
+        return storedProject ? ToolboxProject.fromJson(JSON.parse(storedProject)) : null;
+    }
+};
+
+
+export class SiekerGeks {
+    constructor (SiekerGeks = {}) {
+        this.id = SiekerGeks.id ?? null;
+        this.userField = SiekerGeks.userField ?? null;
+        this.selected_gek_retention = SiekerGeks.selected_gek_retention ?? [];
+    }
+
+    // Save project to localStorage
+    saveToLocalStorage() {
+        localStorage.setItem('projectSiekerGeks', this.toJson());
+    }
+
+    // Load project from localStorage
+    static loadFromLocalStorage() {
+        const storedProject = localStorage.getItem('projectSiekerGeks');
         return storedProject ? ToolboxProject.fromJson(JSON.parse(storedProject)) : null;
     }
 };
@@ -235,6 +255,8 @@ export const updateDropdown = (parameterType, newId) => {
 
 
 export async function toolboxSinks() {
+    // gets the sinks as an image
+    // TODO: obsolte??
   try {
       const response = await fetch('toolbox_sinks/');
       if (!response.ok) {

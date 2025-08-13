@@ -71,7 +71,12 @@ class UserField(models.Model):
     geom_json = PolygonField(null=True)
     comment = models.TextField(null=True, blank=True)
     geom = gis_models.GeometryField(null=True, srid=4326)
-    
+    has_zalf_sinks = models.BooleanField(default=False, null=True, blank=True)
+    has_zalf_enlarged_sinks = models.BooleanField(default=False, null=True, blank=True)
+    has_sieker_sink = models.BooleanField(default=False, null=True, blank=True)
+    has_sieker_gek = models.BooleanField(default=False, null=True, blank=True)
+    has_sieker_surface_water = models.BooleanField(default=False, null=True, blank=True)
+    has_sieker_large_lake = models.BooleanField(default=False, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -814,36 +819,65 @@ class LanduseCLC2018(models.Model):
 
 
 #GEK_Rueckhalteräume
+
+class GekDocument(models.Model):
+    link = models.URLField(max_length=255, null=True, blank=True)
+    publisher = models.CharField(max_length=100, null=True, blank=True)
+    year_of_publication = models.IntegerField(null=True, blank=True)
+
 class GekRetention(models.Model):
     geom25833 = gis_models.PolygonField(srid=25833, null=True, blank=True)
     geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
-    dokument = models.CharField(max_length=100, null=True, blank=True)
+    centroid4326 = gis_models.PointField(srid=4326, null=True, blank=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
     current_landusage = models.CharField(max_length=100, null=True, blank=True) # derz_nutzu
     quelle_1 = models.CharField(max_length=100, null=True, blank=True) # obsolete, always 'GEK'
     quelle_2 = models.CharField(max_length=100, null=True, blank=True)
-    gew_u_ver = models.CharField(max_length=100, null=True, blank=True)
-    gew_name = models.CharField(max_length=100, null=True, blank=True)
-    pabschnitt = models.CharField(max_length=100, null=True, blank=True) # Planungsabschnitt entlang des Gewässers
+    association = models.CharField(max_length=100, null=True, blank=True)
+    
+    planning_segment = models.CharField(max_length=100, null=True, blank=True) # Planungsabschnitt entlang des Gewässers
     hrsg = models.CharField(max_length=100, null=True, blank=True) # 'Bundesanstalt für Gewässerkunde'
-    ersch_jahr = models.CharField(max_length=100, null=True, blank=True)
-    link = models.CharField(max_length=100, null=True, blank=True)
-    massn_insg= models.FloatField(null=True, blank=True)
-    datum_zugr = models.CharField(max_length=100, null=True, blank=True)
+    gek_document = models.ForeignKey('GekDocument', on_delete=models.CASCADE, null=True, blank=True, related_name='retention_areas')
+    number_of_measures = models.IntegerField(null=True, blank=True)
+    datum_zugr = models.CharField(max_length=100, null=True, blank=True) # not necessary
+
+class GekLanduse(models.Model):
+    gek_retention = models.ForeignKey(GekRetention, on_delete=models.CASCADE, related_name='landuses')
+    current_landuse = models.CharField(max_length=100, null=True, blank=True) # derz_nutzu Original Data!
+    first_two_clc_digits = models.CharField(max_length=2, null=True, blank=True) # CLC code
+    clc_landuse = models.ForeignKey(CorineLandCover2018, on_delete=models.CASCADE, null=True, blank=True, related_name='gek_landuses')
+    area_total = models.FloatField(null=True, blank=True) # Total area of the landuse in m²
+    area_of_landuse = models.FloatField(null=True, blank=True) # Area of the landuse in m²
+    area_percentage = models.FloatField(null=True, blank=True) # Percentage of the landuse area compared to the total area
+    
+    def __str__(self):
+        return f"{self.current_landuse} ({self.first_two_clc_digits})"
 
 
+class GekPriority(models.Model):
+    description_de = models.CharField(max_length=255, null=True, blank=True)
+    description_en = models.CharField(max_length=255, null=True, blank=True)
+    priority_level = models.IntegerField(null=True, blank=True)  # 1, 2, or 3
 
-	
+    def __str__(self):
+        return f"{self.description_de} (Priority Level: {self.priority_level})"
+
 
 class GEKMeasures(models.Model):
     description_de = models.CharField(max_length=255, null=True, blank=True)
 class GekRetentionMeasure(models.Model):
     gek_retention = models.ForeignKey(GekRetention, on_delete=models.CASCADE, related_name='measures')
     gek_measure = models.ForeignKey(GEKMeasures, on_delete=models.CASCADE, null=True, blank=True)
-    anz = models.FloatField(null=True, blank=True)
-    besch = models.CharField(max_length=255, null=True, blank=True)
-    prio = models.CharField(max_length=100, null=True, blank=True)
+    quantity = models.FloatField(null=True, blank=True) # anz
+    description_de = models.CharField(max_length=255, null=True, blank=True)
+    priority = models.ForeignKey(GekPriority, on_delete=models.CASCADE, null=True, blank=True, related_name='measures')
     kosten = models.CharField(max_length=100, null=True, blank=True)
-    measure_number = models.IntegerField(null=True, blank=True)  # To differentiate between multiple measures
+    costs = models.IntegerField(null=True, blank=True)  # Kosten in Euro
+    measure_number = models.IntegerField(null=True, blank=True)  # Maßnahme Nummer (2 in 2MNT_ID)
+
+
+
+
 
 
 # Historische >Rückhalteräume

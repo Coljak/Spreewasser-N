@@ -1,19 +1,19 @@
 {% load crispy_forms_tags %}
 {% load static %}
 
-<div id="divSiekerSink">
+<div id="divSiekerGek">
     <!-- Navigation -->
     <ul class="nav nav-tabs">
         <li class="nav-item">
             <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Project</a>
         </li>
         
-        <li class="nav-item sieker-sink">
-            <a id="navSiekerSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerSinks" aria-selected="false">Senken</a>
+        <li class="nav-item sieker-gek">
+            <a id="navSiekerGek" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerGeks" aria-selected="false">Gewässerentwicklungskonzepte</a>
         </li>
         
-        <li class="nav-item sieker-sink">
-            <a id="navSiekerSinkResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerSinkResult">Ergebnis</a>
+        <li class="nav-item sieker-gek">
+            <a id="navSiekerGekResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerGekResult">Ergebnis</a>
         </li>
     </ul>
 
@@ -34,24 +34,25 @@
 
 
 
-        <div id="tabSiekerSinks" class="tab-pane">
+        <div id="tabSiekerGeks" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title">Filter Natürliche Senken als Versickerungsstandorte</h5>
-                        <button id="toggleSiekerSinks" class="btn btn-secondary">ausblenden</button>                                                                                             
+                        <h5 class="card-title">Filter Wasserrückhalteoptionen</h5>
+                        <button id="toggleSiekerGeks" class="btn btn-secondary">ausblenden</button>                                                                                             
                     </div>
                     
                     <form method="POST" action="">
                         {% csrf_token %}
-                        {% crispy sieker_sink_filter.form %}
-                        <button id="btnFilterSiekerSinks"type="submit" class="btn btn-primary">Senken filtern</button>
+                        {% crispy gek_filter_form.form %}
+                        <button id="btnFilterSiekerGeks"type="submit" class="btn btn-primary">Senken filtern</button>
                     </form>
                 </div>
             </div>
-            <div id="cardSiekerSinkTable" class="card mb-3 d-none">
+            
+            <div id="cardSiekerGekTable" class="card mb-3 d-none">
                 <div class="card-body">
-                    <div id="sieker-sink-table-container"></div>
+                    <div id="sieker-gek-table-container"></div>
                     
                 </div>
             </div>
@@ -64,7 +65,7 @@
 
         <!-- Result Tab -->
 
-        <div id="tabSiekerSinkResult" class="tab-pane ">
+        <div id="tabSiekerGekResult" class="tab-pane ">
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>

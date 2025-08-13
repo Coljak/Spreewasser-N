@@ -4,7 +4,7 @@ from swn import forms as swn_forms
 from swn.views import load_nuts_polygon
 from . import forms, models
 
-from .filters import SiekerLargeLakeFilter, SinkFilter, EnlargedSinkFilter, StreamFilter, LakeFilter, SiekerSinkFilter
+from .filters import SiekerLargeLakeFilter,  SinkFilter, EnlargedSinkFilter, StreamFilter, LakeFilter, SiekerSinkFilter, GekRetentionFilter
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry, LineString
 from django.contrib.gis.measure import D
@@ -176,8 +176,33 @@ def save_user_field(request):
                 
                 user_field.save()
 
-            
-            return JsonResponse({'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
+            has_zalf_sinks = models.Sink.objects.filter(geom4326__within=user_field.geom).exists() or \
+                             models.Sink.objects.filter(geom4326__intersects=user_field.geom).exists()
+            has_zalf_enlarged_sinks = models.EnlargedSink.objects.filter(geom4326__within=user_field.geom).exists() or \
+                                        models.EnlargedSink.objects.filter(geom4326__intersects=user_field.geom).exists()
+            has_sieker_sink = models.SiekerSink.objects.filter(geom4326__within=user_field.geom).exists() or \
+                              models.SiekerSink.objects.filter(geom4326__intersects=user_field.geom).exists()
+            has_sieker_gek = models.GekRetention.objects.filter(geom4326__within=user_field.geom).exists() or \
+                                models.GekRetention.objects.filter(geom4326__intersects=user_field.geom).exists()
+            has_sieker_large_lake = models.SiekerLargeLake.objects.filter(geom4326__within=user_field.geom).exists() or \
+                                        models.SiekerLargeLake.objects.filter(geom4326__intersects=user_field.geom).exists()
+            user_field.has_zalf_sinks = has_zalf_sinks
+            user_field.has_zalf_enlarged_sinks = has_zalf_enlarged_sinks
+            user_field.has_sieker_sink = has_sieker_sink
+            user_field.has_sieker_gek = has_sieker_gek
+            user_field.has_sieker_large_lake = has_sieker_large_lake
+            user_field.save()
+
+            geo_json = json.loads(user_field.geom.geojson)
+            geo_json['properties'] = {
+                'name': user_field.name,
+                'has_zalf_sinks': user_field.has_zalf_sinks,
+                'has_zalf_enlarged_sinks': user_field.has_zalf_enlarged_sinks,
+                'has_sieker_sink': user_field.has_sieker_sink,
+                'has_sieker_gek': user_field.has_sieker_gek,
+                'has_sieker_large_lake': user_field.has_sieker_large_lake,
+            }   
+            return JsonResponse({'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id, 'new_user_field': geo_json})
         
     else:
         return HttpResponseRedirect('toolbox:toolbox_dashboard')
@@ -920,7 +945,7 @@ def get_elevations_for_line(line_geom):
 ####### SIEKER TOOLBOX ########################
 
 ##### Surface Waters ######
-def sieker_surface_waters(request, user_field_id):
+def sieker_surface_waters_gui(request, user_field_id):
     if user_field_id == "null":
         user_field_id = None
     else:
@@ -1062,6 +1087,146 @@ def load_sieker_sink_gui(request, user_field_id):
 
 
 def filter_sieker_sinks(request):
+
+    start = datetime.now()
+    try:
+        project = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    user_field = models.UserField.objects.get(pk=project['userField'])
+    
+    geom = GEOSGeometry(user_field.geom)
+    
+    sinks = models.SiekerSink.objects.filter(geom4326__within=geom)
+    print("Sinks:", sinks.count())
+    filters = Q()
+    filters = add_range_filter(filters, project['siekerSink'], 'area', 'area')
+    filters = add_range_filter(filters, project['siekerSink'], 'volume', 'volume')
+    filters = add_range_filter(filters, project['siekerSink'], 'sink_depth', 'sink_depth')
+    filters = add_range_filter(filters, project['siekerSink'], 'avg_depth', 'avg_depth')
+    filters = add_range_filter(filters, project['siekerSink'], 'urbanarea_percent', 'urbanarea_percent')
+    filters = add_range_filter(filters, project['siekerSink'], 'avg_depth', 'avg_depth')
+    
+    sinks = sinks.filter(filters)
+    print("Sinks FILTERED:", sinks.count())
+
+    feasibility = project['siekerSink'].get('feasibility', [])
+    feasibility = (Q(umsetzbark__in=feasibility))
+    sinks = sinks.filter(feasibility)
+    print("Sieker Sinks LAND USE FILTERED:", sinks.count())
+    if sinks.count() == 0:
+        message = {
+            'success': False, 
+            'message': f'No sinks found in the search area.'
+        }
+        return JsonResponse({'message': message})
+    else:
+        print("Sinks", sinks.count())
+        
+        
+
+        features = []
+        for sink in sinks:
+            centroid = sink.centroid
+            geojson = json.loads(centroid.geojson)
+
+            print('geojson:', geojson)
+            geojson['properties'] = {
+                "id": sink.id,
+                "sink_depth": round(sink.sink_depth, 2),
+                "area": round(sink.area, 1),
+                "volume": round(sink.volume, 1),
+                "avg_depth": round(sink.avg_depth, 1),
+                "max_elevation": round(sink.max_elevation, 1),
+                "min_elevation": round(sink.min_elevation, 1),
+                "urbanarea_percent": sink.urbanarea_percent,
+                "wetlands_percent": sink.wetlands_percent,
+                "distance_t": sink.distance_t,
+                "dist_lake": sink.dist_lake,
+                "waterdist": sink.waterdist,
+                "umsetzbark": sink.umsetzbark,
+               
+            }
+            features.append(geojson)
+        feature_collection = {
+            "type": "FeatureCollection",
+            "features": features,
+            }
+        message = {
+            'success': True, 
+            'message': f'Found {sinks.count()} sinks'
+        }
+        print('Time for filter_sinks:', datetime.now() - start)
+        return JsonResponse({'feature_collection': feature_collection, 'message': message})
+
+
+
+   
+def load_sieker_gek_gui(request, user_field_id):
+    if user_field_id == "null":
+        user_field_id = None
+    else:
+        user_field_id = int(user_field_id)
+    
+    user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
+    if user_field is None:
+        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
+    
+    geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+   
+
+    if geks.count() > 0:
+        project_select_form = forms.ToolboxProjectSelectionForm()
+        features = []
+        for gek in geks:
+
+            geojson = json.loads(gek.geom4326.geojson)
+
+            # print('geojson:', geojson)
+            geojson['properties'] = {
+                "id": gek.id,
+                "name": gek.name,
+                "document": gek.gek_document.link if gek.gek_document else None,
+                "current_landusage": gek.current_landusage,
+                "planning_segment": gek.planning_segment,
+                "number_of_measures": gek.number_of_measures,
+               
+            }
+            features.append(geojson)
+        feature_collection = {
+            "type": "FeatureCollection",
+            "features": features,
+            }
+        message = {
+            'success': True, 
+            'message': f'Found {geks.count()} geks'
+        }
+
+
+        gek_filter_form = GekRetentionFilter(request.GET, queryset=geks)
+        slider_labels = dict(models.GekPriority.objects.values_list("priority_level", "description_de").distinct().order_by("priority_level"))
+
+        # streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
+
+        # sieker_geks_filter = SiekerGekFilter(request.GET, queryset=geks)
+
+        html = render_to_string('toolbox/sieker_gek.html', {
+            'project_select_form': project_select_form,
+            'gek_filter_form': gek_filter_form  ,
+            
+            # 'sieker_sink_filter': sieker_geks_filter,
+            
+        }, request=request) 
+
+        return JsonResponse({'success': True, 'html': html, 'gek_retention': feature_collection, 'slider_labels': slider_labels,})
+    else:
+        return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine Gewässerentwicklungskonzepte verfügbar.'})
+
+
+
+# TODO: turn into filter gek
+def filter_sieker_geks(request):
 
     start = datetime.now()
     try:

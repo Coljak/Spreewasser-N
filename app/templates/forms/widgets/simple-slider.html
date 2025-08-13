@@ -1,3 +1,5 @@
+
+
 <div class="row">
     {% if widget.attrs.reset %}
         {% if widget.attrs.prefix %}
@@ -10,9 +12,11 @@
         {% endif %}
     {% else %}
         {% if widget.attrs.prefix %}
-        <div class="col-2 text-start">
-        </div>
-        <div class="col-8">
+            
+            <div id="{{ widget.attrs.id }}_start_text" class="col-2 text-start">
+            </div>
+            
+            <div class="col-8">
         
         {% else %}
         <div class="col-10">
@@ -26,18 +30,26 @@
             max="{{ widget.attrs.data_range_max }}"
             step="{{ widget.attrs.data_range_step }}"
             value="{{ widget.attrs.data_cur_val }}"
-            
             data-default-value="{{ widget.attrs.data_default_value }}"
             id="{{ widget.attrs.id }}_slider"
             {% if widget.attrs.name %}
                 {% comment %} prefix="{{ widget.attrs.prefix|default:"" }}" {% endcomment %}
                 name="{{ widget.attrs.name }}"
             {% endif %}
-            oninput="document.getElementById('{{ widget.attrs.id }}_value').innerText = this.value + '{{ widget.attrs.units|default:"" }}';"
-        >
+            {% if not widget.attrs.string_label %}
+               
+                oninput="document.getElementById('{{ widget.attrs.id }}_value').innerText = this.value + '{{ widget.attrs.units|default:"" }}';"
+            {% endif %}
+                >
     </div>
     <div class="col-2 text-end" id="{{ widget.attrs.id }}_value">
-        {{ widget.attrs.data_cur_val }}{{ widget.attrs.units|default:"" }}
+        {% if widget.attrs.string_label %}
+
+            <span id="{{ widget.attrs.id }}_string_label">{{ widget.attrs.data_range_max }}</span>
+        {% else %}
+            
+            {{ widget.attrs.data_cur_val }}{{ widget.attrs.units|default:"" }}
+        {% endif %}
     </div>
     {% if widget.attrs.reset %}
         <div class="col-1">

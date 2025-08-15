@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject,  updateDropdown } from '/static/toolbox/toolbox.js';
+import { ToolboxProject, SiekerSink, updateDropdown } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 
@@ -107,7 +107,7 @@ function createSinkTableSettings(indexVisible) {
 function getSiekerSinks(sinkType, featureGroup) {
   let url = 'filter_sieker_sinks/';
   
-  const project = ToolboxProject.loadFromLocalStorage();
+  const project = SiekerSink.loadFromLocalStorage();
   fetch(url, {
     method: 'POST',
     body: JSON.stringify(project),
@@ -121,10 +121,10 @@ function getSiekerSinks(sinkType, featureGroup) {
     featureGroup.clearLayers();
     console.log('project', project);
   
-    const selected_sinks = project.siekerSink['selected_sinks'];
+    const selected_sinks = project['selected_sinks'];
     if (data.message.success) {
       
-      project.siekerSink['selected_sinks'] = [];
+      project['selected_sinks'] = [];
       
       // Initialize marker cluster
       let clusterGroup = L.markerClusterGroup();
@@ -300,19 +300,19 @@ export function initializeSiekerSink() {
   $('#toolboxPanel').off('change');
   $('#toolboxPanel').on('change',  function (event) {
     const $target = $(event.target);
-    const project = ToolboxProject.loadFromLocalStorage();
+    const project = SiekerSink.loadFromLocalStorage();
     if ($target.hasClass('double-slider')) {
       const inputName = $target.attr('name');
       const minName = inputName + '_min';
       const maxName = inputName + '_max'; 
       const inputVals = $target.val().split(',');
-      project.siekerSink[minName] = inputVals[0];
-      project.siekerSink[maxName] = inputVals[1];
+      project[minName] = inputVals[0];
+      project[maxName] = inputVals[1];
       project.saveToLocalStorage();
     } else if ($target.hasClass('single-slider')) {   
       const inputName = $target.attr('name'); 
       const inputVal = $target.val();
-      project.siekerSink[inputName] = inputVal;
+      project[inputName] = inputVal;
       project.saveToLocalStorage();
     }else if ($target.hasClass('form-check-input')) {
       // checkboxes 
@@ -329,18 +329,18 @@ export function initializeSiekerSink() {
       console.log("inputChecked", inputChecked)
 
 
-      const index = project.siekerSink[inputName].indexOf(inputValue);
+      const index = project[inputName].indexOf(inputValue);
       console.log("index", index)
 
       if (index > -1) {
         // Value exists — remove it
-        project.siekerSink[inputName] = project.siekerSink[inputName].filter(
+        project[inputName] = project[inputName].filter(
           (v) => v !== inputValue
         );
         console.log('Checkbox unchecked:', inputId, '=', inputValue);
       } else {
         // Value does not exist — add it
-        project.siekerSink[inputName].push(inputValue);
+        project[inputName].push(inputValue);
         console.log('Checkbox checked:', inputId, '=', inputValue);
       }
       project.saveToLocalStorage();
@@ -350,7 +350,7 @@ export function initializeSiekerSink() {
       const allSelected = $target.is(':checked');
       
       if (!allSelected) {
-        project.siekerSink['selected_sieker_sinks'] = [];
+        project['selected_sieker_sinks'] = [];
       }
       $('.sink-select-checkbox').each(function(){
         const $checkbox = $(this);
@@ -358,24 +358,24 @@ export function initializeSiekerSink() {
         const sinkId = $checkbox.data('id');
         if (allSelected) {
           console.log("Selected sink:", sinkId);
-          project.siekerSink['selected_sieker_sinks'].push(sinkId);
+          project['selected_sieker_sinks'].push(sinkId);
         } 
       })
       project.saveToLocalStorage();
     } else if ($target.hasClass('sink-select-checkbox')) {
         if ($target.is(':checked')) {
           console.log("Selected sink:", $target.data('id'));
-          const project= ToolboxProject.loadFromLocalStorage();
-          project.siekerSink['selected_sieker_sinks'].push($target.data('id'));
+          const project= SiekerSink.loadFromLocalStorage();
+          project['selected_sieker_sinks'].push($target.data('id'));
           project.saveToLocalStorage();
 
         } else {
           const sinkId = $target.data('id');
           console.log("Selected sink:", sinkId);
-          const project= ToolboxProject.loadFromLocalStorage();
-          const index = project.siekerSink[key].indexOf(sinkId);
+          const project= SiekerSink.loadFromLocalStorage();
+          const index = project[key].indexOf(sinkId);
           if (index > -1) {
-            project.siekerSink[key].splice(index, 1);
+            project[key].splice(index, 1);
           }
           project.saveToLocalStorage();
         }

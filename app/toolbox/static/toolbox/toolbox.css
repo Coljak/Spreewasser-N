@@ -32,3 +32,59 @@
   text-shadow: 1px 1px 2px rgba(0,0,0,.7);
   pointer-events: none; /* Allows clicks to pass through to cluster icon */
 }
+
+
+
+/* TODO: this is copied and modified from the slider css. There surely is obsolete stuff in the following
+
+/* The slider itself */
+.single-slider {
+  -webkit-appearance: none;  /* Override default CSS styles */
+  appearance: none;
+  background: #f7f7f7;
+  background-image: linear-gradient(to bottom, #F9F9F9, #F5F5F5);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+  border-radius: 4px;
+  height: 10px;
+
+  outline: none; /* Remove outline */
+  opacity: 1; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+}
+
+/* Mouse-over effects */
+.single-slider:hover {
+  opacity: 1; /* Fully shown on mouse-over */
+}
+
+
+
+.single-slider::-moz-range-thumb {
+  width: 15px; /* Set a specific slider handle width */
+  height: 15px; /* Slider handle height */
+  background: var(--bs-primary); /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}
+
+.slider-handle {
+  background-color: var(--bs-success)!important;;
+  background-image: -moz-linear-gradient(top, #0480BE, #036fa5);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#0480BE), to(#036fa5));
+  background-image: -webkit-linear-gradient(top, #0480BE, #036fa5);
+  background-image: -o-linear-gradient(top, #0480BE, #036fa5);
+  background-image: linear-gradient(to bottom, #0480BE, #036fa5);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#0480BE', endColorstr='#036fa5',GradientType=0);
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  position: absolute;
+  top: 0;
+  width: 15px;
+  height: 15px;
+  background-color: #0480BE;
+  border: 0px solid transparent;
+}
+/*********************** COPY END ***********************/

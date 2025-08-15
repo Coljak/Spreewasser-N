@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
+import { ToolboxProject, Infiltration,  SiekerSink, SiekerGek, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { initializeInfiltration } from '/static/toolbox/infiltration.js';
 import { initializeSiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters.js';
@@ -25,6 +25,7 @@ import {
   handleSaveUserField,
   dismissPolygon,
 } from '/static/shared/map_sidebar_utils.js';
+
 
 document.addEventListener("DOMContentLoaded", () => {
   // Hide the coordinate form card from plain Monica
@@ -294,8 +295,14 @@ createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});
 function startInfiltration() {
   console.log('start Infiltration')
   const userField = ToolboxProject.loadFromLocalStorage().userField;
+
+
   // const userField = project.userField;
   if (userField) {
+
+    const infiltration = new Infiltration();
+    infiltration.userField = userField;
+    infiltration.saveToLocalStorage();
   
     fetch('load_infiltration_gui/' + userField + '/')
     .then(response => response.json())
@@ -389,7 +396,9 @@ function startSiekerSinks() {
 
 
 function startSiekerGeks() {
-  console.log('start Gek')
+  console.log('start Sieker Geks')
+  const siekerGek = new SiekerGek();
+  siekerGek.saveToLocalStorage();
   const userField = ToolboxProject.loadFromLocalStorage().userField;
   let layers = {}
   // const userField = project.userField;
@@ -431,6 +440,7 @@ function startSiekerGeks() {
 
 $('#startInfiltration').on('click', () => {
   console.log('startInfiltration clicked');
+
   startInfiltration()
 });
 $('#startInjection').on('click', () => {
@@ -439,9 +449,13 @@ $('#startInjection').on('click', () => {
 });
 $('#startSurfaceWaters').on('click', () => {
   console.log('startSurfaceWaters clicked');
+  const siekerSurfaceWaters = new SiekerSurfaceWaters();
+  siekerSurfaceWaters.saveToLocalStorage();
   startSurfaceWaters()
 });
 $('#startSiekerSinks').on('click', () => {
+  const siekerSinks = new SiekerSink();
+  siekerSinks.saveToLocalStorage();
   console.log('startSiekerSinks clicked');
   startSiekerSinks()
 });

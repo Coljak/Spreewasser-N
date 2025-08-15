@@ -90,6 +90,14 @@ export class Infiltration {
         this.weighting_grassland_soil_water_ratio = infiltration.weighting_grassland_soil_water_ratio ?? 25;
 
     }
+
+    toJson() {
+        return JSON.stringify(this);
+    }
+
+    static fromJson(json) {
+      return new Infiltration(json);
+    }
          // Save project to localStorage
     saveToLocalStorage() {
         localStorage.setItem('projectInfiltration', this.toJson());
@@ -98,7 +106,7 @@ export class Infiltration {
     // Load project from localStorage
     static loadFromLocalStorage() {
         const storedProject = localStorage.getItem('projectInfiltration');
-        return storedProject ? ToolboxProject.fromJson(JSON.parse(storedProject)) : null;
+        return storedProject ? Infiltration.fromJson(JSON.parse(storedProject)) : null;
     }
 
 
@@ -138,6 +146,14 @@ export class SiekerSink {
         this.selected_sieker_sinks = siekerSink.selected_sieker_sinks ?? [];
 
     }
+
+    toJson() {
+        return JSON.stringify(this);
+    }
+
+    static fromJson(json) {
+      return new SiekerSink(json);
+    }
         // Save project to localStorage
     saveToLocalStorage() {
         localStorage.setItem('projectSiekerSink', this.toJson());
@@ -146,7 +162,7 @@ export class SiekerSink {
     // Load project from localStorage
     static loadFromLocalStorage() {
         const storedProject = localStorage.getItem('projectSiekerSink');
-        return storedProject ? ToolboxProject.fromJson(JSON.parse(storedProject)) : null;
+        return storedProject ? SiekerSink.fromJson(JSON.parse(storedProject)) : null;
     }
 };
 
@@ -155,6 +171,13 @@ export class SiekerSurfaceWaters {
         this.id = siekerSurfaceWaters.id ?? null;
         this.userField = siekerSurfaceWaters.userField ?? null;
         this.sieker_surface_waters_distance_min = siekerSurfaceWaters.sieker_surface_waters_distance_min ?? null;
+    }
+    toJson() {
+        return JSON.stringify(this);
+    }
+
+    static fromJson(json) {
+      return new SiekerSink(json);
     }
 
     // Save project to localStorage
@@ -165,16 +188,24 @@ export class SiekerSurfaceWaters {
     // Load project from localStorage
     static loadFromLocalStorage() {
         const storedProject = localStorage.getItem('projectSiekerSurfaceWaters');
-        return storedProject ? ToolboxProject.fromJson(JSON.parse(storedProject)) : null;
+        return storedProject ? SiekerSurfaceWaters.fromJson(JSON.parse(storedProject)) : null;
     }
 };
 
 
-export class SiekerGeks {
-    constructor (SiekerGeks = {}) {
-        this.id = SiekerGeks.id ?? null;
-        this.userField = SiekerGeks.userField ?? null;
-        this.selected_gek_retention = SiekerGeks.selected_gek_retention ?? [];
+export class SiekerGek {
+    constructor (siekerGek = {}) {
+        this.id = siekerGek.id ?? null;
+        this.userField = siekerGek.userField ?? null;
+        this.selected_gek_retention = siekerGek.selected_gek_retention ?? [];
+        this.landuse = siekerGek.landuse ?? [];
+    }
+    toJson() {
+        return JSON.stringify(this);
+    }
+
+    static fromJson(json) {
+      return new SiekerGek(json);
     }
 
     // Save project to localStorage
@@ -185,13 +216,9 @@ export class SiekerGeks {
     // Load project from localStorage
     static loadFromLocalStorage() {
         const storedProject = localStorage.getItem('projectSiekerGeks');
-        return storedProject ? ToolboxProject.fromJson(JSON.parse(storedProject)) : null;
+        return storedProject ? ToolboxSiekerGekProject.fromJson(JSON.parse(storedProject)) : null;
     }
 };
-
-
-
-
 
 
 export class ToolboxProject {
@@ -256,7 +283,7 @@ export const updateDropdown = (parameterType, newId) => {
 
 export async function toolboxSinks() {
     // gets the sinks as an image
-    // TODO: obsolte??
+    // TODO: obsolte??static 'tool
   try {
       const response = await fetch('toolbox_sinks/');
       if (!response.ok) {

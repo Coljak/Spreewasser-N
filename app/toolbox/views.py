@@ -342,18 +342,18 @@ def add_range_filter(filters, obj, field,  model_field=None):
 
 
 def calculate_indices_df(sinks, project, sink_type='sink'):
-    w_usability=int(project['infiltration'].get('weighting_overall_usability', 20))/100
-    w_soil=int(project['infiltration'].get('weighting_soil_index', 80))/100
-    w_fg_fc = int(project['infiltration'].get('weighting_forest_field_capacity', 33.3))/100
-    w_fg_hc1= int(project['infiltration'].get('weighting_forest_hydraulic_conductivity_1m', 33.3))/100
-    w_fg_hc2= int(project['infiltration'].get('weighting_forest_hydraulic_conductivity_2m', 33.3))/100
-    w_ag_fc = int(project['infiltration'].get('weighting_agriculture_field_capacity', 33.3))/100
-    w_ag_hydro = int(project['infiltration'].get('weighting_agriculture_hydromorphy', 33.3))/100
-    w_ag_soil= int(project['infiltration'].get('weighting_agriculture_soil_type', 33.3))/100
-    w_gr_fc = int(project['infiltration'].get('weighting_grassland_field_capacity', 25))/100
-    w_gr_hydro = int(project['infiltration'].get('weighting_grassland_hydromorphy', 25))/100
-    w_gr_soil = int(project['infiltration'].get('weighting_grassland_soil_type', 25))/100
-    w_gr_wet=int(project['infiltration'].get('weighting_grassland_soil_water_ratio', 25))/100
+    w_usability=int(project.get('weighting_overall_usability', 20))/100
+    w_soil=int(project.get('weighting_soil_index', 80))/100
+    w_fg_fc = int(project.get('weighting_forest_field_capacity', 33.3))/100
+    w_fg_hc1= int(project.get('weighting_forest_hydraulic_conductivity_1m', 33.3))/100
+    w_fg_hc2= int(project.get('weighting_forest_hydraulic_conductivity_2m', 33.3))/100
+    w_ag_fc = int(project.get('weighting_agriculture_field_capacity', 33.3))/100
+    w_ag_hydro = int(project.get('weighting_agriculture_hydromorphy', 33.3))/100
+    w_ag_soil= int(project.get('weighting_agriculture_soil_type', 33.3))/100
+    w_gr_fc = int(project.get('weighting_grassland_field_capacity', 25))/100
+    w_gr_hydro = int(project.get('weighting_grassland_hydromorphy', 25))/100
+    w_gr_soil = int(project.get('weighting_grassland_soil_type', 25))/100
+    w_gr_wet=int(project.get('weighting_grassland_soil_water_ratio', 25))/100
 
     if sink_type == 'sink':
         model  = models.SinkSoilProperties
@@ -436,14 +436,14 @@ def filter_sinks(request):
     sinks = models.Sink.objects.filter(geom4326__within=geom)
     print("Sinks:", sinks.count())
     filters = Q()
-    filters = add_range_filter(filters, project['infiltration'], 'sink_area', 'area')
-    filters = add_range_filter(filters, project['infiltration'], 'sink_volume', 'volume')
-    filters = add_range_filter(filters, project['infiltration'], 'sink_depth', 'depth')
-    # filters = add_range_filter(filters, project['infiltration'], 'sink_index_soil', 'index_soil')
+    filters = add_range_filter(filters, project, 'sink_area', 'area')
+    filters = add_range_filter(filters, project, 'sink_volume', 'volume')
+    filters = add_range_filter(filters, project, 'sink_depth', 'depth')
+    # filters = add_range_filter(filters, project, 'sink_index_soil', 'index_soil')
     sinks = sinks.filter(filters)
     print("Sinks FILTERED:", sinks.count())
 
-    land_use_values = project['infiltration'].get('sink_land_use', [])
+    land_use_values = project.get('sink_land_use', [])
     land_use_values = [int(value) for value in land_use_values if value.isdigit()]
     land_use_filter = (
         Q(landuse_1__in=land_use_values) &
@@ -522,16 +522,16 @@ def filter_enlarged_sinks(request):
     sinks = models.EnlargedSink.objects.filter(geom4326__within=geom)
 
     filters = Q()
-    filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_area', 'area')
-    filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_volume', 'volume')
-    filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_depth', 'depth')
-    filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_volume_construction_barrier', 'volume_construction_barrier')
-    filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_volume_gained', 'volume_gained')
-    # filters = add_range_filter(filters, project['infiltration'], 'enlarged_sink_index_soil', 'index_soil')
+    filters = add_range_filter(filters, project, 'enlarged_sink_area', 'area')
+    filters = add_range_filter(filters, project, 'enlarged_sink_volume', 'volume')
+    filters = add_range_filter(filters, project, 'enlarged_sink_depth', 'depth')
+    filters = add_range_filter(filters, project, 'enlarged_sink_volume_construction_barrier', 'volume_construction_barrier')
+    filters = add_range_filter(filters, project, 'enlarged_sink_volume_gained', 'volume_gained')
+    # filters = add_range_filter(filters, project, 'enlarged_sink_index_soil', 'index_soil')
     sinks = sinks.filter(filters)
 
 
-    land_use_values = project['infiltration'].get('enlarged_sink_land_use', [])
+    land_use_values = project.get('enlarged_sink_land_use', [])
     land_use_values = [int(value) for value in land_use_values if value.isdigit()]
     land_use_filter = (
         Q(landuse_1__in=land_use_values) &
@@ -606,7 +606,7 @@ def filter_streams(request):
 
     user_field = models.UserField.objects.get(pk=project['userField'])
     geom = GEOSGeometry(user_field.geom)
-    distance = int(project['infiltration'].get('stream_distance_to_userfield', 0))
+    distance = int(project.get('stream_distance_to_userfield', 0))
     streams = None
     if distance > 0:
         geom_25833 = user_field.geom.transform(25833, clone=True)
@@ -618,10 +618,10 @@ def filter_streams(request):
         streams = models.Stream.objects.filter(Q(geom__intersects=geom) | Q(geom__within=geom))
 
     filters = Q()
-    filters = add_range_filter(filters, project['infiltration'], 'stream_min_surplus_volume', 'min_surplus_volume')
-    filters = add_range_filter(filters, project['infiltration'], 'stream_mean_surplus_volume', 'mean_surplus_volume')
-    filters = add_range_filter(filters, project['infiltration'], 'stream_max_surplus_volume', 'max_surplus_volume')
-    filters = add_range_filter(filters, project['infiltration'], 'stream_plus_days', 'plus_days')
+    filters = add_range_filter(filters, project, 'stream_min_surplus_volume', 'min_surplus_volume')
+    filters = add_range_filter(filters, project, 'stream_mean_surplus_volume', 'mean_surplus_volume')
+    filters = add_range_filter(filters, project, 'stream_max_surplus_volume', 'max_surplus_volume')
+    filters = add_range_filter(filters, project, 'stream_plus_days', 'plus_days')
     streams = streams.filter(filters)
 
     
@@ -674,7 +674,7 @@ def filter_lakes(request):
     user_field = models.UserField.objects.get(pk=project['userField'])
     geom = GEOSGeometry(user_field.geom)
 
-    distance = int(project['infiltration'].get('lake_distance_to_userfield', 0))
+    distance = int(project.get('lake_distance_to_userfield', 0))
     lakes = None
     if distance > 0:
         # Transform to EPSG:25833 (meters) and add the buffer
@@ -686,10 +686,10 @@ def filter_lakes(request):
         lakes = models.Lake.objects.filter(Q(geom__intersects=geom) | Q(geom__within=geom))
 
     filter = Q()
-    filter = add_range_filter(filter, project['infiltration'], 'lake_min_surplus', 'min_surplus_volume')
-    filter = add_range_filter(filter, project['infiltration'], 'lake_mean_surplus', 'mean_surplus_volume')
-    filter = add_range_filter(filter, project['infiltration'], 'lake_max_surplus', 'max_surplus_volume')
-    filter = add_range_filter(filter, project['infiltration'], 'lake_plus_days', 'plus_days')
+    filter = add_range_filter(filter, project, 'lake_min_surplus', 'min_surplus_volume')
+    filter = add_range_filter(filter, project, 'lake_mean_surplus', 'mean_surplus_volume')
+    filter = add_range_filter(filter, project, 'lake_max_surplus', 'max_surplus_volume')
+    filter = add_range_filter(filter, project, 'lake_plus_days', 'plus_days')
     lakes = lakes.filter(filter)
 
     if lakes.count() == 0:
@@ -743,8 +743,8 @@ def get_weighting_forms(request):
     if request.method == 'POST':
         project = json.loads(request.body)
         print('Project:', project)
-        sinks = project['infiltration'].get('selected_sinks', [])
-        enlarged_sinks = project['infiltration'].get('selected_enlarged_sinks', [])
+        sinks = project.get('selected_sinks', [])
+        enlarged_sinks = project.get('selected_enlarged_sinks', [])
         
         land_use_values = {}
         if len(sinks) > 0:
@@ -881,10 +881,10 @@ def get_inlets(request):
     project = json.loads(request.body)
     print('Project:', project)
 
-    sinks = models.Sink.objects.filter(id__in=project['infiltration'].get('selected_sinks', []))
-    enlarged_sinks = models.EnlargedSink.objects.filter(id__in=project['infiltration'].get('selected_enlarged_sinks', []))
-    lakes = models.Lake.objects.filter(id__in=project['infiltration'].get('selected_lakes', []))
-    streams = models.Stream.objects.filter(id__in=project['infiltration'].get('selected_streams', []))
+    sinks = models.Sink.objects.filter(id__in=project.get('selected_sinks', []))
+    enlarged_sinks = models.EnlargedSink.objects.filter(id__in=project.get('selected_enlarged_sinks', []))
+    lakes = models.Lake.objects.filter(id__in=project.get('selected_lakes', []))
+    streams = models.Stream.objects.filter(id__in=project.get('selected_streams', []))
 
     inlets_sinks = get_shortest_connection_lines_utm(sinks, lakes, streams)
     inlets_enlarged_sinks = get_shortest_connection_lines_utm(enlarged_sinks, lakes, streams)
@@ -1003,7 +1003,7 @@ def filter_sieker_large_lakes(request):
     user_field = models.UserField.objects.get(pk=project['userField'])
     geom = GEOSGeometry(user_field.geom)
 
-    distance = int(project['infiltration'].get('lake_distance_to_userfield', 0))
+    distance = int(project.get('lake_distance_to_userfield', 0))
     lakes = None
     if distance > 0:
         # Transform to EPSG:25833 (meters) and add the buffer

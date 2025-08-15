@@ -223,91 +223,94 @@ let layerGroup = L.featureGroup([layer]).addTo(map);
 
       
   $('#toolboxPanel').off('change');
-  // $('#toolboxPanel').on('change',  function (event) {
-  //   const $target = $(event.target);
-  //   const project = ToolboxProject.loadFromLocalStorage();
-  //   if ($target.hasClass('double-slider')) {
-  //     const inputName = $target.attr('name');
-  //     const minName = inputName + '_min';
-  //     const maxName = inputName + '_max'; 
-  //     const inputVals = $target.val().split(',');
-  //     project.siekerGek[minName] = inputVals[0];
-  //     project.siekerGek[maxName] = inputVals[1];
-  //     project.saveToLocalStorage();
-  //   } else if ($target.hasClass('single-slider')) {   
-  //     const inputName = $target.attr('name'); 
-  //     const inputVal = $target.val();
-  //     project.siekerGek[inputName] = inputVal;
-  //     project.saveToLocalStorage();
-  //   }else if ($target.hasClass('form-check-input')) {
-  //     // checkboxes 
-  //     console.log("Checkbox!!")
-  //     const inputId = $target.attr('id');
-  //     console.log("inputId", inputId)
-  //     const inputName = $target.attr('name');
-  //     console.log("inputName", inputName)
-  //     const inputPrefix = $target.attr('prefix');
-  //     console.log("inputPrefix", inputPrefix)
-  //     const inputValue = $target.attr('value');
-  //     console.log("inputValue", inputValue)
-  //     const inputChecked = $target.is(':checked');
-  //     console.log("inputChecked", inputChecked)
+  $('#toolboxPanel').on('change',  function (event) {
+    const $target = $(event.target);
+    const project = SiekerGek.loadFromLocalStorage();
+    if ($target.hasClass('double-slider')) {
+      const inputName = $target.attr('name');
+      const minName = inputName + '_min';
+      const maxName = inputName + '_max'; 
+      const inputVals = $target.val().split(',');
+      project.siekerGek[minName] = inputVals[0];
+      project.siekerGek[maxName] = inputVals[1];
+      project.saveToLocalStorage();
+    } else if ($target.hasClass('single-slider')) {   
+      const inputName = $target.attr('name'); 
+      const inputVal = $target.val();
+      project.siekerGek[inputName] = inputVal;
+      project.saveToLocalStorage();
+    }else if ($target.hasClass('form-check-input')) {
+      // checkboxes 
+      console.log("Checkbox!!")
+      const inputId = $target.attr('id');
+      console.log("inputId", inputId)
+      const inputName = $target.attr('name');
+      console.log("inputName", inputName)
+      const inputPrefix = $target.attr('prefix');
+      console.log("inputPrefix", inputPrefix)
+      const inputValue = $target.attr('value');
+      console.log("inputValue", inputValue)
+      const inputChecked = $target.is(':checked');
+      console.log("inputChecked", inputChecked)
 
 
-  //     const index = project.siekerGek[inputName].indexOf(inputValue);
-  //     console.log("index", index)
+      const index = project.siekerGek[inputName].indexOf(inputValue);
+      console.log("index", index)
 
-  //     if (index > -1) {
-  //       // Value exists — remove it
-  //       project.siekerGek[inputName] = project.siekerGek[inputName].filter(
-  //         (v) => v !== inputValue
-  //       );
-  //       console.log('Checkbox unchecked:', inputId, '=', inputValue);
-  //     } else {
-  //       // Value does not exist — add it
-  //       project.siekerGek[inputName].push(inputValue);
-  //       console.log('Checkbox checked:', inputId, '=', inputValue);
-  //     }
-  //     project.saveToLocalStorage();
+      if (index > -1) {
+        // Value exists — remove it
+        project.siekerGek[inputName] = project.siekerGek[inputName].filter(
+          (v) => v !== inputValue
+        );
+        console.log('Checkbox unchecked:', inputId, '=', inputValue);
+      } else {
+        // Value does not exist — add it
+        project.siekerGek[inputName].push(inputValue);
+        console.log('Checkbox checked:', inputId, '=', inputValue);
+      }
+      project.saveToLocalStorage();
 
-  //   } else if ($target.hasClass('sieker-gek-select-all-checkbox')) {
+    } else if ($target.hasClass('sieker-gek-select-all-checkbox')) {
       
-  //     const allSelected = $target.is(':checked');
+      const allSelected = $target.is(':checked');
       
-  //     if (!allSelected) {
-  //       project.siekerGek['selected_sieker_geks'] = [];
-  //     }
-  //     $('.gek-select-checkbox').each(function(){
-  //       const $checkbox = $(this);
-  //       $checkbox.prop('checked', allSelected);
-  //       const gekId = $checkbox.data('id');
-  //       if (allSelected) {
-  //         console.log("Selected gek:", gekId);
-  //         project.siekerGek['selected_sieker_geks'].push(gekId);
-  //       } 
-  //     })
-  //     project.saveToLocalStorage();
-  //   } else if ($target.hasClass('sieker-gek-select-checkbox')) {
-  //     if ($target.is(':checked')) {
-  //       console.log("Selected gek:", $target.data('id'));
-  //       const project= ToolboxProject.loadFromLocalStorage();
-  //       project.siekerGek['selected_sieker_geks'].push($target.data('id'));
-  //       project.saveToLocalStorage();
+      if (!allSelected) {
+        project.siekerGek['selected_sieker_geks'] = [];
+      }
+      $('.gek-select-checkbox').each(function(){
+        const $checkbox = $(this);
+        $checkbox.prop('checked', allSelected);
+        const gekId = $checkbox.data('id');
+        if (allSelected) {
+          console.log("Selected gek:", gekId);
+          project.siekerGek['selected_sieker_geks'].push(gekId);
+        } 
+      })
+      project.saveToLocalStorage();
+    } else if ($target.hasClass('sieker-gek-select-checkbox')) {
+      if ($target.is(':checked')) {
+        console.log("Selected gek:", $target.data('id'));
+        const project= ToolboxProject.loadFromLocalStorage();
+        project.siekerGek['selected_sieker_geks'].push($target.data('id'));
+        project.saveToLocalStorage();
 
-  //     } else {
-  //       const gekId = $target.data('id');
-  //       console.log("Selected gek:", gekId);
-  //       const project= ToolboxProject.loadFromLocalStorage();
-  //       const index = project.siekerGek[key].indexOf(gekId);
-  //       if (index > -1) {
-  //         project.siekerGek[key].splice(index, 1);
-  //       }
-  //       project.saveToLocalStorage();
-  //     }
+      } else {
+        const gekId = $target.data('id');
+        console.log("Selected gek:", gekId);
+        const project= ToolboxProject.loadFromLocalStorage();
+        const index = project.siekerGek[key].indexOf(gekId);
+        if (index > -1) {
+          project.siekerGek[key].splice(index, 1);
+        }
+        project.saveToLocalStorage();
+      }
 
-  //       // You can trigger your map gek selection logic here
-  //     };
-  //   });
+        // You can trigger your map gek selection logic here
+      };
+    });
+
+
+
 
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);

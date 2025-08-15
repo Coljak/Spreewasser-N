@@ -33,7 +33,7 @@ export class Infiltration {
         this.sink_depth_min = infiltration.sink_depth_min ?? null;
         this.sink_depth_max = infiltration.sink_depth_max ?? null;
         this.sink_land_use = infiltration.sink_land_use ?? [];
-
+        this.all_sink_ids = infiltration.all_sink_ids ?? [];
         this.selected_sinks = infiltration.selected_sinks ?? [];
 
         this.enlarged_sink_area_min = infiltration.enlarged_sink_area_min ?? null;
@@ -48,6 +48,7 @@ export class Infiltration {
         this.enlarged_sink_volume_gained_max = infiltration.enlarged_sink_volume_gained_max ?? null;
         this.enlarged_sink_land_use = infiltration.enlarged_sink_land_use ?? [];
 
+        this.all_enlarged_sink_ids = infiltration.all_enlarged_sink_ids ?? [];
         this.selected_enlarged_sinks = infiltration.selected_enlarged_sinks ?? [];
 
         this.stream_min_surplus_volume_min = infiltration.stream_min_surplus_volume_min ?? null;
@@ -141,7 +142,10 @@ export class SiekerSink {
         this.sieker_sink_waterdist_min = siekerSink.sieker_sink_waterdist_min ?? null;
         this.sieker_sink_waterdist_max = siekerSink.sieker_sink_waterdist_max ?? null;
 
-        this.feasibility = siekerSink.feasibility ?? [];
+        this.all_sieker_sink_ids = siekerSink.all_sieker_sink_ids ?? [];
+        this.selected_sieker_sinks = siekerSink.selected_sieker_sinks ?? [];
+
+        this.sieker_sink_feasibility = siekerSink.feasibility ?? [];
 
         this.selected_sieker_sinks = siekerSink.selected_sieker_sinks ?? [];
 
@@ -171,13 +175,26 @@ export class SiekerSurfaceWaters {
         this.id = siekerSurfaceWaters.id ?? null;
         this.userField = siekerSurfaceWaters.userField ?? null;
         this.sieker_surface_waters_distance_min = siekerSurfaceWaters.sieker_surface_waters_distance_min ?? null;
+        this.all_sieker_large_lake_ids = siekerSurfaceWaters.all_sieker_large_lake_ids ?? [];
+        this.selected_sieker_large_lakes = siekerSurfaceWaters.selected_sieker_large_lakes ?? [];
+
+        this.sieker_large_lake_d_max_m_max = siekerSurfaceWaters.sieker_large_lake_d_max_m_max ?? null;
+        this.sieker_large_lake_d_max_m_min = siekerSurfaceWaters.sieker_large_lake_d_max_m_min ?? null;
+        this.sieker_large_lake_vol_mio_m3_min = siekerSurfaceWaters.sieker_large_lake_vol_mio_m3_min ?? null;
+        this.sieker_large_lake_vol_mio_m3_max = siekerSurfaceWaters.sieker_large_lake_vol_mio_m3_max ?? null;
+        this.sieker_large_lake_area_ha_min = siekerSurfaceWaters.sieker_large_lake_area_ha_min ?? null;
+        this.sieker_large_lake_area_ha_max = siekerSurfaceWaters.sieker_large_lake_area_ha_max ?? null;
+        // TODO BADESEEN!
+
+
+
     }
     toJson() {
         return JSON.stringify(this);
     }
 
     static fromJson(json) {
-      return new SiekerSink(json);
+      return new SiekerSurfaceWaters(json);
     }
 
     // Save project to localStorage
@@ -198,7 +215,13 @@ export class SiekerGek {
         this.id = siekerGek.id ?? null;
         this.userField = siekerGek.userField ?? null;
         this.selected_gek_retention = siekerGek.selected_gek_retention ?? [];
+        this.gek_priority = siekerGek.gek_priority ?? null;
         this.landuse = siekerGek.landuse ?? [];
+        this.all_sieker_gek_ids = siekerGek.all_sieker_gek_ids ?? [];
+        this.selected_sieker_geks = siekerGek.selected_sieker_geks ?? [];
+
+        this.all_sieker_gek_measure_ids = siekerGek.all_sieker_gek_measure_ids ?? [];
+        this.selected_sieker_gek_measures = siekerGek.selected_sieker_gek_measures ?? [];
     }
     toJson() {
         return JSON.stringify(this);
@@ -216,7 +239,7 @@ export class SiekerGek {
     // Load project from localStorage
     static loadFromLocalStorage() {
         const storedProject = localStorage.getItem('projectSiekerGeks');
-        return storedProject ? ToolboxSiekerGekProject.fromJson(JSON.parse(storedProject)) : null;
+        return storedProject ? SiekerGek.fromJson(JSON.parse(storedProject)) : null;
     }
 };
 
@@ -307,3 +330,102 @@ export async function toolboxSinks() {
   }
 };
 
+    // eventlistener for the filters
+export function addChangeEventListener(projectType) {
+    $('#toolboxPanel').on('change',  function (event) {
+        const $target = $(event.target);
+        const project = projectType.loadFromLocalStorage();
+        // console.log('change event', $target);
+        if ($target.hasClass('double-slider')) {
+        const inputName = $target.attr('name');
+        const minName = inputName + '_min';
+        const maxName = inputName + '_max'; 
+        const inputVals = $target.val().split(',');
+        project[minName] = inputVals[0];
+        project[maxName] = inputVals[1];
+        project.saveToLocalStorage();
+        } else if ($target.hasClass('single-slider')) {   
+        const inputName = $target.attr('name'); 
+        const inputVal = $target.val();
+        project[inputName] = inputVal;
+        project.saveToLocalStorage();
+        }else if ($target.hasClass('form-check-input')) {
+        // checkboxes 
+        console.log("Checkbox!!")
+        const inputId = $target.attr('id');
+        const inputName = $target.attr('name');
+        const inputPrefix = $target.attr('prefix');
+        const inputValue = $target.attr('value');
+        const inputChecked = $target.is(':checked');
+
+        const key = `${inputPrefix}_${inputName}`;
+        console.log('key', key)
+        console.log('project', project)
+        const index = project[key].indexOf(inputValue);
+
+        if (index > -1) {
+            // Value exists — remove it
+            project[key] = project[key].filter(
+            (v) => v !== inputValue
+            );
+            console.log('Checkbox unchecked:', inputId, '=', inputValue);
+        } else {
+            // Value does not exist — add it
+            project[key].push(inputValue);
+            console.log('Checkbox checked:', inputId, '=', inputValue);
+        }
+        project.saveToLocalStorage();
+
+        } else if ($target.hasClass('table-select-all')) {
+        
+        const allSelected = $target.is(':checked');
+        const dataType = $target.data('type');
+
+        
+        
+        const key = `selected_${dataType}s`;
+        console.log('key', key)
+        if (!allSelected) {
+            project[key] = [];
+        } else {
+            project[key] = project[`all_${dataType}_ids`]
+        }
+        $(`.table-select-checkbox[data-type="${dataType}"]`).each(function(){
+            const $checkbox = $(this);
+            $checkbox.prop('checked', allSelected);
+            const selectedId = $checkbox.data('id');
+            if (allSelected) {
+            console.log("Selected Id:", selectedId);
+            
+            project[key].push(selectedId);
+            } 
+        })
+        project.saveToLocalStorage();
+        } else if ($target.hasClass('table-select-checkbox')) {
+        const dataType = $target.data('type');
+        
+        const key = `selected_${dataType}s`;
+
+            if ($target.is(':checked')) {
+            console.log("Selected sink:", $target.data('id'));
+            console.log("key:", key);
+            console.log('project[key]', project[key])
+            console.log(project)
+            project[key].push($target.data('id'));
+            project.saveToLocalStorage();
+
+            } else {
+            const dataId = $target.data('id');
+            console.log("Selected sink:", dataId);
+            
+            const index = project[key].indexOf(dataId);
+            if (index > -1) {
+                project[key].splice(index, 1);
+            }
+            project.saveToLocalStorage();
+            }
+
+            // You can trigger your map sink selection logic here
+        };
+        });
+    };

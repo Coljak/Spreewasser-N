@@ -841,6 +841,7 @@ class GekRetention(models.Model):
     number_of_measures = models.IntegerField(null=True, blank=True)
     datum_zugr = models.CharField(max_length=100, null=True, blank=True) # not necessary
 
+# m:n table 
 class GekLanduse(models.Model):
     gek_retention = models.ForeignKey(GekRetention, on_delete=models.CASCADE, related_name='landuses')
     current_landuse = models.CharField(max_length=100, null=True, blank=True) # derz_nutzu Original Data!
@@ -918,3 +919,5 @@ class SinkDifference(models.Model):
     dist_lake = models.CharField(max_length=100, null=True, blank=True)
     umsetzbark = models.CharField(max_length=100, null=True, blank=True)
     waterdist = models.CharField(max_length=100, null=True, blank=True)
+
+    

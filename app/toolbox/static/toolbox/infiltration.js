@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject, Infiltration, updateDropdown } from '/static/toolbox/toolbox.js';
+import { ToolboxProject, Infiltration, updateDropdown, addChangeEventListener } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 
@@ -119,10 +119,8 @@ function createSinkTableSettings(sinkType, indexVisible) {
 };
 
 function getSinks(sinkType, featureGroup) {
-  let url = 'filter_sinks/';
-  if (sinkType === 'enlarged_sink') {
-    url = 'filter_enlarged_sinks/';
-  }
+  let url = `filter_${sinkType}s/`;
+ 
   const infiltration = Infiltration.loadFromLocalStorage();
   fetch(url, {
     method: 'POST',
@@ -155,7 +153,7 @@ function getSinks(sinkType, featureGroup) {
           <caption>${sinkType === 'sink' ? 'Sinks' : 'Enlarged Sinks'}</caption>
           <thead>
             <tr>
-              <th><input type="checkbox" class="sink-select-all-checkbox" data-type="${sinkType}">Select all</th>
+              <th><input type="checkbox" class="sink-select-all-checkbox table-select-all" data-type="${sinkType}">Select all</th>
               <th>Tiefe (m)</th>
               <th>Fläche (m²)</th>
               <th>Volumen (m³)</th>
@@ -180,6 +178,7 @@ function getSinks(sinkType, featureGroup) {
       data.feature_collection.features.forEach(feature => {
 
         const p = feature.properties;
+        
         ids.push(p.id);
         sink_indices[p.id] = {
           index_sink_total: p.index_sink_total,
@@ -249,7 +248,7 @@ function getSinks(sinkType, featureGroup) {
         
         tableHTML += `
           <tr data-sink-id="${p.id}">
-            <td><input type="checkbox" class="sink-select-checkbox" data-type=${sinkType} data-id="${p.id}"></td>
+            <td><input type="checkbox" class="sink-select-checkbox table-select-checkbox" data-type=${sinkType} data-id="${p.id}"></td>
             <td>${p.depth}</td>
             <td>${p.area}</td>
             <td>${p.volume}</td>
@@ -268,6 +267,8 @@ function getSinks(sinkType, featureGroup) {
           </tr>
         `;
       });
+      infiltration[`all_${sinkType}_ids`] = ids;
+      infiltration[`selected_${sinkType}s`] = infiltration[`selected_${sinkType}s`].filter(sink => infiltration[`all_${sinkType}_ids`].has(sink));
       localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
       infiltration.saveToLocalStorage();
       // Add the cluster group to the map
@@ -648,96 +649,8 @@ export function initializeInfiltration() {
     });
 
     $('toolboxPanel').off('change'); // Remove any previous change event handlers
-    $('#toolboxPanel').on('change',  function (event) {
-    const $target = $(event.target);
-    const infiltration = Infiltration.loadFromLocalStorage();
-    // console.log('change event', $target);
-    if ($target.hasClass('double-slider')) {
-      const inputName = $target.attr('name');
-      const minName = inputName + '_min';
-      const maxName = inputName + '_max'; 
-      const inputVals = $target.val().split(',');
-      infiltration[minName] = inputVals[0];
-      infiltration[maxName] = inputVals[1];
-      infiltration.saveToLocalStorage();
-    } else if ($target.hasClass('single-slider')) {   
-      const inputName = $target.attr('name'); 
-      const inputVal = $target.val();
-      infiltration[inputName] = inputVal;
-      infiltration.saveToLocalStorage();
-    }else if ($target.hasClass('form-check-input')) {
-      // checkboxes 
-      console.log("Checkbox!!")
-      const inputId = $target.attr('id');
-      const inputName = $target.attr('name');
-      const inputPrefix = $target.attr('prefix');
-      const inputValue = $target.attr('value');
-      const inputChecked = $target.is(':checked');
-
-      const key = `${inputPrefix}_${inputName}`;
-      console.log('key', key)
-      console.log('infiltration', infiltration)
-      const index = infiltration[key].indexOf(inputValue);
-
-      if (index > -1) {
-        // Value exists — remove it
-        infiltration[key] = infiltration[key].filter(
-          (v) => v !== inputValue
-        );
-        console.log('Checkbox unchecked:', inputId, '=', inputValue);
-      } else {
-        // Value does not exist — add it
-        infiltration[key].push(inputValue);
-        console.log('Checkbox checked:', inputId, '=', inputValue);
-      }
-      infiltration.saveToLocalStorage();
-
-    } else if ($target.hasClass('sink-select-all-checkbox')) {
-      
-      const allSelected = $target.is(':checked');
-      const sinkType = $target.data('type');
-      console.log('sinkType', sinkType);
-      
-      
-      const key = sinkType === 'sink' ? 'selected_sinks' : 'selected_enlarged_sinks';
-      if (!allSelected) {
-        infiltration[key] = [];
-      }
-      $(`.sink-select-checkbox[data-type="${sinkType}"]`).each(function(){
-        const $checkbox = $(this);
-        $checkbox.prop('checked', allSelected);
-        const sinkId = $checkbox.data('id');
-        if (allSelected) {
-          console.log("Selected sink:", sinkId);
-          infiltration[key].push(sinkId);
-        } 
-      })
-      infiltration.saveToLocalStorage();
-    } else if ($target.hasClass('sink-select-checkbox')) {
-      const infiltration = Infiltration.loadFromLocalStorage();
-      const sinkType = $target.data('type');
-      const key = sinkType === 'sink' ? 'selected_sinks' : 'selected_enlarged_sinks';
-      console.log('sinkType', sinkType);
-        if ($target.is(':checked')) {
-          console.log("Selected sink:", $target.data('id'));
-          
-          infiltration[key].push($target.data('id'));
-          infiltration.saveToLocalStorage();
-
-        } else {
-          const sinkId = $target.data('id');
-          console.log("Selected sink:", sinkId);
-          
-          const index = infiltration[key].indexOf(sinkId);
-          if (index > -1) {
-            infiltration[key].splice(index, 1);
-          }
-          infiltration.saveToLocalStorage();
-        }
-
-        // You can trigger your map sink selection logic here
-      };
-    });
+    addChangeEventListener(Infiltration);
+    
 
     $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);

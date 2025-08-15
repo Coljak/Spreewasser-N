@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject, Infiltration,  SiekerSink, SiekerGek, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
+import { ToolboxProject, Infiltration,  SiekerSink, SiekerGek, SiekerSurfaceWaters, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { initializeInfiltration } from '/static/toolbox/infiltration.js';
 import { initializeSiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters.js';
@@ -354,7 +354,7 @@ function startSurfaceWaters() {
       if (!layers || Object.keys(layers).length === 0) { 
         return;
       } else {
-        initializeSiekerSurfaceWaters(layers);
+        initializeSiekerSurfaceWaters(layers, userField);
       }
     })
     // .catch(error => console.error("Error fetching data:", error));
@@ -397,9 +397,13 @@ function startSiekerSinks() {
 
 function startSiekerGeks() {
   console.log('start Sieker Geks')
-  const siekerGek = new SiekerGek();
-  siekerGek.saveToLocalStorage();
+  
   const userField = ToolboxProject.loadFromLocalStorage().userField;
+
+  const siekerGek = new SiekerGek();
+  siekerGek.userField = userField;
+  siekerGek.saveToLocalStorage();
+  
   let layers = {}
   // const userField = project.userField;
   if (userField) {
@@ -419,11 +423,11 @@ function startSiekerGeks() {
       const sliderLabels = data.slider_labels;
       return [feature_collection, sliderLabels];
     })
-    .then(([feature_collection, sliderLabels]) => {
+    .then(([feature_collection, sliderLabels, userField]) => {
       if (!feature_collection || Object.keys(feature_collection).length === 0) { 
         return;
       } else {
-        initializeSiekerGek([feature_collection, sliderLabels]);
+        initializeSiekerGek([feature_collection, sliderLabels, userField]);
       }
     })
     // .catch(error => console.error("Error fetching data:", error));
@@ -449,8 +453,7 @@ $('#startInjection').on('click', () => {
 });
 $('#startSurfaceWaters').on('click', () => {
   console.log('startSurfaceWaters clicked');
-  const siekerSurfaceWaters = new SiekerSurfaceWaters();
-  siekerSurfaceWaters.saveToLocalStorage();
+
   startSurfaceWaters()
 });
 $('#startSiekerSinks').on('click', () => {

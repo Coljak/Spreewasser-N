@@ -323,7 +323,7 @@ class SiekerLargeLakeFilter(FilterSet):
                 filter_.queryset_for_bounds = queryset
                 filter_.set_bounds()
 
-        prefix = 'sieker-large-lake'
+        prefix = 'sieker_large_lake'
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f"{prefix}_{name}"
             field.widget.attrs['name'] = f"{prefix}_{name}"
@@ -431,10 +431,10 @@ class GekRetentionFilter(FilterSet):
         landuses = (
             models.GekLanduse.objects
             .filter(gek_retention__in=self.queryset)
-            .values_list('clc_landuse__label_level_2', flat=True)
+            .values_list('clc_landuse', 'clc_landuse__label_level_2')
             .distinct()
         )
-        self.filters['landuse'].extra['choices'] = [(lu, lu) for lu in landuses if lu]
+        self.filters['landuse'].extra['choices'] = [(id, lu) for id, lu in landuses]
 
         measures_qs = models.GekRetentionMeasure.objects.filter(
             gek_retention__in=self.queryset

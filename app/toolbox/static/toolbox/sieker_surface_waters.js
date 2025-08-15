@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject, updateDropdown } from '/static/toolbox/toolbox.js';
+import { ToolboxProject, updateDropdown, SiekerSurfaceWaters, addChangeEventListener } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 
@@ -83,7 +83,12 @@ function createSiekerLargeLakeTableSettings() {
 };
 
 
-export function initializeSiekerSurfaceWaters(layers) {
+export function initializeSiekerSurfaceWaters(layers, userField) {
+
+    const project = new SiekerSurfaceWaters();
+    project.userField = userField;
+    
+
     console.log("Initializing Sieker surface waters...", layers);
     removeLegendFromMap(map);
     map.eachLayer(function(layer) {
@@ -91,7 +96,12 @@ export function initializeSiekerSurfaceWaters(layers) {
             map.removeLayer(layer);
         }
         });
+
+        $('#toolboxPanel').off('change');
     initializeSliders();
+    
+
+    addChangeEventListener(SiekerSurfaceWaters);
     // add lakes and water levels
 
 
@@ -148,7 +158,7 @@ export function initializeSiekerSurfaceWaters(layers) {
         <caption>Große Seen</caption>
         <thead>
         <tr>
-            <th><input type="checkbox" class="sieker-large-lake-select-all-checkbox" data-type="sieker_large_lake">Select all</th>
+            <th><input type="checkbox" class="sieker-large-lake-select-all-checkbox table-select-all" data-type="sieker_large_lake">Select all</th>
             <th>Name</th>
             <th>Stand</th>
             <th>Badesee</th>
@@ -160,12 +170,14 @@ export function initializeSiekerSurfaceWaters(layers) {
         </thead>
         <tbody>
     `;
+
+    
     layers.lakes.features.forEach(feature => {
 
         // Add to table
         tableHTML += `
             <tr>
-                <td><input type="checkbox" class="sieker-large-lake-checkbox" data-sieker-lake-id="${feature.properties.id}"></td>
+                <td><input type="checkbox" class="sieker-large-lake-checkbox table-select-checkbox" data-type="sieker_large_lake" data-id="${feature.properties.id}"></td>
                 <td>${feature.properties.name}</td>
                 <td>${feature.properties.stand}</td>
                 <td>${feature.properties.badesee ? 'Ja' : 'Nein'}</td>
@@ -175,7 +187,7 @@ export function initializeSiekerSurfaceWaters(layers) {
                 <td>${feature.properties.d_max_m ? feature.properties.d_max_m : '--'}</td>
             </tr>`;
 
-          
+        project['all_sieker_large_lake_ids'].push(feature.properties.id)
     });
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
@@ -291,6 +303,8 @@ export function initializeSiekerSurfaceWaters(layers) {
     });
 
 
+
+
     map.addLayer(lakesFeatureGroup);
     map.addLayer(waterLevelsFeatureGroup);
 
@@ -313,5 +327,6 @@ export function initializeSiekerSurfaceWaters(layers) {
             this.textContent = 'Seen ausblenden';
         }
     });
-
+    
+    project.saveToLocalStorage();
 };

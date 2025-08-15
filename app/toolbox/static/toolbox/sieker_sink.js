@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject, SiekerSink, updateDropdown } from '/static/toolbox/toolbox.js';
+import { ToolboxProject, SiekerSink, updateDropdown, addChangeEventListener } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 
@@ -137,7 +137,7 @@ function getSiekerSinks(sinkType, featureGroup) {
           <caption>Senke</caption>
           <thead>
             <tr>
-              <th><input type="checkbox" class="sink-select-all-checkbox" data-type="sieker_sink">Select all</th>
+              <th><input type="checkbox" class="sink-select-all-checkbox table-select-all" data-type="sieker_sink">Select all</th>
               <th>Volumen (m³)</th>
               <th>Fläche (m²)</th>
               <th>Tiefe (m)</th>
@@ -215,7 +215,7 @@ function getSiekerSinks(sinkType, featureGroup) {
 
         tableHTML += `
         <tr data-sink-id="${p.id}">
-            <td><input type="checkbox" class="sink-select-checkbox" data-type=sieker_sink data-id="${p.id}"></td>
+            <td><input type="checkbox" class="sink-select-checkbox" data-type="sieker_sink" data-id="${p.id}"></td>
             <td>${p.volume}</td>
             <td>${p.area}</td>
             <td>${p.sink_depth}</td>
@@ -298,91 +298,93 @@ export function initializeSiekerSink() {
   initializeSliders();
       
   $('#toolboxPanel').off('change');
-  $('#toolboxPanel').on('change',  function (event) {
-    const $target = $(event.target);
-    const project = SiekerSink.loadFromLocalStorage();
-    if ($target.hasClass('double-slider')) {
-      const inputName = $target.attr('name');
-      const minName = inputName + '_min';
-      const maxName = inputName + '_max'; 
-      const inputVals = $target.val().split(',');
-      project[minName] = inputVals[0];
-      project[maxName] = inputVals[1];
-      project.saveToLocalStorage();
-    } else if ($target.hasClass('single-slider')) {   
-      const inputName = $target.attr('name'); 
-      const inputVal = $target.val();
-      project[inputName] = inputVal;
-      project.saveToLocalStorage();
-    }else if ($target.hasClass('form-check-input')) {
-      // checkboxes 
-      console.log("Checkbox!!")
-      const inputId = $target.attr('id');
-      console.log("inputId", inputId)
-      const inputName = $target.attr('name');
-      console.log("inputName", inputName)
-      const inputPrefix = $target.attr('prefix');
-      console.log("inputPrefix", inputPrefix)
-      const inputValue = $target.attr('value');
-      console.log("inputValue", inputValue)
-      const inputChecked = $target.is(':checked');
-      console.log("inputChecked", inputChecked)
+
+  addChangeEventListener(SiekerSink);
+  // $('#toolboxPanel').on('change',  function (event) {
+  //   const $target = $(event.target);
+  //   const project = SiekerSink.loadFromLocalStorage();
+  //   if ($target.hasClass('double-slider')) {
+  //     const inputName = $target.attr('name');
+  //     const minName = inputName + '_min';
+  //     const maxName = inputName + '_max'; 
+  //     const inputVals = $target.val().split(',');
+  //     project[minName] = inputVals[0];
+  //     project[maxName] = inputVals[1];
+  //     project.saveToLocalStorage();
+  //   } else if ($target.hasClass('single-slider')) {   
+  //     const inputName = $target.attr('name'); 
+  //     const inputVal = $target.val();
+  //     project[inputName] = inputVal;
+  //     project.saveToLocalStorage();
+  //   }else if ($target.hasClass('form-check-input')) {
+  //     // checkboxes 
+  //     console.log("Checkbox!!")
+  //     const inputId = $target.attr('id');
+  //     console.log("inputId", inputId)
+  //     const inputName = $target.attr('name');
+  //     console.log("inputName", inputName)
+  //     const inputPrefix = $target.attr('prefix');
+  //     console.log("inputPrefix", inputPrefix)
+  //     const inputValue = $target.attr('value');
+  //     console.log("inputValue", inputValue)
+  //     const inputChecked = $target.is(':checked');
+  //     console.log("inputChecked", inputChecked)
 
 
-      const index = project[inputName].indexOf(inputValue);
-      console.log("index", index)
+  //     const index = project[inputName].indexOf(inputValue);
+  //     console.log("index", index)
 
-      if (index > -1) {
-        // Value exists — remove it
-        project[inputName] = project[inputName].filter(
-          (v) => v !== inputValue
-        );
-        console.log('Checkbox unchecked:', inputId, '=', inputValue);
-      } else {
-        // Value does not exist — add it
-        project[inputName].push(inputValue);
-        console.log('Checkbox checked:', inputId, '=', inputValue);
-      }
-      project.saveToLocalStorage();
+  //     if (index > -1) {
+  //       // Value exists — remove it
+  //       project[inputName] = project[inputName].filter(
+  //         (v) => v !== inputValue
+  //       );
+  //       console.log('Checkbox unchecked:', inputId, '=', inputValue);
+  //     } else {
+  //       // Value does not exist — add it
+  //       project[inputName].push(inputValue);
+  //       console.log('Checkbox checked:', inputId, '=', inputValue);
+  //     }
+  //     project.saveToLocalStorage();
 
-    } else if ($target.hasClass('sink-select-all-checkbox')) {
+  //   } else if ($target.hasClass('sink-select-all-checkbox')) {
       
-      const allSelected = $target.is(':checked');
+  //     const allSelected = $target.is(':checked');
       
-      if (!allSelected) {
-        project['selected_sieker_sinks'] = [];
-      }
-      $('.sink-select-checkbox').each(function(){
-        const $checkbox = $(this);
-        $checkbox.prop('checked', allSelected);
-        const sinkId = $checkbox.data('id');
-        if (allSelected) {
-          console.log("Selected sink:", sinkId);
-          project['selected_sieker_sinks'].push(sinkId);
-        } 
-      })
-      project.saveToLocalStorage();
-    } else if ($target.hasClass('sink-select-checkbox')) {
-        if ($target.is(':checked')) {
-          console.log("Selected sink:", $target.data('id'));
-          const project= SiekerSink.loadFromLocalStorage();
-          project['selected_sieker_sinks'].push($target.data('id'));
-          project.saveToLocalStorage();
+  //     if (!allSelected) {
+  //       project['selected_sieker_sinks'] = [];
+  //     }
+  //     $('.sink-select-checkbox').each(function(){
+  //       const $checkbox = $(this);
+  //       $checkbox.prop('checked', allSelected);
+  //       const sinkId = $checkbox.data('id');
+  //       if (allSelected) {
+  //         console.log("Selected sink:", sinkId);
+  //         project['selected_sieker_sinks'].push(sinkId);
+  //       } 
+  //     })
+  //     project.saveToLocalStorage();
+  //   } else if ($target.hasClass('sink-select-checkbox')) {
+  //       if ($target.is(':checked')) {
+  //         console.log("Selected sink:", $target.data('id'));
+  //         const project= SiekerSink.loadFromLocalStorage();
+  //         project['selected_sieker_sinks'].push($target.data('id'));
+  //         project.saveToLocalStorage();
 
-        } else {
-          const sinkId = $target.data('id');
-          console.log("Selected sink:", sinkId);
-          const project= SiekerSink.loadFromLocalStorage();
-          const index = project[key].indexOf(sinkId);
-          if (index > -1) {
-            project[key].splice(index, 1);
-          }
-          project.saveToLocalStorage();
-        }
+  //       } else {
+  //         const sinkId = $target.data('id');
+  //         console.log("Selected sink:", sinkId);
+  //         const project= SiekerSink.loadFromLocalStorage();
+  //         const index = project[key].indexOf(sinkId);
+  //         if (index > -1) {
+  //           project[key].splice(index, 1);
+  //         }
+  //         project.saveToLocalStorage();
+  //       }
 
-        // You can trigger your map sink selection logic here
-      };
-    });
+  //       // You can trigger your map sink selection logic here
+  //     };
+  //   });
 
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);

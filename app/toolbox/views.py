@@ -529,7 +529,7 @@ def filter_enlarged_sinks(request):
     filters = add_range_filter(filters, project, 'enlarged_sink_volume_gained', 'volume_gained')
     # filters = add_range_filter(filters, project, 'enlarged_sink_index_soil', 'index_soil')
     sinks = sinks.filter(filters)
-
+    print('Enlarged_sinks 1', sinks)
 
     land_use_values = project.get('enlarged_sink_land_use', [])
     land_use_values = [int(value) for value in land_use_values if value.isdigit()]
@@ -543,6 +543,7 @@ def filter_enlarged_sinks(request):
         Q(landuse_4__isnull=True))
         )
     sinks = sinks.filter(land_use_filter)
+    print('Enlarged_sinks 2', sinks)
     features = []
     if sinks.count() == 0:
         message = {
@@ -553,6 +554,7 @@ def filter_enlarged_sinks(request):
     else:
         sink_indices_soil = calculate_indices_df(sinks, project, sink_type='enlarged_sink')
         for sink in sinks:
+            print('Snk', sink)
             centroid = sink.centroid
             geojson = json.loads(centroid.geojson)
             sink_id = sink.id
@@ -565,7 +567,7 @@ def filter_enlarged_sinks(request):
                 index_sink_total = round(
                     (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
 
-            print('geojson:', geojson)
+
             geojson['properties'] = {
                 "id": sink.id,
                 "depth": round(sink.depth, 2),
@@ -1015,9 +1017,9 @@ def filter_sieker_large_lakes(request):
         lakes = models.SiekerLargeLake.objects.filter(Q(geom__intersects=geom) | Q(geom__within=geom))
 
     filter = Q()
-    filter = add_range_filter(filter, project['siekerLake'], 'lake_volume', 'area_ha')
-    filter = add_range_filter(filter, project['siekerLake'], 'lake_volume', 'vol_mio_m3')
-    filter = add_range_filter(filter, project['siekerLake'], 'lake_max_depth', 'd_max_m')
+    filter = add_range_filter(filter, project, 'lake_volume', 'area_ha')
+    filter = add_range_filter(filter, project, 'lake_volume', 'vol_mio_m3')
+    filter = add_range_filter(filter, project, 'lake_max_depth', 'd_max_m')
     lakes = lakes.filter(filter)
 
     badesee_filter = Q()
@@ -1101,17 +1103,17 @@ def filter_sieker_sinks(request):
     sinks = models.SiekerSink.objects.filter(geom4326__within=geom)
     print("Sinks:", sinks.count())
     filters = Q()
-    filters = add_range_filter(filters, project['siekerSink'], 'area', 'area')
-    filters = add_range_filter(filters, project['siekerSink'], 'volume', 'volume')
-    filters = add_range_filter(filters, project['siekerSink'], 'sink_depth', 'sink_depth')
-    filters = add_range_filter(filters, project['siekerSink'], 'avg_depth', 'avg_depth')
-    filters = add_range_filter(filters, project['siekerSink'], 'urbanarea_percent', 'urbanarea_percent')
-    filters = add_range_filter(filters, project['siekerSink'], 'avg_depth', 'avg_depth')
+    filters = add_range_filter(filters, project, 'area', 'area')
+    filters = add_range_filter(filters, project, 'volume', 'volume')
+    filters = add_range_filter(filters, project, 'sink_depth', 'sink_depth')
+    filters = add_range_filter(filters, project, 'avg_depth', 'avg_depth')
+    filters = add_range_filter(filters, project, 'urbanarea_percent', 'urbanarea_percent')
+    filters = add_range_filter(filters, project, 'avg_depth', 'avg_depth')
     
     sinks = sinks.filter(filters)
     print("Sinks FILTERED:", sinks.count())
 
-    feasibility = project['siekerSink'].get('feasibility', [])
+    feasibility = project.get('feasibility', [])
     feasibility = (Q(umsetzbark__in=feasibility))
     sinks = sinks.filter(feasibility)
     print("Sieker Sinks LAND USE FILTERED:", sinks.count())
@@ -1241,17 +1243,17 @@ def filter_sieker_geks(request):
     sinks = models.SiekerSink.objects.filter(geom4326__within=geom)
     print("Sinks:", sinks.count())
     filters = Q()
-    filters = add_range_filter(filters, project['siekerSink'], 'area', 'area')
-    filters = add_range_filter(filters, project['siekerSink'], 'volume', 'volume')
-    filters = add_range_filter(filters, project['siekerSink'], 'sink_depth', 'sink_depth')
-    filters = add_range_filter(filters, project['siekerSink'], 'avg_depth', 'avg_depth')
-    filters = add_range_filter(filters, project['siekerSink'], 'urbanarea_percent', 'urbanarea_percent')
-    filters = add_range_filter(filters, project['siekerSink'], 'avg_depth', 'avg_depth')
+    filters = add_range_filter(filters, project, 'area', 'area')
+    filters = add_range_filter(filters, project, 'volume', 'volume')
+    filters = add_range_filter(filters, project, 'sink_depth', 'sink_depth')
+    filters = add_range_filter(filters, project, 'avg_depth', 'avg_depth')
+    filters = add_range_filter(filters, project, 'urbanarea_percent', 'urbanarea_percent')
+    filters = add_range_filter(filters, project, 'avg_depth', 'avg_depth')
     
     sinks = sinks.filter(filters)
     print("Sinks FILTERED:", sinks.count())
 
-    feasibility = project['siekerSink'].get('feasibility', [])
+    feasibility = project.get('feasibility', [])
     feasibility = (Q(umsetzbark__in=feasibility))
     sinks = sinks.filter(feasibility)
     print("Sieker Sinks LAND USE FILTERED:", sinks.count())

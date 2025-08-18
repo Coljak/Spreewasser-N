@@ -186,8 +186,8 @@ function getSiekerSinks(sinkType, featureGroup) {
             <b>Ø Tiefe:</b> ${p.avg_depth} m<br>
             <b>Min. Elevation:</b> ${p.min_elevation} (m)<br>
             <b>Max. Elevation:</b> ${p.max_elevation} (m)<br>
-            <b>Urbane Fläche (%):</b> ${p.urbanarea_percent} (m)<br>
-            <b>Fläche Feuchtgebiet (%):</b> ${p.wetlands_percent} (m)<br>
+            <b>Urbane Fläche (%):</b> ${p.urbanarea_percent} (%)<br>
+            <b>Fläche Feuchtgebiet (%):</b> ${p.wetlands_percent} (%)<br>
             <b>Distanz t???:</b> ${p.distance_t} (m)<br>
             <b>Distanz See:</b> ${p.dist_lake} (m)<br>
             <b>Distanz Wasser:</b> ${p.waterdist} (m)<br>
@@ -300,91 +300,7 @@ export function initializeSiekerSink() {
   $('#toolboxPanel').off('change');
 
   addChangeEventListener(SiekerSink);
-  // $('#toolboxPanel').on('change',  function (event) {
-  //   const $target = $(event.target);
-  //   const project = SiekerSink.loadFromLocalStorage();
-  //   if ($target.hasClass('double-slider')) {
-  //     const inputName = $target.attr('name');
-  //     const minName = inputName + '_min';
-  //     const maxName = inputName + '_max'; 
-  //     const inputVals = $target.val().split(',');
-  //     project[minName] = inputVals[0];
-  //     project[maxName] = inputVals[1];
-  //     project.saveToLocalStorage();
-  //   } else if ($target.hasClass('single-slider')) {   
-  //     const inputName = $target.attr('name'); 
-  //     const inputVal = $target.val();
-  //     project[inputName] = inputVal;
-  //     project.saveToLocalStorage();
-  //   }else if ($target.hasClass('form-check-input')) {
-  //     // checkboxes 
-  //     console.log("Checkbox!!")
-  //     const inputId = $target.attr('id');
-  //     console.log("inputId", inputId)
-  //     const inputName = $target.attr('name');
-  //     console.log("inputName", inputName)
-  //     const inputPrefix = $target.attr('prefix');
-  //     console.log("inputPrefix", inputPrefix)
-  //     const inputValue = $target.attr('value');
-  //     console.log("inputValue", inputValue)
-  //     const inputChecked = $target.is(':checked');
-  //     console.log("inputChecked", inputChecked)
-
-
-  //     const index = project[inputName].indexOf(inputValue);
-  //     console.log("index", index)
-
-  //     if (index > -1) {
-  //       // Value exists — remove it
-  //       project[inputName] = project[inputName].filter(
-  //         (v) => v !== inputValue
-  //       );
-  //       console.log('Checkbox unchecked:', inputId, '=', inputValue);
-  //     } else {
-  //       // Value does not exist — add it
-  //       project[inputName].push(inputValue);
-  //       console.log('Checkbox checked:', inputId, '=', inputValue);
-  //     }
-  //     project.saveToLocalStorage();
-
-  //   } else if ($target.hasClass('sink-select-all-checkbox')) {
-      
-  //     const allSelected = $target.is(':checked');
-      
-  //     if (!allSelected) {
-  //       project['selected_sieker_sinks'] = [];
-  //     }
-  //     $('.sink-select-checkbox').each(function(){
-  //       const $checkbox = $(this);
-  //       $checkbox.prop('checked', allSelected);
-  //       const sinkId = $checkbox.data('id');
-  //       if (allSelected) {
-  //         console.log("Selected sink:", sinkId);
-  //         project['selected_sieker_sinks'].push(sinkId);
-  //       } 
-  //     })
-  //     project.saveToLocalStorage();
-  //   } else if ($target.hasClass('sink-select-checkbox')) {
-  //       if ($target.is(':checked')) {
-  //         console.log("Selected sink:", $target.data('id'));
-  //         const project= SiekerSink.loadFromLocalStorage();
-  //         project['selected_sieker_sinks'].push($target.data('id'));
-  //         project.saveToLocalStorage();
-
-  //       } else {
-  //         const sinkId = $target.data('id');
-  //         console.log("Selected sink:", sinkId);
-  //         const project= SiekerSink.loadFromLocalStorage();
-  //         const index = project[key].indexOf(sinkId);
-  //         if (index > -1) {
-  //           project[key].splice(index, 1);
-  //         }
-  //         project.saveToLocalStorage();
-  //       }
-
-  //       // You can trigger your map sink selection logic here
-  //     };
-  //   });
+  
 
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
@@ -403,9 +319,8 @@ export function initializeSiekerSink() {
           map.addLayer(siekerSinkFeatureGroup);
           $target.text('Senken ausblenden');
       }
-
     } 
-    }); 
+  }); 
 
   function selectSink(event) {
     if (event.target.classList.contains('select-sink')) {

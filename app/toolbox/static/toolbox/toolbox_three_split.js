@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject, Infiltration,  SiekerSink, SiekerGek, SiekerSurfaceWaters, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
+import { ToolboxProject,  SiekerSink, SiekerGek, SiekerSurfaceWaters, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { initializeInfiltration } from '/static/toolbox/infiltration.js';
 import { initializeSiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters.js';
@@ -300,10 +300,7 @@ function startInfiltration() {
   // const userField = project.userField;
   if (userField) {
 
-    const infiltration = new Infiltration();
-    infiltration.userField = userField;
-    infiltration.saveToLocalStorage();
-  
+
     fetch('load_infiltration_gui/' + userField + '/')
     .then(response => response.json())
     .then(data => {
@@ -317,7 +314,7 @@ function startInfiltration() {
       $('#toolboxPanel').html(data.html);
     })
     .then(() => {
-      initializeInfiltration();
+      initializeInfiltration(userField);
       // initializeSliders();
 
     })
@@ -404,10 +401,10 @@ function startSiekerGeks() {
   siekerGek.userField = userField;
   siekerGek.saveToLocalStorage();
   
-  let layers = {}
+
   // const userField = project.userField;
   if (userField) {
-  
+    
     fetch('load_sieker_gek_gui/' + userField + '/')
     .then(response => response.json())
     .then(data => {
@@ -427,7 +424,12 @@ function startSiekerGeks() {
       if (!feature_collection || Object.keys(feature_collection).length === 0) { 
         return;
       } else {
-        initializeSiekerGek([feature_collection, sliderLabels, userField]);
+        const data = {
+          'feature_collection': feature_collection,
+          'sliderLabels': sliderLabels
+        }
+        console.log('data sliderLabels', data)
+        initializeSiekerGek(data);
       }
     })
     // .catch(error => console.error("Error fetching data:", error));

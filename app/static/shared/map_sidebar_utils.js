@@ -1083,4 +1083,132 @@ export async function getUserFieldsFromDb (featureGroup) {
   });
 };
 
+// for dataTables
+function createTableSettings(tableLength) {
+  const columnDefs = [{
+        "targets": 0, // Select a checkbox
+        "orderable": false,
+        "searchable": false
+    }];
+  for (let i=1; i<tableLength; i++) {
+    columnDefs.push({
+        "targets": i, // Select a checkbox
+        "orderable": true,
+        "searchable": false
+    })
+  }
+  return {
+    "order": [[1, "asc"]],
+    "searching": false,
+    "columnDefs": columnDefs
+  }
+};
+
+
+export function feautureCollectionToLayerAndTable(featureCollection, dataInfo, featureGroup){
+  
+  
+  let layer = L.geoJSON(featureCollection, {
+      style: {
+          color: dataInfo.featureColor,
+          className: dataInfo.className,
+      },
+      onEachFeature: function (feature, layer) {
+        let popupContent = `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
+        dataInfo.properties.forEach(property => {
+          if (property.popUp) { 
+            popupContent += property.href
+            ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
+            : `<b>${property.title}:</b> ${feature.properties[property.valueName]}<br>`;
+          }
+          
+        });
+            
+                
+        layer.bindTooltip(popupContent);
+        let menuContent = popupContent + `<button class="btn btn-outline-secondary select-feature" data-type=${dataInfo.dataType} data-id="${feature.properties.id}">Auswählen</button>`;
+
+        layer.on('mouseover', function () {
+            // this.setStyle(highlightStyle);
+            this.openTooltip();
+        });
+  
+        layer.on('mouseout', function () {
+            // Only reset to default if not clicked
+            if (!this.options.isClicked) {
+                // this.setStyle(defaultStyle);
+            }
+        });
+  
+        layer.on('click', function (e) {
+              // Remove clicked from all
+          const popUp = L.popup().setContent(menuContent);
+          map.openPopup(popUp, layer.getBounds().getCenter());
+          document.querySelectorAll('.polygon.clicked')
+              .forEach(el => el.classList.remove('clicked'));
+
+          // Add to this one
+          let pathEl = e.target._path; // The actual SVG path element
+          if (pathEl) {
+              pathEl.classList.add('clicked');
+          }
+        });
+  
+        layer.on('contextmenu', function (event) {
+          L.popup()
+              .setLatLng(event.latlng)
+              .setContent(`
+                  <h6><b> ${feature.properties.name}</b></h6>
+                  <button class="btn btn-outline-secondary select-feature-button" data-type="${dataInfo.dataType} data-id="${feature.properties.id}">Auswählen</button>
+              `)
+              .openOn(map);
+  
+          setTimeout(() => {
+            const button = document.querySelector('.select-feature-button');
+            if (button) {
+                button.addEventListener('click', () => {
+                    map.closePopup(); 
+                    const featureId = button.getAttribute('data-id');
+                    console.log('Selected featureId ID:', featureId);
+                });
+            }
+          }, 0);
+        });
+      }
+    });
+  
+    let layerGroup = L.featureGroup([layer]).addTo(map);
+  
+    layer.addTo(featureGroup);
+    layer.bringToFront();
+  
+      const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
+      let tableHTML = `
+      <table class="table table-bordered table-hover" id="${dataInfo.dataType}-table">
+        <caption>${dataInfo.tableCaption}</caption>
+        <thead>
+          <tr>
+              <th><input type="checkbox" class="table-select-all" data-type="${dataInfo.dataType}">Select all</th>`
+      dataInfo.properties.forEach(property => {
+        if (property.table) {tableHTML += `<th>${property.valueName}`}
+      });
+      tableHTML += '</tr></thead><tbody>'
+
+      dataInfo.featureCollection.features.forEach(feature => {
+  
+        // Add to table
+        tableHTML += `
+          <tr>
+            <td><input type="checkbox" class="table-select-checkbox" data-type="${dataInfo.dataType}" data-id="${feature.properties.id}"></td>
+            `;
+          dataInfo.properties.forEach(property => {
+              if (property.table) {tableHTML += `<td>${feature.properties[property.valueName]}</td>`}
+            });
+        tableHTML += '</tr>';
+      });
+      tableHTML += `</tbody></table>`;
+      tableContainer.innerHTML = tableHTML;
+      const tableSettings = createTableSettings(dataInfo.tableLength);
+      $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
+};
 

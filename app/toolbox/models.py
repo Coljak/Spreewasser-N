@@ -921,3 +921,47 @@ class SinkDifference(models.Model):
     waterdist = models.CharField(max_length=100, null=True, blank=True)
 
     
+
+
+
+class DataInfo(models.Model):
+    data_type = models.CharField(max_length=255)  # e.g. 'sieker_gek'
+    feature_color = models.CharField(max_length=255, default="var(--bs-secondary)") # string defining the (bootstrap) color
+    class_name = models.CharField(max_length=255)
+    feature_type = models.CharField(max_length=255, default="polygon")
+    table_caption = models.CharField(max_length=255)
+    popup_header = models.CharField(max_length=255, null=True, blank=True)  # e.g. "name"
+    marker_cluster = models.BooleanField(default=False, null=True, blank=True)
+
+    def as_dict(self, language="de"):
+        return {
+            "dataType": self.data_type,
+            "featureColor": self.feature_color,
+            "className": self.class_name,
+            "featureType": self.feature_type,
+            "tableCaption": self.table_caption,
+            "popUp": {"header": self.popup_header},
+            "properties": [p.as_dict(language) for p in self.properties.all()],
+            "tableLength": self.properties.filter(table=True).count(),
+        }
+
+
+class DataInfoProperty(models.Model):
+    order_position = models.SmallIntegerField(null=True, blank=True)
+    data_info = models.ForeignKey(DataInfo, on_delete=models.CASCADE, related_name="properties")
+    popup = models.BooleanField(default=True)
+    table = models.BooleanField(default=True)
+    title_de = models.CharField(max_length=255)
+    title_en = models.CharField(max_length=255, null=True, blank=True)
+    unit = models.CharField(max_length=16, null=True, blank=True)
+    value_name = models.CharField(max_length=255)  # e.g. "name" or "gek_document__link"
+    href = models.BooleanField(default=False)
+
+    def as_dict(self, language="de"):
+        return {
+            "popUp": self.popup,
+            "table": self.table,
+            "title": self.title_en if language == "en" and self.title_en else self.title_de,
+            "valueName": self.value_name,
+            "href": self.href,
+        }

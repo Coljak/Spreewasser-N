@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject, Infiltration, updateDropdown, addChangeEventListener } from '/static/toolbox/toolbox.js';
+import { ToolboxProject, updateDropdown, addChangeEventListener, tableCheckSelectedItems, addClickEventListenerToTable } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 
@@ -21,6 +21,8 @@ import {
   dismissPolygon,
   removeLegendFromMap,
 } from '/static/shared/map_sidebar_utils.js';
+import {Infiltration} from '/static/toolbox/infiltration_model.js';
+
 
 const sinkFeatureGroup = new L.FeatureGroup()
 sinkFeatureGroup.toolTag = 'infiltration';
@@ -133,13 +135,9 @@ function getSinks(sinkType, featureGroup) {
   .then(response => response.json())
   .then(data => {
     featureGroup.clearLayers();
-    console.log('infiltration', infiltration);
-    console.log('infiltration', infiltration);
-    console.log('infiltration[`selected_${sinkType}s`]', infiltration[`selected_${sinkType}s`]);
-
-    const selected_sinks = infiltration[`selected_${sinkType}s`];
+    
     if (data.message.success) {
-      
+      const selected_sinks = infiltration[`selected_${sinkType}s`];
       infiltration[`selected_${sinkType}s`] = [];
       
       // Initialize marker cluster
@@ -281,20 +279,27 @@ function getSinks(sinkType, featureGroup) {
       const tableSettings = createSinkTableSettings(sinkType, false);
       $('#' + elId + ' table').DataTable(tableSettings);
 
+      addClickEventListenerToTable(Infiltration)
+
 
       // display card with table
       const tableCardId = sinkType === 'sink' ? 'cardSinkTable' : 'cardEnlargedSinkTable';
       const tableCard = document.getElementById(tableCardId);
-      if (selected_sinks !== undefined && selected_sinks.length > 0) {
-        selected_sinks.forEach(sinkId => {
-          const checked = ids.includes(sinkId) ? true : false;
-          const checkbox = document.querySelector(`.sink-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
-          if (checkbox && checked) {
-            checkbox.checked = checked;
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        })
-      }
+
+      tableCheckSelectedItems(infiltration, sinkType)
+
+      // if (selected_sinks !== undefined && selected_sinks.length > 0) {
+      //   selected_sinks.forEach(sinkId => {
+      //     const checked = ids.includes(sinkId) ? true : false;
+      //     const checkbox = document.querySelector(`.sink-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
+      //     if (checkbox && checked) {
+      //       checkbox.checked = checked;
+      //       checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      //     }
+      //   })
+      // }
+
+      
       tableCard.classList.remove('d-none');
     
     } else {
@@ -303,6 +308,8 @@ function getSinks(sinkType, featureGroup) {
 })
 .catch(error => console.error("Error fetching data:", error));
 };
+
+
 
 function getWaterBodies(waterbody, featureGroup){
   let url = 'filter_lakes/';
@@ -549,7 +556,12 @@ function toggleConnection(button) {
   }
 }
 
-export function initializeInfiltration() {
+export function initializeInfiltration(userField) {
+
+  const infiltration = new Infiltration();
+  infiltration.userField = userField;
+  infiltration.saveToLocalStorage();
+  
   removeLegendFromMap(map);
   map.eachLayer(function(layer) {
         console.log(layer.toolTag);
@@ -711,7 +723,7 @@ export function initializeInfiltration() {
           map.addLayer(lakesFeatureGroup);
           $target.text('ausblenden');
       }
-    }
+    } 
     }); 
 
   // TODO I tttttttttthink      this is not working!
@@ -722,7 +734,7 @@ export function initializeInfiltration() {
         console.log('sinkId', sinkId);
         console.log('sinkType', sinkType);
 
-        const checkbox = document.querySelector(`.sink-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
+        const checkbox = document.querySelector(`.table-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
         checkbox.checked = !checkbox.checked;
         checkbox.dispatchEvent(new Event('change', { bubbles: true }));
       }

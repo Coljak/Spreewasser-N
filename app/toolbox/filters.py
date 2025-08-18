@@ -391,16 +391,14 @@ class GekRetentionFilter(FilterSet):
         method="filter_by_landuse"
     )
 
-    priority_labels = dict(
-    models.GekPriority.objects
-    .values_list("priority_level", "description_de")
-    .distinct()
-    .order_by("priority_level")
-    )
-    print(priority_labels)
+    # priority_labels = dict(
+    # models.GekPriority.objects
+    # .values_list("priority_level", "description_de")
+    # .distinct()
+    # .order_by("priority_level")
+    # )
 
-    prio_labels = json.dumps(priority_labels, ensure_ascii=False)
-    print(prio_labels)
+    # prio_labels = json.dumps(priority_labels, ensure_ascii=False)
 
     priority = NumberFilter(
         label="Priorität",

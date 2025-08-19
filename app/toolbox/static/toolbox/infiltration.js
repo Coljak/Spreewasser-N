@@ -1,5 +1,6 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject, updateDropdown, addChangeEventListener, tableCheckSelectedItems, addClickEventListenerToTable } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addChangeEventListener, tableCheckSelectedItems, addClickEventListenerToTable } from '/static/toolbox/toolbox.js';
+import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 

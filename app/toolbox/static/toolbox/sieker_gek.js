@@ -1,5 +1,7 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown, getBsColor } from '/static/shared/utils.js';
-import { ToolboxProject, SiekerGek, updateDropdown, addChangeEventListener } from '/static/toolbox/toolbox.js';
+import { ToolboxProject, updateDropdown, addChangeEventListener } from '/static/toolbox/toolbox.js';
+import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
+import { SiekerGek } from '/static/toolbox/sieker_gek_model.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 

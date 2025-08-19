@@ -1,5 +1,7 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject, updateDropdown, SiekerSurfaceWaters, addChangeEventListener } from '/static/toolbox/toolbox.js';
+import {  updateDropdown, addChangeEventListener } from '/static/toolbox/toolbox.js';
+import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
+import { SiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters_model.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 

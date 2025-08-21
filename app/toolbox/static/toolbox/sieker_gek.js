@@ -1,6 +1,6 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown, getBsColor } from '/static/shared/utils.js';
-import { ToolboxProject, updateDropdown, addChangeEventListener } from '/static/toolbox/toolbox.js';
-import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
+import { updateDropdown, addChangeEventListener, addClickEventListenerToTable,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
+import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerGek } from '/static/toolbox/sieker_gek_model.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
@@ -25,161 +25,57 @@ import {
   getLegendItem,
   getLegendSettings,
   removeLegendFromMap,
-  feautureCollectionToLayerAndTable,
+  
 } from '/static/shared/map_sidebar_utils.js';
 
 
 const siekerGekFeatureGroup = new L.FeatureGroup()
 siekerGekFeatureGroup.toolTag = 'sieker-gek';
 
-function createSiekerGekTableSettings() {
-  return {
-    "order": [[1, "asc"]],
-    "searching": false,
-    "columnDefs": [
-      {
-        "targets": 0, // Select a checkbox
-        "orderable": false,
-        "searchable": false
-      },
-      {
-        "targets": 1, // Name
-        "orderable": true,
-        "searchable": true
-      },
-      {
-        "targets": 2, // Document
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 3, // current landusage
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 4, // planning segment
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 5, // total number of measures
-        "orderable": true,
-        "searchable": false
-      },
-    ]
-  };
-}
+const siekerFilteredGekFeatureGroup = new L.FeatureGroup()
+siekerFilteredGekFeatureGroup.toolTag = 'sieker-gek';
+
+// function createSiekerGekTableSettings() {
+//   return {
+//     "order": [[1, "asc"]],
+//     "searching": false,
+//     "columnDefs": [
+//       {
+//         "targets": 0, // Select a checkbox
+//         "orderable": false,
+//         "searchable": false
+//       },
+//       {
+//         "targets": 1, // Name
+//         "orderable": true,
+//         "searchable": true
+//       },
+//       {
+//         "targets": 2, // Document
+//         "orderable": true,
+//         "searchable": false
+//       },
+//       {
+//         "targets": 3, // current landusage
+//         "orderable": true,
+//         "searchable": false
+//       },
+//       {
+//         "targets": 4, // planning segment
+//         "orderable": true,
+//         "searchable": false
+//       },
+//       {
+//         "targets": 5, // total number of measures
+//         "orderable": true,
+//         "searchable": false
+//       },
+//     ]
+//   };
+// }
 
 
-function geksToGui( data) {
-  const feature_collection = data.feature_collection
-  let layer = L.geoJSON(feature_collection, {
-    style: {
-        color: 'var(--bs-secondary)',
-        className: 'gek polygon',
-    },
-    onEachFeature: function (feature, layer) {
-      let popupContent = `
-          <h6><b> ${feature.properties.name}</b></h6>
-          <b>Anzahl der Einzelmaßnahmen zum Wasserrückhalt:</b> ${feature.properties.number_of_measures}<br>
-          <b>Aktuelle Flächennutzung:</b> ${feature.properties.current_landusage}<br>
-          <b>Planungsabschnitt:</b> ${feature.properties.planning_segment}<br>
-          <b>Dokument: </b><a href="${feature.properties.document}" target="_blank">Link</a><br>
-      `;
 
-      let menuContent = popupContent + `<button class="btn btn-outline-secondary select-sieker-gek" data-id="${feature.properties.id}">Auswählen</button>`;
-      
-      layer.bindTooltip(popupContent);
-
-      layer.on('mouseover', function () {
-          // this.setStyle(highlightStyle);
-          this.openTooltip();
-      });
-
-      layer.on('mouseout', function () {
-          // Only reset to default if not clicked
-          if (!this.options.isClicked) {
-              // this.setStyle(defaultStyle);
-          }
-      });
-
-      layer.on('click', function (e) {
-            // Remove clicked from all
-          const popUp = L.popup().setContent(menuContent);
-          map.openPopup(popUp, layer.getBounds().getCenter());
-          document.querySelectorAll('.polygon.clicked')
-              .forEach(el => el.classList.remove('clicked'));
-
-          // Add to this one
-          let pathEl = e.target._path; // The actual SVG path element
-          if (pathEl) {
-              pathEl.classList.add('clicked');
-          }
-      });
-
-      layer.on('contextmenu', function (event) {
-        L.popup()
-            .setLatLng(event.latlng)
-            .setContent(`
-                <h6><b> ${feature.properties.name}</b></h6>
-                <button class="btn btn-outline-secondary select-sieker-gek" data-id="${feature.properties.id}">Auswählen</button>
-            `)
-            .openOn(map);
-
-        setTimeout(() => {
-          const button = document.querySelector('.select-sieker-gek');
-          if (button) {
-              button.addEventListener('click', () => {
-                  map.closePopup(); 
-                  const gekId = button.getAttribute('data-id');
-                  console.log('Selected gek ID:', gekId);
-              });
-          }
-        }, 0);
-      });
-    }
-  });
-
-  let layerGroup = L.featureGroup([layer]).addTo(map);
-
-  layer.addTo(siekerGekFeatureGroup);
-    layer.bringToFront();
-
-    const tableContainer = document.getElementById('sieker-gek-table-container');
-    let tableHTML = `
-    <table class="table table-bordered table-hover" id="sieker-gek-table">
-      <caption>Gewässerentwicklungskonzepte</caption>
-      <thead>
-        <tr>
-            <th><input type="checkbox" class="sieker-gek-select-all-checkbox table-select-all" data-type="sieker_gek">Select all</th>
-            <th>Name</th>
-            <th>Anzahl Maßnahmen</th>
-            <th>Landnutzung</th>
-            <th>Planungsabschnitt</th>
-            <th>Dokument</th>
-        </tr>
-      </thead>
-      <tbody>
-    `
-    feature_collection.features.forEach(feature => {
-
-      // Add to table
-      tableHTML += `
-          <tr>
-              <td><input type="checkbox" class="sieker-gek-checkbox table-select-checkbox" data-type="sieker_gek" data-id="${feature.properties.id}"></td>
-              <td>${feature.properties.name}</td>
-              <td>${feature.properties.number_of_measures}</td>
-              <td>${feature.properties.current_landusage}</td>
-              <td>${feature.properties.planning_segment}</td>
-              <td>${feature.properties.document}</td>
-          </tr>`;    
-    });
-    tableHTML += `</tbody></table>`;
-    tableContainer.innerHTML = tableHTML;
-    const tableSettings = createSiekerGekTableSettings();
-    $('#sieker-gek-table').DataTable(tableSettings);
-};
 
 function filterSiekerGeks() {
   const project = SiekerGek.loadFromLocalStorage();
@@ -191,18 +87,99 @@ function filterSiekerGeks() {
       'X-CSRFToken': getCSRFToken(),
     }
   }).then(
-    response => response.json
+    response => response.json()
   ).then(data => {
-    siekerGekFeatureGroup.clearLayers();
     
+    console.log(data)
     if(data.message.success) {
-      geksToGui(data)
+      siekerFilteredGekFeatureGroup.clearLayers();
+      // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
+      
+
+    const dataInfoResult = {
+      "dataType": "filtered_sieker_gek",
+      "featureColor": "var(--bs-success)",
+      "className": "gek polygon",
+      "featureType": "polygon",
+      "tableCaption": "Gewässerentwicklungskonzepte",
+      "popUp": {
+        "header": "name"
+      },
+      "properties": [
+        {
+          "popUp": false,
+          "table": false,
+          "title": "id",
+          "valueName": "id",
+          "href": false
+        },
+        {
+          "popUp": false,
+          "table": true,
+          "title": "Name",
+          "valueName": "name",
+          "href": false
+        },
+        {
+          "popUp": true,
+          "table": true,
+          "title": "Anzahl der Einzelmaßnahmen",
+          "valueName": "number_of_measures",
+          "href": false
+        },
+        {
+          "popUp": true,
+          "table": true,
+          "title": "Aktuelle Flächennutzung",
+          "valueName": "current_landusage",
+          "href": false
+        },
+        {
+          "popUp": true,
+          "table": true,
+          "title": "Planungsabschnitt",
+          "valueName": "planning_segment",
+          "href": false
+        },
+        {
+          "popUp": true,
+          "table": true,
+          "title": "Wasserverband",
+          "valueName": "assosiaction",
+          "href": false
+        },
+        {
+          "popUp": true,
+          "table": true,
+          "title": "Dokument",
+          "valueName": "document",
+          "href": false
+        }
+      ],
+      "tableLength": 6
+    }
+    addFeatureCollectionToLayer(data.featureCollection, dataInfoResult, siekerFilteredGekFeatureGroup);
+    addFeatureCollectionToTable(SiekerGek, data.featureCollection, dataInfoResult)
+
+      
+      // addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
+      // feautureCollectionToLayerAndTable(SiekerGek, data.featureCollection, data.dataInfo, siekerFilteredGekFeatureGroup);
+      const measuresTab = $('#navSiekerGekMeasures')
+      const tab = new bootstrap.Tab(measuresTab);
+      tab.show();
+
     }
   })
 
 };
 
 export function initializeSiekerGek(data) {
+
+  const userField = ToolboxProject.loadFromLocalStorage().userField;
+
+  const siekerGek = new SiekerGek();
+  siekerGek.userField = userField;
+  siekerGek.saveToLocalStorage();
 
 
   removeLegendFromMap(map);
@@ -222,8 +199,6 @@ export function initializeSiekerGek(data) {
   const sliderLabelLeft = document.getElementById('gek_priority_start_text');
   const sliderLabelRight = document.getElementById('gek_priority_value');
   const sliderLabels = data['sliderLabels'];
-  console.log('sliderLabels')
-  console.log('sliderLabelLeft',sliderLabelLeft)
   sliderLabelLeft.innerText = sliderLabels[Math.min(...Object.keys(sliderLabels).map(Number))];
   sliderLabelRight.innerText = sliderLabels[Math.max(...Object.keys(sliderLabels).map(Number))];
 
@@ -236,63 +211,12 @@ export function initializeSiekerGek(data) {
     });
   }
   // end of string labelled slider
-    // geksToGui(data)
+   
 
-    const dataInfo = {
-        dataType: 'sieker_gek',
-        featureColor: 'var(--bs-secondary)',
-        className: 'gek polygon',
-        featureType: 'polygon',
-        tableCaption: 'Gewässerentwicklungskonzepte',
-        popUp: {
-          header: 'name'
-        },
-        properties: [{
-          popUp : false,
-          table: true,
-          title:'Name',
-          valueName: 'name',
-          href: false,
-          hrefTarget: null,
-        },
-          {
-          popUp : true,
-          table: true,
-          title:'Anzahl der Einzelmaßnahmen',
-          valueName: 'number_of_measures',
-          href: false,
-          hrefTarget: null,
-        },
-        {
-          popUp : true,
-          table: true,
-          title:'Aktuelle Flächennutzung',
-          valueName: 'current_landusage',
-          href: false,
-          hrefTarget: null,
-        },
-        {
-          popUp : true,
-          table: true,
-          title:'Planungsabschnitt',
-          valueName: 'planning_segment',
-          href: false,
-          hrefTarget: null,
-        },
-        {
-          popUp : true,
-          table: true,
-          title:'Dokument',
-          valueName: 'document',
-          href: true,
-          hrefTarget: null,
-        },
-      
-      ],
-        tableLength: 6
-      }
-
-    feautureCollectionToLayerAndTable(data.feature_collection, dataInfo, siekerGekFeatureGroup)
+    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, siekerGekFeatureGroup)
+    addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
+    
+    addClickEventListenerToTable(SiekerGek)
 
 
     document.getElementById('cardSiekerGekTable').classList.remove('d-none');
@@ -311,7 +235,15 @@ export function initializeSiekerGek(data) {
         $('#toolboxPanel').addClass('d-none');
         
     } else if ($target.attr('id') === 'btnFilterSiekerGeks') {
-      getSiekerGeks('siekerGek', siekerGekFeatureGroup);
+      const project = SiekerGek.loadFromLocalStorage();
+      if (project.selected_sieker_geks.length === 0) {
+        handleAlerts({'success': false, 'message': 'Bitte wählen Sie Gewässer aus!'})
+      } else {
+        map.removeLayer(siekerGekFeatureGroup);
+        map.addLayer(siekerFilteredGekFeatureGroup);
+        filterSiekerGeks();
+      }
+      
     
     } else if ($target.attr('id') === 'toggleSiekerGeks') {
       if (map.hasLayer(siekerGekFeatureGroup)) {
@@ -321,9 +253,25 @@ export function initializeSiekerGek(data) {
           map.addLayer(siekerGekFeatureGroup);
           $target.text('Senken ausblenden');
       }
-
-    } 
+    }
     }); 
+
+  $('#navSiekerGek').on('shown.bs.tab', function (event) {
+    const targetPane = $($(event.target).attr('href')); 
+    if (targetPane.hasClass('active')) {
+      map.addLayer(siekerGekFeatureGroup);
+      map.removeLayer(siekerFilteredGekFeatureGroup);
+    }
+  });
+
+  $('#navSiekerGekMeasures').on('click', function (event) {
+    const targetPane = $($(event.target).attr('href'));
+    if (targetPane.hasClass('active')) {
+      map.removeLayer(siekerGekFeatureGroup);
+      map.addLayer(siekerFilteredGekFeatureGroup);
+    }
+  });
+
 
   function selectGek(event) {
     if (event.target.classList.contains('select-gek')) {
@@ -341,8 +289,10 @@ export function initializeSiekerGek(data) {
   // TODO This is not really working because the checkboxes of the gek table are not always accessible - only the ones visible are accessible
   $('#map').on('click', selectGek);
 
-  $('input[type="checkbox"][name="feasibility"][prefix="sieker_gek"]').prop('checked', true);
-  $('input[type="checkbox"][name="feasibility"][prefix="sieker_gek"]').trigger('change');
+  $('input[type="checkbox"][name="landuse"][prefix="gek"]').prop('checked', true);
+  $('input[type="checkbox"][name="landuse"][prefix="gek"]').trigger('change');
+
+    $('input[type="range"]').trigger('change');
 
 };
 

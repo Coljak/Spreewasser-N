@@ -70,6 +70,27 @@ export class Infiltration {
 
     }
 
+    updateButtonState() {
+        console.log('updateButtonState', this);
+        if (document.getElementById("divInfiltration")){
+            
+            const hasSink = this.selected_sinks.length > 0;
+            const hasEnlargedSink = this.selected_enlarged_sinks.length > 0;
+            const hasStream = this.selected_streams.length > 0;
+            const hasLake = this.selected_lakes.length > 0;
+            
+    
+            // Adjust to your actual button ID
+            if ((hasSink || hasEnlargedSink) && (hasLake || hasStream)) {
+                document.getElementById("btnGetInlets").classList.remove('disabled');
+                console.log('!(hasSink && hasWaterbody)')
+            } else {
+                document.getElementById("btnGetInlets").classList.add('disabled');
+                console.log('(hasSink && hasWaterbody)')
+            };
+        }
+    };
+
     toJson() {
         return JSON.stringify(this);
     }
@@ -79,6 +100,7 @@ export class Infiltration {
     }
          // Save project to localStorage
     saveToLocalStorage() {
+        this.updateButtonState();
         localStorage.setItem('projectInfiltration', this.toJson());
     }
 
@@ -87,6 +109,8 @@ export class Infiltration {
         const storedProject = localStorage.getItem('projectInfiltration');
         return storedProject ? Infiltration.fromJson(JSON.parse(storedProject)) : null;
     }
+
+
 
 
 };

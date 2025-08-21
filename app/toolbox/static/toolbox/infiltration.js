@@ -392,11 +392,11 @@ function addToInletTable(inlet, connectionId) {
   console.log('inlet.rating_connection + inlet.index_sink_total)/2', inlet.rating_connection, inlet.index_sink_total)
   row.innerHTML = `
     <td>${inlet.sink_id}</td>
-    <td>${inlet.is_enlarged_sink ? 'Ja' : 'Nein'}</td>
-    <td>${inlet.index_sink_total ?? inlet.index_sink_total}%</td>
+    <td>${inlet.is_enlarged_sink ? 'Ja' : 'Nein'}</td>  
     <td>${inlet.waterbody_type} ${inlet.waterbody_id}: ${inlet.waterbody_name}</td>
     <td>${inlet.length_m}</td>
     <td>${inlet.rating_connection ?? inlet.rating_connection}%</td>
+    <td>${inlet.index_sink_total ?? inlet.index_sink_total}%</td>
     <td>${((inlet.rating_connection + inlet.index_sink_total)/2)}%</td>
     <td><button class="btn btn-sm btn-primary result-aquifer-recharge hide-connection" data-id="${connectionId}"">Hide</button></td>
     <td><button class="btn btn-sm btn-primary result-aquifer-recharge edit-connection" data-id="${connectionId}">Zuleitung editieren</button></td>
@@ -661,7 +661,7 @@ export function initializeInfiltration(userField) {
     
     });
 
-    $('toolboxPanel').off('change'); // Remove any previous change event handlers
+    $('#toolboxPanel').off('change'); // Remove any previous change event handlers
     addChangeEventListener(Infiltration);
     
 

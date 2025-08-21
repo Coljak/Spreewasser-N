@@ -69,10 +69,10 @@
   } 
 
 /* Default */
-.polygon {
-    stroke: var(--bs-primary);  /* border color */
-    fill: var(--bs-primary);    /* fill color */
-}
+/* .polygon {
+    stroke: var(--bs-primary); 
+    fill: var(--bs-primary); 
+    */  
 
 /* Hover effect */
 .polygon:hover {

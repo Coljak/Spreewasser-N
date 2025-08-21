@@ -1,11 +1,16 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { ToolboxProject,  SiekerSink, SiekerGek, SiekerSurfaceWaters, toolboxSinks, updateDropdown } from '/static/toolbox/toolbox.js';
+import {  toolboxSinks,updateDropdown } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
+import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
+import { SiekerSink } from '/static/toolbox/sieker_sink_model.js';
+import { SiekerGek } from '/static/toolbox/sieker_gek_model.js';
+import { SiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters_model.js';
+import { Infiltration } from '/static/toolbox/infiltration_model.js';
 import { initializeInfiltration } from '/static/toolbox/infiltration.js';
 import { initializeSiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters.js';
 import { initializeSiekerSink } from '/static/toolbox/sieker_sink.js';
 import {initializeSiekerGek } from '/static/toolbox/sieker_gek.js';
-initializeSiekerSink
+
 import { 
   projectRegion, 
   baseMaps, 
@@ -329,7 +334,10 @@ function startInfiltration() {
 function startSurfaceWaters() {
   console.log('startSurfaceWaters')
   const userField = ToolboxProject.loadFromLocalStorage().userField;
-  let layers = {}
+
+  const siekerSurfaceWaters = new SiekerSurfaceWaters();
+  siekerSurfaceWaters.userField = userField;
+  siekerSurfaceWaters.saveToLocalStorage();
   // const userField = project.userField;
   if (userField) {
   
@@ -344,15 +352,10 @@ function startSurfaceWaters() {
       $('#toolboxButtons').addClass('d-none');
       $('#toolboxPanel').removeClass('d-none');
       $('#toolboxPanel').html(data.html);
-      layers = data.layers || {};
-      return layers;
+      return data;
     })
-    .then((layers) => {
-      if (!layers || Object.keys(layers).length === 0) { 
-        return;
-      } else {
-        initializeSiekerSurfaceWaters(layers, userField);
-      }
+    .then((data) => {
+        initializeSiekerSurfaceWaters(data.layers, data.data_info);
     })
     // .catch(error => console.error("Error fetching data:", error));
   } else {
@@ -396,10 +399,6 @@ function startSiekerGeks() {
   console.log('start Sieker Geks')
   
   const userField = ToolboxProject.loadFromLocalStorage().userField;
-
-  const siekerGek = new SiekerGek();
-  siekerGek.userField = userField;
-  siekerGek.saveToLocalStorage();
   
 
   // const userField = project.userField;
@@ -416,21 +415,16 @@ function startSiekerGeks() {
       $('#toolboxButtons').addClass('d-none');
       $('#toolboxPanel').removeClass('d-none');
       $('#toolboxPanel').html(data.html);
-      const feature_collection = data.gek_retention  || {};
-      const sliderLabels = data.slider_labels;
-      return [feature_collection, sliderLabels];
+
+      return {
+        'sliderLabels': data.slider_labels,
+        'dataInfo': data.data_info,
+        'featureCollection': data.gek_retention,
+        'all_ids': data.all_ids
+      };
     })
-    .then(([feature_collection, sliderLabels, userField]) => {
-      if (!feature_collection || Object.keys(feature_collection).length === 0) { 
-        return;
-      } else {
-        const data = {
-          'feature_collection': feature_collection,
-          'sliderLabels': sliderLabels
-        }
-        console.log('data sliderLabels', data)
+    .then(data => {
         initializeSiekerGek(data);
-      }
     })
     // .catch(error => console.error("Error fetching data:", error));
   } else {

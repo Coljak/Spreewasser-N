@@ -439,6 +439,11 @@ class GekRetentionFilter(FilterSet):
         )
         self.filters['costs'].queryset_for_bounds = measures_qs
         self.filters['costs'].set_bounds()
+        prefix = 'gek'
+        for name, field in self.form.fields.items():
+            field.widget.attrs['id'] = f"{prefix}_{name}"
+            field.widget.attrs['name'] = f"{prefix}_{name}"
+            field.widget.attrs['prefix'] = prefix
 
         min_priority = measures_qs.aggregate(Min('priority__priority_level'))['priority__priority_level__min']
         max_priority = models.GekPriority.objects.aggregate(Max('priority_level'))['priority_level__max']
@@ -471,7 +476,7 @@ class GekRetentionFilter(FilterSet):
             return queryset
 
         # Filter by priority level
-        return queryset.filter(measures__priority__priority_level=value).distinct()
+        return queryset.filter(measures__priority__priority_level__gte=value).distinct()
 
     def filter_by_landuse(self, queryset, name, value):
         # value is a list of selected landuse strings

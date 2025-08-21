@@ -3,27 +3,8 @@ import {Infiltration} from '/static/toolbox/infiltration_model.js';
 import {SiekerGek} from '/static/toolbox/sieker_gek_model.js';
 import {SiekerSink} from '/static/toolbox/sieker_sink_model.js';
 import {SiekerSurfaceWaters} from '/static/toolbox/sieker_surface_waters_model.js';
+import {map} from '/static/shared/map_sidebar_utils.js';
 
-function updateButtonState(project) {
-    console.log('updateButtonState', project);
-    if (document.getElementById("divInfiltration")){
-        
-        const hasSink = project.infiltration.selected_sinks.length > 0;
-        const hasEnlargedSink = project.infiltration.selected_enlarged_sinks.length > 0;
-        const hasStream = project.infiltration.selected_streams.length > 0;
-        const hasLake = project.infiltration.selected_lakes.length > 0;
-        
-
-        // Adjust to your actual button ID
-        if ((hasSink || hasEnlargedSink) && (hasLake || hasStream)) {
-            document.getElementById("btnGetInlets").classList.remove('disabled');
-            console.log('!(hasSink && hasWaterbody)')
-        } else {
-            document.getElementById("btnGetInlets").classList.add('disabled');
-            console.log('(hasSink && hasWaterbody)')
-        };
-    }
-};
 
 
 
@@ -61,9 +42,10 @@ export function tableCheckSelectedItems(project, dataType) {
         // checkbox.dispatchEvent(new Event('change', { bubbles: true }));
       }
     })
-  }
-  
-}
+  }  
+};
+
+
 
 
 export async function toolboxSinks() {
@@ -92,13 +74,14 @@ export async function toolboxSinks() {
   }
 };
 
+let CurrentProjectClass = null;
     // eventlistener for the filters
-export function addChangeEventListener(projectType) {
-    const ProjectClass = projectType;
-    console.log(projectType)
+export function addChangeEventListener(projectClass) {
+    const CurrentProjectClass = projectClass;
+    console.log(projectClass)
     $('#toolboxPanel').on('change', function (event) {
         const $target = $(event.target);
-        const project = ProjectClass.loadFromLocalStorage();
+        const project = CurrentProjectClass.loadFromLocalStorage();
         // console.log('change event', $target);
         if ($target.hasClass('double-slider')) {
             const inputName = $target.attr('name');
@@ -146,22 +129,16 @@ export function addChangeEventListener(projectType) {
             const dataType = $target.data('type');
 
             const key = `selected_${dataType}s`;
-            console.log('key', key)
+            console.log('table-select-all key', key)
             if (!allSelected) {
+                console.log('!allSelected')
                 project[key] = [];
             } else {
                 project[key] = project[`all_${dataType}_ids`]
-            }
-            $(`.table-select-checkbox[data-type="${dataType}"]`).each(function(){
-                const $checkbox = $(this);
-                $checkbox.prop('checked', allSelected);
-                const selectedId = $checkbox.data('id');
-                if (allSelected) {
-                console.log("Selected Id:", selectedId);
                 
-                project[key].push(selectedId);
-                } 
-            })
+            }
+            tableCheckSelectedItems(project, dataType);
+
             project.saveToLocalStorage();
         } else if ($target.hasClass('table-select-checkbox')) {
             const dataType = $target.data('type');
@@ -195,15 +172,180 @@ export function addChangeEventListener(projectType) {
         });
     };
 
-export function addClickEventListenerToTable(projectType) {
-    const ProjectClass = projectType;
+export function addClickEventListenerToTable(projectClass) {
+    const ProjectClass = projectClass;
     $('#toolboxPanel').on('click',function (event) {
         const $target = $(event.target);
         const project = ProjectClass.loadFromLocalStorage();
         if ($target.hasClass('paginate_button')) {
             console.log('Paginate')
             const dataType = $('.table-select-all').data('type');
-            tableCheckSelectedItems(project, dataType)
+            
         }
     });
-}
+};
+
+// for dataTables
+function createTableSettings(tableLength) {
+  const columnDefs = [{
+        "targets": 0, // Select a checkbox
+        "orderable": false,
+        "searchable": false
+    }];
+  for (let i=1; i<tableLength; i++) {
+    columnDefs.push({
+        "targets": i, // Select a checkbox
+        "orderable": true,
+        "searchable": false
+    })
+  }
+  return {
+    "order": [[1, "asc"]],
+    "searching": false,
+    "columnDefs": columnDefs
+  }
+};
+
+
+export function addFeatureCollectionToLayer(featureCollection, dataInfo, featureGroup){
+      console.log('addFeatureCollectionToLayer dataInfo', dataInfo)
+  
+    let layer = L.geoJSON(featureCollection, {
+        style: {
+            color: dataInfo.featureColor,
+            className: dataInfo.className,
+        },
+        onEachFeature: function (feature, layer) {
+            let popupContent = `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
+            dataInfo.properties.forEach(property => {
+            if (property.popUp) { 
+                popupContent += property.href
+                ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
+                : `<b>${property.title}:</b> ${feature.properties[property.valueName]}<br>`;
+            }
+            
+            });
+                
+            layer.on('add', function () {
+                if (layer._path) {
+                    layer._path.setAttribute('data-type', dataInfo.dataType);
+                    layer._path.setAttribute('data-id', feature.properties.id);
+                }
+            });
+                    
+            layer.bindTooltip(popupContent);
+            let menuContent = popupContent + `<button class="btn btn-outline-secondary select-feature" data-type=${dataInfo.dataType} data-id="${feature.properties.id}">Auswählen</button>`;
+
+            layer.on('mouseover', function () {
+                // this.setStyle(highlightStyle);
+                this.openTooltip();
+            });
+    
+            layer.on('mouseout', function () {
+                // Only reset to default if not clicked
+                if (!this.options.isClicked) {
+                    // this.setStyle(defaultStyle);
+                }
+            });
+    
+            layer.on('click', function (e) {
+                // Remove clicked from all
+            const popUp = L.popup().setContent(menuContent);
+            map.openPopup(popUp, layer.getBounds().getCenter());
+            document.querySelectorAll('.polygon.clicked')
+                .forEach(el => el.classList.remove('clicked'));
+
+            // Add to this one
+            let pathEl = e.target._path; // The actual SVG path element
+            if (pathEl) {
+                pathEl.classList.add('clicked');
+            }
+            });
+    
+            layer.on('contextmenu', function (event) {
+            L.popup()
+                .setLatLng(event.latlng)
+                .setContent(`
+                    <h6><b> ${feature.properties.name}</b></h6>
+                    <button class="btn btn-outline-secondary select-feature-button" data-type="${dataInfo.dataType} data-id="${feature.properties.id}">Auswählen</button>
+                `)
+                .openOn(map);
+    
+            setTimeout(() => {
+                const button = document.querySelector('.select-feature-button');
+                if (button) {
+                    button.addEventListener('click', () => {
+                        map.closePopup(); 
+                        const featureId = button.getAttribute('data-id');
+                        console.log('Selected featureId ID:', featureId);
+                    });
+                }
+            }, 0);
+            });
+        }
+        });
+  
+    let layerGroup = L.featureGroup([layer]).addTo(map);
+
+    layer.addTo(featureGroup);
+    layer.bringToFront();
+};
+
+
+export function addFeatureCollectionToTable(projectClass, featureCollection, dataInfo){
+    console.log('addFeatureCollectionToTable, dataInfo:', dataInfo)
+    const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
+    let tableHTML = `
+        <table class="table table-bordered table-hover" id="${dataInfo.dataType}-table">
+        <caption>${dataInfo.tableCaption}</caption>
+        <thead>
+            <tr>`;
+    dataInfo.properties.forEach(property => {
+        if (property.table) {
+            if (property.valueName === 'id') {
+                tableHTML += `<th><input type="checkbox" class="table-select-all" data-type="${dataInfo.dataType}">Select all</th>`;
+            } else {
+                tableHTML += `<th>${property.valueName}`
+            }
+        }
+        });
+    tableHTML += '</tr></thead><tbody>';
+    
+    
+    const project = projectClass.loadFromLocalStorage()
+
+    console.log('addFeatureCollectionToTable slected_ids 1: ', project['selected_sieker_geks'])
+    console.log('addFeatureCollectionToTable all_ids 1: ', project['all_sieker_gek_ids'])
+    project[`all_${dataInfo.dataType}_ids`] = [];
+    console.log('addFeatureCollectionToTable slected_ids 2: ', project['selected_sieker_geks'])
+    console.log('addFeatureCollectionToTable all_ids 2: ', project['all_sieker_gek_ids'])
+    featureCollection.features.forEach(feature => {
+        project[`all_${dataInfo.dataType}_ids`].push(feature.properties.id)
+        
+        // Add to table
+        tableHTML += `
+            <tr data-id="${feature.properties.id}">`
+
+        
+        dataInfo.properties.forEach(property => {
+            if (property.table) {
+                if (property.valueName === 'id') {
+                tableHTML += `
+                    <td><input type="checkbox" class="table-select-checkbox" data-type="${dataInfo.dataType}" data-id="${feature.properties.id}"></td>
+                    `;
+                } else {
+                    tableHTML += `<td>${feature.properties[property.valueName]}</td>`
+                }
+                
+            }
+        });
+        tableHTML += '</tr>';
+        });
+    tableHTML += `</tbody></table>`;
+    tableContainer.innerHTML = tableHTML;
+    project.saveToLocalStorage();
+
+    const tableSettings = createTableSettings(dataInfo.tableLength);
+    $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
+};
+

@@ -16,7 +16,7 @@ export class ToolboxProject {
   // Save project to localStorage
   saveToLocalStorage() {
       localStorage.setItem('toolbox_project', this.toJson());
-      updateButtonState(this)
+      
       console.log('saveToLocalStorage');
   }
 

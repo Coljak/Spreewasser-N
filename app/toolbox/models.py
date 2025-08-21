@@ -841,6 +841,18 @@ class GekRetention(models.Model):
     number_of_measures = models.IntegerField(null=True, blank=True)
     datum_zugr = models.CharField(max_length=100, null=True, blank=True) # not necessary
 
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "quelle_1": self.quelle_1,
+            "quelle_2": self.quelle_2,
+            "association": self.association,
+            "planning_segment": self.planning_segment,
+            "hrsg": self.hrsg,
+            "gek_document": self.gek_document.link,
+            "number_of_measures": self.number_of_measures
+        }
+
 # m:n table 
 class GekLanduse(models.Model):
     gek_retention = models.ForeignKey(GekRetention, on_delete=models.CASCADE, related_name='landuses')
@@ -876,9 +888,17 @@ class GekRetentionMeasure(models.Model):
     costs = models.IntegerField(null=True, blank=True)  # Kosten in Euro
     measure_number = models.IntegerField(null=True, blank=True)  # Maßnahme Nummer (2 in 2MNT_ID)
 
+    def to_dict(self, language='de'):
+        return {
 
-
-
+            "gek_measure": self.gek_measure.description_de if language == 'de' else self.gek_measure.description_en,
+            "quantity": self.quantity,
+            "description_de": self.description_de,
+            "priority": self.priority.id if self.priority else None,
+            "kosten": self.kosten,
+            "costs": self.costs,
+                "measure_number": self.measure_number
+            }
 
 
 # Historische >Rückhalteräume
@@ -941,7 +961,7 @@ class DataInfo(models.Model):
             "featureType": self.feature_type,
             "tableCaption": self.table_caption,
             "popUp": {"header": self.popup_header},
-            "properties": [p.as_dict(language) for p in self.properties.all()],
+            "properties": [p.as_dict(language) for p in self.properties.all().order_by('order_position')],
             "tableLength": self.properties.filter(table=True).count(),
         }
 

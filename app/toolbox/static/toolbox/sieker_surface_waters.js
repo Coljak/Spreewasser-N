@@ -85,10 +85,10 @@ function createSiekerLargeLakeTableSettings() {
 };
 
 
-export function initializeSiekerSurfaceWaters(layers, userField) {
+export function initializeSiekerSurfaceWaters(layers, dataInfo) {
+    console.log('DataInfo', dataInfo)
 
-    const project = new SiekerSurfaceWaters();
-    project.userField = userField;
+    const project = SiekerSurfaceWaters.loadFromLocalStorage();
     
 
     console.log("Initializing Sieker surface waters...", layers);

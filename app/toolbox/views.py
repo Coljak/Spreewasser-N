@@ -979,6 +979,7 @@ def sieker_surface_waters_gui(request, user_field_id):
         }
 
         layers = {'lakes': lakes_feature_collection, 'water_levels': water_levels_feature_collection}
+        data_info = models.DataInfo.objects.get(data_type='sieker_large_lake').as_dict()
 
 
         html = render_to_string('toolbox/sieker_surface_waters.html', {
@@ -988,7 +989,7 @@ def sieker_surface_waters_gui(request, user_field_id):
             'sieker_lake_filter': sieker_lake_filter,      
         }, request=request) 
 
-        return JsonResponse({'success': True, 'layers': layers , 'html': html,})
+        return JsonResponse({'success': True, 'layers': layers , 'html': html, 'data_info': data_info})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet befinden sich keine geeigneten Seen.'})
 
@@ -1161,8 +1162,30 @@ def filter_sieker_sinks(request):
         }
         print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
+    
 
 
+def create_gek_feature_collection(geks):
+    features = []
+    for gek in geks:
+
+        geojson = json.loads(gek.geom4326.geojson)
+
+        # print('geojson:', geojson)
+        geojson['properties'] = {
+            "id": gek.id,
+            "name": gek.name,
+            "document": gek.gek_document.link if gek.gek_document else None,
+            "current_landusage": gek.current_landusage,
+            "planning_segment": gek.planning_segment,
+            "number_of_measures": gek.number_of_measures,
+            
+        }
+        features.append(geojson)
+    return  {
+        "type": "FeatureCollection",
+        "features": features,
+        }
 
    
 def load_sieker_gek_gui(request, user_field_id):
@@ -1176,35 +1199,13 @@ def load_sieker_gek_gui(request, user_field_id):
         return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
     
     geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+    # all_sieker_gek_ids = [g.id for g in geks]
    
 
     if geks.count() > 0:
         project_select_form = forms.ToolboxProjectSelectionForm()
-        features = []
-        for gek in geks:
-
-            geojson = json.loads(gek.geom4326.geojson)
-
-            # print('geojson:', geojson)
-            geojson['properties'] = {
-                "id": gek.id,
-                "name": gek.name,
-                "document": gek.gek_document.link if gek.gek_document else None,
-                "current_landusage": gek.current_landusage,
-                "planning_segment": gek.planning_segment,
-                "number_of_measures": gek.number_of_measures,
-               
-            }
-            features.append(geojson)
-        feature_collection = {
-            "type": "FeatureCollection",
-            "features": features,
-            }
-        message = {
-            'success': True, 
-            'message': f'Found {geks.count()} geks'
-        }
-
+        
+        feature_collection = create_gek_feature_collection(geks)
 
         gek_filter_form = GekRetentionFilter(request.GET, queryset=geks)
         slider_labels = dict(models.GekPriority.objects.values_list("priority_level", "description_de").distinct().order_by("priority_level"))
@@ -1220,8 +1221,9 @@ def load_sieker_gek_gui(request, user_field_id):
             # 'sieker_sink_filter': sieker_geks_filter,
             
         }, request=request) 
+        data_info = models.DataInfo.objects.get(data_type='sieker_gek').as_dict()
 
-        return JsonResponse({'success': True, 'html': html, 'gek_retention': feature_collection, 'slider_labels': slider_labels,})
+        return JsonResponse({'success': True, 'html': html, 'gek_retention': feature_collection, 'slider_labels': slider_labels, 'data_info': data_info})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine Gewässerentwicklungskonzepte verfügbar.'})
 
@@ -1229,7 +1231,7 @@ def load_sieker_gek_gui(request, user_field_id):
 
 # TODO: turn into filter gek
 def filter_sieker_geks(request):
-
+   # add_range_filter(filters, obj, field,  model_field=None)
     start = datetime.now()
     try:
         project = json.loads(request.body)
@@ -1237,67 +1239,47 @@ def filter_sieker_geks(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     user_field = models.UserField.objects.get(pk=project['userField'])
+    print('FROM filter_sieker_geks project', project)
     
-    geom = GEOSGeometry(user_field.geom)
-    
-    sinks = models.SiekerSink.objects.filter(geom4326__within=geom)
-    print("Sinks:", sinks.count())
-    filters = Q()
-    filters = add_range_filter(filters, project, 'area', 'area')
-    filters = add_range_filter(filters, project, 'volume', 'volume')
-    filters = add_range_filter(filters, project, 'sink_depth', 'sink_depth')
-    filters = add_range_filter(filters, project, 'avg_depth', 'avg_depth')
-    filters = add_range_filter(filters, project, 'urbanarea_percent', 'urbanarea_percent')
-    filters = add_range_filter(filters, project, 'avg_depth', 'avg_depth')
-    
-    sinks = sinks.filter(filters)
-    print("Sinks FILTERED:", sinks.count())
+    geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+    # filter landuses
+    landuses = models.GekLanduse.objects.filter(Q(gek_retention__in=geks) & Q(clc_landuse__id__in=project['gek_landuse']))
+    geks = models.GekRetention.objects.filter(landuses__in=landuses).distinct()
+    print("Geks:", geks.count())
 
-    feasibility = project.get('feasibility', [])
-    feasibility = (Q(umsetzbark__in=feasibility))
-    sinks = sinks.filter(feasibility)
-    print("Sieker Sinks LAND USE FILTERED:", sinks.count())
-    if sinks.count() == 0:
+    # filter measures
+    filters = Q(priority__priority_level__gte=project['gek_priority'])
+    filters = add_range_filter(filters, project, 'gek_costs', 'costs') 
+
+    measures = models.GekRetentionMeasure.objects.filter(
+            gek_retention__in=geks
+        ).filter(filters)
+    
+    geks = models.GekRetention.objects.filter(measures__in=measures).distinct()
+
+
+    print("Geks FILTERED:", geks.count())
+
+
+    if geks.count() == 0:
         message = {
             'success': False, 
-            'message': f'No sinks found in the search area.'
+            'message': f'Es sind keine Gewässerentwicklungskonzepte für diese Filtereinstellungen bekannt.'
         }
         return JsonResponse({'message': message})
     else:
-        print("Sinks", sinks.count())
+        print("Geks", geks.count())
         
-        
+        feature_collection = create_gek_feature_collection(geks)
+        data_info = models.DataInfo.objects.get(data_type='sieker_gek').as_dict()
+        data_info['featureColor'] = 'var(--bs-success)'
 
-        features = []
-        for sink in sinks:
-            centroid = sink.centroid
-            geojson = json.loads(centroid.geojson)
-
-            print('geojson:', geojson)
-            geojson['properties'] = {
-                "id": sink.id,
-                "sink_depth": round(sink.sink_depth, 2),
-                "area": round(sink.area, 1),
-                "volume": round(sink.volume, 1),
-                "avg_depth": round(sink.avg_depth, 1),
-                "max_elevation": round(sink.max_elevation, 1),
-                "min_elevation": round(sink.min_elevation, 1),
-                "urbanarea_percent": sink.urbanarea_percent,
-                "wetlands_percent": sink.wetlands_percent,
-                "distance_t": sink.distance_t,
-                "dist_lake": sink.dist_lake,
-                "waterdist": sink.waterdist,
-                "umsetzbark": sink.umsetzbark,
-               
-            }
-            features.append(geojson)
-        feature_collection = {
-            "type": "FeatureCollection",
-            "features": features,
-            }
-        message = {
-            'success': True, 
-            'message': f'Found {sinks.count()} sinks'
-        }
+        dict_list = []
+        for gek in geks:
+            d = gek.to_dict()
+            d['measures'] = [m.to_dict() for m in measures if m.gek_retention == gek]
+            dict_list.append(d)
+            
+    
         print('Time for filter_sinks:', datetime.now() - start)
-        return JsonResponse({'feature_collection': feature_collection, 'message': message})
+        return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info, 'measures': dict_list})

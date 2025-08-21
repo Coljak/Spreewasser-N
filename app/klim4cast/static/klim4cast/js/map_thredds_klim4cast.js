@@ -399,9 +399,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 Object.keys(data_json.variables).forEach(variable => {
                     console.log(variable);
                     var option = document.createElement("option");
-                                    option.text = data_json.variables[variable].attributes.description;
-                                    option.value = variable;
-                                    netcdfVariableSelector.add(option);
+                    option.text = data_json.variables[variable].attributes.description;
+                    option.value = variable;
+                    netcdfVariableSelector.add(option);
                 });
                 var selectedVariable = netcdfVariableSelector.value;
 

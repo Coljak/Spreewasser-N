@@ -890,14 +890,14 @@ class GekRetentionMeasure(models.Model):
 
     def to_dict(self, language='de'):
         return {
-
+            "id": self.id,
             "gek_measure": self.gek_measure.description_de if language == 'de' else self.gek_measure.description_en,
             "quantity": self.quantity,
-            "description_de": self.description_de,
+            "description": self.description_de if language == 'de' else self.description_en,
             "priority": self.priority.id if self.priority else None,
             "kosten": self.kosten,
             "costs": self.costs,
-                "measure_number": self.measure_number
+            "measure_number": self.measure_number
             }
 
 

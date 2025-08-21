@@ -1280,6 +1280,7 @@ def filter_sieker_geks(request):
             d['measures'] = [m.to_dict() for m in measures if m.gek_retention == gek]
             dict_list.append(d)
             
+        print('measures: ', dict_list)
     
         print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info, 'measures': dict_list})

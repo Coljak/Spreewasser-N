@@ -91,11 +91,13 @@ export function addChangeEventListener(projectClass) {
             project[minName] = inputVals[0];
             project[maxName] = inputVals[1];
             project.saveToLocalStorage();
+            return;
         } else if ($target.hasClass('single-slider')) {   
             const inputName = $target.attr('name'); 
             const inputVal = $target.val();
             project[inputName] = inputVal;
             project.saveToLocalStorage();
+            return;
         }else if ($target.hasClass('form-check-input')) {
             // checkboxes 
             console.log("Checkbox!!")
@@ -122,7 +124,7 @@ export function addChangeEventListener(projectClass) {
                 console.log('Checkbox checked:', inputId, '=', inputValue);
             }
             project.saveToLocalStorage();
-
+            return;
         } else if ($target.hasClass('table-select-all')) {
         
             const allSelected = $target.is(':checked');
@@ -134,18 +136,17 @@ export function addChangeEventListener(projectClass) {
                 console.log('!allSelected')
                 project[key] = [];
             } else {
-                project[key] = project[`all_${dataType}_ids`]
-                
+                project[key] = project[`all_${dataType}_ids`]                
             }
             tableCheckSelectedItems(project, dataType);
-
             project.saveToLocalStorage();
+            return;
         } else if ($target.hasClass('table-select-checkbox')) {
             const dataType = $target.data('type');
             
             const key = `selected_${dataType}s`;
 
-                if ($target.is(':checked')) {
+            if ($target.is(':checked')) {
                 console.log("Selected Id:", $target.data('id'));
                 console.log("key:", key);
                 console.log('project[key]', project[key])
@@ -153,7 +154,7 @@ export function addChangeEventListener(projectClass) {
                 project[key].push($target.data('id'));
                 project.saveToLocalStorage();
 
-                } else {
+            } else {
                 const dataId = $target.data('id');
                 console.log("Selected Id:", dataId);
                 
@@ -162,15 +163,16 @@ export function addChangeEventListener(projectClass) {
                     project[key].splice(index, 1);
                 }
                 project.saveToLocalStorage();
-                }
-
-                // uncheck the select-all checkbox:
-                $(`.table-select-all[data-type="${dataType}"]`).prop("checked", false);
-
-            // You can trigger your map sink selection logic here
+            }
+            return;
         };
-        });
-    };
+    });
+};
+
+export function openResultCard(dataType, id) {
+
+};
+
 
 export function addClickEventListenerToTable(projectClass) {
     const ProjectClass = projectClass;
@@ -180,8 +182,17 @@ export function addClickEventListenerToTable(projectClass) {
         if ($target.hasClass('paginate_button')) {
             console.log('Paginate')
             const dataType = $('.table-select-all').data('type');
-            
-        }
+            return;
+        } else if ($target.closest('tr').length && !$target.is('input, button, a')) {
+            const $row = $target.closest('tr');
+            const $dataType = $row.data('type')
+            const $id = $row.data('id')
+            console.log('Tablerow: ', $dataType, $row.data('id')) 
+            if ($dataType == 'filtered_sieker_gek') {
+                openResultCard($dataType, $id)
+            }
+            return;
+        } 
     });
 };
 
@@ -294,6 +305,9 @@ export function addFeatureCollectionToLayer(featureCollection, dataInfo, feature
 
 export function addFeatureCollectionToTable(projectClass, featureCollection, dataInfo){
     console.log('addFeatureCollectionToTable, dataInfo:', dataInfo)
+    const project = projectClass.loadFromLocalStorage()
+    project[`all_${dataInfo.dataType}_ids`] = [];
+
     const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
     let tableHTML = `
         <table class="table table-bordered table-hover" id="${dataInfo.dataType}-table">
@@ -311,20 +325,13 @@ export function addFeatureCollectionToTable(projectClass, featureCollection, dat
         });
     tableHTML += '</tr></thead><tbody>';
     
-    
-    const project = projectClass.loadFromLocalStorage()
 
-    console.log('addFeatureCollectionToTable slected_ids 1: ', project['selected_sieker_geks'])
-    console.log('addFeatureCollectionToTable all_ids 1: ', project['all_sieker_gek_ids'])
-    project[`all_${dataInfo.dataType}_ids`] = [];
-    console.log('addFeatureCollectionToTable slected_ids 2: ', project['selected_sieker_geks'])
-    console.log('addFeatureCollectionToTable all_ids 2: ', project['all_sieker_gek_ids'])
     featureCollection.features.forEach(feature => {
         project[`all_${dataInfo.dataType}_ids`].push(feature.properties.id)
         
         // Add to table
         tableHTML += `
-            <tr data-id="${feature.properties.id}">`
+            <tr data-id="${feature.properties.id}" data-type="${dataInfo.dataType}">`
 
         
         dataInfo.properties.forEach(property => {
@@ -349,3 +356,54 @@ export function addFeatureCollectionToTable(projectClass, featureCollection, dat
     $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
 };
 
+export function addFeatureCollectionResultCards(featureCollection, dataInfo, measures) {
+    console.log(measures)
+    console.log("Creating card")
+    const infoCard = document.getElementById('sieker_gek-info-card');
+    const infoCardBody = document.getElementById('sieker_gek-info-card-body');
+    measures.forEach(gek => {
+        const cardBody = document.createElement('div');
+        cardBody.innerHTML = `<h4 class="card-title">${gek.name} Abschnitt ${gek.planning_segment}</h4>`;
+        
+        
+
+        const card = document.createElement('div');
+        card.classList.add("card")
+        card.classList.add("card-body")
+        card.dataType = dataInfo.dataType
+        card.dataId = gek.id
+
+        
+        console.log('Gek', gek)
+
+        gek.measures.forEach(measure => {
+            const innerCard = document.createElement('div');
+            innerCard.classList.add("card")
+            innerCard.dataType = dataInfo.dataType
+            innerCard.dataId = measure.id
+
+            const innerCardBody = document.createElement('div');
+            innerCardBody.classList.add("card-body")
+            innerCard.innerHTML = `
+                <h5 class="card-title">${measure.gek_measure}</h5>
+                <b>Anzahl:</b> ${measure.quantity}</br>
+                <b>Kosten:</b> ${measure.costs} €</br>
+                <p>${measure.description}</p>
+            `;
+        
+
+            
+
+            innerCard.appendChild(innerCardBody)
+            cardBody.append(innerCard)
+        })
+        card.appendChild(cardBody)
+        infoCardBody.appendChild(card)
+    })
+
+    
+    
+
+    
+    infoCard.style.display = '';
+}

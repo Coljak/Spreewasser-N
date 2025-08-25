@@ -843,6 +843,7 @@ class GekRetention(models.Model):
 
     def to_dict(self):
         return {
+            "id": self.id,
             "name": self.name,
             "quelle_1": self.quelle_1,
             "quelle_2": self.quelle_2,
@@ -952,8 +953,10 @@ class DataInfo(models.Model):
     table_caption = models.CharField(max_length=255)
     popup_header = models.CharField(max_length=255, null=True, blank=True)  # e.g. "name"
     marker_cluster = models.BooleanField(default=False, null=True, blank=True)
+    inner_html = models.TextField(null=True, blank=True)
+    inner_html_2 = models.TextField(null=True, blank=True)
 
-    def as_dict(self, language="de"):
+    def to_dict(self, language="de"):
         return {
             "dataType": self.data_type,
             "featureColor": self.feature_color,
@@ -961,8 +964,10 @@ class DataInfo(models.Model):
             "featureType": self.feature_type,
             "tableCaption": self.table_caption,
             "popUp": {"header": self.popup_header},
-            "properties": [p.as_dict(language) for p in self.properties.all().order_by('order_position')],
+            "properties": [p.to_dict(language) for p in self.properties.all().order_by('order_position')],
             "tableLength": self.properties.filter(table=True).count(),
+            "innerHTML": self.inner_html if self.inner_html else '',
+            "innerHTML2": self.inner_html_2 if self.inner_html_2 else '',
         }
 
 
@@ -977,7 +982,7 @@ class DataInfoProperty(models.Model):
     value_name = models.CharField(max_length=255)  # e.g. "name" or "gek_document__link"
     href = models.BooleanField(default=False)
 
-    def as_dict(self, language="de"):
+    def to_dict(self, language="de"):
         return {
             "popUp": self.popup,
             "table": self.table,

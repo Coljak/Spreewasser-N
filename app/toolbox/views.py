@@ -979,7 +979,7 @@ def sieker_surface_waters_gui(request, user_field_id):
         }
 
         layers = {'lakes': lakes_feature_collection, 'water_levels': water_levels_feature_collection}
-        data_info = models.DataInfo.objects.get(data_type='sieker_large_lake').as_dict()
+        data_info = models.DataInfo.objects.get(data_type='sieker_large_lake').to_dict()
 
 
         html = render_to_string('toolbox/sieker_surface_waters.html', {
@@ -1221,7 +1221,7 @@ def load_sieker_gek_gui(request, user_field_id):
             # 'sieker_sink_filter': sieker_geks_filter,
             
         }, request=request) 
-        data_info = models.DataInfo.objects.get(data_type='sieker_gek').as_dict()
+        data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
 
         return JsonResponse({'success': True, 'html': html, 'gek_retention': feature_collection, 'slider_labels': slider_labels, 'data_info': data_info})
     else:
@@ -1241,8 +1241,10 @@ def filter_sieker_geks(request):
     user_field = models.UserField.objects.get(pk=project['userField'])
     print('FROM filter_sieker_geks project', project)
     
-    geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+    # geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
     # filter landuses
+    ids = project.get('selected_sieker_geks')
+    geks = models.GekRetention.objects.filter(pk__in=ids)
     landuses = models.GekLanduse.objects.filter(Q(gek_retention__in=geks) & Q(clc_landuse__id__in=project['gek_landuse']))
     geks = models.GekRetention.objects.filter(landuses__in=landuses).distinct()
     print("Geks:", geks.count())
@@ -1271,7 +1273,7 @@ def filter_sieker_geks(request):
         print("Geks", geks.count())
         
         feature_collection = create_gek_feature_collection(geks)
-        data_info = models.DataInfo.objects.get(data_type='sieker_gek').as_dict()
+        data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
         data_info['featureColor'] = 'var(--bs-success)'
 
         dict_list = []
@@ -1281,6 +1283,7 @@ def filter_sieker_geks(request):
             dict_list.append(d)
             
         print('measures: ', dict_list)
-    
+
+        data_info = models.DataInfo.objects.get(data_type='filtered_sieker_gek').to_dict()
         print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info, 'measures': dict_list})

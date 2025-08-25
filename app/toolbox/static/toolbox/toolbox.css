@@ -20,7 +20,7 @@
   display: block;
 }
 
-/* The number on top of the image */
+/* The number on top of the point-pin image */
 .custom-cluster-icon .count {
   position: absolute;
   top: 50%;
@@ -33,6 +33,10 @@
   pointer-events: none; /* Allows clicks to pass through to cluster icon */
 }
 
+/* .toolbox-result-card {
+  display: inline-block;
+}
+ */
 
 
 /* TODO: this is copied and modified from the slider css. There surely is obsolete stuff in the following

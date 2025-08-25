@@ -157,7 +157,7 @@ export function addChangeEventListener(projectClass) {
             } else {
                 const dataId = $target.data('id');
                 console.log("Selected Id:", dataId);
-                
+                $('.table-select-all')[0].checked = false 
                 const index = project[key].indexOf(dataId);
                 if (index > -1) {
                     project[key].splice(index, 1);
@@ -170,6 +170,16 @@ export function addChangeEventListener(projectClass) {
 };
 
 export function openResultCard(dataType, id) {
+    console.log('openResultCard: ', dataType, id)
+    $('.gek-result-card').hide()
+    const $resultCard = $(`div[data-type="${dataType}"][data-id="${id}"]`)
+    $resultCard.show();
+    $resultCard[0].scrollIntoView({
+        behavior: 'smooth',   
+        block: 'start'        
+        });
+
+    
 
 };
 
@@ -182,13 +192,15 @@ export function addClickEventListenerToTable(projectClass) {
         if ($target.hasClass('paginate_button')) {
             console.log('Paginate')
             const dataType = $('.table-select-all').data('type');
+            tableCheckSelectedItems(project, dataType)
             return;
         } else if ($target.closest('tr').length && !$target.is('input, button, a')) {
             const $row = $target.closest('tr');
             const $dataType = $row.data('type')
             const $id = $row.data('id')
             console.log('Tablerow: ', $dataType, $row.data('id')) 
-            if ($dataType == 'filtered_sieker_gek') {
+            if ($dataType === 'filtered_sieker_gek') {
+                
                 openResultCard($dataType, $id)
             }
             return;
@@ -196,19 +208,21 @@ export function addClickEventListenerToTable(projectClass) {
     });
 };
 
-// for dataTables
-function createTableSettings(tableLength) {
-  const columnDefs = [{
-        "targets": 0, // Select a checkbox
-        "orderable": false,
-        "searchable": false
-    }];
-  for (let i=1; i<tableLength; i++) {
-    columnDefs.push({
+// for dataTablesselect * from toolbox_gekretention tg where id = 1
+function createTableSettings(dataInfo) {
+const tableLength = dataInfo.tableLength;
+const columnDefs = [];
+
+
+for (let i=0; i<tableLength; i++) {
+    if (dataInfo.properties[i].table) {
+        columnDefs.push({
         "targets": i, // Select a checkbox
-        "orderable": true,
+        "orderable": dataInfo.properties[i].valueName !== 'id',
         "searchable": false
     })
+    }
+    
   }
   return {
     "order": [[1, "asc"]],
@@ -352,58 +366,51 @@ export function addFeatureCollectionToTable(projectClass, featureCollection, dat
     tableContainer.innerHTML = tableHTML;
     project.saveToLocalStorage();
 
-    const tableSettings = createTableSettings(dataInfo.tableLength);
+    const tableSettings = createTableSettings(dataInfo);
     $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
 };
 
-export function addFeatureCollectionResultCards(featureCollection, dataInfo, measures) {
-    console.log(measures)
-    console.log("Creating card")
-    const infoCard = document.getElementById('sieker_gek-info-card');
-    const infoCardBody = document.getElementById('sieker_gek-info-card-body');
-    measures.forEach(gek => {
-        const cardBody = document.createElement('div');
-        cardBody.innerHTML = `<h4 class="card-title">${gek.name} Abschnitt ${gek.planning_segment}</h4>`;
+// export function addFeatureCollectionResultCards( dataInfo, gekMeasures) {
+//     console.log(gekMeasures)
+//     console.log("Creating card")
+//     const infoCard = document.getElementById('sieker_gek-info-card');
+//     const infoCardBody = document.getElementById('sieker_gek-info-card-body');
+//     infoCardBody.innerHTML = '';
+//     gekMeasures.forEach(gek => {
+//         const cardBody = document.createElement('div');
+//         cardBody.classList.add('card-body')
+//         // card
+//         cardBody.innerHTML = `<h4 class="card-title m-3">${gek.name} Abschnitt ${gek.planning_segment}</h4>`;
         
+//         const card = document.createElement('div');
+//         card.classList.add("card")
+//         card.classList.add("mb-3")
+//         card.classList.add("gek-result-card")
+//         card.setAttribute('data-type', dataInfo.dataType)
+//         card.setAttribute('data-id', gek.id)
+
+
+//         gek.measures.forEach(measure => {
+//             const innerCard = document.createElement('div');
+//             innerCard.classList.add("card")
+//             innerCard.classList.add("mb-3")
+//             // innerCard.setAttribute('data-type', measure.dataType)
+//             innerCard.setAttribute('data-id',measure.id)
+
+//             const innerCardBody = document.createElement('div');
+//             innerCardBody.classList.add("card-body")
+//             innerCardBody.innerHTML = `
+//                 <h5 class="card-title">${measure.gek_measure}</h5>
+//                 <b>Anzahl:</b><span> ${measure.quantity}</span></br>
+//                 <b>Kosten:</b><span> ${measure.costs} €</span></br>
+//                 <div class="result-text-box">${measure.description}</div>
+//             `;
         
-
-        const card = document.createElement('div');
-        card.classList.add("card")
-        card.classList.add("card-body")
-        card.dataType = dataInfo.dataType
-        card.dataId = gek.id
-
-        
-        console.log('Gek', gek)
-
-        gek.measures.forEach(measure => {
-            const innerCard = document.createElement('div');
-            innerCard.classList.add("card")
-            innerCard.dataType = dataInfo.dataType
-            innerCard.dataId = measure.id
-
-            const innerCardBody = document.createElement('div');
-            innerCardBody.classList.add("card-body")
-            innerCard.innerHTML = `
-                <h5 class="card-title">${measure.gek_measure}</h5>
-                <b>Anzahl:</b> ${measure.quantity}</br>
-                <b>Kosten:</b> ${measure.costs} €</br>
-                <p>${measure.description}</p>
-            `;
-        
-
-            
-
-            innerCard.appendChild(innerCardBody)
-            cardBody.append(innerCard)
-        })
-        card.appendChild(cardBody)
-        infoCardBody.appendChild(card)
-    })
-
-    
-    
-
-    
-    infoCard.style.display = '';
-}
+//             innerCard.appendChild(innerCardBody)
+//             cardBody.append(innerCard)
+//         })
+//         card.appendChild(cardBody)
+//         infoCardBody.appendChild(card)
+//     })
+//     infoCard.style.display = '';
+// }

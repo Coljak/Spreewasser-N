@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown, getBsColor } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addClickEventListenerToTable,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer, addFeatureCollectionResultCards } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addChangeEventListener, addClickEventListenerToTable,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
 import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerGek } from '/static/toolbox/sieker_gek_model.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
@@ -77,8 +77,8 @@ siekerFilteredGekFeatureGroup.toolTag = 'sieker-gek';
 
 
 
-function filterSiekerGeks() {
-  const project = SiekerGek.loadFromLocalStorage();
+function filterSiekerGeks(project) {
+  
   fetch('filter_sieker_geks/', {
     method: 'POST',
     body: JSON.stringify(project),
@@ -96,71 +96,9 @@ function filterSiekerGeks() {
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
       
 
-    const dataInfoResult = {
-      "dataType": "filtered_sieker_gek",
-      "featureColor": "var(--bs-success)",
-      "className": "gek polygon",
-      "featureType": "polygon",
-      "tableCaption": "Gewässerentwicklungskonzepte",
-      "popUp": {
-        "header": "name"
-      },
-      "properties": [
-        {
-          "popUp": false,
-          "table": false,
-          "title": "id",
-          "valueName": "id",
-          "href": false
-        },
-        {
-          "popUp": false,
-          "table": true,
-          "title": "Name",
-          "valueName": "name",
-          "href": false
-        },
-        {
-          "popUp": true,
-          "table": true,
-          "title": "Anzahl der Einzelmaßnahmen",
-          "valueName": "number_of_measures",
-          "href": false
-        },
-        {
-          "popUp": true,
-          "table": true,
-          "title": "Aktuelle Flächennutzung",
-          "valueName": "current_landusage",
-          "href": false
-        },
-        {
-          "popUp": true,
-          "table": true,
-          "title": "Planungsabschnitt",
-          "valueName": "planning_segment",
-          "href": false
-        },
-        {
-          "popUp": true,
-          "table": true,
-          "title": "Wasserverband",
-          "valueName": "assosiaction",
-          "href": false
-        },
-        {
-          "popUp": true,
-          "table": true,
-          "title": "Dokument",
-          "valueName": "document",
-          "href": false
-        }
-      ],
-      "tableLength": 6
-    }
-    addFeatureCollectionToLayer(data.featureCollection, dataInfoResult, siekerFilteredGekFeatureGroup);
-    addFeatureCollectionToTable(SiekerGek, data.featureCollection, dataInfoResult)
-    addFeatureCollectionResultCards(data.featureCollection, data.dataInfo, data.measures)
+    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, siekerFilteredGekFeatureGroup);
+    addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
+    addFeatureCollectionResultCards(data.dataInfo, data.measures)
 
       
       // addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
@@ -173,6 +111,53 @@ function filterSiekerGeks() {
   })
 
 };
+
+function addFeatureCollectionResultCards( dataInfo, gekMeasures) {
+    console.log(gekMeasures)
+    console.log("Creating card")
+    const infoCard = document.getElementById('sieker_gek-info-card');
+    const infoCardBody = document.getElementById('sieker_gek-info-card-body');
+    infoCardBody.innerHTML = '';
+    gekMeasures.forEach(gek => {
+        const cardBody = document.createElement('div');
+        cardBody.classList.add('card-body')
+        // card
+        cardBody.innerHTML = `<h4 class="card-title m-3">${gek.name} Abschnitt ${gek.planning_segment}</h4>`;
+        
+        const card = document.createElement('div');
+        card.classList.add("card")
+        card.classList.add("mb-3")
+        card.classList.add("gek-result-card")
+        card.setAttribute('data-type', dataInfo.dataType)
+        card.setAttribute('data-id', gek.id)
+
+
+        gek.measures.forEach(measure => {
+            const innerCard = document.createElement('div');
+            innerCard.classList.add("card")
+            innerCard.classList.add("mb-3")
+            // innerCard.setAttribute('data-type', measure.dataType)
+            innerCard.setAttribute('data-id',measure.id)
+
+            const innerCardBody = document.createElement('div');
+            innerCardBody.classList.add("card-body")
+            innerCardBody.innerHTML = `
+                <h5 class="card-title">${measure.gek_measure}</h5>
+                <b>Anzahl:</b><span> ${measure.quantity}</span></br>
+                <b>Kosten:</b><span> ${measure.costs} €</span></br>
+                <div class="result-text-box">${measure.description}</div>
+            `;
+        
+            innerCard.appendChild(innerCardBody)
+            cardBody.append(innerCard)
+        })
+        card.appendChild(cardBody)
+        infoCardBody.appendChild(card)
+    })
+    infoCard.style.display = '';
+    $('.gek-result-card').hide();
+}
+
 
 export function initializeSiekerGek(data) {
 
@@ -220,8 +205,9 @@ export function initializeSiekerGek(data) {
     
     addClickEventListenerToTable(SiekerGek)
 
-
-    document.getElementById('cardSiekerGekTable').classList.remove('d-none');
+  $('.table-select-all').prop('checked', true);
+  $('.table-select-all').trigger('change')
+  $('#cardSiekerGekTable').removeClass('d-none');
   
   $('#toolboxPanel').off('change');
 
@@ -243,7 +229,7 @@ export function initializeSiekerGek(data) {
       } else {
         map.removeLayer(siekerGekFeatureGroup);
         map.addLayer(siekerFilteredGekFeatureGroup);
-        filterSiekerGeks();
+        filterSiekerGeks(project);
       }
       
     

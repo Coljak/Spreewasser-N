@@ -7,6 +7,7 @@ from django.utils.timezone import now
 from buek.models import CorineLandCover2018
 from django.contrib.gis.db.models.functions import Transform
 import json
+from datetime import datetime
 class ToolboxType(models.Model):
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=255)
@@ -130,6 +131,11 @@ class River(models.Model):
                 "name": self.name,
             }
         return geojson
+    
+# WA_CD Kürzel des Koordinierungsraums
+class WaterCoordinationEntity(models.Model):
+    short = models.CharField(max_length=4, null=True, blank=True)
+    name = models.CharField(max_length=64)
 
 class Lake25(models.Model):
     geom = gis_models.PolygonField()
@@ -142,11 +148,12 @@ class Lake25(models.Model):
     ms_cd_lw = models.CharField(max_length=24, null=True, blank=True)
     cd_ls = models.CharField(max_length=24, null=True, blank=True)
     wrrl_pg = models.CharField(max_length=20, null=True, blank=True)
-    wa_cd = models.CharField(max_length=4, null=True, blank=True)
+    wa_cd = models.CharField(max_length=4, null=True, blank=True) # wa_cd Kürzeldes Koordinierungsraums
+    water_coordinatin_entity = models.ForeignKey(WaterCoordinationEntity, on_delete=models.DO_NOTHING, null=True, blank=True)
     genese = models.CharField(max_length=10, null=True, blank=True)
     gis_id = models.IntegerField(null=True, blank=True)
     wrrl = models.IntegerField(null=True, blank=True)
-    badesee = models.IntegerField(null=True, blank=True)
+    number_of_swimming_spots = models.IntegerField(null=True, blank=True) # badesee
     quelldat = models.DateField()
     jp_id = models.CharField(max_length=50, null=True, blank=True)
     area_gis = models.FloatField(null=True, blank=True)
@@ -338,6 +345,8 @@ class Sink(models.Model):
             "hydrogeology": self.hydrogeology,
             "index_hydrogeology": self.index_hydrogeology,
         }
+    
+
 
 
 class EnlargedSink(models.Model): 
@@ -650,39 +659,9 @@ class EnlargedSinkSoilProperties(models.Model):
 
 
 ####################### SIEKER ########################
-# Seen25
-class SiekerLake(models.Model):
-    geb_kz_int = models.BigIntegerField(null=True, blank=True)
-    name = models.CharField(max_length=255, null=True, blank=True)
-    object_type = models.IntegerField(null=True, blank=True) # objart
-    geo_quelle = models.CharField(max_length=255, null=True, blank=True)
-    see_alias = models.CharField(max_length=255, null=True, blank=True)
-    stand = models.DateField(null=True, blank=True)
-    # ms_cd_lw = models.CharField(max_length=255, null=True, blank=True)
-    cd_ls = models.CharField(max_length=255, null=True, blank=True) # info includes ms_cd_lw
-    wrrl_pg = models.CharField(max_length=255, null=True, blank=True)
-    # wa_cd = models.CharField(max_length=255, null=True, blank=True)
-    wa_cd_int = models.IntegerField(null=True, blank=True) # wa_cd_int
-    genese = models.CharField(max_length=255, null=True, blank=True)
-    gis_id = models.IntegerField(null=True, blank=True)
-    wrrl = models.IntegerField(null=True, blank=True)
-    badesee = models.IntegerField(null=True, blank=True)
-    bathing_lake = models.BooleanField(default=False) # badesee
-    quelldat = models.DateField(null=True, blank=True)
-    jp_id = models.CharField(max_length=255, null=True, blank=True)
-    area_gis = models.FloatField(null=True, blank=True)
-    area_gis_h = models.FloatField(null=True, blank=True)
-    umfang_gis = models.FloatField(null=True, blank=True)
-    see_kz = models.CharField(max_length=255, null=True, blank=True)
-    shape_area = models.FloatField(null=True, blank=True)
-    shape_len = models.FloatField(null=True, blank=True)
-    geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-    # geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
-
 
 
 class SiekerLargeLake(models.Model):
-
     geom25833 = gis_models.PolygonField(srid=25833, null=True, blank=True)
     geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
     name = models.CharField(max_length=100, null=True, blank=True)
@@ -690,7 +669,7 @@ class SiekerLargeLake(models.Model):
     wrrl_pg = models.CharField(max_length=100, null=True, blank=True)
     genese = models.CharField(max_length=100, null=True, blank=True)
     wrrl = models.IntegerField(null=True, blank=True)
-    badesee = models.IntegerField(null=True, blank=True)
+    number_of_swimming_spots = models.IntegerField(null=True, blank=True) # Badesee
     quelldat = models.DateField(null=True, blank=True)
     area_m2 = models.IntegerField(null=True, blank=True)
     area_ha = models.FloatField(null=True, blank=True)
@@ -714,7 +693,7 @@ class SiekerLargeLake(models.Model):
                 "wrrl_pg": self.wrrl_pg,
                 "genese": self.genese,
                 "wrrl": self.wrrl,
-                "badesee": self.badesee,
+                "number_of_swimming_spots": '-' if self.number_of_swimming_spots == -1 else self.number_of_swimming_spots,
                 "quelldat": self.quelldat.isoformat() if self.quelldat else None,
                 "area_m2": round(self.area_m2) if self.area_m2 else None,
                 "area_ha": round(self.area_ha, 1) if self.area_ha else None,
@@ -768,19 +747,23 @@ class SiekerWaterLevel(models.Model):
     diff_cm = models.IntegerField(null=True, blank=True)  
     bilddatei = models.CharField(max_length=100, null=True, blank=True)
 
-    def to_feature(self):
+    def to_feature(self, language='de'):
         """
         Convert the model instance to a GeoJSON feature.
         """
-        return {
-            "type": "Feature",
-            "geometry": json.loads(self.geom4326.geojson) if self.geom4326 else None,
-            "properties": {
+        if (language == 'de'):
+            start_date = datetime.strftime(self.start_date, '%d.%m.%Y')
+            end_date = datetime.strftime(self.end_date, '%d.%m.%Y')
+        else:
+            start_date = self.start_date.isoformat()
+            end_date = self.end_date.isoformat()
+
+        geojson = json.loads(self.geom4326.geojson) if self.geom4326 else None
+        geojson['properties'] = {
                 "messstelle": self.messstelle,
                 "t_d": self.t_d,
-                "t_a": self.t_a,
-                "start_date": self.start_date.isoformat() if self.start_date else None,
-                "end_date": self.end_date.isoformat() if self.end_date else None,
+                "t_a": round(self.t_a),
+                "period": f"{start_date} - {end_date}",
                 "min_cm": self.min_cm,
                 "max_cm": self.max_cm,
                 "mw_10_19": self.mw_10_19,
@@ -809,7 +792,7 @@ class SiekerWaterLevel(models.Model):
                 "diff_cm": self.diff_cm,
                 # "bilddatei":+self.bilddatei
             }
-        }
+        return geojson
 
 class SiekerSink(models.Model):
     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
@@ -1012,8 +995,7 @@ class DataInfo(models.Model):
     table_caption = models.CharField(max_length=255)
     popup_header = models.CharField(max_length=255, null=True, blank=True)  # e.g. "name"
     marker_cluster = models.BooleanField(default=False, null=True, blank=True)
-    inner_html = models.TextField(null=True, blank=True)
-    inner_html_2 = models.TextField(null=True, blank=True)
+
 
     def to_dict(self, language="de"):
         return {
@@ -1025,8 +1007,7 @@ class DataInfo(models.Model):
             "popUp": {"header": self.popup_header},
             "properties": [p.to_dict(language) for p in self.properties.all().order_by('order_position')],
             "tableLength": self.properties.filter(table=True).count(),
-            "innerHTML": self.inner_html if self.inner_html else '',
-            "innerHTML2": self.inner_html_2 if self.inner_html_2 else '',
+
         }
 
 

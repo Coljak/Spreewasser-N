@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown, getBsColor } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addClickEventListenerToTable,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
 import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerGek } from '/static/toolbox/sieker_gek_model.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
@@ -203,7 +203,7 @@ export function initializeSiekerGek(data) {
     addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
     
     
-    addClickEventListenerToTable(SiekerGek)
+    
 
   $('.table-select-all').prop('checked', true);
   $('.table-select-all').trigger('change')
@@ -215,7 +215,7 @@ export function initializeSiekerGek(data) {
 
 
 
-
+  addClickEventListenerToToolboxPanel(SiekerGek)
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
     if ($target.attr('id') === 'btnFilterSiekerGeks') {

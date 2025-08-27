@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, tableCheckSelectedItems, addClickEventListenerToTable } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addChangeEventListener, tableCheckSelectedItems, addClickEventListenerToToolboxPanel } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
@@ -280,7 +280,7 @@ function getSinks(sinkType, featureGroup) {
       const tableSettings = createSinkTableSettings(sinkType, false);
       $('#' + elId + ' table').DataTable(tableSettings);
 
-      addClickEventListenerToTable(Infiltration)
+      // addClickEventListenerToToolboxPanel(Infiltration)
 
 
       // display card with table
@@ -654,7 +654,7 @@ export function initializeInfiltration(userField) {
     $('#toolboxPanel').off('change'); // Remove any previous change event handlers
     addChangeEventListener(Infiltration);
     
-
+    addClickEventListenerToToolboxPanel(Infiltration)
     $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
     if ($target.attr('id') === 'btnFilterSinks') {

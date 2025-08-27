@@ -107,7 +107,7 @@ function createSinkTableSettings(indexVisible) {
   }
 }
 
-function getSiekerSinks(sinkType, featureGroup) {
+function filterSiekerSinks(sinkType, featureGroup) {
   let url = 'filter_sieker_sinks/';
   
   const project = SiekerSink.loadFromLocalStorage();
@@ -304,11 +304,11 @@ export function initializeSiekerSink() {
 
   addChangeEventListener(SiekerSink);
   
-
+  addClickEventListenerToToolboxPanel(SiekerSink)
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
      if ($target.attr('id') === 'btnFilterSiekerSinks') {
-      getSiekerSinks('siekerSink', siekerSinkFeatureGroup);
+      filterSiekerSinks('siekerSink', siekerSinkFeatureGroup);
     
     } else if ($target.attr('id') === 'toggleSiekerSinks') {
       if (map.hasLayer(siekerSinkFeatureGroup)) {

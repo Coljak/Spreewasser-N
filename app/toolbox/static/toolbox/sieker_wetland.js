@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown, getBsColor } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addClickEventListenerToTable,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
 import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerWetland } from '/static/toolbox/sieker_wetland_model.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
@@ -157,7 +157,7 @@ export function initializeSiekerWetland(data) {
     addFeatureCollectionToTable(SiekerWetland, data.featureCollection, data.dataInfo)
     
     
-    addClickEventListenerToTable(SiekerWetland)
+    
 
   $('.table-select-all').prop('checked', true);
   $('.table-select-all').trigger('change')
@@ -166,7 +166,8 @@ export function initializeSiekerWetland(data) {
   $('#toolboxPanel').off('change');
 
   addChangeEventListener(SiekerWetland);
-
+  
+  addClickEventListenerToToolboxPanel(SiekerWetland)
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
   if ($target.attr('id') === 'btnFilterSiekerWetlands') {

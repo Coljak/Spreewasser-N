@@ -29,6 +29,17 @@ import pandas as pd
 
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 
+def create_feature_collection(queryset):
+    features = []
+    for feature in queryset:
+        
+        features.append(feature.to_feature())
+    return  {
+        "type": "FeatureCollection",
+        "features": features,
+        }
+
+
 
 # TOOLBOX GENERAL
 def create_default_project(user):
@@ -86,16 +97,11 @@ def toolbox_dashboard(request):
     }
 
     all_lakes = models.Lake25.objects.all()
-    all_lakes_feature_collection = {
-        "type": "FeatureCollection",
-        "features": [feature.to_feature() for feature in all_lakes],
-    }
+    all_lakes_feature_collection = create_feature_collection(all_lakes)
 
     all_rivers = models.River.objects.all()
-    all_rivers_feature_collection = {
-        "type": "FeatureCollection",
-        "features": [feature.to_feature() for feature in all_rivers],
-    }
+    all_rivers_feature_collection = create_feature_collection(all_rivers)
+    
     print('all_rivers_feature_collection', all_rivers_feature_collection)
 
     
@@ -281,6 +287,38 @@ def get_field_project_modal(request, id):
     
     return JsonResponse({'projects': list(user_projects.values())})
 
+
+#TODO needed?
+def get_options(request, parameter):
+    dropdown_list = []
+    if parameter == 'toolbox-project':
+        toolbox_projects = models.ToolboxProject.objects.filter(user=request.user)
+        dropdown_list = [(project.id, project.name) for project in toolbox_projects]
+    return JsonResponse({'options': dropdown_list})
+        
+
+
+def add_range_filter(filters, obj, field,  model_field=None):
+    model_field = model_field or field
+    min_val = obj.get(f'{field}_min')
+    max_val = obj.get(f'{field}_max')
+
+    if min_val is not None:
+        if model_field == 'index_soil':
+            min_val = float(min_val) / 100
+        else:
+            min_val = float(min_val)
+        filters &= Q(**{f"{model_field}__gte": min_val})
+    if max_val is not None:
+        if model_field == 'index_soil':
+            max_val = float(max_val) / 100
+        else:
+            max_val = float(max_val)
+        filters &= Q(**{f"{model_field}__lte": max_val})
+
+    return filters
+
+
 ########## ZALF TOOLBOX ########################
 
 def load_infiltration_gui(request, user_field_id):
@@ -333,27 +371,6 @@ def load_infiltration_gui(request, user_field_id):
         return JsonResponse({'success': True, 'html': html})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine Senken bekannt.'})
-
-
-def add_range_filter(filters, obj, field,  model_field=None):
-    model_field = model_field or field
-    min_val = obj.get(f'{field}_min')
-    max_val = obj.get(f'{field}_max')
-
-    if min_val is not None:
-        if model_field == 'index_soil':
-            min_val = float(min_val) / 100
-        else:
-            min_val = float(min_val)
-        filters &= Q(**{f"{model_field}__gte": min_val})
-    if max_val is not None:
-        if model_field == 'index_soil':
-            max_val = float(max_val) / 100
-        else:
-            max_val = float(max_val)
-        filters &= Q(**{f"{model_field}__lte": max_val})
-
-    return filters
 
 
 def calculate_indices_df(sinks, project, sink_type='sink'):
@@ -746,15 +763,6 @@ def filter_lakes(request):
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
         
 
-#TODO needed?
-def get_options(request, parameter):
-    dropdown_list = []
-    if parameter == 'toolbox-project':
-        toolbox_projects = models.ToolboxProject.objects.filter(user=request.user)
-        dropdown_list = [(project.id, project.name) for project in toolbox_projects]
-    return JsonResponse({'options': dropdown_list})
-        
-
 def get_weighting_forms(request):
     if request.method == 'POST':
         project = json.loads(request.body)
@@ -980,20 +988,23 @@ def sieker_surface_waters_gui(request, user_field_id):
         water_levels = models.SiekerWaterLevel.objects.filter(
             geom4326__within=user_field.geom
         )
-        lakes = [lake.to_feature() for lake in lakes]
-        water_levels = [feature.to_feature() for feature in water_levels]
+        lakes_feature_collection = create_feature_collection(lakes)
+        water_levels_feature_collection = create_feature_collection(water_levels)
 
-        lakes_feature_collection = {
-            "type": "FeatureCollection",
-            "features": lakes,
-        }
-        water_levels_feature_collection = {
-            "type": "FeatureCollection",
-            "features": water_levels,
-        }
+        lakes_data_info = models.DataInfo.objects.get(data_type='sieker_large_lake').to_dict()
+        water_levels_data_info = models.DataInfo.objects.get(data_type='sieker_water_level').to_dict()
 
-        layers = {'lakes': lakes_feature_collection, 'water_levels': water_levels_feature_collection}
-        data_info = models.DataInfo.objects.get(data_type='sieker_large_lake').to_dict()
+        layers = {
+            'lakes': {
+                'featureCollection':lakes_feature_collection,
+                'dataInfo': lakes_data_info
+            },
+            'water_levels': {
+                'featureCollection': water_levels_feature_collection,
+                'dataInfo': water_levels_data_info
+                }
+            }
+        
 
 
         html = render_to_string('toolbox/sieker_surface_waters.html', {
@@ -1003,13 +1014,13 @@ def sieker_surface_waters_gui(request, user_field_id):
             'sieker_lake_filter': sieker_lake_filter,      
         }, request=request) 
 
-        return JsonResponse({'success': True, 'layers': layers , 'html': html, 'data_info': data_info})
+        return JsonResponse({'success': True, 'layers': layers , 'html': html, 'data_info': lakes_data_info})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet befinden sich keine geeigneten Seen.'})
 
     
 ## Sieker Oberflächengewässer / Large Lakes / Surface Waters
-def filter_sieker_large_lakes(request):
+def filter_sieker_surface_waters(request):
     try:
         project = json.loads(request.body)
     except json.JSONDecodeError:
@@ -1035,14 +1046,6 @@ def filter_sieker_large_lakes(request):
     filter = add_range_filter(filter, project, 'lake_max_depth', 'd_max_m')
     lakes = lakes.filter(filter)
 
-    badesee_filter = Q()
-    badesee_value = project['siekerLake'].get('badesee', 'all')
-    if badesee_value == 'yes':
-        badesee_filter = Q(badesee=True)
-    elif badesee_value == 'no':
-        badesee_filter = Q(badesee=False)
-    
-    lakes = lakes.filter(badesee_filter)
 
     print("COUNT(Lakes)", lakes.count())
 
@@ -1173,17 +1176,6 @@ def filter_sieker_sinks(request):
         print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
     
-
-def create_feature_collection(queryset):
-    features = []
-    for feature in queryset:
-        
-        features.append(feature.to_feature())
-    return  {
-        "type": "FeatureCollection",
-        "features": features,
-        }
-
    
 def load_sieker_gek_gui(request, user_field_id):
     if user_field_id == "null":

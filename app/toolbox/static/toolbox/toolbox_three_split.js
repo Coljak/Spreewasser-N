@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import {  toolboxSinks,updateDropdown } from '/static/toolbox/toolbox.js';
+import {  toolboxSinks,updateDropdown, waterLevelPinIcon } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
 import { SiekerSink } from '/static/toolbox/sieker_sink_model.js';
@@ -241,12 +241,12 @@ const markers = L.markerClusterGroup({
 });
 
 
-const waterLevelIcon = L.icon({
-  iconUrl: '/static/images/water-level-circle_blue_small.png',
-  iconSize: [30, 30], // size of the icon
-  iconAnchor: [15, 15], // point of the icon which will correspond to marker's location
-  popupAnchor: [0, 0] // point from which the popup should open relative to the iconAnchor
-});
+// const waterLevelPinIcon = L.icon({
+//   iconUrl: '/static/images/water-level-pin_x2.png',
+//   iconSize: [30, 30], // size of the icon
+//   iconAnchor: [15, 15], // point of the icon which will correspond to marker's location
+//   popupAnchor: [0, 0] // point from which the popup should open relative to the iconAnchor
+// });
 //https://www.pegelonline.wsv.de/webservice/dokuRestapi
 fetch('https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json?includeTimeseries=true&includeCurrentMeasurement=true') // Replace with your actual API
   .then(response => response.json())
@@ -254,7 +254,7 @@ fetch('https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json?incl
     data.forEach(station => {
       if (station.latitude && station.longitude) {
         const marker = new L.Marker([station.latitude, station.longitude], {
-          icon: waterLevelIcon,
+          icon: waterLevelPinIcon,
           title: station.shortname || station.name // Use shortname or name as title
         });
 
@@ -419,6 +419,9 @@ function startSurfaceWaters() {
 function startSiekerSinks() {
   console.log('start Infiltration')
   const userField = ToolboxProject.loadFromLocalStorage().userField;
+  const siekerSinks = new SiekerSink();
+  siekerSinks.userField = userField;
+  siekerSinks.saveToLocalStorage();
   // const userField = project.userField;
   if (userField) {
   
@@ -543,8 +546,7 @@ $('#startSurfaceWaters').on('click', () => {
   startSurfaceWaters()
 });
 $('#startSiekerSinks').on('click', () => {
-  const siekerSinks = new SiekerSink();
-  siekerSinks.saveToLocalStorage();
+  
   console.log('startSiekerSinks clicked');
   startSiekerSinks()
 });

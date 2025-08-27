@@ -6,7 +6,12 @@ import {SiekerSurfaceWaters} from '/static/toolbox/sieker_surface_waters_model.j
 import {map} from '/static/shared/map_sidebar_utils.js';
 
 
-
+export const waterLevelPinIcon = L.icon({
+        iconUrl: '/static/images/water-level-pin_x2.png',
+        iconSize: [40, 40], // size of the icon
+        iconAnchor: [20, 40], // point of the icon which will correspond to marker's location
+        // popupAnchor: [0, 0] // point from which the popup should open relative to the iconAnchor
+        });
 
 export const updateDropdown = (parameterType, newId) => {
     
@@ -74,7 +79,7 @@ export async function toolboxSinks() {
   }
 };
 
-let CurrentProjectClass = null;
+// let CurrentProjectClass = null;
     // eventlistener for the filters
 export function addChangeEventListener(projectClass) {
     const CurrentProjectClass = projectClass;
@@ -184,7 +189,7 @@ export function openResultCard(dataType, id) {
 };
 
 
-export function addClickEventListenerToTable(projectClass) {
+export function addClickEventListenerToToolboxPanel(projectClass) {
     const ProjectClass = projectClass;
     $('#toolboxPanel').on('click',function (event) {
         const $target = $(event.target);

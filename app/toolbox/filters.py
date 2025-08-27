@@ -301,19 +301,19 @@ class SiekerLargeLakeFilter(FilterSet):
     area_ha = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='area_ha', label="Fläche (ha)")
     vol_mio_m3 = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='vol_mio_m3', label="Volumen (Mio m³)")
     d_max_m = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='d_max_m', label="Max. Tiefe (m)")
-    badesee = MultipleChoiceFilter(
-        label="Badesee",
-        choices=[('yes', 'Ja'), ('no', 'Nein')],
-        method='filter_bathing_lake',
-        widget=forms.CheckboxSelectMultiple,
-    )
+    # badesee = MultipleChoiceFilter(
+    #     label="Badesee",
+    #     choices=[('yes', 'Ja'), ('no', 'Nein')],
+    #     method='filter_bathing_lake',
+    #     widget=forms.CheckboxSelectMultiple,
+    # )
 
-    def filter_bathing_lake(self, queryset, name, value):
-        if value == 'yes':
-            return queryset.filter(badesee=True)
-        elif value == 'no':
-            return queryset.filter(badesee=False)
-        return queryset
+    # def filter_bathing_lake(self, queryset, name, value):
+    #     if value == 'yes':
+    #         return queryset.filter(badesee=True)
+    #     elif value == 'no':
+    #         return queryset.filter(badesee=False)
+    #     return queryset
 
     def __init__(self, *args, queryset=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
@@ -330,7 +330,7 @@ class SiekerLargeLakeFilter(FilterSet):
             field.widget.attrs['prefix'] = prefix
     class Meta:
         model = models.SiekerLargeLake
-        fields = ['area_ha', 'vol_mio_m3', 'd_max_m', 'badesee']
+        fields = ['area_ha', 'vol_mio_m3', 'd_max_m']
         form = SliderFilterForm
     
 

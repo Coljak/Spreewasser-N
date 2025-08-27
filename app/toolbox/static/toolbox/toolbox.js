@@ -189,7 +189,13 @@ export function addClickEventListenerToTable(projectClass) {
     $('#toolboxPanel').on('click',function (event) {
         const $target = $(event.target);
         const project = ProjectClass.loadFromLocalStorage();
-        if ($target.hasClass('paginate_button')) {
+        if ($target.hasClass('toolbox-back-to-initial')) {
+            $('#toolboxButtons').removeClass('d-none');
+                $('#toolboxPanel').addClass('d-none');
+                console.log('Evenet listener')
+                return;
+        }
+        else if ($target.hasClass('paginate_button')) {
             console.log('Paginate')
             const dataType = $('.table-select-all').data('type');
             tableCheckSelectedItems(project, dataType)
@@ -231,14 +237,32 @@ for (let i=0; i<tableLength; i++) {
   }
 };
 
+const colorFunction = function (index) {
+    // index must be 0 <= index <= 1, 0 is red, 1 is green
+  const hue = index * 100
+  let color = `hsl(${hue}, 90%, 50%)`;
+  return color
+};
 
-export function addFeatureCollectionToLayer(featureCollection, dataInfo, featureGroup){
-      console.log('addFeatureCollectionToLayer dataInfo', dataInfo)
+
+export function addFeatureCollectionToLayer(featureCollection, dataInfo, featureGroup, colorByIndex){
+      console.log('addFeatureCollectionToLayer dataInfo', colorFunction, dataInfo)
   
     let layer = L.geoJSON(featureCollection, {
-        style: {
-            color: dataInfo.featureColor,
-            className: dataInfo.className,
+        style: function (feature) {
+            let color;
+
+            if (colorByIndex) {
+
+                color = colorFunction(feature.geometry.properties[colorByIndex]);
+            } else {
+                color = dataInfo.featureColor;
+            }
+
+            return {
+                color,
+                className: dataInfo.className,
+            };
         },
         onEachFeature: function (feature, layer) {
             let popupContent = `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
@@ -247,7 +271,7 @@ export function addFeatureCollectionToLayer(featureCollection, dataInfo, feature
                 popupContent += property.href
                 ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
                 : `<b>${property.title}:</b> ${feature.properties[property.valueName]}<br>`;
-            }
+                }
             
             });
                 
@@ -331,9 +355,9 @@ export function addFeatureCollectionToTable(projectClass, featureCollection, dat
     dataInfo.properties.forEach(property => {
         if (property.table) {
             if (property.valueName === 'id') {
-                tableHTML += `<th><input type="checkbox" class="table-select-all" data-type="${dataInfo.dataType}">Select all</th>`;
+                tableHTML += `<th><input type="checkbox" class="table-select-all" data-type="${dataInfo.dataType}"> Alle</th>`;
             } else {
-                tableHTML += `<th>${property.valueName}`
+                tableHTML += `<th>${property.title}`
             }
         }
         });

@@ -307,11 +307,7 @@ export function initializeSiekerSink() {
 
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
-    if ($target.hasClass('toolbox-back-to-initial')) {
-      $('#toolboxButtons').removeClass('d-none');
-        $('#toolboxPanel').addClass('d-none');
-        
-    } else if ($target.attr('id') === 'btnFilterSiekerSinks') {
+     if ($target.attr('id') === 'btnFilterSiekerSinks') {
       getSiekerSinks('siekerSink', siekerSinkFeatureGroup);
     
     } else if ($target.attr('id') === 'toggleSiekerSinks') {

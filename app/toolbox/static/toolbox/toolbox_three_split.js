@@ -10,6 +10,7 @@ import { initializeInfiltration } from '/static/toolbox/infiltration.js';
 import { initializeSiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters.js';
 import { initializeSiekerSink } from '/static/toolbox/sieker_sink.js';
 import {initializeSiekerGek } from '/static/toolbox/sieker_gek.js';
+import {initializeSiekerWetland } from '/static/toolbox/sieker_wetland.js';
 
 import { 
   projectRegion, 
@@ -146,28 +147,77 @@ const sinksBounds = [
 ];
 
 const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
-const toolboxOverlaySoil = L.imageOverlay(toolboxUrl, toolboxBounds, { opacity: 1.0 });
-const toolboxOverlaySinks = L.imageOverlay(toolboxSinksUrl, sinksBounds, { opacity: 1.0 });
+// const toolboxOverlaySoil = L.imageOverlay(toolboxUrl, toolboxBounds, { opacity: 1.0 });
+// const toolboxOverlaySinks = L.imageOverlay(toolboxSinksUrl, sinksBounds, { opacity: 1.0 });
+
 
 const toolboxOutlineInjection = new L.geoJSON(outline_injection, {
   attribution: 'Outline Injection',
   onEachFeature: function (feature, layer) {
     layer.bindTooltip(feature.properties.name);
-}
+  }
 });
 
 const toolboxOutlineSurfaceWater = new L.geoJSON(outline_surface_water, {
   attribution: 'Outline Surface Water',
   onEachFeature: function (feature, layer) {
     layer.bindTooltip(feature.properties.name);
-}
+  }
 });
 
 const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
   attribution: 'Outline Infiltration',
   onEachFeature: function (feature, layer) {
     layer.bindTooltip(feature.properties.name);
-}
+  }
+});
+
+const allRivers = L.geoJSON(all_rivers_feature_collection, {
+  style: {
+      color: 'hsl(187 98 66)',
+      className: 'all-rivers',
+  },
+  onEachFeature: function (feature, layer) {
+    let popupContent = 
+    `<h6><b> ${feature.properties['name']}</b></h6> `   
+          
+  layer.on('add', function () {
+      if (layer._path) {
+          layer._path.setAttribute('data-type', 'all-rivers');
+          layer._path.setAttribute('data-id', feature.properties.id);
+      }
+  });
+              
+  layer.bindTooltip(popupContent);
+  layer.on('mouseover', function () {
+          // this.setStyle(highlightStyle);
+        this.openTooltip();
+    });
+  }
+});
+
+const allLakes = L.geoJSON(all_lakes_feature_collection, {
+  style: {
+      color: 'hsl(191 96 55)',
+      className: 'all-lakes',
+  },
+  onEachFeature: function (feature, layer) {
+    let popupContent = 
+    `<h6><b> ${feature.properties['name']}</b></h6> `   
+          
+  layer.on('add', function () {
+      if (layer._path) {
+          layer._path.setAttribute('data-type', 'all-lakes');
+          layer._path.setAttribute('data-id', feature.properties.id);
+      }
+  });
+              
+  layer.bindTooltip(popupContent);
+  layer.on('mouseover', function () {
+          // this.setStyle(highlightStyle);
+        this.openTooltip();
+    });
+  }
 });
 
 
@@ -254,11 +304,13 @@ fetch('https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json?incl
 const overlayLayers = {
   "demOverlay": demOverlay,
   "projectRegion": projectRegion,
-  "toolboxOverlaySoil": toolboxOverlaySoil,
-  "toolboxOverlaySinks": toolboxOverlaySinks,
+  // "toolboxOverlaySoil": toolboxOverlaySoil,
+  // "toolboxOverlaySinks": toolboxOverlaySinks,
   "toolboxOutlineInjection": toolboxOutlineInjection,
   "toolboxOutlineSurfaceWater": toolboxOutlineSurfaceWater,
   "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
+  "allLakes": allLakes,
+  "allRivers": allRivers,
   "sinks": toolboxSinks,
   "waterLevels": markers,
 };
@@ -433,6 +485,44 @@ function startSiekerGeks() {
 };
 
 
+function startFormerWetlands() {
+  console.log('start Sieker Wetlands')
+  
+  const userField = ToolboxProject.loadFromLocalStorage().userField;
+  
+
+  // const userField = project.userField;
+  if (userField) {
+    
+    fetch('load_sieker_wetland_gui/' + userField + '/')
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        handleAlerts(data);
+        return;
+      }
+        // Replace HTML content
+      $('#toolboxButtons').addClass('d-none');
+      $('#toolboxPanel').removeClass('d-none');
+      $('#toolboxPanel').html(data.html);
+
+      return {
+        // 'sliderLabels': data.slider_labels,
+        'dataInfo': data.data_info,
+        'featureCollection': data.wetlands,
+        'all_ids': data.all_ids
+      };
+    })
+    .then(data => {
+        initializeSiekerWetland(data);
+    })
+    // .catch(error => console.error("Error fetching data:", error));
+  } else {
+    handleAlerts({ success: false, message: 'Please select a user field!' });
+  }
+};
+
+
 
 
 
@@ -464,7 +554,7 @@ $('#startWaterDevelopment').on('click', () => {
 });
 $('#startFormerWetlands').on('click', () => {
   console.log('startFormerWetlands clicked');
-  // startFormerWetlands()
+  startFormerWetlands()
 });
 $('#startDrainage').on('click', () => {
   console.log('startDrainage clicked');

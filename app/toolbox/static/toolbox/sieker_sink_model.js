@@ -44,12 +44,12 @@ export class SiekerSink {
     }
         // Save project to localStorage
     saveToLocalStorage() {
-        localStorage.setItem('projectSiekerSink', this.toJson());
+        localStorage.setItem('sieker_sink', this.toJson());
     }
 
     // Load project from localStorage
     static loadFromLocalStorage() {
-        const storedProject = localStorage.getItem('projectSiekerSink');
+        const storedProject = localStorage.getItem('sieker_sink');
         return storedProject ? SiekerSink.fromJson(JSON.parse(storedProject)) : null;
     }
 };

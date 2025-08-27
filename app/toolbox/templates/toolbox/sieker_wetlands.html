@@ -1,0 +1,86 @@
+{% load crispy_forms_tags %}
+{% load static %}
+
+<div id="divSiekerWetland">
+    <!-- Navigation -->
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Project</a>
+        </li>
+        
+        <li class="nav-item sieker-wetland">
+            <a id="navSiekerWetland" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerWetlands" aria-selected="false">Ehemalige Feuchtgebiete</a>
+        </li>
+        {% comment %} <li class="nav-item sieker-wetland">
+            <a id="navSiekerWetlandMeasures" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerWetlandMeasures" aria-selected="false">Maßnahmen</a>
+        </li> {% endcomment %}
+        
+        <li class="nav-item sieker-wetland">
+            <a id="navSiekerWetlandResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerWetlandResult">Ergebnis</a>
+        </li>
+    </ul>
+
+    <!-- Tab Content Wrapper -->
+    <div class="tab-content" id="toolboxTabContent">
+
+        <div id="tabToolboxProject" class="tab-pane active show">
+            <div class="card mb-3">
+                <div class="card-body">
+                    {{ project_select_form | crispy }}
+                
+                    <button class="toolbox-back-to-initial btn btn-secondary">Zurück zur Auswahl</button>
+            
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <div id="tabSiekerWetlands" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Filter ehemalige Feuchtgebiete</h5>
+                        <button id="toggleSiekerWetlands" class="btn btn-secondary">ausblenden</button>                                                                                             
+                    </div>
+                    
+                    {% comment %} <form method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy wetland_filter_form.form %}
+                        <button id="btnFilterSiekerWetlands"type="submit" class="btn btn-primary">Maßnahmen filtern</button>
+                    </form> {% endcomment %}
+                </div>
+            </div>
+            
+            <div id="cardSiekerWetlandTable" class="card mb-3 d-none">
+                <div class="card-body">
+                    <div class="card-title">Gewässer</div>
+                    <div id="sieker_wetland-table-container"></div>
+                    
+                </div>
+            </div>
+        </div>
+
+        {% comment %} <div id="tabSiekerWetlandMeasures" class="tab-pane">
+
+            <div id="cardSiekerWetlandMeasuresCard" class="card mb-3">
+
+                
+                <div class="card-body">
+                    <h5 class="card-title">Maßnahmen</h5>
+                    <div id="filtered_sieker_wetland-table-container"></div>
+                    <div id="sieker_wetland-info-card" class="card mt-3" style="display: none;">
+                        <div id="sieker_wetland-info-card-body" class="card-body"></div>
+                    </div>
+                </div>
+            
+                    
+
+            </div>
+        </div> {% endcomment %}
+
+
+    </div>
+
+</div>

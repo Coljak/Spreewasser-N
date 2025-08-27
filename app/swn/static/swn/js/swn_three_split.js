@@ -65,10 +65,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // Bounds for DEM image overlay
-  const demBounds = [[47.136744752, 15.57241882],[55.058996788, 5.564783468],];
-  const droughtBounds = [[46.89, 15.33], [55.31, 5.41],];
-  const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
-  const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5 });
+const demBounds = [[47.136744752, 15.57241882],[55.058996788, 5.564783468],];
+const droughtBounds = [[46.89, 15.33], [55.31, 5.41],];
+const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
+const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5 });
 
 const overlayLayers = {
   "droughtOverlay": droughtOverlay,

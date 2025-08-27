@@ -30,7 +30,7 @@ import pandas as pd
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 
 
-
+# TOOLBOX GENERAL
 def create_default_project(user):
     """
     Create a default project for the user.
@@ -85,6 +85,19 @@ def toolbox_dashboard(request):
         }
     }
 
+    all_lakes = models.Lake25.objects.all()
+    all_lakes_feature_collection = {
+        "type": "FeatureCollection",
+        "features": [feature.to_feature() for feature in all_lakes],
+    }
+
+    all_rivers = models.River.objects.all()
+    all_rivers_feature_collection = {
+        "type": "FeatureCollection",
+        "features": [feature.to_feature() for feature in all_rivers],
+    }
+    print('all_rivers_feature_collection', all_rivers_feature_collection)
+
     
     state_county_district_form = swn_forms.PolygonSelectionForm(request.POST or None)
     project_select_form = forms.ToolboxProjectSelectionForm(user=user)
@@ -104,6 +117,8 @@ def toolbox_dashboard(request):
         'outline_injection': outline_injection,
         'outline_surface_water': outline_surface_water,
         'outline_infiltration': outline_infiltration,
+        'all_lakes_feature_collection': all_lakes_feature_collection,
+        'all_rivers_feature_collection': all_rivers_feature_collection,
     }
 
     return render(request, 'toolbox/toolbox_three_split.html', context)
@@ -739,7 +754,6 @@ def get_options(request, parameter):
         dropdown_list = [(project.id, project.name) for project in toolbox_projects]
     return JsonResponse({'options': dropdown_list})
         
-    
 
 def get_weighting_forms(request):
     if request.method == 'POST':
@@ -904,7 +918,7 @@ def get_inlets(request):
     print(response)
     return JsonResponse(response)
 
-
+# TODO DEM fehlt noch
 def get_elevation_profile(line_geojson):
     """
     Gets an elevation profile in a 20m raster for a given line geometry.
@@ -992,8 +1006,6 @@ def sieker_surface_waters_gui(request, user_field_id):
         return JsonResponse({'success': True, 'layers': layers , 'html': html, 'data_info': data_info})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet befinden sich keine geeigneten Seen.'})
-
-
 
     
 ## Sieker Oberflächengewässer / Large Lakes / Surface Waters
@@ -1087,8 +1099,6 @@ def load_sieker_sink_gui(request, user_field_id):
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine Senken bekannt.'})
 
 
-
-
 def filter_sieker_sinks(request):
 
     start = datetime.now()
@@ -1164,24 +1174,11 @@ def filter_sieker_sinks(request):
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
     
 
-
-def create_gek_feature_collection(geks):
+def create_feature_collection(queryset):
     features = []
-    for gek in geks:
-
-        geojson = json.loads(gek.geom4326.geojson)
-
-        # print('geojson:', geojson)
-        geojson['properties'] = {
-            "id": gek.id,
-            "name": gek.name,
-            "document": gek.gek_document.link if gek.gek_document else None,
-            "current_landusage": gek.current_landusage,
-            "planning_segment": gek.planning_segment,
-            "number_of_measures": gek.number_of_measures,
-            
-        }
-        features.append(geojson)
+    for feature in queryset:
+        
+        features.append(feature.to_feature())
     return  {
         "type": "FeatureCollection",
         "features": features,
@@ -1205,7 +1202,7 @@ def load_sieker_gek_gui(request, user_field_id):
     if geks.count() > 0:
         project_select_form = forms.ToolboxProjectSelectionForm()
         
-        feature_collection = create_gek_feature_collection(geks)
+        feature_collection = create_feature_collection(geks)
 
         gek_filter_form = GekRetentionFilter(request.GET, queryset=geks)
         slider_labels = dict(models.GekPriority.objects.values_list("priority_level", "description_de").distinct().order_by("priority_level"))
@@ -1272,7 +1269,7 @@ def filter_sieker_geks(request):
     else:
         print("Geks", geks.count())
         
-        feature_collection = create_gek_feature_collection(geks)
+        feature_collection = create_feature_collection(geks)
         data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
         data_info['featureColor'] = 'var(--bs-success)'
 
@@ -1285,5 +1282,109 @@ def filter_sieker_geks(request):
         print('measures: ', dict_list)
 
         data_info = models.DataInfo.objects.get(data_type='filtered_sieker_gek').to_dict()
+        print('Time for filter_sinks:', datetime.now() - start)
+        return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info, 'measures': dict_list})
+
+
+# Sieker Wetlands
+
+   
+def load_sieker_wetland_gui(request, user_field_id):
+    if user_field_id == "null":
+        user_field_id = None
+    else:
+        user_field_id = int(user_field_id)
+    
+    user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
+    if user_field is None:
+        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
+    
+    wetlands = models.HistoricalWetlands.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+    # all_sieker_wetland_ids = [g.id for g in wetlands]
+   
+
+    if wetlands.count() > 0:
+        project_select_form = forms.ToolboxProjectSelectionForm()
+        
+        feature_collection = create_feature_collection(wetlands)
+
+        # wetland_filter_form = GekRetentionFilter(request.GET, queryset=wetlands)
+        # slider_labels = dict(models.GekPriority.objects.values_list("priority_level", "description_de").distinct().order_by("priority_level"))
+
+        # streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
+
+        # sieker_wetlands_filter = SiekerGekFilter(request.GET, queryset=wetlands)
+
+        html = render_to_string('toolbox/sieker_wetlands.html', {
+            'project_select_form': project_select_form,
+            # 'wetland_filter_form': wetland_filter_form  ,
+            
+            # 'sieker_sink_filter': sieker_wetlands_filter,
+            
+        }, request=request) 
+        data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
+
+        return JsonResponse({'success': True, 'html': html, 'wetlands': feature_collection,  'data_info': data_info})
+    else:
+        return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine historischen Feuchtgebiete bekannt.'})
+
+
+
+#TODO
+def filter_sieker_wetlands(request):
+   # add_range_filter(filters, obj, field,  model_field=None)
+    start = datetime.now()
+    try:
+        project = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    user_field = models.UserField.objects.get(pk=project['userField'])
+    print('FROM filter_sieker_wetlands project', project)
+    
+    # wetlands = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+    # filter landuses
+    ids = project.get('selected_sieker_wetlands')
+    wetlands = models.GekRetention.objects.filter(pk__in=ids)
+    landuses = models.GekLanduse.objects.filter(Q(wetland_retention__in=wetlands) & Q(clc_landuse__id__in=project['wetland_landuse']))
+    wetlands = models.GekRetention.objects.filter(landuses__in=landuses).distinct()
+    print("Geks:", wetlands.count())
+
+    # filter measures
+    filters = Q(priority__priority_level__gte=project['wetland_priority'])
+    filters = add_range_filter(filters, project, 'wetland_costs', 'costs') 
+
+    measures = models.GekRetentionMeasure.objects.filter(
+            wetland_retention__in=wetlands
+        ).filter(filters)
+    
+    wetlands = models.GekRetention.objects.filter(measures__in=measures).distinct()
+
+
+    print("Geks FILTERED:", wetlands.count())
+
+
+    if wetlands.count() == 0:
+        message = {
+            'success': False, 
+            'message': f'Es sind keine Gewässerentwicklungskonzepte für diese Filtereinstellungen bekannt.'
+        }
+        return JsonResponse({'message': message})
+    else:
+        print("Geks", wetlands.count())
+        
+        feature_collection = create_wetland_feature_collection(wetlands)
+        data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
+        data_info['featureColor'] = 'var(--bs-success)'
+
+        dict_list = []
+        for wetland in wetlands:
+            d = wetland.to_dict()
+            d['measures'] = [m.to_dict() for m in measures if m.wetland_retention == wetland]
+            dict_list.append(d)
+            
+        print('measures: ', dict_list)
+
+        data_info = models.DataInfo.objects.get(data_type='filtered_sieker_wetland').to_dict()
         print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info, 'measures': dict_list})

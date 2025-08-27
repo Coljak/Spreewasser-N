@@ -96,7 +96,7 @@ function filterSiekerGeks(project) {
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
       
 
-    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, siekerFilteredGekFeatureGroup);
+    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, siekerFilteredGekFeatureGroup, null);
     addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
     addFeatureCollectionResultCards(data.dataInfo, data.measures)
 
@@ -199,7 +199,7 @@ export function initializeSiekerGek(data) {
   // end of string labelled slider
    
 
-    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, siekerGekFeatureGroup)
+    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, siekerGekFeatureGroup, null)
     addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
     
     
@@ -218,11 +218,7 @@ export function initializeSiekerGek(data) {
 
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
-    if ($target.hasClass('toolbox-back-to-initial')) {
-      $('#toolboxButtons').removeClass('d-none');
-        $('#toolboxPanel').addClass('d-none');
-        
-    } else if ($target.attr('id') === 'btnFilterSiekerGeks') {
+    if ($target.attr('id') === 'btnFilterSiekerGeks') {
       const project = SiekerGek.loadFromLocalStorage();
       if (project.selected_sieker_geks.length === 0) {
         handleAlerts({'success': false, 'message': 'Bitte wählen Sie Gewässer aus!'})

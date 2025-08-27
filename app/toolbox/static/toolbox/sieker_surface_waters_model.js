@@ -27,12 +27,12 @@ export class SiekerSurfaceWaters {
 
     // Save project to localStorage
     saveToLocalStorage() {
-        localStorage.setItem('projectSiekerSurfaceWaters', this.toJson());
+        localStorage.setItem('sieker_surface_waters', this.toJson());
     }
 
     // Load project from localStorage
     static loadFromLocalStorage() {
-        const storedProject = localStorage.getItem('projectSiekerSurfaceWaters');
+        const storedProject = localStorage.getItem('sieker_surface_waters');
         return storedProject ? SiekerSurfaceWaters.fromJson(JSON.parse(storedProject)) : null;
     }
 };

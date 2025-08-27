@@ -80,23 +80,6 @@ class UserField(models.Model):
 
     def __str__(self):
         return self.name
-    
-class SinkWeighting(models.Model):
-    """
-    User's weighting for a sink project
-    """
-    general= models.FloatField(default=.2) 
-    soil= models.FloatField(default=.8)
-    field_capacity = models.FloatField(default=.33)
-    hydro_conduct_1m= models.FloatField(default=.33)
-    hydro_conduct_2m= models.FloatField(default=.33)
-    hydromorphy= models.FloatField(default=.33)
-    soil_index= models.FloatField(default=.33)
-    grassland_soil_moisture = models.FloatField(default=.25)
-    grassland_field_capacity = models.FloatField(default=.25)
-    grassland_soil_index = models.FloatField(default=.25)
-    grassland_hydromorphy= models.FloatField(default=.25)
-
 
 
 class ToolboxProject(models.Model):    
@@ -120,9 +103,94 @@ class ToolboxProject(models.Model):
             # 'userField': self.user_field.id,
             # 'toolbox_type': self.toolbox_type.name,
         }
+    
+# Gewnet25
+class River(models.Model):
+    geom = gis_models.LineStringField()
+    name = models.CharField(max_length=255, null=True, blank=True) # w_gn1
+    w_gn2 = models.CharField(max_length=255, null=True, blank=True)
+    w_gn3 = models.CharField(max_length=255, null=True, blank=True)
+    w_gn_lgb = models.CharField(max_length=255, null=True, blank=True)
+    w_wdm = models.IntegerField(null=True, blank=True)
+    w_ofl = models.IntegerField(null=True, blank=True)
+    w_ezg_kl = models.IntegerField(null=True, blank=True)
+    w_achse = models.IntegerField(null=True, blank=True)
+    w_gwk = models.CharField(max_length=16, null=True, blank=True)
+    w_gbk = models.CharField(max_length=16, null=True, blank=True)
+    w_sfk_lg = models.CharField(max_length=16, null=True, blank=True)
+    w_id = models.IntegerField(null=True, blank=True)
+
+    def to_feature(self):
+        """
+        Convert the model instance to a GeoJSON feature.
+        """
+        geojson = json.loads(self.geom.geojson) if self.geom else None
+        geojson['properties'] = {
+                'id': self.id,
+                "name": self.name,
+            }
+        return geojson
+
+class Lake25(models.Model):
+    geom = gis_models.PolygonField()
+    geb_kz = models.CharField(max_length=16, null=True, blank=True)
+    name = models.CharField(max_length=60, null=True, blank=True)
+    objart = models.CharField(max_length=16, null=True, blank=True)
+    geo_quelle = models.CharField(max_length=20, null=True, blank=True)
+    see_alias = models.CharField(max_length=60, null=True, blank=True)
+    stand = models.DateField(null=True, blank=True)
+    ms_cd_lw = models.CharField(max_length=24, null=True, blank=True)
+    cd_ls = models.CharField(max_length=24, null=True, blank=True)
+    wrrl_pg = models.CharField(max_length=20, null=True, blank=True)
+    wa_cd = models.CharField(max_length=4, null=True, blank=True)
+    genese = models.CharField(max_length=10, null=True, blank=True)
+    gis_id = models.IntegerField(null=True, blank=True)
+    wrrl = models.IntegerField(null=True, blank=True)
+    badesee = models.IntegerField(null=True, blank=True)
+    quelldat = models.DateField()
+    jp_id = models.CharField(max_length=50, null=True, blank=True)
+    area_gis = models.FloatField(null=True, blank=True)
+    area_gis_h = models.FloatField(null=True, blank=True)
+    umfang_gis = models.FloatField(null=True, blank=True)
+    see_kz = models.CharField(max_length=24, null=True, blank=True)
+    shape_area = models.FloatField(null=True, blank=True)
+    shape_len = models.FloatField(null=True, blank=True)
+
+    
+    def to_feature(self):
+        """
+        Convert the model instance to a GeoJSON feature.
+        """
+        geojson = json.loads(self.geom.geojson) if self.geom else None
+        geojson['properties'] = {
+                'id': self.id,
+                "name": self.name,
+                "stand": self.stand.isoformat() if self.stand else None,
+            }
+        return geojson
+
 
 
 ######################### INJECTION ###########################
+
+    
+class SinkWeighting(models.Model):
+    """
+    User's weighting for a sink project
+    """
+    general= models.FloatField(default=.2) 
+    soil= models.FloatField(default=.8)
+    field_capacity = models.FloatField(default=.33)
+    hydro_conduct_1m= models.FloatField(default=.33)
+    hydro_conduct_2m= models.FloatField(default=.33)
+    hydromorphy= models.FloatField(default=.33)
+    soil_index= models.FloatField(default=.33)
+    grassland_soil_moisture = models.FloatField(default=.25)
+    grassland_field_capacity = models.FloatField(default=.25)
+    grassland_soil_index = models.FloatField(default=.25)
+    grassland_hydromorphy= models.FloatField(default=.25)
+
+
 
 class InfiltrationProject(ToolboxProject):
     weighting = models.ForeignKey(SinkWeighting, on_delete=models.CASCADE, null=True)
@@ -611,26 +679,7 @@ class SiekerLake(models.Model):
     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     # geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
 
-# gewnet25
-class SiekerGewnet(models.Model):
-    # geom25833 = gis_models.MultiLineStringField(srid=25833, null=True, blank=True)
-    geom25833 = gis_models.LineStringField(srid=25833, null=True, blank=True)
-    geom4326 = gis_models.LineStringField(srid=4326, null=True, blank=True)
-    obectid = models.IntegerField(null=True, blank=True)
-    w_gn1 = models.CharField(max_length=255, null=True, blank=True)
-    w_gn2 = models.CharField(max_length=255, null=True, blank=True)
-    w_gn3 = models.CharField(max_length=255, null=True, blank=True)
-    w_gn_lgb = models.CharField(max_length=255, null=True, blank=True)
-    w_wdm = models.IntegerField(null=True, blank=True)
-    w_ofl = models.IntegerField(null=True, blank=True)
-    w_ezg_kl = models.IntegerField(null=True, blank=True)
-    w_achse = models.IntegerField(null=True, blank=True)
-    w_gwk = models.CharField(max_length=255, null=True, blank=True)
-    w_gbk = models.CharField(max_length=255, null=True, blank=True)
-    w_sfk_lg = models.CharField(max_length=255, null=True, blank=True)
-    w_id = models.IntegerField(null=True, blank=True)
-    length = models.FloatField(null=True, blank=True)
-    shape_leng = models.FloatField(null=True, blank=True)
+
 
 class SiekerLargeLake(models.Model):
 
@@ -680,29 +729,7 @@ class SiekerLargeLake(models.Model):
 
         return geojson
                                
-class EZG(models.Model):
-    geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-    geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
-    geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
-    kennzahl = models.CharField(max_length=100, null=True, blank=True)
-    gewaesser = models.CharField(max_length=100, null=True, blank=True)
-    gew_alias = models.CharField(max_length=100, null=True, blank=True)
-    gew_kennz = models.CharField(max_length=100, null=True, blank=True)
-    beschr_von = models.CharField(max_length=100, null=True, blank=True)
-    beschr_bis = models.CharField(max_length=100, null=True, blank=True)
-    lage = models.CharField(max_length=100, null=True, blank=True)
-    land = models.CharField(max_length=100, null=True, blank=True)
-    ordnung = models.CharField(max_length=100, null=True, blank=True)
-    fl_art = models.CharField(max_length=100, null=True, blank=True)
-    wrrl_kr = models.CharField(max_length=100, null=True, blank=True)
-    area_qkm = models.FloatField(null=True, blank=True)
-    area_ha = models.FloatField(null=True, blank=True)
-    ezg_id = models.IntegerField(null=True, blank=True)
-    bemerkung = models.CharField(max_length=100, null=True, blank=True)
-    wrrl_fge = models.CharField(max_length=100, null=True, blank=True)
-    wrrl_bg = models.CharField(max_length=100, null=True, blank=True)
-    shape_area = models.FloatField(null=True, blank=True)
-    shape_len = models.FloatField(null=True, blank=True)
+
 class SiekerWaterLevel(models.Model):
     geom25833 = gis_models.PointField(srid=25833, null=True, blank=True)
     geom4326 = gis_models.PointField(srid=4326, null=True, blank=True)
@@ -853,6 +880,19 @@ class GekRetention(models.Model):
             "gek_document": self.gek_document.link,
             "number_of_measures": self.number_of_measures
         }
+    
+    def to_feature(self):
+        geojson = json.loads(self.geom4326.geojson) if self.geom4326 else None
+        geojson['properties'] = {
+            "id": self.id,
+            "name": self.name,
+            "document": self.gek_document.link if self.gek_document else None,
+            "current_landusage": self.current_landusage,
+            "planning_segment": self.planning_segment,
+            "number_of_measures": self.number_of_measures,
+            
+        }
+        return geojson
 
 # m:n table 
 class GekLanduse(models.Model):
@@ -879,6 +919,7 @@ class GekPriority(models.Model):
 
 class GEKMeasures(models.Model):
     description_de = models.CharField(max_length=255, null=True, blank=True)
+
 class GekRetentionMeasure(models.Model):
     gek_retention = models.ForeignKey(GekRetention, on_delete=models.CASCADE, related_name='measures')
     gek_measure = models.ForeignKey(GEKMeasures, on_delete=models.CASCADE, null=True, blank=True)
@@ -906,18 +947,36 @@ class GekRetentionMeasure(models.Model):
 class HistoricalWetlands(models.Model):
     geom25833 = gis_models.PolygonField(srid=25833, null=True, blank=True)
     geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
-    anmerkung = models.CharField(max_length=100, null=True, blank=True)
-    derz_nutzu = models.CharField(max_length=100, null=True, blank=True)
-    quelle_1 = models.CharField(max_length=100, null=True, blank=True)
-    quelle_2 = models.CharField(max_length=100, null=True, blank=True)
-    gew_u_ver = models.CharField(max_length=100, null=True, blank=True)
-    gew_name = models.CharField(max_length=100, null=True, blank=True)
-    dokument1 = models.CharField(max_length=100, null=True, blank=True)
-    flaeche_m2 = models.IntegerField(null=True, blank=True)
-    quelle_3 = models.CharField(max_length=100, null=True, blank=True)
-    waseransch = models.CharField(max_length=100, null=True, blank=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
+    comment = models.CharField(max_length=100, null=True, blank=True)
+    current_landusage = models.CharField(max_length=100, null=True, blank=True)
+    source_1 = models.CharField(max_length=100, null=True, blank=True)
+    source_2 = models.CharField(max_length=100, null=True, blank=True)
+    source_3 = models.CharField(max_length=100, null=True, blank=True)
+    association = models.CharField(max_length=100, null=True, blank=True)
+    document_1 = models.CharField(max_length=100, null=True, blank=True)
+    area = models.IntegerField(null=True, blank=True) # m² 
+    water_connection = models.CharField(max_length=100, null=True, blank=True)
     feucht_per = models.FloatField(null=True, blank=True)
-    umsetzbkt = models.CharField(max_length=100, null=True, blank=True)
+    feasibility = models.CharField(max_length=100, null=True, blank=True)
+    index_feasibility = models.FloatField(null=True, blank=True)
+
+    def to_feature(self):
+        geojson = json.loads(self.geom4326.geojson)
+        geojson['properties'] = {
+            "id": self.id,
+            "name": self.name,
+            "comment": self.comment,
+            "current_landusage": self.current_landusage,
+            "association": self.association,
+            "source_1": self.source_1,
+            "source_2": self.source_2,
+            "source_3": self.source_3,
+            "feasibility": self.feasibility,
+            "index_feasibility": self.index_feasibility,
+
+        }
+        return geojson
 
 
 class SinkDifference(models.Model):

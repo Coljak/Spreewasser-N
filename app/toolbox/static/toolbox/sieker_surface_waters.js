@@ -295,14 +295,7 @@ export function initializeSiekerSurfaceWaters(layers, dataInfo) {
         console.log('levelLayer: ', levelLayer);
     });
 
-    $('#toolboxPanel').on('click', function (event) {
-    const $target = $(event.target);
-    if ($target.hasClass('toolbox-back-to-initial')) {
-      $('#toolboxButtons').removeClass('d-none');
-        $('#toolboxPanel').addClass('d-none');
-        
-        }
-    });
+
 
 
 

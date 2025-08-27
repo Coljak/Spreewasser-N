@@ -289,16 +289,6 @@ function getSinks(sinkType, featureGroup) {
 
       tableCheckSelectedItems(infiltration, sinkType)
 
-      // if (selected_sinks !== undefined && selected_sinks.length > 0) {
-      //   selected_sinks.forEach(sinkId => {
-      //     const checked = ids.includes(sinkId) ? true : false;
-      //     const checkbox = document.querySelector(`.sink-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
-      //     if (checkbox && checked) {
-      //       checkbox.checked = checked;
-      //       checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-      //     }
-      //   })
-      // }
 
       
       tableCard.classList.remove('d-none');
@@ -667,11 +657,7 @@ export function initializeInfiltration(userField) {
 
     $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
-    if ($target.hasClass('toolbox-back-to-initial')) {
-      $('#toolboxButtons').removeClass('d-none');
-        $('#toolboxPanel').addClass('d-none');
-        
-    } else if ($target.attr('id') === 'btnFilterSinks') {
+    if ($target.attr('id') === 'btnFilterSinks') {
       getSinks('sink', sinkFeatureGroup);
     
     } else if ($target.attr('id') === 'btnFilterEnlargedSinks') {

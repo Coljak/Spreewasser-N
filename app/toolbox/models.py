@@ -326,25 +326,67 @@ class Sink(models.Model):
     #         self.centroid = self.geom.centroid  # Auto-generate centroid
     #     super().save(*args, **kwargs)
 
-    def to_json(self):
+    # def to_json(self):
+    #     return {
+    #         "id": self.id,
+    #         "depth": self.depth,
+    #         "area": self.area,
+    #         "volume": self.volume,
+    #         "index_1": self.index_1,
+    #         "index_2": self.index_2,
+    #         "index_3": self.index_3,
+    #         "land_use_1": self.land_use_1,
+    #         "land_use_2": self.land_use_2,
+    #         "land_use_3": self.land_use_3,
+    #         "index_soil": self.index_soil,
+    #         "shape_length": self.shape_length,
+    #         "shape_area": self.shape_area,
+    #         "index_feasibility": self.index_feasibility,
+    #         "hydrogeology": self.hydrogeology,
+    #         "index_hydrogeology": self.index_hydrogeology,
+    #     }
+    def to_json(self, language='de'):
+        
+        if (language == 'de'):
+            landuse_1 = self.landuse_1.de
+            landuse_2 = self.landuse_2.de if self.landuse_2 else '-'
+            landuse_3 = self.landuse_3.de if self.landuse_3 else '-'
+            
+            hydrogeology = self.aquifer.name_de if self.aquifer else 'keine Angabe'
+        elif language == 'en':
+            landuse_1 = self.landuse_1.en
+            landuse_2 = self.landuse_2.en if self.landuse_2 else '-'
+            landuse_3 = self.landuse_3.en if self.landuse_3 else '-'
+            hydrogeology = self.aquifer.name_en if self.aquifer else 'no information'
+        landuse = landuse_1
+        if self.landuse_2:
+            landuse += landuse_2
+            if self.landuse_3:
+                landuse += landuse_3
+
         return {
             "id": self.id,
-            "depth": self.depth,
-            "area": self.area,
-            "volume": self.volume,
-            "index_1": self.index_1,
-            "index_2": self.index_2,
-            "index_3": self.index_3,
-            "land_use_1": self.land_use_1,
-            "land_use_2": self.land_use_2,
-            "land_use_3": self.land_use_3,
-            "index_soil": self.index_soil,
-            "shape_length": self.shape_length,
-            "shape_area": self.shape_area,
-            "index_feasibility": self.index_feasibility,
-            "hydrogeology": self.hydrogeology,
-            "index_hydrogeology": self.index_hydrogeology,
+            "depth": f'{round(self.depth, 2)} m',
+            "area": f'{round(self.area, 2)} m²',
+            "volume": f'{round(self.volume, 2)} m³',
+            "index_proportions": f'{round(self.index_proportions * 100, 1)}%',
+            "index_soil": f'{round(self.index_soil * 100, 1)}%',
+            "land_use": landuse,
+            "land_use_1": landuse_1,
+            "land_use_2": landuse_2,
+            "land_use_3": landuse_3,
+            "index_soil": f'{round(self.index_soil * 100, 1)}%',
+            "soil_points": self.soil_points,
+            "index_feasibility": f'{round(self.index_feasibility * 100, 1) if self.index_feasibility else "-"}%',
+            "hydrogeology": hydrogeology,
+            "index_hydrogeology": f'{self.index_hydrogeology}%',
         }
+    
+
+    def to_point_feature(self, language='de'):      
+        geojson = json.loads(self.centroid.geojson)
+        geojson['properties'] = self.to_json(language)
+        return geojson
     
 
 
@@ -395,26 +437,55 @@ class EnlargedSink(models.Model):
     index_hydrogeology = models.FloatField(null=True, blank=True) # related table
 # Intersect of LandusMap and Sink
 
-    def to_json(self):
+    
+    def to_json(self, language='de'):
+        
+        if (language == 'de'):
+            landuse_1 = self.landuse_1.de
+            landuse_2 = self.landuse_2.de if self.landuse_2 else '-'
+            landuse_3 = self.landuse_3.de if self.landuse_3 else '-'
+            landuse_4 = self.landuse_4.de if self.landuse_4 else '-'
+            
+            hydrogeology = self.aquifer.name_de if self.aquifer else 'keine Angabe'
+        elif language == 'en':
+            landuse_1 = self.landuse_1.en
+            landuse_2 = self.landuse_2.en if self.landuse_2 else '-'
+            landuse_3 = self.landuse_3.en if self.landuse_3 else '-'
+            landuse_4 = self.landuse_4.de if self.landuse_4 else '-'
+            hydrogeology = self.aquifer.name_en if self.aquifer else 'no information'
+        landuse = landuse_1
+        if self.landuse_2:
+            landuse += landuse_2
+            if self.landuse_3:
+                landuse += landuse_3
+                if self.landuse_4:
+                    landuse += landuse_4
+
         return {
             "id": self.id,
-            "depth": round(self.depth, 2),
-            "area": round(self.area, 2),
-            "volume": round(self.volume, 2),
-            "index_1": self.index_1,
-            "index_2": self.index_2,
-            "index_3": self.index_3,
-            "land_use_1": self.land_use_1,
-            "land_use_2": self.land_use_2,
-            "land_use_3": self.land_use_3,
-            "land_use_4": self.land_use_4,
-            "index_soil": self.index_soil,
-            "shape_length": self.shape_length,
-            "shape_area": self.shape_area,
-            "index_feasibility": self.index_feasibility,
-            "hydrogeology": self.hydrogeology,
-            "index_hydrogeology": self.index_hydrogeology,
+            "depth": f'{round(self.depth, 2)} m',
+            "area": f'{round(self.area, 2)} m²',
+            "volume": f'{round(self.volume, 2)} m³',
+            "index_proportions": f'{round(self.index_proportions * 100, 1)}%',
+            "index_soil": f'{round(self.index_soil * 100, 1)}%',
+            "land_use": landuse,
+            "land_use_1": landuse_1,
+            "land_use_2": landuse_2,
+            "land_use_3": landuse_3,
+            "land_use_4": landuse_4,
+            "index_soil": f'{round(self.index_soil * 100, 1)}%',
+            "soil_points": self.soil_points,
+            "index_feasibility": f'{round(self.index_feasibility * 100, 1) if self.index_feasibility else "-"}%',
+            "hydrogeology": hydrogeology,
+            "index_hydrogeology": f'{self.index_hydrogeology}%',
         }
+    
+
+    def to_point_feature(self, language='de'):      
+        geojson = json.loads(self.centroid.geojson)
+        geojson['properties'] = self.to_json(language)
+        return geojson
+    
 
 class Aquifer(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)

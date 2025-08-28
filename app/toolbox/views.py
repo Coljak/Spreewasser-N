@@ -499,37 +499,22 @@ def filter_sinks(request):
 
         features = []
         for sink in sinks:
-            centroid = sink.centroid
-            geojson = json.loads(centroid.geojson)
+            # centroid = sink.centroid
+            geojson = sink.to_point_feature(language='de')
 
             sink_id = sink.id
             index_soil = sink_indices_soil.get(sink_id, 0)
 
             if sink.index_hydrogeology:
                 index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / .04)  
+                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / 4)  
             else:       
                 index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
+                    (index_soil + sink.index_proportions + sink.index_feasibility ) / 3) 
             print('geojson:', geojson)
-            geojson['properties'] = {
-                "id": sink.id,
-                "depth": round(sink.depth, 2),
-                "area": round(sink.area, 2),
-                "volume": round(sink.volume, 2),
-                "index_proportions": round(sink.index_proportions * 100, 1),
-                "index_soil": round(sink.index_soil * 100, 1),
-                "land_use_1": sink.landuse_1.de,
-                "land_use_2": sink.landuse_2.de if sink.landuse_2 else None,
-                "land_use_3": sink.landuse_3.de if sink.landuse_3 else None,
-                "index_soil": round(index_soil * 100, 1),
-                "soil_points": sink.soil_points,
-                "index_feasibility": round(sink.index_feasibility * 100, 1) if sink.index_feasibility else None,
-                "hydrogeology": sink.aquifer.name_de if sink.aquifer else None,
-                "index_hydrogeology": sink.index_hydrogeology * 100 if sink.index_hydrogeology else None,
-                "index_sink_total": index_sink_total
+            geojson['properties']["index_sink_total"] = index_sink_total
+            geojson['properties']["index_sink_total_str"] = f'{index_sink_total * 100}%'
 
-            }
             features.append(geojson)
         feature_collection = {
             "type": "FeatureCollection",
@@ -539,8 +524,11 @@ def filter_sinks(request):
             'success': True, 
             'message': f'Found {sinks.count()} sinks'
         }
+
+        data_info = models.DataInfo.objects.get(data_type='sink').to_dict()
+
         print('Time for filter_sinks:', datetime.now() - start)
-        return JsonResponse({'feature_collection': feature_collection, 'message': message})
+        return JsonResponse({'feature_collection': feature_collection, 'dataInfo': data_info, 'message': message})
     
 
 def filter_enlarged_sinks(request):
@@ -575,7 +563,7 @@ def filter_enlarged_sinks(request):
         Q(landuse_4__isnull=True))
         )
     sinks = sinks.filter(land_use_filter)
-    print('Enlarged_sinks 2', sinks)
+
     features = []
     if sinks.count() == 0:
         message = {
@@ -586,40 +574,20 @@ def filter_enlarged_sinks(request):
     else:
         sink_indices_soil = calculate_indices_df(sinks, project, sink_type='enlarged_sink')
         for sink in sinks:
-            print('Snk', sink)
-            centroid = sink.centroid
-            geojson = json.loads(centroid.geojson)
+            
+            geojson = sink.to_point_feature(language='de')
             sink_id = sink.id
             index_soil = sink_indices_soil.get(sink_id, 0)
 
             if sink.index_hydrogeology:
                 index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / .04)  
+                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / 4)  
             else:       
                 index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
-
-
-            geojson['properties'] = {
-                "id": sink.id,
-                "depth": round(sink.depth, 2),
-                "area": round(sink.area, 2),
-                "volume": round(sink.volume, 2),
-                "volume_construction_barrier": round(sink.volume_construction_barrier, 2),
-                "volume_gained": round(sink.volume_gained, 2),
-                "index_proportions": round(sink.index_proportions * 100, 1),
-                "land_use_1": sink.landuse_1.de,
-                "land_use_2": sink.landuse_2.de if sink.landuse_2 else None,
-                "land_use_3": sink.landuse_3.de if sink.landuse_3 else None,
-                "land_use_4": sink.landuse_4.de if sink.landuse_4 else None,
-                "index_soil": round(index_soil * 100, 1),
-                "soil_points": sink.soil_points,
-                "index_feasibility": round(sink.index_feasibility * 100, 1) if sink.index_feasibility else None,
-                "hydrogeology": sink.aquifer.name_de if sink.aquifer else None,
-                "index_hydrogeology": sink.index_hydrogeology * 100 if sink.index_hydrogeology else None,
-                "index_sink_total": index_sink_total
-
-            }
+                    (index_soil + sink.index_proportions + sink.index_feasibility ) / 3) 
+            print('geojson:', geojson)
+            geojson['properties']["index_sink_total"] = index_sink_total
+            geojson['properties']["index_sink_total_str"] = f'{index_sink_total * 100}%'
             features.append(geojson)
         feature_collection = {
             "type": "FeatureCollection",
@@ -630,7 +598,9 @@ def filter_enlarged_sinks(request):
             'message': f'Found {sinks.count()} Enlarged sinks'
         }
 
-        return JsonResponse({'feature_collection': feature_collection, 'message': message})
+        data_info = models.DataInfo.objects.get(data_type='enlarged_sink').to_dict()
+
+        return JsonResponse({'feature_collection': feature_collection, 'dataInfo': data_info, 'message': message})
 
 def filter_streams(request):
     try:

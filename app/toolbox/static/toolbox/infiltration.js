@@ -144,7 +144,7 @@ function getSinks(sinkType, featureGroup) {
       // Initialize marker cluster
       let markers = L.markerClusterGroup();
       let ids = [];
-      const elId = sinkType === 'sink' ? 'sink-table-container' : 'enlarged-sink-table-container';  
+      const elId = sinkType === 'sink' ? 'sink-table-container' : 'enlarged_sink-table-container';  
       const tableContainer = document.getElementById(elId);
 
       let tableHTML = ` 
@@ -261,13 +261,11 @@ function getSinks(sinkType, featureGroup) {
             <td>${p.hydrogeology ?? '-'}</td>
             <td>${p.index_hydrogeology ?? '-'}%</td>
             <td class="index-total" data-type=${sinkType} data-id="${p.id}" style= "background-color: ${color}"><b>${p.index_sink_total ?? '-'}</b></td>
-
-
           </tr>
         `;
       });
       infiltration[`all_${sinkType}_ids`] = ids;
-      infiltration[`selected_${sinkType}s`] = infiltration[`selected_${sinkType}s`].filter(sink => infiltration[`all_${sinkType}_ids`].has(sink));
+      infiltration[`selected_${sinkType}s`] = selected_sinks.filter(sink => infiltration[`all_${sinkType}_ids`].has(sink));
       localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
       infiltration.saveToLocalStorage();
       // Add the cluster group to the map
@@ -287,7 +285,7 @@ function getSinks(sinkType, featureGroup) {
       const tableCardId = sinkType === 'sink' ? 'cardSinkTable' : 'cardEnlargedSinkTable';
       const tableCard = document.getElementById(tableCardId);
 
-      tableCheckSelectedItems(infiltration, sinkType)
+      // tableCheckSelectedItems(infiltration, sinkType)
 
 
       
@@ -295,7 +293,11 @@ function getSinks(sinkType, featureGroup) {
     
     } else {
       handleAlerts(data.message);
+      return;
     }
+    return {'infiltration': infiltration, sinkType: sinkType}
+}).then(data => {
+  tableCheckSelectedItems(data.infiltration, data.sinkType)
 })
 .catch(error => console.error("Error fetching data:", error));
 };

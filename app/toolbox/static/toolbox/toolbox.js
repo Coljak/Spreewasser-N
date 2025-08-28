@@ -36,25 +36,38 @@ export const updateDropdown = (parameterType, newId) => {
 };
 
 // newly filtered items or pagination requires this to be executed in the DataTable
+// export function tableCheckSelectedItems(project, dataType) {
+//     console.log('tableCheckSelectedItems', project)
+//   if (project[`selected_${dataType}s`] !== undefined) {
+//     console.log('tableCheckSelectedItems behind first if: ', dataType)
+//     project[`selected_${dataType}s`].forEach(itemId => {
+//       const checked = project[`all_${dataType}_ids`].includes(itemId) ? true : false;
+//       const checkbox = document.querySelector(`.table-select-checkbox[data-type="${dataType}"][data-id="${itemId}"]`);
+//       if (checkbox && checked) {
+//         checkbox.checked = checked;
+//         // checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+//       }
+//     })
+//   }  
+// };
+
 export function tableCheckSelectedItems(project, dataType) {
-    console.log('tableCheckSelectedItems')
-  if (project[`selected_${dataType}s`] !== undefined && project[`selected_${dataType}s`].length > 0) {
-    project[`selected_${dataType}s`].forEach(itemId => {
-      const checked = project[`all_${dataType}_ids`].includes(itemId) ? true : false;
-      const checkbox = document.querySelector(`.table-select-checkbox[data-type="${dataType}"][data-id="${itemId}"]`);
-      if (checkbox && checked) {
+    console.log('tableCheckSelectedItems', project)
+  if (project[`selected_${dataType}s`] !== undefined) {
+    console.log('tableCheckSelectedItems behind first if: ', dataType)
+    const checkboxes = document.querySelectorAll(`.table-select-checkbox[data-type="${dataType}"]`)
+    checkboxes.forEach(checkbox => {
+        const checked = project[`selected_${dataType}s`].includes(Number(checkbox.dataset.id)) ? true : false;
         checkbox.checked = checked;
-        // checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    })
-  }  
+        })
+    }
 };
 
 
 
 
 export async function toolboxSinks() {
-    // gets the sinks as an image
+    // gets the sink outline
     // TODO: obsolte??static 'tool
   try {
       const response = await fetch('toolbox_sinks/');

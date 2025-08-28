@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const project = new ToolboxProject();
   project.saveToLocalStorage();
 
-
+  const x = L.marker([52.576840949661836, 13.879426770153563]).addTo(map) // TESTPIN Fähre Straußberg
   // center map at geolocation
   getGeolocation()
     .then((position) => {

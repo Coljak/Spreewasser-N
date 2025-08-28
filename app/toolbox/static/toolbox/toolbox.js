@@ -6,12 +6,37 @@ import {SiekerSurfaceWaters} from '/static/toolbox/sieker_surface_waters_model.j
 import {map} from '/static/shared/map_sidebar_utils.js';
 
 
-export const waterLevelPinIcon = L.icon({
-        iconUrl: '/static/images/water-level-pin_x2.png',
-        iconSize: [40, 40], // size of the icon
-        iconAnchor: [20, 40], // point of the icon which will correspond to marker's location
-        // popupAnchor: [0, 0] // point from which the popup should open relative to the iconAnchor
-        });
+
+export function makeColoredPin(color, iconPath = null, label = "") {
+    const iconHtml = iconPath
+        ? `<img src="${iconPath}" class="pin-icon" />`
+        : `<span class="pin-label">${label}</span>`;
+
+    return L.divIcon({
+        className: "colored-pin",
+        html: `
+             ${iconHtml}
+            <div class="pin-tip" style="border-top-color:${color}"></div>
+            <div class="pin-shape" style="background-color:${color}">
+                
+            </div>
+            
+        `,
+        iconSize: [28, 38],
+        iconAnchor: [12, 38],
+        popupAnchor: [0, 38]
+    });
+}
+
+// export const waterLevelPinIcon = L.icon({
+//         iconUrl: '/static/images/water-level-pin_x2.png',
+//         iconSize: [40, 40], // size of the icon
+//         iconAnchor: [20, 40], // point of the icon which will correspond to marker's location
+//         popupAnchor: [20, -40] // point from which the popup should open relative to the iconAnchor
+//         });
+
+
+export const waterLevelPinIcon = makeColoredPin("rgba(0, 255, 255, 1)", "/static/images/pin-transparent_water_level.png");
 
 export const updateDropdown = (parameterType, newId) => {
     
@@ -35,21 +60,7 @@ export const updateDropdown = (parameterType, newId) => {
         .catch(error => console.log('Error in updateDropdown', error));
 };
 
-// newly filtered items or pagination requires this to be executed in the DataTable
-// export function tableCheckSelectedItems(project, dataType) {
-//     console.log('tableCheckSelectedItems', project)
-//   if (project[`selected_${dataType}s`] !== undefined) {
-//     console.log('tableCheckSelectedItems behind first if: ', dataType)
-//     project[`selected_${dataType}s`].forEach(itemId => {
-//       const checked = project[`all_${dataType}_ids`].includes(itemId) ? true : false;
-//       const checkbox = document.querySelector(`.table-select-checkbox[data-type="${dataType}"][data-id="${itemId}"]`);
-//       if (checkbox && checked) {
-//         checkbox.checked = checked;
-//         // checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-//       }
-//     })
-//   }  
-// };
+
 
 export function tableCheckSelectedItems(project, dataType) {
     console.log('tableCheckSelectedItems', project)
@@ -196,9 +207,6 @@ export function openResultCard(dataType, id) {
         behavior: 'smooth',   
         block: 'start'        
         });
-
-    
-
 };
 
 
@@ -234,25 +242,25 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
 
 // for dataTablesselect * from toolbox_gekretention tg where id = 1
 function createTableSettings(dataInfo) {
-const tableLength = dataInfo.tableLength;
-const columnDefs = [];
+    const tableLength = dataInfo.tableLength;
+    const columnDefs = [];
 
 
-for (let i=0; i<tableLength; i++) {
-    if (dataInfo.properties[i].table) {
-        columnDefs.push({
-        "targets": i, // Select a checkbox
-        "orderable": dataInfo.properties[i].valueName !== 'id',
-        "searchable": false
-    })
+    for (let i=0; i<tableLength; i++) {
+        if (dataInfo.properties[i].table) {
+            columnDefs.push({
+            "targets": i, // Select a checkbox
+            "orderable": dataInfo.properties[i].valueName !== 'id',
+            "searchable": false
+        })
+        }
+        
     }
-    
-  }
-  return {
-    "order": [[1, "asc"]],
-    "searching": false,
-    "columnDefs": columnDefs
-  }
+    return {
+        "order": [[1, "asc"]],
+        "searching": false,
+        "columnDefs": columnDefs
+    }
 };
 
 const colorFunction = function (index) {
@@ -285,11 +293,11 @@ export function addFeatureCollectionToLayer(featureCollection, dataInfo, feature
         onEachFeature: function (feature, layer) {
             let popupContent = `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
             dataInfo.properties.forEach(property => {
-            if (property.popUp) { 
-                popupContent += property.href
-                ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
-                : `<b>${property.title}:</b> ${feature.properties[property.valueName]}<br>`;
-                }
+                if (property.popUp) { 
+                    popupContent += property.href
+                    ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
+                    : `<b>${property.title}:</b> ${feature.properties[property.valueName]}<br>`;
+                    }
             
             });
                 
@@ -359,6 +367,137 @@ export function addFeatureCollectionToLayer(featureCollection, dataInfo, feature
 };
 
 
+export function addPointFeatureCollectionToLayer(options) {
+    let featureCollection = options.featureCollection 
+    let dataInfo = options.dataInfo
+    let featureGroup = options.featureGroup
+    let colorPinByIndex = options.colorByIndex ? options.colorByIndex : false
+    let markerCluster = options.markerCluster ? options.markerCluster : false
+    let selectable = options.selectable ? options.selectable : false
+    let pinIconPath = options.pinIconPath ? options.pinIconPath : '/static/images/pin-transparent_dot.png'
+
+    let markers = L.markerClusterGroup();
+    
+
+    let points = L.geoJSON(featureCollection, {
+        pointToLayer: function (feature, latlng) {
+            let color ;
+            if (colorPinByIndex) {
+                color = colorFunction(feature.properties[colorPinByIndex])
+            } else { color = dataInfo.featureColor }
+            
+            const pin = makeColoredPin(color, pinIconPath)
+            return L.marker(latlng, {
+                icon: pin
+            });
+        },
+        onEachFeature: function (feature, layer) {
+            let popupContent = `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
+            dataInfo.properties.forEach(property => {
+                if (property.popUp) { 
+                    popupContent += property.href
+                    ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
+                    : `<b>${property.title}:</b> ${feature.properties[property.valueName]}<br>`;
+                    }
+            
+            });
+
+            
+            layer.bindTooltip(popupContent);
+            layer.on('mouseover', function () {
+                this.openPopup();
+            });
+            layer.on('contextmenu', function (event) {
+                L.popup()
+                    .setLatLng(event.latlng)
+                    .setContent(`
+                    <h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>
+                    <button class="btn btn-outline-secondary select-${dataInfo.dataType}" data-id=${feature.properties.id}">Auswählen</button>
+                    `)
+                    .openOn(map);   
+            });
+
+            markers.addLayer(layer)
+
+
+
+            // Delay attaching event listener until DOM is rendered
+            setTimeout(() => {
+                const button = document.querySelector(`.select-${dataInfo.dataType}`);
+                if (button) {
+                    button.addEventListener('click', () => {
+                        map.closePopup();
+                    });
+                }
+            }, 0);
+        }
+    });
+
+    featureGroup.addLayer(markers)
+
+
+
+
+
+
+
+
+
+
+
+    // featureCollection.features.forEach(feature => {
+
+    //     const p = feature.properties;
+    //     let colorHue = p.index_sink_total * 1.2;
+    //     let color = `hsl(${colorHue}, 70%, 50%)`;
+
+
+
+    //     let coords = feature.coordinates; // Get the lat/lng coordinates
+    //     let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
+    //     // Create popup content with all properties
+
+
+    //     dataInfo.properties.forEach(property => {
+    //         let popupContent = `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
+    //         if (property.popUp) { 
+    //             popupContent += property.href
+    //             ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
+    //             : `<b>${property.title}:</b> ${feature.properties[property.valueName]}<br>`;
+    //             }
+        
+    //     });
+
+    //     let coloredPin = makeColoredPin(color, '/static/images/pin-transparent_dot.png')
+
+    //     let marker = L.marker(latlng, {icon: coloredPin}).bindPopup(popupContent);
+
+
+        
+    //     marker.on('mouseover', function () {
+    //       this.openPopup();
+    //     });
+    //     // Hide popup when not hovering
+    //     marker.on('mouseout', function () {
+    //         this.closePopup();
+    //     });
+    //     marker.on('contextmenu', function (event) {
+    //       L.popup()
+    //           .setLatLng(event.latlng)
+    //           .setContent(`
+    //               <b>Sink Options</b><br>
+    //               <button class="btn btn-outline-secondary show-sink-outline" data-type="${sinkType}" sinkId=${p.id}">Show Sink Outline</button>
+    //               <button class="btn btn-outline-secondary select-sink" data-type="${sinkType}" sinkId="${p.id}">Toggle Sink selection</button>
+    //           `)
+    //           .openOn(map);
+    //     });
+    //     markers.addLayer(marker);
+    //       // Add marker to cluster
+    //   });
+
+    // featureGroup.addLayer(markers);
+}
+
 export function addFeatureCollectionToTable(projectClass, featureCollection, dataInfo){
     console.log('addFeatureCollectionToTable, dataInfo:', dataInfo)
     const project = projectClass.loadFromLocalStorage()
@@ -410,6 +549,7 @@ export function addFeatureCollectionToTable(projectClass, featureCollection, dat
 
     const tableSettings = createTableSettings(dataInfo);
     $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
+    $(`#card-${dataInfo.dataType}-table`).removeClass('d-none')
 };
 
 // export function addFeatureCollectionResultCards( dataInfo, gekMeasures) {

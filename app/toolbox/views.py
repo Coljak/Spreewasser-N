@@ -507,13 +507,13 @@ def filter_sinks(request):
 
             if sink.index_hydrogeology:
                 index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / 4)  
+                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / .04)  
             else:       
                 index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility ) / 3) 
+                    (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
             print('geojson:', geojson)
-            geojson['properties']["index_sink_total"] = index_sink_total
-            geojson['properties']["index_sink_total_str"] = f'{index_sink_total * 100}%'
+            geojson['properties']["index_sink_total"] = index_sink_total/100
+            geojson['properties']["index_sink_total_str"] = f'{index_sink_total}%'
 
             features.append(geojson)
         feature_collection = {
@@ -581,13 +581,13 @@ def filter_enlarged_sinks(request):
 
             if sink.index_hydrogeology:
                 index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / 4)  
+                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / .04)  
             else:       
                 index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility ) / 3) 
+                    (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
             print('geojson:', geojson)
-            geojson['properties']["index_sink_total"] = index_sink_total
-            geojson['properties']["index_sink_total_str"] = f'{index_sink_total * 100}%'
+            geojson['properties']["index_sink_total"] = index_sink_total/100
+            geojson['properties']["index_sink_total_str"] = f'{index_sink_total}%'
             features.append(geojson)
         feature_collection = {
             "type": "FeatureCollection",

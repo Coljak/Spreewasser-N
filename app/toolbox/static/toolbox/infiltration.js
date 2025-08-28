@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, tableCheckSelectedItems, addClickEventListenerToToolboxPanel } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
@@ -23,6 +23,7 @@ import {
   removeLegendFromMap,
 } from '/static/shared/map_sidebar_utils.js';
 import {Infiltration} from '/static/toolbox/infiltration_model.js';
+
 
 
 const sinkFeatureGroup = new L.FeatureGroup()
@@ -143,33 +144,11 @@ function getSinks(sinkType, featureGroup) {
       
       // Initialize marker cluster
       let markers = L.markerClusterGroup();
-      let ids = [];
-      const elId = sinkType === 'sink' ? 'sink-table-container' : 'enlarged_sink-table-container';  
-      const tableContainer = document.getElementById(elId);
 
-      let tableHTML = ` 
-        <table class="table table-bordered table-hover" id="${sinkType}-table">
-          <caption>${sinkType === 'sink' ? 'Sinks' : 'Enlarged Sinks'}</caption>
-          <thead>
-            <tr>
-              <th><input type="checkbox" class="sink-select-all-checkbox table-select-all" data-type="${sinkType}">Select all</th>
-              <th>Tiefe (m)</th>
-              <th>Fläche (m²)</th>
-              <th>Volumen (m³)</th>
-              <th>Volumen Barriere</th>
-              <th>Zusätzliches Volumen</th>
-              <th>Eignung Senkenproportionen</th>
-              <th>Bodeneignung</th>
-              <th>Landnutzung</th>
-              <th>Bodenpunkte</th>
-              <th>Eignung Ertragsverluste</th>
-              <th>Hydrogeologie</th>
-              <th>Eignung Hydrogeologie</th>
-              <th>Gesamteignung Senke</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
+      const elId = sinkType === 'sink' ? 'sink-table-container' : 'enlarged_sink-table-container';  
+
+
+
       console.log('data', data);
       const sink_indices = {}
       
@@ -177,18 +156,9 @@ function getSinks(sinkType, featureGroup) {
       data.feature_collection.features.forEach(feature => {
 
         const p = feature.properties;
-        
-        ids.push(p.id);
-        sink_indices[p.id] = {
-          index_sink_total: p.index_sink_total,
-          index_soil: p.index_soil,
-          index_proportions: p.index_proportions,
-          index_feasibility: p.index_feasibility,
-          index_hydrogeology: p.index_hydrogeology,
-          index_total: p.index_sink_total,
-        }
 
-        let colorHue = p.index_sink_total * 1.2;
+
+        let colorHue = p.index_sink_total * 120;
         let color = `hsl(${colorHue}, 70%, 50%)`;
 
 
@@ -241,55 +211,25 @@ function getSinks(sinkType, featureGroup) {
         });
         markers.addLayer(marker);
           // Add marker to cluster
-        
-        
-
-        
-        tableHTML += `
-          <tr data-sink-id="${p.id}">
-            <td><input type="checkbox" class="sink-select-checkbox table-select-checkbox" data-type=${sinkType} data-id="${p.id}"></td>
-            <td>${p.depth}</td>
-            <td>${p.area}</td>
-            <td>${p.volume}</td>
-            <td>${p.volume_construction_barrier ?? '-'}</td>
-            <td>${p.volume_gained ?? '-'}</td>
-            <td>${p.index_proportions}%</td>
-            <td>${p.index_soil ?? '-'}%</td>
-            <td>${p.land_use_1}${p.land_use_2 ? `, ${p.land_use_2}`: ''}${p.land_use_3 ? `, ${p.land_use_3}`: ''}${p.land_use_4 ? `, ${p.land_use_4}`: ''}</td>
-            <td>${p.soil_points ?? '-'}</td>
-            <td>${p.index_feasibility ?? '-'}%</td>
-            <td>${p.hydrogeology ?? '-'}</td>
-            <td>${p.index_hydrogeology ?? '-'}%</td>
-            <td class="index-total" data-type=${sinkType} data-id="${p.id}" style= "background-color: ${color}"><b>${p.index_sink_total ?? '-'}</b></td>
-          </tr>
-        `;
       });
-      infiltration[`all_${sinkType}_ids`] = ids;
-      infiltration[`selected_${sinkType}s`] = selected_sinks.filter(sink => infiltration[`all_${sinkType}_ids`].has(sink));
+
+      addPointFeatureCollectionToLayer(
+        {
+          featureCollection: data.feature_collection, 
+          dataInfo: data.dataInfo, 
+          featureGroup: featureGroup,
+          colorByIndex: 'index_sink_total',
+          markerCluster: true, 
+          selectable: true
+        })
+
+      addFeatureCollectionToTable(Infiltration, data.feature_collection, data.dataInfo)
+      infiltration[`selected_${sinkType}s`] = selected_sinks.filter(sink => infiltration[`all_${sinkType}_ids`].includes(sink));
       localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
-      infiltration.saveToLocalStorage();
+      // infiltration.saveToLocalStorage();
       // Add the cluster group to the map
-      featureGroup.addLayer(markers);
+      // featureGroup.addLayer(markers);
 
-
-      // Data Table
-      tableHTML += `</tbody></table>`;
-      tableContainer.innerHTML = tableHTML;
-      const tableSettings = createSinkTableSettings(sinkType, false);
-      $('#' + elId + ' table').DataTable(tableSettings);
-
-      // addClickEventListenerToToolboxPanel(Infiltration)
-
-
-      // display card with table
-      const tableCardId = sinkType === 'sink' ? 'cardSinkTable' : 'cardEnlargedSinkTable';
-      const tableCard = document.getElementById(tableCardId);
-
-      // tableCheckSelectedItems(infiltration, sinkType)
-
-
-      
-      tableCard.classList.remove('d-none');
     
     } else {
       handleAlerts(data.message);

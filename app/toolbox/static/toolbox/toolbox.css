@@ -92,3 +92,65 @@
   border: 0px solid transparent;
 }
 /*********************** COPY END ***********************/
+
+
+/* leaflet Pins */
+/* Container matches your PNG size */
+.colored-pin {
+  position: relative;
+  width: 28px;   /* PNG width */
+  height: 38px;  /* PNG height */
+}
+
+/* The pin outline PNG */
+.colored-pin .pin-icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 38px;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 2; /* stays above background shapes */
+}
+
+/* Colored circle overlay */
+.colored-pin .pin-shape {
+  position: absolute;
+  top: 1px;        /* adjust so circle sits inside PNG’s round head */
+  left: 1px;       /* center: (28 - 20) / 2 = 4 */
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: red; /* dynamic color */
+  z-index: -10; /* under the pin outline */
+}
+
+/* Colored triangle tip */
+.colored-pin .pin-tip {
+  position: absolute;
+  left: 13px;
+  top: 22px; /* just below the circle */
+  transform: translateX(-50%); /* center horizontally */
+
+  width: 0;
+  height: 0;
+
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 16px solid red; /* dynamic color */
+  z-index: 1; /* under the pin outline */
+}
+
+/* Optional text/icon inside the circle */
+.colored-pin .pin-label {
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  z-index: 3;
+}
+

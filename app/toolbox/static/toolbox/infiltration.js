@@ -23,19 +23,22 @@ import {
   removeLegendFromMap,
 } from '/static/shared/map_sidebar_utils.js';
 import {Infiltration} from '/static/toolbox/infiltration_model.js';
+import { Layers } from '/static/toolbox/layers.js';
 
 
 
-const sinkFeatureGroup = new L.FeatureGroup()
-sinkFeatureGroup.toolTag = 'infiltration';
-const enlargedSinkFeatureGroup = new L.FeatureGroup()
-enlargedSinkFeatureGroup.toolTag = 'infiltration';
+const sinkFeatureGroup = Layers.sink
+
+const enlargedSinkFeatureGroup = Layers.enlarged_sink
+
 const lakesFeatureGroup = new L.FeatureGroup()
 lakesFeatureGroup.toolTag = 'infiltration';
 const streamsFeatureGroup = new L.FeatureGroup()
 streamsFeatureGroup.toolTag = 'infiltration';
 const inletConnectionsFeatureGroup = new L.featureGroup()
 inletConnectionsFeatureGroup.toolTag = 'infiltration';
+let sinkMarkers = L.markerClusterGroup();
+sinkMarkers.toolTag = 'infiltration';
 
 //TODO: this is not pretty
 const connectionLayerMap = {};
@@ -122,7 +125,8 @@ function createSinkTableSettings(sinkType, indexVisible) {
   }
 };
 
-function getSinks(sinkType, featureGroup) {
+function getSinks(sinkType) {
+  const featureGroup = Layers[sinkType]
   let url = `filter_${sinkType}s/`;
  
   const infiltration = Infiltration.loadFromLocalStorage();
@@ -152,66 +156,6 @@ function getSinks(sinkType, featureGroup) {
       console.log('data', data);
       const sink_indices = {}
       
-      // Iterate through features and add them to the cluster
-      data.feature_collection.features.forEach(feature => {
-
-        const p = feature.properties;
-
-
-        let colorHue = p.index_sink_total * 120;
-        let color = `hsl(${colorHue}, 70%, 50%)`;
-
-
-
-        let coords = feature.coordinates; // Get the lat/lng coordinates
-        let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
-        // Create popup content with all properties
-        
-        let popupContent = `
-            <b>Tiefe:</b> ${p.depth} m<br>
-            <b>Fläche:</b> ${p.area} m²<br>
-            <b>Volumen:</b> ${p.volume} m³<br>
-            <b>Bodeneignung:</b> ${p.index_soil}%<br>
-            ${p.volume_gained ? `<b>Zusätzliches Volumen:</b> ${p.volume_gained}<br>` : ''}
-            ${p.volume_construction_barrier ? `<b>Volumen Barriere:</b> ${p.volume_construction_barrier}<br>` : ''}
-            <b>Landnuntzung 1:</b> ${p.land_use_1}<br>
-            ${p.land_use_2 ? `<b>Landnuntzung 2:</b> ${p.land_use_2}<br>` : ''}
-            ${p.land_use_3 ? `<b>Landnuntzung 3:</b> ${p.land_use_3}<br>` : ''}
-            ${p.land_use_4 ? `<b>Landnuntzung 4:</b> ${p.land_use_4}<br>` : ''}
-        `;
-        // Create a marker
-        let marker = L.circleMarker(latlng, {
-          radius: 5,
-          stroke: true,
-          fill: true,
-          fillColor: color,
-          color: 'black',
-          weight: 1,
-          opacity: 1,
-          fillOpacity: 0.8,
-          className: 'circle-marker'
-        }).bindPopup(popupContent);
-        
-        marker.on('mouseover', function () {
-          this.openPopup();
-        });
-        // Hide popup when not hovering
-        marker.on('mouseout', function () {
-            this.closePopup();
-        });
-        marker.on('contextmenu', function (event) {
-          L.popup()
-              .setLatLng(event.latlng)
-              .setContent(`
-                  <b>Sink Options</b><br>
-                  <button class="btn btn-outline-secondary show-sink-outline" data-type="${sinkType}" sinkId=${p.id}">Show Sink Outline</button>
-                  <button class="btn btn-outline-secondary select-sink" data-type="${sinkType}" sinkId="${p.id}">Toggle Sink selection</button>
-              `)
-              .openOn(map);
-        });
-        markers.addLayer(marker);
-          // Add marker to cluster
-      });
 
       addPointFeatureCollectionToLayer(
         {
@@ -219,7 +163,7 @@ function getSinks(sinkType, featureGroup) {
           dataInfo: data.dataInfo, 
           featureGroup: featureGroup,
           colorByIndex: 'index_sink_total',
-          markerCluster: true, 
+          // markerCluster: sinkMarkers, 
           selectable: true
         })
 
@@ -600,10 +544,10 @@ export function initializeInfiltration(userField) {
     $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
     if ($target.attr('id') === 'btnFilterSinks') {
-      getSinks('sink', sinkFeatureGroup);
+      getSinks('sink');
     
     } else if ($target.attr('id') === 'btnFilterEnlargedSinks') {
-      getSinks('enlarged_sink', enlargedSinkFeatureGroup);
+      getSinks('enlarged_sink');
     
     } else if ($target.attr('id') === 'btnFilterStreams') {
       getWaterBodies('streams', streamsFeatureGroup);
@@ -620,22 +564,26 @@ export function initializeInfiltration(userField) {
     } else if ($target.attr('id') === 'navInfiltrationResult') {
         map.removeLayer(sinkFeatureGroup);
         map.removeLayer(enlargedSinkFeatureGroup);
-    } else if ($target.attr('id') === 'toggleSinks') {
-      if (map.hasLayer(sinkFeatureGroup)) {
-        map.removeLayer(sinkFeatureGroup);
+
+    } else if ($target.hasClass('toggle-feature-group')) {
+      console.log('toggle-feature-group')
+      const dataType = $target.attr('data-type')
+      if (dataType === 'sink') {
+        if (map.hasLayer(Layers[dataType])) {
+        map.removeLayer(Layers[dataType]);
         $target.text('einblenden');
       } else {
-          map.addLayer(sinkFeatureGroup);
+          map.addLayer(Layers[dataType]);
           $target.text('ausblenden');
       }
-    } else if ($target.attr('id') === 'toggleEnlargedSinks') {
-      if (map.hasLayer(enlargedSinkFeatureGroup)) {
+      } else
+      {if (map.hasLayer(enlargedSinkFeatureGroup)) {
         map.removeLayer(enlargedSinkFeatureGroup);
         $target.text('einblenden');
       } else {
           map.addLayer(enlargedSinkFeatureGroup);
           $target.text('ausblenden');
-      }
+      }}
     } else if ($target.attr('id') === 'toggleStreams') {
       if (map.hasLayer(streamsFeatureGroup)) {
         map.removeLayer(streamsFeatureGroup);
@@ -655,19 +603,7 @@ export function initializeInfiltration(userField) {
     } 
     }); 
 
-  // TODO I tttttttttthink      this is not working!
-    $('#map').on('click', function (event) {
-      if (event.target.classList.contains('select-sink')) {
-        const sinkId = event.target.getAttribute('sinkId');
-        const sinkType = event.target.getAttribute('data-type');
-        console.log('sinkId', sinkId);
-        console.log('sinkType', sinkType);
 
-        const checkbox = document.querySelector(`.table-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
-        checkbox.checked = !checkbox.checked;
-        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    });
 
   $('input[type="checkbox"][name="land_use"]').prop('checked', true);
   $('input[type="checkbox"][name="land_use"]').trigger('change');

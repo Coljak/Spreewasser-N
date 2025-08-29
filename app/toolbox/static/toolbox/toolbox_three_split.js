@@ -241,12 +241,7 @@ const markers = L.markerClusterGroup({
 });
 
 
-// const waterLevelPinIcon = L.icon({
-//   iconUrl: '/static/images/water-level-pin_x2.png',
-//   iconSize: [30, 30], // size of the icon
-//   iconAnchor: [15, 15], // point of the icon which will correspond to marker's location
-//   popupAnchor: [0, 0] // point from which the popup should open relative to the iconAnchor
-// });
+
 //https://www.pegelonline.wsv.de/webservice/dokuRestapi
 fetch('https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json?includeTimeseries=true&includeCurrentMeasurement=true') // Replace with your actual API
   .then(response => response.json())

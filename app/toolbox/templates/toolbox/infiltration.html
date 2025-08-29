@@ -49,7 +49,8 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Filter Natürliche Senken als Versickerungsstandorte</h5>
-                        <button id="toggleSinks" class="btn btn-secondary">ausblenden</button>                                                                                             
+                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                        <button id="toggleSinks" class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
                     </div>
                     
                     <form method="POST" action="">
@@ -74,7 +75,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Filter Baulich modifizierte Senken als Versickerungsstandorte</h5>
-                        <button id="toggleEnlargedSinks" class="btn btn-secondary">ausblenden</button>                                                                                             
+                        <button id="toggleEnlargedSinks" class="btn btn-secondary toggle-feature-group">ausblenden</button>                                                                                             
                     </div>
                     
                     <form method="POST" action="">

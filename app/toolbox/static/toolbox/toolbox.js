@@ -5,7 +5,19 @@ import {SiekerSink} from '/static/toolbox/sieker_sink_model.js';
 import {SiekerSurfaceWaters} from '/static/toolbox/sieker_surface_waters_model.js';
 import {map} from '/static/shared/map_sidebar_utils.js';
 
+// TODO I tttttttttthink      this is not working!
+$('#map').on('click', function (event) {
+    if (event.target.classList.contains('select-map-feature-button')) {
+    const dataType = event.target.getAttribute('data-type');
+    const dataId = event.target.getAttribute('data-id');
+    console.log('select-map-feature-button', dataType, 'ID:', dataId);
+        map.closePopup();
 
+    const checkbox = document.querySelector(`.table-select-checkbox[data-type="${dataType}"][data-id="${dataId}"]`);
+    checkbox.checked = !checkbox.checked;
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+});
 
 export function makeColoredPin(color, iconPath = null, label = "") {
     const iconHtml = iconPath
@@ -17,23 +29,15 @@ export function makeColoredPin(color, iconPath = null, label = "") {
         html: `
              ${iconHtml}
             <div class="pin-tip" style="border-top-color:${color}"></div>
-            <div class="pin-shape" style="background-color:${color}">
-                
-            </div>
+            <div class="pin-shape" style="background-color:${color}"></div>
             
         `,
         iconSize: [28, 38],
         iconAnchor: [12, 38],
-        popupAnchor: [0, 38]
+        popupAnchor: [138, 138]
     });
 }
 
-// export const waterLevelPinIcon = L.icon({
-//         iconUrl: '/static/images/water-level-pin_x2.png',
-//         iconSize: [40, 40], // size of the icon
-//         iconAnchor: [20, 40], // point of the icon which will correspond to marker's location
-//         popupAnchor: [20, -40] // point from which the popup should open relative to the iconAnchor
-//         });
 
 
 export const waterLevelPinIcon = makeColoredPin("rgba(0, 255, 255, 1)", "/static/images/pin-transparent_water_level.png");
@@ -309,7 +313,7 @@ export function addFeatureCollectionToLayer(featureCollection, dataInfo, feature
             });
                     
             layer.bindTooltip(popupContent);
-            let menuContent = popupContent + `<button class="btn btn-outline-secondary select-feature" data-type=${dataInfo.dataType} data-id="${feature.properties.id}">Auswählen</button>`;
+            let menuContent = popupContent + `<button class="btn btn-outline-secondary select-map-feature-button" data-type=${dataInfo.dataType} data-id="${feature.properties.id}">Auswählen</button>`;
 
             layer.on('mouseover', function () {
                 // this.setStyle(highlightStyle);
@@ -325,9 +329,9 @@ export function addFeatureCollectionToLayer(featureCollection, dataInfo, feature
     
             layer.on('click', function (e) {
                 // Remove clicked from all
-            const popUp = L.popup().setContent(menuContent);
-            map.openPopup(popUp, layer.getBounds().getCenter());
-            document.querySelectorAll('.polygon.clicked')
+                const popUp = L.popup().setContent(menuContent);
+                map.openPopup(popUp, layer.getBounds().getCenter());
+                document.querySelectorAll('.polygon.clicked')
                 .forEach(el => el.classList.remove('clicked'));
 
             // Add to this one
@@ -337,26 +341,6 @@ export function addFeatureCollectionToLayer(featureCollection, dataInfo, feature
             }
             });
     
-            layer.on('contextmenu', function (event) {
-            L.popup()
-                .setLatLng(event.latlng)
-                .setContent(`
-                    <h6><b> ${feature.properties.name}</b></h6>
-                    <button class="btn btn-outline-secondary select-feature-button" data-type="${dataInfo.dataType} data-id="${feature.properties.id}">Auswählen</button>
-                `)
-                .openOn(map);
-    
-            setTimeout(() => {
-                const button = document.querySelector('.select-feature-button');
-                if (button) {
-                    button.addEventListener('click', () => {
-                        map.closePopup(); 
-                        const featureId = button.getAttribute('data-id');
-                        console.log('Selected featureId ID:', featureId);
-                    });
-                }
-            }, 0);
-            });
         }
         });
   
@@ -372,11 +356,11 @@ export function addPointFeatureCollectionToLayer(options) {
     let dataInfo = options.dataInfo
     let featureGroup = options.featureGroup
     let colorPinByIndex = options.colorByIndex ? options.colorByIndex : false
-    let markerCluster = options.markerCluster ? options.markerCluster : false
+    // let markerCluster = options.markerCluster ? options.markerCluster : null
     let selectable = options.selectable ? options.selectable : false
     let pinIconPath = options.pinIconPath ? options.pinIconPath : '/static/images/pin-transparent_dot.png'
 
-    let markers = L.markerClusterGroup();
+    
     
 
     let points = L.geoJSON(featureCollection, {
@@ -387,6 +371,8 @@ export function addPointFeatureCollectionToLayer(options) {
             } else { color = dataInfo.featureColor }
             
             const pin = makeColoredPin(color, pinIconPath)
+            pin.dataId = feature.properties.id;
+            pin.dataType = dataInfo.dataType;
             return L.marker(latlng, {
                 icon: pin
             });
@@ -407,96 +393,40 @@ export function addPointFeatureCollectionToLayer(options) {
             layer.on('mouseover', function () {
                 this.openPopup();
             });
-            layer.on('contextmenu', function (event) {
+
+            popupContent += `
+                    <button class="btn btn-outline-secondary select-map-feature-button" data-type="${dataInfo.dataType}" data-id=${feature.properties.id}">Auswählen</button>
+                    `;
+            layer.on('click', function (event) {            
                 L.popup()
                     .setLatLng(event.latlng)
-                    .setContent(`
-                    <h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>
-                    <button class="btn btn-outline-secondary select-${dataInfo.dataType}" data-id=${feature.properties.id}">Auswählen</button>
-                    `)
+                    .setContent(popupContent)
                     .openOn(map);   
             });
 
-            markers.addLayer(layer)
+            // markerCluster.addLayer(layer)
+            // layer.addTo(featureGroup)
+            featureGroup.addLayer(layer)
 
 
 
             // Delay attaching event listener until DOM is rendered
-            setTimeout(() => {
-                const button = document.querySelector(`.select-${dataInfo.dataType}`);
-                if (button) {
-                    button.addEventListener('click', () => {
-                        map.closePopup();
-                    });
-                }
-            }, 0);
+            // setTimeout(() => {
+            //     const button = document.querySelector(`.select-select-map-item`);
+            //     if (button) {
+            //         button.addEventListener('click', () => {
+            //             map.closePopup();
+            //         });
+            //     }
+            // }, 0);
         }
     });
 
-    featureGroup.addLayer(markers)
+    map.addLayer(featureGroup)
 
-
-
-
-
-
-
-
-
-
-
-    // featureCollection.features.forEach(feature => {
-
-    //     const p = feature.properties;
-    //     let colorHue = p.index_sink_total * 1.2;
-    //     let color = `hsl(${colorHue}, 70%, 50%)`;
-
-
-
-    //     let coords = feature.coordinates; // Get the lat/lng coordinates
-    //     let latlng = [coords[1], coords[0]]; // Swap for Leaflet format
-    //     // Create popup content with all properties
-
-
-    //     dataInfo.properties.forEach(property => {
-    //         let popupContent = `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
-    //         if (property.popUp) { 
-    //             popupContent += property.href
-    //             ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
-    //             : `<b>${property.title}:</b> ${feature.properties[property.valueName]}<br>`;
-    //             }
-        
-    //     });
-
-    //     let coloredPin = makeColoredPin(color, '/static/images/pin-transparent_dot.png')
-
-    //     let marker = L.marker(latlng, {icon: coloredPin}).bindPopup(popupContent);
-
-
-        
-    //     marker.on('mouseover', function () {
-    //       this.openPopup();
-    //     });
-    //     // Hide popup when not hovering
-    //     marker.on('mouseout', function () {
-    //         this.closePopup();
-    //     });
-    //     marker.on('contextmenu', function (event) {
-    //       L.popup()
-    //           .setLatLng(event.latlng)
-    //           .setContent(`
-    //               <b>Sink Options</b><br>
-    //               <button class="btn btn-outline-secondary show-sink-outline" data-type="${sinkType}" sinkId=${p.id}">Show Sink Outline</button>
-    //               <button class="btn btn-outline-secondary select-sink" data-type="${sinkType}" sinkId="${p.id}">Toggle Sink selection</button>
-    //           `)
-    //           .openOn(map);
-    //     });
-    //     markers.addLayer(marker);
-    //       // Add marker to cluster
-    //   });
-
-    // featureGroup.addLayer(markers);
 }
+
+
 
 export function addFeatureCollectionToTable(projectClass, featureCollection, dataInfo){
     console.log('addFeatureCollectionToTable, dataInfo:', dataInfo)

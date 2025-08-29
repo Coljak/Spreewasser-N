@@ -602,96 +602,6 @@ def filter_enlarged_sinks(request):
 
         return JsonResponse({'feature_collection': feature_collection, 'dataInfo': data_info, 'message': message})
 
-def filter_streams(request):
-    try:
-        project = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-    user_field = models.UserField.objects.get(pk=project['userField'])
-    geom = GEOSGeometry(user_field.geom)
-    distance = int(project.get('stream_distance_to_userfield', 0))
-    streams = None
-    if distance > 0:
-        geom_25833 = user_field.geom.transform(25833, clone=True)
-        
-        geom_25833 = geom_25833.buffer(distance)
-        buffered_4326 = geom_25833.transform(4326, clone=True)
-        streams = models.Stream.objects.filter(Q(geom__intersects=buffered_4326) | Q(geom__within=buffered_4326))
-    else:
-        streams = models.Stream.objects.filter(Q(geom__intersects=geom) | Q(geom__within=geom))
-
-    filters = Q()
-    filters = add_range_filter(filters, project, 'stream_min_surplus_volume', 'min_surplus_volume')
-    filters = add_range_filter(filters, project, 'stream_mean_surplus_volume', 'mean_surplus_volume')
-    filters = add_range_filter(filters, project, 'stream_max_surplus_volume', 'max_surplus_volume')
-    filters = add_range_filter(filters, project, 'stream_plus_days', 'plus_days')
-    streams = streams.filter(filters)
-
-    
-    features = []
-    if streams.count() == 0:
-        message = {
-            'success': False, 
-            'message': f'No streams found in the search area.'
-        }
-        return JsonResponse({'message': {'success': False, 'message': 'No streams found.'}})
-    else:
-        
-        
-        feature_collection = create_feature_collection(streams)
-
-        message = {
-            'success': True, 
-            'message': f'Found {streams.count()} streams'
-        }
-
-        print('feature_collection:', feature_collection)
-        return JsonResponse({'feature_collection': feature_collection, 'message': message})
-
-def filter_lakes(request):
-    try:
-        project = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-    user_field = models.UserField.objects.get(pk=project['userField'])
-    geom = GEOSGeometry(user_field.geom)
-
-    distance = int(project.get('lake_distance_to_userfield', 0))
-    lakes = None
-    if distance > 0:
-        # Transform to EPSG:25833 (meters) and add the buffer
-        user_geom_25833 = user_field.geom.transform(25833, clone=True)
-        buffer_25833 = user_geom_25833.buffer(distance)
-        buffer_4326 = buffer_25833.transform(4326, clone=True)
-        lakes = models.Lake.objects.filter(Q(geom__intersects=buffer_4326) | Q(geom__within=buffer_4326))
-    else:
-        lakes = models.Lake.objects.filter(Q(geom__intersects=geom) | Q(geom__within=geom))
-
-    filter = Q()
-    filter = add_range_filter(filter, project, 'lake_min_surplus', 'min_surplus_volume')
-    filter = add_range_filter(filter, project, 'lake_mean_surplus', 'mean_surplus_volume')
-    filter = add_range_filter(filter, project, 'lake_max_surplus', 'max_surplus_volume')
-    filter = add_range_filter(filter, project, 'lake_plus_days', 'plus_days')
-    lakes = lakes.filter(filter)
-
-    if lakes.count() == 0:
-        message = {
-            'success': False, 
-            'message': f'No lakes found in the search area.'
-        }
-        return JsonResponse({'message': {'success': False, 'message': 'No lakes found.'}})
-    else:
-        
-        feature_collection = create_feature_collection(lakes)
-        message = {
-            'success': True, 
-            'message': f'Found {lakes.count()} lakes'
-        }
-        print('feature_collection:', feature_collection)
-        return JsonResponse({'feature_collection': feature_collection, 'message': message})
-    
 def filter_waterbodies(request):
 
     try:
@@ -704,7 +614,7 @@ def filter_waterbodies(request):
     if data_type == 'lake':
         waterbody_class = models.Lake
     elif data_type == 'stream':
-        waterbody_class = models.Steam
+        waterbody_class = models.Stream
 
     data_info = models.DataInfo.objects.get(data_type=data_type).to_dict()
 

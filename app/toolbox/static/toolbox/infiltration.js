@@ -467,6 +467,7 @@ export function initializeInfiltration(userField) {
       getSinks('enlarged_sink');
     
     } else if ($target.attr('id') === 'btnFilterStreams') {
+      console.log('btnFilterStreams')
       getWaterBodies('stream');
     
     } else if ($target.attr('id') === 'btnFilterLakes') {

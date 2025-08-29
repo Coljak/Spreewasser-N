@@ -44,87 +44,6 @@ sinkMarkers.toolTag = 'infiltration';
 const connectionLayerMap = {};
 
 
-function createSinkTableSettings(sinkType, indexVisible) {
-  return {
-    "order": [[1, "asc"]],
-    "searching": false,
-    "columnDefs": [
-      {
-        "targets": 0, // Select a checkbox
-        "orderable": false,
-        "searchable": false
-      },
-      {
-        "targets": 1, // Tiefe
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 2, // Fläche
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 3, // Volumen
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 4, // Volumen Barriere
-        "visible": sinkType === 'sink'? false : true, 
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 5, // Zusätzliches Volumen
-        "visible": sinkType === 'sink'? false : true, 
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 6, // Eignung Senkenproportionen
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 7, // Bodeneignung 
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 8, // Landnutzung
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 9, // Bodenpunkte
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 10, //Eignungsindex Ertragsverluste/ Feasibility
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 11, // Hydrogeologie
-        "orderable": true,
-        "searchable": false
-      },
-      {
-        "targets": 12, // Eignungsindex Hydrogeologie<
-        "orderable": true,
-        "searchable": false
-      },
-            {
-        "targets": 13, // Gesamteignung
-        "orderable": true,
-        "searchable": false
-      }
-    ]
-  }
-};
-
 function getSinks(sinkType) {
   const featureGroup = Layers[sinkType]
   let url = `filter_${sinkType}s/`;
@@ -145,12 +64,7 @@ function getSinks(sinkType) {
     if (data.message.success) {
       const selected_sinks = infiltration[`selected_${sinkType}s`];
       infiltration[`selected_${sinkType}s`] = [];
-      
-      // Initialize marker cluster
-      let markers = L.markerClusterGroup();
-
-      const elId = sinkType === 'sink' ? 'sink-table-container' : 'enlarged_sink-table-container';  
-
+     
 
 
       console.log('data', data);
@@ -187,17 +101,17 @@ function getSinks(sinkType) {
 };
 
 
+function getWaterBodies(dataType){
+  
+  let url = `filter_waterbodies/`;
 
-function getWaterBodies(waterbody, featureGroup){
-  let url = 'filter_lakes/';
-  if (waterbody === 'streams') {
-    url = 'filter_streams/';
-  } 
   const infiltration = Infiltration.loadFromLocalStorage();
   // infiltration['lakes'] = true;
   fetch(url, {
     method: 'POST',
-    body: JSON.stringify(infiltration),
+    body: JSON.stringify({
+      dataType: dataType,
+      project: infiltration}),
     headers: {
         'Content-Type': 'application/json',
         'X-CSRFToken': getCSRFToken(),
@@ -205,12 +119,16 @@ function getWaterBodies(waterbody, featureGroup){
   })
   .then(response => response.json())
   .then(data => {
-    featureGroup.clearLayers();
-
+    console.log('data', data)
     if (data.message.success) {
-
+      console.log('getWaterbodies success', data)
+      
+      const dataType = data.data_info.dataType
+      Layers[dataType].clearLayers();
+      console.log('dataInfo:', data.data_info)
       data.feature_collection.features.forEach(feature => {
-        try {
+        console.log('feature', feature)
+
 
             let layer = L.geoJSON(feature, {
               style: {
@@ -219,7 +137,7 @@ function getWaterBodies(waterbody, featureGroup){
                 fillOpacity: 0.5
               },
               onEachFeature: function (feature, layer) {
-                infiltration[`selected_${waterbody}`].push(feature.properties.id);
+                infiltration[`selected_${dataType}s`].push(feature.properties.id);
                 let popupContent = `
                   <h6><b> ${feature.properties.name}</b></h6>
                   <b>Fließgewässer-ID:</b> ${feature.properties.fgw_id}<br>
@@ -243,17 +161,16 @@ function getWaterBodies(waterbody, featureGroup){
                         .setContent(`
                             <b>Sink Options</b><br>
                             
-                            <button class="btn btn-outline-secondary select-${waterbody}" ${waterbody}Id=${feature.properties.id}">Select Waterbody</button>
+                            <button class="btn btn-outline-secondary select-${dataType}" ${dataType}Id=${feature.properties.id}">Select Waterbody</button>
                         `)
                         .openOn(map);
                       });
-            layer.addTo(featureGroup);
+            layer.addTo(Layers[dataType]);
 
       //     
-      } catch {
-        console.log('Error processing feature:', feature.properties.id);
-      }
+     
       });
+      Layers[dataType].addTo(map)
       infiltration.saveToLocalStorage();
   
     }  else {
@@ -550,10 +467,10 @@ export function initializeInfiltration(userField) {
       getSinks('enlarged_sink');
     
     } else if ($target.attr('id') === 'btnFilterStreams') {
-      getWaterBodies('streams', streamsFeatureGroup);
+      getWaterBodies('stream');
     
     } else if ($target.attr('id') === 'btnFilterLakes') {
-      getWaterBodies('lakes', lakesFeatureGroup);
+      getWaterBodies('lake');
 
     } else if ($target.attr('id') === 'btnGetInlets') {
         getInlets(); 

@@ -265,6 +265,25 @@ class Stream(models.Model):
     geom = gis_models.LineStringField(srid=4326, null=True, blank=True)
     geom25833 = gis_models.MultiLineStringField(srid=25833, null=True, blank=True)
 
+    def to_json(self):
+        return {
+                'id': self.id,
+                'name': self.name,
+                'fgw_id': self.fgw_id,
+                'shape_length': round(self.shape_length, 2),
+                'minimum_environmental_flow': self.minimum_environmental_flow,
+                'min_surplus_volume': round(self.min_surplus_volume, 2),
+                'mean_surplus_volume': round(self.mean_surplus_volume, 2),
+                'max_surplus_volume': round(self.max_surplus_volume, 2),
+                'plus_days': self.plus_days
+        }
+    
+    def to_feature(self):
+        geojson = json.loads(self.geom.geojson)
+        geojson['properties'] = self.to_json()
+        return geojson
+ 
+
 class Lake(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
     fgw_id = models.IntegerField(null=True, blank=True)  # ArcEGMO-ID des Fließgewässerabschnittes
@@ -282,10 +301,25 @@ class Lake(models.Model):
     plus_days = models.IntegerField()
     simple_geom = gis_models.PolygonField(srid=4326, null=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        if self.geom and not self.centroid:
-            self.centroid = self.geom.centroid  # Auto-generate centroid
-        super().save(*args, **kwargs)
+    def to_json(self):
+        return {
+                'id': self.id,
+                'name': self.name,
+                'fgw_id': self.fgw_id,
+                'shape_length': round(self.shape_length, 2),
+                'shape_area': round(self.shape_area, 2),
+                'minimum_environmental_flow': self.minimum_environmental_flow,
+                'min_surplus_volume': round(self.min_surplus_volume, 2),
+                'mean_surplus_volume': round(self.mean_surplus_volume, 2),
+                'max_surplus_volume': round(self.max_surplus_volume, 2),
+                'plus_days': self.plus_days
+        }
+    
+    def to_feature(self):
+        geojson = json.loads(self.geom.geojson)
+        geojson['properties'] = self.to_json()
+
+        return geojson
 
 class Sink(models.Model):
     #id = models.IntegerField(primary_key=True)

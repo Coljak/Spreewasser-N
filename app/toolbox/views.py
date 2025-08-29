@@ -630,7 +630,6 @@ def filter_streams(request):
 
     
     features = []
-    print("COUNT(Streams)", streams.count())
     if streams.count() == 0:
         message = {
             'success': False, 
@@ -639,27 +638,8 @@ def filter_streams(request):
         return JsonResponse({'message': {'success': False, 'message': 'No streams found.'}})
     else:
         
-        for stream in streams:
-            geom = stream.geom
-            geojson = json.loads(geom.geojson)
-            print('geojson:', geojson)
-            geojson['properties'] = {
-                "id": stream.id,
-                "name": stream.name,
-                "minimum_environmental_flow": stream.minimum_environmental_flow,
-                "fgw_id": stream.fgw_id,
-                # "centroid": geom.centroid,
-                "shape_length": round(stream.shape_length, 2),
-                "min_surplus_volume": round(stream.min_surplus_volume, 2),
-                "mean_surplus_volume": round(stream.mean_surplus_volume, 2),
-                "max_surplus_volume": round(stream.max_surplus_volume, 2),
-                "plus_days": stream.plus_days,
-            }
-            features.append(geojson)
-        feature_collection = {
-            "type": "FeatureCollection",
-            "features": features,
-            }
+        
+        feature_collection = create_feature_collection(streams)
 
         message = {
             'success': True, 
@@ -703,34 +683,67 @@ def filter_lakes(request):
         }
         return JsonResponse({'message': {'success': False, 'message': 'No lakes found.'}})
     else:
-        features = []
-        for lake in lakes:
-            # geom = lake.centroid
-            geom = lake.geom
-            # geom = GEOSGeometry(lake.geom)
-            geojson = json.loads(geom.geojson)
-            print('geojson:', geojson)
-            geojson['properties'] = {
-                "id": lake.id,
-                "name": lake.name,
-                "min_surplus_volume": int(lake.min_surplus_volume),
-                "mean_surplus_volume": int(lake.mean_surplus_volume),
-                "max_surplus_volume": int(lake.max_surplus_volume),
-                "plus_days": lake.plus_days,
-                "shape_length": int(lake.shape_length),
-                "shape_area": int(lake.shape_area),
-            }
-            features.append(geojson)
-        feature_collection = {
-            "type": "FeatureCollection",
-            "features": features,
-            }
+        
+        feature_collection = create_feature_collection(lakes)
         message = {
             'success': True, 
             'message': f'Found {lakes.count()} lakes'
         }
         print('feature_collection:', feature_collection)
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
+    
+def filter_waterbodies(request):
+
+    try:
+        request = json.loads(request.body)
+        project = request['project']
+        data_type = request['dataType']
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    
+    if data_type == 'lake':
+        waterbody_class = models.Lake
+    elif data_type == 'stream':
+        waterbody_class = models.Steam
+
+    data_info = models.DataInfo.objects.get(data_type=data_type).to_dict()
+
+    user_field = models.UserField.objects.get(pk=project['userField'])
+    geom = GEOSGeometry(user_field.geom)
+
+    distance = int(project.get('lake_distance_to_userfield', 0))
+    lakes = None
+    if distance > 0:
+        # Transform to EPSG:25833 (meters) and add the buffer
+        user_geom_25833 = user_field.geom.transform(25833, clone=True)
+        buffer_25833 = user_geom_25833.buffer(distance)
+        buffer_4326 = buffer_25833.transform(4326, clone=True)
+        lakes = waterbody_class.objects.filter(Q(geom__intersects=buffer_4326) | Q(geom__within=buffer_4326))
+    else:
+        lakes = waterbody_class.objects.filter(Q(geom__intersects=geom) | Q(geom__within=geom))
+
+    filter = Q()
+    filter = add_range_filter(filter, project, f'{data_type}_min_surplus', 'min_surplus_volume')
+    filter = add_range_filter(filter, project, f'{data_type}_mean_surplus', 'mean_surplus_volume')
+    filter = add_range_filter(filter, project, f'{data_type}_max_surplus', 'max_surplus_volume')
+    filter = add_range_filter(filter, project, f'{data_type}_plus_days', 'plus_days')
+    lakes = lakes.filter(filter)
+
+    if lakes.count() == 0:
+        message = {
+            'success': False, 
+            'message': f'No lakes found in the search area.'
+        }
+        return JsonResponse({'message': {'success': False, 'message': 'No lakes found.'}})
+    else:
+        
+        feature_collection = create_feature_collection(lakes)
+        message = {
+            'success': True, 
+            'message': f'Found {lakes.count()} lakes'
+        }
+        print('feature_collection:', feature_collection)
+        return JsonResponse({'feature_collection': feature_collection, 'data_info': data_info, 'message': message})
         
 
 def get_weighting_forms(request):

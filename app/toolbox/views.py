@@ -39,6 +39,16 @@ def create_feature_collection(queryset):
         "features": features,
         }
 
+def create_point_feature_collection(queryset):
+    features = []
+    for feature in queryset:
+        
+        features.append(feature.to_point_feature())
+    return  {
+        "type": "FeatureCollection",
+        "features": features,
+        }
+
 
 
 # TOOLBOX GENERAL
@@ -587,7 +597,7 @@ def filter_enlarged_sinks(request):
                     (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
             print('geojson:', geojson)
             geojson['properties']["index_sink_total"] = index_sink_total/100
-            geojson['properties']["index_sink_total_str"] = f'{index_sink_total}%'
+            geojson['properties']["index_sink_total_str"] = f'{index_sink_total}'
             features.append(geojson)
         feature_collection = {
             "type": "FeatureCollection",
@@ -700,8 +710,6 @@ def get_weighting_forms(request):
                 'forest': False,
                 'agriculture': False,
             }
-
-
         }
         # TODO weighting forms
 
@@ -805,9 +813,7 @@ def get_inlets(request):
 
     inlets_sinks = get_shortest_connection_lines_utm(sinks, lakes, streams)
     inlets_enlarged_sinks = get_shortest_connection_lines_utm(enlarged_sinks, lakes, streams)
-    
-    # inlets_sinks = get_result_features(sinks, lakes, streams)
-    # inlets_enlarged_sinks = get_result_features(enlarged_sinks, lakes, streams)
+
     
     response = {
         'inlets_sinks': inlets_sinks + inlets_enlarged_sinks,
@@ -899,10 +905,7 @@ def sieker_surface_waters_gui(request, user_field_id):
             }
         
 
-
         html = render_to_string('toolbox/sieker_surface_waters.html', {
-            # 'sink_form': sink_form, 
-            # 'enlarged_sink_form': enlarged_sink_form,
             'project_select_form': project_select_form,
             'sieker_lake_filter': sieker_lake_filter,      
         }, request=request) 
@@ -949,13 +952,8 @@ def filter_sieker_surface_waters(request):
         }
         return JsonResponse({'message': {'success': False, 'message': 'No lakes found.'}})
     else:
-        features = []
-        for lake in lakes:
-            features.append(lake.to_feature())
-        feature_collection = {
-            "type": "FeatureCollection",
-            "features": features,
-            }
+        
+        feature_collection = create_feature_collection(lakes)
         message = {
             'success': True, 
             'message': 'Keine Seen im Suchgebiet entsprechen den Filterkriterien.'
@@ -1008,22 +1006,23 @@ def filter_sieker_sinks(request):
     geom = GEOSGeometry(user_field.geom)
     
     sinks = models.SiekerSink.objects.filter(geom4326__within=geom)
-    print("Sinks:", sinks.count())
+    print("Sinks before filtering:", sinks.count())
     filters = Q()
-    filters = add_range_filter(filters, project, 'area', 'area')
-    filters = add_range_filter(filters, project, 'volume', 'volume')
-    filters = add_range_filter(filters, project, 'sink_depth', 'sink_depth')
-    filters = add_range_filter(filters, project, 'avg_depth', 'avg_depth')
-    filters = add_range_filter(filters, project, 'urbanarea_percent', 'urbanarea_percent')
-    filters = add_range_filter(filters, project, 'avg_depth', 'avg_depth')
+    filters = add_range_filter(filters, project, 'sieker_sink_area', 'area')
+    filters = add_range_filter(filters, project, 'sieker_sink_volume', 'volume')
+    filters = add_range_filter(filters, project, 'sieker_sink_avg_depth', 'avg_depth')
+    filters = add_range_filter(filters, project, 'sieker_sink_depth', 'depth')
+    filters = add_range_filter(filters, project, 'sieker_sink_urbanarea_percent', 'urbanarea_percent')
+    filters = add_range_filter(filters, project, 'sieker_sink_wetlands_percent', 'wetlands_percent')
     
     sinks = sinks.filter(filters)
     print("Sinks FILTERED:", sinks.count())
 
-    feasibility = project.get('feasibility', [])
-    feasibility = (Q(umsetzbark__in=feasibility))
-    sinks = sinks.filter(feasibility)
-    print("Sieker Sinks LAND USE FILTERED:", sinks.count())
+    feasibility = project.get('sieker_sink_feasibility', [])
+    print('feasibility', feasibility)
+
+    sinks = sinks.filter(Q(umsetzbark__in=feasibility))
+    print("Sieker Sinks feasibility FILTERED:", sinks.count())
     if sinks.count() == 0:
         message = {
             'success': False, 
@@ -1033,41 +1032,14 @@ def filter_sieker_sinks(request):
     else:
         print("Sinks", sinks.count())
         
-        
-
-        features = []
-        for sink in sinks:
-            centroid = sink.centroid
-            geojson = json.loads(centroid.geojson)
-
-            print('geojson:', geojson)
-            geojson['properties'] = {
-                "id": sink.id,
-                "sink_depth": round(sink.sink_depth, 2),
-                "area": round(sink.area, 1),
-                "volume": round(sink.volume, 1),
-                "avg_depth": round(sink.avg_depth, 1),
-                "max_elevation": round(sink.max_elevation, 1),
-                "min_elevation": round(sink.min_elevation, 1),
-                "urbanarea_percent": sink.urbanarea_percent,
-                "wetlands_percent": sink.wetlands_percent,
-                "distance_t": sink.distance_t,
-                "dist_lake": sink.dist_lake,
-                "waterdist": sink.waterdist,
-                "umsetzbark": sink.umsetzbark,
-               
-            }
-            features.append(geojson)
-        feature_collection = {
-            "type": "FeatureCollection",
-            "features": features,
-            }
+        data_info = models.DataInfo.objects.get(data_type='sieker_sink').to_dict()
+        feature_collection = create_point_feature_collection(sinks)
         message = {
             'success': True, 
             'message': f'Found {sinks.count()} sinks'
         }
         print('Time for filter_sinks:', datetime.now() - start)
-        return JsonResponse({'feature_collection': feature_collection, 'message': message})
+        return JsonResponse({'feature_collection': feature_collection, 'data_info': data_info, 'message': message})
     
    
 def load_sieker_gek_gui(request, user_field_id):
@@ -1193,18 +1165,8 @@ def load_sieker_wetland_gui(request, user_field_id):
         
         feature_collection = create_feature_collection(wetlands)
 
-        # wetland_filter_form = GekRetentionFilter(request.GET, queryset=wetlands)
-        # slider_labels = dict(models.GekPriority.objects.values_list("priority_level", "description_de").distinct().order_by("priority_level"))
-
-        # streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
-
-        # sieker_wetlands_filter = SiekerGekFilter(request.GET, queryset=wetlands)
-
         html = render_to_string('toolbox/sieker_wetlands.html', {
             'project_select_form': project_select_form,
-            # 'wetland_filter_form': wetland_filter_form  ,
-            
-            # 'sieker_sink_filter': sieker_wetlands_filter,
             
         }, request=request) 
         data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
@@ -1227,7 +1189,6 @@ def filter_sieker_wetlands(request):
     user_field = models.UserField.objects.get(pk=project['userField'])
     print('FROM filter_sieker_wetlands project', project)
     
-    # wetlands = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
     # filter landuses
     ids = project.get('selected_sieker_wetlands')
     wetlands = models.GekRetention.objects.filter(pk__in=ids)
@@ -1258,9 +1219,10 @@ def filter_sieker_wetlands(request):
     else:
         print("Geks", wetlands.count())
         
-        feature_collection = create_wetland_feature_collection(wetlands)
+        feature_collection = create_feature_collection(wetlands)
         data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
         data_info['featureColor'] = 'var(--bs-success)'
+        data_info['dataType'] = 'filtered_sieker_wetland'
 
         dict_list = []
         for wetland in wetlands:

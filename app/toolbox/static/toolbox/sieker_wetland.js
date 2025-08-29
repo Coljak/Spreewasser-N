@@ -2,6 +2,7 @@ import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFTok
 import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
 import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerWetland } from '/static/toolbox/sieker_wetland_model.js';
+import {Layers} from '/static/toolbox/layers.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 
@@ -30,10 +31,10 @@ import {
 
 
 const siekerWetlandFeatureGroup = new L.FeatureGroup()
-siekerWetlandFeatureGroup.toolTag = 'sieker-wetland';
+siekerWetlandFeatureGroup.toolTag = 'sieker_wetland';
 
 const siekerFilteredWetlandFeatureGroup = new L.FeatureGroup()
-siekerFilteredWetlandFeatureGroup.toolTag = 'sieker-wetland';
+siekerFilteredWetlandFeatureGroup.toolTag = 'sieker_wetland';
 
 
 
@@ -125,32 +126,14 @@ export function initializeSiekerWetland(data) {
   removeLegendFromMap(map);
   map.eachLayer(function(layer) {
         console.log(layer.toolTag);
-        if (layer.toolTag && layer.toolTag !== 'sieker-wetland') {
+        if (layer.toolTag && layer.toolTag !== 'sieker_wetland') {
             map.removeLayer(layer);
         }
         });
   console.log('Initialize Sieker Wetland');
   map.addLayer(siekerWetlandFeatureGroup);
   
-  // initializeSliders();
 
-  // // This is only for the priority slider that has string labels not numbers
-  // const slider = document.getElementById('wetland_priority_slider');
-  // const sliderLabelLeft = document.getElementById('wetland_priority_start_text');
-  // const sliderLabelRight = document.getElementById('wetland_priority_value');
-  // const sliderLabels = data['sliderLabels'];
-  // sliderLabelLeft.innerText = sliderLabels[Math.min(...Object.keys(sliderLabels).map(Number))];
-  // sliderLabelRight.innerText = sliderLabels[Math.max(...Object.keys(sliderLabels).map(Number))];
-
-  // if (slider && sliderLabels) {
-  //   slider.addEventListener('change', function() {
-  //     console.log('sliderChanged', slider.value);
-  //     if (slider.value in sliderLabels) {
-  //       sliderLabelLeft.innerText = sliderLabels[slider.value];
-  //     }
-  //   });
-  // }
-  // end of string labelled slider
    
 
     addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, siekerWetlandFeatureGroup, 'index_feasibility')
@@ -166,7 +149,7 @@ export function initializeSiekerWetland(data) {
   $('#toolboxPanel').off('change');
 
   addChangeEventListener(SiekerWetland);
-  
+
   addClickEventListenerToToolboxPanel(SiekerWetland)
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);

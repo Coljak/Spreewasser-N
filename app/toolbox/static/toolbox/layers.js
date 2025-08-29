@@ -15,6 +15,15 @@ sinkCluster.toolTag = 'infiltration';
 let enlargedSinkCluster = L.markerClusterGroup();
 enlargedSinkCluster.toolTag = 'infiltration';
 
+const siekerWetlandFeatureGroup = new L.FeatureGroup()
+siekerWetlandFeatureGroup.toolTag = 'sieker_wetland';
+
+const siekerFilteredWetlandFeatureGroup = new L.FeatureGroup()
+siekerFilteredWetlandFeatureGroup.toolTag = 'sieker_wetland';
+
+const siekerSinkFeatureGroup = new L.markerClusterGroup();
+siekerSinkFeatureGroup.toolTag = 'sieker_sink';
+
 
 export const Layers = {
     // Infiltration
@@ -25,6 +34,10 @@ export const Layers = {
     'lake': lakesFeatureGroup,
     'stream': streamsFeatureGroup,
     'inletConnectionsFeatureGroup': inletConnectionsFeatureGroup,
+    'sieker_wetland': siekerWetlandFeatureGroup,
+    'filtered_sieker_wetland': siekerFilteredWetlandFeatureGroup,
+
+    'sieker_sink': siekerSinkFeatureGroup,
 
 
 }

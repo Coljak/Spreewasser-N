@@ -44,7 +44,7 @@ sinkMarkers.toolTag = 'infiltration';
 const connectionLayerMap = {};
 
 
-function getSinks(sinkType) {
+function filterSinks(sinkType) {
   const featureGroup = Layers[sinkType]
   let url = `filter_${sinkType}s/`;
  
@@ -392,7 +392,6 @@ export function initializeInfiltration(userField) {
     sliderList.forEach(slider => {
       slider.addEventListener('change', function (e) {
         const infiltration = Infiltration.loadFromLocalStorage();
-        console.log('infiltration from initialize sliders', infiltration)
         const changedSlider = e.target;
 
         const startIndex = Object.keys(sliderObj).find(
@@ -441,7 +440,7 @@ export function initializeInfiltration(userField) {
 
     const resetBtn = form.querySelector('input.reset-all');
     resetBtn.addEventListener('click', function (e) {
-      let infiltration = Infiltration.loadFromLocalStorage();
+      let infiltration = Infiltration.loadFromLocalStorage(); // TODO this is not needed but check
       // const sliderList = form.querySelectorAll('input.single-slider');
       Object.keys(sliderObj).forEach(idx => {
         sliderObj[idx].slider.value = parseFloat(sliderObj[idx].slider.dataset.defaultValue);
@@ -461,13 +460,12 @@ export function initializeInfiltration(userField) {
     $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
     if ($target.attr('id') === 'btnFilterSinks') {
-      getSinks('sink');
+      filterSinks('sink');
     
     } else if ($target.attr('id') === 'btnFilterEnlargedSinks') {
-      getSinks('enlarged_sink');
+      filterSinks('enlarged_sink');
     
     } else if ($target.attr('id') === 'btnFilterStreams') {
-      console.log('btnFilterStreams')
       getWaterBodies('stream');
     
     } else if ($target.attr('id') === 'btnFilterLakes') {
@@ -483,42 +481,8 @@ export function initializeInfiltration(userField) {
         map.removeLayer(sinkFeatureGroup);
         map.removeLayer(enlargedSinkFeatureGroup);
 
-    } else if ($target.hasClass('toggle-feature-group')) {
-      console.log('toggle-feature-group')
-      const dataType = $target.attr('data-type')
-      if (dataType === 'sink') {
-        if (map.hasLayer(Layers[dataType])) {
-        map.removeLayer(Layers[dataType]);
-        $target.text('einblenden');
-      } else {
-          map.addLayer(Layers[dataType]);
-          $target.text('ausblenden');
-      }
-      } else
-      {if (map.hasLayer(enlargedSinkFeatureGroup)) {
-        map.removeLayer(enlargedSinkFeatureGroup);
-        $target.text('einblenden');
-      } else {
-          map.addLayer(enlargedSinkFeatureGroup);
-          $target.text('ausblenden');
-      }}
-    } else if ($target.attr('id') === 'toggleStreams') {
-      if (map.hasLayer(streamsFeatureGroup)) {
-        map.removeLayer(streamsFeatureGroup);
-        $target.text('einblenden');
-      } else {
-          map.addLayer(streamsFeatureGroup);
-          $target.text('ausblenden');
-      }
-    } else if ($target.attr('id') === 'toggleLakes') {
-      if (map.hasLayer(lakesFeatureGroup)) {
-        map.removeLayer(lakesFeatureGroup);
-        $target.text('einblenden');
-      } else {
-          map.addLayer(lakesFeatureGroup);
-          $target.text('ausblenden');
-      }
-    } 
+
+    }  
     }); 
 
 

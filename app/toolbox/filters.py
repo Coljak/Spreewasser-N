@@ -25,7 +25,7 @@ FIELD_UNITS = {
     "mean_surplus_volume": "m³",
     "depth": "m",
     "index_soil": "%",
-    'sink_depth': "m",
+    'depth': "m",
     'avg_depth': "m",
     'urbanarea_percent': "%",
     'wetlands_percent': "%",
@@ -342,7 +342,7 @@ class SiekerSinkFilter(FilterSet):
         label="Fläche (m²)",
         )
     volume = MinMaxRangeFilter(model=models.SiekerSink, field_name='volume', label="Volumen (m³)")
-    sink_depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='sink_depth', label="Depth (m)")
+    depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='depth', label="Depth (m)")
     avg_depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='avg_depth', label="Average Depth (m)")
     urbanarea_percent = MinMaxRangeFilter(model=models.SiekerSink, field_name='urbanarea_percent', label="Urban Area (%)")
     wetlands_percent = MinMaxRangeFilter(model=models.SiekerSink, field_name='wetlands_percent', label="Wetlands Area (%)")
@@ -371,7 +371,7 @@ class SiekerSinkFilter(FilterSet):
 
     class Meta:
         model = models.SiekerSink
-        fields = ['volume', 'sink_depth', 'avg_depth', 'urbanarea_percent', 'wetlands_percent']
+        fields = ['volume', 'depth', 'avg_depth', 'urbanarea_percent', 'wetlands_percent']
         form = SliderFilterForm
 
 

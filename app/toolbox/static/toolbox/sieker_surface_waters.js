@@ -2,6 +2,7 @@ import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFTok
 import {  updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel, addFeatureCollectionToLayer, addFeatureCollectionToTable, waterLevelPinIcon } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters_model.js';
+import {Layers} from '/static/toolbox/layers.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 
@@ -76,7 +77,7 @@ export function initializeSiekerSurfaceWaters(layers, dataInfo) {
     addChangeEventListener(SiekerSurfaceWaters);
     // add lakes and water levels
 
-    addFeatureCollectionToLayer(layers.lakes.featureCollection, layers.lakes.dataInfo, lakesFeatureGroup, null)
+    addFeatureCollectionToLayer(layers.lakes.featureCollection, layers.lakes.dataInfo, null)
     addFeatureCollectionToTable(SiekerSurfaceWaters, layers.lakes.featureCollection, layers.lakes.dataInfo)
     
 

@@ -414,9 +414,7 @@ function startSurfaceWaters() {
 function startSiekerSinks() {
   console.log('start Infiltration')
   const userField = ToolboxProject.loadFromLocalStorage().userField;
-  const siekerSinks = new SiekerSink();
-  siekerSinks.userField = userField;
-  siekerSinks.saveToLocalStorage();
+
   // const userField = project.userField;
   if (userField) {
   
@@ -433,7 +431,7 @@ function startSiekerSinks() {
       $('#toolboxPanel').html(data.html);
     })
     .then(() => {
-      initializeSiekerSink();
+      initializeSiekerSink(userField);
       // initializeSliders();
 
     })

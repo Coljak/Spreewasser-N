@@ -3,7 +3,33 @@ import {Infiltration} from '/static/toolbox/infiltration_model.js';
 import {SiekerGek} from '/static/toolbox/sieker_gek_model.js';
 import {SiekerSink} from '/static/toolbox/sieker_sink_model.js';
 import {SiekerSurfaceWaters} from '/static/toolbox/sieker_surface_waters_model.js';
+import {SiekerWetland} from '/static/toolbox/sieker_wetland_model.js';
 import {map} from '/static/shared/map_sidebar_utils.js';
+import {Layers} from '/static/toolbox/layers.js';
+
+
+const projectClass = {
+    'sink': Infiltration,
+    'enlarged_sink': Infiltration,
+    'stream': Infiltration,
+    'lake': Infiltration,
+    'gek': SiekerGek,
+    'filtered_sieker_gek': SiekerGek,
+    'sieker_wetland': SiekerWetland,
+    'sieker_sink': SiekerSink,
+    'sieker_large_lake': SiekerSurfaceWaters,
+    'sieker_water_level': SiekerSurfaceWaters,
+}
+
+function toggleNumberInArray(list, num) {
+  const index = list.indexOf(num);
+  if (index > -1) {
+    list.splice(index, 1); // remove
+  } else {
+    list.push(num); // add
+  }
+  return list;
+}
 
 // TODO I tttttttttthink      this is not working!
 $('#map').on('click', function (event) {
@@ -13,9 +39,13 @@ $('#map').on('click', function (event) {
     console.log('select-map-feature-button', dataType, 'ID:', dataId);
         map.closePopup();
 
+   try {     
+    // the checkbox is not necessarily available
     const checkbox = document.querySelector(`.table-select-checkbox[data-type="${dataType}"][data-id="${dataId}"]`);
-    checkbox.checked = !checkbox.checked;
-    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        checkbox.checked = !checkbox.checked;
+    } catch {;}
+    const project = projectClass[dataType].loadFromLocalStorage()
+    project[`selected_${dataType}s`] = toggleNumberInArray(project[`selected_${dataType}s`])
     }
 });
 
@@ -143,8 +173,9 @@ export function addChangeEventListener(projectClass) {
             const key = `${inputPrefix}_${inputName}`;
             console.log('key', key)
             console.log('project', project)
+            
             const index = project[key].indexOf(inputValue);
-
+            console.log('index', index)
             if (index > -1) {
                 // Value exists — remove it
                 project[key] = project[key].filter(
@@ -224,8 +255,8 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 $('#toolboxPanel').addClass('d-none');
                 console.log('Evenet listener')
                 return;
-        }
-        else if ($target.hasClass('paginate_button')) {
+        // table related
+        } else if ($target.hasClass('paginate_button')) {
             console.log('Paginate')
             const dataType = $('.table-select-all').data('type');
             tableCheckSelectedItems(project, dataType)
@@ -240,7 +271,22 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 openResultCard($dataType, $id)
             }
             return;
-        } 
+        // actions
+        } else if ($target.hasClass('filter-features')) {
+            const dataType = $('.table-select-all').data('type');
+            console.log('REFACTOR - continue here')
+        } else if ($target.hasClass('toggle-feature-group')) {
+            console.log('toggle-feature-group')
+            const dataType = $target.attr('data-type')
+            
+            if (map.hasLayer(Layers[dataType])) {
+                map.removeLayer(Layers[dataType]);
+                $target.text('einblenden');
+            } else {
+                map.addLayer(Layers[dataType]);
+                $target.text('ausblenden');
+            }
+        }
     });
 };
 
@@ -275,8 +321,9 @@ const colorFunction = function (index) {
 };
 
 
-export function addFeatureCollectionToLayer(featureCollection, dataInfo, featureGroup, colorByIndex){
+export function addFeatureCollectionToLayer(featureCollection, dataInfo,  colorByIndex){
       console.log('addFeatureCollectionToLayer dataInfo', colorFunction, dataInfo)
+    const featureGroup = Layers[dataInfo.dataType]
   
     let layer = L.geoJSON(featureCollection, {
         style: function (feature) {
@@ -395,7 +442,7 @@ export function addPointFeatureCollectionToLayer(options) {
             });
 
             popupContent += `
-                    <button class="btn btn-outline-secondary select-map-feature-button" data-type="${dataInfo.dataType}" data-id=${feature.properties.id}">Auswählen</button>
+                    <button class="btn btn-outline-secondary select-map-feature-button" data-type="${dataInfo.dataType}" data-id=${feature.properties.id}>Auswählen</button>
                     `;
             layer.on('click', function (event) {            
                 L.popup()

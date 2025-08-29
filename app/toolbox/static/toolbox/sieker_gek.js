@@ -3,6 +3,7 @@ import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxP
 import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerGek } from '/static/toolbox/sieker_gek_model.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
+import {Layers} from '/static/toolbox/layers.js';
 import { 
   projectRegion, 
   baseMaps, 
@@ -96,7 +97,7 @@ function filterSiekerGeks(project) {
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
       
 
-    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, siekerFilteredGekFeatureGroup, null);
+    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo,  null);
     addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
     addFeatureCollectionResultCards(data.dataInfo, data.measures)
 
@@ -199,7 +200,7 @@ export function initializeSiekerGek(data) {
   // end of string labelled slider
    
 
-    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, siekerGekFeatureGroup, null)
+    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, null)
     addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
     
     

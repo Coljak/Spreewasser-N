@@ -908,7 +908,7 @@ class SiekerSink(models.Model):
     fid = models.FloatField(null=True, blank=True)
     volume = models.FloatField(null=True, blank=True)
     area = models.FloatField(null=True, blank=True)
-    sink_depth = models.FloatField(null=True, blank=True)
+    depth = models.FloatField(null=True, blank=True)
     max_elevation = models.FloatField(null=True, blank=True)
     min_elevation = models.FloatField(null=True, blank=True)
     urbanarea = models.CharField(max_length=100, null=True, blank=True)
@@ -919,8 +919,39 @@ class SiekerSink(models.Model):
     distance_t = models.FloatField(null=True, blank=True)
     dist_lake = models.CharField(max_length=100, null=True, blank=True)
     umsetzbark = models.CharField(max_length=100, null=True, blank=True)
+    index_feasibility = models.FloatField(null=True, blank=True)
     waterdist = models.CharField(max_length=100, null=True, blank=True)
 
+    def to_json(self):
+        return {
+                "id": self.id,
+                "depth": round(self.depth, 2),
+                "area": round(self.area, 1),
+                "volume": round(self.volume, 1),
+                "avg_depth": round(self.avg_depth, 1),
+                "max_elevation": round(self.max_elevation, 1),
+                "min_elevation": round(self.min_elevation, 1),
+                "urbanarea_percent": self.urbanarea_percent,
+                "wetlands_percent": self.wetlands_percent,
+                "distance_t": self.distance_t,
+                "dist_lake": self.dist_lake,
+                "waterdist": self.waterdist,
+                "umsetzbark": self.umsetzbark,
+                "index_feasibility": self.index_feasibility
+               
+            }
+    
+    def to_point_feature(self):
+        geojson = json.loads(self.centroid.geojson)
+        geojson['properties'] = self.to_json()
+
+        return geojson
+    
+    def to_feature(self):
+        geojson = json.loads(self.centroid.geojson)
+        geojson['properties'] = self.to_json()
+
+        return geojson
 class LanduseCLC2018(models.Model):
     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)

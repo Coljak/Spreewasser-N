@@ -4,8 +4,10 @@ export class SiekerSink {
         this.userField = siekerSink.userField ?? null;
         this.sieker_sink_volume_max = siekerSink.sieker_sink_volume_max ?? null;
         this.sieker_sink_volume_min = siekerSink.sieker_sink_volume_min ?? null;
-        this.sieker_sink_sink_depth_min = siekerSink.sieker_sink_sink_depth_min ?? null;
-        this.sieker_sink_sink_depth_max = siekerSink.sieker_sink_sink_depth_max ?? null;
+        this.sieker_sink_area_max = siekerSink.sieker_sink_area_max ?? null;
+        this.sieker_sink_area_min = siekerSink.sieker_sink_area_min ?? null;
+        this.sieker_sink_depth_min = siekerSink.sieker_sink_depth_min ?? null;
+        this.sieker_sink_depth_max = siekerSink.sieker_sink_depth_max ?? null;
         this.sieker_sink_avg_depth_min = siekerSink.sieker_sink_avg_depth_min ?? null;
         this.sieker_sink_avg_depth_max = siekerSink.sieker_sink_avg_depth_max ?? null;
 
@@ -29,7 +31,7 @@ export class SiekerSink {
         this.all_sieker_sink_ids = siekerSink.all_sieker_sink_ids ?? [];
         this.selected_sieker_sinks = siekerSink.selected_sieker_sinks ?? [];
 
-        this.sieker_sink_feasibility = siekerSink.feasibility ?? [];
+        this.sieker_sink_feasibility = siekerSink.sieker_sink_feasibility ?? [];
 
         this.selected_sieker_sinks = siekerSink.selected_sieker_sinks ?? [];
 

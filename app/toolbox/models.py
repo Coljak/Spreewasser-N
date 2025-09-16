@@ -337,13 +337,10 @@ class Sink(models.Model):
     index_proportions = models.FloatField(null=True)
     land_use_1 = models.CharField(max_length=100, null=True)
     landuse_1 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='sink_landuse_1')
-    # landuse_1_fk = models.IntegerField(null=True, blank=True) 
     land_use_2 = models.CharField(max_length=100, null=True)
     landuse_2 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='sink_landuse_2')
-    # landuse_2_fk = models.IntegerField(null=True, blank=True)
     land_use_3 = models.CharField(max_length=100, null=True)
     landuse_3 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='sink_landuse_3')
-    # landuse_3_fk = models.IntegerField(null=True, blank=True)
     land_use_1_percentage = models.FloatField(null=True)
     land_use_2_percentage = models.FloatField(null=True)
     land_use_3_percentage = models.FloatField(null=True)
@@ -355,43 +352,13 @@ class Sink(models.Model):
     index_hydrogeology = models.FloatField(null=True, blank=True)
 
 
-    # def save(self, *args, **kwargs):
-    #     if self.geom and not self.centroid:
-    #         self.centroid = self.geom.centroid  # Auto-generate centroid
-    #     super().save(*args, **kwargs)
-
-    # def to_json(self):
-    #     return {
-    #         "id": self.id,
-    #         "depth": self.depth,
-    #         "area": self.area,
-    #         "volume": self.volume,
-    #         "index_1": self.index_1,
-    #         "index_2": self.index_2,
-    #         "index_3": self.index_3,
-    #         "land_use_1": self.land_use_1,
-    #         "land_use_2": self.land_use_2,
-    #         "land_use_3": self.land_use_3,
-    #         "index_soil": self.index_soil,
-    #         "shape_length": self.shape_length,
-    #         "shape_area": self.shape_area,
-    #         "index_feasibility": self.index_feasibility,
-    #         "hydrogeology": self.hydrogeology,
-    #         "index_hydrogeology": self.index_hydrogeology,
-    #     }
     def to_json(self, language='de'):
-        
-        if (language == 'de'):
-            landuse_1 = self.landuse_1.de
-            landuse_2 = self.landuse_2.de if self.landuse_2 else '-'
-            landuse_3 = self.landuse_3.de if self.landuse_3 else '-'
+
+        landuse_1 = getattr(self.landuse_1, language, None)
+        landuse_2 = getattr(self.landuse_2, language, '-')
+        landuse_3 = getattr(self.landuse_3, language, '-')
             
-            hydrogeology = self.aquifer.name_de if self.aquifer else 'keine Angabe'
-        elif language == 'en':
-            landuse_1 = self.landuse_1.en
-            landuse_2 = self.landuse_2.en if self.landuse_2 else '-'
-            landuse_3 = self.landuse_3.en if self.landuse_3 else '-'
-            hydrogeology = self.aquifer.name_en if self.aquifer else 'no information'
+
         landuse = landuse_1
         if self.landuse_2:
             landuse += landuse_2
@@ -400,20 +367,20 @@ class Sink(models.Model):
 
         return {
             "id": self.id,
-            "depth": f'{round(self.depth, 2)} m',
-            "area": f'{round(self.area, 2)} m²',
-            "volume": f'{round(self.volume, 2)} m³',
-            "index_proportions": f'{round(self.index_proportions * 100, 1)}%',
-            "index_soil": f'{round(self.index_soil * 100, 1)}%',
+            "depth": round(self.depth, 2),
+            "area": round(self.area, 2),
+            "volume": round(self.volume, 2),
+            "index_proportions": round(self.index_proportions * 100, 1),
+            "index_soil": round(self.index_soil * 100, 1),
             "land_use": landuse,
             "land_use_1": landuse_1,
             "land_use_2": landuse_2,
             "land_use_3": landuse_3,
-            "index_soil": f'{round(self.index_soil * 100, 1)}%',
+            "index_soil": round(self.index_soil * 100, 1),
             "soil_points": self.soil_points,
-            "index_feasibility": f'{round(self.index_feasibility * 100, 1) if self.index_feasibility else "-"}%',
-            "hydrogeology": hydrogeology,
-            "index_hydrogeology": f'{self.index_hydrogeology}%',
+            "index_feasibility": round(self.index_feasibility * 100, 1) if self.index_feasibility else "-",
+            "hydrogeology": getattr(self.aquifer, f'name_{language}', None),
+            "index_hydrogeology": self.index_hydrogeology,
         }
     
 
@@ -436,7 +403,6 @@ class EnlargedSink(models.Model):
     nat_length = models.FloatField(null=True)
     por_length = models.FloatField(null=True)
     con_length = models.FloatField(null=True)
-    # sink_type = models.CharField(max_length=100, null=True) # related table
     constructed_sink = models.BooleanField(null=True, default=False)
     volume = models.FloatField(null=True)
     volume_construction_barrier = models.FloatField(null=True)
@@ -447,13 +413,10 @@ class EnlargedSink(models.Model):
     index_proportions = models.FloatField(null=True)
     land_use_1 = models.CharField(max_length=100, null=True)
     landuse_1 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='enlarged_sink_landuse_1')
-    # land_use_1_fk = models.IntegerField(null=True, blank=True)
     land_use_2 = models.CharField(max_length=100, null=True)
     landuse_2 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='enlarged_sink_landuse_2')
-    # land_use_2_fk = models.IntegerField(null=True, blank=True)
     land_use_3 = models.CharField(max_length=100, null=True)
     landuse_3 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='enlarged_sink_landuse_3')
-    # landuse_3_fk = models.IntegerField(null=True, blank=True)
     land_use_4 = models.CharField(max_length=100, null=True)
     landuse_4 = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='enlarged_sink_landuse_4')
     land_use_4_fk = models.IntegerField(null=True, blank=True)
@@ -473,20 +436,13 @@ class EnlargedSink(models.Model):
 
     
     def to_json(self, language='de'):
-        
-        if (language == 'de'):
-            landuse_1 = self.landuse_1.de
-            landuse_2 = self.landuse_2.de if self.landuse_2 else '-'
-            landuse_3 = self.landuse_3.de if self.landuse_3 else '-'
-            landuse_4 = self.landuse_4.de if self.landuse_4 else '-'
+
+        landuse_1 = getattr(self.landuse_1, language, None)
+        landuse_2 = getattr(self.landuse_2, language, None) if self.landuse_2 else '-'
+        landuse_3 = getattr(self.landuse_3, language, None) if self.landuse_3 else '-'
+        landuse_4 = getattr(self.landuse_4, language, None) if self.landuse_4 else '-'
             
-            hydrogeology = self.aquifer.name_de if self.aquifer else 'keine Angabe'
-        elif language == 'en':
-            landuse_1 = self.landuse_1.en
-            landuse_2 = self.landuse_2.en if self.landuse_2 else '-'
-            landuse_3 = self.landuse_3.en if self.landuse_3 else '-'
-            landuse_4 = self.landuse_4.de if self.landuse_4 else '-'
-            hydrogeology = self.aquifer.name_en if self.aquifer else 'no information'
+
         landuse = landuse_1
         if self.landuse_2:
             landuse += landuse_2
@@ -497,21 +453,21 @@ class EnlargedSink(models.Model):
 
         return {
             "id": self.id,
-            "depth": f'{round(self.depth, 2)} m',
-            "area": f'{round(self.area, 2)} m²',
-            "volume": f'{round(self.volume, 2)} m³',
-            "index_proportions": f'{round(self.index_proportions * 100, 1)}%',
-            "index_soil": f'{round(self.index_soil * 100, 1)}%',
+            "depth": round(self.depth, 2),
+            "area": round(self.area, 2),
+            "volume": round(self.volume, 2),
+            "index_proportions": round(self.index_proportions * 100, 1),
+            "index_soil": round(self.index_soil * 100, 1),
             "land_use": landuse,
             "land_use_1": landuse_1,
             "land_use_2": landuse_2,
             "land_use_3": landuse_3,
             "land_use_4": landuse_4,
-            "index_soil": f'{round(self.index_soil * 100, 1)}%',
+            "index_soil": round(self.index_soil * 100, 1),
             "soil_points": self.soil_points,
-            "index_feasibility": f'{round(self.index_feasibility * 100, 1) if self.index_feasibility else "-"}%',
-            "hydrogeology": hydrogeology,
-            "index_hydrogeology": f'{self.index_hydrogeology}%',
+            "index_feasibility": round(self.index_feasibility * 100, 1) if self.index_feasibility else "-",
+            "hydrogeology": getattr(self.aquifer, f'name_{language}', None),
+            "index_hydrogeology": self.index_hydrogeology,
         }
     
 
@@ -1054,7 +1010,7 @@ class GekRetentionMeasure(models.Model):
             "id": self.id,
             "gek_measure": self.gek_measure.description_de if language == 'de' else self.gek_measure.description_en,
             "quantity": self.quantity,
-            "description": self.description_de if language == 'de' else self.description_en,
+            "description": getattr(self, f'description_{language}', None),
             "priority": self.priority.id if self.priority else None,
             "kosten": self.kosten,
             "costs": self.costs,
@@ -1131,10 +1087,11 @@ class DataInfo(models.Model):
     table_caption = models.CharField(max_length=255)
     popup_header = models.CharField(max_length=255, null=True, blank=True)  # e.g. "name"
     marker_cluster = models.BooleanField(default=False, null=True, blank=True)
-
+    color_by_index = models.CharField(default=None, max_length=32, null=True, blank=True)
+    icon_path = models.CharField(max_length=256, null=True, blank=True)
 
     def to_dict(self, language="de"):
-        return {
+        dict = {
             "dataType": self.data_type,
             "featureColor": self.feature_color,
             "className": self.class_name,
@@ -1143,8 +1100,14 @@ class DataInfo(models.Model):
             "popUp": {"header": self.popup_header},
             "properties": [p.to_dict(language) for p in self.properties.all().order_by('order_position')],
             "tableLength": self.properties.filter(table=True).count(),
-
+            
         }
+        if self.color_by_index:
+            dict.update({"colorByIndex": self.color_by_index})
+        if self.icon_path:
+            dict.update({"pinIconPath": self.icon_path})
+
+        return dict
 
 
 class DataInfoProperty(models.Model):
@@ -1162,7 +1125,8 @@ class DataInfoProperty(models.Model):
         return {
             "popUp": self.popup,
             "table": self.table,
-            "title": self.title_en if language == "en" and self.title_en else self.title_de,
+            "title": getattr(self, f'title_{language}', None),
             "valueName": self.value_name,
+            "unit": self.unit,
             "href": self.href,
         }

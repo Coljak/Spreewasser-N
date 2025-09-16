@@ -25,19 +25,33 @@ const siekerSinkFeatureGroup = new L.markerClusterGroup();
 siekerSinkFeatureGroup.toolTag = 'sieker_sink';
 
 
+// SierkerSurfaceWaters
+const siekerLakesFeatureGroup = new L.FeatureGroup();
+siekerLakesFeatureGroup.toolTag = 'sieker-surface-waters'
+const waterLevelsFeatureGroup = new L.FeatureGroup();
+waterLevelsFeatureGroup.toolTag = 'sieker-surface-waters';
+const filteredLakesFeatureGroup = new L.FeatureGroup();
+filteredLakesFeatureGroup.toolTag = 'sieker-surface-waters';
+
 export const Layers = {
     // Infiltration
     'sink':  sinkCluster,
-    // 'sink-clustered': sinkCluster,
     'enlarged_sink': enlargedSinkCluster,
-    // 'enlarged_sink-clustered': enlargedSinkCluster,
     'lake': lakesFeatureGroup,
     'stream': streamsFeatureGroup,
     'inletConnectionsFeatureGroup': inletConnectionsFeatureGroup,
+    // SiekerWetland
     'sieker_wetland': siekerWetlandFeatureGroup,
     'filtered_sieker_wetland': siekerFilteredWetlandFeatureGroup,
-
+    // SiekerSurfaceWaters
+    'sieker_large_lake': lakesFeatureGroup,
+    'sieker_water_level': waterLevelsFeatureGroup,
+    'filtered_sieker_large_lake': filteredLakesFeatureGroup,
+    // SiekerSink
     'sieker_sink': siekerSinkFeatureGroup,
+    
+    // SiekerGek
+    // TUInjection
 
 
 }

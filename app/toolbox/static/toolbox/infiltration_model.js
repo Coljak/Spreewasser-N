@@ -49,7 +49,9 @@ export class Infiltration {
         this.lake_plus_days_max = infiltration.lake_plus_days_max ?? null;
         this.lake_distance_to_userfield = infiltration.lake_distance_to_userfield ?? 0;
 
+        this.all_lake_ids = infiltration.all_lake_ids ?? [];
         this.selected_lakes = infiltration.selected_lakes ?? [];
+        this.all_stream_ids = infiltration.all_stream_ids ?? [];
         this.selected_streams = infiltration.selected_streams ?? [];
 
         this.weighting_overall_usability = infiltration.weighting_overall_usability ?? 20;
@@ -83,10 +85,10 @@ export class Infiltration {
             // Adjust to your actual button ID
             if ((hasSink || hasEnlargedSink) && (hasLake || hasStream)) {
                 document.getElementById("btnGetInlets").classList.remove('disabled');
-                console.log('!(hasSink && hasWaterbody)')
+                console.log('(hasSink && hasWaterbody)')
             } else {
                 document.getElementById("btnGetInlets").classList.add('disabled');
-                console.log('(hasSink && hasWaterbody)')
+                console.log('!(hasSink && hasWaterbody)')
             };
         }
     };
@@ -101,12 +103,12 @@ export class Infiltration {
          // Save project to localStorage
     saveToLocalStorage() {
         this.updateButtonState();
-        localStorage.setItem('projectInfiltration', this.toJson());
+        localStorage.setItem('infiltration', this.toJson());
     }
 
     // Load project from localStorage
     static loadFromLocalStorage() {
-        const storedProject = localStorage.getItem('projectInfiltration');
+        const storedProject = localStorage.getItem('infiltration');
         return storedProject ? Infiltration.fromJson(JSON.parse(storedProject)) : null;
     }
 

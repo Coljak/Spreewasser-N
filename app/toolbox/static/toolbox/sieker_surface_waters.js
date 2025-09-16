@@ -31,12 +31,6 @@ import {
 
 
 
-const lakesFeatureGroup = new L.FeatureGroup();
-lakesFeatureGroup.toolTag = 'sieker-surface-waters'
-const waterLevelsFeatureGroup = new L.FeatureGroup();
-waterLevelsFeatureGroup.toolTag = 'sieker-surface-waters';
-const filteredLakesFeatureGroup = new L.FeatureGroup();
-filteredLakesFeatureGroup.toolTag = 'sieker-surface-waters';
 
 
 function filterSiekersurfaceWaters() {
@@ -56,8 +50,8 @@ function filterSiekersurfaceWaters() {
 
 }
 
-export function initializeSiekerSurfaceWaters(layers, dataInfo) {
-    console.log('DataInfo', dataInfo)
+export function initializeSiekerSurfaceWaters(layers) {
+    
 
     const project = SiekerSurfaceWaters.loadFromLocalStorage();
     
@@ -77,15 +71,10 @@ export function initializeSiekerSurfaceWaters(layers, dataInfo) {
     addChangeEventListener(SiekerSurfaceWaters);
     // add lakes and water levels
 
-    addFeatureCollectionToLayer(layers.lakes.featureCollection, layers.lakes.dataInfo, null)
-    addFeatureCollectionToTable(SiekerSurfaceWaters, layers.lakes.featureCollection, layers.lakes.dataInfo)
+    addFeatureCollectionToLayer(layers.lakes)
+    addFeatureCollectionToTable(layers.lakes)
     
-
-    console.log('layers.water_levels: ', layers.water_levels);
-    // Add water_levels points
-
-    
-
+    const waterLevelsFeatureGroup = Layers.sieker_water_level
     let waterLevels = L.geoJSON(layers.water_levels.featureCollection, {
         pointToLayer: function (feature, latlng) {
             return L.marker(latlng, {

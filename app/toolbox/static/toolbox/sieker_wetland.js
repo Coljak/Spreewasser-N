@@ -56,8 +56,8 @@ function filterSiekerWetlands(project) {
     if(data.message.success) {
       siekerFilteredWetlandFeatureGroup.clearLayers();
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LATTER!
-      addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, siekerFilteredWetlandFeatureGroup, 'index_feasibility');
-      addFeatureCollectionToTable(SiekerWetland, data.featureCollection, data.dataInfo)
+      addFeatureCollectionToLayer(data);
+      addFeatureCollectionToTable(data)
       addFeatureCollectionResultCards(data.dataInfo, data.measures)
 
       const measuresTab = $('#navSiekerWetlandMeasures')
@@ -136,8 +136,8 @@ export function initializeSiekerWetland(data) {
 
    
 
-    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, siekerWetlandFeatureGroup, 'index_feasibility')
-    addFeatureCollectionToTable(SiekerWetland, data.featureCollection, data.dataInfo)
+    addFeatureCollectionToLayer(data)
+    addFeatureCollectionToTable(data)
     
     
     

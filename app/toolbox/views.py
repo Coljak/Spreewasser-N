@@ -106,13 +106,12 @@ def toolbox_dashboard(request):
         }
     }
 
-    all_lakes = models.Lake25.objects.all()
-    all_lakes_feature_collection = create_feature_collection(all_lakes)
+    # all_lakes = models.Lake25.objects.all()
+    # all_lakes_feature_collection = create_feature_collection(all_lakes)
 
-    all_rivers = models.River.objects.all()
-    all_rivers_feature_collection = create_feature_collection(all_rivers)
+    # all_rivers = models.River.objects.all()
+    # all_rivers_feature_collection = create_feature_collection(all_rivers)
     
-    print('all_rivers_feature_collection', all_rivers_feature_collection)
 
     
     state_county_district_form = swn_forms.PolygonSelectionForm(request.POST or None)
@@ -133,8 +132,8 @@ def toolbox_dashboard(request):
         'outline_injection': outline_injection,
         'outline_surface_water': outline_surface_water,
         'outline_infiltration': outline_infiltration,
-        'all_lakes_feature_collection': all_lakes_feature_collection,
-        'all_rivers_feature_collection': all_rivers_feature_collection,
+        # 'all_lakes_feature_collection': all_lakes_feature_collection,
+        # 'all_rivers_feature_collection': all_rivers_feature_collection,
     }
 
     return render(request, 'toolbox/toolbox_three_split.html', context)
@@ -538,7 +537,7 @@ def filter_sinks(request):
         data_info = models.DataInfo.objects.get(data_type='sink').to_dict()
 
         print('Time for filter_sinks:', datetime.now() - start)
-        return JsonResponse({'feature_collection': feature_collection, 'dataInfo': data_info, 'message': message})
+        return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
     
 
 def filter_enlarged_sinks(request):
@@ -610,7 +609,7 @@ def filter_enlarged_sinks(request):
 
         data_info = models.DataInfo.objects.get(data_type='enlarged_sink').to_dict()
 
-        return JsonResponse({'feature_collection': feature_collection, 'dataInfo': data_info, 'message': message})
+        return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
 
 def filter_waterbodies(request):
 
@@ -663,7 +662,7 @@ def filter_waterbodies(request):
             'message': f'Found {lakes.count()} lakes'
         }
         print('feature_collection:', feature_collection)
-        return JsonResponse({'feature_collection': feature_collection, 'data_info': data_info, 'message': message})
+        return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
         
 
 def get_weighting_forms(request):
@@ -893,6 +892,7 @@ def sieker_surface_waters_gui(request, user_field_id):
         lakes_data_info = models.DataInfo.objects.get(data_type='sieker_large_lake').to_dict()
         water_levels_data_info = models.DataInfo.objects.get(data_type='sieker_water_level').to_dict()
 
+
         layers = {
             'lakes': {
                 'featureCollection':lakes_feature_collection,
@@ -910,7 +910,7 @@ def sieker_surface_waters_gui(request, user_field_id):
             'sieker_lake_filter': sieker_lake_filter,      
         }, request=request) 
 
-        return JsonResponse({'success': True, 'layers': layers , 'html': html, 'data_info': lakes_data_info})
+        return JsonResponse({'success': True, 'layers': layers , 'html': html})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet befinden sich keine geeigneten Seen.'})
 
@@ -1039,7 +1039,7 @@ def filter_sieker_sinks(request):
             'message': f'Found {sinks.count()} sinks'
         }
         print('Time for filter_sinks:', datetime.now() - start)
-        return JsonResponse({'feature_collection': feature_collection, 'data_info': data_info, 'message': message})
+        return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
     
    
 def load_sieker_gek_gui(request, user_field_id):
@@ -1077,7 +1077,7 @@ def load_sieker_gek_gui(request, user_field_id):
         }, request=request) 
         data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
 
-        return JsonResponse({'success': True, 'html': html, 'gek_retention': feature_collection, 'slider_labels': slider_labels, 'data_info': data_info})
+        return JsonResponse({'success': True, 'html': html, 'featureCollection': feature_collection, 'slider_labels': slider_labels, 'dataInfo': data_info})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine Gewässerentwicklungskonzepte verfügbar.'})
 
@@ -1171,7 +1171,7 @@ def load_sieker_wetland_gui(request, user_field_id):
         }, request=request) 
         data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
 
-        return JsonResponse({'success': True, 'html': html, 'wetlands': feature_collection,  'data_info': data_info})
+        return JsonResponse({'success': True, 'html': html, 'wetlands': feature_collection,  'dataInfo': data_info})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine historischen Feuchtgebiete bekannt.'})
 

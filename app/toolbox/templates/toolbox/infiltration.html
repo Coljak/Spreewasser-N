@@ -20,7 +20,10 @@
         </li>
         
         <li class="nav-item infiltration">
-            <a id="navInfiltrationWaterbodies" class="toolbox nav-link" data-bs-toggle="tab" href="#tabWaterbodies" aria-selected="false">Gewässer</a>
+            <a id="navInfiltrationLakes" class="toolbox nav-link" data-bs-toggle="tab" href="#tabLakes" aria-selected="false">Seen</a>
+        </li>
+        <li class="nav-item infiltration">
+            <a id="navInfiltrationStreams" class="toolbox nav-link" data-bs-toggle="tab" href="#tabStreams" aria-selected="false">Flüsse</a>
         </li>
         <li class="nav-item infiltration">
             <a id="navInfiltrationResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabToolboxResult">Ergebnis</a>
@@ -99,8 +102,32 @@
         
         
 
-        <div id="tabWaterbodies" class="tab-pane">
+        <div id="tabLakes" class="tab-pane">
             <h2 class="title">Oberflächengewässer</h2>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title mb-0">Stillgewässer</h5>
+                        <button  class="btn btn-secondary toggle-feature-group" data-type="lake">ausblenden</button>                                                                                             
+                    </div>
+
+                    
+                    <div class="card-body">
+                        {% crispy lakes_form.form  %}
+                        <button id="btnFilterLakes" class="btn btn-primary mt-3 filter-features" data-type="lake">Seen filtern</button>
+                    </div>
+                </div>
+            </div>
+            <div id="card-lake-table"  class="card mb-3 d-none">
+                <div class="card-body">
+                    <div id="lake-table-container"></div>
+                </div>
+            </div>
+            
+        </div>
+
+        <div id="tabStreams" class="tab-pane">
+            <h2 class="title">Seen</h2>
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
@@ -111,24 +138,17 @@
                     
                     <div class="card-body">
                         {% crispy streams_form.form  %}
-                        <button id="btnFilterStreams" class="btn btn-primary mt-3 filter-features" data-type="stream">Flüsse anzeigen</button>
+                        <button id="btnFilterStreams" class="btn btn-primary mt-3 filter-features" data-type="stream">Flüsse filtern</button>
                     </div>
                 </div>
             </div>
-            <div class="card mb-3">
+            <div id="card-stream-table"  class="card mb-3 d-none">
                 <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title">Stillgewässer</h5>
-                        <button  class="btn btn-secondary toggle-feature-group" data-type="lake">ausblenden</button>                                                                                             
-                    </div>
-                    
-
-                    <div class="card-body">
-                        {% crispy lakes_form.form %}
-                        <button id="btnFilterLakes" class="btn btn-primary mt-3 filter-features" data-type="lake">Seen anzeigen</button>
-                    </div> 
+                    <div id="stream-table-container"></div>
+                  
                 </div>
             </div>
+            
         </div>
 
         <div id="tabWeightingForms" class="tab-pane">

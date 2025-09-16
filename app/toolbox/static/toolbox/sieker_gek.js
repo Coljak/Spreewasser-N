@@ -36,47 +36,6 @@ siekerGekFeatureGroup.toolTag = 'sieker-gek';
 const siekerFilteredGekFeatureGroup = new L.FeatureGroup()
 siekerFilteredGekFeatureGroup.toolTag = 'sieker-gek';
 
-// function createSiekerGekTableSettings() {
-//   return {
-//     "order": [[1, "asc"]],
-//     "searching": false,
-//     "columnDefs": [
-//       {
-//         "targets": 0, // Select a checkbox
-//         "orderable": false,
-//         "searchable": false
-//       },
-//       {
-//         "targets": 1, // Name
-//         "orderable": true,
-//         "searchable": true
-//       },
-//       {
-//         "targets": 2, // Document
-//         "orderable": true,
-//         "searchable": false
-//       },
-//       {
-//         "targets": 3, // current landusage
-//         "orderable": true,
-//         "searchable": false
-//       },
-//       {
-//         "targets": 4, // planning segment
-//         "orderable": true,
-//         "searchable": false
-//       },
-//       {
-//         "targets": 5, // total number of measures
-//         "orderable": true,
-//         "searchable": false
-//       },
-//     ]
-//   };
-// }
-
-
-
 
 function filterSiekerGeks(project) {
   
@@ -97,16 +56,13 @@ function filterSiekerGeks(project) {
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
       
 
-    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo,  null);
-    addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
+    addFeatureCollectionToLayer(data);
+    addFeatureCollectionToTable(data)
     addFeatureCollectionResultCards(data.dataInfo, data.measures)
 
-      
-      // addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
-      // feautureCollectionToLayerAndTable(SiekerGek, data.featureCollection, data.dataInfo, siekerFilteredGekFeatureGroup);
-      const measuresTab = $('#navSiekerGekMeasures')
-      const tab = new bootstrap.Tab(measuresTab);
-      tab.show();
+    const measuresTab = $('#navSiekerGekMeasures')
+    const tab = new bootstrap.Tab(measuresTab);
+    tab.show();
 
     }
   })
@@ -200,15 +156,15 @@ export function initializeSiekerGek(data) {
   // end of string labelled slider
    
 
-    addFeatureCollectionToLayer(data.featureCollection, data.dataInfo, null)
-    addFeatureCollectionToTable(SiekerGek, data.featureCollection, data.dataInfo)
+    addFeatureCollectionToLayer(data)
+    addFeatureCollectionToTable(data)
     
     
     
 
   $('.table-select-all').prop('checked', true);
   $('.table-select-all').trigger('change')
-  $('#cardSiekerGekTable').removeClass('d-none');
+
   
   $('#toolboxPanel').off('change');
 
@@ -258,21 +214,6 @@ export function initializeSiekerGek(data) {
   });
 
 
-  function selectGek(event) {
-    if (event.target.classList.contains('select-gek')) {
-      const gekId = event.target.getAttribute('gekId');
-      const gekType = event.target.getAttribute('data-type');
-      console.log('gekId', gekId);
-      console.log('gekType', gekType);
-
-      const checkbox = document.querySelector(`.gek-select-checkbox[data-type="${gekType}"][data-id="${gekId}"]`);
-      checkbox.checked = !checkbox.checked;
-      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  };
-
-  // TODO This is not really working because the checkboxes of the gek table are not always accessible - only the ones visible are accessible
-  $('#map').on('click', selectGek);
 
   $('input[type="checkbox"][name="landuse"][prefix="gek"]').prop('checked', true);
   $('input[type="checkbox"][name="landuse"][prefix="gek"]').trigger('change');

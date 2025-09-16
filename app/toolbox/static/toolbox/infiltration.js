@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
@@ -27,16 +27,8 @@ import { Layers } from '/static/toolbox/layers.js';
 
 
 
-const sinkFeatureGroup = Layers.sink
 
-const enlargedSinkFeatureGroup = Layers.enlarged_sink
 
-const lakesFeatureGroup = new L.FeatureGroup()
-lakesFeatureGroup.toolTag = 'infiltration';
-const streamsFeatureGroup = new L.FeatureGroup()
-streamsFeatureGroup.toolTag = 'infiltration';
-const inletConnectionsFeatureGroup = new L.featureGroup()
-inletConnectionsFeatureGroup.toolTag = 'infiltration';
 let sinkMarkers = L.markerClusterGroup();
 sinkMarkers.toolTag = 'infiltration';
 
@@ -71,17 +63,9 @@ function filterSinks(sinkType) {
       const sink_indices = {}
       
 
-      addPointFeatureCollectionToLayer(
-        {
-          featureCollection: data.feature_collection, 
-          dataInfo: data.dataInfo, 
-          featureGroup: featureGroup,
-          colorByIndex: 'index_sink_total',
-          // markerCluster: sinkMarkers, 
-          selectable: true
-        })
+      addPointFeatureCollectionToLayer(data)
 
-      addFeatureCollectionToTable(Infiltration, data.feature_collection, data.dataInfo)
+      addFeatureCollectionToTable(data)
       infiltration[`selected_${sinkType}s`] = selected_sinks.filter(sink => infiltration[`all_${sinkType}_ids`].includes(sink));
       localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
       // infiltration.saveToLocalStorage();
@@ -121,64 +105,64 @@ function getWaterBodies(dataType){
   .then(data => {
     console.log('data', data)
     if (data.message.success) {
-      console.log('getWaterbodies success', data)
-      
-      const dataType = data.data_info.dataType
-      Layers[dataType].clearLayers();
-      console.log('dataInfo:', data.data_info)
-      data.feature_collection.features.forEach(feature => {
-        console.log('feature', feature)
 
+    //   const dataType = data.dataInfo.dataType
+    //   Layers[dataType].clearLayers();
+    //   data.featureCollection.features.forEach(feature => {
 
-            let layer = L.geoJSON(feature, {
-              style: {
-                color: 'purple',
-                weight: 2,
-                fillOpacity: 0.5
-              },
-              onEachFeature: function (feature, layer) {
-                infiltration[`selected_${dataType}s`].push(feature.properties.id);
-                let popupContent = `
-                  <h6><b> ${feature.properties.name}</b></h6>
-                  <b>Fließgewässer-ID:</b> ${feature.properties.fgw_id}<br>
-                  <b>Länge:</b> ${feature.properties.shape_length} m<br>
-                  ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
-                  <b>Ökologisch bedingter Mindestwasserabfluss:</b> ${feature.properties.minimum_environmental_flow ? `${feature.properties.minimum_environmental_flow} m³/s` : 'unbekannt'}<br>
-                  <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume} m³<br>
-                  <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume} m³<br>
-                  <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume} m³<br>
-                  <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
-                 `;
-                layer.bindTooltip(popupContent);
-                layer.on('mouseover', function () {
-                  this.openPopup();
-                });
-              }
-            })
-            layer.on('contextmenu', function (event) {
-                    L.popup()
-                        .setLatLng(event.latlng)
-                        .setContent(`
-                            <b>Sink Options</b><br>
+    //         let layer = L.geoJSON(feature, {
+    //           style: {
+    //             color: 'purple',
+    //             weight: 2,
+    //             fillOpacity: 0.5
+    //           },
+    //           onEachFeature: function (feature, layer) {
+    //             infiltration[`selected_${dataType}s`].push(feature.properties.id);
+    //             let popupContent = `
+    //               <h6><b> ${feature.properties.name}</b></h6>
+    //               <b>Fließgewässer-ID:</b> ${feature.properties.fgw_id}<br>
+    //               <b>Länge:</b> ${feature.properties.shape_length} m<br>
+    //               ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
+    //               <b>Ökologisch bedingter Mindestwasserabfluss:</b> ${feature.properties.minimum_environmental_flow ? `${feature.properties.minimum_environmental_flow} m³/s` : 'unbekannt'}<br>
+    //               <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume} m³<br>
+    //               <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume} m³<br>
+    //               <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume} m³<br>
+    //               <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
+    //              `;
+    //             layer.bindTooltip(popupContent);
+    //             layer.on('mouseover', function () {
+    //               this.openPopup();
+    //             });
+    //           }
+    //         })
+    //         layer.on('contextmenu', function (event) {
+    //                 L.popup()
+    //                     .setLatLng(event.latlng)
+    //                     .setContent(`
+    //                         <b>Sink Options</b><br>
                             
-                            <button class="btn btn-outline-secondary select-${dataType}" ${dataType}Id=${feature.properties.id}">Select Waterbody</button>
-                        `)
-                        .openOn(map);
-                      });
-            layer.addTo(Layers[dataType]);
+    //                         <button class="btn btn-outline-secondary select-${dataType}" ${dataType}Id=${feature.properties.id}">Select Waterbody</button>
+    //                     `)
+    //                     .openOn(map);
+    //                   });
+    //         layer.addTo(Layers[dataType]);
 
-      //     
+    //   //     
      
-      });
-      Layers[dataType].addTo(map)
-      infiltration.saveToLocalStorage();
-  
+    //   });
+    //   Layers[dataType].addTo(map)
+    //   infiltration.saveToLocalStorage();
+
+      addFeatureCollectionToLayer(data)
+      addFeatureCollectionToTable(data)
+      
+
     }  else {
       handleAlerts(data.message);
     } 
-})
-.catch(error => console.error("Error fetching data:", error));
-}
+  })
+  .catch(error => console.error("Error fetching data:", error));
+};
 
 function addToInletTable(inlet, connectionId) {
   const row = document.createElement('tr');
@@ -273,7 +257,8 @@ function getInlets() {
           });
 
           // Combine both into a LayerGroup
-          const group = L.layerGroup([sinkLayer, lineLayer]).addTo(inletConnectionsFeatureGroup);
+          const group = L.layerGroup([sinkLayer, lineLayer]).addTo(Layers.inletConnectionsFeatureGroup);
+          
           connectionLayerMap[connectionId] = group;
 
           addToInletTable(inlet, connectionId);  // builds a row in the table
@@ -288,11 +273,12 @@ function getInlets() {
         // Activate the tab using Bootstrap's API
         const tab = new bootstrap.Tab(resultTab);
         tab.show();
-
-        map.removeLayer(sinkFeatureGroup);
-        map.removeLayer(enlargedSinkFeatureGroup);
-        map.addLayer(streamsFeatureGroup);
-        map.addLayer(lakesFeatureGroup);
+        
+        map.addLayer(Layers.inletConnectionsFeatureGroup)
+        map.removeLayer(Layers.sink);
+        map.removeLayer(Layers.enlarged_sink);
+        map.addLayer(Layers.stream);
+        map.addLayer(Layers.lake);
 
       } else {
         handleAlerts(data.message);
@@ -331,8 +317,8 @@ function toggleConnection(button) {
     return;
   }
 
-  if (map.hasLayer(layer)) {
-    map.removeLayer(layer);
+  if (Layers.inletConnectionsFeatureGroup.hasLayer(layer)) {
+    Layers.inletConnectionsFeatureGroup.removeLayer(layer);
     button.textContent = 'Show';
     button.classList.replace('btn-primary', 'btn-outline-secondary');
   } else {
@@ -340,7 +326,7 @@ function toggleConnection(button) {
     console.log('Map has layer already?', map.hasLayer(layer));
     
     // TODO : this is not correct!!! The layer needs to be added to the inletConnectionsFeatureGroup, not directly to the map
-    layer.addTo(map);
+    layer.addTo(Layers.inletConnectionsFeatureGroup);
     // inletConnectionsFeatureGroup.addLayer(layer);  // ← correct way to add
     // if (!map.hasLayer(inletConnectionsFeatureGroup)) {
     //   map.addLayer(inletConnectionsFeatureGroup);
@@ -364,11 +350,7 @@ export function initializeInfiltration(userField) {
         }
       });
   console.log('Initialize Infiltraion');
-  map.addLayer(sinkFeatureGroup);
-  map.addLayer(enlargedSinkFeatureGroup);
-  map.addLayer(lakesFeatureGroup);
-  map.addLayer(streamsFeatureGroup);
-  map.addLayer(inletConnectionsFeatureGroup);
+
       
   initializeSliders();
       
@@ -455,7 +437,7 @@ export function initializeInfiltration(userField) {
 
     $('#toolboxPanel').off('change'); // Remove any previous change event handlers
     addChangeEventListener(Infiltration);
-    
+    $('#toolboxPanel').off('click');
     addClickEventListenerToToolboxPanel(Infiltration)
     $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
@@ -474,12 +456,12 @@ export function initializeInfiltration(userField) {
     } else if ($target.attr('id') === 'btnGetInlets') {
         getInlets(); 
     } else if ($target.attr('id') === 'navInfiltrationSinks') {
-        map.addLayer(sinkFeatureGroup);
+        map.addLayer(Layers.sink);
     } else if ($target.attr('id') === 'navInfiltrationEnlargedSinks') {
-        map.addLayer(enlargedSinkFeatureGroup);
+        map.addLayer(Layers.enlarged_sink);
     } else if ($target.attr('id') === 'navInfiltrationResult') {
-        map.removeLayer(sinkFeatureGroup);
-        map.removeLayer(enlargedSinkFeatureGroup);
+        map.removeLayer(Layers.sink);
+        map.removeLayer(Layers.enlarged_sink);
 
 
     }  

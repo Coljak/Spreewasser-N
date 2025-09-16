@@ -57,15 +57,9 @@ function filterSiekerSinks(dataType, featureGroup) {
       // Initialize marker cluster
       let clusterGroup = L.markerClusterGroup();
       let ids = [];
-      addFeatureCollectionToTable(SiekerSink, data.feature_collection, data.data_info)
+      addFeatureCollectionToTable(data)
       Layers['sieker_sink'].clearLayers()
-      addPointFeatureCollectionToLayer({
-        featureCollection: data.feature_collection,
-        dataInfo: data.data_info,
-        featureGroup: Layers['sieker_sink'],
-        colorByIndex: 'index_feasibility',
-        selectable: true
-      })
+      addPointFeatureCollectionToLayer(data)
       
       const sink_indices = {}
 

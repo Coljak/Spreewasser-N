@@ -38,7 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const project = new ToolboxProject();
   project.saveToLocalStorage();
 
-  const x = L.marker([52.576840949661836, 13.879426770153563]).addTo(map) // TESTPIN Fähre Straußberg
   // center map at geolocation
   getGeolocation()
     .then((position) => {
@@ -172,53 +171,53 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
   }
 });
 
-const allRivers = L.geoJSON(all_rivers_feature_collection, {
-  style: {
-      color: 'hsl(187 98 66)',
-      className: 'all-rivers',
-  },
-  onEachFeature: function (feature, layer) {
-    let popupContent = 
-    `<h6><b> ${feature.properties['name']}</b></h6> `   
+// const allRivers = L.geoJSON(all_rivers_feature_collection, {
+//   style: {
+//       color: 'hsl(187 98 66)',
+//       className: 'all-rivers',
+//   },
+//   onEachFeature: function (feature, layer) {
+//     let popupContent = 
+//     `<h6><b> ${feature.properties['name']}</b></h6> `   
           
-  layer.on('add', function () {
-      if (layer._path) {
-          layer._path.setAttribute('data-type', 'all-rivers');
-          layer._path.setAttribute('data-id', feature.properties.id);
-      }
-  });
+//   layer.on('add', function () {
+//       if (layer._path) {
+//           layer._path.setAttribute('data-type', 'all-rivers');
+//           layer._path.setAttribute('data-id', feature.properties.id);
+//       }
+//   });
               
-  layer.bindTooltip(popupContent);
-  layer.on('mouseover', function () {
-          // this.setStyle(highlightStyle);
-        this.openTooltip();
-    });
-  }
-});
+//   layer.bindTooltip(popupContent);
+//   layer.on('mouseover', function () {
+//           // this.setStyle(highlightStyle);
+//         this.openTooltip();
+//     });
+//   }
+// });
 
-const allLakes = L.geoJSON(all_lakes_feature_collection, {
-  style: {
-      color: 'hsl(191 96 55)',
-      className: 'all-lakes',
-  },
-  onEachFeature: function (feature, layer) {
-    let popupContent = 
-    `<h6><b> ${feature.properties['name']}</b></h6> `   
+// const allLakes = L.geoJSON(all_lakes_feature_collection, {
+//   style: {
+//       color: 'hsl(191 96 55)',
+//       className: 'all-lakes',
+//   },
+//   onEachFeature: function (feature, layer) {
+//     let popupContent = 
+//     `<h6><b> ${feature.properties['name']}</b></h6> `   
           
-  layer.on('add', function () {
-      if (layer._path) {
-          layer._path.setAttribute('data-type', 'all-lakes');
-          layer._path.setAttribute('data-id', feature.properties.id);
-      }
-  });
+//   layer.on('add', function () {
+//       if (layer._path) {
+//           layer._path.setAttribute('data-type', 'all-lakes');
+//           layer._path.setAttribute('data-id', feature.properties.id);
+//       }
+//   });
               
-  layer.bindTooltip(popupContent);
-  layer.on('mouseover', function () {
-          // this.setStyle(highlightStyle);
-        this.openTooltip();
-    });
-  }
-});
+//   layer.bindTooltip(popupContent);
+//   layer.on('mouseover', function () {
+//           // this.setStyle(highlightStyle);
+//         this.openTooltip();
+//     });
+//   }
+// });
 
 
 const markers = L.markerClusterGroup({
@@ -242,56 +241,56 @@ const markers = L.markerClusterGroup({
 
 
 
-//https://www.pegelonline.wsv.de/webservice/dokuRestapi
-fetch('https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json?includeTimeseries=true&includeCurrentMeasurement=true') // Replace with your actual API
-  .then(response => response.json())
-  .then(data => {
-    data.forEach(station => {
-      if (station.latitude && station.longitude) {
-        const marker = new L.Marker([station.latitude, station.longitude], {
-          icon: waterLevelPinIcon,
-          title: station.shortname || station.name // Use shortname or name as title
-        });
+// //https://www.pegelonline.wsv.de/webservice/dokuRestapi
+// fetch('https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json?includeTimeseries=true&includeCurrentMeasurement=true') // Replace with your actual API
+//   .then(response => response.json())
+//   .then(data => {
+//     data.forEach(station => {
+//       if (station.latitude && station.longitude) {
+//         const marker = new L.Marker([station.latitude, station.longitude], {
+//           icon: waterLevelPinIcon,
+//           title: station.shortname || station.name // Use shortname or name as title
+//         });
 
-        // Create tooltip content
-        const tooltipContent = `
-          <strong>${station.shortname}</strong><br>
-          Nummer: ${station.number}<br>
-          Behörde: ${station.agency}<br>
-          Gewässer: ${station.water?.shortname || 'N/A'}</br>
-          Flusskilometer: ${station.km || 'N/A'}<br>
-          Aktuelle Messung: ${station.timeseries[0].currentMeasurement?.value || 'N/A'} ${station.timeseries[0]?.unit || ''}<br>
-          Wasserstand: ${station.timeseries[0].currentMeasurement?.stateMnwMhw || 'N/A'},  ${station.timeseries[0].currentMeasurement?.stateNswHsw || ''}<br>
-          <a href="https://www.pegelonline.wsv.de/charts/OnlineVisualisierungGanglinie?pegeluuid=${station.uuid}&imgBreite=450&pegelkennwerte=HSW,GLW&dauer=300" target="_blank">Details</a><br>
-          <a href="https://www.pegelonline.wsv.de/webservices/zeitreihe/visualisierung?pegeluuid=${station.uuid}" target="_blank">Zeitreihe</a>
-        `;
+//         // Create tooltip content
+//         const tooltipContent = `
+//           <strong>${station.shortname}</strong><br>
+//           Nummer: ${station.number}<br>
+//           Behörde: ${station.agency}<br>
+//           Gewässer: ${station.water?.shortname || 'N/A'}</br>
+//           Flusskilometer: ${station.km || 'N/A'}<br>
+//           Aktuelle Messung: ${station.timeseries[0].currentMeasurement?.value || 'N/A'} ${station.timeseries[0]?.unit || ''}<br>
+//           Wasserstand: ${station.timeseries[0].currentMeasurement?.stateMnwMhw || 'N/A'},  ${station.timeseries[0].currentMeasurement?.stateNswHsw || ''}<br>
+//           <a href="https://www.pegelonline.wsv.de/charts/OnlineVisualisierungGanglinie?pegeluuid=${station.uuid}&imgBreite=450&pegelkennwerte=HSW,GLW&dauer=300" target="_blank">Details</a><br>
+//           <a href="https://www.pegelonline.wsv.de/webservices/zeitreihe/visualisierung?pegeluuid=${station.uuid}" target="_blank">Zeitreihe</a>
+//         `;
 
-        marker.bindPopup(tooltipContent);
-        marker.bindTooltip(tooltipContent, {
-          permanent: false,
-          direction: 'top',
-          className: 'water-level-tooltip'
-        });
-        marker.on('click', function () {
+//         marker.bindPopup(tooltipContent);
+//         marker.bindTooltip(tooltipContent, {
+//           permanent: false,
+//           direction: 'top',
+//           className: 'water-level-tooltip'
+//         });
+//         marker.on('click', function () {
 
-            marker.openPopup();
+//             marker.openPopup();
 
-        });
-        marker.on('mouseover', function () {
-          marker.openTooltip();
-        });
-        marker.on('mouseout', function () {
-          marker.closeTooltip();
-        });
-        markers.addLayer(marker);
-        ;
-      }
-    });
-    return markers
-  })
-  .catch(error => {
-    console.error('Error fetching data:', error);
-  });
+//         });
+//         marker.on('mouseover', function () {
+//           marker.openTooltip();
+//         });
+//         marker.on('mouseout', function () {
+//           marker.closeTooltip();
+//         });
+//         markers.addLayer(marker);
+//         ;
+//       }
+//     });
+//     return markers
+//   })
+//   .catch(error => {
+//     console.error('Error fetching data:', error);
+//   });
 
   
   // markers.addTo(map);
@@ -304,8 +303,8 @@ const overlayLayers = {
   "toolboxOutlineInjection": toolboxOutlineInjection,
   "toolboxOutlineSurfaceWater": toolboxOutlineSurfaceWater,
   "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
-  "allLakes": allLakes,
-  "allRivers": allRivers,
+  // "allLakes": allLakes,
+  // "allRivers": allRivers,
   "sinks": toolboxSinks,
   "waterLevels": markers,
 };
@@ -402,7 +401,7 @@ function startSurfaceWaters() {
       return data;
     })
     .then((data) => {
-        initializeSiekerSurfaceWaters(data.layers, data.data_info);
+        initializeSiekerSurfaceWaters(data.layers);
     })
     // .catch(error => console.error("Error fetching data:", error));
   } else {
@@ -466,8 +465,8 @@ function startSiekerGeks() {
 
       return {
         'sliderLabels': data.slider_labels,
-        'dataInfo': data.data_info,
-        'featureCollection': data.gek_retention,
+        'dataInfo': data.dataInfo,
+        'featureCollection': data.featureCollection,
         'all_ids': data.all_ids
       };
     })
@@ -504,8 +503,8 @@ function startFormerWetlands() {
 
       return {
         // 'sliderLabels': data.slider_labels,
-        'dataInfo': data.data_info,
-        'featureCollection': data.wetlands,
+        'dataInfo': data.dataInfo,
+        'featureCollection': data.featureCollection,
         'all_ids': data.all_ids
       };
     })

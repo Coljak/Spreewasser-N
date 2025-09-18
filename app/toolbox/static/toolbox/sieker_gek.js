@@ -30,11 +30,7 @@ import {
 } from '/static/shared/map_sidebar_utils.js';
 
 
-const siekerGekFeatureGroup = new L.FeatureGroup()
-siekerGekFeatureGroup.toolTag = 'sieker-gek';
 
-const siekerFilteredGekFeatureGroup = new L.FeatureGroup()
-siekerFilteredGekFeatureGroup.toolTag = 'sieker-gek';
 
 
 function filterSiekerGeks(project) {
@@ -52,7 +48,7 @@ function filterSiekerGeks(project) {
     
     console.log(data)
     if(data.message.success) {
-      siekerFilteredGekFeatureGroup.clearLayers();
+      Layers['filtered_sieker_gek'].clearLayers();
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
       
 
@@ -132,8 +128,8 @@ export function initializeSiekerGek(data) {
             map.removeLayer(layer);
         }
         });
-  console.log('Initialize Sieker Gek');
-  map.addLayer(siekerGekFeatureGroup);
+  // console.log('Initialize Sieker Gek');
+  // map.addLayer(Layers['sieker_gek']);
   
   initializeSliders();
 
@@ -162,17 +158,18 @@ export function initializeSiekerGek(data) {
     
     
 
-  $('.table-select-all').prop('checked', true);
-  $('.table-select-all').trigger('change')
+
 
   
   $('#toolboxPanel').off('change');
+  $('#toolboxPanel').off('click');
 
   addChangeEventListener(SiekerGek);
-
-
-
   addClickEventListenerToToolboxPanel(SiekerGek)
+
+  $('.table-select-all').prop('checked', true);
+  $('.table-select-all').trigger('change')
+
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
     if ($target.attr('id') === 'btnFilterSiekerGeks') {
@@ -180,18 +177,19 @@ export function initializeSiekerGek(data) {
       if (project.selected_sieker_geks.length === 0) {
         handleAlerts({'success': false, 'message': 'Bitte wählen Sie Gewässer aus!'})
       } else {
-        map.removeLayer(siekerGekFeatureGroup);
-        map.addLayer(siekerFilteredGekFeatureGroup);
+        map.removeLayer(Layers['sieker_gek']);
+        map.addLayer(Layers['filtered_sieker_gek']);
+        // TODO: unsauber- filtered_sieker_gek macht keien Sinn, oder? Toggle nicht eindeutig.
         filterSiekerGeks(project);
       }
       
     
     } else if ($target.attr('id') === 'toggleSiekerGeks') {
-      if (map.hasLayer(siekerGekFeatureGroup)) {
-        map.removeLayer(siekerGekFeatureGroup);
+      if (map.hasLayer(Layers['sieker_gek'])) {
+        map.removeLayer(Layers['sieker_gek']);
         $target.text('Senken einblenden');
       } else {
-          map.addLayer(siekerGekFeatureGroup);
+          map.addLayer(Layers['sieker_gek']);
           $target.text('Senken ausblenden');
       }
     }
@@ -200,16 +198,16 @@ export function initializeSiekerGek(data) {
   $('#navSiekerGek').on('shown.bs.tab', function (event) {
     const targetPane = $($(event.target).attr('href')); 
     if (targetPane.hasClass('active')) {
-      map.addLayer(siekerGekFeatureGroup);
-      map.removeLayer(siekerFilteredGekFeatureGroup);
+      map.addLayer(Layers['sieker_gek']);
+      map.removeLayer(Layers['filtered_sieker_gek']);
     }
   });
 
   $('#navSiekerGekMeasures').on('click', function (event) {
     const targetPane = $($(event.target).attr('href'));
     if (targetPane.hasClass('active')) {
-      map.removeLayer(siekerGekFeatureGroup);
-      map.addLayer(siekerFilteredGekFeatureGroup);
+      map.removeLayer(Layers['sieker_gek']);
+      map.addLayer(Layers['filtered_sieker_gek']);
     }
   });
 

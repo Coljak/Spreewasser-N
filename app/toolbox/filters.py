@@ -90,10 +90,6 @@ class MinMaxRangeFilter(RangeFilter):
             'units': self.units,
         })
 
-
-
-
-
 class SinkFilter(FilterSet):
     area = MinMaxRangeFilter(
         model=models.Sink, 
@@ -200,8 +196,6 @@ class EnlargedSinkFilter(FilterSet):
         fields = ['area', 'volume', 'depth', 'volume_construction_barrier', 'volume_gained',  'land_use']
         form = SliderFilterForm
 
-
-
 class StreamFilter(FilterSet):
     min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Min Surplus Volume (m³)")
     mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mean Surplus Volume (m³)")
@@ -294,8 +288,6 @@ class LakeFilter(FilterSet):
         fields = ['min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days']
         form = SliderFilterForm
 
-
-
 ## Toolbox Sieker Surface Waters
 class SiekerLargeLakeFilter(FilterSet):
     area_ha = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='area_ha', label="Fläche (ha)")
@@ -333,7 +325,6 @@ class SiekerLargeLakeFilter(FilterSet):
         fields = ['area_ha', 'vol_mio_m3', 'd_max_m']
         form = SliderFilterForm
     
-
 ## Toolbox Sieker Sinks
 class SiekerSinkFilter(FilterSet):
     area = MinMaxRangeFilter(
@@ -391,27 +382,18 @@ class GekRetentionFilter(FilterSet):
         method="filter_by_landuse"
     )
 
-    # priority_labels = dict(
-    # models.GekPriority.objects
-    # .values_list("priority_level", "description_de")
-    # .distinct()
-    # .order_by("priority_level")
-    # )
-
-    # prio_labels = json.dumps(priority_labels, ensure_ascii=False)
 
     priority = NumberFilter(
         label="Priorität",
         method='filter_priorities',
         widget=CustomSimpleSliderWidget(attrs = {
-            "id": "gek_priority",
-            "name": "gek_priority",
-            "prefix": "gek",
+            # "id": "gek_priority",
+            # "name": "gek_priority",
+            # "prefix": "gek",
             "data_range_min": 4,
             "data_range_max": 8,
             "string_label": True,
             "data_cur_val": 4,
-            # "units": "m",
             "class": "hiddeninput",
         }) 
     )
@@ -445,21 +427,7 @@ class GekRetentionFilter(FilterSet):
             field.widget.attrs['name'] = f"{prefix}_{name}"
             field.widget.attrs['prefix'] = prefix
 
-        min_priority = measures_qs.aggregate(Min('priority__priority_level'))['priority__priority_level__min']
-        max_priority = models.GekPriority.objects.aggregate(Max('priority_level'))['priority_level__max']
-        priorities = models.GekPriority.objects.values_list("priority_level", "description_de").distinct().order_by("priority_level")
-        if min_priority is not None:
-            desc_map = dict(priorities)
-            # Set widget attributes dynamically
-            slider = self.filters['priority'].field.widget
-            slider.attrs["data_range_min"] = min_priority
-            slider.attrs["data_range_max"] = max_priority
-            slider.attrs["data_cur_val"] = min_priority
 
-            # Store mapping so JS can display description instead of numbers
-            # e.g. {1: "Sehr hoch", 2: "Hoch", ...}
-            slider.attrs["data_labels"] = desc_map
-        
 
     def filter_priorities(self, queryset, name, value):
         """
@@ -510,3 +478,41 @@ class GekRetentionFilter(FilterSet):
             return queryset
 
         return queryset.filter(**q).distinct()
+    
+
+
+class HistoricalWetlandsFilter(FilterSet):
+    feasibility = NumberFilter(
+        label="Machbarkeit",
+        method='filter_feasibility',
+        widget=CustomSimpleSliderWidget(attrs = {
+            "id": "wetland_feasibility",
+            "name": "feasibilty",
+            "prefix": "sieker_wetland",
+            "string_label": True,
+            "class": "hiddeninput",
+        }) 
+    )
+    
+
+    class Meta:
+        model = models.HistoricalWetlands
+        fields = ['feasibility']
+        # Use the custom slider form for the range filter
+        form = SliderFilterForm
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+        ids_feasibilities = models.WetlandFeasibility.objects.values_list('id', flat=True).distinct()
+        min_feasibility = min(ids_feasibilities)
+        max_feasibility = max(ids_feasibilities)
+        # Set widget attributes dynamically
+        slider = self.filters['feasibility'].field.widget
+        slider.attrs["data_range_min"] = min_feasibility
+        slider.attrs["data_range_max"] = max_feasibility
+        slider.attrs["data_cur_val"] = min_feasibility
+        
+
+   

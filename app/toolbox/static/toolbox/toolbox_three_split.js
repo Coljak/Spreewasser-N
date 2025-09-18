@@ -390,6 +390,7 @@ function startSurfaceWaters() {
     fetch('load_surface_waters_gui/' + userField + '/')
     .then(response => response.json())
     .then(data => {
+      console.log('data received', data)
       if (!data.success) {
         handleAlerts(data);
         return;
@@ -398,12 +399,15 @@ function startSurfaceWaters() {
       $('#toolboxButtons').addClass('d-none');
       $('#toolboxPanel').removeClass('d-none');
       $('#toolboxPanel').html(data.html);
-      return data;
+      console.log('returning data.layers', data.layers)
+      return data.layers;
     })
     .then((data) => {
-        initializeSiekerSurfaceWaters(data.layers);
+      console.log('Before initialize, ', data)
+        initializeSiekerSurfaceWaters(data);
+        
     })
-    // .catch(error => console.error("Error fetching data:", error));
+    .catch(error => console.error("Error fetching data:", error));
   } else {
     handleAlerts({ success: false, message: 'Please select a user field!' });
   }
@@ -446,7 +450,8 @@ function startSiekerGeks() {
   console.log('start Sieker Geks')
   
   const userField = ToolboxProject.loadFromLocalStorage().userField;
-  
+  const siekerGek = new SiekerGek;
+  siekerGek.saveToLocalStorage();
 
   // const userField = project.userField;
   if (userField) {
@@ -502,7 +507,7 @@ function startFormerWetlands() {
       $('#toolboxPanel').html(data.html);
 
       return {
-        // 'sliderLabels': data.slider_labels,
+        'sliderLabels': data.slider_labels,
         'dataInfo': data.dataInfo,
         'featureCollection': data.featureCollection,
         'all_ids': data.all_ids

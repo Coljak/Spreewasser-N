@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import {  updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel, addFeatureCollectionToLayer, addFeatureCollectionToTable, waterLevelPinIcon } from '/static/toolbox/toolbox.js';
+import {  updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer, addFeatureCollectionToTable, waterLevelPinIcon } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters_model.js';
 import {Layers} from '/static/toolbox/layers.js';
@@ -50,10 +50,14 @@ function filterSiekersurfaceWaters() {
 
 }
 
-export function initializeSiekerSurfaceWaters(layers) {
-    
 
-    const project = SiekerSurfaceWaters.loadFromLocalStorage();
+
+function addWaterLevelToResultCard(data) {
+    const dataInfo = data.dataInfo;
+    const featureCollection = data.featureCollection;
+}
+
+export function initializeSiekerSurfaceWaters(layers) {
     
 
     console.log("Initializing Sieker surface waters...", layers);
@@ -73,77 +77,37 @@ export function initializeSiekerSurfaceWaters(layers) {
 
     addFeatureCollectionToLayer(layers.lakes)
     addFeatureCollectionToTable(layers.lakes)
-    
-    const waterLevelsFeatureGroup = Layers.sieker_water_level
-    let waterLevels = L.geoJSON(layers.water_levels.featureCollection, {
-        pointToLayer: function (feature, latlng) {
-            return L.marker(latlng, {
-                icon: waterLevelPinIcon
-            });
-        },
-        onEachFeature: function (feature, layer) {
-            let popupContent = `
-                <h6><b> ${feature.properties.pegelname}</b></h6>
-                Zeitraum: ${feature.properties.period}<br>
-                Tage: ${feature.properties.t_d}<br>
-                Jahre: ${feature.properties.t_a}<br>
-                Min.: ${feature.properties.min_cm} cm<br>
-                Max.: ${feature.properties.max_cm} cm<br>
-                Mittel: ${feature.properties.mean_wl} m<br>
-            `;
-            layer.bindTooltip(popupContent);
-            layer.on('mouseover', function () {
-                this.openPopup();
-            });
-            layer.on('contextmenu', function (event) {
-                L.popup()
-                    .setLatLng(event.latlng)
-                    .setContent(`
-                    <h6><b> ${feature.properties.pegelname}</b></h6>
-                    <button class="btn btn-outline-secondary select-sieker-water-level" data-sieker-water-level-id=${feature.properties.id}">Auswählen</button>
-                    `)
-                    .openOn(map);   
-            });
 
-            // Delay attaching event listener until DOM is rendered
-            setTimeout(() => {
-                const button = document.querySelector('.select-sieker-water-level');
-                if (button) {
-                    button.addEventListener('click', () => {
-                        map.closePopup();
-                    });
-                }
-            }, 0);
-        }
-    });
-
-    waterLevels.addTo(waterLevelsFeatureGroup);
+    addPointFeatureCollectionToLayer(layers.water_levels)
+    addWaterLevelToResultCard(layers.water_levels)
 
 
-    map.addLayer(lakesFeatureGroup);
-    map.addLayer(waterLevelsFeatureGroup);
+    // waterLevels.addTo(Layers['sieker_water_level']);
+
+
+    // map.addLayer(Layers['sieker_large_lake']);
+    // map.addLayer(Layers['sieker_water_level']);
 
     document.getElementById('toggleSiekerLevels').addEventListener('click', function() {
-        if (map.hasLayer(waterLevelsFeatureGroup)) {
-            map.removeLayer(waterLevelsFeatureGroup);
+        if (map.hasLayer(Layers['sieker_water_level'])) {
+            map.removeLayer(Layers['sieker_water_level']);
             this.textContent = 'Pegel anzeigen';
         } else {
-            map.addLayer(waterLevelsFeatureGroup);
+            map.addLayer(Layers['sieker_water_level']);
             this.textContent = 'Pegel ausblenden';
         }
     });
 
     document.getElementById('toggleSiekerLakes').addEventListener('click', function() {
-        if (map.hasLayer(lakesFeatureGroup)) {
-            map.removeLayer(lakesFeatureGroup);
+        if (map.hasLayer(Layers['sieker_large_lake'])) {
+            map.removeLayer(Layers['sieker_large_lake']);
             this.textContent = 'Seen anzeigen';
         } else {
-            map.addLayer(lakesFeatureGroup);
+            map.addLayer(Layers['sieker_large_lake']);
             this.textContent = 'Seen ausblenden';
         }
     });
     
-    project.saveToLocalStorage();
     addClickEventListenerToToolboxPanel(SiekerSurfaceWaters)
 };
 

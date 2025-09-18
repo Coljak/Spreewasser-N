@@ -63,7 +63,7 @@ function filterSinks(sinkType) {
       const sink_indices = {}
       
 
-      addPointFeatureCollectionToLayer(data)
+      addPointFeatureCollectionToLayer(data);
 
       addFeatureCollectionToTable(data)
       infiltration[`selected_${sinkType}s`] = selected_sinks.filter(sink => infiltration[`all_${sinkType}_ids`].includes(sink));
@@ -90,7 +90,7 @@ function getWaterBodies(dataType){
   let url = `filter_waterbodies/`;
 
   const infiltration = Infiltration.loadFromLocalStorage();
-  // infiltration['lakes'] = true;
+
   fetch(url, {
     method: 'POST',
     body: JSON.stringify({
@@ -105,58 +105,8 @@ function getWaterBodies(dataType){
   .then(data => {
     console.log('data', data)
     if (data.message.success) {
-
-    //   const dataType = data.dataInfo.dataType
-    //   Layers[dataType].clearLayers();
-    //   data.featureCollection.features.forEach(feature => {
-
-    //         let layer = L.geoJSON(feature, {
-    //           style: {
-    //             color: 'purple',
-    //             weight: 2,
-    //             fillOpacity: 0.5
-    //           },
-    //           onEachFeature: function (feature, layer) {
-    //             infiltration[`selected_${dataType}s`].push(feature.properties.id);
-    //             let popupContent = `
-    //               <h6><b> ${feature.properties.name}</b></h6>
-    //               <b>Fließgewässer-ID:</b> ${feature.properties.fgw_id}<br>
-    //               <b>Länge:</b> ${feature.properties.shape_length} m<br>
-    //               ${feature.properties.shape_area ? `<b>Fläche:</b> ${feature.properties.shape_area} m²<br>` : ''}         
-    //               <b>Ökologisch bedingter Mindestwasserabfluss:</b> ${feature.properties.minimum_environmental_flow ? `${feature.properties.minimum_environmental_flow} m³/s` : 'unbekannt'}<br>
-    //               <b>Mindestüberschuss:</b> ${feature.properties.min_surplus_volume} m³<br>
-    //               <b>Durchschnittsüberschuss 1:</b> ${feature.properties.mean_surplus_volume} m³<br>
-    //               <b>Maximalüberschuss:</b> ${feature.properties.max_surplus_volume} m³<br>
-    //               <b>Tage mit Überschuss:</b> ${feature.properties.plus_days}<br>
-    //              `;
-    //             layer.bindTooltip(popupContent);
-    //             layer.on('mouseover', function () {
-    //               this.openPopup();
-    //             });
-    //           }
-    //         })
-    //         layer.on('contextmenu', function (event) {
-    //                 L.popup()
-    //                     .setLatLng(event.latlng)
-    //                     .setContent(`
-    //                         <b>Sink Options</b><br>
-                            
-    //                         <button class="btn btn-outline-secondary select-${dataType}" ${dataType}Id=${feature.properties.id}">Select Waterbody</button>
-    //                     `)
-    //                     .openOn(map);
-    //                   });
-    //         layer.addTo(Layers[dataType]);
-
-    //   //     
-     
-    //   });
-    //   Layers[dataType].addTo(map)
-    //   infiltration.saveToLocalStorage();
-
       addFeatureCollectionToLayer(data)
       addFeatureCollectionToTable(data)
-      
-
     }  else {
       handleAlerts(data.message);
     } 
@@ -466,8 +416,6 @@ export function initializeInfiltration(userField) {
 
     }  
     }); 
-
-
 
   $('input[type="checkbox"][name="land_use"]').prop('checked', true);
   $('input[type="checkbox"][name="land_use"]').trigger('change');

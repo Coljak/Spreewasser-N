@@ -51,27 +51,12 @@ function filterSiekerSinks(dataType, featureGroup) {
   
     // const selected_sinks = project['selected_sinks'];
     if (data.message.success) {
-      
-      // project['selected_sinks'] = [];
-      
-      // Initialize marker cluster
-      let clusterGroup = L.markerClusterGroup();
-      let ids = [];
-      addFeatureCollectionToTable(data)
-      Layers['sieker_sink'].clearLayers()
+
+
       addPointFeatureCollectionToLayer(data)
+      addFeatureCollectionToTable(data)
       
-      const sink_indices = {}
 
-
-
-
-            
-      project.saveToLocalStorage();
-      // Add the cluster group to the map
-      // featureGroup.addLayer(clusterGroup);
-
-      removeLegendFromMap(map);
 
       const legendItems = [
           getLegendItem('Leicht umsetzbar', getCircleMarkerSettings( 'green')),
@@ -108,7 +93,7 @@ export function initializeSiekerSink(userField) {
         }
         });
   console.log('Initialize Sieker Sink');
-  map.addLayer(siekerSinkFeatureGroup);
+  // map.addLayer(siekerSinkFeatureGroup);
   
   initializeSliders();
       

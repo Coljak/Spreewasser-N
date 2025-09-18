@@ -125,12 +125,15 @@ class River(models.Model):
         """
         Convert the model instance to a GeoJSON feature.
         """
-        geojson = json.loads(self.geom.geojson) if self.geom else None
-        geojson['properties'] = {
+        geometry = json.loads(self.geom.geojson) if self.geom else None
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties":{
                 'id': self.id,
                 "name": self.name,
             }
-        return geojson
+        }
     
 # WA_CD Kürzel des Koordinierungsraums
 class WaterCoordinationEntity(models.Model):
@@ -168,13 +171,17 @@ class Lake25(models.Model):
         """
         Convert the model instance to a GeoJSON feature.
         """
-        geojson = json.loads(self.geom.geojson) if self.geom else None
-        geojson['properties'] = {
+        geometry = json.loads(self.geom.geojson) if self.geom else None
+        return {
+            'type': "Feature",
+            'geometry': geometry,
+            'properties': {
                 'id': self.id,
-                "name": self.name,
-                "stand": self.stand.isoformat() if self.stand else None,
+                'name': self.name,
+                'stand': self.stand.isoformat() if self.stand else None,
             }
-        return geojson
+        }
+        
 
 
 
@@ -279,10 +286,15 @@ class Stream(models.Model):
         }
     
     def to_feature(self):
-        geojson = json.loads(self.geom.geojson)
-        geojson['properties'] = self.to_json()
-        return geojson
- 
+        geometry = json.loads(self.geom.geojson)
+        properties = self.to_json()
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
+        
+        
 
 class Lake(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
@@ -316,10 +328,13 @@ class Lake(models.Model):
         }
     
     def to_feature(self):
-        geojson = json.loads(self.geom.geojson)
-        geojson['properties'] = self.to_json()
-
-        return geojson
+        geometry = json.loads(self.geom.geojson)
+        properties = self.to_json()
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
 
 class Sink(models.Model):
     #id = models.IntegerField(primary_key=True)
@@ -385,9 +400,22 @@ class Sink(models.Model):
     
 
     def to_point_feature(self, language='de'):      
-        geojson = json.loads(self.centroid.geojson)
-        geojson['properties'] = self.to_json(language)
-        return geojson
+        geometry = json.loads(self.centroid.geojson)
+        properties = self.to_json(language)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
+    
+    def to_feature(self, language='de'):      
+        geometry = json.loads(self.geom4326.geojson)
+        properties = self.to_json(language)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
     
 
 
@@ -470,11 +498,24 @@ class EnlargedSink(models.Model):
             "index_hydrogeology": self.index_hydrogeology,
         }
     
-
+     
     def to_point_feature(self, language='de'):      
-        geojson = json.loads(self.centroid.geojson)
-        geojson['properties'] = self.to_json(language)
-        return geojson
+        geometry = json.loads(self.centroid.geojson)
+        properties = self.to_json(language)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
+    
+    def to_feature(self, language='de'):      
+        geometry = json.loads(self.geom4326.geojson)
+        properties = self.to_json(language)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
     
 
 class Aquifer(models.Model):
@@ -735,22 +776,23 @@ class SiekerLargeLake(models.Model):
     area_m2 = models.IntegerField(null=True, blank=True)
     area_ha = models.FloatField(null=True, blank=True)
     vol_mio_m3 = models.FloatField(null=True, blank=True)
-    ezg_km2 = models.FloatField(null=True, blank=True) # Einzugsgebiet in km²
+    einzugsgebiet_km2 = models.FloatField(null=True, blank=True) # Einzugsgebiet in km²
     d_max_m = models.IntegerField(null=True, blank=True) # max depth of lake in m
     verweilt = models.CharField(max_length=100, null=True, blank=True)
     t_cm_per_a = models.FloatField(null=True, blank=True) # annual trend of next level
     seetyp = models.IntegerField(null=True, blank=True)
     seetyp_txt = models.CharField(max_length=100, null=True, blank=True)
 
-    def to_feature(self):
-        """
-        Convert the model instance to a GeoJSON feature.
-        """
-        geojson = json.loads(self.geom4326.geojson) if self.geom4326 else None
-        geojson['properties'] = {
+    def to_json(self, language='de'):
+        if (language == 'de'):
+            stand = datetime.strftime(self.stand, '%d.%m.%Y')
+        else:
+            stand = self.stand.isoformat()
+            
+        return {
                 'id': self.id,
                 "name": self.name,
-                "stand": self.stand.isoformat() if self.stand else None,
+                "stand": stand,
                 "wrrl_pg": self.wrrl_pg,
                 "genese": self.genese,
                 "wrrl": self.wrrl,
@@ -759,7 +801,7 @@ class SiekerLargeLake(models.Model):
                 "area_m2": round(self.area_m2) if self.area_m2 else None,
                 "area_ha": round(self.area_ha, 1) if self.area_ha else None,
                 "vol_mio_m3": round(self.vol_mio_m3) if self.vol_mio_m3 else None,
-                "ezg_km2": self.ezg_km2,
+                "einzugsgebiet_km2": self.einzugsgebiet_km2,
                 "d_max_m": self.d_max_m,
                 "verweilt": self.verweilt,
                 "t_cm_per_a": self.t_cm_per_a,
@@ -767,7 +809,16 @@ class SiekerLargeLake(models.Model):
                 "seetyp_txt": self.seetyp_txt
             }
 
-        return geojson
+    def to_feature(self, language='de'):
+        geometry = json.loads(self.geom4326.geojson)
+        properties = self.to_json(language)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
+
+
                                
 
 class SiekerWaterLevel(models.Model):
@@ -808,52 +859,57 @@ class SiekerWaterLevel(models.Model):
     diff_cm = models.IntegerField(null=True, blank=True)  
     bilddatei = models.CharField(max_length=100, null=True, blank=True)
 
-    def to_feature(self, language='de'):
-        """
-        Convert the model instance to a GeoJSON feature.
-        """
+    def to_json(self, language='de'):
         if (language == 'de'):
             start_date = datetime.strftime(self.start_date, '%d.%m.%Y')
             end_date = datetime.strftime(self.end_date, '%d.%m.%Y')
         else:
             start_date = self.start_date.isoformat()
             end_date = self.end_date.isoformat()
+        return {
+            "messstelle": self.messstelle,
+            "t_d": self.t_d,
+            "t_a": round(self.t_a),
+            "period": f"{start_date} - {end_date}",
+            "min_cm": self.min_cm,
+            "max_cm": self.max_cm,
+            "mw_10_19": self.mw_10_19,
+            "mw_90_99": self.mw_90_99,
+            "stdev_cm": self.stdev_cm,
+            "twenty_yr_trend": self.twenty_yr_trend,
+            "pkz": self.pkz,
+            "pegelname": self.pegelname,
+            "gewaesser": self.gewaesser,
+            "pegelart": self.pegelart,
+            "mess_w": self.mess_w,
+            "mess_q": self.mess_q,
+            "soll_w": self.soll_w,
+            "soll_q": self.soll_q,
+            "region": self.region,
+            "hwmp": self.hwmp,
+            "dgjp": self.dgjp,
+            "gwk": self.gwk,
+            "gbk": self.gbk,
+            "a_ezg": self.a_ezg,
+            "bemerkung": self.bemerkung,
+            "anfrage": self.anfrage,
+            "stat": self.stat,
+            "ent_quell": self.ent_quell,
+            "ent_muend": self.ent_muend,
+            "diff_cm": self.diff_cm,
+        }
 
-        geojson = json.loads(self.geom4326.geojson) if self.geom4326 else None
-        geojson['properties'] = {
-                "messstelle": self.messstelle,
-                "t_d": self.t_d,
-                "t_a": round(self.t_a),
-                "period": f"{start_date} - {end_date}",
-                "min_cm": self.min_cm,
-                "max_cm": self.max_cm,
-                "mw_10_19": self.mw_10_19,
-                "mw_90_99": self.mw_90_99,
-                "stdev_cm": self.stdev_cm,
-                "twenty_yr_trend": self.twenty_yr_trend,
-                "pkz": self.pkz,
-                "pegelname": self.pegelname,
-                "gewaesser": self.gewaesser,
-                "pegelart": self.pegelart,
-                "mess_w": self.mess_w,
-                "mess_q": self.mess_q,
-                "soll_w": self.soll_w,
-                "soll_q": self.soll_q,
-                "region": self.region,
-                "hwmp": self.hwmp,
-                "dgjp": self.dgjp,
-                "gwk": self.gwk,
-                "gbk": self.gbk,
-                "a_ezg": self.a_ezg,
-                "bemerkung": self.bemerkung,
-                "anfrage": self.anfrage,
-                "stat": self.stat,
-                "ent_quell": self.ent_quell,
-                "ent_muend": self.ent_muend,
-                "diff_cm": self.diff_cm,
-                # "bilddatei":+self.bilddatei
-            }
-        return geojson
+    def to_feature(self, language='de'):
+        
+        geometry = json.loads(self.geom4326.geojson) if self.geom4326 else None
+        properties = self.to_json(language)
+        return {
+            'type': 'Feature',
+            'geometry': geometry,
+            'properties': properties
+        }
+
+
 
 class SiekerSink(models.Model):
     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
@@ -878,7 +934,7 @@ class SiekerSink(models.Model):
     index_feasibility = models.FloatField(null=True, blank=True)
     waterdist = models.CharField(max_length=100, null=True, blank=True)
 
-    def to_json(self):
+    def to_json(self, language='de'):
         return {
                 "id": self.id,
                 "depth": round(self.depth, 2),
@@ -897,17 +953,23 @@ class SiekerSink(models.Model):
                
             }
     
-    def to_point_feature(self):
-        geojson = json.loads(self.centroid.geojson)
-        geojson['properties'] = self.to_json()
-
-        return geojson
+    def to_point_feature(self, language='de'):      
+        geometry = json.loads(self.centroid.geojson)
+        properties = self.to_json(language)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
     
-    def to_feature(self):
-        geojson = json.loads(self.centroid.geojson)
-        geojson['properties'] = self.to_json()
-
-        return geojson
+    def to_feature(self, language='de'):  
+        geometry = json.loads(self.geom4326.geojson)
+        properties = self.to_json(language)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
 class LanduseCLC2018(models.Model):
     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
@@ -949,25 +1011,23 @@ class GekRetention(models.Model):
             "name": self.name,
             "quelle_1": self.quelle_1,
             "quelle_2": self.quelle_2,
+            "current_landusage": self.current_landusage,
             "association": self.association,
             "planning_segment": self.planning_segment,
             "hrsg": self.hrsg,
-            "gek_document": self.gek_document.link,
+            "document": self.gek_document.link,
             "number_of_measures": self.number_of_measures
         }
     
     def to_feature(self):
-        geojson = json.loads(self.geom4326.geojson) if self.geom4326 else None
-        geojson['properties'] = {
-            "id": self.id,
-            "name": self.name,
-            "document": self.gek_document.link if self.gek_document else None,
-            "current_landusage": self.current_landusage,
-            "planning_segment": self.planning_segment,
-            "number_of_measures": self.number_of_measures,
-            
+        geometry = json.loads(self.geom4326.geojson) if self.geom4326 else None
+        properties = self.to_dict()
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
         }
-        return geojson
+
 
 # m:n table 
 class GekLanduse(models.Model):
@@ -1016,7 +1076,10 @@ class GekRetentionMeasure(models.Model):
             "costs": self.costs,
             "measure_number": self.measure_number
             }
-
+class WetlandFeasibility(models.Model):
+    name_de = models.CharField(max_length=32, blank=True, null=True)
+    name_en = models.CharField(max_length=32, blank=True, null=True)
+    index = models.FloatField(blank=True, null=True)
 
 # Historische >Rückhalteräume
 class HistoricalWetlands(models.Model):
@@ -1033,25 +1096,33 @@ class HistoricalWetlands(models.Model):
     area = models.IntegerField(null=True, blank=True) # m² 
     water_connection = models.CharField(max_length=100, null=True, blank=True)
     feucht_per = models.FloatField(null=True, blank=True)
-    feasibility = models.CharField(max_length=100, null=True, blank=True)
-    index_feasibility = models.FloatField(null=True, blank=True)
+    # feasibility = models.CharField(max_length=100, null=True, blank=True)
+    # index_feasibility = models.IntegerField(null=True, blank=True)
+    feasibility = models.ForeignKey(WetlandFeasibility, blank=True, null=True, on_delete=models.CASCADE)
 
+    def to_json(self, language='de'):
+        return {
+                "id": self.id,
+                "name": self.name,
+                "comment": self.comment,
+                "current_landusage": self.current_landusage,
+                "association": self.association,
+                "source_1": self.source_1,
+                "source_2": self.source_2,
+                "source_3": self.source_3,
+                "feasibility": getattr(self.feasibility, f'name_{language}', None),
+                "index_feasibility": self.feasibility.index,
+            }
+    
     def to_feature(self):
-        geojson = json.loads(self.geom4326.geojson)
-        geojson['properties'] = {
-            "id": self.id,
-            "name": self.name,
-            "comment": self.comment,
-            "current_landusage": self.current_landusage,
-            "association": self.association,
-            "source_1": self.source_1,
-            "source_2": self.source_2,
-            "source_3": self.source_3,
-            "feasibility": self.feasibility,
-            "index_feasibility": self.index_feasibility,
-
+        geometry = json.loads(self.geom4326.geojson)
+        properties = self.to_json()
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
         }
-        return geojson
+
 
 
 class SinkDifference(models.Model):

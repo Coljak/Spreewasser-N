@@ -30,15 +30,6 @@ import {
 } from '/static/shared/map_sidebar_utils.js';
 
 
-const siekerWetlandFeatureGroup = new L.FeatureGroup()
-siekerWetlandFeatureGroup.toolTag = 'sieker_wetland';
-
-const siekerFilteredWetlandFeatureGroup = new L.FeatureGroup()
-siekerFilteredWetlandFeatureGroup.toolTag = 'sieker_wetland';
-
-
-
-
 function filterSiekerWetlands(project) {
   
   fetch('filter_sieker_wetlands/', {
@@ -54,15 +45,17 @@ function filterSiekerWetlands(project) {
     
     console.log(data)
     if(data.message.success) {
-      siekerFilteredWetlandFeatureGroup.clearLayers();
+      Layers['filtered_sieker_wetland'].clearLayers();
+      Layers['sieker_wetland'].clearLayers();
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LATTER!
-      addFeatureCollectionToLayer(data);
-      addFeatureCollectionToTable(data)
-      addFeatureCollectionResultCards(data.dataInfo, data.measures)
+      addFeatureCollectionToLayer({featureCollection: data.featureCollection, dataInfo: data.dataInfo});
+      addFeatureCollectionToTable({featureCollection: data.featureCollection, dataInfo: data.dataInfo});
 
-      const measuresTab = $('#navSiekerWetlandMeasures')
-      const tab = new bootstrap.Tab(measuresTab);
-      tab.show();
+      // addFeatureCollectionResultCards(data.dataInfo, data.measures)
+
+      // const measuresTab = $('#navSiekerWetlandMeasures')
+      // const tab = new bootstrap.Tab(measuresTab);
+      // tab.show();
     }
   })
 };
@@ -130,27 +123,42 @@ export function initializeSiekerWetland(data) {
             map.removeLayer(layer);
         }
         });
-  console.log('Initialize Sieker Wetland');
-  map.addLayer(siekerWetlandFeatureGroup);
+
+  $('#toolboxPanel').off('change');
+  $('#toolboxPanel').off('click');
+
+    initializeSliders();
+
+  // This is only for the priority slider that has string labels not numbers
+  const slider = document.getElementById('wetland_feasibility_slider');
+  const sliderLabelLeft = document.getElementById('wetland_feasibility_start_text');
+  const sliderLabelRight = document.getElementById('wetland_feasibility_value');
+  const sliderLabels = data['sliderLabels'];
+  sliderLabelLeft.innerText = sliderLabels[Math.min(...Object.keys(sliderLabels).map(Number))];
+  sliderLabelRight.innerText = sliderLabels[Math.max(...Object.keys(sliderLabels).map(Number))];
+
+  if (slider && sliderLabels) {
+    slider.addEventListener('change', function() {
+      console.log('sliderChanged', slider.value);
+      if (slider.value in sliderLabels) {
+        sliderLabelLeft.innerText = sliderLabels[slider.value];
+      }
+    });
+  }
+
+  addChangeEventListener(SiekerWetland);
+  addClickEventListenerToToolboxPanel(SiekerWetland)
+  
+  addFeatureCollectionToLayer({featureCollection: data.featureCollection, dataInfo: data.dataInfo})
+  addFeatureCollectionToTable({featureCollection: data.featureCollection, dataInfo: data.dataInfo})
   
 
-   
-
-    addFeatureCollectionToLayer(data)
-    addFeatureCollectionToTable(data)
     
-    
-    
-
   $('.table-select-all').prop('checked', true);
   $('.table-select-all').trigger('change')
   $('#cardSiekerWetlandTable').removeClass('d-none');
   
-  $('#toolboxPanel').off('change');
 
-  addChangeEventListener(SiekerWetland);
-
-  addClickEventListenerToToolboxPanel(SiekerWetland)
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
   if ($target.attr('id') === 'btnFilterSiekerWetlands') {
@@ -158,17 +166,17 @@ export function initializeSiekerWetland(data) {
       if (project.selected_sieker_wetlands.length === 0) {
         handleAlerts({'success': false, 'message': 'Bitte wählen Sie Gewässer aus!'})
       } else {
-        map.removeLayer(siekerWetlandFeatureGroup);
-        map.addLayer(siekerFilteredWetlandFeatureGroup);
+        map.removeLayer(Layers['sieker_wetland']);
+        map.addLayer(Layers['filtered_sieker_wetland']);
         filterSiekerWetlands(project);
       }
       return;  
     } else if ($target.attr('id') === 'toggleSiekerWetlands') {
-      if (map.hasLayer(siekerWetlandFeatureGroup)) {
-        map.removeLayer(siekerWetlandFeatureGroup);
+      if (map.hasLayer(Layers['sieker_wetland'])) {
+        map.removeLayer(Layers['sieker_wetland']);
         $target.text('Feuchtgebiete einblenden');
       } else {
-          map.addLayer(siekerWetlandFeatureGroup);
+          map.addLayer(Layers['sieker_wetland']);
           $target.text('Feuchtgebiete ausblenden');
       }
     }
@@ -177,16 +185,16 @@ export function initializeSiekerWetland(data) {
   $('#navSiekerWetland').on('shown.bs.tab', function (event) {
     const targetPane = $($(event.target).attr('href')); 
     if (targetPane.hasClass('active')) {
-      map.addLayer(siekerWetlandFeatureGroup);
-      map.removeLayer(siekerFilteredWetlandFeatureGroup);
+      map.addLayer(Layers['sieker_wetland']);
+      map.removeLayer(Layers['filtered_sieker_wetland']);
     }
   });
 
   $('#navSiekerWetlandMeasures').on('click', function (event) {
     const targetPane = $($(event.target).attr('href'));
     if (targetPane.hasClass('active')) {
-      map.removeLayer(siekerWetlandFeatureGroup);
-      map.addLayer(siekerFilteredWetlandFeatureGroup);
+      map.removeLayer(Layers['sieker_wetland']);
+      map.addLayer(Layers['filtered_sieker_wetland']);
     }
   });
 

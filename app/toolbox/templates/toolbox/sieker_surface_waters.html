@@ -2,6 +2,7 @@
 {% load static %}
 
 <div id="divSiekerSurfaceWaters" class="tab-pane">
+    <h2>Oberflächengewässer</h2>
     <!-- Navigation -->
     <ul class="nav nav-tabs">
         <li class="nav-item">
@@ -71,11 +72,7 @@
                         <button id="toggleSiekerLevels" class="btn btn-secondary">ausblenden</button>                                                                                             
                     </div>
                     
-                    <form method="POST" action="">
-                        {% csrf_token %}
-                        {% comment %} {% crispy sink_filter.form %} {% endcomment %}
-                        <button id="btnFilterSiekerSinks"type="submit" class="btn btn-primary">Senken filtern und bewerten</button>
-                    </form>
+
                 </div>
             </div>
             <div id="card-sieker_water_level-table" class="card mb-3 d-none">
@@ -101,12 +98,6 @@
                         <thead>
                             <tr>
                             <th>ID</th>
-                            <th>Vergrößerte Senke</th>
-                            <th>Senkeneignung</th>
-                            <th>Wasserkörper</th>
-                            <th>Länge Zuleitung(m)</th>
-                            <th>Bewertung Zuleitung</th>
-                            <th>Gesamtbewertung</th>
                             <th></th>
                             <th></th>
                             <th></th>
@@ -114,7 +105,7 @@
                         </thead>
                         <tbody></tbody>
                     </table>
-                    <div id="inlet-info-card" class="card mt-3" style="display: none;"></div>
+                    <div id="water-level-info-card" class="card mt-3" style="display: none;"></div>
                 </div>
             </div>
         </div>

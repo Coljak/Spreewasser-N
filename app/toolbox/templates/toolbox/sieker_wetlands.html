@@ -2,6 +2,7 @@
 {% load static %}
 
 <div id="divSiekerWetland">
+    <h2>Ehemalige Feuchtgebiete</h2>
     <!-- Navigation -->
     <ul class="nav nav-tabs">
         <li class="nav-item">
@@ -40,46 +41,22 @@
         <div id="tabSiekerWetlands" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title">Filter ehemalige Feuchtgebiete</h5>
-                        <button id="toggleSiekerWetlands" class="btn btn-secondary">ausblenden</button>                                                                                             
-                    </div>
-                    
-                    {% comment %} <form method="POST" action="">
-                        {% csrf_token %}
-                        {% crispy wetland_filter_form.form %}
-                        <button id="btnFilterSiekerWetlands"type="submit" class="btn btn-primary">Maßnahmen filtern</button>
-                    </form> {% endcomment %}
+                    {{ wetlands_filter.form | crispy }}
+            
                 </div>
             </div>
             
+            
             <div id="card-sieker_wetland-table" class="card mb-3 d-none">
                 <div class="card-body">
+                    <button id="toggleSiekerWetlands" class="btn btn-secondary">ausblenden</button>                                                                                             
+
                     <div class="card-title">Gewässer</div>
                     <div id="sieker_wetland-table-container"></div>
                     
                 </div>
             </div>
         </div>
-
-        {% comment %} <div id="tabSiekerWetlandMeasures" class="tab-pane">
-
-            <div id="cardSiekerWetlandMeasuresCard" class="card mb-3">
-
-                
-                <div class="card-body">
-                    <h5 class="card-title">Maßnahmen</h5>
-                    <div id="filtered_sieker_wetland-table-container"></div>
-                    <div id="sieker_wetland-info-card" class="card mt-3" style="display: none;">
-                        <div id="sieker_wetland-info-card-body" class="card-body"></div>
-                    </div>
-                </div>
-            
-                    
-
-            </div>
-        </div> {% endcomment %}
-
 
     </div>
 

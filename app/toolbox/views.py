@@ -4,7 +4,7 @@ from swn import forms as swn_forms
 from swn.views import load_nuts_polygon
 from . import forms, models
 
-from .filters import SiekerLargeLakeFilter,  SinkFilter, EnlargedSinkFilter, StreamFilter, LakeFilter, SiekerSinkFilter, GekRetentionFilter
+from .filters import SiekerLargeLakeFilter,  SinkFilter, EnlargedSinkFilter, StreamFilter, LakeFilter, SiekerSinkFilter, GekRetentionFilter, HistoricalWetlandsFilter
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry, LineString
 from django.contrib.gis.measure import D
@@ -30,23 +30,16 @@ import pandas as pd
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 
 def create_feature_collection(queryset):
-    features = []
-    for feature in queryset:
-        
-        features.append(feature.to_feature())
-    return  {
+    return {
         "type": "FeatureCollection",
-        "features": features,
-        }
+        "features": [obj.to_feature() for obj in queryset],
+    }
+
 
 def create_point_feature_collection(queryset):
-    features = []
-    for feature in queryset:
-        
-        features.append(feature.to_point_feature())
     return  {
         "type": "FeatureCollection",
-        "features": features,
+        "features": [obj.to_point_feature() for obj in queryset],
         }
 
 
@@ -1071,9 +1064,6 @@ def load_sieker_gek_gui(request, user_field_id):
         html = render_to_string('toolbox/sieker_gek.html', {
             'project_select_form': project_select_form,
             'gek_filter_form': gek_filter_form  ,
-            
-            # 'sieker_sink_filter': sieker_geks_filter,
-            
         }, request=request) 
         data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
 
@@ -1157,21 +1147,22 @@ def load_sieker_wetland_gui(request, user_field_id):
         return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
     
     wetlands = models.HistoricalWetlands.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
-    # all_sieker_wetland_ids = [g.id for g in wetlands]
-   
 
     if wetlands.count() > 0:
         project_select_form = forms.ToolboxProjectSelectionForm()
         
         feature_collection = create_feature_collection(wetlands)
+        filter_form = HistoricalWetlandsFilter()
+        slider_labels =  dict(models.WetlandFeasibility.objects.values_list('id', 'name_de').order_by('id'))
 
         html = render_to_string('toolbox/sieker_wetlands.html', {
             'project_select_form': project_select_form,
+            'wetlands_filter': filter_form,
             
         }, request=request) 
         data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
 
-        return JsonResponse({'success': True, 'html': html, 'wetlands': feature_collection,  'dataInfo': data_info})
+        return JsonResponse({'success': True, 'html': html, 'featureCollection': feature_collection,  'dataInfo': data_info, 'slider_labels': slider_labels})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine historischen Feuchtgebiete bekannt.'})
 
@@ -1191,23 +1182,12 @@ def filter_sieker_wetlands(request):
     
     # filter landuses
     ids = project.get('selected_sieker_wetlands')
-    wetlands = models.GekRetention.objects.filter(pk__in=ids)
-    landuses = models.GekLanduse.objects.filter(Q(wetland_retention__in=wetlands) & Q(clc_landuse__id__in=project['wetland_landuse']))
-    wetlands = models.GekRetention.objects.filter(landuses__in=landuses).distinct()
-    print("Geks:", wetlands.count())
+    wetlands = models.HistoricalWetlands.objects.filter(pk__in=ids)
 
     # filter measures
     filters = Q(priority__priority_level__gte=project['wetland_priority'])
     filters = add_range_filter(filters, project, 'wetland_costs', 'costs') 
-
-    measures = models.GekRetentionMeasure.objects.filter(
-            wetland_retention__in=wetlands
-        ).filter(filters)
-    
-    wetlands = models.GekRetention.objects.filter(measures__in=measures).distinct()
-
-
-    print("Geks FILTERED:", wetlands.count())
+    print("Weltlands FILTERED:", wetlands.count())
 
 
     if wetlands.count() == 0:
@@ -1217,21 +1197,15 @@ def filter_sieker_wetlands(request):
         }
         return JsonResponse({'message': message})
     else:
-        print("Geks", wetlands.count())
+        print("wetlands", wetlands.count())
         
         feature_collection = create_feature_collection(wetlands)
         data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
         data_info['featureColor'] = 'var(--bs-success)'
         data_info['dataType'] = 'filtered_sieker_wetland'
 
-        dict_list = []
-        for wetland in wetlands:
-            d = wetland.to_dict()
-            d['measures'] = [m.to_dict() for m in measures if m.wetland_retention == wetland]
-            dict_list.append(d)
-            
-        print('measures: ', dict_list)
+   
 
         data_info = models.DataInfo.objects.get(data_type='filtered_sieker_wetland').to_dict()
         print('Time for filter_sinks:', datetime.now() - start)
-        return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info, 'measures': dict_list})
+        return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info})

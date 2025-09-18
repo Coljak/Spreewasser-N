@@ -4,7 +4,7 @@ import {SiekerGek} from '/static/toolbox/sieker_gek_model.js';
 import {SiekerSink} from '/static/toolbox/sieker_sink_model.js';
 import {SiekerSurfaceWaters} from '/static/toolbox/sieker_surface_waters_model.js';
 import {SiekerWetland} from '/static/toolbox/sieker_wetland_model.js';
-import {map} from '/static/shared/map_sidebar_utils.js';
+import {map, removeLegendFromMap} from '/static/shared/map_sidebar_utils.js';
 import {Layers} from '/static/toolbox/layers.js';
 
 
@@ -13,12 +13,13 @@ const projectClasses = {
     'enlarged_sink': Infiltration,
     'stream': Infiltration,
     'lake': Infiltration,
-    'gek': SiekerGek,
+    // 'gek': SiekerGek,
     'filtered_sieker_gek': SiekerGek,
     'sieker_wetland': SiekerWetland,
     'sieker_sink': SiekerSink,
     'sieker_large_lake': SiekerSurfaceWaters,
     'sieker_water_level': SiekerSurfaceWaters,
+    'sieker_gek': SiekerGek,
 }
 
 function toggleNumberInArray(list, num) {
@@ -244,6 +245,13 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
         if ($target.hasClass('toolbox-back-to-initial')) {
             $('#toolboxButtons').removeClass('d-none');
                 $('#toolboxPanel').addClass('d-none');
+                removeLegendFromMap(map);
+                map.eachLayer(function(layer) {
+                    console.log(layer.toolTag);
+                    if (layer.toolTag) {
+                        map.removeLayer(layer);
+                    }
+                });
                 return;
         // table related
         } else if ($target.hasClass('paginate_button')) {
@@ -305,29 +313,33 @@ function createTableSettings(dataInfo) {
 
 const colorFunction = function (index) {
     // index must be 0 <= index <= 1, 0 is red, 1 is green
+    console.log('colorFunction index:', index)
   const hue = index * 100
   let color = `hsl(${hue}, 90%, 50%)`;
+  console.log('colorFunction, color: ', color)
   return color
 };
 
 export function addFeatureCollectionToLayer(options){
     console.log('addFeatureCollectionToLayer')
     let selectable = true;
-
-    let featureCollection = options.featureCollection 
-    let dataInfo = options.dataInfo
+    
+    let featureCollection = options.featureCollection;
+    let dataInfo = options.dataInfo;
     
     let colorByIndex = dataInfo.colorByIndex ? dataInfo.colorByIndex : false
-    console.log('addFeatureCollectionToLayer dataInfo', colorFunction, dataInfo)
+    console.log('addFeatureCollectionToLayer dataInfo', dataInfo)
+    console.log('addFeatureCollectionToLayer dataInfo.colorByIndex', dataInfo.colorByIndex)
     const featureGroup = Layers[dataInfo.dataType]
     featureGroup.clearLayers();
-    console.log('featureGroup', featureGroup)
+    // console.log('featureGroup', featureGroup)
+    // console.log('featureCollection', featureCollection)
     let layer = L.geoJSON(featureCollection, {
         style: function (feature) {
             let color;
 
             if (colorByIndex) {
-
+                console.log('addFeatureCollectionToLayer feature.properties[colorByIndex]', feature.properties[colorByIndex])
                 color = colorFunction(feature.properties[colorByIndex]);
             } else {
                 color = dataInfo.featureColor;
@@ -339,6 +351,7 @@ export function addFeatureCollectionToLayer(options){
             };
         },
         onEachFeature: function (feature, layer) {
+            console.log('onEachFeature:', feature)
             let popupContent = '';
             if (feature.properties[dataInfo.popUp.header]) {
                 popupContent += `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
@@ -347,7 +360,8 @@ export function addFeatureCollectionToLayer(options){
                 if (property.popUp) { 
                     popupContent += property.href
                     ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
-                    : `<b>${property.title}:</b> ${feature.properties[property.valueName]}<br>`;
+                    : `<b>${property.title}:</b> ${feature.properties[property.valueName] ?? '-'} ${feature.properties[property.valueName] ? property.unit ?? '' : ''}<br>
+                        `;
                     }    
             });
             // layer.bindTooltip(popupContent);
@@ -422,7 +436,8 @@ export function addPointFeatureCollectionToLayer(options) {
     console.log(options)
     let featureCollection = options.featureCollection 
     let dataInfo = options.dataInfo
-    let featureGroup = Layers[dataInfo.dataType]
+    let featureGroup = Layers[dataInfo.dataType];
+    featureGroup.clearLayers();
     let colorByIndex = dataInfo.colorByIndex ? dataInfo.colorByIndex : false
     if (dataInfo.pinIconPath) {
         featureType = 'point'
@@ -455,7 +470,8 @@ export function addPointFeatureCollectionToLayer(options) {
                 if (property.popUp) { 
                     popupContent += property.href
                     ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
-                    : `<b>${property.title}:</b> ${feature.properties[property.valueName]}${property.unit ?? ''}<br>`;
+                    : `<b>${property.title}:</b> ${feature.properties[property.valueName] ?? '-'
+                        } ${feature.properties[property.valueName] ? property.unit ?? '' : ''}<br>`;
                 }
             });
 
@@ -546,7 +562,7 @@ export function addFeatureCollectionToTable( data ){
                     <td><input type="checkbox" class="table-select-checkbox" data-type="${dataInfo.dataType}" data-id="${feature.properties.id}"></td>
                     `;
                 } else {
-                    tableHTML += `<td>${feature.properties[property.valueName]}</td>`
+                    tableHTML += `<td>${feature.properties[property.valueName] ?? '-'} ${feature.properties[property.valueName] ? property.unit ?? '' : ''}</td>` 
                 }
                 
             }

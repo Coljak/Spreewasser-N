@@ -70,8 +70,6 @@ export function makeColoredPin(color, iconPath = null, label = "") {
     });
 }
 
-export const waterLevelPinIcon = makeColoredPin("rgba(0, 255, 255, 1)", "/static/images/pin-transparent_water_level.png");
-
 export const updateDropdown = (parameterType, newId) => {
     
     // the absolute path is needed because most options are exclusively from /monica
@@ -106,7 +104,41 @@ export function tableCheckSelectedItems(project, dataType) {
     }
 };
 
-export async function toolboxSinks() {
+
+export function addLegend(legendSettings) {
+    console.log('addLegend', legendSettings)
+    removeLegendFromMap()
+
+    let labels = [];
+    for (let i = 0; i < legendSettings.grades.length; i++) {
+            const value = legendSettings.grades[i];
+            const color = colorFunction(value);
+            const label = legendSettings.gradientLabels[i];
+
+            labels.push({
+                label: label,
+                radius: 5,
+                type: 'circle',
+                // sides: 4,
+                weight: 2,
+                fillOpacity: 1,
+                color: 'black',
+                fillColor: color,
+                // margin:5
+            })
+        }
+
+    const legend = L.control.Legend(
+        { 
+        position: 'bottomright',
+        collapsed: false,
+        title: legendSettings.header,
+        legends: labels
+
+        }).addTo(map);
+}
+
+export async function toolboxSinksOutline() {
     // gets the sink outline
     // TODO: obsolte??static 'tool
   try {
@@ -425,36 +457,36 @@ export function addFeatureCollectionToLayer(options){
         });
   
     // let layerGroup = L.featureGroup([layer]).addTo(map);
-
+    if (dataInfo.legendSettings) {
+        addLegend(dataInfo.legendSettings)
+      }
     
     featureGroup.addTo(map);
     layer.bringToFront();
 };
 
+
 export function addPointFeatureCollectionToLayer(options) {
-    let featureType = 'polygon'
+
     console.log(options)
     let featureCollection = options.featureCollection 
     let dataInfo = options.dataInfo
     let featureGroup = Layers[dataInfo.dataType];
     featureGroup.clearLayers();
     let colorByIndex = dataInfo.colorByIndex ? dataInfo.colorByIndex : false
-    if (dataInfo.pinIconPath) {
-        featureType = 'point'
-    }
-    // let pinIconPath = options.pinIconPath ? options.pinIconPath : '/static/images/pin-transparent_dot.png'
-
-    
-    
+   
 
     let points = L.geoJSON(featureCollection, {
         pointToLayer: function (feature, latlng) {
             let color ;
             if (colorByIndex) {
                 color = colorFunction(feature.properties[colorByIndex])
-            } else { color = dataInfo.featureColor }
-            
-            const pin = makeColoredPin(color, dataInfo.pinIconPath)
+                
+            } else { 
+                color = dataInfo.featureColor 
+            }
+            const pinPath = dataInfo.pinIconPath ? dataInfo.pinIconPath : '/static/images/pin-transparent_dot.png';
+            const pin = makeColoredPin(color, pinPath);
             pin.dataId = feature.properties.id;
             pin.dataType = dataInfo.dataType;
             return L.marker(latlng, {
@@ -519,6 +551,9 @@ export function addPointFeatureCollectionToLayer(options) {
     });
 
     map.addLayer(featureGroup)
+    if (dataInfo.legendSettings) {
+        addLegend(dataInfo.legendSettings)
+      }
 
 };
 

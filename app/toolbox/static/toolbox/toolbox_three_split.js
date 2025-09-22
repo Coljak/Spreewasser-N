@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import {  toolboxSinks,updateDropdown, waterLevelPinIcon } from '/static/toolbox/toolbox.js';
+import {  toolboxSinksOutline, updateDropdown } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
 import { SiekerSink } from '/static/toolbox/sieker_sink_model.js';
@@ -11,6 +11,8 @@ import { initializeSiekerSurfaceWaters } from '/static/toolbox/sieker_surface_wa
 import { initializeSiekerSink } from '/static/toolbox/sieker_sink.js';
 import {initializeSiekerGek } from '/static/toolbox/sieker_gek.js';
 import {initializeSiekerWetland } from '/static/toolbox/sieker_wetland.js';
+import { TuMar } from '/static/toolbox/tu_mar_model.js';
+import { initializeTuMar } from '/static/toolbox/tu_mar.js';
 
 import { 
   projectRegion, 
@@ -305,7 +307,7 @@ const overlayLayers = {
   "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
   // "allLakes": allLakes,
   // "allRivers": allRivers,
-  "sinks": toolboxSinks,
+  // "sinks": toolboxSinksOutline,
   "waterLevels": markers,
 };
 
@@ -375,7 +377,6 @@ function startInfiltration() {
   }
 };
 
-
 // Sieker
 function startSurfaceWaters() {
   console.log('startSurfaceWaters')
@@ -443,7 +444,6 @@ function startSiekerSinks() {
     handleAlerts({ success: false, message: 'Please select a user field!' });
   }
 };
-
 
 
 function startSiekerGeks() {
@@ -522,7 +522,37 @@ function startFormerWetlands() {
   }
 };
 
+// TU-Berlin
+function startTuMar() {
+  const userField = ToolboxProject.loadFromLocalStorage().userField;
+    if (userField) {
+    
+      fetch('load_tu_mar_gui/' + userField + '/')
+      .then(response => response.json())
+      .then(data => {
+        if (!data.success) {
+          handleAlerts(data);
+          return
+        }
+        $('#toolboxButtons').addClass('d-none');
+        $('#toolboxPanel').removeClass('d-none');
+        $('#toolboxPanel').html(data.html);
+        const tuMar = new TuMar();
+        tuMar.userField = userField;
+        tuMar.saveToLocalStorage();
 
+        return {
+          'sliderLabels': data.slider_labels,
+          // 'dataInfo': data.dataInfo,
+          // 'featureCollection': data.featureCollection,
+          // 'all_ids': data.all_ids
+        };
+      })
+      .then(data => {
+        initializeTuMar(data);
+      })
+    }
+}
 
 
 
@@ -535,25 +565,25 @@ $('#startInfiltration').on('click', () => {
 });
 $('#startInjection').on('click', () => {
   console.log('startInjection clicked');
+  startTuMar();
   // startInjection()
 });
 $('#startSurfaceWaters').on('click', () => {
   console.log('startSurfaceWaters clicked');
-
-  startSurfaceWaters()
+  startSurfaceWaters();
 });
 $('#startSiekerSinks').on('click', () => {
   
   console.log('startSiekerSinks clicked');
-  startSiekerSinks()
+  startSiekerSinks();
 });
 $('#startWaterDevelopment').on('click', () => {
   console.log('startGek clicked');
-  startSiekerGeks()
+  startSiekerGeks();
 });
 $('#startFormerWetlands').on('click', () => {
   console.log('startFormerWetlands clicked');
-  startFormerWetlands()
+  startFormerWetlands();
 });
 $('#startDrainage').on('click', () => {
   console.log('startDrainage clicked');

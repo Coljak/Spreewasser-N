@@ -515,7 +515,7 @@ def filter_sinks(request):
                     (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
             print('geojson:', geojson)
             geojson['properties']["index_sink_total"] = index_sink_total/100
-            geojson['properties']["index_sink_total_str"] = f'{index_sink_total}%'
+            geojson['properties']["index_sink_total_str"] = index_sink_total
 
             features.append(geojson)
         feature_collection = {
@@ -1209,3 +1209,62 @@ def filter_sieker_wetlands(request):
         data_info = models.DataInfo.objects.get(data_type='filtered_sieker_wetland').to_dict()
         print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info})
+
+
+def load_tu_mar_gui(request, user_field_id):
+    if user_field_id == "null":
+        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
+    else:
+        user_field_id = int(user_field_id)
+        project_select_form = forms.ToolboxProjectSelectionForm()
+        user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
+        tu_mar_weightings_form = forms.MarWeightingForm()
+        suitability_aquifer_thickness = forms.SuitabilityAquiferThicknessForm()
+        suitability_depth_to_gw_form = forms.SuitabilityDepthToGroundWaterForm()
+        suitability_land_use_form = forms.SuitabilityLandUseForm()
+        suitability_distance_to_source_form = forms.SuitabilityDistanceToSourceWaterForm()
+        suitability_distance_to_well_form = forms.SuitabilityDistanceToWellForm()
+        suitability_hydraulic_conductivity = forms.SuitabilityHydraulicConductivityForm()
+
+        slider_labels = dict(models.MarSliderDescription.objects.values_list('id', 'name_de').order_by('id'))
+        slider_labels_suitability = dict(models.MarSuitabilitySliderDescription.objects.values_list('id', 'name_de').order_by('id'))
+
+
+
+
+
+        html = render_to_string('toolbox/tu_mar.html', {
+            # 'sink_form': sink_form, 
+            # 'enlarged_sink_form': enlarged_sink_form,
+            
+            'project_select_form': project_select_form,
+            'tu_mar_weightings_form': tu_mar_weightings_form,
+            'suitability_aquifer_thickness': suitability_aquifer_thickness,
+            'suitability_depth_to_gw_form': suitability_depth_to_gw_form, 
+            'suitability_land_use_form': suitability_land_use_form,
+            'suitability_distance_to_source_form': suitability_distance_to_source_form,
+            'suitability_distance_to_well_form': suitability_distance_to_well_form,
+            'suitability_hydraulic_conductivity': suitability_hydraulic_conductivity,
+
+        }, request=request) 
+
+        return JsonResponse({'success': True, 'html': html, 'slider_labels': slider_labels, 'slider_labels_suitability': slider_labels_suitability})
+
+        
+        # if 
+        #     tu_mar_weightings_form = forms.MarWeightingForm()
+
+
+
+        #     html = render_to_string('toolbox/infiltration.html', {
+        #         # 'sink_form': sink_form, 
+        #         # 'enlarged_sink_form': enlarged_sink_form,
+        #         'project_select_form': project_select_form,
+        #         'tu_mar_weightings_form': tu_mar_weightings_form,
+
+        #     }, request=request) 
+
+        #     return JsonResponse({'success': True, 'html': html})
+        # else:
+        #     return JsonResponse({'success': False, 'message': 'Im Suchgebiet liegen keine Daten vor.'})
+

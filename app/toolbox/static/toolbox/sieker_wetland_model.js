@@ -4,7 +4,8 @@ export class SiekerWetland {
         this.userField = siekerWetland.userField ?? null;
 
         this.wetland_landuse = siekerWetland.wetland_landuse ?? [];        
-        
+        this.feasibility = siekerWetland.feasibility ?? '1';
+
         this.all_sieker_wetland_ids = siekerWetland.all_sieker_wetland_ids ?? [];
         this.selected_sieker_wetlands = siekerWetland.selected_sieker_wetlands ?? [];
 

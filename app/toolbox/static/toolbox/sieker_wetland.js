@@ -50,6 +50,7 @@ function filterSiekerWetlands(project) {
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LATTER!
       addFeatureCollectionToLayer({featureCollection: data.featureCollection, dataInfo: data.dataInfo});
       addFeatureCollectionToTable({featureCollection: data.featureCollection, dataInfo: data.dataInfo});
+      
 
       // addFeatureCollectionResultCards(data.dataInfo, data.measures)
 

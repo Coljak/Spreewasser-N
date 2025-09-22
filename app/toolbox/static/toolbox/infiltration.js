@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addLegend, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
@@ -26,11 +26,12 @@ import {Infiltration} from '/static/toolbox/infiltration_model.js';
 import { Layers } from '/static/toolbox/layers.js';
 
 
+const legendSettings = {
+    'header': 'Senkeneignung',
+    'grades': [1, 0.75, 0.5, 0.25, 0],
+    'gradientLabels': [' 100%', ' 75%', ' 50%', ' 25%', ' 0%']
+} 
 
-
-
-let sinkMarkers = L.markerClusterGroup();
-sinkMarkers.toolTag = 'infiltration';
 
 //TODO: this is not pretty
 const connectionLayerMap = {};
@@ -68,6 +69,7 @@ function filterSinks(sinkType) {
       addFeatureCollectionToTable(data)
       infiltration[`selected_${sinkType}s`] = selected_sinks.filter(sink => infiltration[`all_${sinkType}_ids`].includes(sink));
       localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
+
       // infiltration.saveToLocalStorage();
       // Add the cluster group to the map
       // featureGroup.addLayer(markers);

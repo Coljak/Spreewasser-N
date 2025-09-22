@@ -113,19 +113,16 @@ class ParametersModelForm(forms.ModelForm):
         layout_fields = []
 
         for field_name, field in self.fields.items():
-            # Special handling for checkbox-like widgets
-            print('field.widget:', field.widget)
             
             if isinstance(field.widget, (forms.widgets.CheckboxInput, forms.widgets.NullBooleanSelect)):
                 layout_fields.append(Field(field_name, css_class='form-check-input mb-3'))
                 print("Checkbox field:", field_name)
             else:
-                # Replace Textarea with your custom widget
+                # Replace Textarea with custom Textarea (only two rows not 10)
                 if isinstance(field.widget, forms.Textarea):
                     field.widget = SingleRowTextarea()
                 layout_fields.append(Field(field_name, wrapper_class='row'))
 
-        # Apply layout
                 self.helper.label_class = 'col-5 col-form-label'
                 self.helper.field_class = 'col-7'
         self.helper.layout = Layout(*layout_fields)

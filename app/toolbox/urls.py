@@ -42,5 +42,6 @@ urlpatterns = [
     path('toolbox/filter_sieker_geks/', views.filter_sieker_geks, name='filter_sieker_gek'),
     path('toolbox/load_sieker_wetland_gui/<str:user_field_id>/', views.load_sieker_wetland_gui, name='load_sieker_wetland_gui'),
     path('toolbox/filter_sieker_wetlands/', views.filter_sieker_wetlands, name='filter_sieker_wetland'),
+    path('toolbox/load_tu_mar_gui/<int:user_field_id>/', views.load_tu_mar_gui, name='load_tu_mar_gui' )
 
 ]

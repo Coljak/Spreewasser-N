@@ -39,9 +39,16 @@
 
 
         <div id="tabSiekerWetlands" class="tab-pane">
+
+            
             <div class="card mb-3">
                 <div class="card-body">
-                    {{ wetlands_filter.form | crispy }}
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy wetlands_filter.form %}
+                        <button id="btnFilterSiekerWetlands"type="submit" class="btn btn-primary">Ehemalige Feuchtgebiete filtern</button>
+                    </form>
+                    
             
                 </div>
             </div>

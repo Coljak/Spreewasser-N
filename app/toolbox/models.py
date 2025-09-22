@@ -1148,7 +1148,30 @@ class SinkDifference(models.Model):
 
     
 
+def default_legend_labels():
+    """
+    This Dictionary sets the labels on a map legend. The number value is the one set in color_by_index.
+    """
+    return {'header': '', 'label_by_value': ''}
 
+class LeafletLegend(models.Model):
+    header_de = models.CharField(max_length=64)
+    header_en = models.CharField(max_length=64, null=True, blank=True)
+
+    def to_dict(self, language='de'):
+        
+        return {
+            'header': getattr(self, f'header_{language}'),
+            'grades': [g.value for g in self.grades.all().order_by('order_position')],
+            'gradientLabels': [getattr(g, f'label_{language}') for g in self.grades.all().order_by('order_position')],
+        }
+
+class LegendGrade(models.Model):
+    leaflet_legend = models.ForeignKey(LeafletLegend, on_delete=models.CASCADE, related_name="grades")
+    value = models.FloatField()
+    label_de = models.CharField(max_length=64)
+    label_en = models.CharField(max_length=64, null=True, blank=True)
+    order_position = models.PositiveIntegerField(default=0)
 
 class DataInfo(models.Model):
     data_type = models.CharField(max_length=255)  # e.g. 'sieker_gek'
@@ -1159,6 +1182,9 @@ class DataInfo(models.Model):
     popup_header = models.CharField(max_length=255, null=True, blank=True)  # e.g. "name"
     marker_cluster = models.BooleanField(default=False, null=True, blank=True)
     color_by_index = models.CharField(default=None, max_length=32, null=True, blank=True)
+    # a legend is only created if color_by_index is not None 
+    legend = models.ForeignKey(LeafletLegend, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    # icon path is relevant for point values, that have a custom pin icon
     icon_path = models.CharField(max_length=256, null=True, blank=True)
 
     def to_dict(self, language="de"):
@@ -1177,6 +1203,8 @@ class DataInfo(models.Model):
             dict.update({"colorByIndex": self.color_by_index})
         if self.icon_path:
             dict.update({"pinIconPath": self.icon_path})
+        if self.legend:
+            dict.update({"legendSettings": self.legend.to_dict(language)})
 
         return dict
 
@@ -1201,3 +1229,97 @@ class DataInfoProperty(models.Model):
             "unit": self.unit,
             "href": self.href,
         }
+
+
+## TU Berlin
+class Station(models.Model):
+    name = models.CharField( max_length=50)
+    geom = gis_models.PointField(srid=25833)
+    data_provider = models.CharField(max_length=32)
+    absolute_elevation_of_sensor_m = models.FloatField(null=True, blank=True)
+    station_number = models.IntegerField(null=True, blank=True)
+
+class TimeseriesValues(models.Model):
+    station = models.ForeignKey(Station, on_delete=models.CASCADE)
+    date = models.DateField()
+    rainfall = models.FloatField(null=True, blank=True)
+    waterlevel_above_sensor_cm = models.FloatField(null=True, blank=True)
+    absolute_water_level_elevation_m = models.FloatField(null=True, blank=True)
+
+class MarWeighting(models.Model):
+    aquifer_thickness = models.IntegerField(default=5)
+    depth_groundwater = models.IntegerField(default=5)
+    hydraulic_conductivity = models.IntegerField(default=5)
+    land_use = models.IntegerField(default=5)
+    distance_to_source_water = models.IntegerField(default=5)
+    distance_to_well = models.IntegerField(default=5)
+
+# search area for TU MAR
+class LowerSpreeCachment(models.Model):
+    geom25833 = gis_models.GeometryField(srid=25833)
+    geom4326 = gis_models.GeometryField(srid=4326)
+    area = models.FloatField()
+    perimeter = models.FloatField()
+
+class MarSliderDescription(models.Model):
+    name_de = models.CharField(max_length=32, null=True, blank=True)
+    name_en = models.CharField(max_length=32, null=True, blank=True)
+    weight = models.IntegerField(null=True, blank=True)
+
+class MarSuitabilitySliderDescription(models.Model):
+    name_de = models.CharField(max_length=32, null=True, blank=True)
+    name_en = models.CharField(max_length=32, null=True, blank=True)
+    suitability = models.IntegerField(null=True, blank=True)
+
+
+class SuitabilityAquiferThickness(models.Model):
+    ticknes_gt_60 = models.IntegerField(default=5)
+    ticknes_40_to_60 = models.IntegerField(default=4)
+    ticknes_30_to_40 = models.IntegerField(default=3)
+    ticknes_20_to_30 = models.IntegerField(default=2)
+    ticknes_lt_20 = models.IntegerField(default=1)
+
+class SuitabilityDepthToGroundWater(models.Model):
+    depth_lt_20 = models.IntegerField(default=5)
+    depth_20_to_30 = models.IntegerField(default=4)
+    depth_30_to_40 = models.IntegerField(default=3)
+    depth_40_to_50 = models.IntegerField(default=2)
+    depth_gt_50 = models.IntegerField(default=1)
+
+class SuitabilityLandUse(models.Model):
+    forest_closed_coniferous = models.IntegerField(default=5)
+    forest_closed_deciduous = models.IntegerField(default=5)
+    forest_closed_mixed = models.IntegerField(default=5)
+    forest_closed_unknown = models.IntegerField(default=5)
+    forest_open_coniferous = models.IntegerField(default=5)
+    forest_open_deciduous = models.IntegerField(default=5)
+    forest_open_mixed = models.IntegerField(default=5)
+    forest_open_unknown = models.IntegerField(default=5)
+    shrubs = models.IntegerField(default=4)
+    herbaceous_vegetation = models.IntegerField(default=4)
+    cropland = models.IntegerField(default=2)
+    urban = models.IntegerField(default=0)
+    permanent_waterbodies = models.IntegerField(default=0)
+    herbaceous_wetland = models.IntegerField(default=0)
+
+class SuitabilityDistanceToSourceWater(models.Model):
+    distance_lt_250 = models.IntegerField(default=0)
+    distance_250_to_500 = models.IntegerField(default=1)
+    distance_500_to_800 = models.IntegerField(default=5)
+    distance_800_1200 = models.IntegerField(default=4)
+    distance_1200_to_1500 = models.IntegerField(default=3)
+    distance_gt_1500 = models.IntegerField(default=2)
+
+class SuitabilityDistanceToWell(models.Model):
+    zone_1_and_2 = models.IntegerField(default=0)
+    zone_3 = models.IntegerField(default=5)
+    well_catchment = models.IntegerField(default=4)
+    out_of_catchment_lt_5km = models.IntegerField(default=3)
+    out_of_catchment_gt_5km = models.IntegerField(default=2)
+
+class SuitabilityHydraulicConductivity(models.Model):
+    conductivity_gt_30 = models.IntegerField(default=5)
+    conductivity_20_to_30 = models.IntegerField(default=4)
+    conductivity_10_to_20 = models.IntegerField(default=3)
+    conductivity_5_to_10 = models.IntegerField(default=2)
+    conductivity_lt_5 = models.IntegerField(default=1)

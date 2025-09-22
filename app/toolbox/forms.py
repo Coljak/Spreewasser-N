@@ -365,3 +365,360 @@ class WeightingsGrasslandForm(forms.Form):
 
         self.helper.add_input(Button('grassland-weighting-reset', 'Reset', css_class='btn-secondary reset-all'))
         
+class MarWeightingForm(forms.ModelForm):
+    class Meta:
+        model = models.MarWeighting
+        fields = '__all__'
+
+        labels = {
+            'aquifer_thickness': "Mächtigkeit des Grundwasserleiters",
+            'depth_groundwater_2': "Tiefe zum Grundwasserleiter 2",
+            'hydraulic_conductivity': "Hydraulische Leitfähigkeit",
+            'land_use': "Nutzung des Bodens",
+            'distance_to_source_water': "Entfernung zum Rohwasser",
+            'distance_to_well': "Entfernung zum Brunnen",
+        }
+
+        help_texts = {
+            'aquifer_thickness': "Gewichtung der Mächtigkeit des Grundwasserleiters",
+            'depth_groundwater_2': "Gewichtung der Tiefe zum Grundwasserleiter 2",
+            'hydraulic_conductivity': "Gewichtung der hydraulischen Leitfähigkeit",
+            'land_use': "Gewichtung der Landnutzung",
+            'distance_to_source_water': "Gewichtung der Entfernung zum Rohwasser",
+            'distance_to_well': "Gewichtung der Entfernung zum Brunnen (m)",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Default slider attributes
+        default_attrs = {
+            "data_range_min": 0,
+            "data_range_max": 5,
+            "data_cur_val": 5,
+            "data_default_value": 5,
+            "string_label": True,
+            "reset": True,
+            "class": "hiddeninput",
+        }
+
+        # Apply the custom slider widget to all fields in the model
+        for name, field in self.fields.items():
+            attrs = default_attrs.copy()
+            attrs["id"] = f"id_weighting_{name}"
+            attrs["name"] = f"weighting_{name}"
+            field.widget = CustomSimpleSliderWidget(attrs=attrs)
+
+        # Crispy forms helper
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'mar-weighting-form'
+        self.helper.form_class = 'form-horizontal weighting-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'mar-weighting-reset', 
+            'Reset', 
+            css_class='btn-secondary reset-all'
+        ))
+
+class SuitabilityAquiferThicknessForm(forms.ModelForm):
+    class Meta:
+        model = models.SuitabilityAquiferThickness
+        fields = '__all__'
+
+        labels = {
+            'ticknes_gt_60': "< 60m",
+            'ticknes_40_to_60': "40m - 60m",
+            'ticknes_30_to_40': "30m - 40m",
+            'ticknes_20_to_30': "20m - 30m",
+            'ticknes_lt_20': "< 20m",
+        }
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Default slider attributes
+        default_attrs = {
+            "data_range_min": 0,
+            "data_range_max": 5,
+            "data_cur_val": 5,
+            "data_default_value": 5,
+            "string_label": True,
+            "reset": True,
+            "class": "hiddeninput",
+        }
+
+        # Apply the custom slider widget to all fields in the model
+        for name, field in self.fields.items():
+            attrs = default_attrs.copy()
+            attrs["id"] = f"id_suitability_{name}"
+            attrs["name"] = f"suitability_{name}"
+            field.widget = CustomSimpleSliderWidget(attrs=attrs)
+
+        # Crispy forms helper
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'aquifer-thickness-form'
+        self.helper.form_class = 'form-horizontal suitability-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'aquifer-thickness-reset', 
+            'Reset', 
+            css_class='btn-secondary reset-all'
+        ))
+
+class SuitabilityDepthToGroundWaterForm(forms.ModelForm):
+    class Meta:
+        model = models.SuitabilityDepthToGroundWater
+        fields = '__all__'
+
+        labels = {
+            'depth_lt_20': "< 20m",
+            'depth_20_to_30': "20m - 30m",
+            'depth_30_to_40': "30m - 40m",
+            'depth_40_to_50': "40m - 50m",
+            'depth_gt_50': "> 50m",
+        }
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Default slider attributes
+        default_attrs = {
+            "data_range_min": 0,
+            "data_range_max": 5,
+            "data_cur_val": 5,
+            "data_default_value": 5,
+            "string_label": True,
+            "reset": True,
+            "class": "hiddeninput",
+        }
+
+        # Apply the custom slider widget to all fields in the model
+        for name, field in self.fields.items():
+            attrs = default_attrs.copy()
+            attrs["id"] = f"id_suitability_{name}"
+            attrs["name"] = f"suitability_{name}"
+            field.widget = CustomSimpleSliderWidget(attrs=attrs)
+
+        # Crispy forms helper
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'depth-to-gw-suitability-form'
+        self.helper.form_class = 'form-horizontal suitability-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'depth-to-gw-reset', 
+            'Reset', 
+            css_class='btn-secondary reset-all'
+        ))
+
+
+
+class SuitabilityLandUseForm(forms.ModelForm):
+    class Meta:
+        model = models.SuitabilityLandUse
+        fields = '__all__'
+
+        labels = {
+            'forest_closed_coniferous': 'Geschlossener Nadelwald',
+            'forest_closed_deciduous': 'Geschlossener Laubwald',
+            'forest_closed_mixed': 'Geschlossener Mischwald',
+            'forest_closed_unknown': 'Geschlossener Wald',
+            'forest_open_coniferous': 'Offener Nadelwald',
+            'forest_open_deciduous': 'Offener Laubwald',
+            'forest_open_mixed': 'Offener Mischwald',
+            'forest_open_unknown': 'Offener Wald',
+            'shrubs': 'Sträucher',
+            'herbaceous_vegetation': 'Krautvegetation',
+            'cropland': 'Ackerflächen',
+            'urban': 'Urbane Flächen',
+            'permanent_waterbodies': 'Gewässerflächen',
+            'herbaceous_wetland': 'Feuchtgebiete',
+        }
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Default slider attributes
+        default_attrs = {
+            "data_range_min": 0,
+            "data_range_max": 5,
+            "data_cur_val": 5,
+            "data_default_value": 5,
+            "string_label": True,
+            "reset": True,
+            "class": "hiddeninput",
+        }
+
+        # Apply the custom slider widget to all fields in the model
+        for name, field in self.fields.items():
+            attrs = default_attrs.copy()
+            attrs["id"] = f"id_suitability_{name}"
+            attrs["name"] = f"suitability_{name}"
+            field.widget = CustomSimpleSliderWidget(attrs=attrs)
+
+        # Crispy forms helper
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'depth-to-gw-suitability-form'
+        self.helper.form_class = 'form-horizontal suitability-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'land-use-reset', 
+            'Reset', 
+            css_class='btn-secondary reset-all'
+        ))
+
+
+class SuitabilityDistanceToSourceWaterForm(forms.ModelForm):
+    class Meta:
+        model = models.SuitabilityDistanceToSourceWater
+        fields = '__all__'
+
+        labels = {
+            'distance_lt_250': '< 250m',
+            'distance_250_to_500': '250m - 500m',
+            'distance_500_to_800': '500m - 800m',
+            'distance_800_1200': '800m - 1200m',
+            'distance_1200_to_1500': '1200m - 1500m',
+            'distance_gt_1500': '> 1500m',
+        }
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Default slider attributes
+        default_attrs = {
+            "data_range_min": 0,
+            "data_range_max": 5,
+            "data_cur_val": 5,
+            "data_default_value": 5,
+            "string_label": True,
+            "reset": True,
+            "class": "hiddeninput",
+        }
+
+        # Apply the custom slider widget to all fields in the model
+        for name, field in self.fields.items():
+            attrs = default_attrs.copy()
+            attrs["id"] = f"id_suitability_{name}"
+            attrs["name"] = f"suitability_{name}"
+            field.widget = CustomSimpleSliderWidget(attrs=attrs)
+
+        # Crispy forms helper
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'distance-to-source-suitability-form'
+        self.helper.form_class = 'form-horizontal suitability-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'distance-to-source-reset', 
+            'Reset', 
+            css_class='btn-secondary reset-all'
+        ))
+
+class SuitabilityDistanceToWellForm(forms.ModelForm):
+    class Meta:
+        model = models.SuitabilityDistanceToWell
+        fields = '__all__'
+
+        labels = {
+            'zone_1_and_2': 'Zone 1 und 2',
+            'zone_3': 'Zone 3 oder 30-Jahre Isochron',
+            'well_catchment': 'Im Einzugsgebiet',
+            'out_of_catchment_lt_5km': 'Innerhalb von 5km-Radius um Einzugsgebiet',
+            'out_of_catchment_gt_5km': 'Außerhalb von 5km-Radius um Einzugsgebiet',
+        }
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Default slider attributes
+        default_attrs = {
+            "data_range_min": 0,
+            "data_range_max": 5,
+            "data_cur_val": 5,
+            "data_default_value": 5,
+            "string_label": True,
+            "reset": True,
+            "class": "hiddeninput",
+        }
+
+        # Apply the custom slider widget to all fields in the model
+        for name, field in self.fields.items():
+            attrs = default_attrs.copy()
+            attrs["id"] = f"id_suitability_{name}"
+            attrs["name"] = f"suitability_{name}"
+            field.widget = CustomSimpleSliderWidget(attrs=attrs)
+
+        # Crispy forms helper
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'distance-to-well-suitability-form'
+        self.helper.form_class = 'form-horizontal suitability-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'distance-to-well-reset', 
+            'Reset', 
+            css_class='btn-secondary reset-all'
+        ))
+
+class SuitabilityHydraulicConductivityForm(forms.ModelForm):
+    class Meta:
+        model = models.SuitabilityHydraulicConductivity
+        fields = '__all__'
+
+        labels = {
+            'conductivity_gt_30' : '> 30 K(m/d)',
+            'conductivity_20_to_30' : '20 K(m/d) - 30 K(m/d)',
+            'conductivity_10_to_20' : '10 K(m/d) - 20 K(m/d)',
+            'conductivity_5_to_10' : '5 K(m/d) - 10 K(m/d)',
+            'conductivity_lt_5' : '< 5 K(m/d)',
+        }
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Default slider attributes
+        default_attrs = {
+            "data_range_min": 0,
+            "data_range_max": 5,
+            "data_cur_val": 5,
+            "data_default_value": 5,
+            "string_label": True,
+            "reset": True,
+            "class": "hiddeninput",
+        }
+
+        # Apply the custom slider widget to all fields in the model
+        for name, field in self.fields.items():
+            attrs = default_attrs.copy()
+            attrs["id"] = f"id_suitability_{name}"
+            attrs["name"] = f"suitability_{name}"
+            field.widget = CustomSimpleSliderWidget(attrs=attrs)
+
+        # Crispy forms helper
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'hydraulic-conductivity-suitability-form'
+        self.helper.form_class = 'form-horizontal suitability-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'hydraulic-conductivity-reset', 
+            'Reset', 
+            css_class='btn-secondary reset-all'
+        ))

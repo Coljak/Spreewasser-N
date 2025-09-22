@@ -59,11 +59,11 @@ function filterSiekerSinks(dataType, featureGroup) {
 
 
       const legendItems = [
-          getLegendItem('Leicht umsetzbar', getCircleMarkerSettings( 'green')),
-          getLegendItem('Mittel umsetzbar', getCircleMarkerSettings( 'orange')),
-          getLegendItem('Schwer umsetzbar', getCircleMarkerSettings( 'red')),
+          getLegendItem('Leicht', getCircleMarkerSettings( 'green')),
+          getLegendItem('Mittel', getCircleMarkerSettings( 'orange')),
+          getLegendItem('Schwer', getCircleMarkerSettings( 'red')),
         ]
-      const legendSettings = getLegendSettings ('Umsetzbarkeit', legendItems) 
+      const legendSettings = getLegendSettings ('Umsetzbarkeit', legendItems);
       const legend =  L.control.Legend(legendSettings).addTo(map);
 
     } else {

@@ -1,0 +1,184 @@
+{% load crispy_forms_tags %}
+{% load static %}
+
+<div id="divTuMar">
+    <h2>Grundwasseranreicherung durch Injektion</h2>
+    <!-- Navigation -->
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Project</a>
+        </li>
+        
+        <li class="nav-item tuMar">
+            <a id="navTuMarSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabTuMarWeighting" aria-selected="false">Gewichtung</a>
+        </li>
+        <li class="nav-item tuMar">
+            <a id="navTuMarSuitabilityAquiferThickness" class="toolbox nav-link" data-bs-toggle="tab" href="#tabTuMarSuitabilityAquiferThickness" aria-selected="false">Dicke Aquifer</a>
+        </li>
+        <li class="nav-item tuMar">
+            <a id="navTuMarSuitabilityDepthToGW" class="toolbox nav-link" data-bs-toggle="tab" href="#tabTuMarSuitabilityDepthGW" aria-selected="false">Grundwasserabstand</a>
+        </li>
+        
+        
+        <li class="nav-item tuMar">
+            <a id="navTuMarSuitabilityLandUse" class="toolbox nav-link" data-bs-toggle="tab" href="#tabTuMarSuitabilityLandUse" aria-selected="false">Landnutzung</a>
+        </li>
+        <li class="nav-item tuMar">
+            <a id="navTuMarSuitabilityDistanceSource" class="toolbox nav-link" data-bs-toggle="tab" href="#tabTuMarSuitabilityDistanceSource" aria-selected="false">Abstand zum Wasserkörper</a>
+        </li>
+        <li class="nav-item tuMar">
+            <a id="navTuMarSuitabilityDistanceWells" class="toolbox nav-link disabled"  data-bs-toggle="tab" href="#tabTuMarSuitabilityDistanceWells">Abstand zur Entnahme</a>
+        </li> 
+        <li class="nav-item tuMar">
+            <a id="navTuMarSuitabilityHydraulicConductivity" class="toolbox nav-link disabled"  data-bs-toggle="tab" href="#tabTuMarSuitabilityHydraulicConductivity">Hydraulische Leitfähigkeit</a>
+        </li> 
+        
+    </ul>
+
+    <!-- Tab Content Wrapper -->
+    <div class="tab-content" id="toolboxTabContent">
+
+        <div id="tabToolboxProject" class="tab-pane active show">
+            <div class="card mb-3">
+                <div class="card-body">
+                    {{ project_select_form | crispy }}
+                
+                    <button class="toolbox-back-to-initial btn btn-secondary">Zurück zur Auswahl</button>
+            
+                </div>
+            </div>
+        </div>
+
+
+        <div id="tabTuMarWeighting" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Gewichtung</h5>
+                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
+                    </div>
+                    
+                    <form id="tu-mar-weighting-form" method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy tu_mar_weightings_form %}
+                        <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
+                    </form>
+                </div>
+            </div>       
+        </div>
+
+        <div id="tabTuMarSuitabilityAquiferThickness" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Eignungen Dicke des Grundwasserleiters 2</h5>
+                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
+                    </div>
+                    
+                    <form id="tu-mar-suitability-aquifer-thickness-form" method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy suitability_aquifer_thickness %}
+                        <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
+                    </form>
+                </div>
+            </div>       
+        </div>
+
+        <div id="tabTuMarSuitabilityDepthGW" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Eignungen des Grundwasserabstandes</h5>
+                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
+                    </div>
+                    
+                    <form id="tu-mar-weighting-form" method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy suitability_depth_to_gw_form %}
+                        <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
+                    </form>
+                </div>
+            </div>       
+        </div>
+
+        <div id="tabTuMarSuitabilityLandUse" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Eignungen der Landnutzung</h5>
+                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
+                    </div>
+                    
+                    <form id="tu-mar-weighting-form" method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy suitability_land_use_form %}
+                        <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
+                    </form>
+                </div>
+            </div>       
+        </div>
+
+        <div id="tabTuMarSuitabilityDistanceSource" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Eignungen Abstand zu Flussläufen oder Seen</h5>
+                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
+                    </div>
+                    
+                    <form id="tu-mar-weighting-form" method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy suitability_distance_to_source_form %}
+                        <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
+                    </form>
+                </div>
+            </div>       
+        </div>
+
+        <div id="tabTuMarSuitabilityDistanceWells" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Eignungen Abstand Entnahmebrunnen</h5>
+                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
+                    </div>
+                    
+                    <form id="tu-mar-weighting-form" method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy suitability_distance_to_well_form %}
+                        <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
+                    </form>
+                </div>
+            </div>       
+        </div>
+
+         <div id="tabTuMarSuitabilityHydraulicConductivity" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Eignungen Hydraulische Leitfähigkeit</h5>
+                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
+                    </div>
+                    
+                    <form id="tu-mar-weighting-form" method="POST" action="">
+                        {% csrf_token %}
+                        {% crispy suitability_hydraulic_conductivity %}
+                        <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
+                    </form>
+                </div>
+            </div>       
+        </div>
+
+        
+        
+
+        
+
+</div>

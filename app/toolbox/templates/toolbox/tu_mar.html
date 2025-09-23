@@ -27,10 +27,10 @@
             <a id="navTuMarSuitabilityDistanceSource" class="toolbox nav-link" data-bs-toggle="tab" href="#tabTuMarSuitabilityDistanceSource" aria-selected="false">Abstand zum Wasserkörper</a>
         </li>
         <li class="nav-item tuMar">
-            <a id="navTuMarSuitabilityDistanceWells" class="toolbox nav-link disabled"  data-bs-toggle="tab" href="#tabTuMarSuitabilityDistanceWells">Abstand zur Entnahme</a>
+            <a id="navTuMarSuitabilityDistanceWells" class="toolbox nav-link"  data-bs-toggle="tab" href="#tabTuMarSuitabilityDistanceWells">Abstand zur Entnahme</a>
         </li> 
         <li class="nav-item tuMar">
-            <a id="navTuMarSuitabilityHydraulicConductivity" class="toolbox nav-link disabled"  data-bs-toggle="tab" href="#tabTuMarSuitabilityHydraulicConductivity">Hydraulische Leitfähigkeit</a>
+            <a id="navTuMarSuitabilityHydraulicConductivity" class="toolbox nav-link"  data-bs-toggle="tab" href="#tabTuMarSuitabilityHydraulicConductivity">Hydraulische Leitfähigkeit</a>
         </li> 
         
     </ul>
@@ -59,7 +59,7 @@
                         <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
                     </div>
                     
-                    <form id="tu-mar-weighting-form" method="POST" action="">
+                    <form method="GET" id="{{ tu_mar_weightings_form.helper.form_id }}" class="{{ tu_mar_weightings_form.helper.form_class }}">
                         {% csrf_token %}
                         {% crispy tu_mar_weightings_form %}
                         <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
@@ -77,7 +77,7 @@
                         <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
                     </div>
                     
-                    <form id="tu-mar-suitability-aquifer-thickness-form" method="POST" action="">
+                    <form method="GET" id="{{ suitability_aquifer_thickness.helper.form_id }}" class="{{ suitability_aquifer_thickness.helper.form_class }}">
                         {% csrf_token %}
                         {% crispy suitability_aquifer_thickness %}
                         <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
@@ -95,7 +95,7 @@
                         <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
                     </div>
                     
-                    <form id="tu-mar-weighting-form" method="POST" action="">
+                    <form method="GET" id="{{ suitability_depth_to_gw_form.helper.form_id }}" class="{{ suitability_depth_to_gw_form.helper.form_class }}">
                         {% csrf_token %}
                         {% crispy suitability_depth_to_gw_form %}
                         <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
@@ -113,7 +113,7 @@
                         <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
                     </div>
                     
-                    <form id="tu-mar-weighting-form" method="POST" action="">
+                    <form method="GET" id="{{ suitability_land_use_form.helper.form_id }}" class="{{ suitability_land_use_form.helper.form_class }}">
                         {% csrf_token %}
                         {% crispy suitability_land_use_form %}
                         <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
@@ -131,7 +131,7 @@
                         <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
                     </div>
                     
-                    <form id="tu-mar-weighting-form" method="POST" action="">
+                    <form method="GET" id="{{ suitability_distance_to_source_form.helper.form_id }}" class="{{ suitability_distance_to_source_form.helper.form_class }}">
                         {% csrf_token %}
                         {% crispy suitability_distance_to_source_form %}
                         <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
@@ -149,7 +149,7 @@
                         <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
                     </div>
                     
-                    <form id="tu-mar-weighting-form" method="POST" action="">
+                    <form method="GET" id="{{ suitability_distance_to_well_form.helper.form_id }}" class="{{ suitability_distance_to_well_form.helper.form_class }}">
                         {% csrf_token %}
                         {% crispy suitability_distance_to_well_form %}
                         <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
@@ -167,7 +167,7 @@
                         <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
                     </div>
                     
-                    <form id="tu-mar-weighting-form" method="POST" action="">
+                    <form method="GET" id="{{ suitability_hydraulic_conductivity.helper.form_id }}" class="{{ suitability_hydraulic_conductivity.helper.form_class }}">
                         {% csrf_token %}
                         {% crispy suitability_hydraulic_conductivity %}
                         <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>

@@ -124,7 +124,8 @@ const connectionLayerMap = {};
 
 export function initializeTuMar(data) {
   console.log('data', data)
-  const sliderLabels = data.sliderLabels;
+  const sliderLabelsWeighting = data.sliderLabels;
+  const sliderLabelsSuitability = data.sliderLabelsSuitability;
   
   removeLegendFromMap(map);
   map.eachLayer(function(layer) {
@@ -140,34 +141,38 @@ export function initializeTuMar(data) {
     initializeSliders();
   // initializeSliders();
       
-  const form = document.getElementById('tu-mar-weighting-form')
-
-  const sliders = form.querySelectorAll('input.single-slider');
-    
-
-  const resetBtn = form.querySelector('input.reset-all');
-  resetBtn.addEventListener('click', function (e) {
-    // let tuMar = TuMar.loadFromLocalStorage(); // TODO this is not needed but check
-    sliders.forEach(widget => {
-      widget.value = parseFloat(widget.dataset.defaultValue);
-      widget.dispatchEvent(new Event('input'));
-      // widget.val = parseFloat(widget.slider.dataset.defaultValue);
-    });
-
-  });
-
-  sliders.forEach(slider => {
+  const weightingForm = document.querySelector('.weighting-form')
+  const weightingSliders = weightingForm.querySelectorAll('input.single-slider');
+  weightingSliders.forEach(slider => {
     console.log('slider:', slider)
-    console.log('sliderLabels:', sliderLabels)
+    console.log('sliderLabels:', sliderLabelsWeighting)
     const sliderLabelRight = slider.parentElement.nextElementSibling;
-    sliderLabelRight.innerText = sliderLabels[Math.max(...Object.keys(sliderLabels).map(Number))];
+    sliderLabelRight.innerText = sliderLabelsWeighting[Math.max(...Object.keys(sliderLabelsWeighting).map(Number))];
     slider.addEventListener('change', function() {
       console.log('sliderChanged', slider.value);
-      if (slider.value in sliderLabels) {
-        sliderLabelRight.innerText = sliderLabels[slider.value];
+      if (slider.value in sliderLabelsWeighting) {
+        sliderLabelRight.innerText = sliderLabelsWeighting[slider.value];
       }
     });
   })
+
+  const suitabilityForms = document.querySelectorAll('.suitability-form')
+  suitabilityForms.forEach(form => {
+    const suitabilitySliders = form.querySelectorAll('input.single-slider');
+    suitabilitySliders.forEach(slider => {
+      const sliderLabelRight = slider.parentElement.nextElementSibling;
+      // sliderLabelRight.innerText = sliderLabelsSuitability[slider.value];
+      slider.addEventListener('change', function() {
+      if (slider.value in sliderLabelsSuitability) {
+        sliderLabelRight.innerText = sliderLabelsSuitability[slider.value];
+      }
+    });
+    slider.dispatchEvent(new Event('change'))
+  })
+  
+  })
+
+
   // const slider = document.getElementById('wetland_feasibility_slider');
   // const sliderLabelLeft = document.getElementById('wetland_feasibility_start_text');
   // const sliderLabelRight = document.getElementById('wetland_feasibility_value');
@@ -191,27 +196,46 @@ export function initializeTuMar(data) {
     addChangeEventListener(TuMar);
     $('#toolboxPanel').off('click');
     addClickEventListenerToToolboxPanel(TuMar)
+
+    // $('#toolboxPanel').on('input', function (event) {
+
+    // }
+
+
     $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
-    if ($target.attr('id') === 'btnFilterSinks') {
-      filterSinks('sink');
-    
-    } else if ($target.attr('id') === 'btnFilterEnlargedSinks') {
-      filterSinks('enlarged_sink');
-    
-    } else if ($target.attr('id') === 'btnFilterStreams') {
-      getWaterBodies('stream');
-    
-    } else if ($target.attr('id') === 'btnFilterLakes') {
-      getWaterBodies('lake');
+    if ($target.is('input.reset-all, button.reset-all')) {
+        console.log('Reset button clicked:', $target);
 
-    } else if ($target.attr('id') === 'btnGetInlets') {
-        getInlets(); 
-    } else if ($target.attr('id') === 'navTuMarSinks') {
-        map.addLayer(Layers.sink);
-    } else if ($target.attr('id') === 'navTuMarEnlargedSinks') {
-        map.addLayer(Layers.enlarged_sink);
-    } else if ($target.attr('id') === 'navTuMarResult') {
+        // Find the enclosing form
+        const $form = $target.closest('form');
+
+        // Find all slider inputs inside that form
+        $form.find('input.single-slider').each(function () {
+            const $slider = $(this);
+            const defaultVal = parseFloat($slider.data('default-value'));
+
+            $slider.val(defaultVal).trigger('change'); // set value and trigger input event
+        });
+    }
+
+    // else if ($target.attr('id') === 'btnFilterEnlargedSinks') {
+    //   filterSinks('enlarged_sink');
+    
+    // } else if ($target.attr('id') === 'btnFilterStreams') {
+    //   getWaterBodies('stream');
+    
+    // } else if ($target.attr('id') === 'btnFilterLakes') {
+    //   getWaterBodies('lake');
+
+    // } else if ($target.attr('id') === 'btnGetInlets') {
+    //     getInlets(); 
+    // } else if ($target.attr('id') === 'navTuMarSinks') {
+    //     map.addLayer(Layers.sink);
+    // } else if ($target.attr('id') === 'navTuMarEnlargedSinks') {
+    //     map.addLayer(Layers.enlarged_sink);
+    // } 
+    else if ($target.attr('id') === 'navTuMarResult') {
         map.removeLayer(Layers.sink);
         map.removeLayer(Layers.enlarged_sink);
 

@@ -543,6 +543,7 @@ function startTuMar() {
 
         return {
           'sliderLabels': data.slider_labels,
+          'sliderLabelsSuitability': data.slider_labels_suitability,
           // 'dataInfo': data.dataInfo,
           // 'featureCollection': data.featureCollection,
           // 'all_ids': data.all_ids

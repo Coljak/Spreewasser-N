@@ -1,7 +1,7 @@
 from django import forms
 from django.urls import reverse
 from django.contrib.auth.models import User
-from django.db.models import Max, Min
+from django.db.models import Max, Min, NOT_PROVIDED
 from . import models
 # from .utils import widgets
 from django.db.models import Q
@@ -395,8 +395,6 @@ class MarWeightingForm(forms.ModelForm):
         default_attrs = {
             "data_range_min": 0,
             "data_range_max": 5,
-            "data_cur_val": 5,
-            "data_default_value": 5,
             "string_label": True,
             "reset": True,
             "class": "hiddeninput",
@@ -405,6 +403,10 @@ class MarWeightingForm(forms.ModelForm):
         # Apply the custom slider widget to all fields in the model
         for name, field in self.fields.items():
             attrs = default_attrs.copy()
+            model_field = self._meta.model._meta.get_field(name)
+            if model_field.default is not NOT_PROVIDED:
+                attrs["data_cur_val"] = model_field.default
+                attrs["data_default_value"] = model_field.default
             attrs["id"] = f"id_weighting_{name}"
             attrs["name"] = f"weighting_{name}"
             field.widget = CustomSimpleSliderWidget(attrs=attrs)
@@ -443,16 +445,17 @@ class SuitabilityAquiferThicknessForm(forms.ModelForm):
         default_attrs = {
             "data_range_min": 0,
             "data_range_max": 5,
-            "data_cur_val": 5,
-            "data_default_value": 5,
             "string_label": True,
             "reset": True,
             "class": "hiddeninput",
         }
 
-        # Apply the custom slider widget to all fields in the model
         for name, field in self.fields.items():
             attrs = default_attrs.copy()
+            model_field = self._meta.model._meta.get_field(name)
+            if model_field.default is not NOT_PROVIDED:
+                attrs["data_cur_val"] = model_field.default
+                attrs["data_default_value"] = model_field.default
             attrs["id"] = f"id_suitability_{name}"
             attrs["name"] = f"suitability_{name}"
             field.widget = CustomSimpleSliderWidget(attrs=attrs)
@@ -491,8 +494,6 @@ class SuitabilityDepthToGroundWaterForm(forms.ModelForm):
         default_attrs = {
             "data_range_min": 0,
             "data_range_max": 5,
-            "data_cur_val": 5,
-            "data_default_value": 5,
             "string_label": True,
             "reset": True,
             "class": "hiddeninput",
@@ -501,6 +502,10 @@ class SuitabilityDepthToGroundWaterForm(forms.ModelForm):
         # Apply the custom slider widget to all fields in the model
         for name, field in self.fields.items():
             attrs = default_attrs.copy()
+            model_field = self._meta.model._meta.get_field(name)
+            if model_field.default is not NOT_PROVIDED:
+                attrs["data_cur_val"] = model_field.default
+                attrs["data_default_value"] = model_field.default
             attrs["id"] = f"id_suitability_{name}"
             attrs["name"] = f"suitability_{name}"
             field.widget = CustomSimpleSliderWidget(attrs=attrs)
@@ -550,16 +555,18 @@ class SuitabilityLandUseForm(forms.ModelForm):
         default_attrs = {
             "data_range_min": 0,
             "data_range_max": 5,
-            "data_cur_val": 5,
-            "data_default_value": 5,
             "string_label": True,
             "reset": True,
             "class": "hiddeninput",
         }
 
-        # Apply the custom slider widget to all fields in the model
+        # Custom slider widget applied to all fields in the model
         for name, field in self.fields.items():
             attrs = default_attrs.copy()
+            model_field = self._meta.model._meta.get_field(name)
+            if model_field.default is not NOT_PROVIDED:
+                attrs["data_cur_val"] = model_field.default
+                attrs["data_default_value"] = model_field.default
             attrs["id"] = f"id_suitability_{name}"
             attrs["name"] = f"suitability_{name}"
             field.widget = CustomSimpleSliderWidget(attrs=attrs)
@@ -600,16 +607,18 @@ class SuitabilityDistanceToSourceWaterForm(forms.ModelForm):
         default_attrs = {
             "data_range_min": 0,
             "data_range_max": 5,
-            "data_cur_val": 5,
-            "data_default_value": 5,
             "string_label": True,
             "reset": True,
             "class": "hiddeninput",
         }
 
-        # Apply the custom slider widget to all fields in the model
+        # Custom slider widget applied to all fields in the model
         for name, field in self.fields.items():
             attrs = default_attrs.copy()
+            model_field = self._meta.model._meta.get_field(name)
+            if model_field.default is not NOT_PROVIDED:
+                attrs["data_cur_val"] = model_field.default
+                attrs["data_default_value"] = model_field.default
             attrs["id"] = f"id_suitability_{name}"
             attrs["name"] = f"suitability_{name}"
             field.widget = CustomSimpleSliderWidget(attrs=attrs)
@@ -648,16 +657,18 @@ class SuitabilityDistanceToWellForm(forms.ModelForm):
         default_attrs = {
             "data_range_min": 0,
             "data_range_max": 5,
-            "data_cur_val": 5,
-            "data_default_value": 5,
             "string_label": True,
             "reset": True,
             "class": "hiddeninput",
         }
 
-        # Apply the custom slider widget to all fields in the model
+        # Custom slider widget applied to all fields in the model
         for name, field in self.fields.items():
             attrs = default_attrs.copy()
+            model_field = self._meta.model._meta.get_field(name)
+            if model_field.default is not NOT_PROVIDED:
+                attrs["data_cur_val"] = model_field.default
+                attrs["data_default_value"] = model_field.default
             attrs["id"] = f"id_suitability_{name}"
             attrs["name"] = f"suitability_{name}"
             field.widget = CustomSimpleSliderWidget(attrs=attrs)
@@ -696,19 +707,64 @@ class SuitabilityHydraulicConductivityForm(forms.ModelForm):
         default_attrs = {
             "data_range_min": 0,
             "data_range_max": 5,
-            "data_cur_val": 5,
-            "data_default_value": 5,
             "string_label": True,
             "reset": True,
             "class": "hiddeninput",
         }
 
-        # Apply the custom slider widget to all fields in the model
+        # Custom slider widget applied to all fields in the model
         for name, field in self.fields.items():
             attrs = default_attrs.copy()
+            model_field = self._meta.model._meta.get_field(name)
+            if model_field.default is not NOT_PROVIDED:
+                attrs["data_cur_val"] = model_field.default
+                attrs["data_default_value"] = model_field.default
             attrs["id"] = f"id_suitability_{name}"
             attrs["name"] = f"suitability_{name}"
             field.widget = CustomSimpleSliderWidget(attrs=attrs)
+
+        # Crispy forms helper
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'hydraulic-conductivity-suitability-form'
+        self.helper.form_class = 'form-horizontal suitability-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'hydraulic-conductivity-reset', 
+            'Reset', 
+            css_class='btn-secondary reset-all'
+        ))
+
+
+
+
+class SuitabilityForm(forms.Form):
+    def __init__(self, suitability, language='de', *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        labels = models.MapLabels.objects.filter(suitability=suitability).order_by("order_position")
+        default_attrs = {
+            "data_range_min": 0,
+            "data_range_max": 5,
+            "string_label": True,
+            "reset": True,
+            "class": "hiddeninput",
+        }
+        for label in labels:
+            # Pre-fill with default or existing project score  
+            attrs = default_attrs.copy()
+            
+            attrs["data_cur_val"] = label.default_score
+            attrs["data_default_value"] = label.default_score
+            attrs["id"] = f"id_suitability_{label.name}"
+            attrs["name"] = f"suitability_{label.name}"
+            label_field = f"label_{language}"
+            label_text = getattr(label, label_field, label.name)
+
+            self.fields[label.name] = forms.IntegerField(
+                widget=CustomSimpleSliderWidget(attrs=attrs),
+                label=label_text,
+            )
 
         # Crispy forms helper
         self.helper = FormHelper(self)

@@ -1219,19 +1219,19 @@ def load_tu_mar_gui(request, user_field_id):
         project_select_form = forms.ToolboxProjectSelectionForm()
         user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
         tu_mar_weightings_form = forms.MarWeightingForm()
-        suitability_aquifer_thickness = forms.SuitabilityAquiferThicknessForm()
-        suitability_depth_to_gw_form = forms.SuitabilityDepthToGroundWaterForm()
-        suitability_land_use_form = forms.SuitabilityLandUseForm()
-        suitability_distance_to_source_form = forms.SuitabilityDistanceToSourceWaterForm()
-        suitability_distance_to_well_form = forms.SuitabilityDistanceToWellForm()
-        suitability_hydraulic_conductivity = forms.SuitabilityHydraulicConductivityForm()
+        suitability_aquifer_thickness = forms.SuitabilityForm('aquifer-thickness')
+        suitability_depth_to_gw_form = forms.SuitabilityForm('depth-to-gw')
+        suitability_land_use_form = forms.SuitabilityForm('land-use')
+        suitability_distance_to_source_form = forms.SuitabilityForm('distance-to-source')
+        suitability_distance_to_well_form = forms.SuitabilityForm('distance-to-well')
+        suitability_hydraulic_conductivity = forms.SuitabilityForm('hydraulic-conductivity')
 
         slider_labels = dict(models.MarSliderDescription.objects.values_list('id', 'name_de').order_by('id'))
         slider_labels_suitability = dict(models.MarSuitabilitySliderDescription.objects.values_list('id', 'name_de').order_by('id'))
 
 
 
-
+        suitability_aquifer_thickness = forms.SuitabilityForm('aquifer-thickness')
 
         html = render_to_string('toolbox/tu_mar.html', {
             # 'sink_form': sink_form, 

@@ -1271,13 +1271,33 @@ class MarSuitabilitySliderDescription(models.Model):
     name_en = models.CharField(max_length=32, null=True, blank=True)
     suitability = models.IntegerField(null=True, blank=True)
 
+##################
+
+class MapLabels(models.Model):
+    suitability = models.CharField(max_length=64, null=True, blank=True)
+    name = models.CharField(max_length=64)
+    label_de = models.CharField(max_length=64, null=True, blank=True)
+    label_en = models.CharField(max_length=64, null=True, blank=True)
+    map = models.CharField(max_length=64)
+    map_value = models.IntegerField(null=True)
+    default_score = models.IntegerField()
+    order_position = models.IntegerField()
+    
+    
+
+    ##########################
+
+
+
+
+
 
 class SuitabilityAquiferThickness(models.Model):
-    ticknes_gt_60 = models.IntegerField(default=5)
-    ticknes_40_to_60 = models.IntegerField(default=4)
-    ticknes_30_to_40 = models.IntegerField(default=3)
-    ticknes_20_to_30 = models.IntegerField(default=2)
-    ticknes_lt_20 = models.IntegerField(default=1)
+    tickness_gt_60 = models.IntegerField(default=5)
+    tickness_40_to_60 = models.IntegerField(default=4)
+    tickness_30_to_40 = models.IntegerField(default=3)
+    tickness_20_to_30 = models.IntegerField(default=2)
+    tickness_lt_20 = models.IntegerField(default=1)
 
 class SuitabilityDepthToGroundWater(models.Model):
     depth_lt_20 = models.IntegerField(default=5)

@@ -56,7 +56,7 @@
                 type="button"
                 class="btn btn-outline-secondary btn-sm float-end reset-slider"
                 title="Reset to default values"
-                onclick="const slider = document.querySelector('#{{ widget.attrs.id }}_slider'); slider.value = slider.dataset.defaultValue; slider.dispatchEvent(new Event('input'));"
+                onclick="const slider = document.querySelector('#{{ widget.attrs.id }}_slider'); slider.value = slider.defaultValue; slider.dispatchEvent(new Event('change'));"
             >
                 <i class="bi bi-arrow-clockwise"></i>
             </button>

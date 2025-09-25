@@ -1,0 +1,76 @@
+suitability_dict = {
+    'hydraulic_conductivity': {
+        'mapping': {
+            'conductivity_lt_5': {'map_value': 10, 'default_score': 0.2, 'score': 1},
+            'conductivity_20_to_30': {'map_value': 200, 'default_score': 0.8, 'score': 4},
+            'conductivity_gt_30': {'map_value': 300, 'default_score': 1.0, 'score': 5},
+            'conductivity_5_to_10': {'map_value': 50, 'default_score': 0.4, 'score': 2},
+            'conductivity_10_to_20': {'map_value': 100, 'default_score': 0.6, 'score': 3}
+            }, 
+        'map_path': './mar_raster_files/hydraulic_conductivity_classified_v1.tif', 
+        'weight': 1.0
+        }, 
+        'land_use': {
+            'mapping': {
+                'forest_closed_coniferous': {'map_value': 111, 'default_score': 1.0, 'score': 5},
+                'urban': {'map_value': 50, 'default_score': 0.0, 'score': 0},
+                'permanent_waterbodies': {'map_value': 80, 'default_score': 0.0, 'score': 0},
+                'herbaceous_wetland': {'map_value': 90, 'default_score': 0.0, 'score': 0},
+                'forest_closed_deciduous': {'map_value': 114, 'default_score': 1.0, 'score': 5},
+                'forest_closed_mixed': {'map_value': 115, 'default_score': 1.0, 'score': 5},
+                'forest_closed_unknown': {'map_value': 116, 'default_score': 1.0, 'score': 5},
+                'forest_open_coniferous': {'map_value': 121, 'default_score': 1.0, 'score': 5},
+                'forest_open_deciduous': {'map_value': 124, 'default_score': 1.0, 'score': 5},
+                'forest_open_mixed': {'map_value': 125, 'default_score': 1.0, 'score': 5},
+                'forest_open_unknown': {'map_value': 126, 'default_score': 1.0, 'score': 5},
+                'shrubs': {'map_value': 20, 'default_score': 0.8, 'score': 4},
+                'herbaceous_vegetation': {'map_value': 30, 'default_score': 0.8, 'score': 5},
+                'cropland': {'map_value': 40, 'default_score': 0.4, 'score': 2}
+            }, 
+            'map_path': './mar_raster_files/land_use.tif', 
+            'weight': 1.0
+        }, 
+        'aquifer_thickness': {
+            'mapping': {
+                'thickness_20_to_30': {'map_value': 20, 'default_score': 0.4, 'score': 0.4},
+                'thickness_30_to_40': {'map_value': 30, 'default_score': 0.6, 'score': 0.6},
+                'thickness_40_to_60': {'map_value': 40, 'default_score': 0.8, 'score': 0.8},
+                'thickness_gt_60': {'map_value': 60, 'default_score': 1.0, 'score': 1.0},
+                'thickness_lt_20': {'map_value': 10, 'default_score': 0.2, 'score': 0.2}
+            }, 'map_path': './mar_raster_files/aquifer_classified_v1.tif', 'weight': 1.0
+        }, 
+        'distance_to_well': {
+            'mapping': {
+                'zone_3': {'map_value': 20, 'default_score': 1.0, 'score': 5},
+                'zone_1_and_2': {'map_value': 10, 'default_score': 0.0, 'score': 0},
+                'well_catchment': {'map_value': 30, 'default_score': 0.8, 'score': 4},
+                'out_of_catchment_lt_5km': {'map_value': 40, 'default_score': 0.6, 'score': 3},
+                'out_of_catchment_gt_5km': {'map_value': 50, 'default_score': 0.4, 'score': 2}
+            }, 
+            'map_path': './mar_raster_files/distance_to_extraction_wells_v1.tif', 
+            'weight': 1.0
+        }, 
+        'distance_to_source': {
+            'mapping': {
+                'distance_lt_250': {'map_value': 10, 'default_score': 0.0, 'score': 0},
+                'distance_250_to_500': {'map_value': 20, 'default_score': 0.2, 'score': 1},
+                'distance_500_to_800': {'map_value': 30, 'default_score': 1.0, 'score': 5},
+                'distance_800_1200': {'map_value': 40, 'default_score': 0.8, 'score': 4},
+                'distance_1200_to_1500': {'map_value': 50, 'default_score': 0.6, 'score': 3},
+                'distance_gt_1500': {'map_value': 60, 'default_score': 0.4, 'score': 2}
+            }, 
+            'map_path': './mar_raster_files/distance_to_source_water_v1.tif', 
+            'weight': 0.2
+        }, 
+        'depth_groundwater': {
+            'mapping': {
+                'depth_20_to_30': {'map_value': 20, 'default_score': 0.8, 'score': 4},
+                'depth_30_to_40': {'map_value': 30, 'default_score': 0.6, 'score': 3},
+                'depth_40_to_50': {'map_value': 40, 'default_score': 0.4, 'score': 2},
+                'depth_gt_50': {'map_value': 50, 'default_score': 0.2, 'score': 1},
+                'depth_lt_20': {'map_value': 10, 'default_score': 1.0, 'score': 5}
+            }, 
+            'map_path': './mar_raster_files/depth_to_gw_classified_v1.tif', 
+            'weight': 1.0
+        }
+    }

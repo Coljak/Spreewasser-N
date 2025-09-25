@@ -69,9 +69,11 @@ class UserField(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="toolbox_userfields")
     name = models.CharField(max_length=255)
     creation_date = models.DateField(blank=True, default=now)
+    # TODO is that ever used - it should be a jsonfield.
     geom_json = PolygonField(null=True)
     comment = models.TextField(null=True, blank=True)
     geom = gis_models.GeometryField(null=True, srid=4326)
+    geom25833 = gis_models.GeometryField(null=True, srid=25833)
     has_zalf_sinks = models.BooleanField(default=False, null=True, blank=True)
     has_zalf_enlarged_sinks = models.BooleanField(default=False, null=True, blank=True)
     has_sieker_sink = models.BooleanField(default=False, null=True, blank=True)
@@ -81,6 +83,12 @@ class UserField(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        if self.geom:
+            self.geom25833 = self.geom.transform(25833, clone=True)
+            # TODO: 1. 
+        super().save(*args, **kwargs)
 
 
 class ToolboxProject(models.Model):    
@@ -1278,10 +1286,14 @@ class MapLabels(models.Model):
     name = models.CharField(max_length=64)
     label_de = models.CharField(max_length=64, null=True, blank=True)
     label_en = models.CharField(max_length=64, null=True, blank=True)
-    map = models.CharField(max_length=64)
+    map_name = models.CharField(max_length=64)
     map_value = models.IntegerField(null=True)
     default_score = models.IntegerField()
     order_position = models.IntegerField()
+
+class MarForbiddenArea(models.Model):
+    geom25833 = gis_models.MultiPolygonField(srid=25833)
+
     
     
 
@@ -1290,56 +1302,3 @@ class MapLabels(models.Model):
 
 
 
-
-
-class SuitabilityAquiferThickness(models.Model):
-    tickness_gt_60 = models.IntegerField(default=5)
-    tickness_40_to_60 = models.IntegerField(default=4)
-    tickness_30_to_40 = models.IntegerField(default=3)
-    tickness_20_to_30 = models.IntegerField(default=2)
-    tickness_lt_20 = models.IntegerField(default=1)
-
-class SuitabilityDepthToGroundWater(models.Model):
-    depth_lt_20 = models.IntegerField(default=5)
-    depth_20_to_30 = models.IntegerField(default=4)
-    depth_30_to_40 = models.IntegerField(default=3)
-    depth_40_to_50 = models.IntegerField(default=2)
-    depth_gt_50 = models.IntegerField(default=1)
-
-class SuitabilityLandUse(models.Model):
-    forest_closed_coniferous = models.IntegerField(default=5)
-    forest_closed_deciduous = models.IntegerField(default=5)
-    forest_closed_mixed = models.IntegerField(default=5)
-    forest_closed_unknown = models.IntegerField(default=5)
-    forest_open_coniferous = models.IntegerField(default=5)
-    forest_open_deciduous = models.IntegerField(default=5)
-    forest_open_mixed = models.IntegerField(default=5)
-    forest_open_unknown = models.IntegerField(default=5)
-    shrubs = models.IntegerField(default=4)
-    herbaceous_vegetation = models.IntegerField(default=4)
-    cropland = models.IntegerField(default=2)
-    urban = models.IntegerField(default=0)
-    permanent_waterbodies = models.IntegerField(default=0)
-    herbaceous_wetland = models.IntegerField(default=0)
-
-class SuitabilityDistanceToSourceWater(models.Model):
-    distance_lt_250 = models.IntegerField(default=0)
-    distance_250_to_500 = models.IntegerField(default=1)
-    distance_500_to_800 = models.IntegerField(default=5)
-    distance_800_1200 = models.IntegerField(default=4)
-    distance_1200_to_1500 = models.IntegerField(default=3)
-    distance_gt_1500 = models.IntegerField(default=2)
-
-class SuitabilityDistanceToWell(models.Model):
-    zone_1_and_2 = models.IntegerField(default=0)
-    zone_3 = models.IntegerField(default=5)
-    well_catchment = models.IntegerField(default=4)
-    out_of_catchment_lt_5km = models.IntegerField(default=3)
-    out_of_catchment_gt_5km = models.IntegerField(default=2)
-
-class SuitabilityHydraulicConductivity(models.Model):
-    conductivity_gt_30 = models.IntegerField(default=5)
-    conductivity_20_to_30 = models.IntegerField(default=4)
-    conductivity_10_to_20 = models.IntegerField(default=3)
-    conductivity_5_to_10 = models.IntegerField(default=2)
-    conductivity_lt_5 = models.IntegerField(default=1)

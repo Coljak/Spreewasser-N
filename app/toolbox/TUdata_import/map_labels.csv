@@ -3,7 +3,7 @@ Aquifer GWL2 thickness,40m - 60m,Thickness (m),40,60,4,aquifer_classified.tif
 Aquifer GWL2 thickness,30m - 40m,Thickness (m),30,40,3,aquifer_classified.tif
 Aquifer GWL2 thickness,20m - 30m,Thickness (m),20,30,2,aquifer_classified.tif
 Aquifer GWL2 thickness,< 20m,Thickness (m),0,20,1,aquifer_classified.tif
-Depth to GWL2,< 20m,Depth (m),0,20,5,depth_to_gw_classified.tif
+Depth to GWL2,< 20m,Depth (m),0,20,5,depth_groundwater_classified.tif
 Depth to GWL2,20m - 30m,Depth (m),20,30,4,depth_to_gw_classified.tif
 Depth to GWL2,30m - 40m,Depth (m),30,40,3,depth_to_gw_classified.tif
 Depth to GWL2,40m - 50m,Depth (m),40,50,2,depth_to_gw_classified.tif

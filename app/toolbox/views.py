@@ -20,11 +20,17 @@ from django.db.models import Max, Min, F, Q
 import json, requests
 from datetime import datetime
 
-from shapely.geometry import shape as shapely_shape
+from shapely.geometry import shape as shapely_shape, mapping
 from shapely.ops import nearest_points, transform
 from pyproj import Transformer
 from collections import defaultdict
 import pandas as pd
+
+import numpy as np
+import rasterio
+from rasterio.warp import reproject, Resampling, calculate_default_transform, transform_geom
+from rasterio.mask import mask
+from rasterio.enums import ColorInterp
 
 
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
@@ -1219,19 +1225,16 @@ def load_tu_mar_gui(request, user_field_id):
         project_select_form = forms.ToolboxProjectSelectionForm()
         user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
         tu_mar_weightings_form = forms.MarWeightingForm()
-        suitability_aquifer_thickness = forms.SuitabilityForm('aquifer-thickness')
-        suitability_depth_to_gw_form = forms.SuitabilityForm('depth-to-gw')
-        suitability_land_use_form = forms.SuitabilityForm('land-use')
-        suitability_distance_to_source_form = forms.SuitabilityForm('distance-to-source')
-        suitability_distance_to_well_form = forms.SuitabilityForm('distance-to-well')
-        suitability_hydraulic_conductivity = forms.SuitabilityForm('hydraulic-conductivity')
+        suitability_aquifer_thickness = forms.SuitabilityForm('aquifer_thickness')
+        suitability_depth_groundwater_form = forms.SuitabilityForm('depth_groundwater')
+        suitability_land_use_form = forms.SuitabilityForm('land_use')
+        suitability_distance_to_source_form = forms.SuitabilityForm('distance_to_source')
+        suitability_distance_to_well_form = forms.SuitabilityForm('distance_to_well')
+        suitability_hydraulic_conductivity = forms.SuitabilityForm('hydraulic_conductivity')
 
         slider_labels = dict(models.MarSliderDescription.objects.values_list('id', 'name_de').order_by('id'))
         slider_labels_suitability = dict(models.MarSuitabilitySliderDescription.objects.values_list('id', 'name_de').order_by('id'))
 
-
-
-        suitability_aquifer_thickness = forms.SuitabilityForm('aquifer-thickness')
 
         html = render_to_string('toolbox/tu_mar.html', {
             # 'sink_form': sink_form, 
@@ -1240,7 +1243,7 @@ def load_tu_mar_gui(request, user_field_id):
             'project_select_form': project_select_form,
             'tu_mar_weightings_form': tu_mar_weightings_form,
             'suitability_aquifer_thickness': suitability_aquifer_thickness,
-            'suitability_depth_to_gw_form': suitability_depth_to_gw_form, 
+            'suitability_depth_groundwater_form': suitability_depth_groundwater_form, 
             'suitability_land_use_form': suitability_land_use_form,
             'suitability_distance_to_source_form': suitability_distance_to_source_form,
             'suitability_distance_to_well_form': suitability_distance_to_well_form,
@@ -1251,20 +1254,108 @@ def load_tu_mar_gui(request, user_field_id):
         return JsonResponse({'success': True, 'html': html, 'slider_labels': slider_labels, 'slider_labels_suitability': slider_labels_suitability})
 
         
-        # if 
-        #     tu_mar_weightings_form = forms.MarWeightingForm()
+def mar_calculate_area(request):
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        print('Project:', project)
+        user_field = models.UserField.objects.get(pk=project['userField'])
+        
+
+        map_labels = models.MapLabels.objects.all()
+        suitability_dict = {}
+        for label in map_labels:
+            suitability = label.suitability
+            name = label.name
+            map_value = label.map_value
+            default_score = label.default_score
+            if suitability not in suitability_dict:
+                suitability_dict[suitability] = {'mapping': {}}
+            suitability_dict[suitability]['map_path'] = './mar_raster_files/' + label.map_name
+            suitability_dict[suitability]['weight'] = project.get(f'weighting_{suitability}', 5)/5
+            suitability_dict[suitability]['mapping'][name] = {
+                'map_value': map_value,
+                'default_score': default_score/5,
+                'score': project.get(f'{suitability}_{name}', default_score/5),
+                }
+        print('suitability dict:', suitability_dict)
+        tif = compute_suitability_from_tifs(suitability_dict)
 
 
+        return JsonResponse({'success': True})
+    
+# requirements: rasterio, numpy, shapely (optional), pyproj
+# pip install rasterio numpy shapely
 
-        #     html = render_to_string('toolbox/infiltration.html', {
-        #         # 'sink_form': sink_form, 
-        #         # 'enlarged_sink_form': enlarged_sink_form,
-        #         'project_select_form': project_select_form,
-        #         'tu_mar_weightings_form': tu_mar_weightings_form,
+def compute_suitability_from_tifs(suitability_dict, user_field):
+    
+        # We'll prepare a destination array for each raster, stacked into 3D array
+    
+        # out_masked, out_transform = mask(ref, [user_field.geom25833.geojson], crop=False, invert=False, indexes=1, nodata=np.nan, filled=False)
 
-        #     }, request=request) 
+    with rasterio.open('mar_raster_files/nogo_area_mask.tif') as mask:
+        nogo_mask = mask.read(1)
+        dst_crs = mask.crs
+        dst_transform = mask.transform
+        dst_width = mask.width
+        dst_height = mask.height
+        dst_profile = mask.profile.copy()
 
-        #     return JsonResponse({'success': True, 'html': html})
-        # else:
-        #     return JsonResponse({'success': False, 'message': 'Im Suchgebiet liegen keine Daten vor.'})
+    dst_profile['nodata'] = np.nan
 
+    length_stack = len(suitability_dict) + 1
+    stack = np.zeros((length_stack, dst_height, dst_width), dtype=np.float32)
+    weighted_stack = np.zeros((2, dst_height, dst_width), dtype=np.float32)
+
+    stack[0] = nogo_mask
+    weighted_stack[0] = nogo_mask
+
+
+    mask_arr = None  # to store mask for polygon later
+    layer_weight_sum = 0
+    for key in suitability_dict:
+        layer_weight_sum += suitability_dict[key]['weight']
+        
+    i = 1
+    for key in suitability_dict:
+        
+        path = suitability_dict[key]['map_path']
+        
+        try:
+            with rasterio.open(path) as src:
+                dst_arr = src.read(1)
+            
+                dst_nodata = src.nodata
+            new_arr = dst_arr.copy()
+            new_arr = np.where(
+               new_arr==dst_nodata,
+               np.nan,
+               new_arr
+               )
+            for k in suitability_dict[key]['mapping']:
+                new_arr = np.where(
+                    new_arr==float(suitability_dict[key]['mapping'][k]['map_value']),
+                    suitability_dict[key]['mapping'][k]['score']/5,
+                    new_arr
+                    )
+            stack[i] = new_arr
+            weighted_stack[1] = weighted_stack[1] + (new_arr * suitability_dict[key]['weight'] / layer_weight_sum)
+            
+            i +=1
+        except:
+            print(path)
+    result_2d = np.prod(weighted_stack, axis=0)
+
+    with rasterio.open('mar_raster_files/result_2d.tif', 'w', **dst_profile) as f:
+
+        f.write(result_2d.astype(np.float32),1)
+
+    i = 0
+    for key in suitability_dict:
+        i += 1
+        print(i)
+        with rasterio.open(f'mar_raster_files/weighted_stack_{key}.tif', 'w', **dst_profile) as f:
+
+            f.write(stack[i].astype(np.float32),1)
+    
+
+    return stack, weighted_stack, result_2d

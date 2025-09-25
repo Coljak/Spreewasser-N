@@ -217,24 +217,25 @@ export function initializeTuMar(data) {
 
             $slider.val(defaultVal).trigger('change'); // set value and trigger input event
         });
+    } else if ($target.is('a.nav-link')) {
+      const sustainibilityType = $target.data('type');
+      if (sustainibilityType) {
+        console.log('sustainibility type', sustainibilityType, 'tiff and legend' )
+      }
+    } else if ($target.hasClass('calculate-area')) {
+      const tuMar = TuMar.loadFromLocalStorage()
+      fetch('mar_calculate_area/', {
+            method: 'POST',
+            body: JSON.stringify(tuMar),
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCSRFToken()
+            }
+      })
+      .then(response => response.json)
+      .then(console.log('data', data))
     }
 
-    // else if ($target.attr('id') === 'btnFilterEnlargedSinks') {
-    //   filterSinks('enlarged_sink');
-    
-    // } else if ($target.attr('id') === 'btnFilterStreams') {
-    //   getWaterBodies('stream');
-    
-    // } else if ($target.attr('id') === 'btnFilterLakes') {
-    //   getWaterBodies('lake');
-
-    // } else if ($target.attr('id') === 'btnGetInlets') {
-    //     getInlets(); 
-    // } else if ($target.attr('id') === 'navTuMarSinks') {
-    //     map.addLayer(Layers.sink);
-    // } else if ($target.attr('id') === 'navTuMarEnlargedSinks') {
-    //     map.addLayer(Layers.enlarged_sink);
-    // } 
     else if ($target.attr('id') === 'navTuMarResult') {
         map.removeLayer(Layers.sink);
         map.removeLayer(Layers.enlarged_sink);

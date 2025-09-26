@@ -372,7 +372,7 @@ class MarWeightingForm(forms.ModelForm):
 
         labels = {
             'aquifer_thickness': "Mächtigkeit des Grundwasserleiters",
-            'depth_groundwater_2': "Tiefe zum Grundwasserleiter 2",
+            'depth_groundwater': "Tiefe zum Grundwasserleiter 2",
             'hydraulic_conductivity': "Hydraulische Leitfähigkeit",
             'land_use': "Nutzung des Bodens",
             'distance_to_source_water': "Entfernung zum Rohwasser",
@@ -381,7 +381,7 @@ class MarWeightingForm(forms.ModelForm):
 
         help_texts = {
             'aquifer_thickness': "Gewichtung der Mächtigkeit des Grundwasserleiters",
-            'depth_groundwater_2': "Gewichtung der Tiefe zum Grundwasserleiter 2",
+            'depth_groundwater': "Gewichtung der Tiefe zum Grundwasserleiter 2",
             'hydraulic_conductivity': "Gewichtung der hydraulischen Leitfähigkeit",
             'land_use': "Gewichtung der Landnutzung",
             'distance_to_source_water': "Gewichtung der Entfernung zum Rohwasser",

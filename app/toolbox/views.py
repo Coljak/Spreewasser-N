@@ -5,6 +5,7 @@ from swn.views import load_nuts_polygon
 from . import forms, models
 
 from .filters import SiekerLargeLakeFilter,  SinkFilter, EnlargedSinkFilter, StreamFilter, LakeFilter, SiekerSinkFilter, GekRetentionFilter, HistoricalWetlandsFilter
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry, LineString
 from django.contrib.gis.measure import D
@@ -1270,12 +1271,12 @@ def mar_calculate_area(request):
             default_score = label.default_score
             if suitability not in suitability_dict:
                 suitability_dict[suitability] = {'mapping': {}}
-            suitability_dict[suitability]['map_path'] = './mar_raster_files/' + label.map_name
-            suitability_dict[suitability]['weight'] = project.get(f'weighting_{suitability}', 5)/5
+            suitability_dict[suitability]['map_path'] = 'toolbox/mar_raster_files/' + label.map_name
+            suitability_dict[suitability]['weight'] = int(project.get(f'weighting_{suitability}', 5))/5
             suitability_dict[suitability]['mapping'][name] = {
                 'map_value': map_value,
                 'default_score': default_score/5,
-                'score': project.get(f'{suitability}_{name}', default_score/5),
+                'score': int(project.get(f'{suitability}_{name}', default_score))/5,
                 }
         print('suitability dict:', suitability_dict)
         tif = compute_suitability_from_tifs(suitability_dict)
@@ -1286,13 +1287,14 @@ def mar_calculate_area(request):
 # requirements: rasterio, numpy, shapely (optional), pyproj
 # pip install rasterio numpy shapely
 
-def compute_suitability_from_tifs(suitability_dict, user_field):
+def compute_suitability_from_tifs(suitability_dict):
+    import os
     
         # We'll prepare a destination array for each raster, stacked into 3D array
     
         # out_masked, out_transform = mask(ref, [user_field.geom25833.geojson], crop=False, invert=False, indexes=1, nodata=np.nan, filled=False)
 
-    with rasterio.open('mar_raster_files/nogo_area_mask.tif') as mask:
+    with rasterio.open('toolbox/mar_raster_files/nogo_area_mask.tif') as mask:
         nogo_mask = mask.read(1)
         dst_crs = mask.crs
         dst_transform = mask.transform
@@ -1320,32 +1322,32 @@ def compute_suitability_from_tifs(suitability_dict, user_field):
         
         path = suitability_dict[key]['map_path']
         
-        try:
-            with rasterio.open(path) as src:
-                dst_arr = src.read(1)
-            
-                dst_nodata = src.nodata
-            new_arr = dst_arr.copy()
+        # try:
+        with rasterio.open(path) as src:
+            dst_arr = src.read(1)
+        
+            dst_nodata = src.nodata
+        new_arr = dst_arr.copy()
+        new_arr = np.where(
+            new_arr==dst_nodata,
+            np.nan,
+            new_arr
+            )
+        for k in suitability_dict[key]['mapping']:
             new_arr = np.where(
-               new_arr==dst_nodata,
-               np.nan,
-               new_arr
-               )
-            for k in suitability_dict[key]['mapping']:
-                new_arr = np.where(
-                    new_arr==float(suitability_dict[key]['mapping'][k]['map_value']),
-                    suitability_dict[key]['mapping'][k]['score']/5,
-                    new_arr
-                    )
-            stack[i] = new_arr
-            weighted_stack[1] = weighted_stack[1] + (new_arr * suitability_dict[key]['weight'] / layer_weight_sum)
-            
-            i +=1
-        except:
-            print(path)
+                new_arr==float(suitability_dict[key]['mapping'][k]['map_value']),
+                suitability_dict[key]['mapping'][k]['score'],
+                new_arr
+                )
+        stack[i] = new_arr
+        weighted_stack[1] = weighted_stack[1] + (new_arr * suitability_dict[key]['weight'] / layer_weight_sum)
+        
+        i +=1
+        # except:
+        #     print(path)
     result_2d = np.prod(weighted_stack, axis=0)
 
-    with rasterio.open('mar_raster_files/result_2d.tif', 'w', **dst_profile) as f:
+    with rasterio.open('toolbox/mar_raster_files/result_2d.tif', 'w', **dst_profile) as f:
 
         f.write(result_2d.astype(np.float32),1)
 
@@ -1353,9 +1355,13 @@ def compute_suitability_from_tifs(suitability_dict, user_field):
     for key in suitability_dict:
         i += 1
         print(i)
-        with rasterio.open(f'mar_raster_files/weighted_stack_{key}.tif', 'w', **dst_profile) as f:
+        with rasterio.open(f'toolbox/mar_raster_files/weighted_stack_{key}.tif', 'w', **dst_profile) as f:
 
             f.write(stack[i].astype(np.float32),1)
     
 
     return stack, weighted_stack, result_2d
+
+
+def geoserver_stuff():
+    url = f'{settings.GEOSERVER_URL}/rest/workspaces'

@@ -246,3 +246,8 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Europe/Berlin'
+
+
+GEOSERVER_URL = os.environ.get("GEOSERVER_URL", "http://geoserver:8080/geoserver")
+GEOSERVER_USER = os.environ.get("GEOSERVER_USER", "")
+GEOSERVER_PASS = os.environ.get("GEOSERVER_PASS", "")

@@ -1,5 +1,7 @@
 version: '3.8'
 
+volumes:
+  raster_data:
 services:
   redis:
     image: redis:latest
@@ -22,6 +24,7 @@ services:
     volumes:
       - ./app:/app
       - ./app/klim4cast/data/netcdf:/app/klim4cast/data/netcdf 
+      - ./app/raster_data:/app/raster_data
       # - ./thredds_data/data:/app/thredds_data
     command: 
       sh -c "python3 manage.py wait_for_db &&
@@ -77,6 +80,7 @@ services:
     container_name: swn_geoserver
     volumes:
       - ./geoserver/data:/geoserver_data/data
+      - ./app/raster_data:/geoserver_data/raster_data
     environment:
       - GEOSERVER_URL=geoserver
       - GEOSERVER_ADMIN_USER=admin

@@ -75,17 +75,19 @@ services:
 
   # #geoserver for visualisation and sharing of geodata
   geoserver:
-    image: kartoza/geoserver:2.23.2
+    image: kartoza/geoserver:2.25.2 # new 2025-09-25
     #user: "1000:1000"
     container_name: swn_geoserver
     volumes:
-      - ./geoserver/data:/geoserver_data/data
-      - ./app/raster_data:/geoserver_data/raster_data
+      - ./geoserver/data:/opt/geoserver_data/data
+      - ./app/raster_data:/opt/geoserver_data/raster_data
     environment:
       - GEOSERVER_URL=geoserver
       - GEOSERVER_ADMIN_USER=admin
       - GEOSERVER_ADMIN_PASSWORD=geoserver
-      - GEOSERVER_DATA_DIR=/geoserver_data/data
+      - GEOSERVER_DATA_DIR=/opt/geoserver_data/data
+      - GEOSERVER_RASTER_DATA_DIR=opt/geoserver_data/raster_data
+      # - CATALINA_TMPDIR=/geoserver_data/data/work
     ports:
       - 8080:8080
     depends_on:

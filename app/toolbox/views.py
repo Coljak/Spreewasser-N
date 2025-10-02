@@ -19,6 +19,7 @@ from django.template.loader import render_to_string
 from django.db import connection
 from django.db.models import Max, Min, F, Q
 import json, requests
+from requests.auth import HTTPBasicAuth
 from datetime import datetime
 
 from shapely.geometry import shape as shapely_shape, mapping
@@ -35,6 +36,43 @@ from rasterio.enums import ColorInterp
 
 
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
+
+
+
+
+
+
+
+def publish_raster_geoserver(tif_path, layer_name, workspace, style_name="style_raster_percent"):
+    """
+    Publishes a GeoTIFF to GeoServer as a coverage store and layer.
+    """
+    x_path = 'raster_data/' + layer_name + '.tif'
+    workspace = "spreewassern_raster"
+    store_name = layer_name  # one store per raster
+    headers = {"Content-type": "image/tiff"}
+
+    # 1. Upload GeoTIFF to a new coverage store
+    url = f"{settings.GEOSERVER_USER}/workspaces/{workspace}/coveragestores/{store_name}/file.geotiff"
+
+    with open(tif_path, "rb") as f:
+        r = requests.put(
+            url,
+            data=f,
+            headers=headers,
+            auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS)
+        )
+    r.raise_for_status()
+
+    layer_url = f"{settings.GEOSERVER_URL}/layers/{workspace}:{layer_name}"
+    r = requests.put(
+        layer_url,
+        headers={"Content-type": "application/xml"},
+        data=f"<layer><defaultStyle><name>{style_name}</name></defaultStyle></layer>",
+        auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS)
+    )
+    r.raise_for_status()
+
 
 def create_feature_collection(queryset):
     return {
@@ -1254,40 +1292,72 @@ def load_tu_mar_gui(request, user_field_id):
 
         return JsonResponse({'success': True, 'html': html, 'slider_labels': slider_labels, 'slider_labels_suitability': slider_labels_suitability})
 
-        
-def mar_calculate_area(request):
-    if request.method == 'POST':
-        project = json.loads(request.body)
-        print('Project:', project)
-        user_field = models.UserField.objects.get(pk=project['userField'])
-        
-
-        map_labels = models.MapLabels.objects.all()
-        suitability_dict = {}
-        for label in map_labels:
-            suitability = label.suitability
-            name = label.name
-            map_value = label.map_value
-            default_score = label.default_score
-            if suitability not in suitability_dict:
-                suitability_dict[suitability] = {'mapping': {}}
-            suitability_dict[suitability]['map_path'] = 'toolbox/mar_raster_files/' + label.map_name
-            suitability_dict[suitability]['weight'] = int(project.get(f'weighting_{suitability}', 5))/5
-            suitability_dict[suitability]['mapping'][name] = {
-                'map_value': map_value,
-                'default_score': default_score/5,
-                'score': int(project.get(f'{suitability}_{name}', default_score))/5,
-                }
-        print('suitability dict:', suitability_dict)
-        tif = compute_suitability_from_tifs(suitability_dict)
-
-
-        return JsonResponse({'success': True})
+def delete_geoserver_layer(workspace, layer_name):
+    """
+    Clears GeoWebCache tiles for a specific layer in GeoServer.
+    """
+    url = f"{settings.GEOSERVER_URL}/gwc/rest/layers/{workspace}:{layer_name}.xml"
     
+    try:
+        r = requests.delete(
+            url,
+            auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS),
+        )
+
+        if r.status_code in (200, 202, 204):
+            print(f"✅ Cache for {workspace}:{layer_name} cleared successfully")
+        elif r.status_code == 404:
+            print(f"⚠️ Failed to clear cache: {r.status_code} - {r.text}")
+            r.raise_for_status()
+        else:
+            print(f"⚠️ Failed to clear cache: {r.status_code} - {r.text}")
+            r.raise_for_status()
+    except:
+        pass
+
+def publish_raster_on_geoserver(layer_name, workspace='spreewassern_raster', style_name="style_raster_percent"):
+    """
+    Publishes a GeoTIFF to GeoServer as a coverage store and attaches an existing style.
+    """
+
+    delete_geoserver_layer(workspace, layer_name)
+
+    
+    url = f"{settings.GEOSERVER_URL}/rest/workspaces/{workspace}/coveragestores/{layer_name}/file.geotiff"
+    with open(f"/app/raster_data/{layer_name}.tif", "rb") as f:
+        r = requests.put(
+            url,
+            auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS),
+            headers={"Content-type": "image/tiff"},
+            params={"configure": "all", "coverageName": layer_name},
+            data=f
+        )
+    r.raise_for_status()
+    print(f"Raster {layer_name} uploaded successfully")
+
+    # Apply style
+    layer_url = f"{settings.GEOSERVER_URL}/rest/layers/{workspace}:{layer_name}"
+    style_xml = f"""
+    <layer>
+        <defaultStyle>
+            <name>{style_name}</name>
+        </defaultStyle>
+    </layer>
+    """
+    r = requests.put(
+        layer_url,
+        auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS),
+        headers={"Content-type": "application/xml"},
+        data=style_xml
+    )
+    r.raise_for_status()
+    print(f"Style '{style_name}' applied to layer '{layer_name}'")
+
+
 # requirements: rasterio, numpy, shapely (optional), pyproj
 # pip install rasterio numpy shapely
 
-def compute_suitability_from_tifs(suitability_dict):
+def compute_suitability_from_tifs(suitability_dict, user):
     import os
     
         # We'll prepare a destination array for each raster, stacked into 3D array
@@ -1345,9 +1415,9 @@ def compute_suitability_from_tifs(suitability_dict):
         i +=1
         # except:
         #     print(path)
-    result_2d = np.prod(weighted_stack, axis=0)
+    result_2d = np.prod(weighted_stack, axis=0) * 100
 
-    with rasterio.open('toolbox/mar_raster_files/result_2d.tif', 'w', **dst_profile) as f:
+    with rasterio.open(f'raster_data/{user.id}_mar_result.tif', 'w', **dst_profile) as f:
 
         f.write(result_2d.astype(np.float32),1)
 
@@ -1355,13 +1425,103 @@ def compute_suitability_from_tifs(suitability_dict):
     for key in suitability_dict:
         i += 1
         print(i)
-        with rasterio.open(f'toolbox/mar_raster_files/weighted_stack_{key}.tif', 'w', **dst_profile) as f:
+        with rasterio.open(f'raster_data/{user.id}_weighted_stack_{key}.tif', 'w', **dst_profile) as f:
 
             f.write(stack[i].astype(np.float32),1)
     
+    publish_raster_on_geoserver(f"{user.id}_mar_result")
+
 
     return stack, weighted_stack, result_2d
 
 
-def geoserver_stuff():
-    url = f'{settings.GEOSERVER_URL}/rest/workspaces'
+        
+def mar_calculate_area(request):
+    user = request.user
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        print('Project:', project)
+        user_field = models.UserField.objects.get(pk=project['userField'])
+        
+
+        map_labels = models.MapLabels.objects.all()
+        suitability_dict = {}
+        for label in map_labels:
+            suitability = label.suitability
+            name = label.name
+            map_value = label.map_value
+            default_score = label.default_score
+            if suitability not in suitability_dict:
+                suitability_dict[suitability] = {'mapping': {}}
+            suitability_dict[suitability]['map_path'] = 'raster_data/' + label.map_name
+            suitability_dict[suitability]['weight'] = int(project.get(f'weighting_{suitability}', 5))/5
+            suitability_dict[suitability]['mapping'][name] = {
+                'map_value': map_value,
+                'default_score': default_score/5,
+                'score': int(project.get(f'{suitability}_{name}', default_score))/5,
+                }
+        print('suitability dict:', suitability_dict)
+        tif = compute_suitability_from_tifs(suitability_dict, user)
+
+
+        return JsonResponse({'success': True})
+    
+
+################### BELOW IS NOT IN USE AND NOT WORKING ###############
+# from django.http import HttpResponse, JsonResponse
+ALLOWED_WMS_PARAMS = {
+    "service",
+    "request",
+    "version",
+    "layers",
+    "styles",
+    "bbox",
+    "width",
+    "height",
+    "srs",
+    "crs",
+    "format",
+    "transparent",
+    "CQL_FILTER",
+}
+
+def geoserver_wms(request):
+    geoserver_url = f"{settings.GEOSERVER_URL}/geoserver/wms"
+    
+    print('request:', request.GET.dict())
+    params = request.GET.dict()
+    # Keep only allowed WMS params
+    wms_params = {k: v for k, v in params.items() if k in ALLOWED_WMS_PARAMS}
+
+    response = requests.get(
+        geoserver_url,
+        params=wms_params,
+    )
+
+    return HttpResponse(
+        response.content,
+        content_type=response.headers.get("Content-Type")
+    )
+
+    
+def wms_django_passthrough_wms(request, netcdf):
+    """
+    Incoming requests are passed through to the Thredds server.
+    """
+    # netcdf += '.nc'
+    print("klim4cast.views.timelapse_django_passthrough_wms", netcdf)
+    url = settings.GEOSERVER_URL
+    
+    params = request.GET.dict()
+    
+    # TIFF WMS
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        print("response.headers['Content-Type']", response.headers['Content-Type'])
+        # Return the response content to the frontend
+        return HttpResponse(response.content, content_type=response.headers['Content-Type'])
+    except requests.RequestException as e:
+        # Handle request exception, e.g., log the error
+        print(f"Error: {e}")
+        return HttpResponse(f"Error: {e}", content_type='text/plain')

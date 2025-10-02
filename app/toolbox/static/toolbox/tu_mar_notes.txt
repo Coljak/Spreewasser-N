@@ -1,0 +1,36 @@
+http://localhost:8080/geoserver/wms
+    ?service=WMS
+    &request=GetMap
+    &layers=spreewassern_raster:distance_to_extraction_wells_v1&styles=
+    &format=image/png&transparent=true&version=1.1.1
+    &CQL_FILTER=INCLUDE
+    &srsname=EPSG:4326
+    &fitLayer=true&style=&onEachFeature=function (feature, layer) {}&wmsLayers=
+        &wmsCQL_FILTER=
+        &wmsStyle=
+        &width=256
+        &height=256
+        &srs=EPSG:3857
+        &bbox=1584998.2185214148,6878109.5532133,1594782.1581419175,6887893.492833805
+
+
+
+/proxy/wms/
+?service=WMS
+    &request=GetMap
+    &layers=spreewassern_raster%3Adistance_to_extraction_wells_v1
+    &styles=
+    &format=image%2Fpng
+    &transparent=true
+    &version=1.1.1
+    &CQL_FILTER=INCLUDE
+    &srsname=EPSG%3A4326
+    &fitLayer=true&style=
+    &onEachFeature=function%20(feature%2C%20layer)%20%7B%7D
+    &wmsLayers=
+    &wmsCQL_FILTER=
+    &wmsStyle=
+    &width=256
+    &height=256
+    &srs=EPSG%3A3857
+    &bbox=1682837.6147264405,6770486.217387772,1721973.3732084509,6809621.975869781

@@ -44,5 +44,6 @@ urlpatterns = [
     path('toolbox/filter_sieker_wetlands/', views.filter_sieker_wetlands, name='filter_sieker_wetland'),
     path('toolbox/load_tu_mar_gui/<int:user_field_id>/', views.load_tu_mar_gui, name='load_tu_mar_gui' ),
     path('toolbox/mar_calculate_area/', views.mar_calculate_area, name='mar_calculate_area'),
+    path('proxy/wms/', views.geoserver_wms, name='geoserver_wms'),
 
 ]

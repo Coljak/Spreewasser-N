@@ -31,98 +31,56 @@ import { Layers } from '/static/toolbox/layers.js';
 //     'grades': [1, 0.75, 0.5, 0.25, 0],
 //     'gradientLabels': [' 100%', ' 75%', ' 50%', ' 25%', ' 0%']
 // } 
-
-
-
-
-//TODO: this is not pretty
-const connectionLayerMap = {};
-
-
-// function filterSinks(sinkType) {
-//   const featureGroup = Layers[sinkType]
-//   let url = `filter_${sinkType}s/`;
- 
-//   const tuMar = TuMar.loadFromLocalStorage();
-//   fetch(url, {
-//     method: 'POST',
-//     body: JSON.stringify(tuMar),
-//     headers: {
-//         'Content-Type': 'application/json',
-//         'X-CSRFToken': getCSRFToken(),
-//     }
-//   })
-//   .then(response => response.json())
-//   .then(data => {
-//     featureGroup.clearLayers();
-    
-//     if (data.message.success) {
-//       const selected_sinks = tuMar[`selected_${sinkType}s`];
-//       tuMar[`selected_${sinkType}s`] = [];
-     
-
-
-//       console.log('data', data);
-//       const sink_indices = {}
-      
-
-//       addPointFeatureCollectionToLayer(data);
-
-//       addFeatureCollectionToTable(data)
-//       tuMar[`selected_${sinkType}s`] = selected_sinks.filter(sink => tuMar[`all_${sinkType}_ids`].includes(sink));
-//       localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
-
-//       // tuMar.saveToLocalStorage();
-//       // Add the cluster group to the map
-//       // featureGroup.addLayer(markers);
-
-    
-//     } else {
-//       handleAlerts(data.message);
-//       return;
-//     }
-//     return {'tuMar': tuMar, sinkType: sinkType}
-// }).then(data => {
-//   tableCheckSelectedItems(data.tuMar, data.sinkType)
-// })
-// .catch(error => console.error("Error fetching data:", error));
-// };
-
-
-// function getWaterBodies(dataType){
-  
-//   let url = `filter_waterbodies/`;
-
-//   const tuMar = TuMar.loadFromLocalStorage();
-
-//   fetch(url, {
-//     method: 'POST',
-//     body: JSON.stringify({
-//       dataType: dataType,
-//       project: tuMar}),
-//     headers: {
-//         'Content-Type': 'application/json',
-//         'X-CSRFToken': getCSRFToken(),
-//     }
-//   })
-//   .then(response => response.json())
-//   .then(data => {
-//     console.log('data', data)
-//     if (data.message.success) {
-//       addFeatureCollectionToLayer(data)
-//       addFeatureCollectionToTable(data)
-//     }  else {
-//       handleAlerts(data.message);
-//     } 
-//   })
-//   .catch(error => console.error("Error fetching data:", error));
-// };
-
-
-
-
+// const wmsGwcUrl = "http://localhost:8080/geoserver/gwc/service/wms"
+const wmsGwcUrl = "http://localhost:8080/geoserver/spreewassern_raster/wms"
+// const wmsLayerName = "spreewassern_raster:clc_buek_4326_100m_buek_clc"
+const layerNames = {
+  'result': `spreewassern_raster:${userId}_mar_result`,
+  'aquifer_thickness':'spreewassern_raster:aquifer_classified_v1',
+  'depth_groundwater': 'spreewassern_raster:depth_to_gw_classified_v1',
+  'land_use': 'spreewassern_raster:land_use',
+  'distance_to_source': 'spreewassern_raster:distance_to_source_water_v1',
+  'distance_to_well': 'spreewassern_raster:distance_to_extraction_wells_v1',
+  'hydraulic_conductivity': 'spreewassern_raster:hydraulic_conductivity_classified_v1',
+  }
 
 export function initializeTuMar(data) {
+
+  
+ let wmsOverlayLayer = L.tileLayer()
+ let legend;
+
+function getTileOverlay(wmsLayerName) {
+  wmsOverlayLayer.remove()
+  removeLegendFromMap(map)
+  wmsOverlayLayer = L.tileLayer.wms(wmsGwcUrl, {
+  layers: wmsLayerName,
+  format: "image/png",
+  transparent: true,
+  tileSize: 256,   // ⬅️ important, reduces tile resampling artifacts
+  keepBuffer: 10,  // ⬅️ keeps more tiles around when zooming
+  updateWhenZooming: false, // don’t request tiles mid-zoom
+  _t: Date.now() // this is only a cache buster for rasters that chance
+}).addTo(map);
+
+  const legend = L.control.Legend({
+    position: "bottomleft"
+  });
+  legend.onAdd = function (map) {
+      var div = L.DomUtil.create("div", "leaflet-legend leaflet-bar");
+      var url = `${wmsGwcUrl}?REQUEST=GetLegendGraphic&VERSION=1.1.1&FORMAT=image/png&LAYER=${wmsLayerName}`;
+      div.innerHTML +=
+        "<img src=" +
+        url +
+        ' alt="legend" data-toggle="tooltip" title="Map legend">';
+      return div;
+    };
+  legend.addTo(map)
+
+};
+
+
+
   console.log('data', data)
   const sliderLabelsWeighting = data.sliderLabels;
   const sliderLabelsSuitability = data.sliderLabelsSuitability;
@@ -135,7 +93,7 @@ export function initializeTuMar(data) {
         }
       });
 
-    $('#toolboxPanel').off('change');
+  $('#toolboxPanel').off('change');
   $('#toolboxPanel').off('click');
 
     initializeSliders();
@@ -169,32 +127,9 @@ export function initializeTuMar(data) {
     });
     slider.dispatchEvent(new Event('change'))
   })
-  
   })
-
-
-  // const slider = document.getElementById('wetland_feasibility_slider');
-  // const sliderLabelLeft = document.getElementById('wetland_feasibility_start_text');
-  // const sliderLabelRight = document.getElementById('wetland_feasibility_value');
-  // const sliderLabels = data['sliderLabels'];
-  // sliderLabelLeft.innerText = sliderLabels[Math.min(...Object.keys(sliderLabels).map(Number))];
-  // sliderLabelRight.innerText = sliderLabels[Math.max(...Object.keys(sliderLabels).map(Number))];
-
-  // if (slider && sliderLabels) {
-  //   slider.addEventListener('change', function() {
-  //     console.log('sliderChanged', slider.value);
-  //     if (slider.value in sliderLabels) {
-  //       sliderLabelLeft.innerText = sliderLabels[slider.value];
-  //     }
-  //   });
-  // }
-
-    
-
-
-    $('#toolboxPanel').off('change'); // Remove any previous change event handlers
     addChangeEventListener(TuMar);
-    $('#toolboxPanel').off('click');
+
     addClickEventListenerToToolboxPanel(TuMar)
 
     // $('#toolboxPanel').on('input', function (event) {
@@ -217,10 +152,29 @@ export function initializeTuMar(data) {
 
             $slider.val(defaultVal).trigger('change'); // set value and trigger input event
         });
+    } else if ($target.hasClass('toggle-tile-layer')) {
+      const dataType = $target.data('type')
+      if ($target.hasClass('shown')) {
+        $target.removeClass('shown')
+        $target.text('einblenden')
+        wmsOverlayLayer.remove()
+        removeLegendFromMap(map)
+      } else {
+        $target.text('ausblenden')
+        
+        getTileOverlay(layerNames[dataType])
+        $target.addClass('shown')
+      }
+      // wmsTestLayer.addTo(map);
+      
     } else if ($target.is('a.nav-link')) {
       const sustainibilityType = $target.data('type');
+      wmsOverlayLayer.remove()
+      removeLegendFromMap(map)
       if (sustainibilityType) {
         console.log('sustainibility type', sustainibilityType, 'tiff and legend' )
+        
+        
       }
     } else if ($target.hasClass('calculate-area')) {
       const tuMar = TuMar.loadFromLocalStorage()
@@ -232,17 +186,31 @@ export function initializeTuMar(data) {
               'X-CSRFToken': getCSRFToken()
             }
       })
-      .then(response => response.json)
-      .then(console.log('data', data))
+      .then(response => response.json())
+      .then(msg =>{ 
+        console.log('msg', msg)
+        if (msg.success === true){
+          $('#btn-mar-result-map').removeClass('disabled');
+          getTileOverlay(layerNames['result']);
+          $('#btn-mar-result-map').text('Ergebnis ausblenden');
+      }})
+    }   else if ($target.attr('id') === 'btn-mar-result-map') {
+        if ($target.hasClass('shown')) {
+          console.log("layerNames['result']", layerNames['result'])
+          getTileOverlay(layerNames['result']);
+          $('#btn-mar-result-map').removeClass('shown');
+          $('#btn-mar-result-map').text('Ergebnis ausblenden')
+        } else {
+          $('#btn-mar-result-map').addClass('shown');
+          $('#btn-mar-result-map').text('Ergebnis einblenden');
+          removeLegendFromMap(map);
+          wmsOverlayLayer.remove();
+        }
+        
+
     }
-
-    else if ($target.attr('id') === 'navTuMarResult') {
-        map.removeLayer(Layers.sink);
-        map.removeLayer(Layers.enlarged_sink);
-
-
-    }  
     }); 
+    
 
   $('input[type="checkbox"][name="land_use"]').prop('checked', true);
   $('input[type="checkbox"][name="land_use"]').trigger('change');

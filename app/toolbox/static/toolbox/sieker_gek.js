@@ -9,12 +9,8 @@ import {
   baseMaps, 
   map, 
   initializeMapEventlisteners, 
-  initializeDrawControl,
   openUserFieldNameModal,
-  createNUTSSelectors,
-  changeBasemap, 
-  initializeSidebarEventHandler, 
-  addLayerToSidebar, 
+
   getUserFieldIdByLeafletId, 
   getLeafletIdByUserFieldId, 
   getUserFieldsFromDb, 

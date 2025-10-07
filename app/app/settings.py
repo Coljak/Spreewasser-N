@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_filters',
 
+    'utils',
+
     'swn',
     'toolbox',
     'monica',

@@ -1,0 +1,19 @@
+{
+  "ZRXP": "CREATORKisters ZRXP-Fileexporter",
+  "TZME": "Z",
+  "SANR": "582660",
+  "SNAM": "EGrosse Tränke Wehr OP",
+  "SWAT": "ERMüggelspree",
+  "CNR2": "00",
+  "CNAM": "EQ",
+  "CTYP": "En-min-equi",
+  "CMW9": "6",
+  "RTIM": "ELVLhigh-resolution",
+  "CUNI": "Tm³/s",
+  "RINV": "AL-777",
+  "RNR9": "6",
+  "REXC": "HANGE582660_GROSSETRAENKEWEHROP_Q_Q_15_P",
+  "RTYP": "Emean values",
+  "RORP": "RProduktion",
+  "LAYO": "UT(timestamp,value)"
+}

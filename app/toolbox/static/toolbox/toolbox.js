@@ -153,7 +153,12 @@ export async function toolboxSinksOutline() {
       const toolboxSinks = L.geoJSON(geojsonData, {
           attribution: 'Toolbox Sinks',
           onEachFeature: function (feature, layer) {
-              layer.bindTooltip(feature.properties.name);
+              layer.bindTooltip(feature.properties.name, {
+                direction: 'left',      
+                offset: [0, 0],        
+                permanent: false,       
+                sticky: true  
+            });
           }
       });
 

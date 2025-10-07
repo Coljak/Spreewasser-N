@@ -1,19 +1,20 @@
 from django.db import models
 from django.contrib.gis.db import models as gis_models
-from django.contrib.gis.db import models as gis_models
 from django.contrib.auth.models import User
 from djgeojson.fields import PointField, PolygonField, MultiLineStringField, MultiPointField, MultiPolygonField, GeometryField
 from django.utils.timezone import now
 from buek.models import CorineLandCover2018
 from django.contrib.gis.db.models.functions import Transform
+from django.core.validators import MinValueValidator, MaxValueValidator
 import json
 from datetime import datetime
 class ToolboxType(models.Model):
-    name = models.CharField(max_length=100)
+    name_de = models.CharField(max_length=100)
+    name_en = models.CharField(max_length=100, null=True, blank=True)
     description = models.CharField(max_length=255)
 
-    def __str__(self):
-        return self.name
+    def __str__(self, language='de'):
+        return self.name_de if language == 'de' else self.name_en
     
 
 
@@ -99,6 +100,7 @@ class ToolboxProject(models.Model):
     toolbox_type = models.ForeignKey(ToolboxType, on_delete=models.CASCADE)
     creation_date = models.DateField(blank=True, default=now)
     last_modified = models.DateTimeField(auto_now=True, blank=True)
+    project_data = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -1070,7 +1072,8 @@ class GekRetentionMeasure(models.Model):
     description_de = models.CharField(max_length=255, null=True, blank=True)
     priority = models.ForeignKey(GekPriority, on_delete=models.CASCADE, null=True, blank=True, related_name='measures')
     kosten = models.CharField(max_length=100, null=True, blank=True)
-    costs = models.IntegerField(null=True, blank=True)  # Kosten in Euro
+    costs_2013 = models.IntegerField(null=True, blank=True)  # Kosten in Euro
+    costs = models.IntegerField(null=True, blank=True) # Adjusted for 2025
     measure_number = models.IntegerField(null=True, blank=True)  # Maßnahme Nummer (2 in 2MNT_ID)
 
     def to_dict(self, language='de'):
@@ -1242,10 +1245,54 @@ class DataInfoProperty(models.Model):
 ## TU Berlin
 class Station(models.Model):
     name = models.CharField( max_length=50)
+    waterbody = models.CharField(max_length=64, null=True, blank=True)
     geom = gis_models.PointField(srid=25833)
     data_provider = models.CharField(max_length=32)
     absolute_elevation_of_sensor_m = models.FloatField(null=True, blank=True)
     station_number = models.IntegerField(null=True, blank=True)
+
+class TimeseriesDailyWaterlevel(models.Model):
+    station = models.ForeignKey(Station, on_delete=models.CASCADE)
+    date = models.DateField()
+    level = models.FloatField(blank=True, null=True)
+    class Meta:
+        indexes = [
+            models.Index(fields=['station', 'date'], name='station_day_idx')
+        ]
+        unique_together = ('station', 'date')
+
+class TimeseriesMonthlyWaterlevel(models.Model):
+    station = models.ForeignKey(Station, on_delete=models.CASCADE)
+    month = models.DateField()
+    level = models.FloatField(blank=True, null=True)
+
+    # @property
+    # def year(self):
+    #     return self.month.year
+
+    # @property
+    # def month(self):
+    #     return self.month.month
+    # class Meta:
+    #     indexes = [
+    #         models.Index(fields=['station', 'month'], name='station_month_idx')
+    #     ]
+    #     unique_together = ('station', 'month')
+
+class TimeseriesYearlyWaterlevel(models.Model):
+    station = models.ForeignKey(Station, on_delete=models.CASCADE)
+    year = models.PositiveIntegerField(null=True, blank=True)
+    #     validators=[
+    #         MinValueValidator(1800),
+    #         MaxValueValidator(datetime.date.today().year)
+    #     ]
+    # )
+    level = models.FloatField(blank=True, null=True)
+    class Meta:
+        indexes = [
+            models.Index(fields=['station', 'year'], name='station_year_idx')
+        ]
+        unique_together = ('station', 'year')
 
 class TimeseriesValues(models.Model):
     station = models.ForeignKey(Station, on_delete=models.CASCADE)

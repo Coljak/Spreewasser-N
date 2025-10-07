@@ -16,9 +16,15 @@ export class UserField {
 };
 
 
+const wmsGwcUrl = "http://localhost:8080/geoserver/base_data/wms"
+
 const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-export const osm = L.tileLayer(osmUrl, { maxZoom: 18, attribution: osmAttrib });
+const osm = L.tileLayer(osmUrl, { 
+  maxZoom: 18, 
+  attribution: osmAttrib, 
+  pane: "baselayerPane" 
+});
 
 const satelliteUrl =
   "http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
@@ -27,19 +33,42 @@ const satelliteAttrib =
 const satellite = L.tileLayer(satelliteUrl, {
   maxZoom: 18,
   attribution: satelliteAttrib,
+  pane: "baselayerPane"
 });
 
 const topoUrl = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
 const topoAttrib =
   'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
-const topo = L.tileLayer(topoUrl, { maxZoom: 18, attribution: topoAttrib });
+const topo = L.tileLayer(topoUrl, { 
+  maxZoom: 18, 
+  attribution: topoAttrib,
+pane: "baselayerPane"
+ });
 
 export const projectRegion = new L.geoJSON(project_region, {
     attribution: 'Project Region',
+    pane: "overlayPolygonPane",
     onEachFeature: function (feature, layer) {
-      layer.bindTooltip(feature.properties.name);
+      layer.bindTooltip(feature.properties.name, {
+      direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
+      offset: [0, 0],         // x, y offset in pixels
+      permanent: false,       // only show on hover
+      sticky: true  
+      });
   }
 });
+
+export const demOverlay = L.tileLayer.wms(wmsGwcUrl, {
+      layers: 'base_data:dgm200_utm32s',
+      format: 'image/png',
+      transparent: true,
+      opacity: 0.5,
+      version: '1.1.1',
+      attribution: `© GeoBasis-DE / <a href="https://www.bkg.bund.de/DE/Home/home.html" target="_blank">BKG</a> (Jahr des letzten Datenbezugs) 
+                    <a href="https://www.govdata.de/dl-de/by-2-0" target="_blank">dl-de/by-2-0</a>`,
+      pane: 'overlayRasterPane'
+                    
+  });
 
 
 // basemaps
@@ -50,6 +79,20 @@ export const baseMaps = {
   };
 
 export function enhanceMap (map) {
+  map.createPane("baselayerPane");
+  map.getPane("baselayerPane").style.zIndex = 200;
+
+  map.createPane("overlayRasterPane");
+  map.getPane("overlayRasterPane").style.zIndex = 400;
+
+  map.createPane("overlayPolygonPane");
+  map.getPane("overlayPolygonPane").style.zIndex = 500;
+
+  map.createPane("polygonPane");
+  map.getPane("polygonPane").style.zIndex = 600;
+
+  map.createPane("resultPane");
+  map.getPane("resultPane").style.zIndex = 700;
   
   $(".leaflet-control-zoom").append(
     '<a class="leaflet-control-home" href="#" role="button" title="Project area" aria-label="Project area"><i class="bi bi-bullseye"></i></a>',
@@ -280,25 +323,6 @@ export function initializeMapEventlisteners (map, featureGroup, projectClass) {
 };
 
 
-// Baselayers
-export function changeBasemap(basemapSwitch, baseMaps, map) {
-    console.log("changeBasemap", basemapSwitch);
-    if (!basemapSwitch?.getAttribute) return;
-
-    const selectedBasemap = basemapSwitch.getAttribute("data-basemap");
-    map.eachLayer((layer) => {
-        if (layer instanceof L.TileLayer && layer.options.name !== selectedBasemap) {
-            map.removeLayer(layer);
-        }
-    });
-    map.addLayer(baseMaps[selectedBasemap]);
-    document.querySelectorAll(".basemap-switch").forEach((switchInput) => {
-        if (switchInput !== basemapSwitch) {
-            switchInput.checked = false;
-        }
-    });
-};
-
 
 
 // Overlays
@@ -324,7 +348,7 @@ function handleOverlaySwitch(switchInput, overlayLayers, map) {
 export function createNUTSSelectors({getFeatureGroup}) {
   // Create a LayerGroup to hold the displayed polygons
   // const stateCountyDistrictLayer = L.layerGroup().addTo(map);
-  const stateCountyDistrictLayer = new L.FeatureGroup().addTo(map);
+  const stateCountyDistrictLayer = new L.FeatureGroup({pane: "polygonPane",}).addTo(map);
   stateCountyDistrictLayer.on("click", function (event) {
     console.log("stateCountyDistrictLayer click event: ", event);
   
@@ -396,7 +420,12 @@ export function createNUTSSelectors({getFeatureGroup}) {
                   color: color 
               },
               onEachFeature: function (feature, layer) {
-                  layer.bindTooltip(`${feature.properties.nuts_name}`);
+                  layer.bindTooltip(`${feature.properties.nuts_name}`, {
+                  direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
+                  offset: [0, 0],         // x, y offset in pixels
+                  permanent: false,       // only show on hover
+                  sticky: true  
+                  });
                   layer.setStyle({
                     fill: false, 
                   });
@@ -600,19 +629,18 @@ $('#toggleBottomFullscreen').on('click', function () {
 
 
 // TODO rename to MapEventhandler
-export function initializeSidebarEventHandler({projectClass, sidebar, map, baseMaps, overlayLayers, getUserFields, getFeatureGroup, getProject }) {
+export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, getUserFields, getFeatureGroup, getProject }) {
     sidebar.addEventListener("change", (event) => {
         const switchInput = event.target;
 
-        if (switchInput.classList.contains("basemap-switch")) {
-            changeBasemap(switchInput, baseMaps, map);
-        } else if (switchInput.classList.contains("layer-switch")) {
+        if (switchInput.classList.contains("layer-switch")) {
             const layerId = switchInput.getAttribute("data-layer");
             switchInput.checked ? map.addLayer(overlayLayers[layerId]) : map.removeLayer(overlayLayers[layerId]);
         } else if (switchInput.classList.contains("layer-opacity")) {
             const overlayId = switchInput.getAttribute("data-layer");
             overlayLayers[overlayId].setOpacity(switchInput.value);
         } else if (switchInput.classList.contains("overlay-switch")) {
+          const overlay = switchInput.getAttribute("data-layer");
             handleOverlaySwitch(switchInput, overlayLayers, map);
         } else if (switchInput.classList.contains("user-field-switch")) {
           console.log('switchInput: ', switchInput);
@@ -929,8 +957,15 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
         console.log("Data: ", data);
         var layerGeoJson = L.geoJSON(data.geom_json,
           {
+            className: 'user-field',
+            pane: 'polygonPane',
             onEachFeature: function (f, l) {
-              l.bindTooltip(fieldName);
+              l.bindTooltip(fieldName, {
+                  direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
+                  offset: [0, 0],         // x, y offset in pixels
+                  permanent: false,       // only show on hover
+                  sticky: true  
+              });
               featureGroup.addLayer(l);
             },
           }
@@ -1021,8 +1056,6 @@ export const addLayerToSidebar = (userField, layer) => {
       </div>
     `;
 
-    
-
     accordion.layer = layer;
     const userFieldsAccordion = document.getElementById("userFieldList");
     // console.log("userFieldsAccordion", userFieldsAccordion);
@@ -1050,8 +1083,14 @@ export async function getUserFieldsFromDb (featureGroup) {
       // var layer = L.geoJSON(el.geom_json);
       let layerGeoJson = L.geoJson(el.geom_json, {
         className: 'user-field',
+        pane: 'polygonPane',
         onEachFeature: function (feature, layer) {
-          layer.bindTooltip(el.name);
+          layer.bindTooltip(el.name, {
+                  direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
+                  offset: [0, 0],         // x, y offset in pixels
+                  permanent: false,       // only show on hover
+                  sticky: true  
+              });
           featureGroup.addLayer(layer);
         },
       });

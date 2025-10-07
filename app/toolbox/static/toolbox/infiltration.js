@@ -3,23 +3,10 @@ import { updateDropdown, addLegend, addChangeEventListener, addFeatureCollection
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
-  projectRegion, 
-  baseMaps, 
   map, 
   initializeMapEventlisteners, 
   initializeDrawControl,
   openUserFieldNameModal,
-  createNUTSSelectors,
-  changeBasemap, 
-  initializeSidebarEventHandler, 
-  addLayerToSidebar, 
-  getUserFieldIdByLeafletId, 
-  getLeafletIdByUserFieldId, 
-  getUserFieldsFromDb, 
-  highlightLayer, 
-  selectUserField,
-  handleSaveUserField,
-  dismissPolygon,
   removeLegendFromMap,
 } from '/static/shared/map_sidebar_utils.js';
 import {Infiltration} from '/static/toolbox/infiltration_model.js';

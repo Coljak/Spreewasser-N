@@ -10,7 +10,6 @@ import {
   // createBaseLayerSwitchGroup, 
   openUserFieldNameModal,
   createNUTSSelectors,
-  changeBasemap, 
   initializeSidebarEventHandler, 
   addLayerToSidebar, 
   getUserFieldIdByLeafletId, 
@@ -18,9 +17,8 @@ import {
   getUserFieldsFromDb, 
   highlightLayer, 
   selectUserField,
-  handleSaveUserField,
   dismissPolygon,
-  
+  demOverlay,
 } from '/static/shared/map_sidebar_utils.js';
 
 
@@ -63,12 +61,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // all other datepickers are managed in monica_model.js
   $('#todaysDatePicker').on('changeDate focusout', handleDateChange);
 
+  
 
 // Bounds for DEM image overlay
 const demBounds = [[47.136744752, 15.57241882],[55.058996788, 5.564783468],];
 const droughtBounds = [[46.89, 15.33], [55.31, 5.41],];
-const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
-const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5 });
+// const demOverlay = L.imageOverlay(demUrl, demBounds, { opacity: 0.5 });
+const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5, pane: 'overlayRasterPane' });
+
+
 
 const overlayLayers = {
   "droughtOverlay": droughtOverlay,
@@ -79,7 +80,7 @@ const overlayLayers = {
 
 
 // swn-drought specific overlays
-var featureGroup = new L.FeatureGroup()
+var featureGroup = new L.FeatureGroup({pane: "polygonPane",})
 map.addLayer(featureGroup);
 featureGroup.bringToFront();
 
@@ -89,7 +90,6 @@ initializeDrawControl(map, featureGroup);
 initializeSidebarEventHandler({
   sidebar: document.querySelector(".sidebar-content"),
   map,
-  baseMaps,
   overlayLayers,
   getUserFields: () => localStorage.getItem("userFields") ? JSON.parse(localStorage.getItem("userFields")) : {},
   getFeatureGroup: () => { return featureGroup; },

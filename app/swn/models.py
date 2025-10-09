@@ -149,17 +149,6 @@ class UserField(models.Model):
     
  
 
-# class UserProject(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     name = models.CharField(max_length=255)
-#     creation_date = models.DateField(auto_now_add=True, blank=True)
-#     last_modified = models.DateField(auto_now=True, blank=True)
-#     description = models.TextField(null=True, blank=True)
-#     # user_calculations = models.ManyToManyField(UserCalculation, related_name='user_projects', blank=True)
-
-#     def __str__(self):
-#         return self.name
-    
 class SwnProject(monica_models.MonicaProject):
     user_field = models.ForeignKey(UserField, on_delete=models.CASCADE, related_name='swn_projects')
     # lats and lons for the whole area

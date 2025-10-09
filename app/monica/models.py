@@ -1893,6 +1893,7 @@ class SeedHarvestclimateStation(models.Model):
     
 
 # TODO check all crop_txt for the correct cultivar_parameter!! 
+# Parameters from Klimertrag.
 class SeedHarvestDates(models.Model):
     climate_station = models.ForeignKey(SeedHarvestclimateStation, on_delete=models.CASCADE)
     name_of_csv = models.CharField(max_length=100, null=True, blank=True)

@@ -171,6 +171,15 @@ export const loadProjectToGui = (project) => {
     console.log("Project is loading..", project)
     window.isLoading = true;
     document.querySelector('#cropRotation').innerHTML = '';
+    if (window.location.pathname.endsWith('/drought/')) {
+        console.log('in drought selected project of uf', project.userField);
+        const listEl = document.querySelector(`li[user-field-id="${project.userField}"]`);
+        if (listEl) {
+            listEl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        } else {
+            console.warn(`No list element found for user-field-id=${project.userField}`);
+        }
+    };
     
     
     project.name ? $('#monica-project-name').text(project.name) : $('#monica-project-name').text('Kein Projekt geladen');

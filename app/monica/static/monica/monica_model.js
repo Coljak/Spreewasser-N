@@ -718,7 +718,7 @@ const createModal = (params) => {
                 url = `/drought/${params.parameters}/${params.profile_landusage}/${params.user_field}/`;
                 console.log(url)
             } else {
-                url = `/monica/${params.parameters}/${params.profile_landusage}/`;
+                url = `/monica/${params.parameters}/${params.profile_landusage}/${params.lat}/${params.lon}/`;
             }
         }
         else if (params.parameters === 'select-soil-profile') {

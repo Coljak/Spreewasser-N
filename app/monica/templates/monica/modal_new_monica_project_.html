@@ -1,0 +1,26 @@
+{% load crispy_forms_tags %}
+
+<div id="monicaProjectModal" class="modal new-project-modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body">
+        <form class="new-project-modal-form" data-type="monica">
+        {% csrf_token %}
+        
+        {% crispy new_project_form %}
+        </form>
+       
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary save-new-project" data-type="monica">Save</button>
+      </div>
+    
+    </div>
+  </div>
+</div>

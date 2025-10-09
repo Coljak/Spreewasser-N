@@ -705,31 +705,9 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
             console.log("data", data);
           // TODO the hardcoded # fieldMenuModal is triggered from button
           const modalElement = document.getElementById('fieldMenuModal');
-          modalElement.querySelector('.modal-title').textContent = `Projekte in ${userField.name}`;
+          const modalContent = modalElement.querySelector('.modal-content')
 
-            const table = modalElement.querySelector('.project-table');
-            table.innerHTML = '';
-            const headerRow = document.createElement('tr');
-            headerRow.innerHTML = `
-              <th>Name</th>
-              <th>Last Modified</th>
-              <th>Actions</th>
-            `;
-            table.appendChild(headerRow);
-            data.projects.forEach(project => {
-              const tableRow = document.createElement('tr');
-              // tableRow.classList.add('list-group-item');
-              tableRow.innerHTML = `
-              <td>${project.name}</td>
-              <td>${project.last_modified}</td>
-              <td>
-                <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="${project.id}">
-                  Load
-                </button>
-              </td>
-              `;
-              table.appendChild(tableRow);
-            });
+            modalContent.innerHTML = data.html;
             const fieldMenuModal = new bootstrap.Modal(modalElement);
             fieldMenuModal.show();
 
@@ -749,11 +727,15 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
           });
         } else if (clickedElement.classList.contains("field-project-add")) {
           $('#userFieldSelect').val(userField.id);
-          if (window.location.pathname.endsWith('/drought/') || window.location.pathname.endsWith('/monica/')) {
+           if (window.location.pathname.endsWith('/drought/')) {
             localStorage.setItem('userFieldId', clickedElement.getAttribute('user-field-id'));
-
             
-            $('#monicaProjectModal').modal('show');
+            
+            // $('#newProjectForm')[0].reset();
+            $('#monicaNewProjectModal').find('.modal-title').text('Neues Projekt erstellen');
+            $('#monicaNewProjectModal').modal('show');
+            
+            // $('#swnProjectModal').modal('show');
           } else if (window.location.pathname.endsWith('/toolbox/')){
             $('#toolboxProjectModal').modal('show');
           }

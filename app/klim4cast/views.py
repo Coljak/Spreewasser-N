@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
+from django.utils import translation
+from django.utils.translation import gettext_lazy as _
 import requests
 import xmltodict
 import xarray as xr

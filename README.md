@@ -8,8 +8,17 @@
 
 
 ## Installation
-### 1. Install docker on your system/ server
-### 2. Run the docker build
+### 1. Install git
+```shell
+sudo apt-get install git
+```
+then you can puul this repository from git intop your working directory
+
+### 2. Install docker on your system/ server
+https://docs.docker.com/engine/install/ubuntu/
+
+
+### 3. Run the docker build
 ```shell
 cd into/folder_of/docker-compose
 docker-compose build 
@@ -30,7 +39,14 @@ To import the database, point the management command to the folder holding the d
 ```shell
 python manage.py db_to_disk --import-dir path/to/db_files
 ```
-### 5.Run the django apps
+
+### 5. Thredds Server
+The Thredds server is used to store and serve NetCDF data.
+
+### 6. Geoserver
+The Geoserver is used as Tileserver for large geodatasets. It is necessary for the display of raster data.
+
+### 7.Run the django apps
 To start the django server open the commandline in the django-container
 ```shell
 docker exec -it swn_geo_django bash
@@ -60,6 +76,11 @@ Application that provides access through a GUI to the model MONICA. It accesses 
 
 
 ## Management commands
+To run management commands, you have to be in a bash shell within the django container. To get there run
+```shell
+docker exec -it swn_geo_django bash
+```
+
 ### klim4cast
 To manually update the klim4cast data run
 ```shell
@@ -105,7 +126,7 @@ Arguments:
 --import-dir 
 string defining the folder to be imported. This arguments sets the import mode.
 ```shell
-python manage.py db_to_disk --models UserProfile
+python manage.py db_to_disk --models appname.ModelName
 
 --no-today
 Exports, but does not create a date folder

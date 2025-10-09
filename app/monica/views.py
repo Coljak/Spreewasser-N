@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.apps import apps
 from django.db.models import Q
 from django.core.cache import cache
+from django.utils import translation
+from django.utils.translation import gettext_lazy as _
 
 # from ...xx_obsolete.run_consumer_swn import run_consumer
 from . import models
@@ -1133,7 +1135,7 @@ def monica_model(request):
 
     default_project = create_default_project(user)
     project_select_form = forms.MonicaProjectSelectionForm(user=user)
-    project_form = forms.MonicaProjectForm(user=user)
+    new_monica_project_form = forms.MonicaNewProjectForm(user=user)
     project_modal_title = 'Create new project'
 
     coordinate_form = forms.CoordinateForm()
@@ -1156,7 +1158,7 @@ def monica_model(request):
     data = {
         'default_project': default_project,
         'project_select_form': project_select_form,
-        'project_form': project_form,
+        'new_project_form': new_monica_project_form,
         'project_modal_title': project_modal_title,
         'coordinate_form': coordinate_form,
         'user_crop_parameters_select_form': user_crop_parameters_select_form,

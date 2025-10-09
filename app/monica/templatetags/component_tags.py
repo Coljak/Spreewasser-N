@@ -6,16 +6,19 @@ register = Library()
 @register.inclusion_tag('monica/monica_model_tab_project.html', takes_context=True)
 def render_tab_project(
     context, 
-    project_form,
     user_environment_parameters_select_form, 
     user_crop_parameters_select_form,
-    user_simulation_settings_select_form):
+    user_simulation_settings_select_form
+    ):
     request = context.get('request')
     project_select_form = context.get('project_select_form')
+    new_project_form = context.get('new_project_form')
+    for key in context:
+        print('context', key)
     context = {
         'request': request,
         'project_select_form': project_select_form,
-        'project_form': project_form,
+        'new_project_form': new_project_form,
         'user_environment_parameters_select_form': user_environment_parameters_select_form,
         'user_crop_parameters_select_form': user_crop_parameters_select_form,
         'user_simulation_settings_select_form': user_simulation_settings_select_form,

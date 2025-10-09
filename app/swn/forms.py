@@ -23,10 +23,6 @@ class RegistrationForm(UserCreationForm):
         fields = ['username', 'email', 'password1', 'password2']
 
 
-
-
-
-
 class UserFieldForm(forms.ModelForm):
     class Meta:
         model = models.UserField
@@ -93,25 +89,79 @@ class PolygonSelectionForm(forms.Form):
 
 
 
-class SwnProjectForm(monica_forms.MonicaProjectForm):
+# class SwnNewProjectForm(monica_forms.MonicaNewProjectForm):
+#     user_field = forms.ModelChoiceField(
+#         queryset=models.UserField.objects.all(),
+#         label='Field',
+#         widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'user-field-dropdown'}),
+#     )
+#     def __init__(self, *args, user=None, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         if user is not None:
+#             self.fields['user_field'].choices = [
+#                 (instance.id, instance.name) for instance in models.UserField.objects.filter(Q(user=user)).order_by('name')
+#             ]
+#             monica_projects = MonicaProject.objects.filter(Q(user=user))
+#             mp = [( monica_project.monica_model_setup.id, monica_project.name) for monica_project in monica_projects]
+#             default_setup = ModelSetup.objects.filter(is_default=True)[0]
+#             setup_choices = [(default_setup.id, default_setup.name)] + mp
+#             print(setup_choices, mp)
+
+#             self.fields['monica_model_setup'].choices = setup_choices
+
+class SwnNewProjectForm(monica_forms.MonicaNewProjectForm):
     user_field = forms.ModelChoiceField(
-        queryset=models.UserField.objects.all(),
+        queryset=models.UserField.objects.none(),
         label='Field',
         widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'user-field-dropdown'}),
     )
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if user is not None:
-            self.fields['user_field'].choices = [
-                (instance.id, instance.name) for instance in models.UserField.objects.filter(Q(user=user)).order_by('name')
-            ]
-            monica_projects = MonicaProject.objects.filter(Q(user=user))
-            mp = [( monica_project.monica_model_setup.id, monica_project.name) for monica_project in monica_projects]
-            default_setup = ModelSetup.objects.filter(is_default=True)[0]
-            setup_choices = [(default_setup.id, default_setup.name)] + mp
-            print(setup_choices, mp)
 
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, user=user, **kwargs)
+
+        if user is not None:
+            self.fields['user_field'].queryset = models.UserField.objects.filter(user=user).order_by('name')
+
+            # Set up monica_model_setup choices
+            monica_projects = MonicaProject.objects.filter(user=user)
+            mp = [(mp.monica_model_setup.id, mp.name) for mp in monica_projects]
+            default_setup = ModelSetup.objects.filter(is_default=True).first()
+            setup_choices = [(default_setup.id, default_setup.name)] + mp
             self.fields['monica_model_setup'].choices = setup_choices
+
+            self.helper.layout.fields.insert(0, Field('user_field', wrapper_class='row'))
+
+        # # ✅ Update the Crispy layout to include the new field
+        # # If the parent class already has a helper, extend it
+        # if hasattr(self, 'helper') and self.helper is not None:
+        #     # insert user_field at the top of the layout
+        #     self.helper.layout.fields.insert(0, Field('user_field', wrapper_class='row'))
+        # else:
+        #     # define a new helper if parent didn't create one
+        #     self.helper = get_row_form_helper()
+        #     self.helper.layout = Layout(
+        #         Field('user_field', wrapper_class='row'),
+        #         Field('name', wrapper_class='row'),
+        #         Field('description', wrapper_class='row'),
+        #         Field('start_date', wrapper_class='row'),
+        #         Field('monica_model_setup', wrapper_class='row'),
+            # )
+
+
+
+# class SwnNewProjectForm(forms.Form):
+#     text = forms.CharField(
+#         widget=forms.Textarea(attrs={'rows': 3, 'cols': 40}),
+#         label='User text',
+#         required=False
+#     )
+
+#     def __init__(self, *args, user=None, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         if user is not None:
+#             # Set initial value for the textarea
+#             self.fields['text'].initial = getattr(user, 'username', str(user))
+
 
 
 # TODO this is probably obsolete

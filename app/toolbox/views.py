@@ -155,7 +155,7 @@ def toolbox_dashboard(request):
     state_county_district_form = swn_forms.PolygonSelectionForm(request.POST or None)
     project_select_form = forms.ToolboxProjectSelectionForm(user=user)
     # project_select_form = forms.ToolboxProjectSelectionForm()
-    project_form = forms.ToolboxProjectForm()
+    project_form = forms.ToolboxProjectForm(user=user)
     project_modal_title = 'Create new project'
 
     default_project = create_default_project(user)
@@ -324,18 +324,15 @@ def delete_user_field(request, id):
     else:
         return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}}, status=400)
     
-
 @login_required
 def get_field_project_modal(request, id):
-    # user_projects = models.SwnProject.objects.filter(Q(user_field__id=id) & Q(user_field_user=request.user))
-    user_projects = models.ToolboxProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user))
-    print('user_projects:', user_projects)
-    print('user_projects.values():', list(user_projects.values()))
-    
-    return JsonResponse({'projects': list(user_projects.values())})
+    user_projects = models.ToolboxProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user)).order_by('name')
+
+    html = render(request, 'toolbox/partials/project_table.html', {'projects': user_projects}).content.decode('utf-8')
+    return JsonResponse({'html': html})
 
 
-#TODO needed?
+#TODO needed here?
 def get_options(request, parameter):
     dropdown_list = []
     if parameter == 'toolbox-project':

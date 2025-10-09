@@ -31,6 +31,7 @@
     {% include 'swn/sidebar.html' %}
     {% include 'swn/modal_field_name.html' %}
     {% include 'swn/modal_field_menu.html' %}
+  
     
 
 {% endblock left_panel %}
@@ -68,7 +69,7 @@
         </ul>
         <div class="tab-content">
         <!-- ende navigation -->
-        {% render_tab_project project_form user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
+        {% render_tab_project   user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
 
 
         <!-- General Parameters -->

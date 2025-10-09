@@ -38,7 +38,7 @@
 </div>
 
 
-<div id="monicaProjectModal" class="modal" tabindex="-1">
+<div id="monicaNewProjectModal" class="modal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -47,21 +47,22 @@
       </div>
       
       <div class="modal-body">
-        <form id="projectModalForm">
+        <form id="newProjectForm">
         {% csrf_token %}
         
-        {% crispy project_form %}
+        {% crispy new_project_form %}
         </form>
        
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button id="saveProjectButton" type="button" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close!!</button>
+        <button id="saveProjectButton" type="button" class="btn btn-primary save-new-project">Save</button>
       </div>
     
     </div>
   </div>
 </div>
+
 
 
 <div id="deleteProjectModal" class="modal" tabindex="-1">
@@ -72,10 +73,10 @@
       </div>
       
       <div class="modal-body">
-        <p>If you delete this project, all calculation and stored settings are also deleted.
+        <p>If you delete this project, all calculations and stored settings are also deleted.
           If you have used settings from this project in another project, that will remain unaffected.
         </p>
-        <form id="projectModalForm">
+        <form>
           {% csrf_token %}
           <input type="hidden" name="project" id="delete_project_id">
         </form>

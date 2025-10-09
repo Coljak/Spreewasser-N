@@ -16,6 +16,8 @@ from django.views.decorators.csrf import csrf_protect
 
 from django.core.serializers import serialize
 from django.shortcuts import render
+from django.utils import translation
+from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 import numpy as np
 import requests
@@ -277,7 +279,7 @@ def swn_dashboard(request):
         }
 
     project_select_form = forms.SwnProjectSelectionForm(user=user)
-    project_form = forms.SwnProjectForm(user=user)
+    new_swn_project_form = forms.SwnNewProjectForm(user=user)
     project_modal_title = 'Create new project'
 
     coordinate_form = monica_forms.CoordinateForm()
@@ -296,14 +298,12 @@ def swn_dashboard(request):
     user_soil_transport_parameters_select_form = monica_forms.UserSoilTransportParametersInstanceSelectionForm(user=user)
 
     data = {
-            # 'user_fields': user_projects, 
             'default_project': default_project,
-            # 'user_field_form': forms.UserFieldForm(),
             'state_county_district_form': state_county_district_form,
             'project_region': feature,
             #MONICA FORMS
             'project_select_form': project_select_form,
-            'project_form': project_form,
+            'new_project_form': new_swn_project_form,
             'project_modal_title': project_modal_title,
             'coordinate_form': coordinate_form,
             'user_crop_parameters_select_form': user_crop_parameters_select_form,
@@ -416,12 +416,11 @@ def delete_user_field(request, id):
 
 @login_required
 def get_field_project_modal(request, id):
-    # user_projects = models.SwnProject.objects.filter(Q(user_field__id=id) & Q(user_field_user=request.user))
-    user_projects = models.SwnProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user))
-    print('user_projects:', user_projects)
-    print('user_projects.values():', list(user_projects.values()))
-    
-    return JsonResponse({'projects': list(user_projects.values())})
+    user_projects = models.SwnProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user)).order_by('name')
+
+    html = render(request, 'swn/partials/project_table.html', {'projects': user_projects}).content.decode('utf-8')
+    return JsonResponse({'html': html})
+
 
 def load_nuts_polygon(request, entity, polygon_id):
     print('load_nuts_polygon:', entity, polygon_id)

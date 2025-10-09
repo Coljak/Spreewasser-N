@@ -1,0 +1,19 @@
+{
+  "ZRXP": "CREATORKisters ZRXP-Fileexporter",
+  "TZME": "Z",
+  "SANR": "585940",
+  "SNAM": "EKersdorf OP",
+  "SWAT": "ERSpree-Oder-Wasserstraße (SOW)",
+  "CNR2": "00",
+  "CNAM": "EQ",
+  "CTYP": "En-min-equi",
+  "CMW1": "",
+  "RTIM": "ELVLdaily",
+  "CUNI": "Tm³/s",
+  "RINV": "AL-777",
+  "RNR1": "",
+  "REXC": "HANGE585940_KERSDORFOP_Q_Q_TMitH_P",
+  "RTYP": "Emean values",
+  "RORP": "RProduktion",
+  "LAYO": "UT(timestamp,value)"
+}

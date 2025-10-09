@@ -3,6 +3,7 @@ from django.contrib.gis.db import models as gis_models
 from django.contrib.auth.models import User
 from djgeojson.fields import PointField, PolygonField, MultiLineStringField, MultiPointField, MultiPolygonField, GeometryField
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from buek.models import CorineLandCover2018
 from django.contrib.gis.db.models.functions import Transform
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -11,6 +12,7 @@ from datetime import datetime
 class ToolboxType(models.Model):
     name_de = models.CharField(max_length=100)
     name_en = models.CharField(max_length=100, null=True, blank=True)
+    name_tag = models.CharField(max_length=32, null=True, blank=True)
     description = models.CharField(max_length=255)
 
     def __str__(self, language='de'):
@@ -1244,13 +1246,26 @@ class DataInfoProperty(models.Model):
 
 ## TU Berlin
 class Station(models.Model):
-    name = models.CharField( max_length=50)
+    name = models.CharField(max_length=50)
     waterbody = models.CharField(max_length=64, null=True, blank=True)
-    geom = gis_models.PointField(srid=25833)
+    geom = gis_models.PointField(srid=25833, null=True, blank=True)
     data_provider = models.CharField(max_length=32)
     absolute_elevation_of_sensor_m = models.FloatField(null=True, blank=True)
+    gauge_zero = models.FloatField(null=True, blank=True)
     station_number = models.IntegerField(null=True, blank=True)
 
+# TODO: what is this? amount m³/s. The data is directly obtained from the raw data
+class TimeseriesDailyQ(models.Model):
+    station = models.ForeignKey(Station, on_delete=models.CASCADE)
+    date = models.DateField()
+    amount = models.FloatField(blank=True, null=True)
+    class Meta:
+        indexes = [
+            models.Index(fields=['station', 'date'], name='q_station_day_idx')
+        ]
+        unique_together = ('station', 'date')
+
+# The data is directly obtained from the raw data
 class TimeseriesDailyWaterlevel(models.Model):
     station = models.ForeignKey(Station, on_delete=models.CASCADE)
     date = models.DateField()
@@ -1282,11 +1297,6 @@ class TimeseriesMonthlyWaterlevel(models.Model):
 class TimeseriesYearlyWaterlevel(models.Model):
     station = models.ForeignKey(Station, on_delete=models.CASCADE)
     year = models.PositiveIntegerField(null=True, blank=True)
-    #     validators=[
-    #         MinValueValidator(1800),
-    #         MaxValueValidator(datetime.date.today().year)
-    #     ]
-    # )
     level = models.FloatField(blank=True, null=True)
     class Meta:
         indexes = [
@@ -1294,6 +1304,7 @@ class TimeseriesYearlyWaterlevel(models.Model):
         ]
         unique_together = ('station', 'year')
 
+# TODO this has probably uniquely only the TUB Data. The other data should also be in the other timeseries tables
 class TimeseriesValues(models.Model):
     station = models.ForeignKey(Station, on_delete=models.CASCADE)
     date = models.DateField()

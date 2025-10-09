@@ -49,7 +49,7 @@ def get_parameters_form_helper():
     return helper
 
 
-class MonicaProjectForm(forms.Form):
+class MonicaNewProjectForm(forms.Form):
     project_id = forms.IntegerField(
         widget=forms.HiddenInput(),
         required=False

@@ -122,8 +122,8 @@ document.addEventListener("DOMContentLoaded", () => {
               // updateDropdown('toolbox-project', data.project_id);
               handleAlerts(data.message);
               
-              projectModalForm.reset();
-              
+              // $('.new-project-modal-form')[0].reset();
+           
               $('#toolboxProjectModal').modal('hide');
               project.saveToLocalStorage();
           } else {

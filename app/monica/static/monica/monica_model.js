@@ -1380,7 +1380,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // TAB PROJECT EVENT LISTENERS
 
-
+    $('#monicaNewProjectModal').on('hidden.bs.modal', function () {
+        // Reset the form inside the modal
+        $('#newProjectForm')[0].reset();
+    });
 
 
     $('#tabProject').on('click', (event) => {
@@ -1409,9 +1412,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } else if (event.target.classList.contains('new-project')) {
                 console.log('NEW PROJECT')
-                projectModalForm.reset();
-                $('#monicaProjectModal').find('.modal-title').text('Create new project');
-                $('#monicaProjectModal').modal('show');
+                // $('#newProjectForm')[0].reset();
+
+                $('#monicaNewProjectModal').find('.modal-title').text('Create new project');
+                $('#monicaNewProjectModal').modal('show');
             } else if (event.target.classList.contains('delete-project')) {
                 console.log('delete project')
                 
@@ -1450,11 +1454,14 @@ document.addEventListener('DOMContentLoaded', () => {
             $('#deleteProjectModal').modal('hide');
     });
     
-    const projectModalForm = document.getElementById('projectModalForm');
+
   
 
-    $('#saveProjectButton').on('click', () => {
+    $('.save-new-project').on('click', (e) => {
+        const $button = $(e.target);
+       
         console.log('saveProjectButton clicked');
+        
         
         // Get the project name field
         const projectNameInput = $('#id_project_name');
@@ -1505,12 +1512,16 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => {
             console.log('data', data);
             if (data.message.success) {
+                $('#monicaNewProjectModal').modal('hide');
+                document.getElementById('newProjectForm').reset();
+                
                 project.id = data.project_id;
                 $('#project-info').find('.card-title').text('Project '+ data.project_name);
                 updateDropdown('monica-project', '', data.project_id);
                 handleAlerts(data.message);
                 
-                projectModalForm.reset();
+                // $('.new-project-modal-form')[0].reset();
+
                 
                 $('#monicaProjectModal').modal('hide');
                 project.saveToLocalStorage();

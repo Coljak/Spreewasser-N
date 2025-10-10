@@ -39,23 +39,24 @@ const layerNames = {
   }
 
 export function initializeTuMar(data) {
-
+  console.log('initializeTuMar')
   
  let wmsOverlayLayer = L.tileLayer()
  let legend;
 
-function getTileOverlay(wmsLayerName) {
-  wmsOverlayLayer.remove()
-  removeLegendFromMap(map)
-  wmsOverlayLayer = L.tileLayer.wms(wmsGwcUrl, {
-  layers: wmsLayerName,
-  format: "image/png",
-  transparent: true,
-  tileSize: 256,   // ⬅️ important, reduces tile resampling artifacts
-  keepBuffer: 10,  // ⬅️ keeps more tiles around when zooming
-  updateWhenZooming: false, // don’t request tiles mid-zoom
-  _t: Date.now() // this is only a cache buster for rasters that chance
-}).addTo(map);
+  function getTileOverlay(wmsLayerName) {
+    wmsOverlayLayer.remove()
+    removeLegendFromMap(map)
+    wmsOverlayLayer = L.tileLayer.wms(wmsGwcUrl, {
+    layers: wmsLayerName,
+    pane: 'overlayRasterPane',
+    format: "image/png",
+    transparent: true,
+    tileSize: 256,   // ⬅️ important, reduces tile resampling artifacts
+    keepBuffer: 10,  // ⬅️ keeps more tiles around when zooming
+    updateWhenZooming: false, // don’t request tiles mid-zoom
+    _t: Date.now() // this is only a cache buster for rasters that chance
+  }).addTo(map);
 
   const legend = L.control.Legend({
     position: "bottomleft"

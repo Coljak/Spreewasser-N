@@ -36,3 +36,10 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 npm install bootstrap@5.3
 
 
+git checkout main
+git pull origin main
+git merge dev-3
+git add <resolved files>
+git commit 
+git push
+git checkout dev-3

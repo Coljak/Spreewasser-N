@@ -407,7 +407,7 @@ class Sink(models.Model):
             "soil_points": self.soil_points,
             "index_feasibility": round(self.index_feasibility * 100, 1) if self.index_feasibility else "-",
             "hydrogeology": getattr(self.aquifer, f'name_{language}', None),
-            "index_hydrogeology": self.index_hydrogeology,
+            "index_hydrogeology": round(self.index_hydrogeology *100, 1) if self.index_hydrogeology else None,
         }
     
 
@@ -507,7 +507,7 @@ class EnlargedSink(models.Model):
             "soil_points": self.soil_points,
             "index_feasibility": round(self.index_feasibility * 100, 1) if self.index_feasibility else "-",
             "hydrogeology": getattr(self.aquifer, f'name_{language}', None),
-            "index_hydrogeology": self.index_hydrogeology,
+            "index_hydrogeology": round(self.index_hydrogeology *100, 1) if self.index_hydrogeology else None,
         }
     
      

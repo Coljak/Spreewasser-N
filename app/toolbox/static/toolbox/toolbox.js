@@ -107,7 +107,7 @@ export function tableCheckSelectedItems(project, dataType) {
 
 export function addLegend(legendSettings) {
     console.log('addLegend', legendSettings)
-    removeLegendFromMap()
+    removeLegendFromMap(map)
 
     let labels = [];
     for (let i = 0; i < legendSettings.grades.length; i++) {
@@ -602,7 +602,12 @@ export function addFeatureCollectionToTable( data ){
                     <td><input type="checkbox" class="table-select-checkbox" data-type="${dataInfo.dataType}" data-id="${feature.properties.id}"></td>
                     `;
                 } else {
-                    tableHTML += `<td>${feature.properties[property.valueName] ?? '-'} ${feature.properties[property.valueName] ? property.unit ?? '' : ''}</td>` 
+                    const value = feature.properties[property.valueName];
+                    if (value !== undefined && value !== null){
+                        tableHTML += `<td data-order="${value}">${value} ${property.unit ?? ''}</td>` 
+                    } else {
+                        tableHTML += `<td data-order="0">--</td>` 
+                    }
                 }
                 
             }

@@ -1253,41 +1253,41 @@ def filter_sieker_wetlands(request):
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info})
 
 
-def load_tu_mar_gui(request, user_field_id):
-    if user_field_id == "null":
-        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
-    else:
-        user_field_id = int(user_field_id)
-        project_select_form = forms.ToolboxProjectSelectionForm()
-        user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
-        tu_mar_weightings_form = forms.MarWeightingForm()
-        suitability_aquifer_thickness = forms.SuitabilityForm('aquifer_thickness')
-        suitability_depth_groundwater_form = forms.SuitabilityForm('depth_groundwater')
-        suitability_land_use_form = forms.SuitabilityForm('land_use')
-        suitability_distance_to_source_form = forms.SuitabilityForm('distance_to_source')
-        suitability_distance_to_well_form = forms.SuitabilityForm('distance_to_well')
-        suitability_hydraulic_conductivity = forms.SuitabilityForm('hydraulic_conductivity')
+def load_tu_mar_gui(request):
+    # if user_field_id == "null":
+    #     return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
+    # else:
+    # user_field_id = int(user_field_id)
+    project_select_form = forms.ToolboxProjectSelectionForm()
+    # user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
+    tu_mar_weightings_form = forms.MarWeightingForm()
+    suitability_aquifer_thickness = forms.SuitabilityForm('aquifer_thickness')
+    suitability_depth_groundwater_form = forms.SuitabilityForm('depth_groundwater')
+    suitability_land_use_form = forms.SuitabilityForm('land_use')
+    suitability_distance_to_source_form = forms.SuitabilityForm('distance_to_source')
+    suitability_distance_to_well_form = forms.SuitabilityForm('distance_to_well')
+    suitability_hydraulic_conductivity = forms.SuitabilityForm('hydraulic_conductivity')
 
-        slider_labels = dict(models.MarSliderDescription.objects.values_list('id', 'name_de').order_by('id'))
-        slider_labels_suitability = dict(models.MarSuitabilitySliderDescription.objects.values_list('id', 'name_de').order_by('id'))
+    slider_labels = dict(models.MarSliderDescription.objects.values_list('id', 'name_de').order_by('id'))
+    slider_labels_suitability = dict(models.MarSuitabilitySliderDescription.objects.values_list('id', 'name_de').order_by('id'))
 
 
-        html = render_to_string('toolbox/tu_mar.html', {
-            # 'sink_form': sink_form, 
-            # 'enlarged_sink_form': enlarged_sink_form,
-            
-            'project_select_form': project_select_form,
-            'tu_mar_weightings_form': tu_mar_weightings_form,
-            'suitability_aquifer_thickness': suitability_aquifer_thickness,
-            'suitability_depth_groundwater_form': suitability_depth_groundwater_form, 
-            'suitability_land_use_form': suitability_land_use_form,
-            'suitability_distance_to_source_form': suitability_distance_to_source_form,
-            'suitability_distance_to_well_form': suitability_distance_to_well_form,
-            'suitability_hydraulic_conductivity': suitability_hydraulic_conductivity,
+    html = render_to_string('toolbox/tu_mar.html', {
+        # 'sink_form': sink_form, 
+        # 'enlarged_sink_form': enlarged_sink_form,
+        
+        'project_select_form': project_select_form,
+        'tu_mar_weightings_form': tu_mar_weightings_form,
+        'suitability_aquifer_thickness': suitability_aquifer_thickness,
+        'suitability_depth_groundwater_form': suitability_depth_groundwater_form, 
+        'suitability_land_use_form': suitability_land_use_form,
+        'suitability_distance_to_source_form': suitability_distance_to_source_form,
+        'suitability_distance_to_well_form': suitability_distance_to_well_form,
+        'suitability_hydraulic_conductivity': suitability_hydraulic_conductivity,
 
-        }, request=request) 
+    }, request=request) 
 
-        return JsonResponse({'success': True, 'html': html, 'slider_labels': slider_labels, 'slider_labels_suitability': slider_labels_suitability})
+    return JsonResponse({'success': True, 'html': html, 'slider_labels': slider_labels, 'slider_labels_suitability': slider_labels_suitability})
 
 def delete_geoserver_layer(workspace, layer_name):
     """

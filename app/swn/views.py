@@ -42,7 +42,8 @@ import random
 
 import time
 import urllib
-# from bs4 import BeautifulSoup
+
+
 
 # dev feature displays all bootstrap colors etc.
 def bootstrap(request):
@@ -57,7 +58,6 @@ def get_csrf_token(request):
         'csrfToken': csrf.get_token(request)
     }
     return JsonResponse(data)
-
 
 
 class IndexView(TemplateView):

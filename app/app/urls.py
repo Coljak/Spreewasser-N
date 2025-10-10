@@ -19,8 +19,6 @@ from drf_spectacular.views import (
 )
 from django.contrib import admin
 from django.urls import path, include
-from swn import views, urls
-# from accounts import views, urls
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -33,7 +31,6 @@ urlpatterns = [
     path('monica/', include('monica.urls')),
     path('klim4cast/', include('klim4cast.urls')),
     path('buek/', include('buek.urls')),
-
     path('api/schema/',
          SpectacularAPIView.as_view(), name='api-schema'),
     path(

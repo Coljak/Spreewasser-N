@@ -190,7 +190,7 @@ class NUTS5000_N1(models.Model):
         return self.nuts_name
 #Regierungsbezirke
 class NUTS5000_N2(models.Model):
-    nuts_code_1 = models.ForeignKey(NUTS5000_N1, on_delete=models.CASCADE, default=3)
+    nuts_code_1 = models.ForeignKey(NUTS5000_N1, on_delete=models.CASCADE)
     objid = models.CharField(max_length=16)
     beginn = models.DateField()
     gf = models.IntegerField()
@@ -203,7 +203,7 @@ class NUTS5000_N2(models.Model):
         return self.nuts_name
     
 class NUTS5000_N3(models.Model):
-    nuts_code_2 = models.ForeignKey(NUTS5000_N2, on_delete=models.CASCADE, default=3)
+    nuts_code_2 = models.ForeignKey(NUTS5000_N2, on_delete=models.CASCADE)
     objid = models.CharField(max_length=16)
     beginn = models.DateField()
     gf = models.IntegerField()

@@ -28,6 +28,7 @@ class ToolboxType(models.Model):
 #      extent = gis_models.PolygonField(srid=25833, null=True, blank=True)
 
 # gw_ezg
+# TODO: not used - delete or geoserver
 class AboveGroundWaters(models.Model):
     uezg_id = models.CharField(max_length=100)
     hapt_ezg = models.CharField(max_length=100, null=True)
@@ -41,6 +42,7 @@ class AboveGroundWaters(models.Model):
         return self.uezg_id
 
 # ezg25 
+# TODO: not used - delete or geoserver
 class BelowGroundWaters(models.Model):
     kennzahl = models.CharField(max_length=16,null=True)
     gewaesser = models.CharField(max_length=60,null=True)
@@ -118,6 +120,7 @@ class ToolboxProject(models.Model):
         }
     
 # Gewnet25
+# TODO: not used - delete or geoserver
 class River(models.Model):
     geom = gis_models.LineStringField()
     name = models.CharField(max_length=255, null=True, blank=True) # w_gn1
@@ -152,6 +155,7 @@ class WaterCoordinationEntity(models.Model):
     short = models.CharField(max_length=4, null=True, blank=True)
     name = models.CharField(max_length=64)
 
+# TODO: not used - delete or geoserver
 class Lake25(models.Model):
     geom = gis_models.PolygonField()
     geb_kz = models.CharField(max_length=16, null=True, blank=True)
@@ -199,7 +203,7 @@ class Lake25(models.Model):
 
 ######################### INJECTION ###########################
 
-    
+# TODO: not used 
 class SinkWeighting(models.Model):
     """
     User's weighting for a sink project
@@ -218,8 +222,8 @@ class SinkWeighting(models.Model):
 
 
 
-class InfiltrationProject(ToolboxProject):
-    weighting = models.ForeignKey(SinkWeighting, on_delete=models.CASCADE, null=True)
+# class InfiltrationProject(ToolboxProject):
+#     weighting = models.ForeignKey(SinkWeighting, on_delete=models.CASCADE, null=True)
 
 
 # DE: Injektion/ Qgis _injektion_diss_4326
@@ -263,6 +267,7 @@ class Landuse(models.Model):
     def __str__(self):
         return self.sink_landuse_name
     
+# TODO: not used - delete or geoserver
 class LanduseMap(models.Model):
     landuse = models.ForeignKey(Landuse, on_delete=models.DO_NOTHING, null=True, related_name='landuse_map')
     vegetation = models.BooleanField(null=True, blank=True) 
@@ -535,6 +540,7 @@ class Aquifer(models.Model):
     name_de = models.CharField(max_length=255, null=True, blank=True)
     name_en = models.CharField(max_length=255, null=True, blank=True)
 
+# Intersect of LandusMap and EnlargedSink -- not in use
 class LanduseSink(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     sink = models.ForeignKey(Sink, on_delete=models.DO_NOTHING, null=True, related_name='sink_landuse')
@@ -547,7 +553,7 @@ class LanduseSink(models.Model):
     def __str__(self):
         return f"{self.sink.id} - {self.landuse.name} ({self.percentage}%)"
     
-# Intersect of LandusMap and EnlargedSink
+# Intersect of LandusMap and EnlargedSink -- not in use
 class LanduseEnlargedSink(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     sink = models.ForeignKey(EnlargedSink, on_delete=models.DO_NOTHING, null=True, related_name='enlarged_sink_landuse')
@@ -570,6 +576,7 @@ class Feasibility(models.Model): # soilstuff
     soil_quality_index = models.IntegerField(null=True) # Ackerzahl
     index_feasibility = models.FloatField(null=True)
 
+# TODO not used - geoserver?
 class Hydrogeology(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
@@ -579,6 +586,7 @@ class Hydrogeology(models.Model):
     shape_length = models.FloatField()
     shape_area = models.FloatField()
 
+# TODO not used - geoserver?
 class HydrogeologySinks(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833)
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
@@ -592,6 +600,7 @@ class HydrogeologySinks(models.Model):
             self.centroid = self.geom.centroid  # Auto-generate centroid
         super().save(*args, **kwargs)
 
+# TODO not used - geoserver?
 class HydrogeologyEnlargedSinks(models.Model):
     geom = gis_models.MultiPolygonField(srid=25833)
     centroid = gis_models.PointField(srid=25833, null=True, blank=True)
@@ -1137,7 +1146,7 @@ class HistoricalWetlands(models.Model):
         }
 
 
-
+# TODO delete ??
 class SinkDifference(models.Model):
     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
@@ -1312,6 +1321,7 @@ class TimeseriesValues(models.Model):
     waterlevel_above_sensor_cm = models.FloatField(null=True, blank=True)
     absolute_water_level_elevation_m = models.FloatField(null=True, blank=True)
 
+# only used for forms
 class MarWeighting(models.Model):
     aquifer_thickness = models.IntegerField(default=5)
     depth_groundwater = models.IntegerField(default=5)

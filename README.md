@@ -48,6 +48,19 @@ To import the database, point the management command to the folder holding the d
 python manage.py db_to_disk --import-dir path/to/db_files
 ```
 
+### 5. Run management commands 
+For the manual import of data run
+for chechglobe 
+```shell
+python manage.py update_chech_globe_data
+```
+for monica's weather data
+```shell
+python manage.py import_all_hincast_data
+python manage.py import_forecast_data
+```
+
+
 ### 5. Thredds Server
 The Thredds server is used to store and serve NetCDF data.
 

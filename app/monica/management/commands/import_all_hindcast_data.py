@@ -7,15 +7,15 @@ import numpy as np
 import dask.array as da
 import os
 from datetime import datetime
-from monica.utils.get_weather_hindcasts import update_hindcast_data
+from monica.utils.get_weather_hindcasts import download_all_hindcast_data
 
 """
 !!!!!!!!!!!!!! DOES NOT WORK FROM ZALF GUEST NETWORK !!!!!!!!!!!!!!!
 """
 class Command(BaseCommand):
-    help = 'Download hindcast data'
+    help = 'Download all hindcast data'
 
     def handle(self, *args, **kwargs):
-        update_hindcast_data()
+        download_all_hindcast_data()
 
         self.stdout.write(self.style.SUCCESS('Successfully downloaded forecast data'))

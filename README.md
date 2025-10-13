@@ -56,7 +56,7 @@ python manage.py update_chech_globe_data
 ```
 for monica's weather data
 ```shell
-python manage.py import_all_hincast_data
+python manage.py import_all_hindcast_data
 python manage.py import_forecast_data
 ```
 

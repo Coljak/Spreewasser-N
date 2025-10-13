@@ -100,3 +100,27 @@ def update_hindcast_data():
             # This error should only occur if the last available date is dec 31st of the current year
             print(f"Error: {e}")
 
+
+def download_all_hindcast_data():
+    start_year = 2007
+    year_now = datetime.now().year
+
+    for year in range(start_year, (year_now + 1)):
+                       
+        for var in VARS:
+            remote_file_path = f'/DWD_SpreeWasser_N/zalf_{var}_amber_{year}_v1-0.nc'
+            local_file_path = f'monica/climate_netcdf/zalf_{var}_amber_{year}_v1-0.nc'
+            download_from_ftps(settings['host'], settings['username'], settings['password'], remote_file_path, local_file_path)
+
+    
+        try:
+            year += 1
+            remote_file_path = f'/DWD_SpreeWasser_N/zalf_{var}_amber_{year}_v1-0.nc'
+            local_file_path = f'monica/climate_netcdf/zalf_{var}_amber_{year}_v1-0.nc'
+            download_from_ftps(settings['host'], settings['username'], settings['password'], remote_file_path, local_file_path)
+            
+        except Exception as e:
+            # This error should only occur if the last available date is dec 31st of the current year
+            print(f"Error: {e}")
+
+    print('Done downloading hindcast data.')

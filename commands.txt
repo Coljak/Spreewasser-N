@@ -43,5 +43,8 @@ git add <resolved files>
 git commit 
 git push
 git checkout dev-3
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> dev-3

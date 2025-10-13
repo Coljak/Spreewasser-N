@@ -116,7 +116,7 @@ function addToInletTable(inlet, connectionId) {
     <td>${((inlet.rating_connection + inlet.index_sink_total)/2)}%</td>
     <td><button class="btn btn-sm btn-primary result-aquifer-recharge hide-connection" data-id="${connectionId}"">Hide</button></td>
     <td><button class="btn btn-sm btn-primary result-aquifer-recharge edit-connection" data-id="${connectionId}">Zuleitung editieren</button></td>
-    <td><button class="btn btn-sm btn-primary result-aquifer-recharge choose-waterbody" data-id="${connectionId}">Gewässer wählen</button></td>
+    
 
   `;
 
@@ -128,14 +128,14 @@ function addToInletTable(inlet, connectionId) {
         toggleConnection(e.target);
       } else if (e.target.classList.contains('edit-connection')) {
         editConnection(e.target);
-      } else if (e.target.classList.contains('choose-waterbody')) {
-        openUserFieldNameModal({
-          title: 'Gewässer auswählen',
-          buttonText: 'Gewässer auswählen',
-          onSubmit: (userFieldName) => {
-            console.log('Selected user field name:', userFieldName);
-          }
-        });
+      // } else if (e.target.classList.contains('choose-waterbody')) {
+      //   openUserFieldNameModal({
+      //     title: 'Gewässer auswählen',
+      //     buttonText: 'Gewässer auswählen',
+      //     onSubmit: (userFieldName) => {
+      //       console.log('Selected user field name:', userFieldName);
+      //     }
+      //   });
       }
     }
 }   );

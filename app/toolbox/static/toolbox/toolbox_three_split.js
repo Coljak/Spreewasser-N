@@ -389,8 +389,8 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
       })
       // .catch(error => console.error("Error fetching data:", error));
     } else {
-      handleAlerts({ success: false, message: 'Please select a user field!' });
-    }
+        handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'})
+      }
   };
 
 // Sieker
@@ -426,8 +426,8 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
       })
       .catch(error => console.error("Error fetching data:", error));
     } else {
-      handleAlerts({ success: false, message: 'Please select a user field!' });
-    }
+        handleAlerts({success: false, message: 'Bitte wählen Sie ein Suchgebiet aus!'})
+      }
   };
 
 
@@ -457,8 +457,8 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
       })
       // .catch(error => console.error("Error fetching data:", error));
     } else {
-      handleAlerts({ success: false, message: 'Please select a user field!' });
-    }
+        handleAlerts({success: false, message: 'Bitte wählen Sie ein Suchgebiet aus!'})
+      }
   };
 
 
@@ -496,8 +496,8 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
       })
       // .catch(error => console.error("Error fetching data:", error));
     } else {
-      handleAlerts({ success: false, message: 'Please select a user field!' });
-    }
+        handleAlerts({success: false, message: 'Bitte wählen Sie ein Suchgebiet aus!'})
+      }
   };                              
 
 
@@ -534,16 +534,17 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
       })
       // .catch(error => console.error("Error fetching data:", error));
     } else {
-      handleAlerts({ success: false, message: 'Please select a user field!' });
-    }
+        handleAlerts({success: false, message: 'Bitte wählen Sie ein Suchgebiet aus!'})
+      }
   };
 
   // TU-Berlin
   function startTuMar() {
     const userField = ToolboxProject.loadFromLocalStorage().userField;
-      if (userField) {
+      // if (userField) {
       
-        fetch('load_tu_mar_gui/' + userField + '/')
+        // fetch('load_tu_mar_gui/' + userField + '/')
+        fetch('load_tu_mar_gui/')
         .then(response => response.json())
         .then(data => {
           if (!data.success) {
@@ -568,7 +569,9 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
         .then(data => {
           initializeTuMar(data);
         })
-      }
+      // } else {
+      //   handleAlerts({success: false, message: 'Bitte wählen Sie ein Suchgebiet aus!'})
+      // }
   }
 
 

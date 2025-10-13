@@ -53,6 +53,11 @@ class MapSoilCLCAdmin(LeafletGeoAdmin):
 
     def get_corine_landcover_code_name(self, obj):
         return obj.corine_landcover_code.__str__() if obj.corine_landcover_code else "No CLC Assigned"
+class CLCMap2018Admin(admin.ModelAdmin):
+    list_display = ('id', 'geom', 'code_18', 'fid', 'objectid')
+    list_filter = ('code_18', 'fid', 'objectid')
+
+
     
 
 admin.site.register(models.BulkDensityClass, BulkDensityClassAdmin)
@@ -66,3 +71,5 @@ admin.site.register(models.CorineLandCover2018, CorineLandCover2018Admin)
 admin.site.register(models.SoilProfile, SoilProfileAdmin)
 admin.site.register(models.SoilProfileHorizon, SoilProfileHorizonAdmin)
 admin.site.register(models.MapSoilCLC, MapSoilCLCAdmin)
+admin.site.register(models.CLCMap2018, CLCMap2018Admin)
+

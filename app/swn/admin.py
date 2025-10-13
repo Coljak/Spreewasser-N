@@ -53,8 +53,9 @@ class UserAdmin(BaseUserAdmin):
 class UserFieldAdmin(LeafletGeoAdmin):
     list_display = ('id', 'user', 'name')
 
-admin.site.register(models.ProjectRegion, LeafletGeoAdmin)
 
+
+admin.site.register(models.ProjectRegion, LeafletGeoAdmin)
 admin.site.register(models.UserField, UserFieldAdmin)
 admin.site.register(models.SwnProject, ModelAdmin)
 admin.site.register(models.NUTS5000_N1, LeafletGeoAdmin)

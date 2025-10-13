@@ -1146,27 +1146,27 @@ class HistoricalWetlands(models.Model):
         }
 
 
-# TODO delete ??
-class SinkDifference(models.Model):
-    geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-    geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
-    geom_remaining = gis_models.PolygonField(srid=25833, null=True, blank=True)
-    geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
-    fid = models.FloatField(null=True, blank=True)
-    volume = models.FloatField(null=True, blank=True)
-    area = models.FloatField(null=True, blank=True)
-    sink_depth = models.FloatField(null=True, blank=True)
-    max_elevation = models.FloatField(null=True, blank=True)
-    min_elevation = models.FloatField(null=True, blank=True)
-    urbanarea = models.CharField(max_length=100, null=True, blank=True)
-    urbanarea_percent = models.FloatField(null=True, blank=True)
-    wetlands = models.CharField(max_length=100, null=True, blank=True)
-    wetlands_percent = models.FloatField(null=True, blank=True)
-    avg_depth = models.FloatField(null=True, blank=True)
-    distance_t = models.FloatField(null=True, blank=True)
-    dist_lake = models.CharField(max_length=100, null=True, blank=True)
-    umsetzbark = models.CharField(max_length=100, null=True, blank=True)
-    waterdist = models.CharField(max_length=100, null=True, blank=True)
+# # TODO delete ??
+# class SinkDifference(models.Model):
+#     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+#     geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
+#     geom_remaining = gis_models.PolygonField(srid=25833, null=True, blank=True)
+#     geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
+#     fid = models.FloatField(null=True, blank=True)
+#     volume = models.FloatField(null=True, blank=True)
+#     area = models.FloatField(null=True, blank=True)
+#     sink_depth = models.FloatField(null=True, blank=True)
+#     max_elevation = models.FloatField(null=True, blank=True)
+#     min_elevation = models.FloatField(null=True, blank=True)
+#     urbanarea = models.CharField(max_length=100, null=True, blank=True)
+#     urbanarea_percent = models.FloatField(null=True, blank=True)
+#     wetlands = models.CharField(max_length=100, null=True, blank=True)
+#     wetlands_percent = models.FloatField(null=True, blank=True)
+#     avg_depth = models.FloatField(null=True, blank=True)
+#     distance_t = models.FloatField(null=True, blank=True)
+#     dist_lake = models.CharField(max_length=100, null=True, blank=True)
+#     umsetzbark = models.CharField(max_length=100, null=True, blank=True)
+#     waterdist = models.CharField(max_length=100, null=True, blank=True)
 
     
 

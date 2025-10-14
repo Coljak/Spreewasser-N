@@ -54,7 +54,7 @@ class MapSoilCLCAdmin(LeafletGeoAdmin):
     def get_corine_landcover_code_name(self, obj):
         return obj.corine_landcover_code.__str__() if obj.corine_landcover_code else "No CLC Assigned"
 class CLCMap2018Admin(admin.ModelAdmin):
-    list_display = ('id', 'geom', 'code_18', 'fid', 'objectid')
+    list_display = ('id','code_18', 'fid', 'objectid')
     list_filter = ('code_18', 'fid', 'objectid')
 
 

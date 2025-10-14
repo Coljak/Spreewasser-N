@@ -38,32 +38,17 @@ const layerNames = {
   'hydraulic_conductivity': 'spreewassern_raster:hydraulic_conductivity_classified_v1',
   }
 
-export function initializeTuMar(data) {
-  console.log('initializeTuMar')
-  
- let wmsOverlayLayer = L.tileLayer()
- let legend;
+let wmsOverlayLayer = L.tileLayer()
 
-  function getTileOverlay(wmsLayerName) {
-    wmsOverlayLayer.remove()
-    removeLegendFromMap(map)
-    wmsOverlayLayer = L.tileLayer.wms(wmsGwcUrl, {
-    layers: wmsLayerName,
-    pane: 'overlayRasterPane',
-    format: "image/png",
-    transparent: true,
-    tileSize: 256,   // ⬅️ important, reduces tile resampling artifacts
-    keepBuffer: 10,  // ⬅️ keeps more tiles around when zooming
-    updateWhenZooming: false, // don’t request tiles mid-zoom
-    _t: Date.now() // this is only a cache buster for rasters that chance
-  }).addTo(map);
-
+function addLegendForWms(wmsLayerName) {
   const legend = L.control.Legend({
     position: "bottomleft"
   });
   legend.onAdd = function (map) {
       var div = L.DomUtil.create("div", "leaflet-legend leaflet-bar");
       var url = `${wmsGwcUrl}?REQUEST=GetLegendGraphic&VERSION=1.1.1&FORMAT=image/png&LAYER=${wmsLayerName}`;
+     
+      
       div.innerHTML +=
         "<img src=" +
         url +
@@ -71,10 +56,32 @@ export function initializeTuMar(data) {
       return div;
     };
   legend.addTo(map)
-
 };
 
+function getTileOverlay(wmsLayerName) {
+  wmsOverlayLayer.remove()
+  removeLegendFromMap(map)
+  wmsOverlayLayer = L.tileLayer.wms('/toolbox/proxy/wms/', {
+  layers: wmsLayerName,
+  pane: 'overlayRasterPane',
+  format: "image/png",
+  transparent: true,
+  tileSize: 256,   
+  keepBuffer: 10,  
+  updateWhenZooming: false, // don’t request tiles mid-zoom
+  _t: Date.now() // this is only a cache buster - necessary to alter request 
+}).addTo(map);
 
+addLegendForWms(wmsLayerName)
+  
+  
+}
+
+
+
+export function initializeTuMar(data) {
+  console.log('initializeTuMar')
+  
 
   console.log('data', data)
   const sliderLabelsWeighting = data.sliderLabels;
@@ -92,7 +99,6 @@ export function initializeTuMar(data) {
   $('#toolboxPanel').off('click');
 
     initializeSliders();
-  // initializeSliders();
       
   const weightingForm = document.querySelector('.weighting-form')
   const weightingSliders = weightingForm.querySelectorAll('input.single-slider');
@@ -127,10 +133,6 @@ export function initializeTuMar(data) {
 
     addClickEventListenerToToolboxPanel(TuMar)
 
-    // $('#toolboxPanel').on('input', function (event) {
-
-    // }
-
 
     $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
@@ -150,17 +152,18 @@ export function initializeTuMar(data) {
     } else if ($target.hasClass('toggle-tile-layer')) {
       const dataType = $target.data('type')
       if ($target.hasClass('shown')) {
-        $target.removeClass('shown')
-        $target.text('einblenden')
-        wmsOverlayLayer.remove()
-        removeLegendFromMap(map)
+        $('button.toggle-tile-layer').removeClass('shown');
+        $('button.toggle-tile-layer').text('einblenden')
+        document.querySelector('.leaflet-overlayRaster-pane').hidden = true;
+        document.querySelector('.leaflet-legend').hidden = true; 
       } else {
-        $target.text('ausblenden')
+        $('button.toggle-tile-layer').text('ausblenden')
+        $('button.toggle-tile-layer').addClass('shown');
         
-        getTileOverlay(layerNames[dataType])
+        document.querySelector('.leaflet-overlayRaster-pane').hidden = false;
+        document.querySelector('.leaflet-legend').hidden = false; 
         $target.addClass('shown')
       }
-      // wmsTestLayer.addTo(map);
       
     } else if ($target.is('a.nav-link')) {
       const sustainibilityType = $target.data('type');
@@ -168,7 +171,13 @@ export function initializeTuMar(data) {
       removeLegendFromMap(map)
       if (sustainibilityType) {
         console.log('sustainibility type', sustainibilityType, 'tiff and legend' )
-        
+          getTileOverlay(layerNames[sustainibilityType])
+          if(!$('button.toggle-tile-layer').hasClass('shown')){
+            console.log('IS not shown')
+            document.querySelector('.leaflet-legend').hidden = true; 
+          } else {
+            document.querySelector('.leaflet-legend').hidden = false;
+          }
         
       }
     } else if ($target.hasClass('calculate-area')) {

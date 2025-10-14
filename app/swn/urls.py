@@ -3,7 +3,6 @@ from django.urls import include, path
 from django.conf import settings
 
 from django.contrib.auth.views import LoginView, LogoutView
-from djgeojson.views import GeoJSONLayerView
 from . import views
 from . import models
 

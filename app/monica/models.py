@@ -1939,7 +1939,7 @@ class SeedHarvestDates(models.Model):
     
 
     def __str__(self):
-        return f"Winter Wheat - {self.seed_harvest_dates}"
+        return f"Winter Wheat - {self.crop_txt}"
 
            
 class DWDGridAsPolygon(models.Model):

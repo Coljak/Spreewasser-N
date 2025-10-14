@@ -27,8 +27,9 @@ services:
       # - ./thredds_data/data:/app/thredds_data
     command: 
       sh -c "python3 manage.py wait_for_db &&
-      python3 manage.py migrate &&
-      python3 manage.py runserver 0.0.0.0:8000"
+      python3 manage.py migrate"
+      #&&
+      #python3 manage.py runserver 0.0.0.0:8000"
         
     environment:
       - DEV=true
@@ -48,7 +49,7 @@ services:
       
     container_name: swn_geo_django
     # if the container does not run, this line delays the runserver command
-    entrypoint: ["sh", "-c", "sleep 2073600"]
+    # entrypoint: ["sh", "-c", "sleep 2073600"]
     depends_on:
       - db
     networks:

@@ -3,7 +3,6 @@ from django.urls import include, path
 from django.conf import settings
 
 from django.contrib.auth.views import LoginView, LogoutView
-from djgeojson.views import GeoJSONLayerView
 from . import views
 from . import models
 
@@ -44,6 +43,6 @@ urlpatterns = [
     path('toolbox/filter_sieker_wetlands/', views.filter_sieker_wetlands, name='filter_sieker_wetland'),
     path('toolbox/load_tu_mar_gui/', views.load_tu_mar_gui, name='load_tu_mar_gui' ),
     path('toolbox/mar_calculate_area/', views.mar_calculate_area, name='mar_calculate_area'),
-    path('proxy/wms/', views.geoserver_wms, name='geoserver_wms'),
+    path('toolbox/proxy/wms/', views.geoserver_wms, name='geoserver_wms'),
 
 ]

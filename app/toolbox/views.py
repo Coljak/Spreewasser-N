@@ -1438,7 +1438,7 @@ def mar_calculate_area(request):
     if request.method == 'POST':
         project = json.loads(request.body)
         print('Project:', project)
-        user_field = models.UserField.objects.get(pk=project['userField'])
+        # user_field = models.UserField.objects.get(pk=project['userField'])
         
 
         map_labels = models.MapLabels.objects.all()
@@ -1483,10 +1483,10 @@ ALLOWED_WMS_PARAMS = {
 }
 
 def geoserver_wms(request):
-    geoserver_url = f"{settings.GEOSERVER_URL}/geoserver/wms"
-    
-    print('request:', request.GET.dict())
+    geoserver_url = f"{settings.GEOSERVER_URL}/spreewassern_raster/wms"
+
     params = request.GET.dict()
+    print("Received WMS request with params:", params)
     # Keep only allowed WMS params
     wms_params = {k: v for k, v in params.items() if k in ALLOWED_WMS_PARAMS}
 
@@ -1499,26 +1499,3 @@ def geoserver_wms(request):
         response.content,
         content_type=response.headers.get("Content-Type")
     )
-
-    
-def wms_django_passthrough_wms(request, netcdf):
-    """
-    Incoming requests are passed through to the Thredds server.
-    """
-    # netcdf += '.nc'
-    print("klim4cast.views.timelapse_django_passthrough_wms", netcdf)
-    url = settings.GEOSERVER_URL
-    
-    params = request.GET.dict()
-    
-    # TIFF WMS
-    try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        print("response.headers['Content-Type']", response.headers['Content-Type'])
-        # Return the response content to the frontend
-        return HttpResponse(response.content, content_type=response.headers['Content-Type'])
-    except requests.RequestException as e:
-        # Handle request exception, e.g., log the error
-        print(f"Error: {e}")
-        return HttpResponse(f"Error: {e}", content_type='text/plain')

@@ -168,7 +168,7 @@ export function initializeTuMar(data) {
       removeLegendFromMap(map)
       if (sustainibilityType) {
         console.log('sustainibility type', sustainibilityType, 'tiff and legend' )
-        
+        $('button[data-type="' + sustainibilityType + '"]').trigger('click');
         
       }
     } else if ($target.hasClass('calculate-area')) {

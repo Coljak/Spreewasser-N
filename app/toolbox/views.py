@@ -1361,7 +1361,7 @@ def compute_suitability_from_tifs(suitability_dict, user):
     
         # out_masked, out_transform = mask(ref, [user_field.geom25833.geojson], crop=False, invert=False, indexes=1, nodata=np.nan, filled=False)
 
-    with rasterio.open('toolbox/mar_raster_files/nogo_area_mask.tif') as mask:
+    with rasterio.open('raster_data/no_injection_area_mask.tif') as mask:
         nogo_mask = mask.read(1)
         dst_crs = mask.crs
         dst_transform = mask.transform

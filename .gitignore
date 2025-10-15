@@ -171,6 +171,10 @@ geoserver__/
 geoserver/
 geoserver/data/user_projections/epsg.properties
 
+# GeoServer data directories to ignore
+geoserver/data/logs/
+geoserver/data/security/
+
 # local files and folders for data import 
 raster_polygons.geojson
 # climate_data/

@@ -1471,6 +1471,7 @@ ALLOWED_WMS_PARAMS = {
     "request",
     "version",
     "layers",
+    "layer",
     "styles",
     "bbox",
     "width",
@@ -1479,7 +1480,8 @@ ALLOWED_WMS_PARAMS = {
     "crs",
     "format",
     "transparent",
-    "CQL_FILTER",
+    
+    "qcl_filter",
 }
 
 def geoserver_wms(request):
@@ -1488,7 +1490,10 @@ def geoserver_wms(request):
     params = request.GET.dict()
     print("Received WMS request with params:", params)
     # Keep only allowed WMS params
-    wms_params = {k: v for k, v in params.items() if k in ALLOWED_WMS_PARAMS}
+    
+
+    wms_params = {k: v for k, v in params.items() if k.lower() in ALLOWED_WMS_PARAMS}
+    print("Forwarding params to GeoServer:", wms_params)
 
     response = requests.get(
         geoserver_url,

@@ -20,14 +20,9 @@ import {TuMar} from '/static/toolbox/tu_mar_model.js';
 import { Layers } from '/static/toolbox/layers.js';
 
 
-// const legendSettings = {
-//     'header': 'Senkeneignung',
-//     'grades': [1, 0.75, 0.5, 0.25, 0],
-//     'gradientLabels': [' 100%', ' 75%', ' 50%', ' 25%', ' 0%']
-// } 
-// const wmsGwcUrl = "http://localhost:8080/geoserver/gwc/service/wms"
-const wmsGwcUrl = "http://localhost:8080/geoserver/spreewassern_raster/wms"
-// const wmsLayerName = "spreewassern_raster:clc_buek_4326_100m_buek_clc"
+
+const wmsGwcUrl = '/toolbox/proxy/wms/'
+
 const layerNames = {
   'result': `spreewassern_raster:${userId}_mar_result`,
   'aquifer_thickness':'spreewassern_raster:aquifer_classified_v1',

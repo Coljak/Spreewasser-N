@@ -1,0 +1,22 @@
+<layer>
+  <name>depth_to_gw_classified_v1</name>
+  <id>LayerInfoImpl--37416f30:1999556b74e:-70e7</id>
+  <type>RASTER</type>
+  <defaultStyle>
+    <id>StyleInfoImpl--37416f30:1999556b74e:-70ef</id>
+  </defaultStyle>
+  <styles class="linked-hash-set">
+    <style>
+      <id>StyleInfoImpl--37416f30:1999556b74e:-70ef</id>
+    </style>
+  </styles>
+  <resource class="coverage">
+    <id>CoverageInfoImpl--37416f30:1999556b74e:-70e8</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2025-09-30 12:35:00.515 UTC</dateCreated>
+  <dateModified>2025-09-30 13:24:08.279 UTC</dateModified>
+</layer>

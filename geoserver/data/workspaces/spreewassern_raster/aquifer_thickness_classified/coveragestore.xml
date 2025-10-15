@@ -1,0 +1,14 @@
+<coverageStore>
+  <id>CoverageStoreInfoImpl--37416f30:1999556b74e:-70ea</id>
+  <name>aquifer_thickness_classified</name>
+  <type>GeoTIFF</type>
+  <enabled>true</enabled>
+  <workspace>
+    <id>WorkspaceInfoImpl-e06781c:19985bd5ad8:-7fe9</id>
+  </workspace>
+  <__default>false</__default>
+  <dateCreated>2025-09-30 12:31:18.926 UTC</dateCreated>
+  <dateModified>2025-09-30 12:31:43.845 UTC</dateModified>
+  <disableOnConnFailure>false</disableOnConnFailure>
+  <url>file:///opt/geoserver_data/raster_data/aquifer_classified_v1.tif</url>
+</coverageStore>

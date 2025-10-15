@@ -1,0 +1,16 @@
+<layer>
+  <name>buek_map_soil_clc</name>
+  <id>LayerInfoImpl-76afd097:192d1e34acb:-7ffb</id>
+  <type>VECTOR</type>
+  <defaultStyle>
+    <id>StyleInfoImpl-4bc4348b:18afa3371a0:-7ffe</id>
+  </defaultStyle>
+  <resource class="featureType">
+    <id>FeatureTypeInfoImpl-76afd097:192d1e34acb:-7ffc</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2024-10-28 12:55:46.40 UTC</dateCreated>
+</layer>

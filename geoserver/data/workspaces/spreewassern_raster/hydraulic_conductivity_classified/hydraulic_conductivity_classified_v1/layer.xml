@@ -1,0 +1,22 @@
+<layer>
+  <name>hydraulic_conductivity_classified_v1</name>
+  <id>LayerInfoImpl--37416f30:1999556b74e:-70db</id>
+  <type>RASTER</type>
+  <defaultStyle>
+    <id>StyleInfoImpl--37416f30:1999556b74e:-70ec</id>
+  </defaultStyle>
+  <styles class="linked-hash-set">
+    <style>
+      <id>StyleInfoImpl--37416f30:1999556b74e:-70ec</id>
+    </style>
+  </styles>
+  <resource class="coverage">
+    <id>CoverageInfoImpl--37416f30:1999556b74e:-70dc</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2025-09-30 13:06:06.177 UTC</dateCreated>
+  <dateModified>2025-09-30 13:21:02.279 UTC</dateModified>
+</layer>

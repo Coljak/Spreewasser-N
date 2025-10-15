@@ -1,0 +1,17 @@
+<layer>
+  <name>aquifer_classified_v1</name>
+  <id>LayerInfoImpl--37416f30:1999556b74e:-70e1</id>
+  <type>RASTER</type>
+  <defaultStyle>
+    <id>StyleInfoImpl--37416f30:1999556b74e:-705c</id>
+  </defaultStyle>
+  <resource class="coverage">
+    <id>CoverageInfoImpl--37416f30:1999556b74e:-70e2</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2025-09-30 12:49:54.873 UTC</dateCreated>
+  <dateModified>2025-09-30 13:40:03.60 UTC</dateModified>
+</layer>

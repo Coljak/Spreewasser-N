@@ -1,0 +1,19 @@
+<layer>
+  <name>9_mar_result</name>
+  <id>LayerInfoImpl--1326ac42:1999f683b9e:-55e0</id>
+  <type>RASTER</type>
+  <defaultStyle>
+    <id>StyleInfoImpl--1326ac42:1999f683b9e:-7fd0</id>
+  </defaultStyle>
+  <resource class="coverage">
+    <id>CoverageInfoImpl--1326ac42:1999f683b9e:-55e1</id>
+  </resource>
+  <queryable>true</queryable>
+  <opaque>false</opaque>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2025-10-15 10:57:59.125 UTC</dateCreated>
+  <dateModified>2025-10-15 10:57:59.150 UTC</dateModified>
+</layer>

@@ -1,0 +1,22 @@
+<layer>
+  <name>dgm200_utm32s</name>
+  <id>LayerInfoImpl--1326ac42:1999f683b9e:-7763</id>
+  <type>RASTER</type>
+  <defaultStyle>
+    <id>StyleInfoImpl--1326ac42:1999f683b9e:-63f0</id>
+  </defaultStyle>
+  <styles class="linked-hash-set">
+    <style>
+      <id>StyleInfoImpl--1326ac42:1999f683b9e:-63f0</id>
+    </style>
+  </styles>
+  <resource class="coverage">
+    <id>CoverageInfoImpl--1326ac42:1999f683b9e:-7764</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2025-10-06 11:41:07.881 UTC</dateCreated>
+  <dateModified>2025-10-06 15:15:28.133 UTC</dateModified>
+</layer>

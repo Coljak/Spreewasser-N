@@ -176,7 +176,7 @@ cython_debug/
 data_temp/
 database/
 notes/
-geoserver/
+
 model_exports/
 
 # Django stuff
@@ -185,6 +185,10 @@ migrations/
 #sass
 .sass-cache/
 
+
+# GeoServer data directories to ignore
+geoserver/data/logs/
+geoserver/data/security/
 
 # local files and folders for data import 
 raster_polygons.geojson

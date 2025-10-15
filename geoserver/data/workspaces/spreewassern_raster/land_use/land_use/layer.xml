@@ -1,0 +1,22 @@
+<layer>
+  <name>land_use</name>
+  <id>LayerInfoImpl--37416f30:1999556b74e:-70d9</id>
+  <type>RASTER</type>
+  <defaultStyle>
+    <id>StyleInfoImpl--37416f30:1999556b74e:-70eb</id>
+  </defaultStyle>
+  <styles class="linked-hash-set">
+    <style>
+      <id>StyleInfoImpl--37416f30:1999556b74e:-70eb</id>
+    </style>
+  </styles>
+  <resource class="coverage">
+    <id>CoverageInfoImpl--37416f30:1999556b74e:-70da</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2025-09-30 13:09:28.55 UTC</dateCreated>
+  <dateModified>2025-09-30 13:21:58.371 UTC</dateModified>
+</layer>

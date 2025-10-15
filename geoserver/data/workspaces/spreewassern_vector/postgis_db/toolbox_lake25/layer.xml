@@ -1,0 +1,16 @@
+<layer>
+  <name>toolbox_lake25</name>
+  <id>LayerInfoImpl-e06781c:19985bd5ad8:-7fec</id>
+  <type>VECTOR</type>
+  <defaultStyle>
+    <id>StyleInfoImpl-4bc4348b:18afa3371a0:-7ffe</id>
+  </defaultStyle>
+  <resource class="featureType">
+    <id>FeatureTypeInfoImpl-e06781c:19985bd5ad8:-7fed</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2025-09-26 12:20:27.200 UTC</dateCreated>
+</layer>

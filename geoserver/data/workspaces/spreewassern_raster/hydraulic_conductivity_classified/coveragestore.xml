@@ -1,0 +1,14 @@
+<coverageStore>
+  <id>CoverageStoreInfoImpl--37416f30:1999556b74e:-70e3</id>
+  <name>hydraulic_conductivity_classified</name>
+  <type>GeoTIFF</type>
+  <enabled>true</enabled>
+  <workspace>
+    <id>WorkspaceInfoImpl-e06781c:19985bd5ad8:-7fe9</id>
+  </workspace>
+  <__default>false</__default>
+  <dateCreated>2025-09-30 12:42:52.222 UTC</dateCreated>
+  <dateModified>2025-09-30 12:43:02.177 UTC</dateModified>
+  <disableOnConnFailure>false</disableOnConnFailure>
+  <url>file:///opt/geoserver_data/raster_data/hydraulic_conductivity_classified_v1.tif</url>
+</coverageStore>

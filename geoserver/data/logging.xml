@@ -1,0 +1,7 @@
+
+<logging>
+  <level>DEFAULT_LOGGING</level>
+  <location>/opt/geoserver_data/data/logs/geoserver.log</location>
+  <stdOutLogging>true</stdOutLogging>
+</logging>
+

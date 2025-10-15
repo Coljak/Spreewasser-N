@@ -1,0 +1,16 @@
+<layer>
+  <name>swn_buek</name>
+  <id>LayerInfoImpl--22903d11:18afa7460a5:-6bb3</id>
+  <type>VECTOR</type>
+  <defaultStyle>
+    <id>StyleInfoImpl-4bc4348b:18afa3371a0:-7ffe</id>
+  </defaultStyle>
+  <resource class="featureType">
+    <id>FeatureTypeInfoImpl--22903d11:18afa7460a5:-6bb4</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2023-10-05 12:38:44.305 UTC</dateCreated>
+</layer>

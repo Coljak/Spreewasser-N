@@ -48,6 +48,7 @@ export class ToolboxProject {
       // Optionally update local id and mark as saved
       if (data.id) this.id = data.id;
       this.isSaved = true;
+      this.saveToLocalStorage();
       console.log('Project saved to backend');
       return data;
     } catch (err) {

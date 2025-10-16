@@ -78,93 +78,83 @@ document.addEventListener("DOMContentLoaded", () => {
     
   });
 
-  $('#saveToolboxProjectButton').on('click', () => {
-    console.log('saveToolboxProjectButton clicked');
-    
-      // Get the project name field
-      const projectNameInput = $('#id_project_name');
-      const projectName = projectNameInput.val().trim();
+  $('#saveToolboxProjectButton').on('click', async () => {
+  console.log('saveToolboxProjectButton clicked');
   
-      // Check if the project name is empty
-      if (!projectName) {
-          projectNameInput.addClass('is-invalid'); // Bootstrap class for red highlight
-          projectNameInput.focus();
-          return; // Stop execution if validation fails
-      } else {
-          projectNameInput.removeClass('is-invalid'); // Remove error class if fixed
-      }
-      const project = new ToolboxProject();
-  
-      try {
-          project.userField = $('#userFieldSelect').val();
-      } catch (e) {
-          console.log('UserField not found');
-      }
+  const projectNameInput = $('#id_project_name');
+  const projectName = projectNameInput.val().trim();
 
-      try {
-        project.toolboxType = $('#projectTypeSelect').val();
-    } catch (e) {
-        console.log('ProjectType not found');
-    }
-  
-      project.name = projectName;
-      project.description = $('#id_project_description').val();
-  
-      project.saveToLocalStorage();
-  
-      fetch('save-project/', {
-          method: 'POST',
-          body: JSON.stringify(project),
-          headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCSRFToken(),
-          }
-      })
-      .then(response => response.json())
-      .then(data => {
-          console.log('data', data);
-          if (data.message.success) {
-              project.id = data.project_id;
-              // $('#project-info').find('.card-title').text('Project '+ data.project_name);
-              // addToDropdown(data.project_id, data.project_name, document.querySelector('.toolbox-project.form-select'));
-              // updateDropdown('toolbox-project', data.project_id);
-              handleAlerts(data.message);
-              $('#toolboxProjectModal').modal('hide');
-              project.saveToLocalStorage();
+  // Validate project name
+  if (!projectName) {
+    projectNameInput.addClass('is-invalid');
+    projectNameInput.focus();
+    return;
+  } else {
+    projectNameInput.removeClass('is-invalid');
+  }
 
-              if (data.project_type === 'infiltration'){
-                console.log('startInfiltration saved');
-
-                startInfiltration()
-              } else if (data.project_type === 'injection'){
-                console.log('startInjection saved');
-                startTuMar();
-                // startInjection()
-              } else if (data.project_type === 'sieker_surface_waters'){ 
-                console.log('startSurfaceWaters saved');
-                startSurfaceWaters();
-              } else if (data.project_type === 'sieker_sink'){
-                startSiekerSinks();
-              } else if (data.project_type === 'sieker_gek'){
-                console.log('startGek clicked');
-                startSiekerGeks();
-              } else if (data.project_type === 'sieker_wetland'){
-                console.log('startFormerWetlands saved');
-                startFormerWetlands();
-              } else if (data.project_type === 'drainage'){
-                console.log('startDrainage saved');
-                // startDrainage()
-              };
-
-              
-              // $('.new-project-modal-form')[0].reset();
-           
-              
-          } else {
-              handleAlerts(data.message);
-          }
-      });
+  // Create new project object
+  const project = new ToolboxProject({
+    name: projectName,
+    userField: $('#userFieldSelect').val(),
+    toolboxType: $('#projectTypeSelect').val(),
+    description: $('#id_project_description').val() // <-- was `=` before (typo)
   });
+
+  project.saveToLocalStorage();
+
+  try {
+    const data = await project.saveToDB(); // 👈 replaces your manual fetch call
+    console.log('data', data);
+
+    if (data.message.success) {
+      project.id = data.project_id;
+      project.isSaved = true;
+      project.saveToLocalStorage();
+
+      handleAlerts(data.message);
+      $('#toolboxProjectModal').modal('hide');
+
+      // Trigger correct start function
+      switch (data.project_type) {
+        case 'infiltration':
+          console.log('startInfiltration saved');
+          startInfiltration();
+          break;
+        case 'injection':
+          console.log('startInjection saved');
+          startTuMar();
+          break;
+        case 'sieker_surface_waters':
+          console.log('startSurfaceWaters saved');
+          startSurfaceWaters();
+          break;
+        case 'sieker_sink':
+          startSiekerSinks();
+          break;
+        case 'sieker_gek':
+          console.log('startGek clicked');
+          startSiekerGeks();
+          break;
+        case 'sieker_wetland':
+          console.log('startFormerWetlands saved');
+          startFormerWetlands();
+          break;
+        case 'drainage':
+          console.log('startDrainage saved');
+          // startDrainage();
+          break;
+      }
+    } else {
+      handleAlerts(data.message);
+    }
+
+  } catch (err) {
+    console.error('Failed to save project:', err);
+    handleAlerts({ success: false, message: 'Error saving project.' });
+  }
+});
+
 
 
 const demBounds = [

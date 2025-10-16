@@ -187,33 +187,64 @@ def load_toolbox_project(request, id):
         return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
 
 
-def save_toolbox_project(request, project_id=None):
-    print("CREATE Toolbox PROJECT\n", request.POST)
-    if request.method == 'POST':
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from . import models
+
+@csrf_exempt  # remove this if you're already handling CSRF in JS correctly
+def save_toolbox_project(request):
+    if request.method != 'POST':
+        return JsonResponse({'message': {'success': False, 'message': 'Invalid request method'}}, status=405)
+
+    try:
         user = request.user
-        
         project_data = json.loads(request.body)
+
         toolbox_type = models.ToolboxType.objects.get(name_tag=project_data['toolboxType'])
         user_field = models.UserField.objects.get(pk=project_data['userField'])
 
-        project = models.ToolboxProject.objects.create(
-            name=project_data['name'],
-            user=user,
-            toolbox_type=toolbox_type,
-            user_field=user_field,
-            description=project_data['description']
-        )
-        project.save()
+        # --- UPDATE CASE ---
+        if  project_data.get('id'):
+            pid = project_data.get('id')
+            try:
+                project = models.ToolboxProject.objects.get(pk=pid, user=user)
+                project.name = project_data.get('name', project.name)
+                project.description = project_data.get('description', project.description)
+                project.toolbox_type = toolbox_type
+                project.user_field = user_field
+                project.save()
+
+                message = f'Project {project.name} updated'
+                status = 200
+
+            except models.ToolboxProject.DoesNotExist:
+                return JsonResponse({'message': {'success': False, 'message': 'Project not found'}}, status=404)
+
+        # --- CREATE CASE ---
+        else:
+            project = models.ToolboxProject.objects.create(
+                name=project_data['name'],
+                user=user,
+                toolbox_type=toolbox_type,
+                user_field=user_field,
+                description=project_data.get('description', '')
+            )
+            project.save()
+            message = f'Project {project.name} created'
+            status = 201
 
         return JsonResponse({
-            'message': {
-                'success': True, 
-                'message': f'Project {project.name} saved'
-                }, 
-                'project_id': project.id, 
-                'project_name': project.name,
-                'project_type': project.toolbox_type.name_tag,
-                })
+            'message': {'success': True, 'message': message},
+            'project_id': project.id,
+            'project_name': project.name,
+            'project_type': project.toolbox_type.name_tag,
+        }, status=status)
+
+    except Exception as e:
+        print('Error saving project:', e)
+        return JsonResponse({'message': {'success': False, 'message': str(e)}}, status=400)
+
     
 
 @login_required

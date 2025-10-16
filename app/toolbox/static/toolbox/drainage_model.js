@@ -1,9 +1,9 @@
 import { ToolboxProject } from './toolbox_project.js';
 
-export class SiekerWetland extends ToolboxProject {
+export class Drainage {
     constructor (data = {}) {
         super(data);
-        this.toolboxType = 'sieker_wetland';
+        this.toolboxType = 'drainage';
         // this.id = data.id ?? null;
         // this.userField = data.userField ?? null;
 
@@ -18,11 +18,11 @@ export class SiekerWetland extends ToolboxProject {
         this.all_sieker_wetland_measure_ids = data.all_sieker_wetland_measure_ids ?? [];
         this.selected_sieker_wetland_measures = data.selected_sieker_wetland_measures ?? [];
     }
-
+   
 
     static fromJson(json) {
-      return new SiekerWetland(json);
+      return new Drainage(json);
     }
-};
 
-ToolboxProject.registerSubclass('sieker_wetland', SiekerWetland);
+};
+ToolboxProject.registerSubclass('drainage', Drainage);

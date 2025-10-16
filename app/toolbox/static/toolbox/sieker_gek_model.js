@@ -1,37 +1,31 @@
-export class SiekerGek {
-    constructor (siekerGek = {}) {
-        this.id = siekerGek.id ?? null;
-        this.userField = siekerGek.userField ?? null;
-        this.gek_priority = siekerGek.gek_priority ?? null;
+import { ToolboxProject } from './toolbox_project.js';
+export class SiekerGek extends ToolboxProject {
+    constructor (data = {}) {
+        super(data);
+        this.toolboxType = 'sieker_gek';
+        // this.id = data.id ?? null;
+        // this.userField = data.userField ?? null;
+        this.gek_priority = data.gek_priority ?? null;
         // gek retention filters
-        this.gek_landuse = siekerGek.gek_landuse ?? [];        
-        this.gek_costs_max = siekerGek.gek_costs_max ?? null;
-        this.gek_costs_min = siekerGek.gek_costs_min ?? null;
+        this.gek_landuse = data.gek_landuse ?? [];        
+        this.gek_costs_max = data.gek_costs_max ?? null;
+        this.gek_costs_min = data.gek_costs_min ?? null;
 
-        this.all_sieker_gek_ids = siekerGek.all_sieker_gek_ids ?? [];
-        this.selected_sieker_geks = siekerGek.selected_sieker_geks ?? [];
+        this.all_sieker_gek_ids = data.all_sieker_gek_ids ?? [];
+        this.selected_sieker_geks = data.selected_sieker_geks ?? [];
 
-        this.all_filtered_sieker_gek_ids = siekerGek.all_filtered_sieker_gek_ids ?? [];
+        this.all_filtered_sieker_gek_ids = data.all_filtered_sieker_gek_ids ?? [];
 
-        this.all_sieker_gek_measure_ids = siekerGek.all_sieker_gek_measure_ids ?? [];
-        this.selected_sieker_gek_measures = siekerGek.selected_sieker_gek_measures ?? [];
+        this.all_sieker_gek_measure_ids = data.all_sieker_gek_measure_ids ?? [];
+        this.selected_sieker_gek_measures = data.selected_sieker_gek_measures ?? [];
     }
-    toJson() {
-        return JSON.stringify(this);
-    }
+   
 
     static fromJson(json) {
       return new SiekerGek(json);
     }
 
-    // Save project to localStorage
-    saveToLocalStorage() {
-        localStorage.setItem('sieker_geks', this.toJson());
-    }
 
-    // Load project from localStorage
-    static loadFromLocalStorage() {
-        const storedProject = localStorage.getItem('sieker_geks');
-        return storedProject ? SiekerGek.fromJson(JSON.parse(storedProject)) : null;
-    }
 };
+
+ToolboxProject.registerSubclass('sieker_gek', SiekerGek);

@@ -186,7 +186,7 @@ export const loadProjectToGui = (project) => {
     $('#projectDescription').val(project.description);
     $('#id_longitude').val(project.longitude);
     $('#id_latitude').val(project.latitude);
-    $('userFieldSelect').val(project.userField);
+    $('#userFieldSelect').val(project.userField);
     
     $('#monicaStartDatePicker').datepicker('update', new Date(project.startDate));
     // TODO check if this is necessary/ what to do with it

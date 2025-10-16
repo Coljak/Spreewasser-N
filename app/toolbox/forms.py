@@ -58,6 +58,7 @@ class ToolboxProjectForm(forms.Form):
         queryset = models.ToolboxType.objects.all(),
         label='Project Type',
         empty_label=None,
+        to_field_name='name_tag',
         widget=forms.Select(attrs={'id': 'projectTypeSelect', 'class': 'project-type-dropdown'}),
     )
     project_id = forms.IntegerField(

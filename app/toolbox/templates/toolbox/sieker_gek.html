@@ -2,8 +2,13 @@
 {% load static %}
 
 <div id="divSiekerGek">
-    <h2>Gewässerentwicklungskonzepte</h2>
-    <!-- Navigation -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Gewässerentwicklungskonzepte</h2>
+        <div>
+            <button class="btn btn-primary me-2 save-toolbox-project" data-type="sieker_gek">Speichern</button>
+        </div>
+    </div>
+        <!-- Navigation -->
     <ul class="nav nav-tabs">
         <li class="nav-item">
             <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Project</a>
@@ -22,7 +27,7 @@
     </ul>
 
     <!-- Tab Content Wrapper -->
-    <div class="tab-content" id="toolboxTabContent">
+    <div class="tab-content me-2" id="toolboxTabContent">
 
         <div id="tabToolboxProject" class="tab-pane active show">
             <div class="card mb-3">

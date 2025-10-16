@@ -193,7 +193,7 @@ def save_toolbox_project(request, project_id=None):
         user = request.user
         
         project_data = json.loads(request.body)
-        toolbox_type = models.ToolboxType.objects.get(pk=project_data['toolboxType'])
+        toolbox_type = models.ToolboxType.objects.get(name_tag=project_data['toolboxType'])
         user_field = models.UserField.objects.get(pk=project_data['userField'])
 
         project = models.ToolboxProject.objects.create(
@@ -211,7 +211,8 @@ def save_toolbox_project(request, project_id=None):
                 'message': f'Project {project.name} saved'
                 }, 
                 'project_id': project.id, 
-                'project_name': project.name
+                'project_name': project.name,
+                'project_type': project.toolbox_type.name_tag,
                 })
     
 

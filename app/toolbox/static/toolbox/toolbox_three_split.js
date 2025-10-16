@@ -33,6 +33,16 @@ import {
   dismissPolygon,
 } from '/static/shared/map_sidebar_utils.js';
 
+// from db: ToolboxType
+const TOOLBOX_TYPES = {
+  '1': 'drainage',
+  '2': 'infiltration',
+  '3': 'injection',
+  '4': 'sieker_gek',
+  '5': 'sieker_large_lake',
+  '6': 'sieker_sink',
+  '7': 'sieker_wetland'
+}; 
 
 document.addEventListener("DOMContentLoaded", () => {
   // Hide the coordinate form card from plain Monica
@@ -83,8 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
           projectNameInput.removeClass('is-invalid'); // Remove error class if fixed
       }
-  
-
       const project = new ToolboxProject();
   
       try {
@@ -118,14 +126,40 @@ document.addEventListener("DOMContentLoaded", () => {
           if (data.message.success) {
               project.id = data.project_id;
               // $('#project-info').find('.card-title').text('Project '+ data.project_name);
-              addToDropdown(data.project_id, data.project_name, document.querySelector('.toolbox-project.form-select'));
+              // addToDropdown(data.project_id, data.project_name, document.querySelector('.toolbox-project.form-select'));
               // updateDropdown('toolbox-project', data.project_id);
               handleAlerts(data.message);
+              $('#toolboxProjectModal').modal('hide');
+              project.saveToLocalStorage();
+
+              if (data.project_type === 'infiltration'){
+                console.log('startInfiltration saved');
+
+                startInfiltration()
+              } else if (data.project_type === 'injection'){
+                console.log('startInjection saved');
+                startTuMar();
+                // startInjection()
+              } else if (data.project_type === 'sieker_surface_waters'){ 
+                console.log('startSurfaceWaters saved');
+                startSurfaceWaters();
+              } else if (data.project_type === 'sieker_sink'){
+                startSiekerSinks();
+              } else if (data.project_type === 'sieker_gek'){
+                console.log('startGek clicked');
+                startSiekerGeks();
+              } else if (data.project_type === 'sieker_wetland'){
+                console.log('startFormerWetlands saved');
+                startFormerWetlands();
+              } else if (data.project_type === 'drainage'){
+                console.log('startDrainage saved');
+                // startDrainage()
+              };
+
               
               // $('.new-project-modal-form')[0].reset();
            
-              $('#toolboxProjectModal').modal('hide');
-              project.saveToLocalStorage();
+              
           } else {
               handleAlerts(data.message);
           }

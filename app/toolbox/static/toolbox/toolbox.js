@@ -4,8 +4,9 @@ import {SiekerGek} from '/static/toolbox/sieker_gek_model.js';
 import {SiekerSink} from '/static/toolbox/sieker_sink_model.js';
 import {SiekerSurfaceWaters} from '/static/toolbox/sieker_surface_waters_model.js';
 import {SiekerWetland} from '/static/toolbox/sieker_wetland_model.js';
-import {map, removeLegendFromMap} from '/static/shared/map_sidebar_utils.js';
+import {map, removeLegendFromMap, getSelectedUserField} from '/static/shared/map_sidebar_utils.js';
 import {Layers} from '/static/toolbox/layers.js';
+import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 
 
 const projectClasses = {
@@ -50,6 +51,11 @@ $('#map').on('click', function (event) {
     project.saveToLocalStorage();
     }
 });
+
+$('#toolboxProjectModal').on('hidden.bs.modal', function () {
+        // Reset the form inside the modal
+        $('.new-toolbox-project')[0].reset();
+    });
 
 export function makeColoredPin(color, iconPath = null, label = "") {
     const iconHtml = iconPath
@@ -281,15 +287,18 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
         const project = ProjectClass.loadFromLocalStorage();
         if ($target.hasClass('toolbox-back-to-initial')) {
             $('#toolboxButtons').removeClass('d-none');
-                $('#toolboxPanel').addClass('d-none');
-                removeLegendFromMap(map);
-                map.eachLayer(function(layer) {
-                    console.log(layer.toolTag);
-                    if (layer.toolTag) {
-                        map.removeLayer(layer);
-                    }
-                });
-                return;
+            $('#toolboxPanel').addClass('d-none');
+            removeLegendFromMap(map);
+            map.eachLayer(function(layer) {
+                console.log(layer.toolTag);
+                if (layer.toolTag) {
+                    map.removeLayer(layer);
+                }
+            });
+            const project = new ToolboxProject();
+            project.userField = getSelectedUserField();
+            project.saveToLocalStorage();
+            return;
         // table related
         } else if ($target.hasClass('paginate_button')) {
             console.log('Paginate')
@@ -320,6 +329,15 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             } else {
                 map.addLayer(Layers[dataType]);
                 $target.text('ausblenden');
+            }
+        } else if ($target.hasClass('save-toolbox-project')) {
+            if (!project.id) {
+                $('#userFieldSelect').val(project.userField);
+                $('#toolboxProjectModal').modal('show');
+                $('#id_project_name').focus();
+
+            } else {
+                project.saveToDB();
             }
         }
     });

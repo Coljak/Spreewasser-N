@@ -109,7 +109,6 @@ function addFeatureCollectionResultCards( dataInfo, gekMeasures) {
 
 
 export function initializeSiekerGek(data) {
-
   const userField = ToolboxProject.loadFromLocalStorage().userField;
 
   const siekerGek = new SiekerGek();

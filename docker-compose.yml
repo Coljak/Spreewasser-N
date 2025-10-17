@@ -78,14 +78,14 @@ services:
     #user: "1000:1000"
     container_name: swn_geoserver
     volumes:
-      - ./geoserver/data:/opt/geoserver_data/data
-      - ./app/raster_data:/opt/geoserver_data/raster_data
+      - ./geoserver/data:/opt/geoserver/data
+      - ./app/raster_data:/opt/geoserver/raster_data
     environment:
       - GEOSERVER_URL=geoserver
       - GEOSERVER_ADMIN_USER=admin
       - GEOSERVER_ADMIN_PASSWORD=geoserver
-      - GEOSERVER_DATA_DIR=/opt/geoserver_data/data
-      - GEOSERVER_RASTER_DATA_DIR=opt/geoserver_data/raster_data
+      - GEOSERVER_DATA_DIR=/opt/geoserver/data
+      - GEOSERVER_RASTER_DATA_DIR=/opt/geoserver/raster_data
       # - CATALINA_TMPDIR=/geoserver_data/data/work
     ports:
       - 8080:8080

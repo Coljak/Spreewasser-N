@@ -520,7 +520,18 @@ export function selectUserField(userFieldId, project, featureGroup) {
     if (needsConfirmation) {
         const isChangingExisting = !!project.userField;
 
-        showUserFieldModal({
+        if (project.toolboxType) {
+          showUserFieldModal({
+            title: "Auswahl des Suchbereichs",
+            text: isChangingExisting
+                ? "Wollen Sie den Suchbereich wechseln?"
+                : "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.",
+            onConfirm: () => {
+                applyUserFieldChange(project, userFieldId, userField, featureGroup);
+            }
+        });
+        } else {
+          showUserFieldModal({
             title: "User Field Selection",
             text: isChangingExisting
                 ? "You are changing a Monica Project's user field."
@@ -529,11 +540,18 @@ export function selectUserField(userFieldId, project, featureGroup) {
                 applyUserFieldChange(project, userFieldId, userField, featureGroup);
             }
         });
+      }
     } else  {
         applyUserFieldChange(project, userFieldId, userField, featureGroup);
     }
 };
 
+export function getSelectedUserField() {
+  if ($('.user-field-header.highlight')[0]) {
+    const userFieldId = $('.user-field-header.highlight').first().attr('user-field-id');
+    return userFieldId;
+  } else { return null; }
+}
 
 function showUserFieldModal({ title, text, onConfirm }) {
     const modal = document.getElementById('interactionModal');
@@ -698,6 +716,7 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
               });
           }
         } else if (clickedElement.classList.contains("field-menu")) {
+          selectUserField(project.userField, getProject(), featureGroup);
           console.log('field-menu clicked');
           fetch(`field-projects-menu/${userField.id}/`)
           .then(response => response.json())
@@ -717,7 +736,7 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
                 loadProjectFromDB(projectId)
                 .then(project => {
                   loadProjectToGui(project);
-                  selectUserField(project.userField, getProject(), featureGroup);
+                  
                   
                 });
                 // console.log('project after loadProjectFromDb', project)
@@ -726,7 +745,11 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
             });
           });
         } else if (clickedElement.classList.contains("field-project-add")) {
+          selectUserField(userField.id, getProject(), featureGroup);
+          //set the right user field in the modal
           $('#userFieldSelect').val(userField.id);
+          
+          
            if (window.location.pathname.endsWith('/drought/')) {
             localStorage.setItem('userFieldId', clickedElement.getAttribute('user-field-id'));
             
@@ -740,6 +763,7 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
             $('#toolboxProjectModal').modal('show');
           }
         } else if (clickedElement.classList.contains('field-edit')) {
+          selectUserField(userField.id, getProject(), featureGroup);
           console.log('field-edit clicked');
           let layer = featureGroup.getLayer(leafletId);
         

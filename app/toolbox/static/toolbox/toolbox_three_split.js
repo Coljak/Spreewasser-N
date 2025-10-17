@@ -13,6 +13,8 @@ import {initializeSiekerGek } from '/static/toolbox/sieker_gek.js';
 import {initializeSiekerWetland } from '/static/toolbox/sieker_wetland.js';
 import { TuMar } from '/static/toolbox/tu_mar_model.js';
 import { initializeTuMar } from '/static/toolbox/tu_mar.js';
+import { initializeDrainage } from '/static/toolbox/sieker_drainage.js';
+import { Drainage } from '/static/toolbox/sieker_drainage_model.js';
 
 import { 
   projectRegion, 
@@ -33,6 +35,16 @@ import {
   dismissPolygon,
 } from '/static/shared/map_sidebar_utils.js';
 
+// from db: ToolboxType
+const TOOLBOX_TYPES = {
+  '1': 'drainage',
+  '2': 'infiltration',
+  '3': 'injection',
+  '4': 'sieker_gek',
+  '5': 'sieker_surface_water',
+  '6': 'sieker_sink',
+  '7': 'sieker_wetland'
+}; 
 
 document.addEventListener("DOMContentLoaded", () => {
   // Hide the coordinate form card from plain Monica
@@ -68,69 +80,83 @@ document.addEventListener("DOMContentLoaded", () => {
     
   });
 
-  $('#saveToolboxProjectButton').on('click', () => {
-    console.log('saveToolboxProjectButton clicked');
-    
-      // Get the project name field
-      const projectNameInput = $('#id_project_name');
-      const projectName = projectNameInput.val().trim();
+  $('#saveToolboxProjectButton').on('click', async () => {
+  console.log('saveToolboxProjectButton clicked');
   
-      // Check if the project name is empty
-      if (!projectName) {
-          projectNameInput.addClass('is-invalid'); // Bootstrap class for red highlight
-          projectNameInput.focus();
-          return; // Stop execution if validation fails
-      } else {
-          projectNameInput.removeClass('is-invalid'); // Remove error class if fixed
-      }
-  
+  const projectNameInput = $('#id_project_name');
+  const projectName = projectNameInput.val().trim();
 
-      const project = new ToolboxProject();
-  
-      try {
-          project.userField = $('#userFieldSelect').val();
-      } catch (e) {
-          console.log('UserField not found');
-      }
+  // Validate project name
+  if (!projectName) {
+    projectNameInput.addClass('is-invalid');
+    projectNameInput.focus();
+    return;
+  } else {
+    projectNameInput.removeClass('is-invalid');
+  }
 
-      try {
-        project.toolboxType = $('#projectTypeSelect').val();
-    } catch (e) {
-        console.log('ProjectType not found');
+  const project = ToolboxProject.loadFromLocalStorage();
+  const genericProject = (project.toolboxType === 'generic');
+  project.name = projectName;
+  project.userField = $('#userFieldSelect').val();
+  project.toolboxType = $('#projectTypeSelect').val();
+  project.description = $('#id_project_description').val().trim();
+
+  project.saveToLocalStorage();
+  $('#toolboxProjectModal').modal('hide');
+  try {
+    const data = await project.saveToDB(); 
+    console.log('data', data);
+
+    if (data.message.success) {
+
+      handleAlerts(data.message);
+
+      console.log('Is generic project?', genericProject);
+      
+
+      // Trigger correct start function
+      if (genericProject) {
+        switch (data.project_type) {
+          case 'infiltration':
+            console.log('startInfiltration saved');
+            startInfiltration();
+            break;
+          case 'injection':
+            console.log('startInjection saved');
+            startTuMar();
+            break;
+          case 'sieker_surface_waters':
+            console.log('startSurfaceWaters saved');
+            startSurfaceWaters();
+            break;
+          case 'sieker_sink':
+            startSiekerSinks();
+            break;
+          case 'sieker_gek':
+            console.log('startGek clicked');
+            startSiekerGeks();
+            break;
+          case 'sieker_wetland':
+            console.log('startFormerWetlands saved');
+            startFormerWetlands();
+            break;
+          case 'drainage':
+            console.log('startDrainage saved');
+            startDrainage();
+            break;
+        }
+      }
+    } else {
+      handleAlerts(data.message);
     }
-  
-      project.name = projectName;
-      project.description = $('#id_project_description').val();
-  
-      project.saveToLocalStorage();
-  
-      fetch('save-project/', {
-          method: 'POST',
-          body: JSON.stringify(project),
-          headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCSRFToken(),
-          }
-      })
-      .then(response => response.json())
-      .then(data => {
-          console.log('data', data);
-          if (data.message.success) {
-              project.id = data.project_id;
-              // $('#project-info').find('.card-title').text('Project '+ data.project_name);
-              addToDropdown(data.project_id, data.project_name, document.querySelector('.toolbox-project.form-select'));
-              // updateDropdown('toolbox-project', data.project_id);
-              handleAlerts(data.message);
-              
-              // $('.new-project-modal-form')[0].reset();
-           
-              $('#toolboxProjectModal').modal('hide');
-              project.saveToLocalStorage();
-          } else {
-              handleAlerts(data.message);
-          }
-      });
-  });
+
+  } catch (err) {
+    console.error('Failed to save project:', err);
+    handleAlerts({ success: false, message: 'Error saving project.' });
+  }
+});
+
 
 
 const demBounds = [
@@ -189,54 +215,6 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
     });
   }
 });
-
-// const allRivers = L.geoJSON(all_rivers_feature_collection, {
-//   style: {
-//       color: 'hsl(187 98 66)',
-//       className: 'all-rivers',
-//   },
-//   onEachFeature: function (feature, layer) {
-//     let popupContent = 
-//     `<h6><b> ${feature.properties['name']}</b></h6> `   
-          
-//   layer.on('add', function () {
-//       if (layer._path) {
-//           layer._path.setAttribute('data-type', 'all-rivers');
-//           layer._path.setAttribute('data-id', feature.properties.id);
-//       }
-//   });
-              
-//   layer.bindTooltip(popupContent);
-//   layer.on('mouseover', function () {
-//           // this.setStyle(highlightStyle);
-//         this.openTooltip();
-//     });
-//   }
-// });
-
-// const allLakes = L.geoJSON(all_lakes_feature_collection, {
-//   style: {
-//       color: 'hsl(191 96 55)',
-//       className: 'all-lakes',
-//   },
-//   onEachFeature: function (feature, layer) {
-//     let popupContent = 
-//     `<h6><b> ${feature.properties['name']}</b></h6> `   
-          
-//   layer.on('add', function () {
-//       if (layer._path) {
-//           layer._path.setAttribute('data-type', 'all-lakes');
-//           layer._path.setAttribute('data-id', feature.properties.id);
-//       }
-//   });
-              
-//   layer.bindTooltip(popupContent);
-//   layer.on('mouseover', function () {
-//           // this.setStyle(highlightStyle);
-//         this.openTooltip();
-//     });
-//   }
-// });
 
 
   const markers = L.markerClusterGroup({
@@ -398,9 +376,7 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
     console.log('startSurfaceWaters')
     const userField = ToolboxProject.loadFromLocalStorage().userField;
 
-    const siekerSurfaceWaters = new SiekerSurfaceWaters();
-    siekerSurfaceWaters.userField = userField;
-    siekerSurfaceWaters.saveToLocalStorage();
+
     // const userField = project.userField;
     if (userField) {
     
@@ -466,8 +442,6 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
     console.log('start Sieker Geks')
     
     const userField = ToolboxProject.loadFromLocalStorage().userField;
-    const siekerGek = new SiekerGek;
-    siekerGek.saveToLocalStorage();
 
     // const userField = project.userField;
     if (userField) {
@@ -479,6 +453,7 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
           handleAlerts(data);
           return;
         }
+
           // Replace HTML content
         $('#toolboxButtons').addClass('d-none');
         $('#toolboxPanel').removeClass('d-none');
@@ -505,8 +480,6 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
     console.log('start Sieker Wetlands')
     
     const userField = ToolboxProject.loadFromLocalStorage().userField;
-    
-
     // const userField = project.userField;
     if (userField) {
       
@@ -517,7 +490,9 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
           handleAlerts(data);
           return;
         }
-          // Replace HTML content
+
+
+                // Replace HTML content
         $('#toolboxButtons').addClass('d-none');
         $('#toolboxPanel').removeClass('d-none');
         $('#toolboxPanel').html(data.html);
@@ -554,9 +529,7 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
           $('#toolboxButtons').addClass('d-none');
           $('#toolboxPanel').removeClass('d-none');
           $('#toolboxPanel').html(data.html);
-          const tuMar = new TuMar();
-          tuMar.userField = userField;
-          tuMar.saveToLocalStorage();
+
 
           return {
             'sliderLabels': data.slider_labels,
@@ -572,7 +545,45 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
       // } else {
       //   handleAlerts({success: false, message: 'Bitte wählen Sie ein Suchgebiet aus!'})
       // }
-  }
+  };
+
+  function startDrainage() {
+    console.log('start Sieker Drainage')
+    
+    const userField = ToolboxProject.loadFromLocalStorage().userField;
+    
+
+    // const userField = project.userField;
+    if (userField) {
+
+      fetch('load_sieker_drainage_gui/' + userField + '/')
+      .then(response => response.json())
+      .then(data => {
+        if (!data.success) {
+          handleAlerts(data);
+          return;
+        }
+          // Replace HTML content
+        $('#toolboxButtons').addClass('d-none');
+        $('#toolboxPanel').removeClass('d-none');
+        $('#toolboxPanel').html(data.html);
+
+
+        // return {
+        //   'sliderLabels': data.slider_labels,
+        //   'dataInfo': data.dataInfo,
+        //   'featureCollection': data.featureCollection,
+        //   'all_ids': data.all_ids
+        // };
+      })
+      .then(data => {
+          initializeDrainage(data);
+      })
+      // .catch(error => console.error("Error fetching data:", error));
+    } else {
+        handleAlerts({success: false, message: 'Bitte wählen Sie ein Suchgebiet aus!'})
+      }
+  };
 
 
 
@@ -607,7 +618,7 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
   });
   $('#startDrainage').on('click', () => {
     console.log('startDrainage clicked');
-    // startDrainage()
+   startDrainage()
   });
 
 

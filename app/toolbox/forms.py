@@ -39,11 +39,12 @@ class ToolboxProjectSelectionForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control toolbox-project'})
     )
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args,qs=None, **kwargs):
         super().__init__(*args, **kwargs)
+        
         self.fields['toolbox_project'].choices = [
             # print(instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
-            (instance.id, instance.name) for instance in models.ToolboxProject.objects.filter(Q(user=user))
+            (instance.id, instance.name) for instance in qs
         ]
 
 
@@ -58,6 +59,7 @@ class ToolboxProjectForm(forms.Form):
         queryset = models.ToolboxType.objects.all(),
         label='Project Type',
         empty_label=None,
+        to_field_name='name_tag',
         widget=forms.Select(attrs={'id': 'projectTypeSelect', 'class': 'project-type-dropdown'}),
     )
     project_id = forms.IntegerField(
@@ -473,3 +475,33 @@ class SuitabilityForm(forms.Form):
             'Reset', 
             css_class='btn-secondary reset-all'
         ))
+
+
+class SiekerDrainageFilterForm(forms.Form):
+    threshold  = forms.IntegerField(
+        min_value=0, 
+        max_value=100, 
+        # initial=25, 
+        widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_drainage_threshold",
+            "name": "threshold",
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 0,
+            "data_default_value": 0,
+            "units": "%",
+        }),
+        label="Schwellenwert (%)",
+        help_text= (
+            "Schwellenwert für die dargestellte Entwässerungswahrscheinlichkeit."
+        )
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'threshold-filter-form'
+        self.helper.form_class = 'form-horizontal threshold-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'

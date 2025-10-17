@@ -84,7 +84,6 @@ class UserField(models.Model):
     has_sieker_sink = models.BooleanField(default=False, null=True, blank=True)
     has_sieker_gek = models.BooleanField(default=False, null=True, blank=True)
     has_sieker_surface_water = models.BooleanField(default=False, null=True, blank=True)
-    has_sieker_large_lake = models.BooleanField(default=False, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -100,9 +99,9 @@ class ToolboxProject(models.Model):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="toolbox_projects")
     description = models.TextField(null=True, blank=True)
-    user_field = models.ForeignKey(UserField, on_delete=models.CASCADE)
-    toolbox_type = models.ForeignKey(ToolboxType, on_delete=models.CASCADE)
-    creation_date = models.DateField(blank=True, default=now)
+    user_field = models.ForeignKey('UserField', on_delete=models.CASCADE)
+    toolbox_type = models.ForeignKey('ToolboxType', on_delete=models.CASCADE)
+    creation_date = models.DateTimeField(blank=True, default=now)
     last_modified = models.DateTimeField(auto_now=True, blank=True)
     project_data = models.JSONField(null=True, blank=True)
 
@@ -110,14 +109,19 @@ class ToolboxProject(models.Model):
         return self.name
     
     def to_json(self):
-        # Start with the project fields
-        return {
-            "id": self.id, # if self.id is not None else None,
+        """Return project as flat JSON (merge base fields with project_data)."""
+        base = {
+            "id": self.id,
             "name": self.name,
             "description": self.description,
-            # 'userField': self.user_field.id,
-            # 'toolbox_type': self.toolbox_type.name,
+            "userField": self.user_field.id if self.user_field else None,
+            "toolboxType": self.toolbox_type.name_tag if self.toolbox_type else None,
         }
+        # Merge project_data if available
+        if self.project_data:
+            base.update(self.project_data)
+        return base
+
     
 # Gewnet25
 # TODO: not used - delete or geoserver

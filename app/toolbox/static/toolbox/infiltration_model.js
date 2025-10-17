@@ -1,74 +1,77 @@
+import { ToolboxProject } from './toolbox_project.js';
 
-export class Infiltration {
-    constructor (infiltration = {}) {
-        this.id = infiltration.id ?? null;
-        this.userField = infiltration.userField ?? null;
+export class Infiltration extends ToolboxProject {
+    constructor (data = {}) {
+        super(data);
+        this.toolboxType = 'infiltration';
+        // this.id = data.id ?? null;
+        // this.userField = data.userField ?? null;
 
-        this.sink_area_min = infiltration.sink_area_min ?? null;
-        this.sink_area_max = infiltration.sink_area_max ?? null;
-        this.sink_volume_min = infiltration.sink_volume_min ?? null;
-        this.sink_volume_max = infiltration.sink_volume_max ?? null;
-        this.sink_depth_min = infiltration.sink_depth_min ?? null;
-        this.sink_depth_max = infiltration.sink_depth_max ?? null;
-        this.sink_land_use = infiltration.sink_land_use ?? [];
-        this.all_sink_ids = infiltration.all_sink_ids ?? [];
-        this.selected_sinks = infiltration.selected_sinks ?? [];
+        this.sink_area_min = data.sink_area_min ?? null;
+        this.sink_area_max = data.sink_area_max ?? null;
+        this.sink_volume_min = data.sink_volume_min ?? null;
+        this.sink_volume_max = data.sink_volume_max ?? null;
+        this.sink_depth_min = data.sink_depth_min ?? null;
+        this.sink_depth_max = data.sink_depth_max ?? null;
+        this.sink_land_use = data.sink_land_use ?? [];
+        this.all_sink_ids = data.all_sink_ids ?? [];
+        this.selected_sinks = data.selected_sinks ?? [];
 
-        this.enlarged_sink_area_min = infiltration.enlarged_sink_area_min ?? null;
-        this.enlarged_sink_area_max = infiltration.enlarged_sink_area_max ?? null;
-        this.enlarged_sink_volume_min = infiltration.enlarged_sink_volume_minn ?? null;
-        this.enlarged_sink_volume_max = infiltration.enlarged_sink_volume_max ?? null;
-        this.enlarged_sink_depth_min = infiltration.enlarged_sink_depth_min ?? null;
-        this.enlarged_sink_depth_max = infiltration.enlarged_sink_depth_max ?? null;
-        this.enlarged_sink_volume_construction_barrier_min = infiltration.enlarged_sink_volume_construction_barrier_min ?? null;
-        this.enlarged_sink_volume_construction_barrier_max = infiltration.enlarged_sink_volume_construction_barrier_max ?? null;
-        this.enlarged_sink_volume_gained_min = infiltration.enlarged_sink_volume_gained_min ?? null;
-        this.enlarged_sink_volume_gained_max = infiltration.enlarged_sink_volume_gained_max ?? null;
-        this.enlarged_sink_land_use = infiltration.enlarged_sink_land_use ?? [];
+        this.enlarged_sink_area_min = data.enlarged_sink_area_min ?? null;
+        this.enlarged_sink_area_max = data.enlarged_sink_area_max ?? null;
+        this.enlarged_sink_volume_min = data.enlarged_sink_volume_minn ?? null;
+        this.enlarged_sink_volume_max = data.enlarged_sink_volume_max ?? null;
+        this.enlarged_sink_depth_min = data.enlarged_sink_depth_min ?? null;
+        this.enlarged_sink_depth_max = data.enlarged_sink_depth_max ?? null;
+        this.enlarged_sink_volume_construction_barrier_min = data.enlarged_sink_volume_construction_barrier_min ?? null;
+        this.enlarged_sink_volume_construction_barrier_max = data.enlarged_sink_volume_construction_barrier_max ?? null;
+        this.enlarged_sink_volume_gained_min = data.enlarged_sink_volume_gained_min ?? null;
+        this.enlarged_sink_volume_gained_max = data.enlarged_sink_volume_gained_max ?? null;
+        this.enlarged_sink_land_use = data.enlarged_sink_land_use ?? [];
 
-        this.all_enlarged_sink_ids = infiltration.all_enlarged_sink_ids ?? [];
-        this.selected_enlarged_sinks = infiltration.selected_enlarged_sinks ?? [];
+        this.all_enlarged_sink_ids = data.all_enlarged_sink_ids ?? [];
+        this.selected_enlarged_sinks = data.selected_enlarged_sinks ?? [];
 
-        this.stream_min_surplus_volume_min = infiltration.stream_min_surplus_volume_min ?? null;
-        this.stream_min_surplus_volume_max = infiltration.stream_min_surplus_volume_max ?? null;
-        this.stream_mean_surplus_volume_min = infiltration.stream_mean_surplus_volume_min ?? null;
-        this.stream_mean_surplus_volume_max = infiltration.stream_mean_surplus_volume_max ?? null;
-        this.stream_max_surplus_volume_min = infiltration.stream_max_surplus_volume_min ?? null;
-        this.stream_max_surplus_volume_max = infiltration.stream_max_surplus_volume_max ?? null;
-        this.stream_plus_days_min = infiltration.stream_plus_days_min ?? null;
-        this.stream_plus_days_max = infiltration.stream_plus_days_max ?? null;
-        this.stream_distance_to_userfield = infiltration.stream_distance_to_userfield ?? 0;
+        this.stream_min_surplus_volume_min = data.stream_min_surplus_volume_min ?? null;
+        this.stream_min_surplus_volume_max = data.stream_min_surplus_volume_max ?? null;
+        this.stream_mean_surplus_volume_min = data.stream_mean_surplus_volume_min ?? null;
+        this.stream_mean_surplus_volume_max = data.stream_mean_surplus_volume_max ?? null;
+        this.stream_max_surplus_volume_min = data.stream_max_surplus_volume_min ?? null;
+        this.stream_max_surplus_volume_max = data.stream_max_surplus_volume_max ?? null;
+        this.stream_plus_days_min = data.stream_plus_days_min ?? null;
+        this.stream_plus_days_max = data.stream_plus_days_max ?? null;
+        this.stream_distance_to_userfield = data.stream_distance_to_userfield ?? 0;
 
-        this.lake_min_surplus_volume_min = infiltration.lake_min_surplus_volume_min ?? null;
-        this.lake_min_surplus_volume_max = infiltration.lake_min_surplus_volume_max ?? null;
-        this.lake_mean_surplus_volume_min = infiltration.lake_mean_surplus_volume_min ?? null;
-        this.lake_mean_surplus_volume_max = infiltration.lake_mean_surplus_volume_max ?? null;
-        this.lake_max_surplus_volume_min = infiltration.lake_max_surplus_volume_min ?? null;
-        this.lake_max_surplus_volume_max = infiltration.lake_max_surplus_volume_max ?? null;
-        this.lake_plus_days_min = infiltration.lake_plus_days_min ?? null;
-        this.lake_plus_days_max = infiltration.lake_plus_days_max ?? null;
-        this.lake_distance_to_userfield = infiltration.lake_distance_to_userfield ?? 0;
+        this.lake_min_surplus_volume_min = data.lake_min_surplus_volume_min ?? null;
+        this.lake_min_surplus_volume_max = data.lake_min_surplus_volume_max ?? null;
+        this.lake_mean_surplus_volume_min = data.lake_mean_surplus_volume_min ?? null;
+        this.lake_mean_surplus_volume_max = data.lake_mean_surplus_volume_max ?? null;
+        this.lake_max_surplus_volume_min = data.lake_max_surplus_volume_min ?? null;
+        this.lake_max_surplus_volume_max = data.lake_max_surplus_volume_max ?? null;
+        this.lake_plus_days_min = data.lake_plus_days_min ?? null;
+        this.lake_plus_days_max = data.lake_plus_days_max ?? null;
+        this.lake_distance_to_userfield = data.lake_distance_to_userfield ?? 0;
 
-        this.all_lake_ids = infiltration.all_lake_ids ?? [];
-        this.selected_lakes = infiltration.selected_lakes ?? [];
-        this.all_stream_ids = infiltration.all_stream_ids ?? [];
-        this.selected_streams = infiltration.selected_streams ?? [];
+        this.all_lake_ids = data.all_lake_ids ?? [];
+        this.selected_lakes = data.selected_lakes ?? [];
+        this.all_stream_ids = data.all_stream_ids ?? [];
+        this.selected_streams = data.selected_streams ?? [];
 
-        this.weighting_overall_usability = infiltration.weighting_overall_usability ?? 20;
-        this.weighting_soil_index = infiltration.weighting_soil_index ?? 80;
+        this.weighting_overall_usability = data.weighting_overall_usability ?? 20;
+        this.weighting_soil_index = data.weighting_soil_index ?? 80;
 
-        this.weighting_forest_field_capacity = infiltration.weighting_forest_field_capacity ?? 33;
-        this.weighting_forest_hydraulic_conductivity_1m = infiltration.weighting_forest_hydraulic_conductivity_1m ?? 33;
-        this.weighting_forest_hydraulic_conductivity_2m = infiltration.weighting_forest_hydraulic_conductivity_2m ?? 33;
+        this.weighting_forest_field_capacity = data.weighting_forest_field_capacity ?? 33;
+        this.weighting_forest_hydraulic_conductivity_1m = data.weighting_forest_hydraulic_conductivity_1m ?? 33;
+        this.weighting_forest_hydraulic_conductivity_2m = data.weighting_forest_hydraulic_conductivity_2m ?? 33;
 
-        this.weighting_agriculture_field_capacity = infiltration.weighting_agriculture_field_capacity ?? 33;
-        this.weighting_agriculture_hydromorphy = infiltration.weighting_agriculture_hydromorphy ?? 33;
-        this.weighting_agriculture_soil_type = infiltration.weighting_agriculture_soil_type ?? 33;
+        this.weighting_agriculture_field_capacity = data.weighting_agriculture_field_capacity ?? 33;
+        this.weighting_agriculture_hydromorphy = data.weighting_agriculture_hydromorphy ?? 33;
+        this.weighting_agriculture_soil_type = data.weighting_agriculture_soil_type ?? 33;
 
-        this.weighting_grassland_field_capacity = infiltration.weighting_grassland_field_capacity ?? 25;
-        this.weighting_grassland_hydromorphy = infiltration.weighting_grassland_hydromorphy ?? 25;
-        this.weighting_grassland_soil_type = infiltration.weighting_grassland_soil_type ?? 25;
-        this.weighting_grassland_soil_water_ratio = infiltration.weighting_grassland_soil_water_ratio ?? 25;
+        this.weighting_grassland_field_capacity = data.weighting_grassland_field_capacity ?? 25;
+        this.weighting_grassland_hydromorphy = data.weighting_grassland_hydromorphy ?? 25;
+        this.weighting_grassland_soil_type = data.weighting_grassland_soil_type ?? 25;
+        this.weighting_grassland_soil_water_ratio = data.weighting_grassland_soil_water_ratio ?? 25;
 
     }
 
@@ -93,26 +96,12 @@ export class Infiltration {
         }
     };
 
-    toJson() {
-        return JSON.stringify(this);
-    }
+    
 
     static fromJson(json) {
       return new Infiltration(json);
     }
-         // Save project to localStorage
-    saveToLocalStorage() {
-        this.updateButtonState();
-        localStorage.setItem('infiltration', this.toJson());
-    }
-
-    // Load project from localStorage
-    static loadFromLocalStorage() {
-        const storedProject = localStorage.getItem('infiltration');
-        return storedProject ? Infiltration.fromJson(JSON.parse(storedProject)) : null;
-    }
-
-
-
 
 };
+
+ToolboxProject.registerSubclass('infiltration', Infiltration);

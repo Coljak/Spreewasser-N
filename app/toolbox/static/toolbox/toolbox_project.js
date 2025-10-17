@@ -1,33 +1,78 @@
+import { getGeolocation, handleAlerts, getCSRFToken, saveProject, observeDropdown, populateDropdown,  setLanguage, addToDropdown } from '/static/shared/utils.js';
 export class ToolboxProject {
-  constructor (project = {}) {
+  constructor(project = {}) {
     this.id = project.id ?? null;
     this.name = project.name ?? '';
     this.updated = project.updated ?? null;
     this.description = project.description ?? '';
     this.userField = project.userField ?? null;
-    this.toolboxType = project.toolboxType ?? 1;
+    this.toolboxType = project.toolboxType ?? 'generic';
+    this.isSaved = project.isSaved ?? false;
+
+    return new Proxy(this, {
+      set: (target, prop, value) => {
+        if (prop !== 'isSaved' && target[prop] !== value) {
+          target.isSaved = false; // mark modified
+        }
+        target[prop] = value;
+        return true;
+      }
+    });
   }
 
-    // Convert instance to JSON for storage
-    toJson() {
-      return JSON.stringify(this);
+  toJson() {
+    return JSON.stringify(this);
   }
 
-  // Save project to localStorage
   saveToLocalStorage() {
-      localStorage.setItem('toolbox_project', this.toJson());
+    localStorage.setItem('toolbox_project', this.toJson());
+    console.log('saveToLocalStorage');
+  }
+
+  /** Save project to backend */
+  async saveToDB() {
+    try {
+      const response = await fetch('save-project/', {
+        method: 'POST', // POST for new, PUT for existing
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCSRFToken()
+         },
+        body: this.toJson()
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       
-      console.log('saveToLocalStorage');
+      const data = await response.json();
+      
+      // Optionally update local id and mark as saved
+      if (data.project_id) this.id = data.project_id;
+      this.isSaved = true;
+      this.saveToLocalStorage();
+      console.log('Project saved to backend');
+      return data;
+    } catch (err) {
+      console.error('Failed to save project:', err);
+      throw err;
+    }
   }
 
-  // Load project from localStorage
+  static subclassRegistry = {};
+
+  static registerSubclass(toolboxType, subclass) {
+    ToolboxProject.subclassRegistry[toolboxType] = subclass;
+  }
+
   static loadFromLocalStorage() {
-      const storedProject = localStorage.getItem('toolbox_project');
-      return storedProject ? ToolboxProject.fromJson(JSON.parse(storedProject)) : null;
+    const stored = localStorage.getItem('toolbox_project');
+    if (!stored) return null;
+
+    const json = JSON.parse(stored);
+    const cls = ToolboxProject.subclassRegistry[json.toolboxType];
+    return cls ? cls.fromJson(json) : new ToolboxProject(json);
   }
 
-  // Static method to create ToolboxProject from JSON
   static fromJson(json) {
-      return new ToolboxProject(json);
+    return new ToolboxProject(json);
   }
-};
+}

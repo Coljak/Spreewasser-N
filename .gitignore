@@ -184,7 +184,7 @@ migrations/
 
 #sass
 .sass-cache/
-
+geoserver/data.backup/
 geoserver/data/
 geoserver__/
 # GeoServer data directories to ignore

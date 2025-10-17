@@ -1,0 +1,104 @@
+{% load crispy_forms_tags %}
+{% load static %}
+
+<div id="divSiekerSink">
+    
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Drän- Speicher-Tool</h2>
+        <div>
+            <button class="btn btn-primary me-2 save-toolbox-project" data-type="drainage">Speichern</button>
+        </div>
+    </div>
+    <!-- Navigation -->
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
+        </li>
+        
+        <li class="nav-item drainage">
+            <a id="navSiekerSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabDrainageNetwork" aria-selected="false">Entwässerungsnetz</a>
+        </li>
+        
+        <li class="nav-item drainage">
+            <a id="navSiekerSinkResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabDrainageResult">Ergebnis</a>
+        </li>
+    </ul>
+
+    <!-- Tab Content Wrapper -->
+    <div class="tab-content" id="toolboxTabContent">
+
+        <div id="tabToolboxProject" class="tab-pane active show">
+            <div class="card mb-3">
+                <div class="card-body">
+                    {{ project_select_form | crispy }}
+                
+                    <button class="toolbox-back-to-initial btn btn-secondary">Zurück zur Auswahl</button>
+                    <button class="toolbox-load-project btn btn-secondary">Laden</button>
+            
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <div id="tabDrainageNetwork" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Filter Natürliche Senken als Versickerungsstandorte</h5>
+                        <button  class="btn btn-secondary toggle-feature-group" data-type="drainage">ausblenden</button>                                                                                             
+                    </div>
+                    
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        {{ drainage_filter_form | crispy }}
+                        <button id="btnFilterSiekerSinks"type="submit" class="btn btn-primary">Senken filtern</button>
+                    </form>
+                </div>
+            </div>
+            <div id="card-drainage-table" class="card mb-3 d-none">
+                <div class="card-body">
+                    <div id="drainage-table-container"></div>
+                    
+                </div>
+            </div>
+        </div>
+
+        
+
+        
+        
+
+        <!-- Result Tab -->
+
+        <div id="tabDrainageResult" class="tab-pane ">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ergebnis</h5>
+                    <table  class="table table-hover" id="inlet-table">
+                        <thead>
+                            <tr>
+                            <th>ID</th>
+                            <th>Vergrößerte Senke</th>
+                            <th>Senkeneignung</th>
+                            <th>Wasserkörper</th>
+                            <th>Länge Zuleitung(m)</th>
+                            <th>Eignung Zuleitung</th>
+                            <th>Gesamtbewertung</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div id="inlet-info-card" class="card mt-3" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+        {% comment %} <button id="btnGetInlets" class="btn btn-primary mt-3">Ergebnis berechnen</button> {% endcomment %}
+
+    </div>
+
+</div>

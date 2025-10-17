@@ -76,9 +76,10 @@ addLegendForWms(wmsLayerName)
 
 export function initializeTuMar(data) {
   console.log('initializeTuMar')
-  
-
-  console.log('data', data)
+  const userField = ToolboxProject.loadFromLocalStorage().userField;
+  const tuMar = new TuMar();
+  tuMar.userField = userField;
+  tuMar.saveToLocalStorage();
   const sliderLabelsWeighting = data.sliderLabels;
   const sliderLabelsSuitability = data.sliderLabelsSuitability;
   

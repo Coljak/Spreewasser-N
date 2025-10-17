@@ -176,7 +176,12 @@ cython_debug/
 data_temp/
 database/
 notes/
-geoserver/
+
+geoserver/data/
+# geoserver/data/security/
+# geoserver/data/logs/
+
+geoserver__/ 
 model_exports/
 
 # Django stuff

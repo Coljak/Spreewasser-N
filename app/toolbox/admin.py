@@ -77,10 +77,10 @@ class EnlargedSinkSoilPropertiesAdmin(admin.ModelAdmin):
 
 @admin.register(models.UserField)
 class UserFieldAdmin(LeafletGeoAdmin):
-    list_display = ('id', 'user', 'name', 'creation_date', 'geom', 'has_zalf_sinks', 'has_zalf_enlarged_sinks',   'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water', 'has_sieker_large_lake')
+    list_display = ('id', 'user', 'name', 'creation_date', 'geom', 'has_zalf_sinks', 'has_zalf_enlarged_sinks',   'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water')
     list_filter = ['name']
     ordering = ['user', 'name']
-    search_fields = ['user__username', 'name', 'creation_date', 'has_zalf_sinks', 'has_zalf_enlarged_sinks',  'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water', 'has_sieker_large_lake']
+    search_fields = ['user__username', 'name', 'creation_date', 'has_zalf_sinks', 'has_zalf_enlarged_sinks',  'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water']
 
 @admin.register(models.ToolboxProject)
 class ToolboxProjectAdmin(admin.ModelAdmin):

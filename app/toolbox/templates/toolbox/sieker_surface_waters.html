@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Oberflächengewässer</h2>
         <div>
-            <button class="btn btn-primary me-2 save-toolbox-project" data-type="sieker_surface_waters">Speichern</button>
+            <button class="btn btn-primary me-2 save-toolbox-project" data-type="sieker_surface_water">Speichern</button>
         </div>
     </div>
     <!-- Navigation -->
@@ -15,14 +15,14 @@
             <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersProject" aria-selected="true">Project</a>
         </li>
     
-        <li class="nav-item sieker-surface-waters">
+        <li class="nav-item sieker_surface_water">
             <a id="navSiekerSurfaceWatersLakes" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersLakes" aria-selected="false">Seen</a>
         </li>
-        <li class="nav-item sieker-surface-waters">
+        <li class="nav-item sieker_surface_water">
             <a id="navSiekerSurfaceWatersLevels" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersLevels" aria-selected="false">Pegelzeitreihen</a>
         </li>
 
-        <li class="nav-item sieker-surface-waters">
+        <li class="nav-item sieker_surface_water">
             <a id="navSiekerSurfaceWatersResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersResult">Ergebnis</a>
         </li>
     </ul>
@@ -36,6 +36,7 @@
                     {{ project_select_form | crispy }}
                 
                     <button class="toolbox-back-to-initial btn btn-secondary">Zurück zur Auswahl</button>
+                    <button class="toolbox-load-project btn btn-secondary">Laden</button>
             
                 </div>
             </div>
@@ -59,10 +60,10 @@
                     </form>
                 </div>
             </div>
-            <div id="card-sieker_large_lake-table" class="card mb-3">
+            <div id="card-sieker_surface_water-table" class="card mb-3">
                 <div class="card-body">
                     {% comment %} <div id="sieker-lake-table-container"></div> {% endcomment %}
-                    <div id="sieker_large_lake-table-container"></div>
+                    <div id="sieker_surface_water-table-container"></div>
                     {% comment %} <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button> {% endcomment %}
                     {% comment %} <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button> {% endcomment %}
 

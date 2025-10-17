@@ -315,7 +315,7 @@ class SiekerLargeLakeFilter(FilterSet):
                 filter_.queryset_for_bounds = queryset
                 filter_.set_bounds()
 
-        prefix = 'sieker_large_lake'
+        prefix = 'sieker_surface_water'
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f"{prefix}_{name}"
             field.widget.attrs['name'] = f"{prefix}_{name}"

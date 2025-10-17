@@ -55,12 +55,16 @@ function addWaterLevelToResultCard(data) {
 }
 
 export function initializeSiekerSurfaceWaters(layers) {
+    const userField = ToolboxProject.loadFromLocalStorage().userField;
+    const siekerSurfaceWaters = new SiekerSurfaceWaters();
+    siekerSurfaceWaters.userField = userField;
+    siekerSurfaceWaters.saveToLocalStorage();
     
 
     console.log("Initializing Sieker surface waters...", layers);
     removeLegendFromMap(map);
     map.eachLayer(function(layer) {
-        if (layer.toolTag && layer.toolTag !== 'sieker-surface-waters') {
+        if (layer.toolTag && layer.toolTag !== 'sieker_surface_water') {
             map.removeLayer(layer);
         }
         });
@@ -82,7 +86,7 @@ export function initializeSiekerSurfaceWaters(layers) {
     // waterLevels.addTo(Layers['sieker_water_level']);
 
 
-    // map.addLayer(Layers['sieker_large_lake']);
+    // map.addLayer(Layers['sieker_surface_water']);
     // map.addLayer(Layers['sieker_water_level']);
 
     document.getElementById('toggleSiekerLevels').addEventListener('click', function() {
@@ -96,11 +100,11 @@ export function initializeSiekerSurfaceWaters(layers) {
     });
 
     document.getElementById('toggleSiekerLakes').addEventListener('click', function() {
-        if (map.hasLayer(Layers['sieker_large_lake'])) {
-            map.removeLayer(Layers['sieker_large_lake']);
+        if (map.hasLayer(Layers['sieker_surface_water'])) {
+            map.removeLayer(Layers['sieker_surface_water']);
             this.textContent = 'Seen anzeigen';
         } else {
-            map.addLayer(Layers['sieker_large_lake']);
+            map.addLayer(Layers['sieker_surface_water']);
             this.textContent = 'Seen ausblenden';
         }
     });

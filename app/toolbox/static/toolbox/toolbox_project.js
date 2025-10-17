@@ -46,7 +46,7 @@ export class ToolboxProject {
       const data = await response.json();
       
       // Optionally update local id and mark as saved
-      if (data.id) this.id = data.id;
+      if (data.project_id) this.id = data.project_id;
       this.isSaved = true;
       this.saveToLocalStorage();
       console.log('Project saved to backend');

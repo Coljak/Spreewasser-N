@@ -35,6 +35,7 @@ from rasterio.mask import mask
 from rasterio.enums import ColorInterp
 
 
+
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 
 
@@ -89,17 +90,17 @@ def create_point_feature_collection(queryset):
 
 
 
-# TOOLBOX GENERAL
-def create_default_project(user):
-    """
-    Create a default project for the user.
-    """
-    default_project = models.ToolboxProject(
-        name= '',
-        user=user,
-    ).to_json()
+# # TOOLBOX GENERAL
+# def create_default_project(user):
+#     """
+#     Create a default project for the user.
+#     """
+#     default_project = models.ToolboxProject(
+#         name= '',
+#         user=user,
+#     ).to_json()
 
-    return json.dumps(default_project, default=str)
+#     return json.dumps(default_project, default=str)
 
 
 def toolbox_dashboard(request):
@@ -153,18 +154,18 @@ def toolbox_dashboard(request):
 
     
     state_county_district_form = swn_forms.PolygonSelectionForm(request.POST or None)
-    project_select_form = forms.ToolboxProjectSelectionForm(user=user)
+    # project_select_form = forms.ToolboxProjectSelectionForm(user=user)
     # project_select_form = forms.ToolboxProjectSelectionForm()
     project_form = forms.ToolboxProjectForm(user=user)
     project_modal_title = 'Create new project'
 
-    default_project = create_default_project(user)
+    # default_project = create_default_project(user)
 
     context = {
         'project_region': project_region,
-        'default_project': default_project,
+        # 'default_project': default_project,
         'state_county_district_form': state_county_district_form,
-        'project_select_form': project_select_form,
+        # 'project_select_form': project_select_form,
         'project_form': project_form,
         'project_modal_title': project_modal_title,
         'outline_injection': outline_injection,
@@ -176,43 +177,32 @@ def toolbox_dashboard(request):
 
     return render(request, 'toolbox/toolbox_three_split.html', context)
 
-def load_toolbox_project(request, id):
 
-    project = models.ToolboxProject.objects.get(pk=id)
-    print("Toolbox Project: ", project)
-    if not project:
-        return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
-    else:
-        project_json = project.to_json()
-        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
-
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from . import models
-
-@csrf_exempt  # remove this if you're already handling CSRF in JS correctly
 def save_toolbox_project(request):
     if request.method != 'POST':
         return JsonResponse({'message': {'success': False, 'message': 'Invalid request method'}}, status=405)
 
     try:
         user = request.user
-        project_data = json.loads(request.body)
+        request_data = json.loads(request.body)
 
-        toolbox_type = models.ToolboxType.objects.get(name_tag=project_data['toolboxType'])
-        user_field = models.UserField.objects.get(pk=project_data['userField'])
+        toolbox_type = models.ToolboxType.objects.get(name_tag=request_data['toolboxType'])
+        user_field = models.UserField.objects.get(pk=request_data['userField'])
+
+        # Known model fields
+        known_fields = {'id', 'name', 'description', 'userField', 'toolboxType'}
+        project_data = {k: v for k, v in request_data.items() if k not in known_fields}
 
         # --- UPDATE CASE ---
-        if  project_data.get('id'):
-            pid = project_data.get('id')
+        if  request_data.get('id'):
+            pid = request_data.get('id')
             try:
                 project = models.ToolboxProject.objects.get(pk=pid, user=user)
-                project.name = project_data.get('name', project.name)
-                project.description = project_data.get('description', project.description)
+                project.name = request_data.get('name', project.name)
+                project.description = request_data.get('description', project.description)
                 project.toolbox_type = toolbox_type
                 project.user_field = user_field
+                project.project_data = project_data
                 project.save()
 
                 message = f'Project {project.name} updated'
@@ -224,11 +214,12 @@ def save_toolbox_project(request):
         # --- CREATE CASE ---
         else:
             project = models.ToolboxProject.objects.create(
-                name=project_data['name'],
+                name=request_data['name'],
                 user=user,
                 toolbox_type=toolbox_type,
                 user_field=user_field,
-                description=project_data.get('description', '')
+                description=request_data.get('description', ''),
+                project_data=project_data
             )
             project.save()
             message = f'Project {project.name} created'
@@ -244,6 +235,17 @@ def save_toolbox_project(request):
     except Exception as e:
         print('Error saving project:', e)
         return JsonResponse({'message': {'success': False, 'message': str(e)}}, status=400)
+    
+
+def load_toolbox_project(request, id):
+
+    project = models.ToolboxProject.objects.get(pk=id)
+    print("Toolbox Project: ", project)
+    if not project:
+        return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
+    else:
+        project_json = project.to_json()
+        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
 
     
 
@@ -276,6 +278,7 @@ def save_user_field(request):
                 
                 user_field.save()
 
+            # TODO move this to the model save() method
             has_zalf_sinks = models.Sink.objects.filter(geom4326__within=user_field.geom).exists() or \
                              models.Sink.objects.filter(geom4326__intersects=user_field.geom).exists()
             has_zalf_enlarged_sinks = models.EnlargedSink.objects.filter(geom4326__within=user_field.geom).exists() or \
@@ -284,13 +287,13 @@ def save_user_field(request):
                               models.SiekerSink.objects.filter(geom4326__intersects=user_field.geom).exists()
             has_sieker_gek = models.GekRetention.objects.filter(geom4326__within=user_field.geom).exists() or \
                                 models.GekRetention.objects.filter(geom4326__intersects=user_field.geom).exists()
-            has_sieker_large_lake = models.SiekerLargeLake.objects.filter(geom4326__within=user_field.geom).exists() or \
+            has_sieker_surface_water = models.SiekerLargeLake.objects.filter(geom4326__within=user_field.geom).exists() or \
                                         models.SiekerLargeLake.objects.filter(geom4326__intersects=user_field.geom).exists()
             user_field.has_zalf_sinks = has_zalf_sinks
             user_field.has_zalf_enlarged_sinks = has_zalf_enlarged_sinks
             user_field.has_sieker_sink = has_sieker_sink
             user_field.has_sieker_gek = has_sieker_gek
-            user_field.has_sieker_large_lake = has_sieker_large_lake
+            user_field.has_sieker_surface_water = has_sieker_surface_water
             user_field.save()
 
             geo_json = json.loads(user_field.geom.geojson)
@@ -300,7 +303,7 @@ def save_user_field(request):
                 'has_zalf_enlarged_sinks': user_field.has_zalf_enlarged_sinks,
                 'has_sieker_sink': user_field.has_sieker_sink,
                 'has_sieker_gek': user_field.has_sieker_gek,
-                'has_sieker_large_lake': user_field.has_sieker_large_lake,
+                'has_sieker_surface_water': user_field.has_sieker_surface_water,
             }   
             return JsonResponse({'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id, 'new_user_field': geo_json})
         
@@ -402,8 +405,14 @@ def load_infiltration_gui(request, user_field_id):
         user_field_id = None
     else:
         user_field_id = int(user_field_id)
-    project_select_form = forms.ToolboxProjectSelectionForm()
+    toolbox_type = models.ToolboxType.objects.get(name_tag='infiltration')
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
+    qs = models.ToolboxProject.objects.filter(
+        Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
+    ).order_by('-creation_date').reverse()
+
+    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+    
     if user_field is None:
         return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
     
@@ -947,7 +956,11 @@ def sieker_surface_waters_gui(request, user_field_id):
     lakes = models.SiekerLargeLake.objects.filter(Q(geom4326__within=user_field.geom) | Q(geom4326__intersects=user_field.geom))
 
     if lakes.count() > 0:
-        project_select_form = forms.ToolboxProjectSelectionForm()
+        toolbox_type = models.ToolboxType.objects.get(name_tag='sieker_surface_water')
+        qs = models.ToolboxProject.objects.filter(
+            Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
+            ).order_by('-creation_date').reverse()
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
         sieker_lake_filter = SiekerLargeLakeFilter(request.GET, queryset=lakes)
 
         water_levels = models.SiekerWaterLevel.objects.filter(
@@ -956,7 +969,7 @@ def sieker_surface_waters_gui(request, user_field_id):
         lakes_feature_collection = create_feature_collection(lakes)
         water_levels_feature_collection = create_feature_collection(water_levels)
 
-        lakes_data_info = models.DataInfo.objects.get(data_type='sieker_large_lake').to_dict()
+        lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_dict()
         water_levels_data_info = models.DataInfo.objects.get(data_type='sieker_water_level').to_dict()
 
 
@@ -1036,10 +1049,17 @@ def load_sieker_sink_gui(request, user_field_id):
         user_field_id = None
     else:
         user_field_id = int(user_field_id)
-    project_select_form = forms.ToolboxProjectSelectionForm()
+    toolbox_type = models.ToolboxType.objects.get(name_tag='sieker_sink')
+    
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
+    
     if user_field is None:
         return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
+
+    qs = models.ToolboxProject.objects.filter(
+        Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
+        ).order_by('-creation_date').reverse()
+    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
     
     sinks = models.SiekerSink.objects.filter(
         centroid__within=user_field.geom
@@ -1118,14 +1138,19 @@ def load_sieker_gek_gui(request, user_field_id):
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
     if user_field is None:
         return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
-    
+
+
     geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
     # all_sieker_gek_ids = [g.id for g in geks]
    
 
     if geks.count() > 0:
-        project_select_form = forms.ToolboxProjectSelectionForm()
-        
+        toolbox_type = models.ToolboxType.objects.get(name_tag='sieker_gek')
+        qs = models.ToolboxProject.objects.filter(
+            Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
+            ).order_by('-creation_date').reverse()
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+
         feature_collection = create_feature_collection(geks)
 
         gek_filter_form = GekRetentionFilter(request.GET, queryset=geks)
@@ -1215,6 +1240,11 @@ def load_sieker_wetland_gui(request, user_field_id):
         user_field_id = None
     else:
         user_field_id = int(user_field_id)
+
+    user = request.user
+    toolbox_type = models.ToolboxType.objects.get(name_tag='sieker_wetland')
+    user_field = models.UserField.objects.get(Q(id=int(user_field_id))&Q(user=user))
+    
     
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
     if user_field is None:
@@ -1223,7 +1253,10 @@ def load_sieker_wetland_gui(request, user_field_id):
     wetlands = models.HistoricalWetlands.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
 
     if wetlands.count() > 0:
-        project_select_form = forms.ToolboxProjectSelectionForm()
+        qs = models.ToolboxProject.objects.filter(
+                Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
+            ).order_by('-creation_date').reverse()
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
         
         feature_collection = create_feature_collection(wetlands)
         filter_form = HistoricalWetlandsFilter()
@@ -1286,12 +1319,14 @@ def filter_sieker_wetlands(request):
 
 
 def load_tu_mar_gui(request):
-    # if user_field_id == "null":
-    #     return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
-    # else:
-    # user_field_id = int(user_field_id)
-    project_select_form = forms.ToolboxProjectSelectionForm()
-    # user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
+    user = request.user
+    toolbox_type = models.ToolboxType.objects.get(name_tag='injection')
+    
+    qs = models.ToolboxProject.objects.filter(
+            Q(user=user)&Q(toolbox_type=toolbox_type)
+        ).order_by('-creation_date').reverse()
+    
+    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
     tu_mar_weightings_form = forms.MarWeightingForm()
     suitability_aquifer_thickness = forms.SuitabilityForm('aquifer_thickness')
     suitability_depth_groundwater_form = forms.SuitabilityForm('depth_groundwater')
@@ -1536,3 +1571,23 @@ def geoserver_wms(request):
         response.content,
         content_type=response.headers.get("Content-Type")
     )
+
+
+def load_sieker_drainage_gui(request, user_field_id):
+    user = request.user
+    if request.method == 'GET':
+        toolbox_type = models.ToolboxType.objects.get(name_tag='sieker_drainage')
+        user_field = models.UserField.objects.get(Q(id=int(user_field_id))&Q(user=user))
+        qs = models.ToolboxProject.objects.filter(
+            Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
+        ).order_by('-creation_date').reverse()
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+        drainage_filter_form = forms.SiekerDrainageFilterForm()
+
+        html = render_to_string('toolbox/sieker_drainage.html', {
+            'project_select_form': project_select_form,
+            'drainage_filter_form': drainage_filter_form,
+        }, request=request)
+
+        return JsonResponse({'success': True, 'html': html})
+       

@@ -547,8 +547,8 @@ export function selectUserField(userFieldId, project, featureGroup) {
 };
 
 export function getSelectedUserField() {
-  if ($('.user-field-header.highlight')) {
-    const userFieldId = $('.user-field-header.highlight').first().data('user-field-id');
+  if ($('.user-field-header.highlight')[0]) {
+    const userFieldId = $('.user-field-header.highlight').first().attr('user-field-id');
     return userFieldId;
   } else { return null; }
 }

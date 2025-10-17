@@ -18,7 +18,7 @@ const projectClasses = {
     'filtered_sieker_gek': SiekerGek,
     'sieker_wetland': SiekerWetland,
     'sieker_sink': SiekerSink,
-    'sieker_large_lake': SiekerSurfaceWaters,
+    'sieker_surface_water': SiekerSurfaceWaters,
     'sieker_water_level': SiekerSurfaceWaters,
     'sieker_gek': SiekerGek,
 }
@@ -55,6 +55,8 @@ $('#map').on('click', function (event) {
 $('#toolboxProjectModal').on('hidden.bs.modal', function () {
         // Reset the form inside the modal
         $('.new-toolbox-project')[0].reset();
+        $('#projectTypeSelect').prop('disabled', false);
+        $('#userFieldSelect').prop('disabled', false);
     });
 
 export function makeColoredPin(color, iconPath = null, label = "") {
@@ -295,9 +297,12 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                     map.removeLayer(layer);
                 }
             });
-            const project = new ToolboxProject();
-            project.userField = getSelectedUserField();
-            project.saveToLocalStorage();
+            console.log('Back to initial t1: ', project);
+            const newProject = new ToolboxProject();
+            console.log('Back to initial t2: ', getSelectedUserField());
+            newProject.userField = getSelectedUserField();
+            console.log('Back to initial t3: ', newProject);
+            newProject.saveToLocalStorage();
             return;
         // table related
         } else if ($target.hasClass('paginate_button')) {
@@ -331,10 +336,13 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 $target.text('ausblenden');
             }
         } else if ($target.hasClass('save-toolbox-project')) {
-            if (!project.id) {
+            if (!project.id || project.name === '') {
                 $('#userFieldSelect').val(project.userField);
                 $('#toolboxProjectModal').modal('show');
                 $('#id_project_name').focus();
+                $('#projectTypeSelect').val($target.data('type'));
+                $('#projectTypeSelect').prop('disabled', true);
+                $('#userFieldSelect').prop('disabled', true);
 
             } else {
                 project.saveToDB();

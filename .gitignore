@@ -177,11 +177,6 @@ data_temp/
 database/
 notes/
 
-geoserver/data/
-# geoserver/data/security/
-# geoserver/data/logs/
-
-geoserver__/ 
 model_exports/
 
 # Django stuff
@@ -190,6 +185,10 @@ migrations/
 #sass
 .sass-cache/
 
+geoserver/data/
+# GeoServer data directories to ignore
+geoserver/data/logs/
+geoserver/data/security/
 
 # local files and folders for data import 
 raster_polygons.geojson

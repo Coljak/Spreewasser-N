@@ -99,7 +99,7 @@ class ToolboxProject(models.Model):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="toolbox_projects")
     description = models.TextField(null=True, blank=True)
-    user_field = models.ForeignKey('UserField', on_delete=models.CASCADE)
+    user_field = models.ForeignKey('UserField', on_delete=models.CASCADE, null=True)
     toolbox_type = models.ForeignKey('ToolboxType', on_delete=models.CASCADE)
     creation_date = models.DateTimeField(blank=True, default=now)
     last_modified = models.DateTimeField(auto_now=True, blank=True)

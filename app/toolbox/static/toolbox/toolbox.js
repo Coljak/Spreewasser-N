@@ -1,9 +1,11 @@
 import { getGeolocation, handleAlerts, getCSRFToken, saveProject, observeDropdown,  setLanguage, populateDropdown } from '/static/shared/utils.js';
 import {Infiltration} from '/static/toolbox/infiltration_model.js';
+import {TuMar} from '/static/toolbox/tu_mar_model.js';
 import {SiekerGek} from '/static/toolbox/sieker_gek_model.js';
 import {SiekerSink} from '/static/toolbox/sieker_sink_model.js';
 import {SiekerSurfaceWaters} from '/static/toolbox/sieker_surface_waters_model.js';
 import {SiekerWetland} from '/static/toolbox/sieker_wetland_model.js';
+import { Drainage } from '/static/toolbox/sieker_drainage_model.js';
 import {map, removeLegendFromMap, getSelectedUserField} from '/static/shared/map_sidebar_utils.js';
 import {Layers} from '/static/toolbox/layers.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
@@ -14,13 +16,15 @@ const projectClasses = {
     'enlarged_sink': Infiltration,
     'stream': Infiltration,
     'lake': Infiltration,
-    // 'gek': SiekerGek,
+    'infiltration': Infiltration,
+    'injection': TuMar,
     'filtered_sieker_gek': SiekerGek,
     'sieker_wetland': SiekerWetland,
     'sieker_sink': SiekerSink,
     'sieker_surface_water': SiekerSurfaceWaters,
     'sieker_water_level': SiekerSurfaceWaters,
     'sieker_gek': SiekerGek,
+    'drainage': Drainage,
 }
 
 function toggleNumberInArray(list, num) {
@@ -183,7 +187,6 @@ export function addChangeEventListener(projectClass) {
     $('#toolboxPanel').on('change', function (event) {
         const $target = $(event.target);
         const project = CurrentProjectClass.loadFromLocalStorage();
-        // console.log('change event', $target);
         if ($target.hasClass('double-slider')) {
             const inputName = $target.attr('name');
             const minName = inputName + '_min';
@@ -282,6 +285,61 @@ export function openResultCard(dataType, id) {
         });
 };
 
+function loadProjectToGui(project) {
+    console.log('loadProjectToGui', project);
+
+    const projectType = project.toolboxType;
+
+    for (const [key, value] of Object.entries(project)) {
+        // --- Double sliders (_min and _max) ---
+        if (key.endsWith('_min') || key.endsWith('_max')) {
+            const baseName = key.replace(/_(min|max)$/, '');
+            const $slider = $(`[name="${baseName}"]`);
+            if ($slider.hasClass('double-slider')) {
+                const min = project[`${baseName}_min`];
+                const max = project[`${baseName}_max`];
+                if (min !== null || max !== null) {
+                    try {
+                        $slider.slider('setValue', [parseFloat(min), parseFloat(max)], true, false);
+                    } catch (err) {
+                        console.warn(`Failed to update slider "${baseName}":`, err);
+                    }
+                }
+            }
+            continue;
+        }
+
+        // --- Single sliders ---
+        const $single = $(`[name="${key}"].single-slider`);
+        if ($single.length) {
+            $single.val(value).trigger('input');
+            continue;
+        }
+
+        // --- Checkboxes ---
+        const $checkboxes = $(`.form-check-input[name="${key.split('_').slice(1).join('_')}"][prefix="${key.split('_')[0]}"]`);
+        if ($checkboxes.length && Array.isArray(value)) {
+            $checkboxes.each(function () {
+                const $checkbox = $(this);
+                const val = $checkbox.val();
+                $checkbox.prop('checked', value.includes(val));
+            });
+            continue;
+        }
+
+        // --- Generic inputs ---
+        const $input = $(`[name="${key}"]`);
+        if ($input.length && !$input.hasClass('double-slider') && !$input.hasClass('single-slider')) {
+            $input.val(value);
+        }
+    }
+}
+
+
+
+
+
+
 export function addClickEventListenerToToolboxPanel(projectClass) {
     const ProjectClass = projectClass;
     $('#toolboxPanel').on('click',function (event) {
@@ -347,6 +405,23 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             } else {
                 project.saveToDB();
             }
+        } else if ($target.hasClass('toolbox-load-project')) {
+            const project_id = $('#id_toolbox_project').val();
+            fetch(`/toolbox/load-project/${project_id}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Project data received:', data);
+                    const ProjectClass = projectClasses[data.project.toolboxType];
+                    const loadedProject = new ProjectClass(data.project);
+                    console.log('Loaded project:', loadedProject);
+                    loadProjectToGui(loadedProject);
+                    // Re-initialize the toolbox with the loaded project
+                    loadedProject.saveToLocalStorage();
+                } else {
+                    handleAlerts(data.message);
+                }
+            });
         }
     });
 };

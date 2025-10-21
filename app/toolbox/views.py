@@ -188,6 +188,7 @@ def save_toolbox_project(request):
 
         toolbox_type = models.ToolboxType.objects.get(name_tag=request_data['toolboxType'])
         user_field = models.UserField.objects.get(pk=request_data['userField'])
+        print('iserField None?', user_field)
 
         # Known model fields
         known_fields = {'id', 'name', 'description', 'userField', 'toolboxType'}
@@ -242,10 +243,10 @@ def load_toolbox_project(request, id):
     project = models.ToolboxProject.objects.get(pk=id)
     print("Toolbox Project: ", project)
     if not project:
-        return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
+        return JsonResponse({'success': False, 'message': 'Project not found'})
     else:
         project_json = project.to_json()
-        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
+        return JsonResponse({'success': True, 'message': f'Project {project.name} loaded', 'project': project_json})
 
     
 

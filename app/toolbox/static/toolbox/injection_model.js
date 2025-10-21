@@ -1,6 +1,6 @@
 import { ToolboxProject } from './toolbox_project.js';
 
-export class TuMar extends ToolboxProject {
+export class Injection extends ToolboxProject {
     constructor (data = {}) {
         super(data);
         this.toolboxType = 'injection';
@@ -59,8 +59,8 @@ export class TuMar extends ToolboxProject {
     }
  
     static fromJson(json) {
-      return new TuMar(json);
+      return new Injection(json);
     }
 };
 
-ToolboxProject.registerSubclass('injection', TuMar);
+ToolboxProject.registerSubclass('injection', Injection);

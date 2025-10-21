@@ -1,6 +1,6 @@
 import { getGeolocation, handleAlerts, getCSRFToken, saveProject, observeDropdown,  setLanguage, populateDropdown } from '/static/shared/utils.js';
 import {Infiltration} from '/static/toolbox/infiltration_model.js';
-import {TuMar} from '/static/toolbox/tu_mar_model.js';
+import {Injection} from '/static/toolbox/injection_model.js';
 import {SiekerGek} from '/static/toolbox/sieker_gek_model.js';
 import {SiekerSink} from '/static/toolbox/sieker_sink_model.js';
 import {SiekerSurfaceWaters} from '/static/toolbox/sieker_surface_waters_model.js';
@@ -17,7 +17,7 @@ const projectClasses = {
     'stream': Infiltration,
     'lake': Infiltration,
     'infiltration': Infiltration,
-    'injection': TuMar,
+    'injection': Injection,
     'filtered_sieker_gek': SiekerGek,
     'sieker_wetland': SiekerWetland,
     'sieker_sink': SiekerSink,

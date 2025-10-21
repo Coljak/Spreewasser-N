@@ -7,13 +7,13 @@ import { SiekerGek } from '/static/toolbox/sieker_gek_model.js';
 import { SiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters_model.js';
 import { SiekerWetland } from '/static/toolbox/sieker_wetland_model.js';
 import { Infiltration } from '/static/toolbox/infiltration_model.js';
+import { Injection } from '/static/toolbox/injection_model.js';
 import { initializeInfiltration } from '/static/toolbox/infiltration.js';
 import { initializeSiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters.js';
 import { initializeSiekerSink } from '/static/toolbox/sieker_sink.js';
 import {initializeSiekerGek } from '/static/toolbox/sieker_gek.js';
 import {initializeSiekerWetland } from '/static/toolbox/sieker_wetland.js';
-import { TuMar } from '/static/toolbox/tu_mar_model.js';
-import { initializeTuMar } from '/static/toolbox/tu_mar.js';
+import { initializeInjection } from '/static/toolbox/injection.js';
 import { initializeDrainage } from '/static/toolbox/sieker_drainage.js';
 import { Drainage } from '/static/toolbox/sieker_drainage_model.js';
 
@@ -51,14 +51,14 @@ const TOOLBOX_TYPES = {
 
 async function startInfiltration(project) {
   console.log('start Infiltration');
-  const userField = project.userField;
+  
 
-  if (!userField) {
+  if (!project.userField || project.userField === undefined) {
     handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'});
     return Promise.reject('No userField selected');
   }
 
-  const response = await fetch('load_infiltration_gui/' + userField + '/');
+  const response = await fetch('load_infiltration_gui/' + project.userField + '/');
   const data = await response.json();
   if (!data.success) {
     handleAlerts(data);
@@ -81,12 +81,12 @@ async function startInfiltration(project) {
 // Sieker
 async function startSurfaceWaters(project) {
   console.log('startSurfaceWaters')
-  const userField = project.userField;
-  if (!userField) {
+  // const userField = project.userField;
+  if (!project.userField || project.userField === undefined) {
     handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'});
     return Promise.reject('No userField selected');
   }
-  return fetch('load_surface_waters_gui/' + userField + '/')
+  return fetch('load_surface_waters_gui/' + project.userField + '/')
     .then(response => response.json())
     .then(data => {
       console.log('data received', data)
@@ -115,13 +115,13 @@ async function startSurfaceWaters(project) {
 
 async function startSiekerSinks(project) {
   console.log('start Infiltration')
-  const userField = project.userField;
+  // const userField = project.userField;
 
-  if (!userField) {
+  if (!project.userField || project.userField === undefined) {
     handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'});
     return Promise.reject('No userField selected');
   }
-  return fetch('load_sieker_sink_gui/' + userField + '/')
+  return fetch('load_sieker_sink_gui/' + project.userField + '/')
     .then(response => response.json())
     .then(data => {
       if (!data.success) {
@@ -136,7 +136,7 @@ async function startSiekerSinks(project) {
       $('#toolboxPanel').removeClass('d-none');
       $('#toolboxPanel').html(data.html);
 
-      return userField;
+      return project;
     })
     .then(() => {
       initializeSiekerSink();
@@ -149,13 +149,13 @@ async function startSiekerSinks(project) {
 async function startSiekerGeks(project) {
   console.log('start Sieker Geks')
   
-  const userField = project.userField;
-  if (!userField) {
+  // const userField = project.userField;
+  if (!project.userField || project.userField === undefined) {
     handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'});
     return Promise.reject('No userField selected');
   }
 
-  return fetch('load_sieker_gek_gui/' + userField + '/')
+  return fetch('load_sieker_gek_gui/' + project.userField + '/')
     .then(response => response.json())
     .then(data => {
       console.log('data', data);
@@ -189,13 +189,13 @@ async function startSiekerGeks(project) {
 async function startFormerWetlands(project) {
   console.log('start Sieker Wetlands')
   
-  const userField = project.userField;
-  if (!userField) {
+  // const userField = project.userField;
+  if (!project.userField || project.userField === undefined) {
     handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'});
     return Promise.reject('No userField selected');
   }
 
-  return fetch('load_sieker_wetland_gui/' + userField + '/')
+  return fetch('load_sieker_wetland_gui/' + project.userField + '/')
     .then(response => response.json())
     .then(data => {
       if (!data.success) {
@@ -224,12 +224,12 @@ async function startFormerWetlands(project) {
 };
 
 // TU-Berlin
-async function startTuMar(project) {
-  const userField = project.userField;
+async function startInjection(project) {
+  // const userField = project.userField;
     // if (userField) {
     
-      // fetch('load_tu_mar_gui/' + userField + '/')
-  return fetch('load_tu_mar_gui/')
+      // fetch('load_injection_gui/' + userField + '/')
+  return fetch('load_injection_gui/')
   .then(response => response.json())
   .then(data => {
     if (!data.success) {
@@ -237,8 +237,8 @@ async function startTuMar(project) {
       return
     }
 
-    // const tuMar = new TuMar({ userField: userField});
-    // tuMar.saveToLocalStorage();
+    // const injection = new Injection({ userField: userField});
+    // injection.saveToLocalStorage();
     $('#toolboxButtons').addClass('d-none');
     $('#toolboxPanel').removeClass('d-none');
     $('#toolboxPanel').html(data.html);
@@ -249,7 +249,7 @@ async function startTuMar(project) {
     };
   })
   .then(data => {
-    initializeTuMar(data);
+    initializeInjection(data);
     return true;
   })
 };
@@ -258,14 +258,14 @@ async function startTuMar(project) {
 async function startDrainage(project) {
   console.log('start Sieker Drainage')
   
-  const userField = project.userField;
+  // const userField = project.userField;
 
-  if (!userField) {
+  if (!project.userField || project.userField === undefined) {
     handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'});
     return Promise.reject('No userField selected');
   }
   
-  return fetch('load_sieker_drainage_gui/' + userField + '/')
+  return fetch('load_sieker_drainage_gui/' + project.userField + '/')
   .then(response => response.json())
   .then(data => {
     if (!data.success) {
@@ -300,7 +300,7 @@ export function startToolbox(project) {
       return Promise.resolve(startInfiltration(project)); // returns a promise
     case 'injection':
       console.log('startInjection saved');
-      return Promise.resolve(startTuMar(project)); // should return a promise
+      return Promise.resolve(startInjection(project)); // should return a promise
     case 'sieker_surface_waters':
       console.log('startSurfaceWaters saved');
       return Promise.resolve(startSurfaceWaters(project));
@@ -577,38 +577,52 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
 
   $('#startInfiltration').on('click', () => {
     console.log('startInfiltration clicked');
-    const project = ToolboxProject.loadFromLocalStorage();
+    const userField = ToolboxProject.loadFromLocalStorage().userField;
+    const project = new Infiltration({ userField: userField });
+    project.saveToLocalStorage();
     startInfiltration(project)
   });
   $('#startInjection').on('click', () => {
     console.log('startInjection clicked');
-    const project = ToolboxProject.loadFromLocalStorage();
-    startTuMar(project);
+    const userField = ToolboxProject.loadFromLocalStorage().userField;
+    const project = new Injection({ userField: userField });
+    project.saveToLocalStorage();
+    startInjection(project);
     // startInjection()
   });
   $('#startSurfaceWaters').on('click', () => {
     console.log('startSurfaceWaters clicked');
-    const project = ToolboxProject.loadFromLocalStorage();
+    const userField = ToolboxProject.loadFromLocalStorage().userField;
+    const project = new SiekerSurfaceWaters({ userField: userField });
+    project.saveToLocalStorage();
     startSurfaceWaters(project);
   });
   $('#startSiekerSinks').on('click', () => {
-    const project = ToolboxProject.loadFromLocalStorage();
+    const userField = ToolboxProject.loadFromLocalStorage().userField;
+    const project = new SiekerSink({ userField: userField });
+    project.saveToLocalStorage();
     console.log('startSiekerSinks clicked');
     startSiekerSinks(project);
   });
   $('#startWaterDevelopment').on('click', () => {
     console.log('startGek clicked');
-    const project = ToolboxProject.loadFromLocalStorage();
+    const userField = ToolboxProject.loadFromLocalStorage().userField;
+    const project = new SiekerGek({ userField: userField });
+    project.saveToLocalStorage();
     startSiekerGeks(project);
   });
   $('#startFormerWetlands').on('click', () => {
     console.log('startFormerWetlands clicked');
-    const project = ToolboxProject.loadFromLocalStorage();
+    const userField = ToolboxProject.loadFromLocalStorage().userField;
+    const project = new SiekerWetland({ userField: userField });
+    project.saveToLocalStorage();
     startFormerWetlands(project);
   });
   $('#startDrainage').on('click', () => {
     console.log('startDrainage clicked');
-    const project = ToolboxProject.loadFromLocalStorage();
+    const userField = ToolboxProject.loadFromLocalStorage().userField;
+    const project = new Drainage({ userField: userField });
+    project.saveToLocalStorage();
    startDrainage(project)
   });
 

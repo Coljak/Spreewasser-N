@@ -1,7 +1,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 
-<div id="divTuMar">
+<div id="divInjection">
     
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Grundwasseranreicherung durch Injektion</h2>
@@ -16,26 +16,26 @@
         </li>
         
         
-        <li class="nav-item tuMar">
-            <a id="navTuMarSuitabilityAquiferThickness" class="toolbox nav-link" data-type="aquifer_thickness" data-bs-toggle="tab" href="#tabTuMarSuitabilityAquiferThickness" aria-selected="false">Aquifermächtigkeit</a>
+        <li class="nav-item injection">
+            <a id="navInjectionSuitabilityAquiferThickness" class="toolbox nav-link" data-type="aquifer_thickness" data-bs-toggle="tab" href="#tabInjectionSuitabilityAquiferThickness" aria-selected="false">Aquifermächtigkeit</a>
         </li>
-        <li class="nav-item tuMar">
-            <a id="navTuMarSuitabilityDepthToGW" class="toolbox nav-link" data-type="depth_groundwater" data-bs-toggle="tab" href="#tabTuMarSuitabilityDepthGW" aria-selected="false">Grundwasserflurabstand</a>
+        <li class="nav-item injection">
+            <a id="navInjectionSuitabilityDepthToGW" class="toolbox nav-link" data-type="depth_groundwater" data-bs-toggle="tab" href="#tabInjectionSuitabilityDepthGW" aria-selected="false">Grundwasserflurabstand</a>
         </li>
-        <li class="nav-item tuMar">
-            <a id="navTuMarSuitabilityLandUse" class="toolbox nav-link" data-type="land_use" data-bs-toggle="tab" href="#tabTuMarSuitabilityLandUse" aria-selected="false">Landnutzung</a>
+        <li class="nav-item injection">
+            <a id="navInjectionSuitabilityLandUse" class="toolbox nav-link" data-type="land_use" data-bs-toggle="tab" href="#tabInjectionSuitabilityLandUse" aria-selected="false">Landnutzung</a>
         </li>
-        <li class="nav-item tuMar">
-            <a id="navTuMarSuitabilityDistanceSource" class="toolbox nav-link" data-type="distance_to_source" data-bs-toggle="tab" href="#tabTuMarSuitabilityDistanceSource" aria-selected="false">Distanz zu Gewässern</a>
+        <li class="nav-item injection">
+            <a id="navInjectionSuitabilityDistanceSource" class="toolbox nav-link" data-type="distance_to_source" data-bs-toggle="tab" href="#tabInjectionSuitabilityDistanceSource" aria-selected="false">Distanz zu Gewässern</a>
         </li>
-        <li class="nav-item tuMar">
-            <a id="navTuMarSuitabilityDistanceWells" class="toolbox nav-link"  data-type="distance_to_well" data-bs-toggle="tab" href="#tabTuMarSuitabilityDistanceWells">Distanz zu Entnahmebrunnen</a>
+        <li class="nav-item injection">
+            <a id="navInjectionSuitabilityDistanceWells" class="toolbox nav-link"  data-type="distance_to_well" data-bs-toggle="tab" href="#tabInjectionSuitabilityDistanceWells">Distanz zu Entnahmebrunnen</a>
         </li> 
-        <li class="nav-item tuMar">
-            <a id="navTuMarSuitabilityHydraulicConductivity" class="toolbox nav-link"  data-type="hydraulic_conductivity" data-bs-toggle="tab" href="#tabTuMarSuitabilityHydraulicConductivity">Hydraulische Leitfähigkeit</a>
+        <li class="nav-item injection">
+            <a id="navInjectionSuitabilityHydraulicConductivity" class="toolbox nav-link"  data-type="hydraulic_conductivity" data-bs-toggle="tab" href="#tabInjectionSuitabilityHydraulicConductivity">Hydraulische Leitfähigkeit</a>
         </li> 
-        <li class="nav-item tuMar">
-            <a id="navTuMarSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabTuMarWeighting" aria-selected="false">Gesamtgewichtung</a>
+        <li class="nav-item injection">
+            <a id="navInjectionSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabInjectionWeighting" aria-selected="false">Gesamtgewichtung</a>
         </li>
         
     </ul>
@@ -56,7 +56,7 @@
         </div>
 
 
-        <div id="tabTuMarWeighting" class="tab-pane">
+        <div id="tabInjectionWeighting" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
@@ -66,16 +66,16 @@
                         {% comment %} <button class="btn btn-secondary toggle-tile-layer" data-type="overall_weightings">einblenden</button>                                                                                              {% endcomment %}
                     </div>
                     
-                    <form method="GET" id="{{ tu_mar_weightings_form.helper.form_id }}" class="{{ tu_mar_weightings_form.helper.form_class }}">
+                    <form method="GET" id="{{ injection_weightings_form.helper.form_id }}" class="{{ injection_weightings_form.helper.form_class }}">
                         {% csrf_token %}
-                        {% crispy tu_mar_weightings_form %}
-                        <button  type="submit" class="btn btn-primary calculate-area" data-type="tu_mar_weightings">Fläche berechnen</button>
+                        {% crispy injection_weightings_form %}
+                        <button  type="submit" class="btn btn-primary calculate-area" data-type="injection_weightings">Fläche berechnen</button>
                     </form>
                 </div>
             </div>       
         </div>
 
-        <div id="tabTuMarSuitabilityAquiferThickness" class="tab-pane">
+        <div id="tabInjectionSuitabilityAquiferThickness" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
@@ -93,7 +93,7 @@
             </div>       
         </div>
 
-        <div id="tabTuMarSuitabilityDepthGW" class="tab-pane">
+        <div id="tabInjectionSuitabilityDepthGW" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
@@ -111,7 +111,7 @@
             </div>       
         </div>
 
-        <div id="tabTuMarSuitabilityLandUse" class="tab-pane">
+        <div id="tabInjectionSuitabilityLandUse" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
@@ -129,7 +129,7 @@
             </div>       
         </div>
 
-        <div id="tabTuMarSuitabilityDistanceSource" class="tab-pane">
+        <div id="tabInjectionSuitabilityDistanceSource" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
@@ -147,7 +147,7 @@
             </div>       
         </div>
 
-        <div id="tabTuMarSuitabilityDistanceWells" class="tab-pane">
+        <div id="tabInjectionSuitabilityDistanceWells" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
@@ -165,7 +165,7 @@
             </div>       
         </div>
 
-         <div id="tabTuMarSuitabilityHydraulicConductivity" class="tab-pane">
+         <div id="tabInjectionSuitabilityHydraulicConductivity" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">

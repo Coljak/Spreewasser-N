@@ -16,7 +16,7 @@ import {
   dismissPolygon,
   removeLegendFromMap,
 } from '/static/shared/map_sidebar_utils.js';
-import {TuMar} from '/static/toolbox/tu_mar_model.js';
+import {Injection} from '/static/toolbox/injection_model.js';
 import { Layers } from '/static/toolbox/layers.js';
 
 
@@ -74,8 +74,8 @@ addLegendForWms(wmsLayerName)
 
 
 
-export function initializeTuMar(data) {
-  console.log('initializeTuMar')
+export function initializeInjection(data) {
+  console.log('initializeInjection')
 
   
 
@@ -85,7 +85,7 @@ export function initializeTuMar(data) {
   removeLegendFromMap(map);
   map.eachLayer(function(layer) {
         console.log(layer.toolTag);
-        if (layer.toolTag && layer.toolTag !== 'tuMar') {
+        if (layer.toolTag && layer.toolTag !== 'injection') {
             map.removeLayer(layer);
         }
       });
@@ -124,9 +124,9 @@ export function initializeTuMar(data) {
     slider.dispatchEvent(new Event('change'))
   })
   })
-    addChangeEventListener(TuMar);
+    addChangeEventListener(Injection);
 
-    addClickEventListenerToToolboxPanel(TuMar)
+    addClickEventListenerToToolboxPanel(Injection)
 
 
     $('#toolboxPanel').on('click', function (event) {
@@ -176,10 +176,10 @@ export function initializeTuMar(data) {
         
       }
     } else if ($target.hasClass('calculate-area')) {
-      const tuMar = TuMar.loadFromLocalStorage()
+      const injection = Injection.loadFromLocalStorage()
       fetch('mar_calculate_area/', {
             method: 'POST',
-            body: JSON.stringify(tuMar),
+            body: JSON.stringify(injection),
             headers: {
               'Content-Type': 'application/json',
               'X-CSRFToken': getCSRFToken()
@@ -213,8 +213,8 @@ export function initializeTuMar(data) {
 
   $('input[type="checkbox"][name="land_use"]').prop('checked', true);
   $('input[type="checkbox"][name="land_use"]').trigger('change');
-  
-const tuMar = TuMar.loadFromLocalStorage();
-loadProjectToGui(tuMar)
+
+const injection = Injection.loadFromLocalStorage();
+loadProjectToGui(injection)
 }
 

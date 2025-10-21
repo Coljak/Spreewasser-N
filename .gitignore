@@ -188,8 +188,8 @@ geoserver/data.backup/
 geoserver/data/
 geoserver__/
 # GeoServer data directories to ignore
-geoserver/data/logs/
-geoserver/data/security/
+geoserver/
+
 
 # local files and folders for data import 
 raster_polygons.geojson

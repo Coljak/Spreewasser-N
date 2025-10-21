@@ -1,8 +1,11 @@
 import { getGeolocation } from '/static/shared/utils.js';
-import { MonicaProject, loadProjectFromDB, loadProjectToGui  } from '/static/monica/monica.js';
+import { MonicaProject, loadProjectFromDB as loadMonicaProjectFromDb, loadProjectToGui as loadMonicaProjectToGui  } from '/static/monica/monica.js';
 
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
+import { loadProjectFromDb as loadToolboxProjectFromDb, loadProjectToGui as loadToolboxProjectToGui } from '/static/toolbox/toolbox.js';
 import { getCSRFToken, handleAlerts, getBsColor } from '/static/shared/utils.js';
+import { startToolbox } from '/static/toolbox/toolbox_three_split.js';
+
 export class UserField {
   constructor(name, id=null, lat=null, lon=null, userProjects=[], properties={} ) {
     this.name = name;
@@ -685,12 +688,13 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
       
       if (clickedElement.classList.contains("user-field-action")) {
         const leafletId = clickedElement.getAttribute("leaflet-id");
+        const userFieldId = clickedElement.getAttribute("user-field-id");
         console.log("user-field-action clicked", leafletId);
         let userFields = getUserFields();
-        const userField = userFields[leafletId];
+        
 
         if (clickedElement.classList.contains("delete")) {
-          let confirmDelete = confirm(`Are you sure to delete ` + userField.name + "?");
+          let confirmDelete = confirm(`Are you sure to delete ` + userFields[leafletId].name + "?");
           if (confirmDelete) {
             
             let layer = featureGroup.getLayer(leafletId);
@@ -700,8 +704,8 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
             const listElement = document.getElementById("accordion-"+leafletId);
             listElement.remove(); // removes HTML element from sidebar
             // removes field from dbprojectClass
-            console.log("delete UserField ", userField)
-            fetch(`delete-user-field/${userField.id}/`, {
+            console.log("delete UserField ", userFieldId)
+            fetch(`delete-user-field/${userFieldId}/`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -716,9 +720,9 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
               });
           }
         } else if (clickedElement.classList.contains("field-menu")) {
-          selectUserField(project.userField, getProject(), featureGroup);
+          selectUserField(userFieldId, getProject(), featureGroup);
           console.log('field-menu clicked');
-          fetch(`field-projects-menu/${userField.id}/`)
+          fetch(`field-projects-menu/${userFieldId}/`)
           .then(response => response.json())
           .then(data => {
             console.log("data", data);
@@ -733,21 +737,29 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
             modalElement.addEventListener('click', (event) => {
               if(event.target.classList.contains('open-project')) {
                 const projectId = event.target.getAttribute('data-project-id');
-                loadProjectFromDB(projectId)
-                .then(project => {
-                  loadProjectToGui(project);
+                if (data.type === 'monica') {
+                  console.log(' then load monica', projectId)
+                  loadMonicaProjectFromDb(projectId)
+                  .then(project => {
+                    loadMonicaProjectToGui(project);
+                  });
+                } else if (data.type === 'toolbox') {
+                  loadToolboxProjectFromDb(projectId)
+                  .then(project => {
+                    
+                    return startToolbox(project)
+                  })
                   
-                  
-                });
-                // console.log('project after loadProjectFromDb', project)
+                  .catch(err => console.error(err))  
+                }
                 fieldMenuModal.hide();
               }
             });
           });
         } else if (clickedElement.classList.contains("field-project-add")) {
-          selectUserField(userField.id, getProject(), featureGroup);
+          selectUserField(userFieldId, getProject(), featureGroup);
           //set the right user field in the modal
-          $('#userFieldSelect').val(userField.id);
+          $('#userFieldSelect').val(userFieldId);
           
           
            if (window.location.pathname.endsWith('/drought/')) {
@@ -763,7 +775,7 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
             $('#toolboxProjectModal').modal('show');
           }
         } else if (clickedElement.classList.contains('field-edit')) {
-          selectUserField(userField.id, getProject(), featureGroup);
+          selectUserField(userFieldId, getProject(), featureGroup);
           console.log('field-edit clicked');
           let layer = featureGroup.getLayer(leafletId);
         
@@ -797,7 +809,7 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
               L.DomEvent.on(saveBtn, 'click', () => {
                 console.log('Save clicked');
                 editConfirmed = true;
-                saveUserField(userField.name, userField.id, layer);
+                saveUserField(userField.name, userFieldId, layer);
                 layer.editing.disable();
                 layer.closePopup();
                 layer.unbindPopup(); // Prevent popup from reopening later
@@ -1018,7 +1030,7 @@ const tooltip = {
     edit: "Feld bearbeiten",
     createProject: "Projekt erstellen",
     loadProject: "Projekt laden",
-    delete: "Project löschen",
+    delete: "Feld löschen",
   }
 }
 

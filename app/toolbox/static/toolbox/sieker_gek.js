@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown, getBsColor } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
 import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerGek } from '/static/toolbox/sieker_gek_model.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
@@ -109,11 +109,8 @@ function addFeatureCollectionResultCards( dataInfo, gekMeasures) {
 
 
 export function initializeSiekerGek(data) {
-  const userField = ToolboxProject.loadFromLocalStorage().userField;
 
-  const siekerGek = new SiekerGek();
-  siekerGek.userField = userField;
-  siekerGek.saveToLocalStorage();
+  
 
 
   removeLegendFromMap(map);
@@ -212,6 +209,8 @@ export function initializeSiekerGek(data) {
   $('input[type="checkbox"][name="landuse"][prefix="gek"]').trigger('change');
 
   $('input[type="range"]').trigger('change');
+  const siekerGek = SiekerGek.loadFromLocalStorage();
+  loadProjectToGui(siekerGek);
 
 };
 

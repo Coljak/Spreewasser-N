@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel, addFeatureCollectionToTable, addFeatureCollectionToLayer, addPointFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel, addFeatureCollectionToTable, addFeatureCollectionToLayer, addPointFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerSink } from '/static/toolbox/sieker_sink_model.js';
 import {Layers} from '/static/toolbox/layers.js';
@@ -77,10 +77,8 @@ function filterSiekerSinks(dataType, featureGroup) {
 
 
 
-export function initializeSiekerSink(userField) {
-  const project = new SiekerSink();
-  project.userField = userField;
-  project.saveToLocalStorage()
+export function initializeSiekerSink() {
+  
 
   removeLegendFromMap(map);
   map.eachLayer(function(layer) {
@@ -125,5 +123,7 @@ export function initializeSiekerSink(userField) {
   $('input[type="checkbox"][name="feasibility"][prefix="sieker_sink"]').prop('checked', true);
   $('input[type="checkbox"][name="feasibility"][prefix="sieker_sink"]').trigger('change');
 
+  const siekerSink = SiekerSink.loadFromLocalStorage();
+  loadProjectToGui(siekerSink)
 };
 

@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addLegend, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addLegend, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
@@ -76,10 +76,9 @@ addLegendForWms(wmsLayerName)
 
 export function initializeTuMar(data) {
   console.log('initializeTuMar')
-  const userField = ToolboxProject.loadFromLocalStorage().userField;
-  const tuMar = new TuMar();
-  tuMar.userField = userField;
-  tuMar.saveToLocalStorage();
+
+  
+
   const sliderLabelsWeighting = data.sliderLabels;
   const sliderLabelsSuitability = data.sliderLabelsSuitability;
   
@@ -214,7 +213,8 @@ export function initializeTuMar(data) {
 
   $('input[type="checkbox"][name="land_use"]').prop('checked', true);
   $('input[type="checkbox"][name="land_use"]').trigger('change');
-
-
+  
+const tuMar = TuMar.loadFromLocalStorage();
+loadProjectToGui(tuMar)
 }
 

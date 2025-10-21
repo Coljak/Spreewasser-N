@@ -227,10 +227,9 @@ def save_toolbox_project(request):
             status = 201
 
         return JsonResponse({
-            'message': {'success': True, 'message': message},
-            'project_id': project.id,
-            'project_name': project.name,
-            'project_type': project.toolbox_type.name_tag,
+            'success': True, 
+            'message': message,
+            'project': project.to_json(),
         }, status=status)
 
     except Exception as e:
@@ -365,7 +364,7 @@ def get_field_project_modal(request, id):
     user_projects = models.ToolboxProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user)).order_by('name')
 
     html = render(request, 'toolbox/partials/project_table.html', {'projects': user_projects}).content.decode('utf-8')
-    return JsonResponse({'html': html})
+    return JsonResponse({'html': html, 'type': 'toolbox'})
 
 
 #TODO needed here?

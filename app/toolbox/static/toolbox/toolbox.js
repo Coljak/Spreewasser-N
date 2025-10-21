@@ -61,6 +61,7 @@ $('#toolboxProjectModal').on('hidden.bs.modal', function () {
         $('.new-toolbox-project')[0].reset();
         $('#projectTypeSelect').prop('disabled', false);
         $('#userFieldSelect').prop('disabled', false);
+        $('#saveToolboxProjectButton').data('page-reload', true);
     });
 
 export function makeColoredPin(color, iconPath = null, label = "") {
@@ -73,8 +74,7 @@ export function makeColoredPin(color, iconPath = null, label = "") {
         html: `
              ${iconHtml}
             <div class="pin-tip" style="border-top-color:${color}"></div>
-            <div class="pin-shape" style="background-color:${color}"></div>
-            
+            <div class="pin-shape" style="background-color:${color}"></div>    
         `,
         iconSize: [28, 38],
         iconAnchor: [12, 38],
@@ -90,18 +90,18 @@ export const updateDropdown = (parameterType, newId) => {
     console.log('updateDropdown baseUrl', baseUrl);
     var select = document.querySelector('.form-select.' + parameterType); 
     fetch(baseUrl + parameterType + '/')
-        .then(response => response.json())
-        .then(data => {
-            console.log('updateDropdown', data);
-            populateDropdown(data, select);
-        })
-        .then(() => {
-            if (newId != '') {
-                select.value = newId
-            }
-            $(select).trigger('change');
-        })
-        .catch(error => console.log('Error in updateDropdown', error));
+    .then(response => response.json())
+    .then(data => {
+        console.log('updateDropdown', data);
+        populateDropdown(data, select);
+    })
+    .then(() => {
+        if (newId != '') {
+            select.value = newId
+        }
+        $(select).trigger('change');
+    })
+    .catch(error => console.log('Error in updateDropdown', error));
 };
 
 export function tableCheckSelectedItems(project, dataType) {
@@ -148,7 +148,7 @@ export function addLegend(legendSettings) {
         legends: labels
 
         }).addTo(map);
-}
+};
 
 export async function toolboxSinksOutline() {
     // gets the sink outline
@@ -204,7 +204,6 @@ export function addChangeEventListener(projectClass) {
             return;
         }else if ($target.hasClass('form-check-input')) {
             // checkboxes 
-            console.log("Checkbox!!")
             const inputId = $target.attr('id');
             const inputName = $target.attr('name');
             const inputPrefix = $target.attr('prefix');
@@ -212,9 +211,6 @@ export function addChangeEventListener(projectClass) {
             const inputChecked = $target.is(':checked');
 
             const key = `${inputPrefix}_${inputName}`;
-            console.log('key', key)
-            console.log('project', project)
-            
             const index = project[key].indexOf(inputValue);
             console.log('index', index)
             if (index > -1) {
@@ -281,31 +277,38 @@ export function openResultCard(dataType, id) {
     $resultCard.show();
     $resultCard[0].scrollIntoView({
         behavior: 'smooth',   
-        block: 'start'        
+        block: 'start'
         });
 };
 
-function loadProjectToGui(project) {
-    console.log('loadProjectToGui', project);
 
-    const projectType = project.toolboxType;
 
+export function loadProjectToGui(project) {
+    if (project.id === null) { return; }
+    // console.log('loadProjectToGui', project);
     for (const [key, value] of Object.entries(project)) {
         // --- Double sliders (_min and _max) ---
         if (key.endsWith('_min') || key.endsWith('_max')) {
             const baseName = key.replace(/_(min|max)$/, '');
             const $slider = $(`[name="${baseName}"]`);
             if ($slider.hasClass('double-slider')) {
-                const min = project[`${baseName}_min`];
-                const max = project[`${baseName}_max`];
-                if (min !== null || max !== null) {
-                    try {
-                        $slider.slider('setValue', [parseFloat(min), parseFloat(max)], true, false);
-                    } catch (err) {
-                        console.warn(`Failed to update slider "${baseName}":`, err);
-                    }
-                }
+        // Fetch project values
+            let min = project[`${baseName}_min`];
+            let max = project[`${baseName}_max`];
+
+            // ✅ Fallback to slider's configured bounds if missing
+            const sliderMin = parseFloat($slider.data('slider-min'));
+            const sliderMax = parseFloat($slider.data('slider-max'));
+
+            if (min === null || isNaN(min)) min = sliderMin;
+            if (max === null || isNaN(max)) max = sliderMax;
+
+            try {
+            $slider.slider('setValue', [parseFloat(min), parseFloat(max)], true, false);
+            } catch (err) {
+            console.warn(`Failed to update slider "${baseName}":`, err);
             }
+        }
             continue;
         }
 
@@ -333,9 +336,25 @@ function loadProjectToGui(project) {
             $input.val(value);
         }
     }
-}
+    project.saveToLocalStorage();
+};
 
+export async function loadProjectFromDb(project_id) {
+    console.log('loadProjectFromDb', project_id);
+    const response = await fetch(`/toolbox/load-project/${project_id}/`);
+    const data = await response.json();
+    if (data.success) {
+        console.log('received data', data)
+        const ProjectClass = ToolboxProject.subclassRegistry[data.project.toolboxType] || ToolboxProject;
+        const loadedProject = ProjectClass.fromJson(data.project);
+        loadedProject.saveToLocalStorage();
+        console.log('Loaded project:', loadedProject);
+        return loadedProject;
+    } else {
+        handleAlerts(data.message);
+    }
 
+};
 
 
 
@@ -397,30 +416,23 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             if (!project.id || project.name === '') {
                 $('#userFieldSelect').val(project.userField);
                 $('#toolboxProjectModal').modal('show');
+                
                 $('#id_project_name').focus();
                 $('#projectTypeSelect').val($target.data('type'));
                 $('#projectTypeSelect').prop('disabled', true);
                 $('#userFieldSelect').prop('disabled', true);
+                $('#saveToolboxProjectButton').data('page-reload', false);
 
             } else {
                 project.saveToDB();
             }
         } else if ($target.hasClass('toolbox-load-project')) {
             const project_id = $('#id_toolbox_project').val();
-            fetch(`/toolbox/load-project/${project_id}/`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('Project data received:', data);
-                    const ProjectClass = projectClasses[data.project.toolboxType];
-                    const loadedProject = new ProjectClass(data.project);
-                    console.log('Loaded project:', loadedProject);
-                    loadProjectToGui(loadedProject);
-                    // Re-initialize the toolbox with the loaded project
-                    loadedProject.saveToLocalStorage();
-                } else {
-                    handleAlerts(data.message);
-                }
+            const loadedProject = loadProjectFromDb(project_id);
+            loadedProject.then(project => {
+                console.log('Loaded project:', project);
+                loadProjectToGui(project);
+
             });
         }
     });
@@ -710,7 +722,6 @@ export function addFeatureCollectionToTable( data ){
                         tableHTML += `<td data-order="0">--</td>` 
                     }
                 }
-                
             }
         });
         tableHTML += '</tr>';
@@ -724,47 +735,3 @@ export function addFeatureCollectionToTable( data ){
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none')
 };
 
-// export function addFeatureCollectionResultCards( dataInfo, gekMeasures) {
-//     console.log(gekMeasures)
-//     console.log("Creating card")
-//     const infoCard = document.getElementById('sieker_gek-info-card');
-//     const infoCardBody = document.getElementById('sieker_gek-info-card-body');
-//     infoCardBody.innerHTML = '';
-//     gekMeasures.forEach(gek => {
-//         const cardBody = document.createElement('div');
-//         cardBody.classList.add('card-body')
-//         // card
-//         cardBody.innerHTML = `<h4 class="card-title m-3">${gek.name} Abschnitt ${gek.planning_segment}</h4>`;
-        
-//         const card = document.createElement('div');
-//         card.classList.add("card")
-//         card.classList.add("mb-3")
-//         card.classList.add("gek-result-card")
-//         card.setAttribute('data-type', dataInfo.dataType)
-//         card.setAttribute('data-id', gek.id)
-
-
-//         gek.measures.forEach(measure => {
-//             const innerCard = document.createElement('div');
-//             innerCard.classList.add("card")
-//             innerCard.classList.add("mb-3")
-//             // innerCard.setAttribute('data-type', measure.dataType)
-//             innerCard.setAttribute('data-id',measure.id)
-
-//             const innerCardBody = document.createElement('div');
-//             innerCardBody.classList.add("card-body")
-//             innerCardBody.innerHTML = `
-//                 <h5 class="card-title">${measure.gek_measure}</h5>
-//                 <b>Anzahl:</b><span> ${measure.quantity}</span></br>
-//                 <b>Kosten:</b><span> ${measure.costs} €</span></br>
-//                 <div class="result-text-box">${measure.description}</div>
-//             `;
-        
-//             innerCard.appendChild(innerCardBody)
-//             cardBody.append(innerCard)
-//         })
-//         card.appendChild(cardBody)
-//         infoCardBody.appendChild(card)
-//     })
-//     infoCard.style.display = '';
-// }

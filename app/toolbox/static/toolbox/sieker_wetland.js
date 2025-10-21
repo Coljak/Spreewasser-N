@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown, getBsColor } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
 import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerWetland } from '/static/toolbox/sieker_wetland_model.js';
 import {Layers} from '/static/toolbox/layers.js';
@@ -106,12 +106,7 @@ function addFeatureCollectionResultCards( dataInfo, wetlandMeasures) {
 
 export function initializeSiekerWetland(data) {
 
-  const userField = ToolboxProject.loadFromLocalStorage().userField;
-
-  const siekerWetland = new SiekerWetland();
-  siekerWetland.userField = userField;
-  siekerWetland.saveToLocalStorage();
-
+  
 
   removeLegendFromMap(map);
   map.eachLayer(function(layer) {
@@ -216,6 +211,8 @@ export function initializeSiekerWetland(data) {
   // $('input[type="checkbox"][name="landuse"][prefix="wetland"]').trigger('change');
 
   // $('input[type="range"]').trigger('change');
+  const siekerWetland = SiekerWetland.loadFromLocalStorage();
+  loadProjectToGui(siekerWetland)
 
 };
 

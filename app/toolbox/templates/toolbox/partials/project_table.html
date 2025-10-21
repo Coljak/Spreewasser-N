@@ -16,7 +16,7 @@
         {% for project in projects %}
         <tr>
             <td>{{ project.name }}</td>
-            <td>{{ project.project_type }}</td>
+            <td>{{ project.toolbox_type }}</td>
             <td>{{ project.last_modified|date:"d.m.Y H:i" }}</td>
             <td>
                 <button type="button" class="btn btn-primary btn-sm open-project" data-project-id="{{ project.id }}">

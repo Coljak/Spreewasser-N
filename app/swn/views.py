@@ -419,7 +419,7 @@ def get_field_project_modal(request, id):
     user_projects = models.SwnProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user)).order_by('name')
 
     html = render(request, 'swn/partials/project_table.html', {'projects': user_projects}).content.decode('utf-8')
-    return JsonResponse({'html': html})
+    return JsonResponse({'html': html, 'type': 'monica'})
 
 
 def load_nuts_polygon(request, entity, polygon_id):

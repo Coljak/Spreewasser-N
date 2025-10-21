@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addLegend, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addLegend, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
@@ -16,7 +16,7 @@ import {
   dismissPolygon,
   removeLegendFromMap,
 } from '/static/shared/map_sidebar_utils.js';
-import {TuMar} from '/static/toolbox/tu_mar_model.js';
+import {Injection} from '/static/toolbox/injection_model.js';
 import { Layers } from '/static/toolbox/layers.js';
 
 
@@ -74,19 +74,18 @@ addLegendForWms(wmsLayerName)
 
 
 
-export function initializeTuMar(data) {
-  console.log('initializeTuMar')
-  const userField = ToolboxProject.loadFromLocalStorage().userField;
-  const tuMar = new TuMar();
-  tuMar.userField = userField;
-  tuMar.saveToLocalStorage();
+export function initializeInjection(data) {
+  console.log('initializeInjection')
+
+  
+
   const sliderLabelsWeighting = data.sliderLabels;
   const sliderLabelsSuitability = data.sliderLabelsSuitability;
   
   removeLegendFromMap(map);
   map.eachLayer(function(layer) {
         console.log(layer.toolTag);
-        if (layer.toolTag && layer.toolTag !== 'tuMar') {
+        if (layer.toolTag && layer.toolTag !== 'injection') {
             map.removeLayer(layer);
         }
       });
@@ -125,9 +124,9 @@ export function initializeTuMar(data) {
     slider.dispatchEvent(new Event('change'))
   })
   })
-    addChangeEventListener(TuMar);
+    addChangeEventListener(Injection);
 
-    addClickEventListenerToToolboxPanel(TuMar)
+    addClickEventListenerToToolboxPanel(Injection)
 
 
     $('#toolboxPanel').on('click', function (event) {
@@ -177,10 +176,10 @@ export function initializeTuMar(data) {
         
       }
     } else if ($target.hasClass('calculate-area')) {
-      const tuMar = TuMar.loadFromLocalStorage()
+      const injection = Injection.loadFromLocalStorage()
       fetch('mar_calculate_area/', {
             method: 'POST',
-            body: JSON.stringify(tuMar),
+            body: JSON.stringify(injection),
             headers: {
               'Content-Type': 'application/json',
               'X-CSRFToken': getCSRFToken()
@@ -215,6 +214,7 @@ export function initializeTuMar(data) {
   $('input[type="checkbox"][name="land_use"]').prop('checked', true);
   $('input[type="checkbox"][name="land_use"]').trigger('change');
 
-
+const injection = Injection.loadFromLocalStorage();
+loadProjectToGui(injection)
 }
 

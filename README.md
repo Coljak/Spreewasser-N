@@ -147,7 +147,12 @@ Arguments:
 --import-dir 
 string defining the folder to be imported. This arguments sets the import mode.
 ```shell
+python manage.py db_to_disk --import-dir directory
+```
+
+```shell
 python manage.py db_to_disk --models appname.ModelName
+```
 
 --no-today
 Exports, but does not create a date folder

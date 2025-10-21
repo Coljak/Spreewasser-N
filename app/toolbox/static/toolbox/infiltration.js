@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addLegend, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer } from '/static/toolbox/toolbox.js';
+import { updateDropdown, addLegend, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
@@ -275,11 +275,11 @@ function toggleConnection(button) {
   }
 }
 
-export function initializeInfiltration(userField) {
+export function initializeInfiltration() {
 
-  const infiltration = new Infiltration();
-  infiltration.userField = userField;
-  infiltration.saveToLocalStorage();
+  
+  
+  
   
   removeLegendFromMap(map);
   map.eachLayer(function(layer) {
@@ -361,7 +361,7 @@ export function initializeInfiltration(userField) {
 
     const resetBtn = form.querySelector('input.reset-all');
     resetBtn.addEventListener('click', function (e) {
-      let infiltration = Infiltration.loadFromLocalStorage(); // TODO this is not needed but check
+      const infiltration = Infiltration.loadFromLocalStorage(); // TODO this is not needed but check
       // const sliderList = form.querySelectorAll('input.single-slider');
       Object.keys(sliderObj).forEach(idx => {
         sliderObj[idx].slider.value = parseFloat(sliderObj[idx].slider.dataset.defaultValue);
@@ -408,6 +408,9 @@ export function initializeInfiltration(userField) {
 
   $('input[type="checkbox"][name="land_use"]').prop('checked', true);
   $('input[type="checkbox"][name="land_use"]').trigger('change');
+
+  const infiltration = Infiltration.loadFromLocalStorage();
+  loadProjectToGui(infiltration)
 
 
 }

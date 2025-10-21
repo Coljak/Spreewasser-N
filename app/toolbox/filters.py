@@ -256,6 +256,7 @@ class LakeFilter(FilterSet):
             "id": "lake_distance_to_userfield",
             "name": "lake_distance_to_userfield",
             "prefix": "lake",
+            "reset": True,
             "data_range_min": 0,
             "data_range_max": 2000,
             "data_cur_val": 0,

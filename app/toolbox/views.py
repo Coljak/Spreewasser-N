@@ -188,6 +188,7 @@ def save_toolbox_project(request):
 
         toolbox_type = models.ToolboxType.objects.get(name_tag=request_data['toolboxType'])
         user_field = models.UserField.objects.get(pk=request_data['userField'])
+        print('iserField None?', user_field)
 
         # Known model fields
         known_fields = {'id', 'name', 'description', 'userField', 'toolboxType'}
@@ -226,10 +227,9 @@ def save_toolbox_project(request):
             status = 201
 
         return JsonResponse({
-            'message': {'success': True, 'message': message},
-            'project_id': project.id,
-            'project_name': project.name,
-            'project_type': project.toolbox_type.name_tag,
+            'success': True, 
+            'message': message,
+            'project': project.to_json(),
         }, status=status)
 
     except Exception as e:
@@ -242,10 +242,10 @@ def load_toolbox_project(request, id):
     project = models.ToolboxProject.objects.get(pk=id)
     print("Toolbox Project: ", project)
     if not project:
-        return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
+        return JsonResponse({'success': False, 'message': 'Project not found'})
     else:
         project_json = project.to_json()
-        return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
+        return JsonResponse({'success': True, 'message': f'Project {project.name} loaded', 'project': project_json})
 
     
 
@@ -363,8 +363,19 @@ def delete_user_field(request, id):
 def get_field_project_modal(request, id):
     user_projects = models.ToolboxProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user)).order_by('name')
 
+    user_field_projects = models.ToolboxProject.objects.filter(
+        Q(user_field__id=id) & Q(user_field__user=request.user)
+    )
+
+    injection_projects = models.ToolboxProject.objects.filter(
+        Q(toolbox_type__name_tag='injection') & Q(user_field__user=request.user)
+    )
+
+    # Combine the two querysets
+    user_projects = (user_field_projects | injection_projects).order_by('name')
+    
     html = render(request, 'toolbox/partials/project_table.html', {'projects': user_projects}).content.decode('utf-8')
-    return JsonResponse({'html': html})
+    return JsonResponse({'html': html, 'type': 'toolbox'})
 
 
 #TODO needed here?
@@ -1318,7 +1329,7 @@ def filter_sieker_wetlands(request):
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info})
 
 
-def load_tu_mar_gui(request):
+def load_injection_gui(request):
     user = request.user
     toolbox_type = models.ToolboxType.objects.get(name_tag='injection')
     
@@ -1327,7 +1338,7 @@ def load_tu_mar_gui(request):
         ).order_by('-creation_date').reverse()
     
     project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
-    tu_mar_weightings_form = forms.MarWeightingForm()
+    injection_weightings_form = forms.MarWeightingForm()
     suitability_aquifer_thickness = forms.SuitabilityForm('aquifer_thickness')
     suitability_depth_groundwater_form = forms.SuitabilityForm('depth_groundwater')
     suitability_land_use_form = forms.SuitabilityForm('land_use')
@@ -1339,12 +1350,12 @@ def load_tu_mar_gui(request):
     slider_labels_suitability = dict(models.MarSuitabilitySliderDescription.objects.values_list('id', 'name_de').order_by('id'))
 
 
-    html = render_to_string('toolbox/tu_mar.html', {
+    html = render_to_string('toolbox/injection.html', {
         # 'sink_form': sink_form, 
         # 'enlarged_sink_form': enlarged_sink_form,
         
         'project_select_form': project_select_form,
-        'tu_mar_weightings_form': tu_mar_weightings_form,
+        'injection_weightings_form': injection_weightings_form,
         'suitability_aquifer_thickness': suitability_aquifer_thickness,
         'suitability_depth_groundwater_form': suitability_depth_groundwater_form, 
         'suitability_land_use_form': suitability_land_use_form,

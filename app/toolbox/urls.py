@@ -14,7 +14,6 @@ urlpatterns = [
     path('toolbox/', views.toolbox_dashboard, name='toolbox_dashboard'),
     path('toolbox/save-user-field/', views.save_user_field, name='save-user-field'),
     path('toolbox/get-user-fields/', views.get_user_fields, name='get-user-fields'),
-    path('toolbox/update-user-field/<int:id>/', views.update_user_field, name='update-user-field'),
     path('toolbox/delete-user-field/<int:id>/', views.delete_user_field, name='delete-user-field'),
     path('toolbox/field-projects-menu/<int:id>/', views.get_field_project_modal, name='field_projects_menu'),
     path('toolbox/get_options/<str:parameter>/', views.get_options, name='get-options'),

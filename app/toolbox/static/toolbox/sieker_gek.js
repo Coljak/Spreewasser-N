@@ -10,10 +10,6 @@ import {
   map, 
   initializeMapEventlisteners, 
   openUserFieldNameModal,
-
-  getUserFieldIdByLeafletId, 
-  getLeafletIdByUserFieldId, 
-  getUserFieldsFromDb, 
   highlightLayer, 
   selectUserField,
   handleSaveUserField,

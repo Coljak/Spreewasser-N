@@ -34,8 +34,9 @@ class SliderFilterForm(forms.Form):
 
 class ToolboxProjectSelectionForm(forms.Form):
     toolbox_project = forms.ChoiceField(
+        required=False,
         choices=[],
-        label="Toolbox Project",
+        label="Projekt",
         widget=forms.Select(attrs={'class': 'form-control toolbox-project'})
     )
 
@@ -52,12 +53,12 @@ class ToolboxProjectSelectionForm(forms.Form):
 class ToolboxProjectForm(forms.Form):
     user_field = forms.ModelChoiceField(
         queryset=models.UserField.objects.all(),
-        label='Field',
+        label='Suchgebiet',
         widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'user-field-dropdown'}),
     )
     project_type = forms.ModelChoiceField(
         queryset = models.ToolboxType.objects.all(),
-        label='Project Type',
+        label='Tool',
         empty_label=None,
         to_field_name='name_tag',
         widget=forms.Select(attrs={'id': 'projectTypeSelect', 'class': 'project-type-dropdown'}),
@@ -90,6 +91,7 @@ class ToolboxProjectForm(forms.Form):
 
 class OverallWeightingsForm(forms.Form):
     overall_usability = forms.IntegerField(
+        required=False,
         min_value=0,
         max_value=100,
         widget=CustomSimpleSliderWidget(attrs={
@@ -109,6 +111,7 @@ class OverallWeightingsForm(forms.Form):
     )
 
     soil_index = forms.IntegerField(
+        required=False,
         min_value=0,
         max_value=100,
         widget=CustomSimpleSliderWidget(attrs={
@@ -143,6 +146,7 @@ class OverallWeightingsForm(forms.Form):
       
 class WeightingsForestForm(forms.Form):
     field_capacity = forms.IntegerField(
+        required=False,
         min_value=0, 
         max_value=100, 
         # initial=33, 
@@ -164,6 +168,7 @@ class WeightingsForestForm(forms.Form):
         )
     )
     hydraulic_conductivity_1m = forms.IntegerField(
+        required=False,
         min_value=0,
         max_value=100,
         # initial=33,
@@ -184,6 +189,7 @@ class WeightingsForestForm(forms.Form):
         )
     )
     hydraulic_conductivity_2m = forms.IntegerField(
+        required=False,
         min_value=0,
         max_value=100,
         # initial=33,
@@ -219,6 +225,7 @@ class WeightingsForestForm(forms.Form):
 
 class WeightingsAgricultureForm(forms.Form):
     field_capacity = forms.IntegerField(
+        required=False,
         min_value=0, 
         max_value=100, 
         # initial=33, 
@@ -239,6 +246,7 @@ class WeightingsAgricultureForm(forms.Form):
         )
     )
     hydromorphy = forms.IntegerField(
+        required=False,
         min_value=0, 
         max_value=100, 
         # initial=33, 
@@ -258,6 +266,7 @@ class WeightingsAgricultureForm(forms.Form):
         )
     )
     soil_type = forms.IntegerField(
+        required=False,
         min_value=0, 
         max_value=100, 
         # initial=33, 
@@ -288,6 +297,7 @@ class WeightingsAgricultureForm(forms.Form):
 
 class WeightingsGrasslandForm(forms.Form):
     field_capacity = forms.IntegerField(
+        required=False,
         min_value=0, 
         max_value=100, 
         # initial=25, 
@@ -308,6 +318,7 @@ class WeightingsGrasslandForm(forms.Form):
         )
     )
     hydromorphy = forms.IntegerField(
+        required=False,
         min_value=0, 
         max_value=100, 
         # initial=25, 
@@ -327,6 +338,7 @@ class WeightingsGrasslandForm(forms.Form):
         )
     )
     soil_type = forms.IntegerField(
+        required=False,
         min_value=0, 
         max_value=100, 
         # initial=25, 
@@ -345,6 +357,7 @@ class WeightingsGrasslandForm(forms.Form):
         )
     )
     soil_water_ratio = forms.IntegerField(
+        required=False,
         min_value=0, 
         max_value=100, 
         # initial=25, 

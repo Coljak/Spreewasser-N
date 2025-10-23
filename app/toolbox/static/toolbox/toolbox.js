@@ -11,6 +11,7 @@ import {Layers} from '/static/toolbox/layers.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 
 
+
 const projectClasses = {
     'sink': Infiltration,
     'enlarged_sink': Infiltration,
@@ -181,6 +182,23 @@ export async function toolboxSinksOutline() {
   }
 };
 
+export async function loadProjectFromDb(project_id) {
+    console.log('loadProjectFromDb', project_id);
+    const response = await fetch(`/toolbox/load-project/${project_id}/`);
+    const data = await response.json();
+    if (data.success) {
+        console.log('received data', data)
+        const ProjectClass = ToolboxProject.subclassRegistry[data.project.toolboxType] || ToolboxProject;
+        const loadedProject = ProjectClass.fromJson(data.project);
+        loadedProject.saveToLocalStorage();
+        console.log('Loaded project:', loadedProject);
+        return loadedProject;
+    } else {
+        handleAlerts(data.message);
+    }
+
+};
+
 export function addChangeEventListener(projectClass) {
     const CurrentProjectClass = projectClass;
     console.log(projectClass)
@@ -338,24 +356,6 @@ export function loadProjectToGui(project) {
     }
     project.saveToLocalStorage();
 };
-
-export async function loadProjectFromDb(project_id) {
-    console.log('loadProjectFromDb', project_id);
-    const response = await fetch(`/toolbox/load-project/${project_id}/`);
-    const data = await response.json();
-    if (data.success) {
-        console.log('received data', data)
-        const ProjectClass = ToolboxProject.subclassRegistry[data.project.toolboxType] || ToolboxProject;
-        const loadedProject = ProjectClass.fromJson(data.project);
-        loadedProject.saveToLocalStorage();
-        console.log('Loaded project:', loadedProject);
-        return loadedProject;
-    } else {
-        handleAlerts(data.message);
-    }
-
-};
-
 
 
 

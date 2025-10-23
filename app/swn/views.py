@@ -320,14 +320,15 @@ def swn_dashboard(request):
 
 
 
+@login_required
 def get_user_fields(request):
     if request.method == "GET":
         user_fields = models.UserField.objects.filter(user=request.user)
         user_projects = models.SwnProject.objects.filter(user=request.user)
         ufs = []
         for user_field in user_fields:
-            uf = model_to_dict(user_field, fields=['id', 'user', 'name', 'centroid_lat', 'centroid_lon', 'geom_json'])
-            uf['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
+            uf = user_field.to_feature()
+            uf['properties']['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
             ufs.append(uf)
         # print('user_fields:', ufs)
     return JsonResponse({'user_fields': ufs})
@@ -363,8 +364,7 @@ def save_user_field(request):
         else:
             body = json.loads(request.body)
             name = body['name']
-            geom = json.loads(body['geom'])
-            geos = GEOSGeometry(body['geom'], srid=4326)
+            geom = GEOSGeometry(body['geom'], srid=4326)
             user = request.user
             user_field = None
 
@@ -372,21 +372,15 @@ def save_user_field(request):
                 # Update existing UserField
                 user_field = models.UserField.objects.get(id=body['id'])
                 user_field.name = name
-                user_field.geom_json = geom
-                user_field.geom = geos
-                
+                user_field.geom = geom  
                 user_field.save()
             else:
-                user_field = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
-                
+                user_field = models.UserField(name=name, geom=geom, user=user)
+
                 user_field.save()
-            # TODO this should rather be a save method of UserField
-            # user_field.get_centroid()
-            # user_field.get_intersecting_soil_data()
-            # user_field.get_weather_grid_points()
-            
-            return JsonResponse({'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
-        
+
+            geo_json = user_field.to_feature()
+            return JsonResponse(geo_json)
     else:
         return HttpResponseRedirect('swn:swn_dashboard')
     
@@ -463,11 +457,8 @@ def manual_soil_selection(request, user_field_id):
     user_field = models.UserField.objects.get(id=user_field_id)
     soil_profile_polygon_ids = user_field.soil_profile_polygon_ids['buek_polygon_ids']
 
-    # name = user_field.name
-    data_menu = monica_views.soil_profiles_from_polygon_ids(user_field.soil_profile_polygon_ids['buek_polygon_ids'])
-    # data_menu['text'] = name
-    # data_menu['id'] = user_field.id
-
+    data_menu = monica_views.soil_profiles_from_polygon_ids(soil_profile_polygon_ids)
+    
     print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
     return JsonResponse(data_menu)
 

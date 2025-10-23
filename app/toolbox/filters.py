@@ -33,6 +33,7 @@ FIELD_UNITS = {
     'vol_mio_m3': "Mio m³",
     'area_ha': "ha",
     'costs': '€',
+    'plus_days': 'Tage/Jahr',
 }
 class MinMaxRangeFilter(RangeFilter):
     def __init__(self, *args, model=None, field_name=None, widget=None, queryset=None, **kwargs):
@@ -244,13 +245,13 @@ class StreamFilter(FilterSet):
         form = SliderFilterForm
 
 class LakeFilter(FilterSet):
-    min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Min Surplus Volume (m³)")
-    mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mean Surplus Volume (m³)")
-    max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Max Surplus Volume (m³)")
-    plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Surplus Days")
-   
+    min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Min. Überschussvolumen")
+    mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mittleres Überschussvolumen ")
+    max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Max. Überschussvolumen")
+    plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Überschusstage")
+
     distance_to_userfield = NumberFilter(
-        label="Distance to userfield (m)",
+        label="Abstand zum Suchgebiet erweitern",
         method='filter_distance_placeholder',
         widget=CustomSimpleSliderWidget(attrs = {
             "id": "lake_distance_to_userfield",
@@ -260,7 +261,7 @@ class LakeFilter(FilterSet):
             "data_range_min": 0,
             "data_range_max": 2000,
             "data_cur_val": 0,
-            "units": "m",
+            "units": " m",
             "class": "hiddeninput",
         }) 
     )
@@ -488,7 +489,7 @@ class HistoricalWetlandsFilter(FilterSet):
         method='filter_feasibility',
         widget=CustomSimpleSliderWidget(attrs = {
             "id": "wetland_feasibility",
-            "name": "feasibilty",
+            "name": "feasibility",
             "prefix": "sieker_wetland",
             "string_label": True,
             "class": "hiddeninput",

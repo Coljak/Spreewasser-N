@@ -1,10 +1,10 @@
 import { getGeolocation } from '/static/shared/utils.js';
-import { MonicaProject, loadProjectFromDB as loadMonicaProjectFromDb, loadProjectToGui as loadMonicaProjectToGui  } from '/static/monica/monica.js';
+import { MonicaProject } from '/static/monica/monica.js';
 
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
-import { loadProjectFromDb as loadToolboxProjectFromDb, loadProjectToGui as loadToolboxProjectToGui } from '/static/toolbox/toolbox.js';
+// import { loadProjectFromDb as loadToolboxProjectFromDb } from '/static/toolbox/load_toolbox_project.js';
 import { getCSRFToken, handleAlerts, getBsColor } from '/static/shared/utils.js';
-import { startToolbox } from '/static/toolbox/toolbox_three_split.js';
+// import { startToolbox } from '/static/toolbox/toolbox_three_split.js';
 
 export class UserField {
   constructor(name, id=null, lat=null, lon=null, userProjects=[], properties={} ) {
@@ -633,7 +633,7 @@ $('#toggleBottomFullscreen').on('click', function () {
     } else {
       // Enter fullscreen mode - shrink top, hide left
       $('.panel-top').css('height', '20%'); // or even '5%' if you want it smaller
-      $('.panel-left').css('visibility', 'hidden');
+      // $('.panel-left').css('visibility', 'hidden');
             // hide the sidebar
       $('#main-navbar').hide(); // hide the navbar
       $('.leaflet-control-container').hide(); // hide Leaflet controls
@@ -649,8 +649,19 @@ $('#toggleBottomFullscreen').on('click', function () {
     });
 
 
+
+
 // TODO rename to MapEventhandler
-export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, getUserFields, getFeatureGroup, getProject }) {
+export function initializeSidebarEventHandler({ 
+  sidebar, 
+  map, 
+  overlayLayers, 
+  getUserFields, 
+  getFeatureGroup, 
+  getProject,
+  loadProjectFromDb,
+  startApplication,
+}) {
     sidebar.addEventListener("change", (event) => {
         const switchInput = event.target;
 
@@ -666,6 +677,17 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
         } else if (switchInput.classList.contains("user-field-switch")) {
           console.log('switchInput: ', switchInput);
             toggleUserField(switchInput, getFeatureGroup());
+        } else if (switchInput.classList.contains('all-userfields-switch')) {
+          // event.prevent
+          // event.stopPropagation();
+          // TODO: Instead of switching all switches hide the layer and grey out switchwes; also preventPropagation!!??
+
+          console.log('all-userfields-switch')
+          $('.form-check-input.user-field-switch')
+          .prop('checked', switchInput.checked)
+          $('.form-check-input.user-field-switch').each((_, s) => {
+            toggleUserField(s, getFeatureGroup());
+          })
         }
     });
 
@@ -689,8 +711,10 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
       if (clickedElement.classList.contains("user-field-action")) {
         const leafletId = clickedElement.getAttribute("leaflet-id");
         const userFieldId = clickedElement.getAttribute("user-field-id");
+
         console.log("user-field-action clicked", leafletId);
         let userFields = getUserFields();
+        let userField = userFields[leafletId];
         
 
         if (clickedElement.classList.contains("delete")) {
@@ -737,21 +761,23 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
             modalElement.addEventListener('click', (event) => {
               if(event.target.classList.contains('open-project')) {
                 const projectId = event.target.getAttribute('data-project-id');
-                if (data.type === 'monica') {
-                  console.log(' then load monica', projectId)
-                  loadMonicaProjectFromDb(projectId)
-                  .then(project => {
-                    loadMonicaProjectToGui(project);
-                  });
-                } else if (data.type === 'toolbox') {
-                  loadToolboxProjectFromDb(projectId)
-                  .then(project => {
+                // if (data.type === 'monica') {
+                //   console.log(' then load monica', projectId)
+                //   loadProjectFromDb(projectId)
+                //   .then(project => {
+                //     loadMonicaProjectToGui(project);
+                //   });
+                // } else if (data.type === 'toolbox') {
+                //   loadToolboxProjectFromDb(projectId)
+                //   .then(project => {
                     
-                    return startToolbox(project)
-                  })
+                //     return startToolbox(project)
+                //   })
                   
-                  .catch(err => console.error(err))  
-                }
+                //   .catch(err => console.error(err))  
+                // }
+                loadProjectFromDb(projectId)
+                .then(project => startApplication(project))
                 fieldMenuModal.hide();
               }
             });
@@ -902,34 +928,7 @@ function saveUserField(name, id, layer) {
   });
 };
 
-export function updateUserField(userField, layer) {
-  let geomJson = layer.toGeoJSON();
-  return new Promise((resolve, reject) => {
-    const requestData = {
-      geom: JSON.stringify(geomJson.geometry),
-      userField: userField,
-    };
-    fetch(`update-user-field/${userField.id}/`, {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCSRFToken(),
-      },
-      body: JSON.stringify(requestData)
-    })
-    .then(response => response.json())
-    .then(data => {
-      handleAlerts({'success': true, 'message': 'UserField saved successfully'});
-      resolve(data); 
-    })
-    .catch(error => {
-      handleAlerts({'success': false, 'message': 'Error saving UserField: ', error});
-      reject(error); 
-    });
-  });
 
-};
 
 function updateFieldSelectorOption(userField, fieldSelector) {  
   const option = document.createElement("option");
@@ -973,7 +972,7 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
       saveUserField(fieldName, null, layer)
       .then((data) => {
         console.log("Data: ", data);
-        var layerGeoJson = L.geoJSON(data.geom_json,
+        var layerGeoJson = L.geoJSON(data.geometry,
           {
             className: 'user-field',
             pane: 'polygonPane',
@@ -989,10 +988,8 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
           }
         );
         const userField = new UserField(
-          data.name,
-          data.id,  
-          data.lat,
-          data.lon,
+          data.properties.name,
+          data.properties.id,  
           data.properties ? data.properties : {},
         );
         layer.remove(); // removes the drawn shape from map
@@ -1099,7 +1096,7 @@ export async function getUserFieldsFromDb (featureGroup) {
     
     userFieldsDb.forEach((el) => {
       // var layer = L.geoJSON(el.geom_json);
-      let layerGeoJson = L.geoJson(el.geom_json, {
+      let layerGeoJson = L.geoJson(el.geometry, {
         className: 'user-field',
         pane: 'polygonPane',
         onEachFeature: function (feature, layer) {
@@ -1115,12 +1112,12 @@ export async function getUserFieldsFromDb (featureGroup) {
 
       // console.log("getData, element: ", el);
       const userField = new UserField(
-        el.name,
-        el.id,  
-        el.centroid_lat || null,
-        el.centroid_lon || null,
-        el.user_projects || [], // Ensure user_projects is an array
-        el.properties || {}
+        el.properties.name,
+        el.properties.id,  
+        el.properties.centroid_lat || null,
+        el.properties.centroid_lon || null,
+        el.properties.user_projects || [], // Ensure user_projects is an array
+        el.properties.properties || {}
       );
 
       // Add the layer to the droughtFeatureGroup layer group

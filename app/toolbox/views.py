@@ -259,54 +259,24 @@ def save_user_field(request):
             
             return HttpResponseBadRequest('Invalid CSRF token')
         else:
+            
             body = json.loads(request.body)
             name = body['name']
-            geom = json.loads(body['geom'])
-            geos = GEOSGeometry(body['geom'], srid=4326)
+            geom = GEOSGeometry(body['geom'], srid=4326)
             user = request.user
             user_field = None
             if body['id']:
                 # Update existing UserField
                 user_field = models.UserField.objects.get(id=body['id'])
                 user_field.name = name
-                user_field.geom_json = geom
-                user_field.geom = geos
-                
+                user_field.geom = geom      
                 user_field.save()
             else:
-                user_field = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
-                
+                user_field = models.UserField(name=name,  geom=geom, user=user)
                 user_field.save()
 
-            # TODO move this to the model save() method
-            has_zalf_sinks = models.Sink.objects.filter(geom4326__within=user_field.geom).exists() or \
-                             models.Sink.objects.filter(geom4326__intersects=user_field.geom).exists()
-            has_zalf_enlarged_sinks = models.EnlargedSink.objects.filter(geom4326__within=user_field.geom).exists() or \
-                                        models.EnlargedSink.objects.filter(geom4326__intersects=user_field.geom).exists()
-            has_sieker_sink = models.SiekerSink.objects.filter(geom4326__within=user_field.geom).exists() or \
-                              models.SiekerSink.objects.filter(geom4326__intersects=user_field.geom).exists()
-            has_sieker_gek = models.GekRetention.objects.filter(geom4326__within=user_field.geom).exists() or \
-                                models.GekRetention.objects.filter(geom4326__intersects=user_field.geom).exists()
-            has_sieker_surface_water = models.SiekerLargeLake.objects.filter(geom4326__within=user_field.geom).exists() or \
-                                        models.SiekerLargeLake.objects.filter(geom4326__intersects=user_field.geom).exists()
-            user_field.has_zalf_sinks = has_zalf_sinks
-            user_field.has_zalf_enlarged_sinks = has_zalf_enlarged_sinks
-            user_field.has_sieker_sink = has_sieker_sink
-            user_field.has_sieker_gek = has_sieker_gek
-            user_field.has_sieker_surface_water = has_sieker_surface_water
-            user_field.save()
-
-            geo_json = json.loads(user_field.geom.geojson)
-            geo_json['properties'] = {
-                'name': user_field.name,
-                'has_zalf_sinks': user_field.has_zalf_sinks,
-                'has_zalf_enlarged_sinks': user_field.has_zalf_enlarged_sinks,
-                'has_sieker_sink': user_field.has_sieker_sink,
-                'has_sieker_gek': user_field.has_sieker_gek,
-                'has_sieker_surface_water': user_field.has_sieker_surface_water,
-            }   
-            return JsonResponse({'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id, 'new_user_field': geo_json})
-        
+            geo_json = user_field.to_feature()
+            return JsonResponse(geo_json)      
     else:
         return HttpResponseRedirect('toolbox:toolbox_dashboard')
 
@@ -317,29 +287,12 @@ def get_user_fields(request):
         user_projects = models.ToolboxProject.objects.filter(user=request.user)
         ufs = []
         for user_field in user_fields:
-            uf = model_to_dict(user_field, fields=['id', 'user', 'name', 'geom_json'])
-            uf['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
+            uf = user_field.to_feature()
+            uf['properties']['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
             ufs.append(uf)
         # print('user_fields:', ufs)
     return JsonResponse({'user_fields': ufs})
 
-@login_required
-def update_user_field(request, id):
-    if request.method == 'POST':
-        body = json.loads(request.body)
-        name = body['name']
-        geom = json.loads(body['geom'])
-        geos = GEOSGeometry(body['geom'])
-        # geos.transform(25833)
-        user_field = models.UserField.objects.get(id=id)
-        user_field.name = name
-        user_field.geom_json = geom
-        user_field.geom = geos
-        user_field.save()
-        
-        return JsonResponse({'message': {'success': True, 'message': 'User field updated.'},'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
-    else:
-        return JsonResponse({'message': {'success': False, 'message': 'An error occurred updating the user field.'}})
 
 @login_required
 # @csrf_protect
@@ -1303,7 +1256,7 @@ def filter_sieker_wetlands(request):
     wetlands = models.HistoricalWetlands.objects.filter(pk__in=ids)
 
     # filter measures
-    filters = Q(priority__priority_level__gte=project['wetland_priority'])
+    filters = Q(priority__priority_level__gte=project['feasibility'])
     filters = add_range_filter(filters, project, 'wetland_costs', 'costs') 
     print("Weltlands FILTERED:", wetlands.count())
 
@@ -1516,8 +1469,6 @@ def mar_calculate_area(request):
     if request.method == 'POST':
         project = json.loads(request.body)
         print('Project:', project)
-        # user_field = models.UserField.objects.get(pk=project['userField'])
-        
 
         map_labels = models.MapLabels.objects.all()
         suitability_dict = {}

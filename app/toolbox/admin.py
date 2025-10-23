@@ -77,10 +77,9 @@ class EnlargedSinkSoilPropertiesAdmin(admin.ModelAdmin):
 
 @admin.register(models.UserField)
 class UserFieldAdmin(LeafletGeoAdmin):
-    list_display = ('id', 'user', 'name', 'creation_date', 'geom', 'has_zalf_sinks', 'has_zalf_enlarged_sinks',   'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water')
-    list_filter = ['name']
+    list_display = ('id', 'user', 'name', 'creation_date', 'geom', 'geom25833', 'has_infiltration', 'has_injection', 'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water', 'has_sieker_wetland', 'has_sieker_drainage')
     ordering = ['user', 'name']
-    search_fields = ['user__username', 'name', 'creation_date', 'has_zalf_sinks', 'has_zalf_enlarged_sinks',  'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water']
+    search_fields = ['user__username', 'name', 'creation_date', 'has_infiltration', 'has_injection', 'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water', 'has_sieker_wetland', 'has_sieker_drainage']
 
 @admin.register(models.ToolboxProject)
 class ToolboxProjectAdmin(admin.ModelAdmin):
@@ -241,6 +240,12 @@ class SiekerWaterLevelAdmin(LeafletGeoAdmin):
     list_filter = ('region',)
     ordering = ('id',)
 
+@admin.register(models.BelowGroundWaters)
+class BelowGroundWatersAdmin(LeafletGeoAdmin):
+    list_display = ('id', 'kennzahl', 'gewaesser', 'gew_alias', 'geom')
+    search_fields = ('gewaesser',)
+    ordering = ('id',)
+
 
 # ---------------------------
 # NON-SPATIAL MODELS
@@ -368,11 +373,11 @@ class GEKMeasuresAdmin(admin.ModelAdmin):
 # FEASIBILITY / ECOLOGY
 # ---------------------------
 
-@admin.register(models.WetlandFeasibility)
-class WetlandFeasibilityAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name_de', 'name_en', 'index')
-    search_fields = ('name_de', 'name_en')
-    ordering = ('index',)
+# @admin.register(models.WetlandFeasibility)
+# class WetlandFeasibilityAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'name_de', 'name_en', 'index')
+#     search_fields = ('name_de', 'name_en')
+#     ordering = ('index',)
 
 
 @admin.register(models.WetGrassland)

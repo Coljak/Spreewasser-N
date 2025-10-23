@@ -1,25 +1,20 @@
-import { MonicaCalculation, MonicaProject, Rotation, Workstep, loadProjectFromDB, handleDateChange } from '/static/monica/monica.js';
+import { MonicaCalculation, MonicaProject, Rotation, Workstep, loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica.js';
 import { getGeolocation, handleAlerts, getCSRFToken, saveProject } from '/static/shared/utils.js';
 // import { projectRegion, baseMaps, map, initializeMapEventlisteners, initializeDrawControl } from '/static/shared/map_utils.js';
 import { 
   projectRegion, 
-  baseMaps, 
   map, 
   initializeMapEventlisteners, 
   initializeDrawControl,
-  // createBaseLayerSwitchGroup, 
-  openUserFieldNameModal,
   createNUTSSelectors,
   initializeSidebarEventHandler, 
-  addLayerToSidebar, 
-  getUserFieldIdByLeafletId, 
-  getLeafletIdByUserFieldId, 
   getUserFieldsFromDb, 
   highlightLayer, 
   selectUserField,
   dismissPolygon,
   demOverlay,
 } from '/static/shared/map_sidebar_utils.js';
+
 
 
 var userFieldStore = null;
@@ -94,6 +89,8 @@ initializeSidebarEventHandler({
   getUserFields: () => localStorage.getItem("userFields") ? JSON.parse(localStorage.getItem("userFields")) : {},
   getFeatureGroup: () => { return featureGroup; },
   getProject: () => MonicaProject.loadFromLocalStorage(),
+  loadProjectFromDb: (projectId) => loadProjectFromDB(projectId),
+  startApplication: (project) => loadProjectToGui(project)
 });
 
 createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});

@@ -19,14 +19,6 @@ class ToolboxType(models.Model):
         return self.name_de if language == 'de' else self.name_en
     
 
-
-
-# class DigitalElevationModel10(models.Model):
-#      name = models.CharField(max_length=100, null=True, blank=True)
-#      elevation = models.FloatField(null=True, blank=True)
-#      rast = gis_models.RasterField(srid=25833)
-#      extent = gis_models.PolygonField(srid=25833, null=True, blank=True)
-
 # gw_ezg
 # TODO: not used - delete or geoserver
 class AboveGroundWaters(models.Model):
@@ -74,25 +66,65 @@ class UserField(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="toolbox_userfields")
     name = models.CharField(max_length=255)
     creation_date = models.DateField(blank=True, default=now)
-    # TODO is that ever used - it should be a jsonfield.
-    geom_json = PolygonField(null=True)
-    comment = models.TextField(null=True, blank=True)
     geom = gis_models.GeometryField(null=True, srid=4326)
     geom25833 = gis_models.GeometryField(null=True, srid=25833)
-    has_zalf_sinks = models.BooleanField(default=False, null=True, blank=True)
-    has_zalf_enlarged_sinks = models.BooleanField(default=False, null=True, blank=True)
+    has_infiltration = models.BooleanField(default=False, null=True, blank=True)
+    has_injection = models.BooleanField(default=False, null=True, blank=True)
     has_sieker_sink = models.BooleanField(default=False, null=True, blank=True)
     has_sieker_gek = models.BooleanField(default=False, null=True, blank=True)
     has_sieker_surface_water = models.BooleanField(default=False, null=True, blank=True)
+    has_sieker_wetland = models.BooleanField(default=False, null=True, blank=True)
+    has_sieker_drainage = models.BooleanField(default=False, null=True, blank=True)
 
     def __str__(self):
         return self.name
+    
+    def to_json(self):
+        return {
+                'id': self.id,
+                'name': self.name,
+                'user': self.user.id,
+                'has_infiltration': self.has_infiltration,
+                'has_injection': self.has_injection,
+                'has_sieker_sink': self.has_sieker_sink,
+                'has_sieker_gek': self.has_sieker_gek,
+                'has_sieker_surface_water': self.has_sieker_surface_water,
+                'has_sieker_wetland': self.has_sieker_wetland,
+                'has_sieker_drainage': self.has_sieker_drainage,
+        }
+    
+    def to_feature(self):
+        geometry = json.loads(self.geom.geojson)
+        properties = self.to_json()
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
     
     def save(self, *args, **kwargs):
         if self.geom:
             self.geom25833 = self.geom.transform(25833, clone=True)
             # TODO: 1. 
         super().save(*args, **kwargs)
+
+        # TODO move this to the model save() method
+            # has_zalf_sinks = models.Sink.objects.filter(geom4326__within=user_field.geom).exists() or \
+            #                  models.Sink.objects.filter(geom4326__intersects=user_field.geom).exists()
+            # has_zalf_enlarged_sinks = models.EnlargedSink.objects.filter(geom4326__within=user_field.geom).exists() or \
+            #                             models.EnlargedSink.objects.filter(geom4326__intersects=user_field.geom).exists()
+            # has_sieker_sink = models.SiekerSink.objects.filter(geom4326__within=user_field.geom).exists() or \
+            #                   models.SiekerSink.objects.filter(geom4326__intersects=user_field.geom).exists()
+            # has_sieker_gek = models.GekRetention.objects.filter(geom4326__within=user_field.geom).exists() or \
+            #                     models.GekRetention.objects.filter(geom4326__intersects=user_field.geom).exists()
+            # has_sieker_surface_water = models.SiekerLargeLake.objects.filter(geom4326__within=user_field.geom).exists() or \
+            #                             models.SiekerLargeLake.objects.filter(geom4326__intersects=user_field.geom).exists()
+            # user_field.has_zalf_sinks = has_zalf_sinks
+            # user_field.has_zalf_enlarged_sinks = has_zalf_enlarged_sinks
+            # user_field.has_sieker_sink = has_sieker_sink
+            # user_field.has_sieker_gek = has_sieker_gek
+            # user_field.has_sieker_surface_water = has_sieker_surface_water
+            # user_field.save()
 
 
 class ToolboxProject(models.Model):    
@@ -207,29 +239,6 @@ class Lake25(models.Model):
 
 ######################### INJECTION ###########################
 
-# TODO: not used 
-class SinkWeighting(models.Model):
-    """
-    User's weighting for a sink project
-    """
-    general= models.FloatField(default=.2) 
-    soil= models.FloatField(default=.8)
-    field_capacity = models.FloatField(default=.33)
-    hydro_conduct_1m= models.FloatField(default=.33)
-    hydro_conduct_2m= models.FloatField(default=.33)
-    hydromorphy= models.FloatField(default=.33)
-    soil_index= models.FloatField(default=.33)
-    grassland_soil_moisture = models.FloatField(default=.25)
-    grassland_field_capacity = models.FloatField(default=.25)
-    grassland_soil_index = models.FloatField(default=.25)
-    grassland_hydromorphy= models.FloatField(default=.25)
-
-
-
-# class InfiltrationProject(ToolboxProject):
-#     weighting = models.ForeignKey(SinkWeighting, on_delete=models.CASCADE, null=True)
-
-
 # DE: Injektion/ Qgis _injektion_diss_4326
 class OutlineInjection(gis_models.Model):
     """
@@ -260,6 +269,25 @@ class OutlineInfiltration(gis_models.Model):
 
 ### ---- 2024-12-02 ---- ###
 
+#Quoek_qn_9115
+class Quoek(models.Model):
+    fgw_id = models.IntegerField(primary_key=True)  
+    geom25833 = gis_models.MultiLineStringField(srid=25833, null=True, blank=True)
+    geom4326 = gis_models.MultiLineStringField(srid=4326, null=True, blank=True)
+    gewaesser = models.CharField(max_length=100, null=True, blank=True)
+    gewaesser_gn2 = models.CharField(max_length=100, null=True, blank=True) 
+    
+    ezg25_km2 = models.FloatField(null=True, blank=True)
+    mq_qn = models.FloatField(null=True, blank=True)
+    mnq_qn = models.FloatField(null=True, blank=True)
+    wkid_2021 = models.IntegerField(null=True, blank=True)
+    kat_2021 = models.CharField(max_length=100, null=True, blank=True)
+    typ_2021 = models.CharField(max_length=100, null=True, blank=True)
+    mow_2021 = models.FloatField(null=True, blank=True)
+    q_oek = models.FloatField(null=True, blank=True)
+    laenge_km = models.FloatField(null=True, blank=True)
+    fgw_unterlauf_id = models.IntegerField(null=True, blank=True)
+
 class Landuse(models.Model):
     name = models.CharField(max_length=50)
     name_v = models.CharField(max_length=50)
@@ -281,7 +309,8 @@ class LanduseMap(models.Model):
 
 class Stream(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
-    fgw_id = models.IntegerField(null=True, blank=True)  # ArcEGMO-ID des Fließgewässerabschnittes
+    # fgw_id = models.IntegerField(null=True, blank=True)
+    fgw = models.ForeignKey(Quoek, on_delete=models.CASCADE, null=True, blank=True)  # ArcEGMO-ID des Fließgewässerabschnittes
     # Ökologisch begründete Mindestwasserführung hergeleitet für den 3. BWZ ab 2021 (EZG x MOW / 1000)
     minimum_environmental_flow = models.FloatField(null=True, blank=True) # - m³/s  -777 kein berichtspflichtiger OWK; -999 künstlicher OWK
     shape_length = models.FloatField()
@@ -297,7 +326,7 @@ class Stream(models.Model):
         return {
                 'id': self.id,
                 'name': self.name,
-                'fgw_id': self.fgw_id,
+                'fgw_id': self.fgw.id,
                 'shape_length': round(self.shape_length, 2),
                 'minimum_environmental_flow': self.minimum_environmental_flow,
                 'min_surplus_volume': round(self.min_surplus_volume, 2),
@@ -315,11 +344,11 @@ class Stream(models.Model):
             "properties": properties
         }
         
-        
-
+    
 class Lake(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
-    fgw_id = models.IntegerField(null=True, blank=True)  # ArcEGMO-ID des Fließgewässerabschnittes
+    # fgw_id = models.IntegerField(null=True, blank=True)  
+    fgw = models.ForeignKey(Quoek, on_delete=models.CASCADE, null=True, blank=True)  # ArcEGMO-ID des Fließgewässerabschnittes
     # Ökologisch begründete Mindestwasserführung hergeleitet für den 3. BWZ ab 2021 (EZG x MOW / 1000)
     minimum_environmental_flow = models.FloatField(null=True, blank=True) # - m³/s  -777 kein berichtspflichtiger OWK; -999 künstlicher OWK
     geom = gis_models.MultiPolygonField(srid=4326)
@@ -338,7 +367,7 @@ class Lake(models.Model):
         return {
                 'id': self.id,
                 'name': self.name,
-                'fgw_id': self.fgw_id,
+                'fgw_id': self.fgw.id,
                 'shape_length': round(self.shape_length, 2),
                 'shape_area': round(self.shape_area, 2),
                 'minimum_environmental_flow': self.minimum_environmental_flow,
@@ -438,9 +467,6 @@ class Sink(models.Model):
             "properties": properties
         }
     
-
-
-
 class EnlargedSink(models.Model): 
     # id = models.IntegerField(primary_key=True) # former fid_sink
     geom25833 = gis_models.PolygonField(srid=25833, null=True, blank=True)
@@ -784,9 +810,17 @@ class EnlargedSinkSoilProperties(models.Model):
     soil_properties = models.ForeignKey(SoilProperties, on_delete=models.DO_NOTHING, blank=True, null=True)
     enlarged_sink = models.ForeignKey(EnlargedSink, on_delete=models.DO_NOTHING,  blank=True, null=True, related_name='enlarged_sink_soil_properties')
 
+# Quoek 
 
-####################### SIEKER ########################
 
+
+
+class DischargeTimeseries(models.Model):
+    stream = models.ForeignKey(Stream,  on_delete=models.CASCADE, related_name='discharge_timeseries_stream', null=True, blank=True) 
+    lake = models.ForeignKey(Lake,  on_delete=models.CASCADE, related_name='discharge_timeseries_lake', null=True, blank=True)
+    date = models.DateField(null=True, blank=True)
+    discharge_m3s = models.FloatField(null=True, blank=True)
+    fgw = models.ForeignKey(Quoek, on_delete=models.CASCADE, null=True, blank=True)
 
 class SiekerLargeLake(models.Model):
     geom25833 = gis_models.PolygonField(srid=25833, null=True, blank=True)
@@ -1148,31 +1182,6 @@ class HistoricalWetlands(models.Model):
             "geometry": geometry,
             "properties": properties
         }
-
-
-# # TODO delete ??
-# class SinkDifference(models.Model):
-#     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-#     geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
-#     geom_remaining = gis_models.PolygonField(srid=25833, null=True, blank=True)
-#     geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
-#     fid = models.FloatField(null=True, blank=True)
-#     volume = models.FloatField(null=True, blank=True)
-#     area = models.FloatField(null=True, blank=True)
-#     sink_depth = models.FloatField(null=True, blank=True)
-#     max_elevation = models.FloatField(null=True, blank=True)
-#     min_elevation = models.FloatField(null=True, blank=True)
-#     urbanarea = models.CharField(max_length=100, null=True, blank=True)
-#     urbanarea_percent = models.FloatField(null=True, blank=True)
-#     wetlands = models.CharField(max_length=100, null=True, blank=True)
-#     wetlands_percent = models.FloatField(null=True, blank=True)
-#     avg_depth = models.FloatField(null=True, blank=True)
-#     distance_t = models.FloatField(null=True, blank=True)
-#     dist_lake = models.CharField(max_length=100, null=True, blank=True)
-#     umsetzbark = models.CharField(max_length=100, null=True, blank=True)
-#     waterdist = models.CharField(max_length=100, null=True, blank=True)
-
-    
 
 def default_legend_labels():
     """

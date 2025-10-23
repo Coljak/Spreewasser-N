@@ -88,7 +88,7 @@ class CustomSimpleSliderWidget(NumberInput):
     def get_context(self, name, value, attrs):
         if value is not None:
             attrs = attrs or {}
-            attrs["data_cur_val"] = value  # 🟢 Ensure this is always set dynamically
+            attrs["data_cur_val"] = value  
         return super().get_context(name, value, attrs)
 
 

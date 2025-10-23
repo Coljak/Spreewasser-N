@@ -14,7 +14,6 @@ import {
   addLayerToSidebar, 
   getUserFieldIdByLeafletId, 
   getLeafletIdByUserFieldId, 
-  getUserFieldsFromDb, 
   highlightLayer, 
   selectUserField,
   handleSaveUserField,

@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import {  toolboxSinksOutline, updateDropdown } from '/static/toolbox/toolbox.js';
+import {  toolboxSinksOutline, updateDropdown, loadProjectFromDb } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
 import { SiekerSink } from '/static/toolbox/sieker_sink_model.js';
@@ -71,7 +71,7 @@ async function startInfiltration(project) {
   $('#toolboxButtons').addClass('d-none');
   $('#toolboxPanel').removeClass('d-none');
   $('#toolboxPanel').html(data.html);
-  userField;
+  
   initializeInfiltration(); // initialize UI
   return true;
 }
@@ -323,7 +323,8 @@ export function startToolbox(project) {
 
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Hide the coordinate form card from plain Monica
+ 
+
   const project = new ToolboxProject();
   project.saveToLocalStorage();
 
@@ -566,6 +567,8 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
     getUserFields: () => localStorage.getItem("userFields") ? JSON.parse(localStorage.getItem("userFields")) : {},
     getFeatureGroup: () => { return featureGroup; },
     getProject: () => ToolboxProject.loadFromLocalStorage(),
+    loadProjectFromDb: (projectId) => loadProjectFromDb(projectId),
+    startApplication: (project) => startToolbox(project)
   });
 
   createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});

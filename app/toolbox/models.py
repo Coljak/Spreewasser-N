@@ -249,6 +249,15 @@ class OutlineInjection(gis_models.Model):
 
     def __str__(self):
                 return self.name
+    
+    
+    def to_feature(self):
+        geometry = json.loads(self.geom.geojson)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": {'name': self.name}
+        }
 
 # DE: Ufernah /Qgis: ufernah_diss_4326
 class OutlineSurfaceWater(gis_models.Model):
@@ -258,12 +267,29 @@ class OutlineSurfaceWater(gis_models.Model):
     def __str__(self):
             return self.name
 
+    def to_feature(self):
+        geometry = json.loads(self.geom.geojson)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": {'name': self.name}
+        }
+
 # DE: Versickerung / Qgis: versickerung_diss_4326
 class OutlineInfiltration(gis_models.Model):
     name = models.CharField(max_length=64, null=True, blank=True)
     geom = gis_models.MultiPolygonField('Infiltration')  
 
+    def __str__(self):
+            return self.name
 
+    def to_feature(self):
+        geometry = json.loads(self.geom.geojson)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": {'name': self.name}
+        }
 
     
 

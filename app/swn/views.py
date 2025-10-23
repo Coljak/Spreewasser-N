@@ -268,15 +268,7 @@ def swn_dashboard(request):
 
     state_county_district_form = forms.PolygonSelectionForm(request.POST or None)
     
-    projectregion = models.ProjectRegion.objects.first()
-    geojson = json.loads(projectregion.geom.geojson) 
-    feature = {
-            "type": "Feature",
-            "geometry": geojson,
-            "properties": {
-                "name": 'Spreewasser:N Projektregion',
-            }
-        }
+    project_region = models.ProjectRegion.objects.first().to_feature()
 
     project_select_form = forms.SwnProjectSelectionForm(user=user)
     new_swn_project_form = forms.SwnNewProjectForm(user=user)
@@ -300,7 +292,7 @@ def swn_dashboard(request):
     data = {
             'default_project': default_project,
             'state_county_district_form': state_county_district_form,
-            'project_region': feature,
+            'project_region': project_region,
             #MONICA FORMS
             'project_select_form': project_select_form,
             'new_project_form': new_swn_project_form,

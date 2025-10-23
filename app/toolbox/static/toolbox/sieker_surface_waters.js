@@ -5,17 +5,7 @@ import { SiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters_model
 import {Layers} from '/static/toolbox/layers.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
-  projectRegion, 
-  baseMaps, 
   map, 
-
-  highlightLayer, 
-  selectUserField,
-  handleSaveUserField,
-  dismissPolygon,
-  getCircleMarkerSettings,
-  getLegendItem,
-  getLegendSettings,
   removeLegendFromMap,
 } from '/static/shared/map_sidebar_utils.js';
 

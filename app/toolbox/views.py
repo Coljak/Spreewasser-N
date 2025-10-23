@@ -105,54 +105,15 @@ def create_point_feature_collection(queryset):
 
 def toolbox_dashboard(request):
     user = request.user
-    projectregion = swn_models.ProjectRegion.objects.first()
-    geojson = json.loads(projectregion.geom.geojson) 
-    project_region = {
-            "type": "Feature",
-            "geometry": geojson,
-            "properties": {
-                "name": 'Spreewasser:N Projektregion',
-            }
-        }
+    project_region = swn_models.ProjectRegion.objects.first().to_feature()
 
-    outline_injection = models.OutlineInjection.objects.first().geom.geojson
-    outline_injection = json.loads(outline_injection)
-    outline_injection = {
-        "type": "Feature",
-        "geometry": outline_injection,
-        "properties": {
-            "name": 'Spreewasser:N Injektionsbereich',
-        }
-    }
+    outline_injection = models.OutlineInjection.objects.first().to_feature()
 
-    outline_surface_water = models.OutlineSurfaceWater.objects.first().geom.geojson
-    outline_surface_water = json.loads(outline_surface_water)
-    outline_surface_water = {
-        "type": "Feature",
-        "geometry": outline_surface_water,
-        "properties": {
-            "name": 'Spreewasser:N Oberflächenwasser',
-        }
-    }
+    outline_surface_water = models.OutlineSurfaceWater.objects.first().to_feature()
 
-    outline_infiltration = models.OutlineInfiltration.objects.first().geom.geojson
-    outline_infiltration = json.loads(outline_infiltration)
-    outline_infiltration = {
-        "type": "Feature",
-        "geometry": outline_infiltration,
-        "properties": {
-            "name": 'Spreewasser:N Infiltrationsbereich',
-        }
-    }
+    outline_infiltration = models.OutlineInfiltration.objects.first().to_feature()
 
-    # all_lakes = models.Lake25.objects.all()
-    # all_lakes_feature_collection = create_feature_collection(all_lakes)
 
-    # all_rivers = models.River.objects.all()
-    # all_rivers_feature_collection = create_feature_collection(all_rivers)
-    
-
-    
     state_county_district_form = swn_forms.PolygonSelectionForm(request.POST or None)
     # project_select_form = forms.ToolboxProjectSelectionForm(user=user)
     # project_select_form = forms.ToolboxProjectSelectionForm()

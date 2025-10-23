@@ -26,12 +26,6 @@ import datetime
 import os
 
 from geo.Geoserver import Geoserver
-# from psycopg2 import connect
-
-# db = Pg(dbname=os.environ.get('DB_NAME'), 
-#         user=os.environ.get('DB_USER'), 
-#         password=os.environ.get('DB_PASS'), 
-#         host=os.environ.get('DB_HOST'))
 
 
 geo = Geoserver(os.environ.get('GEOSERVER_URL'), 
@@ -47,12 +41,18 @@ class ProjectRegion(models.Model):
     def __str__(self):
         return self.name
 
+    def to_feature(self):
+        geometry = json.loads(self.geom.geojson)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": {'name': self.name}
+        }
+
 class UserField(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
     creation_date = models.DateField(auto_now_add=True, blank=True, null=True)
-    # swn_tool = models.CharField(max_length=16, null=True, blank=True)
-    # geom_json = PolygonField(null=True)
     geom = gis_models.GeometryField(null=True, srid=4326)
     soil_profile_polygon_ids = models.JSONField(null=True, blank=True)
     centroid_lat = models.FloatField(null=True, blank=True)

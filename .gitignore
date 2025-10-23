@@ -220,4 +220,5 @@ app/monica/monica-parameters/
 *.dbf
 *.dods
 
-_hohenfinow/
+_hohenfinow/app/toolbox/Abflusswerte.txt
+app/toolbox/Abflusswerte_nachtrag.txt

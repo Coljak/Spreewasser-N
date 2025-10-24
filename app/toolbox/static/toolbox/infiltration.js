@@ -279,10 +279,7 @@ function toggleConnection(button) {
 
 export function initializeInfiltration() {
 
-  
-  
-  
-  
+let inletVolumeChart;
   removeLegendFromMap(map);
   map.eachLayer(function(layer) {
         console.log(layer.toolTag);
@@ -362,6 +359,8 @@ export function initializeInfiltration() {
     });
 
     const resetBtn = form.querySelector('input.reset-all');
+
+    // zhis is unique to infiltration
     resetBtn.addEventListener('click', function (e) {
       const infiltration = Infiltration.loadFromLocalStorage(); // TODO this is not needed but check
       // const sliderList = form.querySelectorAll('input.single-slider');
@@ -371,10 +370,9 @@ export function initializeInfiltration() {
         sliderObj[idx].val = parseFloat(sliderObj[idx].slider.dataset.defaultValue);
       });
       infiltration.saveToLocalStorage();
+      });
     });
 
-    
-    });
 
     $('#toolboxPanel').off('change'); // Remove any previous change event handlers
     addChangeEventListener(Infiltration);
@@ -414,9 +412,9 @@ export function initializeInfiltration() {
             const chartData = data.chart_data;
             // Render chart in the canvas
             const ctx = document.getElementById('inletVolumeChart').getContext('2d');
-            // if (window.inletVolumeChart) {
-            //     window.inletVolumeChart.destroy();
-            // }
+            if (inletVolumeChart) {
+                inletVolumeChart.destroy();
+            }
             const deLocale = dateFns.locale?.de;
             
             // new Chart(ctx, {
@@ -471,7 +469,7 @@ export function initializeInfiltration() {
 
             // })
 
-            new Chart(ctx, {
+            inletVolumeChart = new Chart(ctx, {
               type: 'bar',
               data: { datasets: [{ label: 'Abfluss (m³/s)', data: chartData }] },
               options: {
@@ -484,7 +482,7 @@ export function initializeInfiltration() {
                 }
               }
             })
-            .catch(err => console.error('Chart data error:', err));
+            // .catch(err => console.error('Chart data error:', err));
 
         });
     }

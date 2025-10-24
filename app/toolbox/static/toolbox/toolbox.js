@@ -106,7 +106,7 @@ export const updateDropdown = (parameterType, newId) => {
 };
 
 export function tableCheckSelectedItems(project, dataType) {
-    console.log('tableCheckSelectedItems', project)
+    console.log('tableCheckSelectedItems', dataType, project)
   if (project[`selected_${dataType}s`] !== undefined) {
     console.log('tableCheckSelectedItems behind first if: ', dataType)
     const checkboxes = document.querySelectorAll(`.table-select-checkbox[data-type="${dataType}"]`)
@@ -384,7 +384,8 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
         // table related
         } else if ($target.hasClass('paginate_button')) {
             console.log('Paginate')
-            const dataType = $('.table-select-all').data('type');
+            const dataType =  $target.attr('aria-controls').split('-')[0];
+            console.log('dataType', dataType)
             tableCheckSelectedItems(project, dataType)
             return;
         } else if ($target.closest('tr').length && !$target.is('input, button, a')) {
@@ -400,6 +401,7 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
         // actions
         } else if ($target.hasClass('filter-features')) {
             const dataType = $('.table-select-all').data('type');
+            // TODO dead end
             console.log('REFACTOR - continue here')
         } else if ($target.hasClass('toggle-feature-group')) {
             console.log('toggle-feature-group')

@@ -374,18 +374,14 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                     map.removeLayer(layer);
                 }
             });
-            console.log('Back to initial t1: ', project);
             const newProject = new ToolboxProject();
-            console.log('Back to initial t2: ', getSelectedUserField());
             newProject.userField = getSelectedUserField();
-            console.log('Back to initial t3: ', newProject);
             newProject.saveToLocalStorage();
             return;
         // table related
         } else if ($target.hasClass('paginate_button')) {
             console.log('Paginate')
             const dataType =  $target.attr('aria-controls').split('-')[0];
-            console.log('dataType', dataType)
             tableCheckSelectedItems(project, dataType)
             return;
         } else if ($target.closest('tr').length && !$target.is('input, button, a')) {

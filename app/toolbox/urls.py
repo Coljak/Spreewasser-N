@@ -29,7 +29,8 @@ urlpatterns = [
     path('toolbox/load_infiltration_gui/<str:user_field_id>/', views.load_infiltration_gui, name='load_infiltration_gui'),
     path('toolbox/get_weighting_form/', views.get_weighting_forms, name='get_weighting_forms'),
     # path('toolbox/calculate_index_for_selection/', views.calculate_index_for_selection, name='calculate_index_for_selection'),
-    path('toolbox/get_inlets/', views.get_inlets, name='get_inlets'),
+    path('toolbox/get_infiltration_results/', views.get_infiltration_results, name='get_infiltration_results'),
+    path('toolbox/get_injection_volume_chart/<str:waterbody_type>/<int:id>/', views.get_injection_volume_chart, name='get_injection_volume_chart'),
     #### Sieker ####
     # Surface Waters
     path('toolbox/load_surface_waters_gui/<int:user_field_id>/', views.sieker_surface_waters_gui, name='sieker_surface_waters_gui'),

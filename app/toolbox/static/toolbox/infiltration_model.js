@@ -75,6 +75,7 @@ export class Infiltration extends ToolboxProject {
 
     }
 
+
     updateButtonState() {
         console.log('updateButtonState', this);
         if (document.getElementById("divInfiltration")){
@@ -87,10 +88,10 @@ export class Infiltration extends ToolboxProject {
     
             // Adjust to your actual button ID
             if ((hasSink || hasEnlargedSink) && (hasLake || hasStream)) {
-                document.getElementById("btnGetInlets").classList.remove('disabled');
+                document.getElementById("btnGetInfiltrationResults").classList.remove('disabled');
                 console.log('(hasSink && hasWaterbody)')
             } else {
-                document.getElementById("btnGetInlets").classList.add('disabled');
+                document.getElementById("btnGetInfiltrationResults").classList.add('disabled');
                 console.log('!(hasSink && hasWaterbody)')
             };
         }
@@ -100,6 +101,11 @@ export class Infiltration extends ToolboxProject {
 
     static fromJson(json) {
       return new Infiltration(json);
+    }
+
+    saveToLocalStorage() {
+        super.saveToLocalStorage(); 
+        this.updateButtonState();  
     }
 
 };

@@ -143,9 +143,9 @@ function addToInletTable(inlet, connectionId) {
   document.querySelector('#inlet-table tbody').appendChild(row);
 };
 
-function getInlets() {
+function getInfiltrationResults() {
     const infiltration = Infiltration.loadFromLocalStorage();
-    fetch('get_inlets/', {
+    fetch('get_infiltration_results/', {
       method: 'POST',
       body: JSON.stringify(infiltration),
       headers: {
@@ -235,10 +235,12 @@ function updateInletInfoCard(inlet) {
           Connected to: ${inlet.waterbody_type} (ID ${inlet.waterbody_id})<br>
           Distance: ${inlet.length_m} meters
         </p>
+        <button class="btn btn-primary show-injection-result-chart" data-waterbody-type="${inlet.waterbody_type}" data-waterbody-id="${inlet.waterbody_id}">Anreicherungsvolumen anzeigen</button>
       </div>
       <div class="card-body col-6">
         <h5 class="card-title">Tägliches Anreicherungsvolumen </h5>
         <img src="/static/toolbox/anreicherung.jpg" alt="Inlet" class="img-fluid rounded" style="max-height: 500px;" />
+        
       </div>
     </div>
   `;
@@ -392,8 +394,8 @@ export function initializeInfiltration() {
     } else if ($target.attr('id') === 'btnFilterLakes') {
       getWaterBodies('lake');
 
-    } else if ($target.attr('id') === 'btnGetInlets') {
-        getInlets(); 
+    } else if ($target.attr('id') === 'btnGetInfiltrationResults') {
+        getInfiltrationResults(); 
     } else if ($target.attr('id') === 'navInfiltrationSinks') {
         map.addLayer(Layers.sink);
     } else if ($target.attr('id') === 'navInfiltrationEnlargedSinks') {
@@ -401,9 +403,91 @@ export function initializeInfiltration() {
     } else if ($target.attr('id') === 'navInfiltrationResult') {
         map.removeLayer(Layers.sink);
         map.removeLayer(Layers.enlarged_sink);
+    } else if ($target.hasClass('show-injection-result-chart')) {
+        const waterbodyType = $target.data('waterbody-type');
+        const waterbodyId = $target.data('waterbody-id');
+        console.log('Show injection chart for', waterbodyType, waterbodyId);
+        fetch(`get_injection_volume_chart/${waterbodyType}/${waterbodyId}/`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Chart data', data);
+            const chartData = data.chart_data;
+            // Render chart in the canvas
+            const ctx = document.getElementById('inletVolumeChart').getContext('2d');
+            // if (window.inletVolumeChart) {
+            //     window.inletVolumeChart.destroy();
+            // }
+            const deLocale = dateFns.locale?.de;
+            
+            // new Chart(ctx, {
+            //   type: 'bar',
+            //   data: {
+            //     datasets: [{
+            //       label: 'Abfluss (m³/s)',
+            //       data: chartData, // expects [{x: date, y: value}]
+            //       borderWidth: 0,
+            //       backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            //     }]
+            //   },
+            //   options: {
+            //     responsive: true,
+            //     parsing: false, // we already have x/y format
+            //     scales: {
+            //       x: {
+            //         type: 'time',
+            //         time: {
+            //           unit: 'month', // 'day' | 'month' | 'year'
+            //           displayFormats: {
+            //             day: 'dd-MM-yyyy',
+            //             month: 'MM-yyyy',
+            //             year: 'yyyy',
+            //           },
+            //         },
+            //         adapters: {
+            //           date: { locale: deLocale },
+            //         },
+            //         title: {
+            //           display: true,
+            //           text: 'Datum'
+            //         }
+            //       },
+            //       y: {
+            //         title: {
+            //           display: true,
+            //           text: 'Abfluss (m³/s)'
+            //         },
+            //         beginAtZero: true
+            //       }
+            //     },
+            //     plugins: {
+            //       legend: { display: true },
+            //       tooltip: {
+            //         callbacks: {
+            //           label: ctx => `${ctx.formattedValue} m³/s`,
+            //         }
+            //       }
+            //     }
+            //   }
 
+            // })
 
-    }  
+            new Chart(ctx, {
+              type: 'bar',
+              data: { datasets: [{ label: 'Abfluss (m³/s)', data: chartData }] },
+              options: {
+                scales: {
+                  x: {
+                    type: 'time',
+                    adapters: { date: { locale: deLocale } },
+                    time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } }
+                  }
+                }
+              }
+            })
+            .catch(err => console.error('Chart data error:', err));
+
+        });
+    }
     }); 
 
   $('input[type="checkbox"][name="land_use"]').prop('checked', true);

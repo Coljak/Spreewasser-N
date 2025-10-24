@@ -759,6 +759,7 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
     Returns a list of dictionaries with sink_id, waterbody_type, waterbody_id, line (WKT), and length_m.
     """
     results = []
+    wos = []
     if sinks != [] and (lakes != [] or streams != []):
         for sink in sinks:
             sink_geom = shapely_shape(json.loads(sink.geom25833.geojson))
@@ -817,6 +818,17 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
                 'rating_connection': rating_length,
                 'index_total': rating_length
             }
+
+            wo = {
+                'sink_id': sink.id,                
+                'is_enlarged_sink': is_enlarged_sink,
+                'waterbody_type': waterbody_type,
+                'waterbody_id': waterbody_id,
+                'waterbody_name': waterbody_name,
+                'length_m': round(length_m, 2),
+                'rating_connection': rating_length,
+                'index_total': rating_length
+            }
             if is_enlarged_sink:
                 if sink.sink_embankment.first():
                     sink_embankment = sink.sink_embankment.first()
@@ -824,12 +836,15 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
                 
 
             results.append(result)
+            wos.append(wo)
             
+    with open('debug_lines.json', 'w') as f:
+        json.dump(wos, f, indent=2)
 
     return results
 
 
-def get_inlets(request):
+def get_infiltration_results(request):
     # POST request
     project = json.loads(request.body)
     print('Project:', project)
@@ -852,6 +867,35 @@ def get_inlets(request):
     }
     print(response)
     return JsonResponse(response)
+
+
+def get_injection_volume_chart(request, waterbody_type, id):
+    """
+    Gets injection volume chart data for a given waterbody type and ID.
+    """
+    if waterbody_type == 'stream':
+        wb = models.Stream.objects.get(pk=id)
+    elif waterbody_type == 'lake':
+        wb = models.Lake.objects.get(pk=id)
+
+    
+
+    chart_data_qs = (
+        models.DischargeTimeseries.objects
+        .filter(fgw=wb.fgw)
+        .order_by('date')
+        .values('date', 'discharge_m3s')
+    )
+    
+    chart_data = [
+        {
+            "x": record["date"].isoformat(),     # ISO 8601 — ideal for JS Date parsing
+            "y": float(record["discharge_m3s"] or 0)
+        }
+        for record in chart_data_qs
+    ]
+
+    return JsonResponse({"chart_data": chart_data})
 
 # TODO DEM fehlt noch
 def get_elevation_profile(line_geojson):

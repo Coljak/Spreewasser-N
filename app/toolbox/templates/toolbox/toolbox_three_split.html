@@ -143,7 +143,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
   
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
+    {% comment %} <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script> {% endcomment %}
 
     {% comment %} <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script> {% endcomment %}
 
@@ -152,6 +152,12 @@
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.markercluster-src.js' %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/bootstrap-slider.min.js" integrity="sha512-f0VlzJbcEB6KiW8ZVtL+5HWPDyW1+nJEjguZ5IVnSQkvZbwBt2RfCBY0CBO1PsMAqxxrG4Di6TfsCPP3ZRwKpA==" crossorigin="anonymous"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.min.js"></script> {% endcomment %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.legend.js' %}"></script>
     <script src="{% static 'vendor/leaflet/L.Geoserver.js' %}"></script>
     <script type="module" src="{% static 'toolbox/toolbox_three_split.js' %}" ></script>

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Min, Max, Q
 from django.contrib.gis.db import models as gis_models
 from django.contrib.auth.models import User
 from djgeojson.fields import PointField, PolygonField, MultiLineStringField, MultiPointField, MultiPolygonField, GeometryField
@@ -7,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from buek.models import CorineLandCover2018
 from django.contrib.gis.db.models.functions import Transform
 from django.core.validators import MinValueValidator, MaxValueValidator
+from toolbox import utils
 import json
 from datetime import datetime
 class ToolboxType(models.Model):
@@ -75,6 +77,7 @@ class UserField(models.Model):
     has_sieker_surface_water = models.BooleanField(default=False, null=True, blank=True)
     has_sieker_wetland = models.BooleanField(default=False, null=True, blank=True)
     has_sieker_drainage = models.BooleanField(default=False, null=True, blank=True)
+    filter_bounds = models.JSONField(default=dict, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -101,31 +104,66 @@ class UserField(models.Model):
             "geometry": geometry,
             "properties": properties
         }
+
+        #{"lakes": {"plus_days": [114, 182], "max_surplus_volume": [7, 22830600], "min_surplus_volume": [2, 2215500], "mean_surplus_volume": [4, 8374270]}, "sinks": {"area": [3, 190735], "depth": [0, 14], "volume": [1, 81540]}, "streams": {"plus_days": [94, 356], "max_surplus_volume": [4, 2872900], "min_surplus_volume": [0, 306334], "mean_surplus_volume": [2, 1028830]}, "enlarged_sinks": {"area": [2, 208162], "depth": [0, 12], "volume": [0, 243609], "volume_gained": [-17714, 243584], "volume_construction_barrier": [0, 1914]}}
+    def compute_filter_bounds_infiltration(self):
+        bounds = dict()
+        lakes = Lake.objects.filter(Q(geom__intersects=self.geom) | Q(geom__within=self.geom))
+        streams = Stream.objects.filter(Q(geom__intersects=self.geom) | Q(geom__within=self.geom))
+        sinks = Sink.objects.filter(centroid__within=self.geom)
+        enlarged_sinks = EnlargedSink.objects.filter(centroid__within=self.geom)
+
+        bounds['sinks'] = {
+            'area': utils.get_bounds(sinks, 'area'),
+            'depth': utils.get_bounds(sinks, 'depth'),
+            'volume': utils.get_bounds(sinks, 'volume'),
+        }
+
+        bounds['enlarged_sinks'] = {
+            'area': utils.get_bounds(enlarged_sinks, 'area'),
+            'depth': utils.get_bounds(enlarged_sinks, 'depth'),
+            'volume': utils.get_bounds(enlarged_sinks, 'volume'),
+            'volume_construction_barrier': utils.get_bounds(enlarged_sinks, 'volume_construction_barrier'),
+            'volume_gained': utils.get_bounds(enlarged_sinks, 'volume_gained'),
+        }
+
+        bounds['streams'] = {
+            'min_surplus_volume': utils.get_bounds(streams, 'min_surplus_volume'),
+            'mean_surplus_volume': utils.get_bounds(streams, 'mean_surplus_volume'),
+            'max_surplus_volume': utils.get_bounds(streams, 'max_surplus_volume'),
+            'plus_days': utils.get_bounds(streams, 'plus_days'),
+        }
+
+        bounds['lakes'] = {
+            'min_surplus_volume': utils.get_bounds(lakes, 'min_surplus_volume'),
+            'mean_surplus_volume': utils.get_bounds(lakes, 'mean_surplus_volume'),
+            'max_surplus_volume': utils.get_bounds(lakes, 'max_surplus_volume'),
+            'plus_days': utils.get_bounds(lakes, 'plus_days'),
+        }
+
+        # and similarly for streams/sinks/enlarged_sinks
+        self.filter_bounds.update(bounds)
+        self.save(update_fields=['filter_bounds'])
     
     def save(self, *args, **kwargs):
         if self.geom:
             self.geom25833 = self.geom.transform(25833, clone=True)
             # TODO: 1. 
+
+        self.has_infiltration = Sink.objects.filter(geom4326__intersects=self.geom).exists()
+        if not self.has_infiltration:
+            self.has_infiltration = EnlargedSink.objects.filter(geom4326__intersects=self.geom).exists()
+
+        self.has_injection = OutlineInjection.objects.filter(geom__intersects=self.geom).exists()
+        self.has_sieker_sink = SiekerSink.objects.filter(geom4326__intersects=self.geom).exists()
+        self.has_sieker_gek = GekRetention.objects.filter(geom4326__intersects=self.geom).exists()
+        self.has_sieker_surface_water = SiekerLargeLake.objects.filter(geom4326__intersects=self.geom).exists()
+        self.has_sieker_wetland = HistoricalWetlands.objects.filter(geom4326__intersects=self.geom).exists()
+        # self.has_sieker_drainage = SiekerDrainage.objects.filter(geom4326__intersects=self.geom).exists()
+
         super().save(*args, **kwargs)
 
-        # TODO move this to the model save() method
-            # has_zalf_sinks = models.Sink.objects.filter(geom4326__within=user_field.geom).exists() or \
-            #                  models.Sink.objects.filter(geom4326__intersects=user_field.geom).exists()
-            # has_zalf_enlarged_sinks = models.EnlargedSink.objects.filter(geom4326__within=user_field.geom).exists() or \
-            #                             models.EnlargedSink.objects.filter(geom4326__intersects=user_field.geom).exists()
-            # has_sieker_sink = models.SiekerSink.objects.filter(geom4326__within=user_field.geom).exists() or \
-            #                   models.SiekerSink.objects.filter(geom4326__intersects=user_field.geom).exists()
-            # has_sieker_gek = models.GekRetention.objects.filter(geom4326__within=user_field.geom).exists() or \
-            #                     models.GekRetention.objects.filter(geom4326__intersects=user_field.geom).exists()
-            # has_sieker_surface_water = models.SiekerLargeLake.objects.filter(geom4326__within=user_field.geom).exists() or \
-            #                             models.SiekerLargeLake.objects.filter(geom4326__intersects=user_field.geom).exists()
-            # user_field.has_zalf_sinks = has_zalf_sinks
-            # user_field.has_zalf_enlarged_sinks = has_zalf_enlarged_sinks
-            # user_field.has_sieker_sink = has_sieker_sink
-            # user_field.has_sieker_gek = has_sieker_gek
-            # user_field.has_sieker_surface_water = has_sieker_surface_water
-            # user_field.save()
-
+            
 
 class ToolboxProject(models.Model):    
     name = models.CharField(max_length=255)
@@ -297,7 +335,7 @@ class OutlineInfiltration(gis_models.Model):
 
 #Quoek_qn_9115
 class Quoek(models.Model):
-    fgw_id = models.IntegerField(primary_key=True)  
+    id = models.IntegerField(primary_key=True)  # THIS IS FGW_ID
     geom25833 = gis_models.MultiLineStringField(srid=25833, null=True, blank=True)
     geom4326 = gis_models.MultiLineStringField(srid=4326, null=True, blank=True)
     gewaesser = models.CharField(max_length=100, null=True, blank=True)
@@ -352,7 +390,7 @@ class Stream(models.Model):
         return {
                 'id': self.id,
                 'name': self.name,
-                'fgw_id': self.fgw.id,
+                'fgw_id': self.fgw.id if self.fgw else None,
                 'shape_length': round(self.shape_length, 2),
                 'minimum_environmental_flow': self.minimum_environmental_flow,
                 'min_surplus_volume': round(self.min_surplus_volume, 2),
@@ -393,7 +431,7 @@ class Lake(models.Model):
         return {
                 'id': self.id,
                 'name': self.name,
-                'fgw_id': self.fgw.id,
+                'fgw_id': self.fgw.id if self.fgw else None,
                 'shape_length': round(self.shape_length, 2),
                 'shape_area': round(self.shape_area, 2),
                 'minimum_environmental_flow': self.minimum_environmental_flow,

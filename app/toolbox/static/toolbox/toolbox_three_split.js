@@ -390,10 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
       handleAlerts({ success: data.success, message: data.message });
       // console.log('Is generic project?', isNewProject);
       if (pageReload) { startToolbox(project); }
-      
-      // Trigger correct start function
-      // if (isNewProject) {
-        
+
       // }
     } else {
       handleAlerts(data.message);

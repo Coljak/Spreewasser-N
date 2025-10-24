@@ -231,6 +231,7 @@ def save_user_field(request):
                 user_field = models.UserField.objects.get(id=body['id'])
                 user_field.name = name
                 user_field.geom = geom      
+                user_field.filter_bounds = {}
                 user_field.save()
             else:
                 user_field = models.UserField(name=name,  geom=geom, user=user)
@@ -330,33 +331,60 @@ def load_infiltration_gui(request, user_field_id):
         user_field_id = None
     else:
         user_field_id = int(user_field_id)
+
+    start_load_projects = datetime.now()
     toolbox_type = models.ToolboxType.objects.get(name_tag='infiltration')
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
     qs = models.ToolboxProject.objects.filter(
         Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
     ).order_by('-creation_date').reverse()
-
     project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+    print("Time to load projects:", datetime.now() - start_load_projects)
     
     if user_field is None:
         return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
     
-    sinks = models.Sink.objects.filter(
-        centroid__within=user_field.geom
-    )
-    enlarged_sinks = models.EnlargedSink.objects.filter(
-        centroid__within=user_field.geom
-    )
-    if sinks.count() > 0 or enlarged_sinks.count() > 0:
-        streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
+    start_filter_sinks = datetime.now()
+    # TODO these querysets are not necessary if the has_x attributes are implemented
+    sinks = models.Sink.objects.filter(centroid__within=user_field.geom)    
+    
+    print("Time to filter sinks:", datetime.now() - start_filter_sinks)
 
+    start_sink_loop = datetime.now()
+    if user_field.has_infiltration:
+        sinks = models.Sink.objects.filter(centroid__within=user_field.geom)
+        enlarged_sinks = models.EnlargedSink.objects.filter(centroid__within=user_field.geom)
+        streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
         lakes = models.Lake.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
 
-        lake_form = LakeFilter(request.GET, queryset=lakes)
-        stream_form = StreamFilter(request.GET, queryset=streams)
-        sink_form = SinkFilter(request.GET, queryset=sinks)
+        if user_field.filter_bounds.get('sinks') is None:
+            print('FOUND Sinks no bounds')
+            user_field.compute_filter_bounds_infiltration()
+
+        print("Time to loop stream and lake filter:", datetime.now() - start_sink_loop)
+        lake_form = LakeFilter(
+            request.GET,
+            queryset=lakes,
+            bounds=user_field.filter_bounds.get('lakes') if user_field.filter_bounds else None
+        )
+        stream_form = StreamFilter(
+            request.GET,
+            queryset=streams,
+            bounds=user_field.filter_bounds.get('streams') if user_field.filter_bounds else None
+        )
+        sink_form = SinkFilter(
+            request.GET,
+            queryset=sinks,
+            bounds=user_field.filter_bounds.get('sinks') if user_field.filter_bounds else None
+        )
         print("Queryset Sinks", sinks.count())
-        enlarged_sink_form = EnlargedSinkFilter(request.GET, queryset=enlarged_sinks)
+        enlarged_sink_form = EnlargedSinkFilter(
+            request.GET,
+            queryset=enlarged_sinks,
+            bounds=user_field.filter_bounds.get('enlarged_sinks') if user_field.filter_bounds else None
+        )
+        print("Time to loop end:", datetime.now() - start_sink_loop)
+
 
         overall_weighting = forms.OverallWeightingsForm()
         forest_weighting = forms.WeightingsForestForm()
@@ -378,6 +406,7 @@ def load_infiltration_gui(request, user_field_id):
             'grassland_weighting': grassland_weighting, 
         }, request=request) 
 
+        
         return JsonResponse({'success': True, 'html': html})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine Senken bekannt.'})
@@ -701,7 +730,6 @@ def get_weighting_forms(request):
         land_use_values = list(land_use_values)
 
         context = {
-            # 'forest_weighting': ForestWeightingFilter(),
             'forest_weighting': forms.WeightingsForestForm(),
             'agriculture_weighting': forms.WeightingsAgricultureForm(),
             'grassland_weighting': forms.WeightingsGrasslandForm(),
@@ -886,7 +914,11 @@ def sieker_surface_waters_gui(request, user_field_id):
             Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
             ).order_by('-creation_date').reverse()
         project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
-        sieker_lake_filter = SiekerLargeLakeFilter(request.GET, queryset=lakes)
+        sieker_lake_filter = SiekerLargeLakeFilter(
+            request.GET,
+            queryset=lakes,
+            bounds=user_field.filter_bounds.get('lakes') if user_field.filter_bounds else None
+            )
 
         water_levels = models.SiekerWaterLevel.objects.filter(
             geom4326__within=user_field.geom
@@ -993,7 +1025,11 @@ def load_sieker_sink_gui(request, user_field_id):
     if sinks.count() > 0:
         # streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
 
-        sieker_sink_filter = SiekerSinkFilter(request.GET, queryset=sinks)
+        sieker_sink_filter = SiekerSinkFilter(
+            request.GET, 
+            queryset=sinks,
+            bounds=user_field.filter_bounds.get('sieker_sinks') if user_field.filter_bounds else None
+            )
 
         html = render_to_string('toolbox/sieker_sink.html', {
             'project_select_form': project_select_form,
@@ -1078,7 +1114,11 @@ def load_sieker_gek_gui(request, user_field_id):
 
         feature_collection = create_feature_collection(geks)
 
-        gek_filter_form = GekRetentionFilter(request.GET, queryset=geks)
+        gek_filter_form = GekRetentionFilter(
+            request.GET, 
+            queryset=geks,
+            bounds=user_field.filter_bounds.get('sieker_geks') if user_field.filter_bounds else None
+            )
         slider_labels = dict(models.GekPriority.objects.values_list("priority_level", "description_de").distinct().order_by("priority_level"))
 
         # streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))

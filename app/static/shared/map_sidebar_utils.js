@@ -530,7 +530,7 @@ export function selectUserField(userFieldId, project, featureGroup) {
                 ? "Wollen Sie den Suchbereich wechseln?"
                 : "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.",
             onConfirm: () => {
-                applyUserFieldChange(project, userFieldId, userField, featureGroup);
+                commitSwitchUserField(project, userFieldId, userField, featureGroup);
             }
         });
         } else {
@@ -540,12 +540,12 @@ export function selectUserField(userFieldId, project, featureGroup) {
                 ? "You are changing a Monica Project's user field."
                 : "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.",
             onConfirm: () => {
-                applyUserFieldChange(project, userFieldId, userField, featureGroup);
+                commitSwitchUserField(project, userFieldId, userField, featureGroup);
             }
         });
       }
     } else  {
-        applyUserFieldChange(project, userFieldId, userField, featureGroup);
+        commitSwitchUserField(project, userFieldId, userField, featureGroup);
     }
 };
 
@@ -573,11 +573,14 @@ function showUserFieldModal({ title, text, onConfirm }) {
     modalInstance.show();
 }
 
-function applyUserFieldChange(project, userFieldId, userField, featureGroup) {
-    console.log('applyUserFieldChange', userFieldId, userField);
+function commitSwitchUserField(project, userFieldId, userField, featureGroup) {
+    console.log('commitSwitchUserField', userFieldId, userField);
     project['userField'] = userFieldId;
-    project['latitude'] = userField.lat;
-    project['longitude'] = userField.lon;
+    try {
+      project['latitude'] = userField.lat;
+      project['longitude'] = userField.lon;
+    } catch {;};
+    
     project.saveToLocalStorage();
     highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
 }
@@ -1064,7 +1067,7 @@ export const addLayerToSidebar = (userField, layer) => {
               <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
             </button>
             <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.delete}">
-              <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+              <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" user-field-name="${userField.name}"></i></span>
             </button>
           </form>
         </div>  
@@ -1073,7 +1076,6 @@ export const addLayerToSidebar = (userField, layer) => {
 
     accordion.layer = layer;
     const userFieldsAccordion = document.getElementById("userFieldList");
-    // console.log("userFieldsAccordion", userFieldsAccordion);
     userFieldsAccordion.appendChild(accordion);
   };
 
@@ -1100,7 +1102,7 @@ export async function getUserFieldsFromDb (featureGroup) {
         className: 'user-field',
         pane: 'polygonPane',
         onEachFeature: function (feature, layer) {
-          layer.bindTooltip(el.name, {
+          layer.bindTooltip(el.properties.name, {
                   direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
                   offset: [0, 0],         // x, y offset in pixels
                   permanent: false,       // only show on hover

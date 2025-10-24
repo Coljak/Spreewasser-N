@@ -6,11 +6,13 @@ from django.db.models import Q
 from django_filters.filters import RangeFilter, ChoiceFilter, MultipleChoiceFilter, ModelMultipleChoiceFilter, NumberFilter
 from django_filters.fields import RangeField
 from django import forms
+from toolbox import utils
 from . import models
 from .forms import SliderFilterForm
 import json
 from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget
 import math
+from datetime import datetime
 # from django_filters import FloatFilter
 
 
@@ -36,60 +38,48 @@ FIELD_UNITS = {
     'plus_days': 'Tage/Jahr',
 }
 class MinMaxRangeFilter(RangeFilter):
-    def __init__(self, *args, model=None, field_name=None, widget=None, queryset=None, **kwargs):
-        
+    def __init__(self, *args, model=None, field_name=None, widget=None, queryset=None, bounds=None, **kwargs):
         self.model = model
         self.field_name = field_name
         self.units = FIELD_UNITS.get(field_name, "")
-        self.queryset_for_bounds = queryset  # to be set in FilterSet
+        self.queryset_for_bounds = queryset
+        self.precomputed_bounds = bounds
         if widget is None:
             widget = CustomDoubleSliderWidget()
         super().__init__(widget=widget, *args, **kwargs)
 
+        # Immediately set bounds if precomputed
+        if self.precomputed_bounds and self.field_name in self.precomputed_bounds:
+            min_val, max_val = self.precomputed_bounds[self.field_name]
+            self._apply_widget_bounds(min_val, max_val)
 
     def set_bounds(self):
+        """Compute bounds if not precomputed."""
+        # Skip queryset requirement when precomputed bounds are available
+        if self.precomputed_bounds and self.field_name in self.precomputed_bounds:
+            min_val, max_val = self.precomputed_bounds[self.field_name]
+            self._apply_widget_bounds(min_val, max_val)
+            return
+        
+        # otherwise fall back to live computation
         if not self.queryset_for_bounds or not self.field_name:
             return
+        
+        min_val, max_val = utils.get_bounds(
+            self.queryset_for_bounds.exclude(**{f"{self.field_name}__isnull": True}),
+            self.field_name
+        )
+        self._apply_widget_bounds(min_val, max_val)
 
-        qs = self.queryset_for_bounds.exclude(**{f"{self.field_name}__isnull": True})
-        min_val, max_val = None, None
-
-        if self.field_name == 'index_soil':
-            values = list(qs.values_list(self.field_name, flat=True))
-            int_values = []
-            for v in values:
-                if (v * 100) < 1:
-                    v = 0
-                elif (v * 100) > 99:
-                    v = 100
-                else:
-                    v = int(v * 100)
-                int_values.append(v)
-            if int_values:
-                min_val, max_val = min(int_values), max(int_values)
-            else:
-                min_val, max_val = 0, 100
-
-        else:
-            agg = qs.aggregate(min_val=Min(self.field_name), max_val=Max(self.field_name))
-
-
-            if agg['min_val'] is not None and agg['max_val'] is not None:
-                min_val = math.floor(agg['min_val'])
-                max_val = math.ceil(agg['max_val'])
-            else:
-                min_val = 0
-                max_val = 1  
-
-        # Assign attributes to widget
+    def _apply_widget_bounds(self, min_val, max_val):
         self.field.widget.attrs.update({
             'data_range_min': min_val,
             'data_range_max': max_val,
             'data_cur_min': min_val,
             'data_cur_max': max_val,
-            # 'data_range_step': 1,
             'units': self.units,
         })
+
 
 class SinkFilter(FilterSet):
     area = MinMaxRangeFilter(
@@ -109,7 +99,7 @@ class SinkFilter(FilterSet):
     )
 
     
-    def __init__(self, *args, queryset=None, **kwargs):
+    def __init__(self, *args, queryset=None, bounds=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
 
         if queryset is not None:
@@ -130,8 +120,9 @@ class SinkFilter(FilterSet):
 
         for name, filter_ in self.filters.items():
             if isinstance(filter_, MinMaxRangeFilter):
+                filter_.precomputed_bounds = bounds
                 filter_.queryset_for_bounds = queryset
-                filter_.set_bounds()
+                filter_.set_bounds() 
 
         prefix = 'sink'
         for name, field in self.form.fields.items():
@@ -160,7 +151,7 @@ class EnlargedSinkFilter(FilterSet):
         widget=forms.CheckboxSelectMultiple,
     )
 
-    def __init__(self, *args, queryset=None, **kwargs):
+    def __init__(self, *args, queryset=None, bounds=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
 
         # Dynamically set land use choices from queryset
@@ -183,8 +174,9 @@ class EnlargedSinkFilter(FilterSet):
         # Configure range sliders (MinMaxRangeFilter)
         for name, filter_ in self.filters.items():
             if isinstance(filter_, MinMaxRangeFilter):
+                filter_.precomputed_bounds = bounds
                 filter_.queryset_for_bounds = queryset
-                filter_.set_bounds()
+                filter_.set_bounds() 
 
         prefix = 'enlarged_sink'
         for name, field in self.form.fields.items():
@@ -224,13 +216,14 @@ class StreamFilter(FilterSet):
         # We don’t filter here – this is just a placeholder.
         return queryset
     
-    def __init__(self, *args, queryset=None, **kwargs):
+    def __init__(self, *args, queryset=None, bounds=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
 
         for name, filter_ in self.filters.items():
             if isinstance(filter_, MinMaxRangeFilter):
+                filter_.precomputed_bounds = bounds
                 filter_.queryset_for_bounds = queryset
-                filter_.set_bounds()
+                filter_.set_bounds() 
 
         prefix = 'stream'
         for name, field in self.form.fields.items():
@@ -270,20 +263,24 @@ class LakeFilter(FilterSet):
     def filter_distance_placeholder(self, queryset, name, value):
         # this is just a placeholder.
         return queryset
-    
-    def __init__(self, *args, queryset=None, **kwargs):
+
+    def __init__(self, *args, queryset=None, bounds=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
 
         for name, filter_ in self.filters.items():
             if isinstance(filter_, MinMaxRangeFilter):
+                filter_.precomputed_bounds = bounds
                 filter_.queryset_for_bounds = queryset
                 filter_.set_bounds()
+
+
 
         prefix = 'lake'
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f'{prefix}_{name}'
             field.widget.attrs['name'] = f'{prefix}_{name}'
             field.widget.attrs['prefix'] = prefix
+
 
     class Meta:
         model = models.Lake
@@ -309,13 +306,14 @@ class SiekerLargeLakeFilter(FilterSet):
     #         return queryset.filter(badesee=False)
     #     return queryset
 
-    def __init__(self, *args, queryset=None, **kwargs):
+    def __init__(self, *args, queryset=None, bounds=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
 
         for name, filter_ in self.filters.items():
             if isinstance(filter_, MinMaxRangeFilter):
+                filter_.precomputed_bounds = bounds
                 filter_.queryset_for_bounds = queryset
-                filter_.set_bounds()
+                filter_.set_bounds() 
 
         prefix = 'sieker_surface_water'
         for name, field in self.form.fields.items():
@@ -346,14 +344,15 @@ class SiekerSinkFilter(FilterSet):
         widget=forms.CheckboxSelectMultiple,
     )
 
-    
-    def __init__(self, *args, queryset=None, **kwargs):
+
+    def __init__(self, *args, queryset=None, bounds=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
 
         for name, filter_ in self.filters.items():
             if isinstance(filter_, MinMaxRangeFilter):
+                filter_.precomputed_bounds = bounds
                 filter_.queryset_for_bounds = queryset
-                filter_.set_bounds()
+                filter_.set_bounds() 
 
         prefix = 'sieker_sink'
         for name, field in self.form.fields.items():
@@ -406,7 +405,7 @@ class GekRetentionFilter(FilterSet):
         # Use the custom slider form for the range filter
         form = SliderFilterForm
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, bounds=None, **kwargs):
         super().__init__(*args, **kwargs)
         
         # Limit landuse choices to the current queryset
@@ -422,7 +421,9 @@ class GekRetentionFilter(FilterSet):
             gek_retention__in=self.queryset
         )
         self.filters['costs'].queryset_for_bounds = measures_qs
+        self.filters['costs'].precomputed_bounds = bounds
         self.filters['costs'].set_bounds()
+
         prefix = 'gek'
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f"{prefix}_{name}"

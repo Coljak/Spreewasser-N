@@ -68,7 +68,10 @@
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy sink_filter.form %}
-                        <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
+                        <button type="submit" class="btn btn-primary filter-features filter-sinks" data-type="sink">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Senken filtern und bewerten
+                        </button>
                     </form>
                 </div>
             </div>
@@ -93,7 +96,10 @@
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy enlarged_sink_filter.form %}
-                        <button id="btnFilterEnlargedSinks" type="submit" class="btn btn-primary filter-features" data-type="enlarged_sink">Senken filtern und bewerten</button>
+                        <button type="submit" class="btn btn-primary filter-features filter-sinks" data-type="enlarged_sink">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Senken filtern und bewerten
+                        </button>
                     </form>
                 </div>
             </div>
@@ -123,7 +129,10 @@
                     
                     <div class="card-body">
                         {% crispy lakes_form.form  %}
-                        <button id="btnFilterLakes" class="btn btn-primary mt-3 filter-features" data-type="lake">Seen filtern</button>
+                        <button id="btnFilterLakes" class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="lake">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Seen filtern
+                        </button>
                     </div>
                 </div>
             </div>
@@ -147,7 +156,10 @@
                     
                     <div class="card-body">
                         {% crispy streams_form.form  %}
-                        <button id="btnFilterStreams" class="btn btn-primary mt-3 filter-features" data-type="stream">Flüsse filtern</button>
+                        <button id="btnFilterStreams" class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="stream">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Flüsse filtern
+                        </button>
                     </div>
                 </div>
             </div>
@@ -236,13 +248,12 @@
                         <tbody></tbody>
                     </table>
                     <div id="inlet-info-card" class="card mt-3" style="display: none;"></div>
-                    <canvas id="inletVolumeChart"></canvas>
+                    
                 </div>
             </div>
         </div>
-        
-        <button id="btnGetInfiltrationResults" class="btn btn-primary mt-3">Ergebnis berechnen</button>
-
+        <div id="divBtnGetInfiltrationResults">
+            <button id="btnGetInfiltrationResults" class="btn btn-primary mt-3">Ergebnis berechnen</button>
+        </div>
     </div>
-
 </div>

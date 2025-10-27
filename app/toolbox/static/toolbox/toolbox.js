@@ -480,8 +480,7 @@ export function addFeatureCollectionToLayer(options){
     console.log('addFeatureCollectionToLayer dataInfo.colorByIndex', dataInfo.colorByIndex)
     const featureGroup = Layers[dataInfo.dataType]
     featureGroup.clearLayers();
-    // console.log('featureGroup', featureGroup)
-    // console.log('featureCollection', featureCollection)
+
     let layer = L.geoJSON(featureCollection, {
         style: function (feature) {
             let color;

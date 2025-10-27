@@ -84,16 +84,19 @@ export class Infiltration extends ToolboxProject {
             const hasEnlargedSink = this.selected_enlarged_sinks.length > 0;
             const hasStream = this.selected_streams.length > 0;
             const hasLake = this.selected_lakes.length > 0;
-            
+            const btn = document.getElementById("btnGetInfiltrationResults")
+            const btnDiv = document.getElementById('divBtnGetInfiltrationResults');
     
             // Adjust to your actual button ID
             if ((hasSink || hasEnlargedSink) && (hasLake || hasStream)) {
-                document.getElementById("btnGetInfiltrationResults").classList.remove('disabled');
-                console.log('(hasSink && hasWaterbody)')
+                btn.classList.remove('disabled');
+                btnDiv.removeAttribute('title');
+
             } else {
-                document.getElementById("btnGetInfiltrationResults").classList.add('disabled');
-                console.log('!(hasSink && hasWaterbody)')
-            };
+                btn.classList.add('disabled');
+                btnDiv.setAttribute('title', 'Sie müssen mindestens eine Senke und ein Gewässer auswählen!');
+
+            }
         }
     };
 

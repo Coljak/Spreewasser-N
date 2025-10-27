@@ -16,20 +16,20 @@ urlpatterns = [
     path('toolbox/get-user-fields/', views.get_user_fields, name='get-user-fields'),
     path('toolbox/delete-user-field/<int:id>/', views.delete_user_field, name='delete-user-field'),
     path('toolbox/field-projects-menu/<int:id>/', views.get_field_project_modal, name='field_projects_menu'),
+    # TODO check this- if needed and if used
     path('toolbox/get_options/<str:parameter>/', views.get_options, name='get-options'),
-
     path('toolbox/save-project/', views.save_toolbox_project, name='save-project'),
     path('toolbox/load-project/<int:id>/', views.load_toolbox_project, name='load-project'),
     path('toolbox/load_polygon/', views.load_nuts_polygon, name='load_nuts_polygon'),
     path('toolbox/load_polygon/<str:entity>/<int:polygon_id>/', views.load_nuts_polygon, name='load_nuts_polygon_entity'),
+    path('toolbox/proxy/wms/', views.geoserver_wms, name='geoserver_wms'),
+    # Zalf sinks   
+    path('toolbox/load_infiltration_gui/<str:user_field_id>/', views.load_infiltration_gui, name='load_infiltration_gui'),
+    path('toolbox/get_weighting_form/', views.get_weighting_forms, name='get_weighting_forms'),
     path('toolbox/filter_sinks/', views.filter_sinks, name='filter_sinks'),
     path('toolbox/filter_enlarged_sinks/', views.filter_enlarged_sinks, name='filter_enlarged_sinks'),
     path('toolbox/filter_waterbodies/', views.filter_waterbodies, name='filter_waterbodies'),
-    # path('toolbox/get_sinks_within/<int:user_field_id>/', views.toolbox_get_sinks_within, name='toolbox_get_sinks_within'),
-    path('toolbox/load_infiltration_gui/<str:user_field_id>/', views.load_infiltration_gui, name='load_infiltration_gui'),
-    path('toolbox/get_weighting_form/', views.get_weighting_forms, name='get_weighting_forms'),
-    # path('toolbox/calculate_index_for_selection/', views.calculate_index_for_selection, name='calculate_index_for_selection'),
-    path('toolbox/get_infiltration_results/', views.get_infiltration_results, name='get_infiltration_results'),
+    path('toolbox/get_infiltration_results/', views.get_infiltration_results, name='get_infiltration_results'),   
     path('toolbox/get_injection_volume_chart/<str:waterbody_type>/<int:id>/', views.get_injection_volume_chart, name='get_injection_volume_chart'),
     #### Sieker ####
     # Surface Waters
@@ -43,7 +43,8 @@ urlpatterns = [
     path('toolbox/filter_sieker_wetlands/', views.filter_sieker_wetlands, name='filter_sieker_wetland'),
     path('toolbox/load_injection_gui/', views.load_injection_gui, name='load_injection_gui' ),
     path('toolbox/load_sieker_drainage_gui/<str:user_field_id>/', views.load_sieker_drainage_gui, name='load_sieker_drainage_gui' ),
+    # TU Berlin
     path('toolbox/mar_calculate_area/', views.mar_calculate_area, name='mar_calculate_area'),
-    path('toolbox/proxy/wms/', views.geoserver_wms, name='geoserver_wms'),
+    
 
 ]

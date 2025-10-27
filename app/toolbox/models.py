@@ -544,7 +544,7 @@ class EnlargedSink(models.Model):
     con_length = models.FloatField(null=True)
     constructed_sink = models.BooleanField(null=True, default=False)
     volume = models.FloatField(null=True)
-    volume_construction_barrier = models.FloatField(null=True)
+    # volume_construction_barrier = models.FloatField(null=True)
     volume_gained =  models.FloatField(null=True)
     construction_efficiciency = models.FloatField(null=True)
     index_1 = models.FloatField(null=True)

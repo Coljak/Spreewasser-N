@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "sink_id": 21749,
+    "is_enlarged_sink": true,
+    "waterbody_type": "lake",
+    "waterbody_id": 129,
+    "waterbody_name": "Elisensee",
+    "length_m": 2704.03,
+    "rating_connection": 0,
+    "index_total": 0
+  },
+  {
+    "sink_id": 22308,
+    "is_enlarged_sink": true,
+    "waterbody_type": "lake",
+    "waterbody_id": 129,
+    "waterbody_name": "Elisensee",
+    "length_m": 3796.05,
+    "rating_connection": 0,
+    "index_total": 0
+  }
+]

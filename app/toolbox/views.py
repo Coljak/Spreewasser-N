@@ -753,7 +753,7 @@ def get_weighting_forms(request):
         return render(request, 'toolbox/weighting_tab.html', context)
 
 
-def get_shortest_connection_lines_utm(sinks, lakes, streams):
+def get_shortest_connection_lines_utm(sinks, lakes, streams, is_enlarged_sink=False):
     """
     Get the shortest connection line between the sinks and the nearest selected lake or stream.
     Returns a list of dictionaries with sink_id, waterbody_type, waterbody_id, line (WKT), and length_m.
@@ -805,7 +805,7 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
             else:
                 rating_length = int((1000 - length_m)/10)
 
-            is_enlarged_sink = isinstance(sink, models.EnlargedSink)
+            
             result = {
                 'sink_id': sink.id,
                 'sink_geom': json.loads(sink.geom4326.geojson),
@@ -819,16 +819,7 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
                 'index_total': rating_length
             }
 
-            wo = {
-                'sink_id': sink.id,                
-                'is_enlarged_sink': is_enlarged_sink,
-                'waterbody_type': waterbody_type,
-                'waterbody_id': waterbody_id,
-                'waterbody_name': waterbody_name,
-                'length_m': round(length_m, 2),
-                'rating_connection': rating_length,
-                'index_total': rating_length
-            }
+
             if is_enlarged_sink:
                 if sink.sink_embankment.first():
                     sink_embankment = sink.sink_embankment.first()
@@ -836,10 +827,8 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams):
                 
 
             results.append(result)
-            wos.append(wo)
-            
-    with open('debug_lines.json', 'w') as f:
-        json.dump(wos, f, indent=2)
+
+
 
     return results
 
@@ -855,7 +844,7 @@ def get_infiltration_results(request):
     streams = models.Stream.objects.filter(id__in=project.get('selected_streams', []))
 
     inlets_sinks = get_shortest_connection_lines_utm(sinks, lakes, streams)
-    inlets_enlarged_sinks = get_shortest_connection_lines_utm(enlarged_sinks, lakes, streams)
+    inlets_enlarged_sinks = get_shortest_connection_lines_utm(enlarged_sinks, lakes, streams, is_enlarged_sink=True)
 
     
     response = {
@@ -886,7 +875,7 @@ def get_injection_volume_chart(request, waterbody_type, id):
         .order_by('date')
         .values('date', 'discharge_m3s')
     )
-    
+
     chart_data = [
         {
             "x": record["date"].isoformat(),     # ISO 8601 — ideal for JS Date parsing

@@ -24,10 +24,13 @@ const legendSettings = {
 const connectionLayerMap = {};
 
 
-function filterSinks(sinkType) {
+function filterSinks( $button) {
+  const sinkType = $button.data('type')
+  const spinner = $button.find('.spinner-border')
+  spinner.show();
+  $button.prop('disabled', true)
   const featureGroup = Layers[sinkType]
   let url = `filter_${sinkType}s/`;
- 
   const infiltration = Infiltration.loadFromLocalStorage();
   fetch(url, {
     method: 'POST',
@@ -44,24 +47,16 @@ function filterSinks(sinkType) {
     if (data.message.success) {
       const selected_sinks = infiltration[`selected_${sinkType}s`];
       infiltration[`selected_${sinkType}s`] = [];
-     
-
-
+  
       console.log('data', data);
       const sink_indices = {}
       
-
       addPointFeatureCollectionToLayer(data);
 
       addFeatureCollectionToTable(data)
       infiltration[`selected_${sinkType}s`] = selected_sinks.filter(sink => infiltration[`all_${sinkType}_ids`].includes(sink));
       localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
 
-      // infiltration.saveToLocalStorage();
-      // Add the cluster group to the map
-      // featureGroup.addLayer(markers);
-
-    
     } else {
       handleAlerts(data.message);
       return;
@@ -70,16 +65,22 @@ function filterSinks(sinkType) {
 }).then(data => {
   tableCheckSelectedItems(data.infiltration, data.sinkType)
 })
-.catch(error => console.error("Error fetching data:", error));
+.catch(error => console.error("Error fetching data:", error))
+.finally(() => {
+    // Always hide spinner & enable button
+    spinner.hide();
+    $button.prop('disabled', false);
+  });
 };
 
 
-function getWaterBodies(dataType){
-  
+function getWaterBodies($button){
+  const dataType = $button.data('type');
+  const spinner = $button.find('.spinner-border')
+  spinner.show();
+  $button.prop('disabled', true) 
   let url = `filter_waterbodies/`;
-
   const infiltration = Infiltration.loadFromLocalStorage();
-
   fetch(url, {
     method: 'POST',
     body: JSON.stringify({
@@ -100,11 +101,18 @@ function getWaterBodies(dataType){
       handleAlerts(data.message);
     } 
   })
-  .catch(error => console.error("Error fetching data:", error));
+  .catch(error => console.error("Error fetching data:", error))
+  .finally(() => {
+    // Always hide spinner & enable button
+    spinner.hide();
+    $button.prop('disabled', false);
+  });
 };
 
 function addToInletTable(inlet, connectionId) {
   const row = document.createElement('tr');
+  row.setAttribute('data-waterbody-type', inlet.waterbody_type);
+  row.setAttribute('data-waterbody-id', inlet.waterbody_id);
   console.log('inlet.rating_connection + inlet.index_sink_total)/2', inlet.rating_connection, inlet.index_sink_total)
   row.innerHTML = `
     <td>${inlet.sink_id}</td>
@@ -116,29 +124,69 @@ function addToInletTable(inlet, connectionId) {
     <td>${((inlet.rating_connection + inlet.index_sink_total)/2)}%</td>
     <td><button class="btn btn-sm btn-primary result-aquifer-recharge hide-connection" data-id="${connectionId}"">Hide</button></td>
     <td><button class="btn btn-sm btn-primary result-aquifer-recharge edit-connection" data-id="${connectionId}">Zuleitung editieren</button></td>
-    
-
   `;
 
   // On row click: update info card
   row.addEventListener('click', (e) => {
     updateInletInfoCard(inlet);
+    console.log('Show injection chart for', inlet.waterbody_id), inlet.waterbody_type;
+    const spinner = document.querySelector('#inletChartSpinnerWrapper'); // 🌀 find spinner
+    const canvas = document.getElementById('inletVolumeChart');
+    const ctx = canvas.getContext('2d');
+    fetch(`get_injection_volume_chart/${inlet.waterbody_type}/${inlet.waterbody_id}/`)
+    .then(response => response.json())
+    .then(data => {
+        console.log('Chart data', data);
+        const chartData = data.chart_data;
+        // Render chart in the canvas
+
+        if (inletVolumeChart) {
+          try {
+            inletVolumeChart.destroy();
+          } catch {;}
+            
+        }
+        const deLocale = dateFns.locale?.de;
+        // Hide spinner once data is ready
+
+        spinner.classList.add('d-none');
+        // canvas.style.display = 'block';
+
+        inletVolumeChart = new Chart(ctx, {
+          type: 'bar',
+          data: { 
+            datasets: [{ 
+              label: 'Abfluss (m³/s)', 
+              data: chartData }] 
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                type: 'time',
+                adapters: { date: { locale: deLocale } },
+                time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
+                title: { display: true, text: 'Datum' }
+              },
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Abfluss (m³/s)' }
+              }
+            }
+          }
+        })
+        // .catch(err => console.error('Chart data error:', err));
+
+    });
     if (e.target.classList.contains('result-aquifer-recharge')) {
       if (e.target.classList.contains('hide-connection')) {
         toggleConnection(e.target);
       } else if (e.target.classList.contains('edit-connection')) {
         editConnection(e.target);
-      // } else if (e.target.classList.contains('choose-waterbody')) {
-      //   openUserFieldNameModal({
-      //     title: 'Gewässer auswählen',
-      //     buttonText: 'Gewässer auswählen',
-      //     onSubmit: (userFieldName) => {
-      //       console.log('Selected user field name:', userFieldName);
-      //     }
-      //   });
+
       }
     }
-}   );
+});
 
   document.querySelector('#inlet-table tbody').appendChild(row);
 };
@@ -176,18 +224,12 @@ function getInfiltrationResults() {
 
           // Create sink marker
           const sinkLayer = L.geoJSON(inlet.sink_geom, {
-            pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
-              radius: 6,
-              fillColor: '#ff5722',
-              color: '#000',
-              weight: 1,
-              opacity: 1,
-              fillOpacity: 0.8
-            })
-          });
+              className: 'sink-outline',
+          })
 
           // Create line
           const lineLayer = L.geoJSON(inlet.line, {
+            className: `connection-line connection-${inlet.waterbody_type}`,
             style: {
               color: inlet.waterbody_type === 'lake' ? '#007bff' : '#28a745',
               weight: 3,
@@ -195,8 +237,24 @@ function getInfiltrationResults() {
             }
           });
 
+          const groupLayers = [sinkLayer, lineLayer]
+
+          if (inlet.sink_embankment) {
+            const sink_embankment = L.geoJSON(inlet.sink_embankment, {
+              className: 'sink-embankment',
+              style: {
+                fillColor: '#ff5722',
+                color: '#000',
+              }
+              
+            })
+            groupLayers.push(sink_embankment)
+          }
+
+          
+
           // Combine both into a LayerGroup
-          const group = L.layerGroup([sinkLayer, lineLayer]).addTo(Layers.inletConnectionsFeatureGroup);
+          const group = L.layerGroup(groupLayers).addTo(Layers.inletConnectionsFeatureGroup);
           
           connectionLayerMap[connectionId] = group;
 
@@ -229,18 +287,22 @@ function updateInletInfoCard(inlet) {
   const card = document.getElementById('inlet-info-card');
   card.innerHTML = `
     <div class="row">
-      <div class="card-body col-6">
+      <div class="card-body col-4">
         <h5 class="card-title">Sink ${inlet.sink_id} ${inlet.is_enlarged_sink ? '(Enlarged)' : ''}</h5>
         <p class="card-text">
           Connected to: ${inlet.waterbody_type} (ID ${inlet.waterbody_id})<br>
           Distance: ${inlet.length_m} meters
         </p>
-        <button class="btn btn-primary show-injection-result-chart" data-waterbody-type="${inlet.waterbody_type}" data-waterbody-id="${inlet.waterbody_id}">Anreicherungsvolumen anzeigen</button>
+       
       </div>
-      <div class="card-body col-6">
+      <div class="card-body col-8">
         <h5 class="card-title">Tägliches Anreicherungsvolumen </h5>
-        <img src="/static/toolbox/anreicherung.jpg" alt="Inlet" class="img-fluid rounded" style="max-height: 500px;" />
-        
+        <div id="inletChartSpinnerWrapper" class="d-flex justify-content-center align-items-center" style="height: 200px;">
+          <div id="inletChartSpinner" class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <canvas id="inletVolumeChart"></canvas>
       </div>
     </div>
   `;
@@ -278,8 +340,8 @@ function toggleConnection(button) {
 }
 
 export function initializeInfiltration() {
-
-let inletVolumeChart;
+  console.log('Initialize Infiltraion');
+  let inletVolumeChart;
   removeLegendFromMap(map);
   map.eachLayer(function(layer) {
         console.log(layer.toolTag);
@@ -287,7 +349,7 @@ let inletVolumeChart;
             map.removeLayer(layer);
         }
       });
-  console.log('Initialize Infiltraion');
+  
 
       
   initializeSliders();
@@ -380,18 +442,10 @@ let inletVolumeChart;
     addClickEventListenerToToolboxPanel(Infiltration)
     $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
-    if ($target.attr('id') === 'btnFilterSinks') {
-      filterSinks('sink');
-    
-    } else if ($target.attr('id') === 'btnFilterEnlargedSinks') {
-      filterSinks('enlarged_sink');
-    
-    } else if ($target.attr('id') === 'btnFilterStreams') {
-      getWaterBodies('stream');
-    
-    } else if ($target.attr('id') === 'btnFilterLakes') {
-      getWaterBodies('lake');
-
+    if ($target.hasClass('filter-sinks')) {
+      filterSinks($target);   
+    } else if ($target.hasClass('filter-waterbodies')) {
+      getWaterBodies($target);  
     } else if ($target.attr('id') === 'btnGetInfiltrationResults') {
         getInfiltrationResults(); 
     } else if ($target.attr('id') === 'navInfiltrationSinks') {
@@ -401,91 +455,7 @@ let inletVolumeChart;
     } else if ($target.attr('id') === 'navInfiltrationResult') {
         map.removeLayer(Layers.sink);
         map.removeLayer(Layers.enlarged_sink);
-    } else if ($target.hasClass('show-injection-result-chart')) {
-        const waterbodyType = $target.data('waterbody-type');
-        const waterbodyId = $target.data('waterbody-id');
-        console.log('Show injection chart for', waterbodyType, waterbodyId);
-        fetch(`get_injection_volume_chart/${waterbodyType}/${waterbodyId}/`)
-        .then(response => response.json())
-        .then(data => {
-            console.log('Chart data', data);
-            const chartData = data.chart_data;
-            // Render chart in the canvas
-            const ctx = document.getElementById('inletVolumeChart').getContext('2d');
-            if (inletVolumeChart) {
-                inletVolumeChart.destroy();
-            }
-            const deLocale = dateFns.locale?.de;
-            
-            // new Chart(ctx, {
-            //   type: 'bar',
-            //   data: {
-            //     datasets: [{
-            //       label: 'Abfluss (m³/s)',
-            //       data: chartData, // expects [{x: date, y: value}]
-            //       borderWidth: 0,
-            //       backgroundColor: 'rgba(54, 162, 235, 0.6)',
-            //     }]
-            //   },
-            //   options: {
-            //     responsive: true,
-            //     parsing: false, // we already have x/y format
-            //     scales: {
-            //       x: {
-            //         type: 'time',
-            //         time: {
-            //           unit: 'month', // 'day' | 'month' | 'year'
-            //           displayFormats: {
-            //             day: 'dd-MM-yyyy',
-            //             month: 'MM-yyyy',
-            //             year: 'yyyy',
-            //           },
-            //         },
-            //         adapters: {
-            //           date: { locale: deLocale },
-            //         },
-            //         title: {
-            //           display: true,
-            //           text: 'Datum'
-            //         }
-            //       },
-            //       y: {
-            //         title: {
-            //           display: true,
-            //           text: 'Abfluss (m³/s)'
-            //         },
-            //         beginAtZero: true
-            //       }
-            //     },
-            //     plugins: {
-            //       legend: { display: true },
-            //       tooltip: {
-            //         callbacks: {
-            //           label: ctx => `${ctx.formattedValue} m³/s`,
-            //         }
-            //       }
-            //     }
-            //   }
-
-            // })
-
-            inletVolumeChart = new Chart(ctx, {
-              type: 'bar',
-              data: { datasets: [{ label: 'Abfluss (m³/s)', data: chartData }] },
-              options: {
-                scales: {
-                  x: {
-                    type: 'time',
-                    adapters: { date: { locale: deLocale } },
-                    time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } }
-                  }
-                }
-              }
-            })
-            // .catch(err => console.error('Chart data error:', err));
-
-        });
-    }
+    } 
     }); 
 
   $('input[type="checkbox"][name="land_use"]').prop('checked', true);

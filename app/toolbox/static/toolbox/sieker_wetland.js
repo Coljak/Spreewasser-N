@@ -108,13 +108,6 @@ export function initializeSiekerWetland(data) {
 
   
 
-  removeLegendFromMap(map);
-  map.eachLayer(function(layer) {
-        console.log(layer.toolTag);
-        if (layer.toolTag && layer.toolTag !== 'sieker_wetland') {
-            map.removeLayer(layer);
-        }
-        });
 
   $('#toolboxPanel').off('change');
   $('#toolboxPanel').off('click');

@@ -19,7 +19,7 @@ export class UserField {
 };
 
 
-const wmsGwcUrl = "http://localhost:8080/geoserver/base_data/wms"
+const wmsUrl = "/toolbox/proxy/wms/"
 
 const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
@@ -48,6 +48,14 @@ const topo = L.tileLayer(topoUrl, {
 pane: "baselayerPane"
  });
 
+
+ const stamenUrl = 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}@2x.png'
+ const topo2 = L.tileLayer(stamenUrl, {
+    attribution: 'Map tiles by Stamen Design, CC BY 3.0 — Map data © OpenStreetMap contributors',
+    maxZoom: 18,
+    pane: "baselayerPane",
+})
+
 export const projectRegion = new L.geoJSON(project_region, {
     attribution: 'Project Region',
     pane: "overlayPolygonPane",
@@ -61,8 +69,8 @@ export const projectRegion = new L.geoJSON(project_region, {
   }
 });
 
-export const demOverlay = L.tileLayer.wms(wmsGwcUrl, {
-      layers: 'base_data:dgm200_utm32s',
+export const demOverlay = L.tileLayer.wms(wmsUrl, {
+      layers: 'spreewassern_raster:dgm200_singleband',
       format: 'image/png',
       transparent: true,
       opacity: 0.5,
@@ -79,6 +87,7 @@ export const baseMaps = {
     "Open Street Maps": osm,
     Satellit: satellite,
     Topomap: topo,
+    Topmap2: topo2,
   };
 
 export function enhanceMap (map) {

@@ -106,16 +106,6 @@ function addFeatureCollectionResultCards( dataInfo, gekMeasures) {
 
 export function initializeSiekerGek(data) {
 
-  
-
-
-  removeLegendFromMap(map);
-  map.eachLayer(function(layer) {
-        console.log(layer.toolTag);
-        if (layer.toolTag && layer.toolTag !== 'sieker-gek') {
-            map.removeLayer(layer);
-        }
-        });
   // console.log('Initialize Sieker Gek');
   // map.addLayer(Layers['sieker_gek']);
   

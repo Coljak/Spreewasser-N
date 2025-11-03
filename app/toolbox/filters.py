@@ -1,10 +1,10 @@
 
-from django_filters import FilterSet
+
 from django.db.models import Min, Max
 from django.db.models import Q
-# from django_filters import FloatFilter
+from django_filters import FilterSet
 from django_filters.filters import RangeFilter, ChoiceFilter, MultipleChoiceFilter, ModelMultipleChoiceFilter, NumberFilter
-from django_filters.fields import RangeField
+
 from django import forms
 from toolbox import utils
 from . import models
@@ -13,7 +13,7 @@ import json
 from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget
 import math
 from datetime import datetime
-# from django_filters import FloatFilter
+
 
 
 
@@ -518,4 +518,94 @@ class HistoricalWetlandsFilter(FilterSet):
         slider.attrs["data_cur_val"] = min_feasibility
         
 
-   
+
+class DrainageNetworkFilter(FilterSet):
+    natural_creeks = MultipleChoiceFilter(
+        initial=True,
+        label="",
+        choices=[],
+        widget=forms.CheckboxSelectMultiple,
+    )
+    non_natural_creeks = MultipleChoiceFilter(
+        initial=True,
+        label="",
+        choices=[],
+        widget=forms.CheckboxSelectMultiple,
+    )
+    ditches = MultipleChoiceFilter(
+        initial=True,
+        label="",
+        choices=[],
+        widget=forms.CheckboxSelectMultiple,
+    )
+    pipes = MultipleChoiceFilter(
+        initial=True,
+        label="",
+        choices=[],
+        widget=forms.CheckboxSelectMultiple,
+    )
+    rivers = MultipleChoiceFilter(
+        initial=True,
+        label="",
+        choices=[],
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+
+    def __init__(self, *args, queryset=None, **kwargs):
+        super().__init__(*args, queryset=queryset, **kwargs)
+
+        network_types = models.DrainageNetworkType.objects.filter(
+            details__in=queryset
+        ).distinct()
+
+        
+        groups = {
+            'natural_creeks': 1,
+            'non_natural_creeks': 2,
+            'ditches': 3,
+            'pipes': 4,
+            'rivers': 5,
+        }
+        prefix = 'drainage'
+        # for field_name, network_type_id in groups.items():
+
+        for network_type in network_types:
+            self.form.fields[network_type.name_tag].widget.attrs['data_network_type'] = str(network_type.id)
+
+            details = queryset.filter(network_type=network_type)
+            self.form.fields[network_type.name_tag].choices = [
+                
+                (d.id, d.name_de) for d in details
+            ]
+            self.form.fields[network_type.name_tag].widget.attrs['parent']=network_type.id
+            self.form.fields[network_type.name_tag].widget.attrs['prefix']=prefix
+
+
+    class Meta:
+        model = models.DrainageNetworkTypeDetail
+        fields = ['natural_creeks', 'non_natural_creeks', 'ditches', 'pipes', 'rivers']
+        form = SliderFilterForm
+
+class KnownDrainagesFilter(FilterSet):
+    types = MultipleChoiceFilter(
+        initial=True,
+        label="",
+        choices=[],
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+
+    def __init__(self, *args, queryset=None, **kwargs):
+        super().__init__(*args, queryset=queryset, **kwargs)
+        types = queryset.distinct('drainage_type')
+        self.form.fields['types'].choices = queryset.values_list('drainage_type__id', 'drainage_type__name_de').distinct()
+        self.form.fields['types'].widget.attrs['prefix']='known_drainage'
+
+
+    class Meta:
+        model = models.KnownDrainages
+        fields = ['types']
+        form = SliderFilterForm
+
+

@@ -1,3 +1,4 @@
+// Zalf Innfiltration
 const sinkFeatureGroup = new L.FeatureGroup()
 sinkFeatureGroup.toolTag = 'infiltration';
 const sinkPointFeatureGroup = new L.FeatureGroup()
@@ -15,6 +16,10 @@ sinkCluster.toolTag = 'infiltration';
 let enlargedSinkCluster = L.markerClusterGroup();
 enlargedSinkCluster.toolTag = 'infiltration';
 
+// TUB Injection
+const tubInjectionTileLayer = new L.TileLayer();
+tubInjectionTileLayer.toolTag = 'injection';
+
 // SiekerWetlands
 const siekerWetlandFeatureGroup = new L.FeatureGroup()
 siekerWetlandFeatureGroup.toolTag = 'sieker_wetland';
@@ -23,7 +28,6 @@ siekerFilteredWetlandFeatureGroup.toolTag = 'sieker_wetland';
 
 const siekerSinkFeatureGroup = new L.markerClusterGroup();
 siekerSinkFeatureGroup.toolTag = 'sieker_sink';
-
 
 // SierkerSurfaceWaters
 const siekerLakesFeatureGroup = new L.FeatureGroup();
@@ -36,9 +40,20 @@ filteredLakesFeatureGroup.toolTag = 'sieker_surface_water';
 //siekerGek
 const siekerGekFeatureGroup = new L.FeatureGroup()
 siekerGekFeatureGroup.toolTag = 'sieker-gek';
-
 const siekerFilteredGekFeatureGroup = new L.FeatureGroup()
 siekerFilteredGekFeatureGroup.toolTag = 'sieker-gek';
+
+// SiekerDrainage
+const siekerDrainageRasterTile = new L.TileLayer();
+siekerDrainageRasterTile.toolTag = 'drainage';
+const siekerDrainageNetworkFeatureGroup = new L.TileLayer();
+siekerDrainageNetworkFeatureGroup.toolTag = 'drainage';
+const siekerKnownDrainageFeatureGroup = new L.TileLayer();
+siekerKnownDrainageFeatureGroup.toolTag = 'drainage';
+const siekerDrainageDrainageNetworkResult = new L.FeatureGroup();
+siekerDrainageDrainageNetworkResult.toolTag = 'drainage';
+
+
 
 export const Layers = {
     // Infiltration
@@ -59,7 +74,14 @@ export const Layers = {
     // SiekerGek
     'sieker_gek': siekerGekFeatureGroup,
     'filtered_sieker_gek': siekerFilteredGekFeatureGroup,
+    
+    'drainage_probability': siekerDrainageRasterTile,
+    'drainage_network': siekerDrainageNetworkFeatureGroup,
+    'known_drainage': siekerKnownDrainageFeatureGroup,
+    'drainage_drainage_network_result': siekerDrainageDrainageNetworkResult,
+
     // TUInjection
+    'injection': tubInjectionTileLayer,
 
 
 }

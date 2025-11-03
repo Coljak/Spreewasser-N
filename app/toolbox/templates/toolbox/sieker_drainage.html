@@ -1,10 +1,11 @@
 {% load crispy_forms_tags %}
+{% load custom_templatetags %}
 {% load static %}
 
-<div id="divSiekerSink">
+<div id="divSiekerDrainage">
     
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Drän- Speicher-Tool</h2>
+        <h2 class="mb-0">Drän-Speicher-Tool</h2>
         <div>
             <button class="btn btn-primary me-2 save-toolbox-project" data-type="drainage">Speichern</button>
         </div>
@@ -16,11 +17,17 @@
         </li>
         
         <li class="nav-item drainage">
-            <a id="navSiekerSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabDrainageNetwork" aria-selected="false">Entwässerungsnetz</a>
+            <a id="navDrainageNetwork" class="toolbox nav-link" data-bs-toggle="tab" href="#tabDrainageNetwork" aria-selected="false">Entwässerungsnetz</a>
+        </li>
+        <li class="nav-item drainage">
+            <a id="navDrainageProbability" class="toolbox nav-link" aria-disabled="true" data-bs-toggle="tab" data-type="drainage_probability" href="#tabDrainageProbability">Entwässerungswahrscheinlichkeit</a>
+        </li>
+        <li class="nav-item drainage">
+            <a id="navKnownDrainages" class="toolbox nav-link" aria-disabled="true" data-bs-toggle="tab" data-type="known_drainage" href="#tabKnownDrainages">Entwässerte Flächen</a> <!--Bekannte Drainageflächen? -->
         </li>
         
         <li class="nav-item drainage">
-            <a id="navSiekerSinkResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabDrainageResult">Ergebnis</a>
+            <a id="navSiekerDrainageResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabDrainageResult">Ergebnis</a>
         </li>
     </ul>
 
@@ -46,28 +53,76 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title">Filter Natürliche Senken als Versickerungsstandorte</h5>
-                        <button  class="btn btn-secondary toggle-feature-group" data-type="drainage">ausblenden</button>                                                                                             
+                        <h5 class="card-title">Entwässerungsnetz</h5>
+                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                        <button class="btn btn-secondary toggle-tile-layer shown" data-type="known_drainage">Ausblenden</button>                                                                                             
                     </div>
-                    
                     <form method="POST" action="">
                         {% csrf_token %}
-                        {{ drainage_filter_form | crispy }}
-                        <button id="btnFilterSiekerSinks"type="submit" class="btn btn-primary">Senken filtern</button>
-                    </form>
+                        {% for checkbox_set in drainage_network_filter_form.form %}
+                            {% with key=checkbox_set.name %}
+                            <div class="mb-3 card">
+                                <div class="card-body">
+                                    <div class="mb-3 form-check"> 
+                                        <input type="checkbox" name="{{ checkbox_set.name }}" prefix="parent" class="checkboxinput form-check-input" id="id_{{ checkbox_set.name }}" value="{{ checkbox_set.field.widget.attrs.data_network_type }}" checked=""> 
+                                        <label for="id_{{ checkbox_set.name }}" class="form-check-label">
+                                            <h5>{{ labels|get_item:key }}</h5> 
+                                                {# Crispy field without label #}
+                                            {{ checkbox_set|as_crispy_field  }}
+                                                    {% comment %} {{ field_html|safe|replace:'<label','<label style="display:none"' }} {% endcomment %}
+                                        </label> 
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            {% endwith %}
+                        {% endfor %}
+                        <button id="btnFilterDrainageNetwork"type="submit" class="btn btn-primary">Entwässerungsnetz filtern</button>
+                    </form>   
                 </div>
-            </div>
-            <div id="card-drainage-table" class="card mb-3 d-none">
-                <div class="card-body">
-                    <div id="drainage-table-container"></div>
-                    
-                </div>
-            </div>
+            </div>       
         </div>
 
         
 
-        
+        <div id="tabDrainageProbability" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Entwässerungswahrscheinlichkeit</h5>
+                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                        <button class="btn btn-secondary toggle-tile-layer shown" data-type="drainage_probability">Ausblenden</button>                                                                                             
+                    </div>
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            {% crispy  drainage_probabiliy_filter_form %}
+                            <button id="btnFilterDrainages"type="submit" class="btn btn-primary">Entwässerungsnetz filtern</button>
+                        </form>
+                    
+                    
+                </div>
+            </div>       
+        </div>
+
+        <div id="tabKnownDrainages" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Bekannte Entwässerungsflächen</h5>
+                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                        <button class="btn btn-secondary toggle-tile-layer shown" data-type="known_drainage">Ausblenden</button>                                                                                             
+                    </div>
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            {% crispy known_drainage_filter_form.form %}
+                            <button id="btnFilterKnownDrainages"type="submit" class="btn btn-primary">Entwässerungsnetz filtern</button>
+                        </form>
+                    
+                    
+                </div>
+            </div>       
+        </div
+
         
 
         <!-- Result Tab -->

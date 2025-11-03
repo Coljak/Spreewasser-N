@@ -544,9 +544,13 @@ class EnlargedSink(models.Model):
     con_length = models.FloatField(null=True)
     constructed_sink = models.BooleanField(null=True, default=False)
     volume = models.FloatField(null=True)
-    # volume_construction_barrier = models.FloatField(null=True)
+    volume_construction_barrier = models.FloatField(null=True)
     volume_gained =  models.FloatField(null=True)
     construction_efficiciency = models.FloatField(null=True)
+    construction_plat_width = models.FloatField(null=True)
+    construction_height = models.FloatField(null=True)
+    construction_geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
+    construction_geom4326 = gis_models.MultiPolygonField(srid=4326, null=True, blank=True)
     index_1 = models.FloatField(null=True)
     index_2 = models.FloatField(null=True)
     index_proportions = models.FloatField(null=True)
@@ -602,6 +606,8 @@ class EnlargedSink(models.Model):
             "land_use_2": landuse_2,
             "land_use_3": landuse_3,
             "land_use_4": landuse_4,
+            "volume_gained": round(self.volume_gained, 2) if self.volume_gained else None,
+            "volume_construction_barrier": round(self.volume_construction_barrier, 2) if self.volume_construction_barrier else None,
             "index_soil": round(self.index_soil * 100, 1),
             "soil_points": self.soil_points,
             "index_feasibility": round(self.index_feasibility * 100, 1) if self.index_feasibility else "-",
@@ -902,7 +908,7 @@ class SiekerLargeLake(models.Model):
     einzugsgebiet_km2 = models.FloatField(null=True, blank=True) # Einzugsgebiet in km²
     d_max_m = models.IntegerField(null=True, blank=True) # max depth of lake in m
     verweilt = models.CharField(max_length=100, null=True, blank=True)
-    t_cm_per_a = models.FloatField(null=True, blank=True) # annual trend of next level
+    t_cm_per_a = models.FloatField(null=True, blank=True) # trend in cm /jahr
     seetyp = models.IntegerField(null=True, blank=True)
     seetyp_txt = models.CharField(max_length=100, null=True, blank=True)
 
@@ -941,8 +947,18 @@ class SiekerLargeLake(models.Model):
             "properties": properties
         }
 
-
-                               
+class PegelOnline(models.Model):
+    uuid = models.CharField(max_length=52)
+    number = models.BigIntegerField(null=True, blank=True)
+    shortname = models.CharField(max_length=100, null=True, blank=True)
+    longname = models.CharField(max_length=200, null=True, blank=True)
+    km = models.FloatField(null=True, blank=True)
+    agency = models.CharField(max_length=100, null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    geom = gis_models.PointField(srid=4326, null=True, blank=True)
+    water_shortname = models.CharField(max_length=100, null=True, blank=True)
+    water_longname = models.CharField(max_length=200, null=True, blank=True)
 
 class SiekerWaterLevel(models.Model):
     geom25833 = gis_models.PointField(srid=25833, null=True, blank=True)
@@ -1051,11 +1067,15 @@ class SiekerSink(models.Model):
     wetlands = models.CharField(max_length=100, null=True, blank=True)
     wetlands_percent = models.FloatField(null=True, blank=True)
     avg_depth = models.FloatField(null=True, blank=True)
-    distance_t = models.FloatField(null=True, blank=True)
+    distance_t = models.FloatField(null=True, blank=True) # distance to stream
     dist_lake = models.CharField(max_length=100, null=True, blank=True)
     umsetzbark = models.CharField(max_length=100, null=True, blank=True)
     index_feasibility = models.FloatField(null=True, blank=True)
     waterdist = models.CharField(max_length=100, null=True, blank=True)
+    distance_lake= models.FloatField(null=True, blank=True)
+    nearest_lake = models.ForeignKey(Lake, on_delete=models.DO_NOTHING, null=True, blank=True)
+    distance_stream = models.FloatField(null=True, blank=True)
+    nearest_stream = models.ForeignKey(Stream, on_delete=models.DO_NOTHING, null=True, blank=True)
 
     def to_json(self, language='de'):
         return {
@@ -1257,6 +1277,9 @@ class LeafletLegend(models.Model):
     header_de = models.CharField(max_length=64)
     header_en = models.CharField(max_length=64, null=True, blank=True)
 
+    def __str__(self):
+        return self.header_de
+
     def to_dict(self, language='de'):
         
         return {
@@ -1341,6 +1364,7 @@ class Station(models.Model):
     station_number = models.IntegerField(null=True, blank=True)
 
 # TODO: what is this? amount m³/s. The data is directly obtained from the raw data
+# TODO delete. It is the ids 168, 170, 172, 173, 176,177 that are also in toolbox_timeseriesdailywaterlevel
 class TimeseriesDailyQ(models.Model):
     station = models.ForeignKey(Station, on_delete=models.CASCADE)
     date = models.DateField()
@@ -1443,7 +1467,64 @@ class MarForbiddenArea(models.Model):
     
 
     ##########################
+class KnownDrainageType(models.Model):
+    name_de = models.CharField(max_length=64)
+    name_en = models.CharField( max_length=64, null=True, blank=True)
+    eww = models.IntegerField(null=True, blank=True)
+
+class KnownDrainages(models.Model):
+    geom25833 = gis_models.PolygonField(srid=25833)
+    geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
+    drainage_type = models.ForeignKey(KnownDrainageType, on_delete=models.DO_NOTHING,  null=True, blank=True)
+
+    def to_json(self, language='de'):
+        return {
+            'id': self.id,
+            'drainage_type_id': self.drainage_type.id,
+            'drainage_type': self.drainage_type.name_de if language=='de' else self.drainage_type.name_en,
+        }
+    def to_feature(self, language='de'):
+        geometry = json.loads(self.geom4326.geojson)
+        properties = self.to_json(language=language)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
+class DrainageNetworkType(models.Model):
+    name_tag = models.CharField(max_length=100, null=True, blank=True)
+    name_de = models.CharField(max_length=100, null=True, blank=True)
+    name_en = models.CharField(max_length=100, null=True, blank=True)
+
+    
+    
 
 
 
+class DrainageNetworkTypeDetail(models.Model):
+    # name_de = models.CharField(max_length=100, null=True, blank=True)
+    name_de = models.CharField(max_length=255, null=True, blank=True)
+    network_type = models.ForeignKey(DrainageNetworkType, on_delete=models.CASCADE, related_name='details', null=True, blank=True)
+
+class DrainageNetwork(models.Model):
+    geom25833 = gis_models.LineStringField(srid=25833)
+    geom4326 = gis_models.LineStringField(srid=4326, null=True, blank=True)
+    total_length_m = models.FloatField(null=True, blank=True)
+    network_type_detail = models.ForeignKey(DrainageNetworkTypeDetail, on_delete=models.DO_NOTHING, null=True, blank=True)
+
+    def to_json(self, language='de'):
+        return {
+            'id': self.id,
+            'length_m': self.geom25833.length,
+            'network_type_id': self.network_type_detail.id,
+            'network_type': self.network_type_detail.name_de if language=='de' else self.network_type_detail.name_en,
+        }
+    def to_feature(self, language='de'):
+        geometry = json.loads(self.geom4326.geojson)
+        properties = self.to_json(language=language)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
 

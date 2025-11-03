@@ -77,7 +77,6 @@ export class Infiltration extends ToolboxProject {
 
 
     updateButtonState() {
-        console.log('updateButtonState', this);
         if (document.getElementById("divInfiltration")){
             
             const hasSink = this.selected_sinks.length > 0;

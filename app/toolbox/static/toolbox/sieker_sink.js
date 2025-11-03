@@ -49,13 +49,13 @@ function filterSiekerSinks(dataType, featureGroup) {
       
 
 
-      const legendItems = [
-          getLegendItem('Leicht', getCircleMarkerSettings( 'green')),
-          getLegendItem('Mittel', getCircleMarkerSettings( 'orange')),
-          getLegendItem('Schwer', getCircleMarkerSettings( 'red')),
-        ]
-      const legendSettings = getLegendSettings ('Umsetzbarkeit', legendItems);
-      const legend =  L.control.Legend(legendSettings).addTo(map);
+      // const legendItems = [
+      //     getLegendItem('Leicht', getCircleMarkerSettings( 'green')),
+      //     getLegendItem('Mittel', getCircleMarkerSettings( 'orange')),
+      //     getLegendItem('Schwer', getCircleMarkerSettings( 'red')),
+      //   ]
+      // const legendSettings = getLegendSettings ('Umsetzbarkeit', legendItems);
+      // const legend =  L.control.Legend(legendSettings).addTo(map);
 
     } else {
 
@@ -74,13 +74,6 @@ function filterSiekerSinks(dataType, featureGroup) {
 export function initializeSiekerSink() {
   
 
-  removeLegendFromMap(map);
-  map.eachLayer(function(layer) {
-        console.log(layer.toolTag);
-        if (layer.toolTag && layer.toolTag !== 'sieker_sink') {
-            map.removeLayer(layer);
-        }
-        });
   console.log('Initialize Sieker Sink');
   // map.addLayer(siekerSinkFeatureGroup);
   

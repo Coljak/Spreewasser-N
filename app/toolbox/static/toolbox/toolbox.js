@@ -229,8 +229,8 @@ export function addChangeEventListener(projectClass) {
             const inputChecked = $target.is(':checked');
 
             const key = `${inputPrefix}_${inputName}`;
+            console.log('key', key )
             const index = project[key].indexOf(inputValue);
-            console.log('index', index)
             if (index > -1) {
                 // Value exists — remove it
                 project[key] = project[key].filter(
@@ -240,7 +240,6 @@ export function addChangeEventListener(projectClass) {
             } else {
                 // Value does not exist — add it; Dev purposes
                 project[key].push(inputValue);
-                console.log('Checkbox checked:', inputId, '=', inputValue);
             }
             project.saveToLocalStorage();
             return;
@@ -369,8 +368,10 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             $('#toolboxPanel').addClass('d-none');
             removeLegendFromMap(map);
             map.eachLayer(function(layer) {
+                console.log('back-to-initial', layer);
                 console.log(layer.toolTag);
                 if (layer.toolTag) {
+                    console.log('has tooltag, removing layer');
                     map.removeLayer(layer);
                 }
             });
@@ -730,5 +731,43 @@ export function addFeatureCollectionToTable( data ){
     const tableSettings = createTableSettings(dataInfo);
     $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none')
+};
+
+export function addLegendForWms(wmsLayerName, wmsUrl) {
+  const legend = L.control.Legend({
+    position: "bottomleft"
+  });
+  legend.onAdd = function (map) {
+      var div = L.DomUtil.create("div", "leaflet-legend leaflet-bar");
+      var url = `${wmsUrl}?REQUEST=GetLegendGraphic&VERSION=1.1.1&FORMAT=image/png&LAYER=${wmsLayerName}`;
+     
+      
+      div.innerHTML +=
+        "<img src=" +
+        url +
+        ' alt="legend" data-toggle="tooltip" title="Map legend">';
+      return div;
+    };
+  legend.addTo(map)
+};
+
+export function getTileOverlay(wmsLayer, layersName) {
+    const wmsUrl = '/toolbox/proxy/wms/';
+    if (Layers[layersName]) {
+        Layers[layersName].remove()
+        removeLegendFromMap(map)
+    }
+  Layers[layersName] = L.tileLayer.wms(wmsUrl, {
+  layers: wmsLayer,
+  pane: 'overlayRasterPane',
+  format: "image/png",
+  transparent: true,
+  tileSize: 256,   
+  keepBuffer: 10,  
+  updateWhenZooming: false, // don’t request tiles mid-zoom
+  _t: Date.now() // this is only a cache buster - necessary to alter request 
+}).addTo(map);
+
+addLegendForWms(wmsLayer, wmsUrl)
 };
 

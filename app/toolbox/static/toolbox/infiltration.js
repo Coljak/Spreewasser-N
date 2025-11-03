@@ -13,11 +13,6 @@ import {Infiltration} from '/static/toolbox/infiltration_model.js';
 import { Layers } from '/static/toolbox/layers.js';
 
 
-const legendSettings = {
-    'header': 'Senkeneignung',
-    'grades': [1, 0.75, 0.5, 0.25, 0],
-    'gradientLabels': [' 100%', ' 75%', ' 50%', ' 25%', ' 0%']
-} 
 
 
 //TODO: this is not pretty
@@ -330,10 +325,7 @@ function toggleConnection(button) {
     
     // TODO : this is not correct!!! The layer needs to be added to the inletConnectionsFeatureGroup, not directly to the map
     layer.addTo(Layers.inletConnectionsFeatureGroup);
-    // inletConnectionsFeatureGroup.addLayer(layer);  // ← correct way to add
-    // if (!map.hasLayer(inletConnectionsFeatureGroup)) {
-    //   map.addLayer(inletConnectionsFeatureGroup);
-    // }
+
     button.textContent = 'Hide';
     button.classList.replace('btn-outline-secondary', 'btn-primary');
   }
@@ -342,14 +334,7 @@ function toggleConnection(button) {
 export function initializeInfiltration() {
   console.log('Initialize Infiltraion');
   let inletVolumeChart;
-  removeLegendFromMap(map);
-  map.eachLayer(function(layer) {
-        console.log(layer.toolTag);
-        if (layer.toolTag && layer.toolTag !== 'infiltration') {
-            map.removeLayer(layer);
-        }
-      });
-  
+
 
       
   initializeSliders();

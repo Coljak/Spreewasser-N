@@ -1,5 +1,17 @@
 import { getGeolocation, handleAlerts, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addLegend, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
+import { 
+  updateDropdown, 
+  addLegend, 
+  addChangeEventListener, 
+  addFeatureCollectionToTable, 
+  tableCheckSelectedItems, 
+  addClickEventListenerToToolboxPanel, 
+  addPointFeatureCollectionToLayer, 
+  addFeatureCollectionToLayer, 
+  loadProjectToGui,
+addLegendForWms,
+getTileOverlay,
+ } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
@@ -21,9 +33,9 @@ import { Layers } from '/static/toolbox/layers.js';
 
 
 
-const wmsGwcUrl = '/toolbox/proxy/wms/'
 
-const layerNames = {
+
+const geoserverLayers = {
   'result': `spreewassern_raster:${userId}_mar_result`,
   'aquifer_thickness':'spreewassern_raster:aquifer_classified_v1',
   'depth_groundwater': 'spreewassern_raster:depth_to_gw_classified_v1',
@@ -32,45 +44,11 @@ const layerNames = {
   'distance_to_well': 'spreewassern_raster:distance_to_extraction_wells_v1',
   'hydraulic_conductivity': 'spreewassern_raster:hydraulic_conductivity_classified_v1',
   }
+// TODO same as in drainage- check if needs to be removed
+// let wmsOverlayLayer = L.tileLayer();
+// wmsOverlayLayer.toolTag = 'injection';
 
-let wmsOverlayLayer = L.tileLayer()
 
-function addLegendForWms(wmsLayerName) {
-  const legend = L.control.Legend({
-    position: "bottomleft"
-  });
-  legend.onAdd = function (map) {
-      var div = L.DomUtil.create("div", "leaflet-legend leaflet-bar");
-      var url = `${wmsGwcUrl}?REQUEST=GetLegendGraphic&VERSION=1.1.1&FORMAT=image/png&LAYER=${wmsLayerName}`;
-     
-      
-      div.innerHTML +=
-        "<img src=" +
-        url +
-        ' alt="legend" data-toggle="tooltip" title="Map legend">';
-      return div;
-    };
-  legend.addTo(map)
-};
-
-function getTileOverlay(wmsLayerName) {
-  wmsOverlayLayer.remove()
-  removeLegendFromMap(map)
-  wmsOverlayLayer = L.tileLayer.wms('/toolbox/proxy/wms/', {
-  layers: wmsLayerName,
-  pane: 'overlayRasterPane',
-  format: "image/png",
-  transparent: true,
-  tileSize: 256,   
-  keepBuffer: 10,  
-  updateWhenZooming: false, // don’t request tiles mid-zoom
-  _t: Date.now() // this is only a cache buster - necessary to alter request 
-}).addTo(map);
-
-addLegendForWms(wmsLayerName)
-  
-  
-}
 
 
 
@@ -81,14 +59,7 @@ export function initializeInjection(data) {
 
   const sliderLabelsWeighting = data.sliderLabels;
   const sliderLabelsSuitability = data.sliderLabelsSuitability;
-  
-  removeLegendFromMap(map);
-  map.eachLayer(function(layer) {
-        console.log(layer.toolTag);
-        if (layer.toolTag && layer.toolTag !== 'injection') {
-            map.removeLayer(layer);
-        }
-      });
+
 
   $('#toolboxPanel').off('change');
   $('#toolboxPanel').off('click');
@@ -162,11 +133,11 @@ export function initializeInjection(data) {
       
     } else if ($target.is('a.nav-link')) {
       const sustainibilityType = $target.data('type');
-      wmsOverlayLayer.remove()
+      Layers['injection'].remove()
       removeLegendFromMap(map)
       if (sustainibilityType) {
         console.log('sustainibility type', sustainibilityType, 'tiff and legend' )
-          getTileOverlay(layerNames[sustainibilityType])
+          getTileOverlay(geoserverLayers[sustainibilityType], 'injection')
           if(!$('button.toggle-tile-layer').hasClass('shown')){
             console.log('IS not shown')
             document.querySelector('.leaflet-legend').hidden = true; 
@@ -190,20 +161,20 @@ export function initializeInjection(data) {
         console.log('msg', msg)
         if (msg.success === true){
           $('#btn-mar-result-map').removeClass('disabled');
-          getTileOverlay(layerNames['result']);
+          getTileOverlay(geoserverLayers['result'], 'injection');
           $('#btn-mar-result-map').text('Ergebnis ausblenden');
       }})
     }   else if ($target.attr('id') === 'btn-mar-result-map') {
         if ($target.hasClass('shown')) {
-          console.log("layerNames['result']", layerNames['result'])
-          getTileOverlay(layerNames['result']);
+          console.log("layerNames['result']", geoserverLayers['result'])
+          getTileOverlay(geoserverLayers['result'], 'injection');
           $('#btn-mar-result-map').removeClass('shown');
           $('#btn-mar-result-map').text('Ergebnis ausblenden')
         } else {
           $('#btn-mar-result-map').addClass('shown');
           $('#btn-mar-result-map').text('Ergebnis einblenden');
           removeLegendFromMap(map);
-          wmsOverlayLayer.remove();
+          Layers['injection'].remove();
         }
         
 

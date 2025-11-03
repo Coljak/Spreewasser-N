@@ -2,9 +2,8 @@ from django.shortcuts import render
 from swn import models as swn_models
 from swn import forms as swn_forms
 from swn.views import load_nuts_polygon
-from . import forms, models
+from . import forms, models, filters
 
-from .filters import SiekerLargeLakeFilter,  SinkFilter, EnlargedSinkFilter, StreamFilter, LakeFilter, SiekerSinkFilter, GekRetentionFilter, HistoricalWetlandsFilter
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry, LineString
@@ -37,9 +36,6 @@ from rasterio.enums import ColorInterp
 
 
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
-
-
-
 
 
 
@@ -362,23 +358,23 @@ def load_infiltration_gui(request, user_field_id):
             user_field.compute_filter_bounds_infiltration()
 
         print("Time to loop stream and lake filter:", datetime.now() - start_sink_loop)
-        lake_form = LakeFilter(
+        lake_form = filters.LakeFilter(
             request.GET,
             queryset=lakes,
             bounds=user_field.filter_bounds.get('lakes') if user_field.filter_bounds else None
         )
-        stream_form = StreamFilter(
+        stream_form = filters.StreamFilter(
             request.GET,
             queryset=streams,
             bounds=user_field.filter_bounds.get('streams') if user_field.filter_bounds else None
         )
-        sink_form = SinkFilter(
+        sink_form = filters.SinkFilter(
             request.GET,
             queryset=sinks,
             bounds=user_field.filter_bounds.get('sinks') if user_field.filter_bounds else None
         )
         print("Queryset Sinks", sinks.count())
-        enlarged_sink_form = EnlargedSinkFilter(
+        enlarged_sink_form = filters.EnlargedSinkFilter(
             request.GET,
             queryset=enlarged_sinks,
             bounds=user_field.filter_bounds.get('enlarged_sinks') if user_field.filter_bounds else None
@@ -947,7 +943,7 @@ def sieker_surface_waters_gui(request, user_field_id):
             Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
             ).order_by('-creation_date').reverse()
         project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
-        sieker_lake_filter = SiekerLargeLakeFilter(
+        sieker_lake_filter = filters.SiekerLargeLakeFilter(
             request.GET,
             queryset=lakes,
             bounds=user_field.filter_bounds.get('lakes') if user_field.filter_bounds else None
@@ -1058,7 +1054,7 @@ def load_sieker_sink_gui(request, user_field_id):
     if sinks.count() > 0:
         # streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
 
-        sieker_sink_filter = SiekerSinkFilter(
+        sieker_sink_filter = filters.SiekerSinkFilter(
             request.GET, 
             queryset=sinks,
             bounds=user_field.filter_bounds.get('sieker_sinks') if user_field.filter_bounds else None
@@ -1147,7 +1143,7 @@ def load_sieker_gek_gui(request, user_field_id):
 
         feature_collection = create_feature_collection(geks)
 
-        gek_filter_form = GekRetentionFilter(
+        gek_filter_form = filters.GekRetentionFilter(
             request.GET, 
             queryset=geks,
             bounds=user_field.filter_bounds.get('sieker_geks') if user_field.filter_bounds else None
@@ -1257,7 +1253,7 @@ def load_sieker_wetland_gui(request, user_field_id):
         project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
         
         feature_collection = create_feature_collection(wetlands)
-        filter_form = HistoricalWetlandsFilter()
+        filter_form = filters.HistoricalWetlandsFilter()
         slider_labels =  dict(models.WetlandFeasibility.objects.values_list('id', 'name_de').order_by('id'))
 
         html = render_to_string('toolbox/sieker_wetlands.html', {
@@ -1420,11 +1416,6 @@ def publish_raster_on_geoserver(layer_name, workspace='spreewassern_raster', sty
 # pip install rasterio numpy shapely
 
 def compute_suitability_from_tifs(suitability_dict, user):
-    import os
-    
-        # We'll prepare a destination array for each raster, stacked into 3D array
-    
-        # out_masked, out_transform = mask(ref, [user_field.geom25833.geojson], crop=False, invert=False, indexes=1, nodata=np.nan, filled=False)
 
     with rasterio.open('raster_data/no_injection_area_mask.tif') as mask:
         nogo_mask = mask.read(1)
@@ -1551,12 +1542,12 @@ def geoserver_wms(request):
     geoserver_url = f"{settings.GEOSERVER_URL}/spreewassern_raster/wms"
 
     params = request.GET.dict()
-    print("Received WMS request with params:", params)
+    # print("Received WMS request with params:", params)
     # Keep only allowed WMS params
     
 
     wms_params = {k: v for k, v in params.items() if k.lower() in ALLOWED_WMS_PARAMS}
-    print("Forwarding params to GeoServer:", wms_params)
+    # print("Forwarding params to GeoServer:", wms_params)
 
     response = requests.get(
         geoserver_url,
@@ -1570,20 +1561,74 @@ def geoserver_wms(request):
 
 
 def load_sieker_drainage_gui(request, user_field_id):
+    print('arrived in views')
     user = request.user
     if request.method == 'GET':
-        toolbox_type = models.ToolboxType.objects.get(name_tag='sieker_drainage')
+        toolbox_type = models.ToolboxType.objects.get(name_tag='drainage')
         user_field = models.UserField.objects.get(Q(id=int(user_field_id))&Q(user=user))
         qs = models.ToolboxProject.objects.filter(
             Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
         ).order_by('-creation_date').reverse()
         project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
-        drainage_filter_form = forms.SiekerDrainageFilterForm()
+        drainage_probabiliy_filter_form = forms.DrainageProbabilityFilterForm()
 
+        known_drainages = models.KnownDrainages.objects.all()
+        known_drainage_filter_form = filters.KnownDrainagesFilter(queryset=known_drainages)
+
+        
+        drainage_network = models.DrainageNetwork.objects.filter(geom4326__within=user_field.geom)
+        print('drainageNetwork COUNT', drainage_network.count())
+
+        details = models.DrainageNetworkTypeDetail.objects.filter(drainagenetwork__in=drainage_network).distinct()
+        print('details COUNT', details.count())
+
+        drainage_network_filter_form = filters.DrainageNetworkFilter(queryset=details)
+        
+        drainage_network_labels = { d.name_tag: d.name_de for d in models.DrainageNetworkType.objects.all() }
+        
         html = render_to_string('toolbox/sieker_drainage.html', {
             'project_select_form': project_select_form,
-            'drainage_filter_form': drainage_filter_form,
+            'drainage_probabiliy_filter_form': drainage_probabiliy_filter_form,
+            'known_drainage_filter_form': known_drainage_filter_form,
+            'drainage_network_filter_form': drainage_network_filter_form,
+            'labels': drainage_network_labels,
         }, request=request)
+        
+        return JsonResponse({
+            'success': True, 
+            'html': html, 
+            })
+       
+def load_sieker_drainage_features(request, user_field_id):
+    print('load_sieker_drainage_features')
+    user = request.user
+    if request.method == 'GET':
+        user_field = models.UserField.objects.get(Q(id=int(user_field_id))&Q(user=user))
+        known_drainages = models.KnownDrainages.objects.all()
+    
+        dts = list(known_drainages.values_list('drainage_type__id', 'drainage_type__name_de').distinct())
+        print('drainage_types', dts)
+        
+        for dt in dts:
+            id = dt[0]
+            name = dt[1]           
+            drainage_type_feature_collections = {name: create_feature_collection(known_drainages.filter(pk=id))}
 
-        return JsonResponse({'success': True, 'html': html})
+
+        drainage_network = models.DrainageNetwork.objects.filter(geom4326__within=user_field.geom)
+        detail_ids = drainage_network.values_list('network_type_detail_id', flat=True).distinct()
+        details = models.DrainageNetworkTypeDetail.objects.filter(pk__in=detail_ids)
+
+        
+        for detail in details:     
+            network_type_detail_feature_collections = {detail.name_de: create_feature_collection(drainage_network.filter(network_type_detail=detail))}
+        print(network_type_detail_feature_collections)
+
+
+
+        return JsonResponse({
+            'success': True, 
+            'drainage_type_feature_collections': drainage_type_feature_collections,
+            'network_type_detail_feature_collections': network_type_detail_feature_collections,
+            })
        

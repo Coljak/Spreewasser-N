@@ -9,10 +9,7 @@ from django.db.models import Q
 from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
-from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, StrictButton
-from django_filters.fields import RangeField
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.gis.geos import GEOSGeometry
+
 
 from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget,CustomSimpleSliderWidget, CustomDoubleSliderWidget
 
@@ -43,10 +40,12 @@ class ToolboxProjectSelectionForm(forms.Form):
     def __init__(self, *args,qs=None, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.fields['toolbox_project'].choices = [
-            # print(instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
-            (instance.id, instance.name) for instance in qs
-        ]
+        if qs:
+            self.fields['toolbox_project'].choices = [
+                # print(instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
+                (instance.id, instance.name) for instance in qs
+            ]
+        
 
 
 
@@ -490,21 +489,23 @@ class SuitabilityForm(forms.Form):
         ))
 
 
-class SiekerDrainageFilterForm(forms.Form):
+class DrainageProbabilityFilterForm(forms.Form):
     threshold  = forms.IntegerField(
         min_value=0, 
         max_value=100, 
         # initial=25, 
         widget=CustomSimpleSliderWidget(attrs={
             "id": "id_drainage_threshold",
-            "name": "threshold",
+            "name": "drainage_threshold",
+            "reset": True,
             "data_range_min": 0,
             "data_range_max": 100,
-            "data_cur_val": 0,
-            "data_default_value": 0,
+            "data_cur_val": 40,
+            "data_default_value": 40,
             "units": "%",
         }),
-        label="Schwellenwert (%)",
+        label="Schwellenwert",
+        required=False,
         help_text= (
             "Schwellenwert für die dargestellte Entwässerungswahrscheinlichkeit."
         )
@@ -514,7 +515,101 @@ class SiekerDrainageFilterForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_method = 'GET'
-        self.helper.form_id = 'threshold-filter-form'
+        self.helper.form_id = 'drainage-threshold-filter-form'
         self.helper.form_class = 'form-horizontal threshold-form'
-        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
-        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.label_class = 'col-lg-2 col-md-2 col-sm-auto'
+        self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
+        self.helper.layout = Layout(*[Field(name) for name in self.fields])
+
+
+class KnownDrainageFilterForm(forms.Form):
+    pumping_station = forms.BooleanField(
+        required=False,
+        initial=True,
+        label="Schöpfwerke",
+    )
+    known_drainage_area = forms.BooleanField(
+        required=False,
+        initial=True,
+        label="Bekannte Drainageflächen",
+    )
+    others = forms.BooleanField(
+        required=False,
+        initial=False,
+        label="Sonstige",
+    )
+
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.helper = FormHelper(self)
+    #     self.helper.form_method = 'GET'
+    #     self.helper.form_id = 'known-drainage-filter-form'
+    #     self.helper.form_class = 'form-horizontal known-drainage-form'
+    #     self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+    #     self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+
+
+# class DrainageNetworkFilterForm(forms.Form):
+#     drainage = forms.BooleanField(
+#         required=False,
+#         initial=True,
+#         label="Drainagen",
+#     )
+#     ditches = forms.BooleanField(
+#         required=False,
+#         initial=True,
+#         label="Gräben",
+#     )
+#     rivers = forms.BooleanField(
+#         required=False,
+#         initial=True,
+#         label="Flüsse",
+#     )
+#     natural_creek = forms.BooleanField(
+#         required=False,
+#         initial=True,
+#         label="Naturnahe Bäche",
+#     )
+#     not_natural_creek = forms.BooleanField(
+#         required=False,
+#         initial=True,
+#         label="Naturferne Bäche",
+#     )
+
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+
+#         for field_name, field in self.fields.items():
+#             field.widget.attrs['data-type'] = field_name
+
+
+
+class DrainageNetworkFilterForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Loop types
+        for network_type in models.DrainageNetworkType.objects.prefetch_related('details'):
+            # Create a heading (optional, useful in template)
+            self.fields[f"group_{network_type.id}"] = forms.CharField(
+                initial=network_type.name_de,
+                required=False,
+                widget=forms.HiddenInput()
+            )
+
+            # Loop details and create checkboxes
+            for detail in network_type.details.all():
+                field_name = f"detail_{detail.id}"
+                self.fields[field_name] = forms.BooleanField(
+                    required=False,
+                    initial=True,
+                    label=detail.name_de,
+                    widget=forms.CheckboxInput(attrs={
+                        "data-network-type-detail": detail.id,
+                        "data-network-type": network_type.id,
+                        "prefix": 'drainage_network',
+                        "name": 'detail',
+                        "value": detail.id,
+                    })
+                )

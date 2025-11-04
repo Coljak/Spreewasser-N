@@ -31,20 +31,26 @@ urlpatterns = [
     path('toolbox/filter_waterbodies/', views.filter_waterbodies, name='filter_waterbodies'),
     path('toolbox/get_infiltration_results/', views.get_infiltration_results, name='get_infiltration_results'),   
     path('toolbox/get_injection_volume_chart/<str:waterbody_type>/<int:id>/', views.get_injection_volume_chart, name='get_injection_volume_chart'),
+     # TU Berlin
+    path('toolbox/mar_calculate_area/', views.mar_calculate_area, name='mar_calculate_area'),
     #### Sieker ####
     # Surface Waters
     path('toolbox/load_surface_waters_gui/<int:user_field_id>/', views.sieker_surface_waters_gui, name='sieker_surface_waters_gui'),
     path('toolbox/filter_sieker_surface_waters/', views.filter_sieker_surface_waters, name='filter_sieker_surface_waters'),
+    # Sieker sinks
     path('toolbox/load_sieker_sink_gui/<str:user_field_id>/', views.load_sieker_sink_gui, name='load_sieker_sink_gui'),
     path('toolbox/filter_sieker_sinks/', views.filter_sieker_sinks, name='filter_sieker_sinks'),
+    # Sieker Gek
     path('toolbox/load_sieker_gek_gui/<str:user_field_id>/', views.load_sieker_gek_gui, name='load_sieker_gek_gui'),
     path('toolbox/filter_sieker_geks/', views.filter_sieker_geks, name='filter_sieker_gek'),
+    # Wetlands
     path('toolbox/load_sieker_wetland_gui/<str:user_field_id>/', views.load_sieker_wetland_gui, name='load_sieker_wetland_gui'),
     path('toolbox/filter_sieker_wetlands/', views.filter_sieker_wetlands, name='filter_sieker_wetland'),
     path('toolbox/load_injection_gui/', views.load_injection_gui, name='load_injection_gui' ),
+    # Drainage
     path('toolbox/load_sieker_drainage_gui/<int:user_field_id>/', views.load_sieker_drainage_gui, name='load_sieker_drainage_gui' ),
-    # TU Berlin
-    path('toolbox/mar_calculate_area/', views.mar_calculate_area, name='mar_calculate_area'),
+    path('toolbox/load_sieker_drainage_features/<int:user_field_id>/', views.load_sieker_drainage_features, name='load_sieker_drainage_features' ),
+   
     
 
 ]

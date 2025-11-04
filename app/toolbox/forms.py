@@ -522,68 +522,6 @@ class DrainageProbabilityFilterForm(forms.Form):
         self.helper.layout = Layout(*[Field(name) for name in self.fields])
 
 
-class KnownDrainageFilterForm(forms.Form):
-    pumping_station = forms.BooleanField(
-        required=False,
-        initial=True,
-        label="Schöpfwerke",
-    )
-    known_drainage_area = forms.BooleanField(
-        required=False,
-        initial=True,
-        label="Bekannte Drainageflächen",
-    )
-    others = forms.BooleanField(
-        required=False,
-        initial=False,
-        label="Sonstige",
-    )
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.helper = FormHelper(self)
-    #     self.helper.form_method = 'GET'
-    #     self.helper.form_id = 'known-drainage-filter-form'
-    #     self.helper.form_class = 'form-horizontal known-drainage-form'
-    #     self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
-    #     self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
-
-
-# class DrainageNetworkFilterForm(forms.Form):
-#     drainage = forms.BooleanField(
-#         required=False,
-#         initial=True,
-#         label="Drainagen",
-#     )
-#     ditches = forms.BooleanField(
-#         required=False,
-#         initial=True,
-#         label="Gräben",
-#     )
-#     rivers = forms.BooleanField(
-#         required=False,
-#         initial=True,
-#         label="Flüsse",
-#     )
-#     natural_creek = forms.BooleanField(
-#         required=False,
-#         initial=True,
-#         label="Naturnahe Bäche",
-#     )
-#     not_natural_creek = forms.BooleanField(
-#         required=False,
-#         initial=True,
-#         label="Naturferne Bäche",
-#     )
-
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-
-#         for field_name, field in self.fields.items():
-#             field.widget.attrs['data-type'] = field_name
-
-
-
 class DrainageNetworkFilterForm(forms.Form):
 
     def __init__(self, *args, **kwargs):

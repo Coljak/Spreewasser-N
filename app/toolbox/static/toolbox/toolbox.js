@@ -220,7 +220,7 @@ export function addChangeEventListener(projectClass) {
             project[inputName] = inputVal;
             project.saveToLocalStorage();
             return;
-        }else if ($target.hasClass('form-check-input')) {
+        } else if ($target.hasClass('form-check-input')) {
             // checkboxes 
             const inputId = $target.attr('id');
             const inputName = $target.attr('name');
@@ -357,7 +357,6 @@ export function loadProjectToGui(project) {
 };
 
 
-
 export function addClickEventListenerToToolboxPanel(projectClass) {
     const ProjectClass = projectClass;
     $('#toolboxPanel').on('click',function (event) {
@@ -380,7 +379,24 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             newProject.saveToLocalStorage();
             return;
         // table related
-        } else if ($target.hasClass('paginate_button')) {
+        } else if ($target.hasClass('toggle-tile-layer')) {
+            console.log('toggle-tile-layer')
+              const dataType = $target.data('type')
+              if ($target.hasClass('shown')) {
+                $('button.toggle-tile-layer').removeClass('shown');
+                $('button.toggle-tile-layer').text('einblenden')
+                document.querySelector('.leaflet-overlayRaster-pane').hidden = true;
+                document.querySelector('.leaflet-legend').hidden = true; 
+              } else {
+                $('button.toggle-tile-layer').text('ausblenden')
+                $('button.toggle-tile-layer').addClass('shown');
+                
+                document.querySelector('.leaflet-overlayRaster-pane').hidden = false;
+                document.querySelector('.leaflet-legend').hidden = false; 
+                $target.addClass('shown')
+              }
+              
+            } else if ($target.hasClass('paginate_button')) {
             console.log('Paginate')
             const dataType =  $target.attr('aria-controls').split('-')[0];
             tableCheckSelectedItems(project, dataType)
@@ -401,8 +417,9 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             // TODO dead end
             console.log('REFACTOR - continue here')
         } else if ($target.hasClass('toggle-feature-group')) {
-            console.log('toggle-feature-group')
+            
             const dataType = $target.attr('data-type')
+            console.log('toggle-feature-group', dataType)
             
             if (map.hasLayer(Layers[dataType])) {
                 map.removeLayer(Layers[dataType]);
@@ -469,12 +486,12 @@ const colorFunction = function (index) {
   return color
 };
 
-export function addFeatureCollectionToLayer(options){
+export function addFeatureCollectionToLayer(data){
     console.log('addFeatureCollectionToLayer')
     let selectable = true;
     
-    let featureCollection = options.featureCollection;
-    let dataInfo = options.dataInfo;
+    let featureCollection = data.featureCollection;
+    let dataInfo = data.dataInfo;
     
     let colorByIndex = dataInfo.colorByIndex ? dataInfo.colorByIndex : false
     console.log('addFeatureCollectionToLayer dataInfo', dataInfo)
@@ -498,8 +515,9 @@ export function addFeatureCollectionToLayer(options){
                 className: dataInfo.className,
             };
         },
+        pane: "polygonPane",
         onEachFeature: function (feature, layer) {
-            console.log('onEachFeature:', feature)
+            // console.log('onEachFeature:', feature)
             let popupContent = '';
             if (feature.properties[dataInfo.popUp.header]) {
                 popupContent += `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
@@ -582,11 +600,11 @@ export function addFeatureCollectionToLayer(options){
 };
 
 
-export function addPointFeatureCollectionToLayer(options) {
+export function addPointFeatureCollectionToLayer(data) {
 
-    console.log(options)
-    let featureCollection = options.featureCollection 
-    let dataInfo = options.dataInfo
+    console.log(data)
+    let featureCollection = data.featureCollection 
+    let dataInfo = data.dataInfo
     let featureGroup = Layers[dataInfo.dataType];
     featureGroup.clearLayers();
     let colorByIndex = dataInfo.colorByIndex ? dataInfo.colorByIndex : false
@@ -609,6 +627,7 @@ export function addPointFeatureCollectionToLayer(options) {
                 icon: pin
             });
         },
+        pane: "polygonPane",
         onEachFeature: function (feature, layer) {
             let popupContent = '';
             if (feature.properties[dataInfo.popUp.header]) {
@@ -758,15 +777,15 @@ export function getTileOverlay(wmsLayer, layersName) {
         removeLegendFromMap(map)
     }
   Layers[layersName] = L.tileLayer.wms(wmsUrl, {
-  layers: wmsLayer,
-  pane: 'overlayRasterPane',
-  format: "image/png",
-  transparent: true,
-  tileSize: 256,   
-  keepBuffer: 10,  
-  updateWhenZooming: false, // don’t request tiles mid-zoom
-  _t: Date.now() // this is only a cache buster - necessary to alter request 
-}).addTo(map);
+    layers: wmsLayer,
+    pane: 'overlayRasterPane',
+    format: "image/png",
+    transparent: true,
+    tileSize: 256,   
+    keepBuffer: 10,  
+    updateWhenZooming: false, // don’t request tiles mid-zoom
+    _t: Date.now() // this is only a cache buster - necessary to alter request 
+    }).addTo(map);
 
 addLegendForWms(wmsLayer, wmsUrl)
 };

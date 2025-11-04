@@ -44,15 +44,77 @@ const siekerFilteredGekFeatureGroup = new L.FeatureGroup()
 siekerFilteredGekFeatureGroup.toolTag = 'sieker-gek';
 
 // SiekerDrainage
+// probabilty
 const siekerDrainageRasterTile = new L.TileLayer();
 siekerDrainageRasterTile.toolTag = 'drainage';
-const siekerDrainageNetworkFeatureGroup = new L.TileLayer();
-siekerDrainageNetworkFeatureGroup.toolTag = 'drainage';
-const siekerKnownDrainageFeatureGroup = new L.TileLayer();
-siekerKnownDrainageFeatureGroup.toolTag = 'drainage';
-const siekerDrainageDrainageNetworkResult = new L.FeatureGroup();
-siekerDrainageDrainageNetworkResult.toolTag = 'drainage';
+// drainage network
+const naturalCreekUnshadedFeatureGroup = new L.FeatureGroup();
+naturalCreekUnshadedFeatureGroup.toolTag = 'drainage';
+const naturalCreekShadedFeatureGroup = new L.FeatureGroup();
+naturalCreekShadedFeatureGroup.toolTag = 'drainage';
+const ditchFeatureGroup = new L.FeatureGroup();
+ditchFeatureGroup.toolTag = 'drainage';
+const canalUnshadedFeatureGroup = new L.FeatureGroup();
+canalUnshadedFeatureGroup.toolTag = 'drainage';
+const canalShadedFeatureGroup = new L.FeatureGroup();
+canalShadedFeatureGroup.toolTag = 'drainage';
+const nonNaturalCreekShadedFeatureGroup = new L.FeatureGroup();
+nonNaturalCreekShadedFeatureGroup.toolTag = 'drainage';
+const nonNaturalCreekPartlyShadedFeatureGroup = new L.FeatureGroup();
+nonNaturalCreekPartlyShadedFeatureGroup.toolTag = 'drainage';
+const nonNaturalCreekUnshadedFeatureGroup = new L.FeatureGroup();
+nonNaturalCreekUnshadedFeatureGroup.toolTag = 'drainage';
+const collectorFeatureGroup = new L.FeatureGroup();
+collectorFeatureGroup.toolTag = 'drainage';
+const drainagePipeFeatureGroup = new L.FeatureGroup();
+drainagePipeFeatureGroup.toolTag = 'drainage';
+const suckerFeatureGroup = new L.FeatureGroup();
+suckerFeatureGroup.toolTag = 'drainage';
+const naturalRiverFeatureGroup = new L.FeatureGroup();
+naturalRiverFeatureGroup.toolTag = 'drainage';
 
+const naturalCreeksFeatureGroup = new L.FeatureGroup(
+    [   naturalCreekUnshadedFeatureGroup,
+        nonNaturalCreekUnshadedFeatureGroup,
+    ]
+);
+naturalCreeksFeatureGroup.toolTag = 'drainage';
+
+const ditchesFeatureGroup = new L.FeatureGroup(
+    [
+        ditchFeatureGroup,
+        canalShadedFeatureGroup,
+        canalUnshadedFeatureGroup
+    ]
+);
+ditchesFeatureGroup.toolTag = 'drainage';
+
+const nonNaturalCreeksFeatureGroup = new L.FeatureGroup([
+    nonNaturalCreekShadedFeatureGroup,
+    nonNaturalCreekPartlyShadedFeatureGroup,
+    nonNaturalCreekUnshadedFeatureGroup
+]);
+nonNaturalCreeksFeatureGroup.toolTag = 'drainage';
+
+const riversFeatureGroup = new L.FeatureGroup([
+    suckerFeatureGroup,
+    drainagePipeFeatureGroup
+]);
+riversFeatureGroup.toolTag = 'drainage';
+
+const pipesFeatureGroup = new L.FeatureGroup([
+    naturalRiverFeatureGroup
+]);
+pipesFeatureGroup.toolTag = 'drainage';
+
+
+
+
+// 'natural_creeks': ['natural_creek_unshaded', 'natural_creek_shaded'],
+// 'ditches':  ['ditch', 'canal_shaded', 'canal_unshaded'],
+// 'non_natural_creeks':  ['non_natural_creek_shaded', 'non_natural_creek_partly_shaded', 'non_natural_creek_unshaded'],
+// 'pipes': ['drainage_pipe', 'sucker'],
+// 'rivers': ['natural_river',],
 
 
 export const Layers = {
@@ -76,13 +138,31 @@ export const Layers = {
     'filtered_sieker_gek': siekerFilteredGekFeatureGroup,
     
     'drainage_probability': siekerDrainageRasterTile,
-    'drainage_network': siekerDrainageNetworkFeatureGroup,
-    'known_drainage': siekerKnownDrainageFeatureGroup,
-    'drainage_drainage_network_result': siekerDrainageDrainageNetworkResult,
+    // 'parents'
+    'natural_creeks': naturalCreeksFeatureGroup,
+    'ditches':  ditchesFeatureGroup,
+    'non_natural_creeks':  nonNaturalCreeksFeatureGroup,
+    'pipes': pipesFeatureGroup,
+    'rivers': riversFeatureGroup,
+
+    'sucker': suckerFeatureGroup, // id=1
+    'non_natural_creek_unshaded': nonNaturalCreekUnshadedFeatureGroup, // id=2
+    'canal_shaded': canalShadedFeatureGroup, // id = 3
+    'canal_unshaded': canalUnshadedFeatureGroup, // id = 4
+    'non_natural_creek_partly_shaded': nonNaturalCreekPartlyShadedFeatureGroup,//id=5
+    'drainage_pipe': drainagePipeFeatureGroup, // id=6
+    'non_natural_creek_shaded': nonNaturalCreekShadedFeatureGroup, //7
+    'natural_creek_shaded': naturalCreekShadedFeatureGroup, // 8
+    'natural_river': naturalRiverFeatureGroup, // 9
+    'collector': collectorFeatureGroup, // 10
+    'ditch': ditchFeatureGroup, // 11
+    'natural_creek_unshaded': naturalCreekUnshadedFeatureGroup, // 12
+
+    // 'ditches': ditchesFeatureGroup,
+    // 'natural_creeks': naturalCreekFeatureGroup,
 
     // TUInjection
     'injection': tubInjectionTileLayer,
-
-
 }
+
 

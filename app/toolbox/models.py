@@ -1467,21 +1467,23 @@ class MarForbiddenArea(models.Model):
     
 
     ##########################
-class KnownDrainageType(models.Model):
+class DrainedAreaType(models.Model):
+    name_tag = models.CharField(max_length=64, null=True, blank=True)
     name_de = models.CharField(max_length=64)
     name_en = models.CharField( max_length=64, null=True, blank=True)
     eww = models.IntegerField(null=True, blank=True)
 
-class KnownDrainages(models.Model):
+class DrainedArea(models.Model):
     geom25833 = gis_models.PolygonField(srid=25833)
     geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
-    drainage_type = models.ForeignKey(KnownDrainageType, on_delete=models.DO_NOTHING,  null=True, blank=True)
+    drained_area_type = models.ForeignKey(DrainedAreaType, on_delete=models.DO_NOTHING,  null=True, blank=True)
 
     def to_json(self, language='de'):
         return {
             'id': self.id,
-            'drainage_type_id': self.drainage_type.id,
-            'drainage_type': self.drainage_type.name_de if language=='de' else self.drainage_type.name_en,
+            'drained_area_type_id': self.drained_area_type.id,
+            'drained_area_type_name': self.drained_area_type.name_de if language=='de' else self.drained_area_type.name_en,
+            'drained_area_type': self.drained_area_type.name_tag,
         }
     def to_feature(self, language='de'):
         geometry = json.loads(self.geom4326.geojson)
@@ -1496,14 +1498,11 @@ class DrainageNetworkType(models.Model):
     name_de = models.CharField(max_length=100, null=True, blank=True)
     name_en = models.CharField(max_length=100, null=True, blank=True)
 
-    
-    
-
-
 
 class DrainageNetworkTypeDetail(models.Model):
     # name_de = models.CharField(max_length=100, null=True, blank=True)
     name_de = models.CharField(max_length=255, null=True, blank=True)
+    name_tag = models.CharField(max_length=255, null=True, blank=True)
     network_type = models.ForeignKey(DrainageNetworkType, on_delete=models.CASCADE, related_name='details', null=True, blank=True)
 
 class DrainageNetwork(models.Model):

@@ -40,17 +40,9 @@ function addWaterLevelToResultCard(data) {
 
 export function initializeSiekerSurfaceWaters(layers) {
     
-    
-
-    
 
     console.log("Initializing Sieker surface waters...", layers);
-    removeLegendFromMap(map);
-    map.eachLayer(function(layer) {
-        if (layer.toolTag && layer.toolTag !== 'sieker_surface_water') {
-            map.removeLayer(layer);
-        }
-        });
+
 
     $('#toolboxPanel').off('change');
     initializeSliders();

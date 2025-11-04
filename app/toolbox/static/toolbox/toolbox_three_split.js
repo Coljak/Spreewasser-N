@@ -282,7 +282,7 @@ async function startDrainage(project) {
 
   })
   .then(data => {
-      initializeDrainage(data);
+      initializeDrainage( project.userField);
       return true;
   })
 

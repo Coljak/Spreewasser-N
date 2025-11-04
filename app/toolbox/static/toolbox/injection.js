@@ -115,23 +115,7 @@ export function initializeInjection(data) {
 
             $slider.val(defaultVal).trigger('change'); // set value and trigger input event
         });
-    } else if ($target.hasClass('toggle-tile-layer')) {
-      const dataType = $target.data('type')
-      if ($target.hasClass('shown')) {
-        $('button.toggle-tile-layer').removeClass('shown');
-        $('button.toggle-tile-layer').text('einblenden')
-        document.querySelector('.leaflet-overlayRaster-pane').hidden = true;
-        document.querySelector('.leaflet-legend').hidden = true; 
-      } else {
-        $('button.toggle-tile-layer').text('ausblenden')
-        $('button.toggle-tile-layer').addClass('shown');
-        
-        document.querySelector('.leaflet-overlayRaster-pane').hidden = false;
-        document.querySelector('.leaflet-legend').hidden = false; 
-        $target.addClass('shown')
-      }
-      
-    } else if ($target.is('a.nav-link')) {
+    }  else if ($target.is('a.nav-link')) {
       const sustainibilityType = $target.data('type');
       Layers['injection'].remove()
       removeLegendFromMap(map)

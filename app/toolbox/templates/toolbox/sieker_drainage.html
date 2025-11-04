@@ -15,15 +15,15 @@
         <li class="nav-item">
             <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
         </li>
-        
-        <li class="nav-item drainage">
-            <a id="navDrainageNetwork" class="toolbox nav-link" data-bs-toggle="tab" href="#tabDrainageNetwork" aria-selected="false">Entwässerungsnetz</a>
-        </li>
         <li class="nav-item drainage">
             <a id="navDrainageProbability" class="toolbox nav-link" aria-disabled="true" data-bs-toggle="tab" data-type="drainage_probability" href="#tabDrainageProbability">Entwässerungswahrscheinlichkeit</a>
-        </li>
+        </li>       
         <li class="nav-item drainage">
-            <a id="navKnownDrainages" class="toolbox nav-link" aria-disabled="true" data-bs-toggle="tab" data-type="known_drainage" href="#tabKnownDrainages">Entwässerte Flächen</a> <!--Bekannte Drainageflächen? -->
+            <a id="navDrainageNetwork" class="toolbox nav-link" aria-disabled="true" data-bs-toggle="tab" data-type="drainage_network" href="#tabDrainageNetwork" aria-selected="false">Entwässerungsnetz</a>
+        </li>
+
+        <li class="nav-item drainage">
+            <a id="navDrainedArea" class="toolbox nav-link" aria-disabled="true" data-bs-toggle="tab" data-type="drained_area" href="#tabDrainedArea">Entwässerte Flächen</a> <!--Bekannte Drainageflächen? -->
         </li>
         
         <li class="nav-item drainage">
@@ -55,28 +55,44 @@
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Entwässerungsnetz</h5>
                         {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
-                        <button class="btn btn-secondary toggle-tile-layer shown" data-type="known_drainage">Ausblenden</button>                                                                                             
+                        <button class="btn btn-secondary toggle-feature-group shown" data-type="drainage_network">Ausblenden</button>                                                                                             
                     </div>
                     <form method="POST" action="">
                         {% csrf_token %}
+                        {% with printed_any=False %}
                         {% for checkbox_set in drainage_network_filter_form.form %}
-                            {% with key=checkbox_set.name %}
-                            <div class="mb-3 card">
-                                <div class="card-body">
-                                    <div class="mb-3 form-check"> 
-                                        <input type="checkbox" name="{{ checkbox_set.name }}" prefix="parent" class="checkboxinput form-check-input" id="id_{{ checkbox_set.name }}" value="{{ checkbox_set.field.widget.attrs.data_network_type }}" checked=""> 
-                                        <label for="id_{{ checkbox_set.name }}" class="form-check-label">
-                                            <h5>{{ labels|get_item:key }}</h5> 
-                                                {# Crispy field without label #}
-                                            {{ checkbox_set|as_crispy_field  }}
-                                                    {% comment %} {{ field_html|safe|replace:'<label','<label style="display:none"' }} {% endcomment %}
-                                        </label> 
+                            {% if checkbox_set.field.choices %}
+                                {% with key=checkbox_set.name %}
+                                    <div class="mb-3 card">
+                                        <div class="card-body">
+                                            <div class="mb-3 form-check"> 
+                                                <input type="checkbox"
+                                                    name="{{ checkbox_set.name }}"
+                                                    prefix="parent"
+                                                    class="checkboxinput form-check-input"
+                                                    id="id_{{ checkbox_set.name }}"
+                                                    value="{{ checkbox_set.field.widget.attrs.data_network_type }}"
+                                                    checked>
+
+                                                <label for="id_{{ checkbox_set.name }}" class="form-check-label">
+                                                    <h5>{{ labels|get_item:key }}</h5>
+                                                    {{ checkbox_set|as_crispy_field }}
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        
-                            {% endwith %}
+                                {% endwith %}
+                                {% with printed_any=True %}{% endwith %}
+                            {% endif %}
                         {% endfor %}
+
+                        {% if not printed_any %}
+                            <h5>Es ist keine Entwässerung im Suchgebiet vorhanden</h5>
+                        {% endif %}
+                    {% endwith %}
+
+
+
                         <button id="btnFilterDrainageNetwork"type="submit" class="btn btn-primary">Entwässerungsnetz filtern</button>
                     </form>   
                 </div>
@@ -104,18 +120,18 @@
             </div>       
         </div>
 
-        <div id="tabKnownDrainages" class="tab-pane">
+        <div id="tabDrainedArea" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Bekannte Entwässerungsflächen</h5>
                         {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
-                        <button class="btn btn-secondary toggle-tile-layer shown" data-type="known_drainage">Ausblenden</button>                                                                                             
+                        <button class="btn btn-secondary toggle-feature-group shown" data-type="drained_area">Ausblenden</button>                                                                                             
                     </div>
                         <form method="POST" action="">
                             {% csrf_token %}
-                            {% crispy known_drainage_filter_form.form %}
-                            <button id="btnFilterKnownDrainages"type="submit" class="btn btn-primary">Entwässerungsnetz filtern</button>
+                            {% crispy drained_area_filter_form.form %}
+                            <button id="btnFilterDrainedArea"type="submit" class="btn btn-primary">Entwässerungsnetz filtern</button>
                         </form>
                     
                     

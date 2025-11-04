@@ -1572,24 +1572,26 @@ def load_sieker_drainage_gui(request, user_field_id):
         project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
         drainage_probabiliy_filter_form = forms.DrainageProbabilityFilterForm()
 
-        known_drainages = models.KnownDrainages.objects.all()
-        known_drainage_filter_form = filters.KnownDrainagesFilter(queryset=known_drainages)
+        drained_areas = models.DrainedArea.objects.all()
+        drained_area_filter_form = filters.DrainedAreaFilter(queryset=drained_areas)
 
         
         drainage_network = models.DrainageNetwork.objects.filter(geom4326__within=user_field.geom)
         print('drainageNetwork COUNT', drainage_network.count())
 
         details = models.DrainageNetworkTypeDetail.objects.filter(drainagenetwork__in=drainage_network).distinct()
-        print('details COUNT', details.count())
-
         drainage_network_filter_form = filters.DrainageNetworkFilter(queryset=details)
-        
-        drainage_network_labels = { d.name_tag: d.name_de for d in models.DrainageNetworkType.objects.all() }
+
+        detail_types = models.DrainageNetworkType.objects.filter(details__in=details).distinct()
+        print('details COUNT', details.count(), detail_types)
+
+           
+        drainage_network_labels = { d.name_tag: d.name_de for d in detail_types }
         
         html = render_to_string('toolbox/sieker_drainage.html', {
             'project_select_form': project_select_form,
             'drainage_probabiliy_filter_form': drainage_probabiliy_filter_form,
-            'known_drainage_filter_form': known_drainage_filter_form,
+            'drained_area_filter_form': drained_area_filter_form,
             'drainage_network_filter_form': drainage_network_filter_form,
             'labels': drainage_network_labels,
         }, request=request)
@@ -1604,31 +1606,47 @@ def load_sieker_drainage_features(request, user_field_id):
     user = request.user
     if request.method == 'GET':
         user_field = models.UserField.objects.get(Q(id=int(user_field_id))&Q(user=user))
-        known_drainages = models.KnownDrainages.objects.all()
+
+        drained_areas = models.DrainedArea.objects.filter(geom4326__within=user_field.geom)
     
-        dts = list(known_drainages.values_list('drainage_type__id', 'drainage_type__name_de').distinct())
-        print('drainage_types', dts)
-        
-        for dt in dts:
-            id = dt[0]
-            name = dt[1]           
-            drainage_type_feature_collections = {name: create_feature_collection(known_drainages.filter(pk=id))}
+        drained_area_type_ids = list(drained_areas.values_list('drained_area_type__id', flat=True).distinct())
+        drained_area_types = models.DrainageNetworkType.objects.filter(pk__in=drained_area_type_ids)
+        print('drainage_types', drained_area_types)
+        drainage_type_feature_collections = []
+        for dt in drained_area_types:          
+            drainage_type_feature_collections.append({
+                'drainedAreaTypeId': dt.id,
+                'dataInfo': models.DataInfo.objects.get(data_type=dt.name_tag).to_dict(),
+                'featureCollection': create_feature_collection(drained_areas.filter(drained_area_type__id=dt.id)),
+                })
 
 
         drainage_network = models.DrainageNetwork.objects.filter(geom4326__within=user_field.geom)
-        detail_ids = drainage_network.values_list('network_type_detail_id', flat=True).distinct()
+        detail_ids = drainage_network.values_list('network_type_detail__id', flat=True).distinct()
         details = models.DrainageNetworkTypeDetail.objects.filter(pk__in=detail_ids)
 
-        
+        network_type_detail_feature_collections = []
         for detail in details:     
-            network_type_detail_feature_collections = {detail.name_de: create_feature_collection(drainage_network.filter(network_type_detail=detail))}
+            network_type_detail_feature_collections.append({
+                'drainageNetworkTypeId': detail.network_type.id,
+                'drainageNetworkTye': detail.network_type.name_tag,
+                'drainageNetworkTypeDetailId': detail.id,
+                'dataInfo': models.DataInfo.objects.get(data_type=detail.name_tag).to_dict(),
+                'featureCollection': create_feature_collection(drainage_network.filter(network_type_detail=detail))
+                })
+        # print(network_type_detail_feature_collections)
+
+        print(drainage_type_feature_collections)
         print(network_type_detail_feature_collections)
-
-
-
-        return JsonResponse({
-            'success': True, 
-            'drainage_type_feature_collections': drainage_type_feature_collections,
-            'network_type_detail_feature_collections': network_type_detail_feature_collections,
+        if details.count() > 0 or drained_area_types.count() > 0:
+            return JsonResponse({
+                'success': True, 
+                'drainage_type_feature_collections': drainage_type_feature_collections,
+                'network_type_detail_feature_collections': network_type_detail_feature_collections,
+                })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Es gibt weder drainierte Flächen noch Enbtwässerungen im Suchgebiet.'
             })
        

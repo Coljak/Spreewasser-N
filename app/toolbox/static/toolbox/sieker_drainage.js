@@ -28,37 +28,92 @@ import {
 const geoserverLayers = {
   // 'result': `spreewassern_raster:${userId}_mar_result`,
   'drainage_probability':'spreewassern_raster:Entwaesserungswahrscheinlichkeit_9Parameter_v2',
-  'known_drainage': 'toolbox_vector:toolbox_knowndrainages',
-  'drainage_network': 'toolbox_vector:toolbox_drainagenetwork',
-
-  // 'drainage_network_ditches': 'toolbox_vector:drainage_network_ditches',
-  // 'drainage_network_drainage': 'toolbox_vector:drainage_network_drainage',
-  // 'drainage_network_natural_creeks': 'toolbox_vector:drainage_network_natural_creeks',
-  // 'drainage_network_non_natural_creeks': 'toolbox_vector:drainage_network_non_natural_creeks',
-  // 'drainage_network_rivers': 'toolbox_vector:drainage_network_rivers',
   }
 
 
-  function filterDrainages(type, featureGroup) {
-    // Implement filtering logic here
-  }
+function filterDrainages(type, featureGroup) {
+  // Implement filtering logic here
+};
+
+function showButtonSpinner($button) {
+  $button.data('original-text', $button.find('.btn-text').text());
+  $button.find('.btn-text').html(`
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Lädt...
+  `);
+  $button.prop('disabled', true);
+};
+
+function hideButtonSpinner($button) {
+  const originalText = $button.data('original-text');
+  $button.find('.btn-text').text(originalText);
+  $button.prop('disabled', false);
+};
+
+function getFeatures(userField) {
+  console.log('getFeatures', userField)
+  // const $buttons = $('.toggle-vector-layer')
+  // $buttons.each($button => {
+  //   showButtonSpinner($button)
+  // })
+  fetch(`load_sieker_drainage_features/${userField}/`)
+  .then(response => response.json())
+  .then(data => {
+    if (!data.success) {
+      handleAlerts(data)
+    } else {
+      console.log('received data', data)
+      if (data.drainage_type_feature_collections.length > 0) {
+        data.drainage_type_feature_collections.forEach(dataset => {
+          console.log('drainage_type:', dataset.drainedAreaTypeId, dataset.dataInfo.dataType, dataset.dataInfo);
+          addFeatureCollectionToLayer(dataset)
+        })  
+      }
+      if (data.network_type_detail_feature_collections.length > 0) {
+        data.network_type_detail_feature_collections.forEach(dataset => {
+          ('drainage_type:',  dataset.dataInfo.dataType, dataset.dataInfo);
+          addFeatureCollectionToLayer(dataset)
+        })  
+      }
+      
+    }
+    
+  })
+  .catch(err => console.log('getFeatures', err))
+  .finally(() => {
+    console.log('turn off spinner')
+    // $buttons.each($button => {
+    //   hideButtonSpinner($button)
+    // })
+  })
+}
 
 export function initializeDrainage(userField) {
   const project = new Drainage();
   project.userField = userField;
   project.saveToLocalStorage()
 
+  $('#toolboxPanel').off('change');
+  $('#toolboxPanel').off('click');
+
   getTileOverlay(geoserverLayers['drainage_probability'], 'drainage_probability');
-
-
-
 
   console.log('Initialize Sieker Drainage with project:', project);
   // map.addLayer(siekerSinkFeatureGroup);
   
+
   initializeSliders();
+  addChangeEventListener(Drainage);
+  addClickEventListenerToToolboxPanel(Drainage);
       
-  $('#toolboxPanel').off('change');
+
+  $('#id_drainage_threshold_slider').on('change', () => {   
+          const inputName = $target.attr('name'); 
+          const inputVal = $target.val();
+          project[inputName] = inputVal;
+          project.saveToLocalStorage();
+          // TODO implement live change of the raster map
+          return;
+      });
 
   $('#toolboxPanel').on('click', function (event) {
       const $target = $(event.target);
@@ -75,24 +130,6 @@ export function initializeDrainage(userField) {
   
               $slider.val(defaultVal).trigger('change'); // set value and trigger input event
           });
-      } else if ($target.hasClass('toggle-tile-layer')) {
-        const dataType = $target.data('type')
-        console.log('toggle tile', dataType)
-        if ($target.hasClass('shown')) {
-          $('button.toggle-tile-layer').removeClass('shown');
-          $('button.toggle-tile-layer').text('einblenden')
-
-          Layers[dataType].hidden = true;
-          // document.querySelector('.leaflet-legend').hidden = true; 
-        } else {
-          $('button.toggle-tile-layer').text('ausblenden')
-          $('button.toggle-tile-layer').addClass('shown');
-          
-          Layers[dataType].hidden = false;
-          // document.querySelector('.leaflet-legend').hidden = false; 
-          $target.addClass('shown')
-        }
-
       } else if ($target.attr('prefix') == 'parent'){
           const parent = $target.val();
           console.log('parent clicked:', parent, $(`input[parent=${parent}]`))
@@ -100,31 +137,52 @@ export function initializeDrainage(userField) {
 
       } else if ($target.attr('id') === 'btnFilterDrainageNetwork') {
         filterDrainages('Drainage', DrainageFeatureGroup);
-      } else if ($target.attr('id') === 'btnFilterKnownDrainages') {
-        filterKnownDrainages('KnownDrainage', KnownDrainageFeatureGroup);
+      } else if ($target.attr('id') === 'btnFilterDrainedArea') {
+        filterDrainedArea('KnownDrainage', KnownDrainageFeatureGroup);
       } 
   });
 
-  addChangeEventListener(Drainage);
-  
-  addClickEventListenerToToolboxPanel(Drainage);
-  // this is only for the slider
-  //addChangeEventListener(Drainage);
-  $('#id_drainage_threshold_slider').on('change', () => {   
-            const inputName = $target.attr('name'); 
-            const inputVal = $target.val();
-            project[inputName] = inputVal;
-            project.saveToLocalStorage();
-            // TODO implement live change of the raster map
-            return;
-        })
+  $('#toolboxPanel').on('change', function (event) {
+    const $target = $(event.target);
+    const project = Drainage.loadFromLocalStorage();
+    if ($target.hasClass('form-check-input')) {
+            // checkboxes 
+      const inputId = $target.attr('id');
+      const inputName = $target.attr('name'); //non_natural_creeks
+      const inputPrefix = $target.attr('prefix'); /// 'parent' is parent of 'drainage', else 'drained_area'
+      const inputValue = $target.attr('value'); // 5 id of detail
+      const inputChecked = $target.is(':checked');
+      console.log('click inputName', inputName)
+      console.log('the layer Layers[inputName]:', Layers[inputName])
+      if (inputPrefix === 'parent') {    
+              if (inputChecked) {
+                map.addLayer(Layers[inputName])
+              } else {
+                map.removeLayer(Layers[inputName])
+              }
+      } else if (inputPrefix === 'drainage') {
+        const inputParent = $target.attr('parent');// = 3
+        const inputDetail = $target.attr('detail');
+        if (inputChecked) {
+          map.addLayer(Layers[inputDetail])
+        } else { 
+          map.removeLayer(Layers[inputDetail])
+        }
+      } else if (inputPrefix === 'drained_area') {
+        if (inputChecked) {
+          map.addLayer(Layers[inputName])
+        } else { 
+          map.removeLayer(Layers[inputName])
+        }
+      }
+    }
+            // for drainage network, prefix is drainage, drained_area
 
-  
+  })
+  getFeatures(userField);
 
-$('#tabDrainageNetwork input[type="checkbox"]')
+$('input[type="checkbox"]')
     .prop('checked', true)
     .trigger('change');
-
-
 };
 

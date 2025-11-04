@@ -22,8 +22,8 @@ export class Drainage extends ToolboxProject {
         this.drainage_ditches = data.drainage_ditches ?? [];
         this.drainage_rivers = data.drainage_rivers ?? [];
         this.drainage_pipes = data.drainage_pipes ?? [];
-        this.parents = data.parents ?? [];
-        this.known_drainage_types = data.known_drainage_types ?? [];
+        this.drainage_network_types = data.drainage_network_types ?? [];
+        this.drained_area_types = data.drained_area_types ?? [];
     }
    
 
@@ -31,7 +31,7 @@ export class Drainage extends ToolboxProject {
       return new Drainage(json);
     }
     saveToLocalStorage() {
-      this.parents = [...this.parent_ditches, ...this.parent_rivers, ...this.parent_pipes, ...this.parent_non_natural_creeks, ...this.parent_natural_creeks];  
+      this.drainage_network_types = [...this.parent_ditches, ...this.parent_rivers, ...this.parent_pipes, ...this.parent_non_natural_creeks, ...this.parent_natural_creeks];  
         super.saveToLocalStorage(); 
         
     }

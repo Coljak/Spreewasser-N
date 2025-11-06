@@ -44,10 +44,6 @@ const geoserverLayers = {
   'distance_to_well': 'spreewassern_raster:distance_to_extraction_wells_v1',
   'hydraulic_conductivity': 'spreewassern_raster:hydraulic_conductivity_classified_v1',
   }
-// TODO same as in drainage- check if needs to be removed
-// let wmsOverlayLayer = L.tileLayer();
-// wmsOverlayLayer.toolTag = 'injection';
-
 
 
 
@@ -121,7 +117,7 @@ export function initializeInjection(data) {
       removeLegendFromMap(map)
       if (sustainibilityType) {
         console.log('sustainibility type', sustainibilityType, 'tiff and legend' )
-          getTileOverlay(geoserverLayers[sustainibilityType], 'injection')
+          getTileOverlay(geoserverLayers[sustainibilityType], 'injection', 'injection')
           if(!$('button.toggle-tile-layer').hasClass('shown')){
             console.log('IS not shown')
             document.querySelector('.leaflet-legend').hidden = true; 
@@ -145,13 +141,13 @@ export function initializeInjection(data) {
         console.log('msg', msg)
         if (msg.success === true){
           $('#btn-mar-result-map').removeClass('disabled');
-          getTileOverlay(geoserverLayers['result'], 'injection');
+          getTileOverlay(geoserverLayers['result'], 'injection', 'injection');
           $('#btn-mar-result-map').text('Ergebnis ausblenden');
       }})
     }   else if ($target.attr('id') === 'btn-mar-result-map') {
         if ($target.hasClass('shown')) {
           console.log("layerNames['result']", geoserverLayers['result'])
-          getTileOverlay(geoserverLayers['result'], 'injection');
+          getTileOverlay(geoserverLayers['result'], 'injection', 'injection');
           $('#btn-mar-result-map').removeClass('shown');
           $('#btn-mar-result-map').text('Ergebnis ausblenden')
         } else {

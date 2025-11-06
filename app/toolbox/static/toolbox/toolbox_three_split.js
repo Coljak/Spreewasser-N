@@ -279,9 +279,18 @@ async function startDrainage(project) {
     $('#toolboxButtons').addClass('d-none');
     $('#toolboxPanel').removeClass('d-none');
     $('#toolboxPanel').html(data.html);
-
+    return data.colors
   })
-  .then(data => {
+  .then(colors => {
+      
+    $('input[detail]').each(function() {
+        const detail = $(this).attr('detail');         // get the key
+        const color = colors[detail];                  // look up color
+        if (color) {
+            const id = $(this).attr('id');            // get input id
+            $(`label[for="${id}"]`).css('color', color); // set label color
+        }
+    });
       initializeDrainage( project.userField);
       return true;
   })

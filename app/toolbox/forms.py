@@ -37,7 +37,7 @@ class ToolboxProjectSelectionForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control toolbox-project'})
     )
 
-    def __init__(self, *args,qs=None, **kwargs):
+    def __init__(self, *args,qs=None, data_type=None, **kwargs):
         super().__init__(*args, **kwargs)
         
         if qs:
@@ -45,6 +45,33 @@ class ToolboxProjectSelectionForm(forms.Form):
                 # print(instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
                 (instance.id, instance.name) for instance in qs
             ]
+
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'overall-weighting-form'
+        self.helper.form_class = 'form-horizontal weighting-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'load-project', 
+            'Laden', 
+            css_class='toolbox-load-project btn btn-secondary',
+            attrs={'data-type': data_type}))
+        self.helper.add_input(Button(
+            'delete-project', 
+            'Löschen', 
+            css_class='toolbox-delete-project btn btn-secondary',
+            attrs={'data-type': data_type}))
+        self.helper.add_input(Button(
+            'info-project', 
+            'Projektinfo', 
+            css_class='toolbox-project-info btn btn-secondary',
+            attrs={'data-type': data_type}))
+        self.helper.add_input(Button(
+            'new-project', 
+            'Neues Projekt', 
+            css_class='toolbox-new-project btn btn-secondary',
+            attrs={'data-type': data_type}))
         
 
 

@@ -518,100 +518,6 @@ class HistoricalWetlandsFilter(FilterSet):
         slider.attrs["data_cur_val"] = min_feasibility
         
 
-
-
-# class CheckboxSelectMultipleWithAttrs(forms.CheckboxSelectMultiple):
-#     def __init__(self, attrs=None, choice_attrs=None):
-#         super().__init__(attrs)
-#         self.choice_attrs = choice_attrs or {}  # {choice_value: {attr_name: attr_value}}
-
-#     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
-#         option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
-#         if value in self.choice_attrs:
-#             option['attrs'].update(self.choice_attrs[value])
-#         return option
-
-
-# class DrainageNetworkFilter(FilterSet):
-#     natural_creeks = MultipleChoiceFilter(
-#         initial=True,
-#         label="",
-#         choices=[],
-#         widget=forms.CheckboxSelectMultiple,
-#     )
-#     non_natural_creeks = MultipleChoiceFilter(
-#         initial=True,
-#         label="",
-#         choices=[],
-#         widget=forms.CheckboxSelectMultiple,
-#     )
-#     ditches = MultipleChoiceFilter(
-#         initial=True,
-#         label="",
-#         choices=[],
-#         widget=forms.CheckboxSelectMultiple,
-#     )
-#     pipes = MultipleChoiceFilter(
-#         initial=True,
-#         label="",
-#         choices=[],
-#         widget=forms.CheckboxSelectMultiple,
-#     )
-#     rivers = MultipleChoiceFilter(
-#         initial=True,
-#         label="",
-#         choices=[],
-#         widget=forms.CheckboxSelectMultiple,
-#     )
-
-
-#     def __init__(self, *args, queryset=None, **kwargs):
-#         super().__init__(*args, queryset=queryset, **kwargs)
-
-#         network_types = models.DrainageNetworkType.objects.filter(
-#             details__in=queryset
-#         ).distinct()
-
-
-#         # for field_name, network_type_id in groups.items():
-
-#         # for network_type in network_types:
-            
-#         #     self.form.fields[network_type.name_tag].widget.attrs['data_network_type'] = str(network_type.name_tag)
-
-#         #     details = queryset.filter(network_type=network_type)
-#         #     self.form.fields[network_type.name_tag].choices = [
-                
-#         #         (d.id, d.name_de) for d in details
-#         #     ]
-#         #     self.form.fields[network_type.name_tag].widget.attrs['parent']=network_type.id
-#         #     self.form.fields[network_type.name_tag].widget.attrs['prefix']=prefix
-
-#         for network_type in network_types:
-#             details = queryset.filter(network_type=network_type)
-
-#             # Build choices
-#             choices = [(d.id, d.name_de) for d in details]
-            
-#             # Build per-choice attributes
-#             # choice_attrs = {str(d.id): {'detail': d.name_tag} for d in details}
-
-#             # Assign to the field
-#             self.form.fields[network_type.name_tag].choices = choices
-#             self.form.fields[network_type.name_tag].widget = CheckboxSelectMultipleWithAttrs(choice_attrs=choice_attrs)
-            
-#             # Also keep your other widget attrs
-#             self.form.fields[network_type.name_tag].widget.attrs['parent'] = network_type.id
-#             self.form.fields[network_type.name_tag].widget.attrs['prefix'] = 'drainage'
-#             self.form.fields[network_type.name_tag].widget.attrs['data_network_type'] = str(network_type.name_tag)
-
-
-
-#     class Meta:
-#         model = models.DrainageNetworkTypeDetail
-#         fields = ['natural_creeks', 'non_natural_creeks', 'ditches', 'pipes', 'rivers']
-#         form = SliderFilterForm
-
 class CheckboxSelectMultipleWithAttrs(forms.CheckboxSelectMultiple):
     def __init__(self, attrs=None, choice_attrs=None):
         super().__init__(attrs)
@@ -682,6 +588,7 @@ class DrainageNetworkFilter(FilterSet):
             field.widget.attrs['parent'] = network_type.id
             field.widget.attrs['prefix'] = prefix
             
+            
 
 
 class DrainedAreaFilter(FilterSet):
@@ -689,20 +596,30 @@ class DrainedAreaFilter(FilterSet):
         initial=True,
         label="",
         choices=[],
-        widget=forms.CheckboxSelectMultiple,
+        widget=CheckboxSelectMultipleWithAttrs(),
     )
 
 
     def __init__(self, *args, queryset=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
-        # types = queryset.distinct('drainage_type')
-        self.form.fields['types'].choices = queryset.values_list('drained_area_type__id', 'drained_area_type__name_de').distinct()
-        self.form.fields['types'].widget.attrs['prefix']='drained_area'
+
+        # queryset is models.DrainedArea
+        drained_area_types = models.DrainedAreaType.objects.filter(
+            drainedarea__in=queryset
+        ).distinct()
+        choice_attrs = {str(d.id): {'drained_area_type': d.name_tag} for d in drained_area_types}
+        choices = [(d.id, d.name_de) for d in drained_area_types]
+        # self.form.fields['drained_area_types'].choices = drained_area_types.values_list('id', 'name_de')
+
+        self.form.fields['types'].widget.attrs['prefix'] = 'drained_area'
+        self.form.fields['types'].widget.choice_attrs = choice_attrs
+        self.form.fields['types'].choices = choices
 
 
-    class Meta:
-        model = models.DrainedArea
-        fields = ['types']
-        form = SliderFilterForm
+
+    # class Meta:
+    #     model = models.DrainedArea
+    #     fields = ['drained_area_types']
+    #     form = SliderFilterForm
 
 

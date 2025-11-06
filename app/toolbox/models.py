@@ -496,6 +496,7 @@ class Sink(models.Model):
 
         return {
             "id": self.id,
+            "name": 'Senke' if language=='de' else 'Sink',
             "depth": round(self.depth, 2),
             "area": round(self.area, 2),
             "volume": round(self.volume, 2),
@@ -596,6 +597,7 @@ class EnlargedSink(models.Model):
 
         return {
             "id": self.id,
+            "name": 'Vergrößerte Senke' if language=='de' else 'Enlarged Sink',
             "depth": round(self.depth, 2),
             "area": round(self.area, 2),
             "volume": round(self.volume, 2),
@@ -1308,6 +1310,7 @@ class DataInfo(models.Model):
     legend = models.ForeignKey(LeafletLegend, on_delete=models.CASCADE, default=None, null=True, blank=True)
     # icon path is relevant for point values, that have a custom pin icon
     icon_path = models.CharField(max_length=256, null=True, blank=True)
+    dash_array = models.CharField(max_length=8, null=True, blank=True)
 
     def to_dict(self, language="de"):
         dict = {
@@ -1327,6 +1330,8 @@ class DataInfo(models.Model):
             dict.update({"pinIconPath": self.icon_path})
         if self.legend:
             dict.update({"legendSettings": self.legend.to_dict(language)})
+        if self.dash_array:
+            dict.update({"dashArray": self.dash_array})
 
         return dict
 
@@ -1482,7 +1487,8 @@ class DrainedArea(models.Model):
         return {
             'id': self.id,
             'drained_area_type_id': self.drained_area_type.id,
-            'drained_area_type_name': self.drained_area_type.name_de if language=='de' else self.drained_area_type.name_en,
+            'area': int(self.geom25833.area),
+            'name': self.drained_area_type.name_de if language=='de' else self.drained_area_type.name_en,
             'drained_area_type': self.drained_area_type.name_tag,
         }
     def to_feature(self, language='de'):
@@ -1514,7 +1520,8 @@ class DrainageNetwork(models.Model):
     def to_json(self, language='de'):
         return {
             'id': self.id,
-            'length_m': self.geom25833.length,
+            'name': self.network_type_detail.name_de if language== 'de' else self.network_type_detail.name_en,
+            'length_m': int(self.geom25833.length),
             'network_type_id': self.network_type_detail.id,
             'network_type': self.network_type_detail.name_de if language=='de' else self.network_type_detail.name_en,
         }

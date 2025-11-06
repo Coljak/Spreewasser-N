@@ -367,7 +367,6 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             $('#toolboxPanel').addClass('d-none');
             removeLegendFromMap(map);
             map.eachLayer(function(layer) {
-                console.log('back-to-initial', layer);
                 console.log(layer.toolTag);
                 if (layer.toolTag) {
                     console.log('has tooltag, removing layer');
@@ -501,19 +500,21 @@ export function addFeatureCollectionToLayer(data){
 
     let layer = L.geoJSON(featureCollection, {
         style: function (feature) {
-            let color;
+            let color = colorByIndex
+                ? colorFunction(feature.properties[colorByIndex])
+                : dataInfo.featureColor;
 
-            if (colorByIndex) {
-                console.log('addFeatureCollectionToLayer feature.properties[colorByIndex]', feature.properties[colorByIndex])
-                color = colorFunction(feature.properties[colorByIndex]);
-            } else {
-                color = dataInfo.featureColor;
-            }
-
-            return {
+            const style = {
                 color,
                 className: dataInfo.className,
+                weight: 3,
             };
+
+            if (dataInfo.dashArray) {
+                style.dashArray = dataInfo.dashArray;
+            }
+
+            return style;
         },
         pane: "polygonPane",
         onEachFeature: function (feature, layer) {
@@ -530,14 +531,7 @@ export function addFeatureCollectionToLayer(data){
                         `;
                     }    
             });
-            // layer.bindTooltip(popupContent);
-            
-                    
-            
-            // layer.on('mouseover', function () {
-            //     // this.setStyle(highlightStyle);
-            //     this.openTooltip();
-            // });
+
             const popupOptions = {
                 offset: [0, -30],   // shift popup upwards
                 autoPan: false      // don’t auto-pan map on hover
@@ -770,7 +764,7 @@ export function addLegendForWms(wmsLayerName, wmsUrl) {
   legend.addTo(map)
 };
 
-export function getTileOverlay(wmsLayer, layersName) {
+export function getTileOverlay(wmsLayer, layersName, toolTag) {
     const wmsUrl = '/toolbox/proxy/wms/';
     if (Layers[layersName]) {
         Layers[layersName].remove()
@@ -786,6 +780,7 @@ export function getTileOverlay(wmsLayer, layersName) {
     updateWhenZooming: false, // don’t request tiles mid-zoom
     _t: Date.now() // this is only a cache buster - necessary to alter request 
     }).addTo(map);
+    Layers[layersName].toolTag = toolTag
 
 addLegendForWms(wmsLayer, wmsUrl)
 };

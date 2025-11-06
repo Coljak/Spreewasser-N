@@ -31,7 +31,7 @@ export class Drainage extends ToolboxProject {
       return new Drainage(json);
     }
     saveToLocalStorage() {
-      this.drainage_network_types = [...this.parent_ditches, ...this.parent_rivers, ...this.parent_pipes, ...this.parent_non_natural_creeks, ...this.parent_natural_creeks];  
+      this.parents = [...this.parent_ditches, ...this.parent_rivers, ...this.parent_pipes, ...this.parent_non_natural_creeks, ...this.parent_natural_creeks];  
         super.saveToLocalStorage(); 
         
     }

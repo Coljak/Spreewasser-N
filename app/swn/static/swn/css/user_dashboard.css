@@ -86,6 +86,11 @@
     fill: var(--bs-success);
 }
 
+.polygon.selected {
+    stroke: var(--bs-success);
+    fill: var(--bs-success);
+}
+
 
   /* .form-check {
     margin-bottom: 0%;

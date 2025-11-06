@@ -36,39 +36,7 @@ from rasterio.enums import ColorInterp
 
 
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
-
-
-
-
-def publish_raster_geoserver(tif_path, layer_name, workspace, style_name="style_raster_percent"):
-    """
-    Publishes a GeoTIFF to GeoServer as a coverage store and layer.
-    """
-    x_path = 'raster_data/' + layer_name + '.tif'
-    workspace = "spreewassern_raster"
-    store_name = layer_name  # one store per raster
-    headers = {"Content-type": "image/tiff"}
-
-    # 1. Upload GeoTIFF to a new coverage store
-    url = f"{settings.GEOSERVER_USER}/workspaces/{workspace}/coveragestores/{store_name}/file.geotiff"
-
-    with open(tif_path, "rb") as f:
-        r = requests.put(
-            url,
-            data=f,
-            headers=headers,
-            auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS)
-        )
-    r.raise_for_status()
-
-    layer_url = f"{settings.GEOSERVER_URL}/layers/{workspace}:{layer_name}"
-    r = requests.put(
-        layer_url,
-        headers={"Content-type": "application/xml"},
-        data=f"<layer><defaultStyle><name>{style_name}</name></defaultStyle></layer>",
-        auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS)
-    )
-    r.raise_for_status()
+FLOAT32_NODATA = np.float32(-3.4028235e+38)
 
 
 def create_feature_collection(queryset):
@@ -86,19 +54,6 @@ def create_point_feature_collection(queryset):
 
 
 
-# # TOOLBOX GENERAL
-# def create_default_project(user):
-#     """
-#     Create a default project for the user.
-#     """
-#     default_project = models.ToolboxProject(
-#         name= '',
-#         user=user,
-#     ).to_json()
-
-#     return json.dumps(default_project, default=str)
-
-
 def toolbox_dashboard(request):
     user = request.user
     project_region = swn_models.ProjectRegion.objects.first().to_feature()
@@ -111,8 +66,7 @@ def toolbox_dashboard(request):
 
 
     state_county_district_form = swn_forms.PolygonSelectionForm(request.POST or None)
-    # project_select_form = forms.ToolboxProjectSelectionForm(user=user)
-    # project_select_form = forms.ToolboxProjectSelectionForm()
+
     project_form = forms.ToolboxProjectForm(user=user)
     project_modal_title = 'Create new project'
 
@@ -137,7 +91,7 @@ def toolbox_dashboard(request):
 
 def save_toolbox_project(request):
     if request.method != 'POST':
-        return JsonResponse({'message': {'success': False, 'message': 'Invalid request method'}}, status=405)
+        return JsonResponse({'message': {'success': False, 'message': 'Ungültiger Request.'}}, status=405)
 
     try:
         user = request.user
@@ -163,11 +117,11 @@ def save_toolbox_project(request):
                 project.project_data = project_data
                 project.save()
 
-                message = f'Project {project.name} updated'
+                message = f'Projekt {project.name} wurde aktualisiert.'
                 status = 200
 
             except models.ToolboxProject.DoesNotExist:
-                return JsonResponse({'message': {'success': False, 'message': 'Project not found'}}, status=404)
+                return JsonResponse({'message': {'success': False, 'message': 'Projekt existiert nicht.'}}, status=404)
 
         # --- CREATE CASE ---
         else:
@@ -180,7 +134,7 @@ def save_toolbox_project(request):
                 project_data=project_data
             )
             project.save()
-            message = f'Project {project.name} created'
+            message = f'Projekt {project.name} wurde gespeichert.'
             status = 201
 
         return JsonResponse({
@@ -199,10 +153,10 @@ def load_toolbox_project(request, id):
     project = models.ToolboxProject.objects.get(pk=id)
     print("Toolbox Project: ", project)
     if not project:
-        return JsonResponse({'success': False, 'message': 'Project not found'})
+        return JsonResponse({'success': False, 'message': 'Projekt existiert nicht.'})
     else:
         project_json = project.to_json()
-        return JsonResponse({'success': True, 'message': f'Project {project.name} loaded', 'project': project_json})
+        return JsonResponse({'success': True, 'message': f'Projekt {project.name} wurde geladen.', 'project': project_json})
 
     
 
@@ -261,14 +215,14 @@ def delete_user_field(request, id):
 
             if user_field.user == request.user:
                 user_field.delete()
-                return JsonResponse({'message': {'success': True, 'message': 'Field deleted'}})
+                return JsonResponse({'message': {'success': True, 'message': 'Suchegebiet wurde gelöscht.'}})
             else:
-                return JsonResponse({'message': {'success': False, 'message': 'You do not have permission to delete this field'}}, status=403)
+                return JsonResponse({'message': {'success': False, 'message': 'Sie können dieses Suchgebiet nicht löschen.'}}, status=403)
 
         except models.UserField.DoesNotExist:
-            return JsonResponse({'message': {'success': False, 'message': 'Field not found'}}, status=404)
+            return JsonResponse({'message': {'success': False, 'message': 'Das Suchgebiet konnte nicht gefunden werden.'}}, status=404)
     else:
-        return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}}, status=400)
+        return JsonResponse({'message': {'success': False, 'message': 'Ungültiger Request.'}}, status=400)
     
 @login_required
 def get_field_project_modal(request, id):
@@ -324,7 +278,7 @@ def add_range_filter(filters, obj, field,  model_field=None):
 
 def load_infiltration_gui(request, user_field_id):
     if user_field_id == "null":
-        user_field_id = None
+         return JsonResponse({'message':{'success': False, 'message': 'Es ist kein Suchgebiet ausgewählt oder es existiert nicht..'}})
     else:
         user_field_id = int(user_field_id)
 
@@ -334,12 +288,10 @@ def load_infiltration_gui(request, user_field_id):
     qs = models.ToolboxProject.objects.filter(
         Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
     ).order_by('-creation_date').reverse()
-    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='infiltration')
     print("Time to load projects:", datetime.now() - start_load_projects)
     
-    if user_field is None:
-        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
-    
+
     start_filter_sinks = datetime.now()
     # TODO these querysets are not necessary if the has_x attributes are implemented
     sinks = models.Sink.objects.filter(centroid__within=user_field.geom)    
@@ -524,7 +476,7 @@ def filter_sinks(request):
     if sinks.count() == 0:
         message = {
             'success': False, 
-            'message': f'No sinks found in the search area.'
+            'message': 'Im Suchgebiet entsprechen keine Senken den Filterkriterien.'
         }
         return JsonResponse({'message': message})
     else:
@@ -557,7 +509,7 @@ def filter_sinks(request):
             }
         message = {
             'success': True, 
-            'message': f'Found {sinks.count()} sinks'
+            'message': f'Es wurden {sinks.count()} Senken gefunden.'
         }
 
         data_info = models.DataInfo.objects.get(data_type='sink').to_dict()
@@ -603,7 +555,7 @@ def filter_enlarged_sinks(request):
     if sinks.count() == 0:
         message = {
             'success': False, 
-            'message': f'No sinks found in the search area.'
+            'message': 'Im Suchgebiet entsprechen keine vergrößerten Senken den Filterkriterien.'
         }
         return JsonResponse({'message': message})
     else:
@@ -630,7 +582,7 @@ def filter_enlarged_sinks(request):
             }
         message = {
             'success': True, 
-            'message': f'Found {sinks.count()} Enlarged sinks'
+            'message': f'Es wurden {sinks.count()} vergrößerte Senken gefunden.'
         }
 
         data_info = models.DataInfo.objects.get(data_type='enlarged_sink').to_dict()
@@ -675,20 +627,14 @@ def filter_waterbodies(request):
     lakes = lakes.filter(filter)
 
     if lakes.count() == 0:
-        message = {
-            'success': False, 
-            'message': f'No lakes found in the search area.'
-        }
-        return JsonResponse({'message': {'success': False, 'message': 'No lakes found.'}})
+        
+        return JsonResponse({'message': {'success': False, 'message': 'Es befinden sich keine Seen im Suchgebiet.'}})
     else:
         
         feature_collection = create_feature_collection(lakes)
-        message = {
-            'success': True, 
-            'message': f'Found {lakes.count()} lakes'
-        }
+        
         print('feature_collection:', feature_collection)
-        return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
+        return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': {'success': True}})
         
 
 def get_weighting_forms(request):
@@ -847,7 +793,6 @@ def get_infiltration_results(request):
         'inlets_sinks': inlets_sinks + inlets_enlarged_sinks,
         'message': {
             'success': True,
-            'message': f'Found {len(inlets_sinks)} pipes for sinks and {len(inlets_enlarged_sinks)} pipes for enlarged sinks.'
         }
     }
     print(response)
@@ -927,13 +872,12 @@ def get_elevations_for_line(line_geom):
 ##### Surface Waters ######
 def sieker_surface_waters_gui(request, user_field_id):
     if user_field_id == "null":
-        user_field_id = None
+
+        return JsonResponse({'message':{'success': False, 'message': 'Das Suchgebiet konnte nicht gefunden werden.'}})
     else:
         user_field_id = int(user_field_id)
 
-    user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
-    if user_field is None:
-        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
+    user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))        
     
     lakes = models.SiekerLargeLake.objects.filter(Q(geom4326__within=user_field.geom) | Q(geom4326__intersects=user_field.geom))
 
@@ -942,7 +886,7 @@ def sieker_surface_waters_gui(request, user_field_id):
         qs = models.ToolboxProject.objects.filter(
             Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
             ).order_by('-creation_date').reverse()
-        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='sieker_surface_water')
         sieker_lake_filter = filters.SiekerLargeLakeFilter(
             request.GET,
             queryset=lakes,
@@ -1012,17 +956,13 @@ def filter_sieker_surface_waters(request):
     print("COUNT(Lakes)", lakes.count())
 
     if lakes.count() == 0:
-        message = {
-            'success': False, 
-            'message': f'No lakes found in the search area.'
-        }
-        return JsonResponse({'message': {'success': False, 'message': 'No lakes found.'}})
+        
+        return JsonResponse({'message': {'success': False, 'message': 'Keine Seen im Suchgebiet entsprechen den Filterkriterien.'}})
     else:
         
         feature_collection = create_feature_collection(lakes)
         message = {
             'success': True, 
-            'message': 'Keine Seen im Suchgebiet entsprechen den Filterkriterien.'
         }
         print('feature_collection:', feature_collection)
         return JsonResponse({'feature_collection': feature_collection, 'message': message})
@@ -1032,20 +972,18 @@ def filter_sieker_surface_waters(request):
    
 def load_sieker_sink_gui(request, user_field_id):
     if user_field_id == "null":
-        user_field_id = None
+        return JsonResponse({'message':{'success': False, 'message': 'Es ist kein Suchgebiet ausgewählt oder es existiert nicht.'}})
     else:
         user_field_id = int(user_field_id)
     toolbox_type = models.ToolboxType.objects.get(name_tag='sieker_sink')
     
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
-    
-    if user_field is None:
-        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
+
 
     qs = models.ToolboxProject.objects.filter(
         Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
         ).order_by('-creation_date').reverse()
-    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='sieker_sink')
     
     sinks = models.SiekerSink.objects.filter(
         centroid__within=user_field.geom
@@ -1103,32 +1041,27 @@ def filter_sieker_sinks(request):
     if sinks.count() == 0:
         message = {
             'success': False, 
-            'message': f'No sinks found in the search area.'
+            'message': 'Im Suchgebiet entsprechen keine Senken den Filterkriterien.'
         }
         return JsonResponse({'message': message})
     else:
-        print("Sinks", sinks.count())
         
         data_info = models.DataInfo.objects.get(data_type='sieker_sink').to_dict()
         feature_collection = create_point_feature_collection(sinks)
         message = {
             'success': True, 
-            'message': f'Found {sinks.count()} sinks'
+            'message': f'Es wurden {sinks.count()} Senken gefunden.'
         }
-        print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
     
    
 def load_sieker_gek_gui(request, user_field_id):
     if user_field_id == "null":
-        user_field_id = None
+         return JsonResponse({'message':{'success': False, 'message': 'Es ist kein Suchgebiet ausgewählt oder es existiert nicht.'}})
     else:
         user_field_id = int(user_field_id)
     
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
-    if user_field is None:
-        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
-
 
     geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
     # all_sieker_gek_ids = [g.id for g in geks]
@@ -1139,7 +1072,7 @@ def load_sieker_gek_gui(request, user_field_id):
         qs = models.ToolboxProject.objects.filter(
             Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
             ).order_by('-creation_date').reverse()
-        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='sieker_gek')
 
         feature_collection = create_feature_collection(geks)
 
@@ -1231,7 +1164,7 @@ def filter_sieker_geks(request):
    
 def load_sieker_wetland_gui(request, user_field_id):
     if user_field_id == "null":
-        user_field_id = None
+         return JsonResponse({'message':{'success': False, 'message': 'Es ist kein Suchgebiet ausgewählt oder es existiert nicht..'}})
     else:
         user_field_id = int(user_field_id)
 
@@ -1241,8 +1174,6 @@ def load_sieker_wetland_gui(request, user_field_id):
     
     
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
-    if user_field is None:
-        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
     
     wetlands = models.HistoricalWetlands.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
 
@@ -1250,7 +1181,7 @@ def load_sieker_wetland_gui(request, user_field_id):
         qs = models.ToolboxProject.objects.filter(
                 Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
             ).order_by('-creation_date').reverse()
-        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='sieker_wetland')
         
         feature_collection = create_feature_collection(wetlands)
         filter_form = filters.HistoricalWetlandsFilter()
@@ -1320,7 +1251,7 @@ def load_injection_gui(request):
             Q(user=user)&Q(toolbox_type=toolbox_type)
         ).order_by('-creation_date').reverse()
     
-    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='injection')
     injection_weightings_form = forms.MarWeightingForm()
     suitability_aquifer_thickness = forms.SuitabilityForm('aquifer_thickness')
     suitability_depth_groundwater_form = forms.SuitabilityForm('depth_groundwater')
@@ -1425,7 +1356,7 @@ def compute_suitability_from_tifs(suitability_dict, user):
         dst_height = mask.height
         dst_profile = mask.profile.copy()
 
-    dst_profile['nodata'] = np.nan
+    dst_profile['nodata'] = FLOAT32_NODATA
 
     length_stack = len(suitability_dict) + 1
     stack = np.zeros((length_stack, dst_height, dst_width), dtype=np.float32)
@@ -1453,7 +1384,7 @@ def compute_suitability_from_tifs(suitability_dict, user):
         new_arr = dst_arr.copy()
         new_arr = np.where(
             new_arr==dst_nodata,
-            np.nan,
+            FLOAT32_NODATA,
             new_arr
             )
         for k in suitability_dict[key]['mapping']:
@@ -1569,7 +1500,7 @@ def load_sieker_drainage_gui(request, user_field_id):
         qs = models.ToolboxProject.objects.filter(
             Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
         ).order_by('-creation_date').reverse()
-        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='drainage')
         drainage_probabiliy_filter_form = forms.DrainageProbabilityFilterForm()
 
         drained_areas = models.DrainedArea.objects.all()
@@ -1587,6 +1518,13 @@ def load_sieker_drainage_gui(request, user_field_id):
 
            
         drainage_network_labels = { d.name_tag: d.name_de for d in detail_types }
+        details_exist = detail_types.count() > 0
+
+        
+        labels_colors_details = models.DataInfo.objects.filter(data_type__in=details.values('name_tag'))
+        labels_colors_areas = models.DataInfo.objects.filter(data_type__in=models.DrainedAreaType.objects.all().values('name_tag'))
+        colors = {di.data_type: di.feature_color for di in labels_colors_details}
+        colors.update({di.data_type: di.feature_color for di in labels_colors_areas})
         
         html = render_to_string('toolbox/sieker_drainage.html', {
             'project_select_form': project_select_form,
@@ -1594,11 +1532,14 @@ def load_sieker_drainage_gui(request, user_field_id):
             'drained_area_filter_form': drained_area_filter_form,
             'drainage_network_filter_form': drainage_network_filter_form,
             'labels': drainage_network_labels,
+            'details_exist': details_exist,
+            
         }, request=request)
         
         return JsonResponse({
             'success': True, 
             'html': html, 
+            'colors': colors,
             })
        
 def load_sieker_drainage_features(request, user_field_id):
@@ -1610,7 +1551,7 @@ def load_sieker_drainage_features(request, user_field_id):
         drained_areas = models.DrainedArea.objects.filter(geom4326__within=user_field.geom)
     
         drained_area_type_ids = list(drained_areas.values_list('drained_area_type__id', flat=True).distinct())
-        drained_area_types = models.DrainageNetworkType.objects.filter(pk__in=drained_area_type_ids)
+        drained_area_types = models.DrainedAreaType.objects.filter(pk__in=drained_area_type_ids)
         print('drainage_types', drained_area_types)
         drainage_type_feature_collections = []
         for dt in drained_area_types:          

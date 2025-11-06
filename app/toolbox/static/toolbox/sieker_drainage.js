@@ -95,7 +95,7 @@ export function initializeDrainage(userField) {
   $('#toolboxPanel').off('change');
   $('#toolboxPanel').off('click');
 
-  getTileOverlay(geoserverLayers['drainage_probability'], 'drainage_probability');
+  getTileOverlay(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage');
 
   console.log('Initialize Sieker Drainage with project:', project);
   // map.addLayer(siekerSinkFeatureGroup);
@@ -132,7 +132,8 @@ export function initializeDrainage(userField) {
           });
       } else if ($target.attr('prefix') == 'parent'){
           const parent = $target.val();
-          console.log('parent clicked:', parent, $(`input[parent=${parent}]`))
+          console.log('parent', parent)
+          console.log("`input[parent=${parent}]`", `input[parent=${parent}]`)
           $(`input[parent=${parent}]`).prop('disabled', !$target.is(':checked'));
 
       } else if ($target.attr('id') === 'btnFilterDrainageNetwork') {
@@ -153,15 +154,27 @@ export function initializeDrainage(userField) {
       const inputValue = $target.attr('value'); // 5 id of detail
       const inputChecked = $target.is(':checked');
       console.log('click inputName', inputName)
-      console.log('the layer Layers[inputName]:', Layers[inputName])
-      if (inputPrefix === 'parent') {    
-              if (inputChecked) {
-                map.addLayer(Layers[inputName])
+      // console.log('the layer Layers[inputName]:', Layers[inputName])
+      if (inputPrefix === 'parent') { 
+        
+              if (!inputChecked) {
+                Layers[inputName].forEach(featureGroup => {
+                  map.removeLayer(featureGroup)
+                })
               } else {
-                map.removeLayer(Layers[inputName])
-              }
+                const checkboxes = $(`input[name=${inputName}][prefix="drainage"]`) 
+                // checkboxes.each(checkbox => {
+                console.log('checkbox', checkboxes)
+                checkboxes.each(function () {
+                  const name = $(this).attr('detail');
+                  if ($(this).is(':checked')) {
+                    console.log('add layer', name, $(this), $(this).is(':checked'))
+                    map.addLayer(Layers[name])
+                  } 
+                 })
+              } 
       } else if (inputPrefix === 'drainage') {
-        const inputParent = $target.attr('parent');// = 3
+        
         const inputDetail = $target.attr('detail');
         if (inputChecked) {
           map.addLayer(Layers[inputDetail])
@@ -169,10 +182,12 @@ export function initializeDrainage(userField) {
           map.removeLayer(Layers[inputDetail])
         }
       } else if (inputPrefix === 'drained_area') {
+        const layerName = $target.attr('drained_area_type');
+        console.log('drained area:', layerName)
         if (inputChecked) {
-          map.addLayer(Layers[inputName])
-        } else { 
-          map.removeLayer(Layers[inputName])
+          map.addLayer(Layers[layerName])
+        } else {
+          map.removeLayer(Layers[layerName])
         }
       }
     }

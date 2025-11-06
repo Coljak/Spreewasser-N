@@ -405,6 +405,7 @@ export function initializeInfiltration() {
       });
     });
 
+    console.log('form: ', form)
     const resetBtn = form.querySelector('input.reset-all');
 
     // zhis is unique to infiltration
@@ -419,6 +420,8 @@ export function initializeInfiltration() {
       infiltration.saveToLocalStorage();
       });
     });
+
+
 
 
     $('#toolboxPanel').off('change'); // Remove any previous change event handlers

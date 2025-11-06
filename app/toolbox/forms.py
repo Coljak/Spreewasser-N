@@ -48,8 +48,7 @@ class ToolboxProjectSelectionForm(forms.Form):
 
         self.helper = FormHelper(self)
         self.helper.form_method = 'GET'
-        self.helper.form_id = 'overall-weighting-form'
-        self.helper.form_class = 'form-horizontal weighting-form'
+        self.helper.form_class = 'form-horizontal toolbox-selection-form'
         self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
         self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
         self.helper.add_input(Button(

@@ -761,7 +761,6 @@ export function initializeSidebarEventHandler({
           fetch(`field-projects-menu/${userFieldId}/`)
           .then(response => response.json())
           .then(data => {
-            console.log("data", data);
           // TODO the hardcoded # fieldMenuModal is triggered from button
           const modalElement = document.getElementById('fieldMenuModal');
           const modalContent = modalElement.querySelector('.modal-content')
@@ -773,21 +772,6 @@ export function initializeSidebarEventHandler({
             modalElement.addEventListener('click', (event) => {
               if(event.target.classList.contains('open-project')) {
                 const projectId = event.target.getAttribute('data-project-id');
-                // if (data.type === 'monica') {
-                //   console.log(' then load monica', projectId)
-                //   loadProjectFromDb(projectId)
-                //   .then(project => {
-                //     loadMonicaProjectToGui(project);
-                //   });
-                // } else if (data.type === 'toolbox') {
-                //   loadToolboxProjectFromDb(projectId)
-                //   .then(project => {
-                    
-                //     return startToolbox(project)
-                //   })
-                  
-                //   .catch(err => console.error(err))  
-                // }
                 loadProjectFromDb(projectId)
                 .then(project => startApplication(project))
                 fieldMenuModal.hide();
@@ -823,9 +807,7 @@ export function initializeSidebarEventHandler({
             layer._originalLatLngs = L.LatLngUtil.cloneLatLngs(layer.getLatLngs());
             layer.editing.enable();
         
-            // Use plain HTML string for popup content
             const popupHtml = `
-              <strong>Editing field</strong><br>
               <button class="btn btn-sm btn-success" id="btnUpdateUserField">Speichern</button>
               <button class="btn btn-sm btn-danger" id="btnCancelEditUserField">Abbrechen</button>
             `;
@@ -930,6 +912,7 @@ function saveUserField(name, id, layer) {
     })
     .then(response => response.json())
     .then(data => {
+      console.log('SaveUserField data', data)
       handleAlerts({'success': true, 'message': 'UserField saved successfully'});
       resolve(data); 
     })
@@ -955,10 +938,13 @@ function updateFieldSelectorOption(userField, fieldSelector) {
 export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
 
   let userFieldsName;
+  let project;
   if (window.location.pathname.endsWith('/drought/')) {
     userFieldsName = 'droughtUserFields';
+    project = MonicaProject.loadFromLocalStorage();
   } else if (window.location.pathname.endsWith('toolbox/')) {
-    userFieldsName = 'toolboxUserFields'
+    userFieldsName = 'toolboxUserFields';
+    project = ToolboxProject.loadFromLocalStorage();
   } else {
     userFieldsName = '';
   }
@@ -966,6 +952,7 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
   const fieldNameInput = document.getElementById("fieldNameInput");
   const fieldName = fieldNameInput.value;
   let userFields = {};
+  // TODO move this task to db (check if exists)
           try {
             userFields = JSON.parse(localStorage.getItem('userFields'));
           } catch { ; }
@@ -1013,6 +1000,11 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
         localStorage.setItem('userFields', JSON.stringify(userFields));
 
         addLayerToSidebar(userField, newLayer);
+        // add UserField to dropdown
+        $('#userFieldSelect').append(new Option( userField.name, userField.id));
+
+        selectUserField(userField.id, project, featureGroup)
+
       })
 
       fieldNameInput.value = '';

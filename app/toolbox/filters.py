@@ -37,6 +37,98 @@ FIELD_UNITS = {
     'costs': '€',
     'plus_days': 'Tage/Jahr',
 }
+
+
+
+def export_bounds_for_project(filter_set, metadata={}):
+    for name, filter_ in filter_set.filters.items():
+        print(name, filter_)
+        prefix = filter_set.form.fields[name].widget.attrs.get('prefix')
+        if not prefix:
+            continue
+        base_name = f'{prefix}_{name}'
+        # --- Range filters ---
+        if isinstance(filter_, MinMaxRangeFilter):
+            # first determine bounds
+
+            
+            if filter_.precomputed_bounds and filter_.field_name in filter_.precomputed_bounds:
+                min_val, max_val = filter_.precomputed_bounds[filter_.field_name]
+            else:
+                # fallback to widget (already set by set_bounds())
+                attrs = filter_.field.widget.attrs
+                min_val = attrs.get("data_range_min")
+                max_val = attrs.get("data_range_max")
+
+            metadata.update({
+                f"{base_name}_min": min_val,
+                f"{base_name}_max": max_val,
+            })
+            continue
+
+        # --- Multiple-choice filters ---
+        # if hasattr(filter_, "extra") and "choices" in filter_.extra:
+        #     metadata.update({
+        #         base_name: [
+        #             value for value, _ in filter_.extra.get("choices", [])
+        #         ]
+        #     })
+        #     continue
+
+        # --- Multiple-choice filters ---
+        field = filter_set.form.fields[name]
+        if hasattr(field, "choices"):
+            metadata.update({
+                base_name: [value for value, _ in field.choices]
+            })
+            continue
+
+
+    return metadata
+
+
+def create_default_project(user_filed, list_of_filters, toolbox_type):
+    metadata = {}
+    for l in list_of_filters:
+        if isinstance(l, FilterSet):
+            metadata = export_bounds_for_project(l, metadata)
+            
+            if toolbox_type == 'drainage' and isinstance(l, DrainageNetworkFilter):
+                # Special handling for DrainageNetworkFilter
+                for name, field in l.form.fields.items():
+                    parent_name = 'parent_' + name
+                    parent_id = field.widget.attrs.get('parent')
+
+
+                    if parent_id:
+                        metadata.update({parent_name: [parent_id]})
+
+            
+            
+        elif isinstance(l, forms.Form):
+            for _, field in l.fields.items():
+                name = field.widget.attrs['name']
+                val = field.widget.attrs['data_cur_val']
+                metadata.update({name: val})
+
+        
+
+    
+
+    project = {
+        "userField": user_filed.id if user_filed else None,
+        "toolboxType": toolbox_type
+    }
+    print(project)
+    project.update(metadata)
+    print(project)
+    return project
+
+
+
+
+
+
 class MinMaxRangeFilter(RangeFilter):
     def __init__(self, *args, model=None, field_name=None, widget=None, queryset=None, bounds=None, **kwargs):
         self.model = model
@@ -189,6 +281,8 @@ class EnlargedSinkFilter(FilterSet):
         fields = ['area', 'volume', 'depth', 'volume_construction_barrier', 'volume_gained',  'land_use']
         form = SliderFilterForm
 
+    
+
 class StreamFilter(FilterSet):
     min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Min Surplus Volume (m³)")
     mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mean Surplus Volume (m³)")
@@ -292,19 +386,7 @@ class SiekerLargeLakeFilter(FilterSet):
     area_ha = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='area_ha', label="Fläche (ha)")
     vol_mio_m3 = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='vol_mio_m3', label="Volumen (Mio m³)")
     d_max_m = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='d_max_m', label="Max. Tiefe (m)")
-    # badesee = MultipleChoiceFilter(
-    #     label="Badesee",
-    #     choices=[('yes', 'Ja'), ('no', 'Nein')],
-    #     method='filter_bathing_lake',
-    #     widget=forms.CheckboxSelectMultiple,
-    # )
 
-    # def filter_bathing_lake(self, queryset, name, value):
-    #     if value == 'yes':
-    #         return queryset.filter(badesee=True)
-    #     elif value == 'no':
-    #         return queryset.filter(badesee=False)
-    #     return queryset
 
     def __init__(self, *args, queryset=None, bounds=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)

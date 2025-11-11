@@ -5,7 +5,7 @@ export class SiekerSurfaceWaters extends ToolboxProject {
         this.toolboxType = 'sieker_surface_water';
         // this.id = data.id ?? null;
         // this.userField = data.userField ?? null;
-        this.sieker_surface_waters_distance_min = data.sieker_surface_waters_distance_min ?? null;
+
         this.all_sieker_surface_water_ids = data.all_sieker_surface_water_ids ?? [];
         this.selected_sieker_surface_waters = data.selected_sieker_surface_waters ?? [];
 

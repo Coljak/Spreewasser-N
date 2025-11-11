@@ -38,6 +38,45 @@ function toggleNumberInArray(list, num) {
   return list;
 }
 
+export function getWaterBodies($button, ProjectClass){
+    // used in Infiltration and SiekerSink
+    console.log('get waterbodies')
+  const dataType = $button.data('type');
+  const spinner = $button.find('.spinner-border')
+  spinner.show();
+  $button.prop('disabled', true) 
+  let url = `filter_waterbodies/`;
+  const project = ProjectClass.loadFromLocalStorage();
+  fetch(url, {
+    method: 'POST',
+    body: JSON.stringify({
+      dataType: dataType,
+      project: project}),
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('data', data)
+    if (data.message.success) {
+      addFeatureCollectionToLayer(data)
+      addFeatureCollectionToTable(data)
+    }  else {
+      // TODO clear layers
+      clearAndRemoveTable(ProjectClass, dataType, data.message.message)
+      handleAlerts(data.message);
+    } 
+  })
+  .catch(error => console.error("Error fetching data:", error))
+  .finally(() => {
+    // Always hide spinner & enable button
+    spinner.hide();
+    $button.prop('disabled', false);
+  });
+};
+
 // TODO I think      this is not working!
 $('#map').on('click', function (event) {
     if (event.target.classList.contains('select-map-feature-button')) {
@@ -60,6 +99,7 @@ $('#map').on('click', function (event) {
 $('#toolboxProjectModal').on('hidden.bs.modal', function () {
         // Reset the form inside the modal
         $('.new-toolbox-project')[0].reset();
+        $('#id_project_name').val('')
         $('#projectTypeSelect').prop('disabled', false);
         $('#userFieldSelect').prop('disabled', false);
         $('#saveToolboxProjectButton').data('page-reload', true);
@@ -301,12 +341,19 @@ export function openResultCard(dataType, id) {
 
 
 export function loadProjectToGui(project) {
+    console.log('loadProjectToGui', project)
     if (project.id === null) { return; }
-    // console.log('loadProjectToGui', project);
+    console.log('loadProjectToGui', project);
+    const checkboxInputs = $('#toolboxPanel .form-check-input[prefix][name]');
+    const checkboxKeys = [];
+    checkboxInputs.each(function () {
+        const key = $(this).attr('prefix') + '_' + $(this).attr('name')
+        checkboxKeys.push(key)
+    });
     for (const [key, value] of Object.entries(project)) {
         // --- Double sliders (_min and _max) ---
-        if (key.endsWith('_min') || key.endsWith('_max')) {
-            const baseName = key.replace(/_(min|max)$/, '');
+        if (key.endsWith('_min')) {
+            const baseName = key.replace('_min', '');
             const $slider = $(`[name="${baseName}"]`);
             if ($slider.hasClass('double-slider')) {
         // Fetch project values
@@ -326,6 +373,23 @@ export function loadProjectToGui(project) {
             console.warn(`Failed to update slider "${baseName}":`, err);
             }
         }
+            continue;
+        } else if (key.endsWith('_max')) {
+            continue;
+        } else if (checkboxKeys.includes(key)) {
+            console.log('Includes checkbox key', key)
+            for (let i = 0; i < project[key].length; i++) {
+                const targetValue = project[key][i];
+                console.log('targetValue', targetValue)
+                checkboxInputs.each(function () {
+                    console.log('$(this', $(this))
+                    const checkboxValue = $(this).attr('prefix') + '_' + $(this).attr('name');
+                    if (checkboxValue === targetValue) {
+                        $(this).prop('checked', true);
+                    }
+                });
+
+            }
             continue;
         }
 
@@ -354,6 +418,65 @@ export function loadProjectToGui(project) {
         }
     }
     project.saveToLocalStorage();
+    switch(project.toolboxType) {
+        case 'infiltration':
+            console.log('loadGui infiltration')
+            if (project['all_sink_ids'].length > 0){
+                console.log('project.all_sink_ids', project['all_sink_ids'])
+                console.log('project.all_sink_ids..length', project['all_sink_ids'].length)
+                $('.filter-sinks[data-type="sink"]').trigger('click')
+            };
+            if (project.all_enlarged_sink_ids.length > 0){
+                $('.filter-sinks[data-type="enlarged_sink"]').trigger('click')
+            }
+            if (project.all_lake_ids.length > 0){
+                $('.filter-waterbodies[data-type="lake"]').trigger('click')
+            }
+            if (project.all_stream_ids.length > 0){
+                $('.filter-waterbodies[data-type="stream"]').trigger('click')
+            }
+            break;
+        case 'injection':
+            console.log('loadGui injection')
+            $('.calculate-area[data-type="injection_weightings"]').trigger('click');
+            break;
+        case 'drainage':
+            console.log('loadGui drainage')
+            break;
+        case 'sieker_gek':
+            console.log('loadGui sieker_gek')
+            break;
+        case 'sieker_sink':
+            console.log('loadGui sieker_sink')
+            break;
+        case 'sieker_surface_water':
+            tableCheckSelectedItems(project, 'sieker_surface_water')
+            console.log('loadGui sieker_surface_water')
+            break;
+        case 'sieker_wetland':
+            console.log('loadGui sieker_wetland')
+            break;
+    }   
+};
+
+export function clearToolboxPanel(){
+    $('#toolboxButtons').removeClass('d-none');
+    $('#toolboxPanel').html('') 
+    $('#toolboxPanel').addClass('d-none');
+    removeLegendFromMap(map);
+    map.eachLayer(function(layer) {
+        console.log(layer.toolTag);
+        if (layer.toolTag) {
+            console.log('has tooltag, removing layer');
+            if (layer.clearLayers) {
+                layer.clearLayers();  
+            }
+            map.removeLayer(layer);    
+        }
+    });
+    const newProject = new ToolboxProject();
+    newProject.userField = getSelectedUserField();
+    newProject.saveToLocalStorage();
 };
 
 
@@ -363,19 +486,7 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
         const $target = $(event.target);
         const project = ProjectClass.loadFromLocalStorage();
         if ($target.hasClass('toolbox-back-to-initial')) {
-            $('#toolboxButtons').removeClass('d-none');
-            $('#toolboxPanel').addClass('d-none');
-            removeLegendFromMap(map);
-            map.eachLayer(function(layer) {
-                console.log(layer.toolTag);
-                if (layer.toolTag) {
-                    console.log('has tooltag, removing layer');
-                    map.removeLayer(layer);
-                }
-            });
-            const newProject = new ToolboxProject();
-            newProject.userField = getSelectedUserField();
-            newProject.saveToLocalStorage();
+            clearToolboxPanel();
             return;
         // table related
         } else if ($target.hasClass('toggle-tile-layer')) {
@@ -411,10 +522,10 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             }
             return;
         // actions
-        } else if ($target.hasClass('filter-features')) {
-            const dataType = $('.table-select-all').data('type');
-            // TODO dead end
-            console.log('REFACTOR - continue here')
+        // } else if ($target.hasClass('filter-features')) {
+        //     const dataType = $('.table-select-all').data('type');
+        //     // TODO dead end
+        //     console.log('REFACTOR - continue here')
         } else if ($target.hasClass('toggle-feature-group')) {
             
             const dataType = $target.attr('data-type')
@@ -447,8 +558,13 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             loadedProject.then(project => {
                 console.log('Loaded project:', project);
                 loadProjectToGui(project);
+                // necessary for drainage
+                // $('input[type="checkbox"]').trigger('change');
 
             });
+        } else if ($target.hasClass('filter-waterbodies')) {
+            console.log('Click eventlistener filter-waterbodies')
+            getWaterBodies($target, ProjectClass);  
         }
     });
 };
@@ -691,6 +807,9 @@ export function addFeatureCollectionToTable( data ){
     const dataInfo = data.dataInfo
     const ProjectClass = projectClasses[dataInfo.dataType]
     const project = ProjectClass.loadFromLocalStorage()
+    const selected_sinks = project[`selected_${dataInfo.dataType}s`];
+    project[`selected_${dataInfo.dataType}s`] = [];
+    
     project[`all_${dataInfo.dataType}_ids`] = [];
 
     const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
@@ -739,14 +858,30 @@ export function addFeatureCollectionToTable( data ){
         });
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
+    // select all previously selected
+    project[`selected_${dataInfo.dataType}s`] = selected_sinks.filter(sink => project[`all_${dataInfo.dataType}_ids`].includes(sink));
     project.saveToLocalStorage();
 
     const tableSettings = createTableSettings(dataInfo);
     $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
+    
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none')
 };
 
-export function addLegendForWms(wmsLayerName, wmsUrl) {
+export function clearAndRemoveTable(ProjectClass, dataType, message) {
+    console.log('clearAndRemove dataType:', dataType, 'Class:', ProjectClass, 'msg', message)
+    const project = ProjectClass.loadFromLocalStorage();
+    const tableContainer = document.getElementById(`${dataType}-table-container`);
+    tableContainer.innerHTML = `<h6>${message}</h6>`;
+    $(`#card-${dataType}-table`).removeClass('d-none')
+
+    project[`all_${dataType}_ids`] = [];
+    project.saveToLocalStorage();
+
+}
+
+export function addLegendForWms(wmsLayerName) {
+    const wmsUrl = '/toolbox/proxy/wms/';
   const legend = L.control.Legend({
     position: "bottomleft"
   });
@@ -782,6 +917,6 @@ export function getTileOverlay(wmsLayer, layersName, toolTag) {
     }).addTo(map);
     Layers[layersName].toolTag = toolTag
 
-addLegendForWms(wmsLayer, wmsUrl)
+
 };
 

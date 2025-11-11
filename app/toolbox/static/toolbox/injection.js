@@ -3,11 +3,7 @@ import {
   updateDropdown, 
   addLegend, 
   addChangeEventListener, 
-  addFeatureCollectionToTable, 
-  tableCheckSelectedItems, 
   addClickEventListenerToToolboxPanel, 
-  addPointFeatureCollectionToLayer, 
-  addFeatureCollectionToLayer, 
   loadProjectToGui,
 addLegendForWms,
 getTileOverlay,
@@ -118,6 +114,7 @@ export function initializeInjection(data) {
       if (sustainibilityType) {
         console.log('sustainibility type', sustainibilityType, 'tiff and legend' )
           getTileOverlay(geoserverLayers[sustainibilityType], 'injection', 'injection')
+          addLegendForWms(geoserverLayers[sustainibilityType])
           if(!$('button.toggle-tile-layer').hasClass('shown')){
             console.log('IS not shown')
             document.querySelector('.leaflet-legend').hidden = true; 
@@ -142,12 +139,18 @@ export function initializeInjection(data) {
         if (msg.success === true){
           $('#btn-mar-result-map').removeClass('disabled');
           getTileOverlay(geoserverLayers['result'], 'injection', 'injection');
+          // TODO REPLACE!!
+          addLegendForWms(geoserverLayers['result'])
           $('#btn-mar-result-map').text('Ergebnis ausblenden');
       }})
     }   else if ($target.attr('id') === 'btn-mar-result-map') {
         if ($target.hasClass('shown')) {
           console.log("layerNames['result']", geoserverLayers['result'])
           getTileOverlay(geoserverLayers['result'], 'injection', 'injection');
+          // TODO REPLACE!!
+          addLegendForWms(geoserverLayers['result']);
+          
+          legend.addTo(map);
           $('#btn-mar-result-map').removeClass('shown');
           $('#btn-mar-result-map').text('Ergebnis ausblenden')
         } else {

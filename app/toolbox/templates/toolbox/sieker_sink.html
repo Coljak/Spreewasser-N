@@ -21,6 +21,13 @@
         </li>
         
         <li class="nav-item sieker-sink">
+            <a id="navSiekerSinkLakes" class="toolbox nav-link" data-bs-toggle="tab" href="#tabLakes" aria-selected="false">Seen</a>
+        </li>
+        <li class="nav-item sieker-sink">
+            <a id="navSiekerSinkStreams" class="toolbox nav-link" data-bs-toggle="tab" href="#tabStreams" aria-selected="false">Flüsse</a>
+        </li>
+        
+        <li class="nav-item sieker-sink">
             <a id="navSiekerSinkResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerSinkResult">Ergebnis</a>
         </li>
     </ul>
@@ -63,23 +70,60 @@
             </div>
         </div>
 
-        
-
-        
-        
-
-        <!-- Result Tab -->
-
-        <div id="tabSiekerSinkResult" class="tab-pane ">
+        <div id="tabLakes" class="tab-pane">
+            {% comment %} <h2 class="title">Oberflächengewässer</h2> {% endcomment %}
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Ergebnis</h5>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title mb-0">Stehende Gewässer</h5>
+                        <button  class="btn btn-secondary toggle-feature-group" data-type="lake">ausblenden</button>                                                                                             
+                    </div>
+
                     
+                    <div class="card-body">
+                        {% crispy lakes_form.form  %}
+                        <button id="btnFilterLakes" class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="lake">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Seen filtern
+                        </button>
+                    </div>
                 </div>
             </div>
+            <div id="card-lake-table"  class="card mb-3 d-none">
+                <div class="card-body">
+                    <div id="lake-table-container"></div>
+                </div>
+            </div>
+            
         </div>
-        {% comment %} <button id="btnGetInlets" class="btn btn-primary mt-3">Ergebnis berechnen</button> {% endcomment %}
 
+        <div id="tabStreams" class="tab-pane">
+            {% comment %} <h2 class="title">Seen</h2> {% endcomment %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title mb-0">Fließgewässer</h5>
+                        <button  class="btn btn-secondary toggle-feature-group" data-type="stream">ausblenden</button>                                                                                             
+                    </div>
+
+                    
+                    <div class="card-body">
+                        {% crispy streams_form.form  %}
+                        <button id="btnFilterStreams" class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="stream">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Flüsse filtern
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="card-stream-table"  class="card mb-3 d-none">
+                <div class="card-body">
+                    <div id="stream-table-container"></div>
+                  
+                </div>
+            </div>
+            
+        </div>
     </div>
 
 </div>

@@ -4,14 +4,11 @@ export class Drainage extends ToolboxProject {
     constructor (data = {}) {
         super(data);
         this.toolboxType = 'drainage';
-        // this.id = data.id ?? null;
-        // this.userField = data.userField ?? null;
 
         this.location_known = data.location_known ?? true; 
         this.location = data.location ?? null;      
         
-        this.threshold = data.threshold ?? 0;    
-        // this.drainage_detail = data.drainage_detail ?? [];
+        this.drainage_threshold = data.drainage_threshold ?? 0;   
         this.parent_natural_creeks = data.parent_natural_creeks ?? [];
         this.parent_non_natural_creeks = data.parent_non_natural_creeks ?? [];
         this.parent_ditches = data.parent_ditches ?? [];
@@ -24,6 +21,7 @@ export class Drainage extends ToolboxProject {
         this.drainage_pipes = data.drainage_pipes ?? [];
         this.drainage_network_types = data.drainage_network_types ?? [];
         this.drained_area_types = data.drained_area_types ?? [];
+        
     }
    
 

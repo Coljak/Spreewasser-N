@@ -1,5 +1,17 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addLegend, addChangeEventListener, addFeatureCollectionToTable, tableCheckSelectedItems, addClickEventListenerToToolboxPanel, addPointFeatureCollectionToLayer, addFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
+import { 
+  updateDropdown, 
+  addLegend, 
+  addChangeEventListener, 
+  addFeatureCollectionToTable, 
+  tableCheckSelectedItems, 
+  addClickEventListenerToToolboxPanel, 
+  addPointFeatureCollectionToLayer, 
+  addFeatureCollectionToLayer, 
+  loadProjectToGui,
+  clearAndRemoveTable,
+  getWaterBodies
+ } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
@@ -39,23 +51,26 @@ function filterSinks( $button) {
   .then(data => {
     featureGroup.clearLayers();
     
-    if (data.message.success) {
-      const selected_sinks = infiltration[`selected_${sinkType}s`];
-      infiltration[`selected_${sinkType}s`] = [];
-  
-      console.log('data', data);
-      const sink_indices = {}
-      
-      addPointFeatureCollectionToLayer(data);
-
-      addFeatureCollectionToTable(data)
-      infiltration[`selected_${sinkType}s`] = selected_sinks.filter(sink => infiltration[`all_${sinkType}_ids`].includes(sink));
-      localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
-
-    } else {
+    if (!data.message.success) {
       handleAlerts(data.message);
-      return;
+      infiltration[`selected_${sinkType}s`] = [];
+      localStorage.setItem(`${sinkType}_indices`,{})
+      clearAndRemoveTable(Infiltration, sinkType, data.message.message)
+      throw new Error('Filter returned 0 objects');
     }
+    // const selected_sinks = infiltration[`selected_${sinkType}s`];
+    // infiltration[`selected_${sinkType}s`] = [];
+    // infiltration[`selected_${sinkType}s`] = selected_sinks.filter(sink => infiltration[`all_${sinkType}_ids`].includes(sink));
+
+    console.log('data', data);
+    const sink_indices = {}
+    
+    addPointFeatureCollectionToLayer(data);
+
+    addFeatureCollectionToTable(data)
+    
+    localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
+
     return {'infiltration': infiltration, sinkType: sinkType}
 }).then(data => {
   tableCheckSelectedItems(data.infiltration, data.sinkType)
@@ -69,40 +84,42 @@ function filterSinks( $button) {
 };
 
 
-function getWaterBodies($button){
-  const dataType = $button.data('type');
-  const spinner = $button.find('.spinner-border')
-  spinner.show();
-  $button.prop('disabled', true) 
-  let url = `filter_waterbodies/`;
-  const infiltration = Infiltration.loadFromLocalStorage();
-  fetch(url, {
-    method: 'POST',
-    body: JSON.stringify({
-      dataType: dataType,
-      project: infiltration}),
-    headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCSRFToken(),
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('data', data)
-    if (data.message.success) {
-      addFeatureCollectionToLayer(data)
-      addFeatureCollectionToTable(data)
-    }  else {
-      handleAlerts(data.message);
-    } 
-  })
-  .catch(error => console.error("Error fetching data:", error))
-  .finally(() => {
-    // Always hide spinner & enable button
-    spinner.hide();
-    $button.prop('disabled', false);
-  });
-};
+// function getWaterBodies($button){
+//   const dataType = $button.data('type');
+//   const spinner = $button.find('.spinner-border')
+//   spinner.show();
+//   $button.prop('disabled', true) 
+//   let url = `filter_waterbodies/`;
+//   const infiltration = Infiltration.loadFromLocalStorage();
+//   fetch(url, {
+//     method: 'POST',
+//     body: JSON.stringify({
+//       dataType: dataType,
+//       project: infiltration}),
+//     headers: {
+//         'Content-Type': 'application/json',
+//         'X-CSRFToken': getCSRFToken(),
+//     }
+//   })
+//   .then(response => response.json())
+//   .then(data => {
+//     console.log('data', data)
+//     if (data.message.success) {
+//       addFeatureCollectionToLayer(data)
+//       addFeatureCollectionToTable(data)
+//     }  else {
+//       // TODO clear layers
+//       clearAndRemoveTable(Infiltration, dataType, data.message.message)
+//       handleAlerts(data.message);
+//     } 
+//   })
+//   .catch(error => console.error("Error fetching data:", error))
+//   .finally(() => {
+//     // Always hide spinner & enable button
+//     spinner.hide();
+//     $button.prop('disabled', false);
+//   });
+// };
 
 function addToInletTable(inlet, connectionId) {
   const row = document.createElement('tr');
@@ -331,7 +348,7 @@ function toggleConnection(button) {
   }
 }
 
-export function initializeInfiltration() {
+export function initializeInfiltration(loadProject=false) {
   console.log('Initialize Infiltraion');
   let inletVolumeChart;
 
@@ -432,8 +449,8 @@ export function initializeInfiltration() {
     const $target = $(event.target);
     if ($target.hasClass('filter-sinks')) {
       filterSinks($target);   
-    } else if ($target.hasClass('filter-waterbodies')) {
-      getWaterBodies($target);  
+    // } else if ($target.hasClass('filter-waterbodies')) {
+    //   getWaterBodies($target);  
     } else if ($target.attr('id') === 'btnGetInfiltrationResults') {
         getInfiltrationResults(); 
     } else if ($target.attr('id') === 'navInfiltrationSinks') {
@@ -446,11 +463,15 @@ export function initializeInfiltration() {
     } 
     }); 
 
-  $('input[type="checkbox"][name="land_use"]').prop('checked', true);
-  $('input[type="checkbox"][name="land_use"]').trigger('change');
 
-  const infiltration = Infiltration.loadFromLocalStorage();
-  loadProjectToGui(infiltration)
+    if (loadProject){
+      const infiltration = Infiltration.loadFromLocalStorage();
+      loadProjectToGui(infiltration)
+    } else {
+      $('input[type="checkbox"][name="land_use"]').prop('checked', true);
+      $('input[type="checkbox"][name="land_use"]').trigger('change');
+    };
+  
 
 
 }

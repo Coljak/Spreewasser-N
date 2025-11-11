@@ -1,5 +1,14 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel, addFeatureCollectionToTable, getTileOverlay, addFeatureCollectionToLayer, addPointFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
+import { 
+  updateDropdown, 
+  addChangeEventListener,
+   addClickEventListenerToToolboxPanel, 
+   addFeatureCollectionToTable, 
+   getTileOverlay, 
+   addFeatureCollectionToLayer, 
+   addPointFeatureCollectionToLayer, 
+   loadProjectToGui,
+  addLegendForWms, } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { Drainage } from '/static/toolbox/sieker_drainage_model.js';
 import {Layers} from '/static/toolbox/layers.js';
@@ -87,15 +96,14 @@ function getFeatures(userField) {
   })
 }
 
-export function initializeDrainage(userField) {
-  const project = new Drainage();
-  project.userField = userField;
-  project.saveToLocalStorage()
+export function initializeDrainage(project) {
 
   $('#toolboxPanel').off('change');
   $('#toolboxPanel').off('click');
 
   getTileOverlay(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage');
+  addLegendForWms(geoserverLayers['drainage_probability']);
+  
 
   console.log('Initialize Sieker Drainage with project:', project);
   // map.addLayer(siekerSinkFeatureGroup);
@@ -194,10 +202,8 @@ export function initializeDrainage(userField) {
             // for drainage network, prefix is drainage, drained_area
 
   })
-  getFeatures(userField);
+  getFeatures(project.userField);
 
-$('input[type="checkbox"]')
-    .prop('checked', true)
-    .trigger('change');
+// $('input[type="checkbox"]').trigger('change');
 };
 

@@ -53,6 +53,9 @@ function filterSiekerWetlands(project) {
       // const measuresTab = $('#navSiekerWetlandMeasures')
       // const tab = new bootstrap.Tab(measuresTab);
       // tab.show();
+    } else {
+      handleAlerts(data.message);
+      clearAndRemoveTable(SiekerWetland, 'sieker_wetland', data.message.message)
     }
   })
 };

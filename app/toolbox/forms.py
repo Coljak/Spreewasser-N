@@ -77,6 +77,7 @@ class ToolboxProjectSelectionForm(forms.Form):
 
 class ToolboxProjectForm(forms.Form):
     user_field = forms.ModelChoiceField(
+        # TODO this line should be deleted
         queryset=models.UserField.objects.all(),
         label='Suchgebiet',
         widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'user-field-dropdown'}),

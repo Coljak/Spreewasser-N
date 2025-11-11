@@ -1090,7 +1090,7 @@ class SiekerSink(models.Model):
                 "min_elevation": round(self.min_elevation, 1),
                 "urbanarea_percent": self.urbanarea_percent,
                 "wetlands_percent": self.wetlands_percent,
-                "distance_t": self.distance_t,
+                "distance_t": int(self.distance_t),
                 "dist_lake": self.dist_lake,
                 "waterdist": self.waterdist,
                 "umsetzbark": self.umsetzbark,
@@ -1292,6 +1292,8 @@ class LeafletLegend(models.Model):
 
 class LegendGrade(models.Model):
     leaflet_legend = models.ForeignKey(LeafletLegend, on_delete=models.CASCADE, related_name="grades")
+    ramp = models.BooleanField(default=False)
+    color_value = models.CharField(max_length=10, null=True, blank=True)
     value = models.FloatField()
     label_de = models.CharField(max_length=64)
     label_en = models.CharField(max_length=64, null=True, blank=True)
@@ -1455,7 +1457,11 @@ class MarSuitabilitySliderDescription(models.Model):
 
 ##################
 
+
 class MapLabels(models.Model):
+    """
+    Infos about base raster files used in TU Berlin Injection.
+    """
     suitability = models.CharField(max_length=64, null=True, blank=True)
     name = models.CharField(max_length=64)
     label_de = models.CharField(max_length=64, null=True, blank=True)

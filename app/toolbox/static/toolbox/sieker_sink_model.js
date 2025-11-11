@@ -38,6 +38,31 @@ export class SiekerSink extends ToolboxProject {
 
         this.selected_sieker_sinks = data.selected_sieker_sinks ?? [];
 
+        this.stream_min_surplus_volume_min = data.stream_min_surplus_volume_min ?? null;
+        this.stream_min_surplus_volume_max = data.stream_min_surplus_volume_max ?? null;
+        this.stream_mean_surplus_volume_min = data.stream_mean_surplus_volume_min ?? null;
+        this.stream_mean_surplus_volume_max = data.stream_mean_surplus_volume_max ?? null;
+        this.stream_max_surplus_volume_min = data.stream_max_surplus_volume_min ?? null;
+        this.stream_max_surplus_volume_max = data.stream_max_surplus_volume_max ?? null;
+        this.stream_plus_days_min = data.stream_plus_days_min ?? null;
+        this.stream_plus_days_max = data.stream_plus_days_max ?? null;
+        this.stream_distance_to_userfield = data.stream_distance_to_userfield ?? 0;
+
+        this.lake_min_surplus_volume_min = data.lake_min_surplus_volume_min ?? null;
+        this.lake_min_surplus_volume_max = data.lake_min_surplus_volume_max ?? null;
+        this.lake_mean_surplus_volume_min = data.lake_mean_surplus_volume_min ?? null;
+        this.lake_mean_surplus_volume_max = data.lake_mean_surplus_volume_max ?? null;
+        this.lake_max_surplus_volume_min = data.lake_max_surplus_volume_min ?? null;
+        this.lake_max_surplus_volume_max = data.lake_max_surplus_volume_max ?? null;
+        this.lake_plus_days_min = data.lake_plus_days_min ?? null;
+        this.lake_plus_days_max = data.lake_plus_days_max ?? null;
+        this.lake_distance_to_userfield = data.lake_distance_to_userfield ?? 0;
+
+        this.all_lake_ids = data.all_lake_ids ?? [];
+        this.selected_lakes = data.selected_lakes ?? [];
+        this.all_stream_ids = data.all_stream_ids ?? [];
+        this.selected_streams = data.selected_streams ?? [];
+
     }
 
     

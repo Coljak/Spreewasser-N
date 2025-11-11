@@ -44,14 +44,16 @@ function filterSiekerGeks(project) {
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
       
 
-    addFeatureCollectionToLayer(data);
-    addFeatureCollectionToTable(data)
-    addFeatureCollectionResultCards(data.dataInfo, data.measures)
+      addFeatureCollectionToLayer(data);
+      addFeatureCollectionToTable(data)
+      addFeatureCollectionResultCards(data.dataInfo, data.measures)
 
-    const measuresTab = $('#navSiekerGekMeasures')
-    const tab = new bootstrap.Tab(measuresTab);
-    tab.show();
+      const measuresTab = $('#navSiekerGekMeasures')
+      const tab = new bootstrap.Tab(measuresTab);
+      tab.show();
 
+    } else {
+      clearAndRemoveTable(SiekerGek, 'filtered_sieker_gek', data.message.message)
     }
   })
 
@@ -133,11 +135,6 @@ export function initializeSiekerGek(data) {
     addFeatureCollectionToLayer(data)
     addFeatureCollectionToTable(data)
     
-    
-    
-
-
-
   
   $('#toolboxPanel').off('change');
   $('#toolboxPanel').off('click');

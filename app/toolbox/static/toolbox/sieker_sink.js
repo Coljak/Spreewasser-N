@@ -1,5 +1,15 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel, addFeatureCollectionToTable, addFeatureCollectionToLayer, addPointFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
+import { 
+  updateDropdown, 
+  addChangeEventListener, 
+  addClickEventListenerToToolboxPanel, 
+  addFeatureCollectionToTable, 
+  addFeatureCollectionToLayer, 
+  addPointFeatureCollectionToLayer, 
+  loadProjectToGui,
+  getWaterBodies, 
+  clearAndRemoveTable,
+} from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerSink } from '/static/toolbox/sieker_sink_model.js';
 import {Layers} from '/static/toolbox/layers.js';
@@ -60,10 +70,8 @@ function filterSiekerSinks(dataType, featureGroup) {
     } else {
 
       handleAlerts(data.message);
-      const tableCard = document.getElementById('card-sieker_sink-table')
-      document.getElementById('sieker_sink-table-container').innerHTML = '';
-
-      tableCard.classList.add('d-none');
+      
+      clearAndRemoveTable(SiekerSink, dataType, data.message.message)
     }
 })
 .catch(error => console.error("Error fetching data:", error));
@@ -71,7 +79,7 @@ function filterSiekerSinks(dataType, featureGroup) {
 
 
 
-export function initializeSiekerSink() {
+export function initializeSiekerSink(loadProject=false) {
   
 
   console.log('Initialize Sieker Sink');
@@ -86,7 +94,7 @@ export function initializeSiekerSink() {
   addClickEventListenerToToolboxPanel(SiekerSink)
   $('#btnFilterSiekerSinks').on('click', function (event) {
 
-      filterSiekerSinks('siekerSink', siekerSinkFeatureGroup);
+      filterSiekerSinks('sieker_sink', siekerSinkFeatureGroup);
     
     });
   
@@ -106,10 +114,13 @@ export function initializeSiekerSink() {
 
   // TODO This is not really working because the checkboxes of the sink table are not always accessible - only the ones visible are accessible
   $('#map').on('click', selectSink);
-
-  $('input[type="checkbox"][name="feasibility"][prefix="sieker_sink"]').prop('checked', true);
-  $('input[type="checkbox"][name="feasibility"][prefix="sieker_sink"]').trigger('change');
-
+  if (loadProject){
+      const project = SiekerSink.loadFromLocalStorage();
+      loadProjectToGui(project)
+    } else {
+      $('input[type="checkbox"][name="feasibility"][prefix="sieker_sink"]').prop('checked', true);
+      $('input[type="checkbox"][name="feasibility"][prefix="sieker_sink"]').trigger('change');
+    }
   const siekerSink = SiekerSink.loadFromLocalStorage();
   loadProjectToGui(siekerSink)
 };

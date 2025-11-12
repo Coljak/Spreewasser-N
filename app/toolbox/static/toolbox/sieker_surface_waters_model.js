@@ -9,6 +9,11 @@ export class SiekerSurfaceWaters extends ToolboxProject {
         this.all_sieker_surface_water_ids = data.all_sieker_surface_water_ids ?? [];
         this.selected_sieker_surface_waters = data.selected_sieker_surface_waters ?? [];
 
+        this.all_sieker_water_level_ids = data.all_sieker_water_level_ids ?? [];
+        this.selected_sieker_water_levels = data.selected_sieker_water_levels ?? [];
+
+        this.sieker_surface_water_filtered = data.sieker_surface_water_filtered ?? false;
+
         this.sieker_surface_water_d_max_m_max = data.sieker_surface_water_d_max_m_max ?? null;
         this.sieker_surface_water_d_max_m_min = data.sieker_surface_water_d_max_m_min ?? null;
         this.sieker_surface_water_vol_mio_m3_min = data.sieker_surface_water_vol_mio_m3_min ?? null;

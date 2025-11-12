@@ -338,126 +338,87 @@ export function openResultCard(dataType, id) {
         });
 };
 
-
-
 export function loadProjectToGui(project) {
-    console.log('loadProjectToGui', project)
-    if (project.id === null) { return; }
+
     console.log('loadProjectToGui', project);
-    const checkboxInputs = $('#toolboxPanel .form-check-input[prefix][name]');
-    const checkboxKeys = [];
-    checkboxInputs.each(function () {
-        const key = $(this).attr('prefix') + '_' + $(this).attr('name')
-        checkboxKeys.push(key)
-    });
-    for (const [key, value] of Object.entries(project)) {
-        // --- Double sliders (_min and _max) ---
-        if (key.endsWith('_min')) {
-            const baseName = key.replace('_min', '');
-            const $slider = $(`[name="${baseName}"]`);
-            if ($slider.hasClass('double-slider')) {
-        // Fetch project values
-            let min = project[`${baseName}_min`];
-            let max = project[`${baseName}_max`];
-
-            // ✅ Fallback to slider's configured bounds if missing
-            const sliderMin = parseFloat($slider.data('slider-min'));
-            const sliderMax = parseFloat($slider.data('slider-max'));
-
-            if (min === null || isNaN(min)) min = sliderMin;
-            if (max === null || isNaN(max)) max = sliderMax;
-
-            try {
-            $slider.slider('setValue', [parseFloat(min), parseFloat(max)], true, false);
-            } catch (err) {
-            console.warn(`Failed to update slider "${baseName}":`, err);
-            }
-        }
-            continue;
-        } else if (key.endsWith('_max')) {
-            continue;
-        } else if (checkboxKeys.includes(key)) {
-            console.log('Includes checkbox key', key)
-            for (let i = 0; i < project[key].length; i++) {
-                const targetValue = project[key][i];
-                console.log('targetValue', targetValue)
-                checkboxInputs.each(function () {
-                    console.log('$(this', $(this))
-                    const checkboxValue = $(this).attr('prefix') + '_' + $(this).attr('name');
-                    if (checkboxValue === targetValue) {
-                        $(this).prop('checked', true);
-                    }
-                });
-
-            }
-            continue;
-        }
-
-        // --- Single sliders ---
-        const $single = $(`[name="${key}"].single-slider`);
-        if ($single.length) {
-            $single.val(value).trigger('input');
-            continue;
-        }
-
-        // --- Checkboxes ---
-        const $checkboxes = $(`.form-check-input[name="${key.split('_').slice(1).join('_')}"][prefix="${key.split('_')[0]}"]`);
-        if ($checkboxes.length && Array.isArray(value)) {
-            $checkboxes.each(function () {
-                const $checkbox = $(this);
-                const val = $checkbox.val();
-                $checkbox.prop('checked', value.includes(val));
-            });
-            continue;
-        }
-
-        // --- Generic inputs ---
-        const $input = $(`[name="${key}"]`);
-        if ($input.length && !$input.hasClass('double-slider') && !$input.hasClass('single-slider')) {
-            $input.val(value);
+    if (project.name) {
+        $('.title-project-name').text(project.name);
+    }
+    if (project.userField) {
+        const userFields = JSON.parse(localStorage.getItem('userFields')) || [];
+        const userFieldName = Object.values(userFields).find((uf => uf.id === project.userField)).name;
+        
+        if (userFieldName) {
+            $('.title-user-field-name').text(userFieldName);
+        } else {
+            $('.title-user-field-name').text('ID', project.userField);
         }
     }
-    project.saveToLocalStorage();
-    switch(project.toolboxType) {
-        case 'infiltration':
-            console.log('loadGui infiltration')
-            if (project['all_sink_ids'].length > 0){
-                console.log('project.all_sink_ids', project['all_sink_ids'])
-                console.log('project.all_sink_ids..length', project['all_sink_ids'].length)
-                $('.filter-sinks[data-type="sink"]').trigger('click')
-            };
-            if (project.all_enlarged_sink_ids.length > 0){
-                $('.filter-sinks[data-type="enlarged_sink"]').trigger('click')
+    
+    const doubleSliders = $('#toolboxPanel input.double-slider');
+    if (doubleSliders.length) {
+        doubleSliders.each(function () {
+            // console.log('double slider this', this)
+            const $slider = $(this);
+            const min = parseFloat(project[`${$slider.attr('name')}_min`]);
+            const max = parseFloat(project[`${$slider.attr('name')}_max`]);
+            // console.log('double slider min max', min, max)
+            $slider.slider('setValue', [min, max]);
+        });
+    }
+    
+        // --- Single sliders ---
+    const $singleSliders = $('#toolboxPanel input.single-slider');
+    if ($singleSliders.length) {
+        $singleSliders.each(function () {
+            // console.log('single slider this', this)
+            const $slider = $(this);
+            const value = project[$slider.attr('name')];
+            // console.log('single slider value', value)
+            $slider.val(value).trigger('input');
+        });
+    }
+
+    // --- Checkboxes ---
+    const $checkboxes = $('#toolboxPanel .form-check-input[prefix][name]');
+    if ($checkboxes.length) {
+        $checkboxes.each(function () {
+            // console.log('checkbox this', this)
+            const $checkbox = $(this);
+            const val = $checkbox.val();
+            const key = $checkbox.attr('prefix') + '_' + $checkbox.attr('name');
+            // console.log('checkbox val key', val, key, project[key].includes(val))
+            
+            $checkbox.prop('checked', project[key].includes(val));
+
+        });
+    }
+
+    
+    for (const [key, value] of Object.entries(project)) {
+        if (key.startsWith('all_') && key.endsWith('_ids') && value.length > 0) {
+            const name = key.replace('all_', '').replace('_ids', '');
+            if (!project.toolboxType === 'sieker_surface_water') {
+                $(`button.filter-features[data-type="${name}"]`).trigger('click')
+            } else {
+                if (project.sieker_surface_water_filtered === false){
+                    tableCheckSelectedItems(project, 'sieker_surface_water')
+                } else {
+                    $(`button.filter-features[data-type="${name}"]`).trigger('click')
+                }
+                tableCheckSelectedItems(project, 'sieker_water_level')
+                        
             }
-            if (project.all_lake_ids.length > 0){
-                $('.filter-waterbodies[data-type="lake"]').trigger('click')
-            }
-            if (project.all_stream_ids.length > 0){
-                $('.filter-waterbodies[data-type="stream"]').trigger('click')
-            }
-            break;
-        case 'injection':
-            console.log('loadGui injection')
-            $('.calculate-area[data-type="injection_weightings"]').trigger('click');
-            break;
-        case 'drainage':
-            console.log('loadGui drainage')
-            break;
-        case 'sieker_gek':
-            console.log('loadGui sieker_gek')
-            break;
-        case 'sieker_sink':
-            console.log('loadGui sieker_sink')
-            break;
-        case 'sieker_surface_water':
-            tableCheckSelectedItems(project, 'sieker_surface_water')
-            console.log('loadGui sieker_surface_water')
-            break;
-        case 'sieker_wetland':
-            console.log('loadGui sieker_wetland')
-            break;
-    }   
+                     
+        }
+    }
+    
+
+   
+            
 };
+
+
 
 export function clearToolboxPanel(){
     $('#toolboxButtons').removeClass('d-none');
@@ -467,7 +428,6 @@ export function clearToolboxPanel(){
     map.eachLayer(function(layer) {
         console.log(layer.toolTag);
         if (layer.toolTag) {
-            console.log('has tooltag, removing layer');
             if (layer.clearLayers) {
                 layer.clearLayers();  
             }
@@ -521,11 +481,7 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 openResultCard($dataType, $id)
             }
             return;
-        // actions
-        // } else if ($target.hasClass('filter-features')) {
-        //     const dataType = $('.table-select-all').data('type');
-        //     // TODO dead end
-        //     console.log('REFACTOR - continue here')
+
         } else if ($target.hasClass('toggle-feature-group')) {
             
             const dataType = $target.attr('data-type')
@@ -807,7 +763,7 @@ export function addFeatureCollectionToTable( data ){
     const dataInfo = data.dataInfo
     const ProjectClass = projectClasses[dataInfo.dataType]
     const project = ProjectClass.loadFromLocalStorage()
-    const selected_sinks = project[`selected_${dataInfo.dataType}s`];
+    const selected_items = project[`selected_${dataInfo.dataType}s`];
     project[`selected_${dataInfo.dataType}s`] = [];
     
     project[`all_${dataInfo.dataType}_ids`] = [];
@@ -859,7 +815,7 @@ export function addFeatureCollectionToTable( data ){
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
     // select all previously selected
-    project[`selected_${dataInfo.dataType}s`] = selected_sinks.filter(sink => project[`all_${dataInfo.dataType}_ids`].includes(sink));
+    project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink => project[`all_${dataInfo.dataType}_ids`].includes(sink));
     project.saveToLocalStorage();
 
     const tableSettings = createTableSettings(dataInfo);

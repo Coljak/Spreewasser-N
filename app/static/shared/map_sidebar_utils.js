@@ -2,9 +2,7 @@ import { getGeolocation } from '/static/shared/utils.js';
 import { MonicaProject } from '/static/monica/monica.js';
 
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
-// import { loadProjectFromDb as loadToolboxProjectFromDb } from '/static/toolbox/load_toolbox_project.js';
 import { getCSRFToken, handleAlerts, getBsColor } from '/static/shared/utils.js';
-// import { startToolbox } from '/static/toolbox/toolbox_three_split.js';
 
 export class UserField {
   constructor(name, id=null, lat=null, lon=null, userProjects=[], properties={} ) {
@@ -672,6 +670,7 @@ export function initializeSidebarEventHandler({
   getFeatureGroup, 
   getProject,
   loadProjectFromDb,
+  // TODO get rid of the project argument- it is already saved to localStorage
   startApplication,
 }) {
     sidebar.addEventListener("change", (event) => {

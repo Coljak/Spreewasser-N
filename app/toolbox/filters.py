@@ -61,25 +61,26 @@ def export_bounds_for_project(filter_set, metadata={}):
                 max_val = attrs.get("data_range_max")
 
             metadata.update({
-                f"{base_name}_min": min_val,
-                f"{base_name}_max": max_val,
+                f"{base_name}_min": str(min_val),
+                f"{base_name}_max": str(max_val),
             })
             continue
 
-        # --- Multiple-choice filters ---
-        # if hasattr(filter_, "extra") and "choices" in filter_.extra:
-        #     metadata.update({
-        #         base_name: [
-        #             value for value, _ in filter_.extra.get("choices", [])
-        #         ]
-        #     })
-        #     continue
+        # ---single-sliders
+        if isinstance(filter_, NumberFilter):
+            attrs = filter_.field.widget.attrs
+            cur_val = attrs.get("data_cur_val", 0)
+            metadata.update({
+                base_name: str(cur_val),
+            })
+            continue
+
 
         # --- Multiple-choice filters ---
         field = filter_set.form.fields[name]
         if hasattr(field, "choices"):
             metadata.update({
-                base_name: [value for value, _ in field.choices]
+                base_name: [str(value) for value, _ in field.choices]
             })
             continue
 
@@ -101,15 +102,16 @@ def create_default_project(user_filed, list_of_filters, toolbox_type):
 
 
                     if parent_id:
-                        metadata.update({parent_name: [parent_id]})
+                        metadata.update({parent_name: [str(parent_id)]})
 
             
             
-        elif isinstance(l, forms.Form):
+        elif isinstance(l, forms.Form) or isinstance(l, forms.ModelForm):
             for _, field in l.fields.items():
                 name = field.widget.attrs['name']
+                print(name, field)
                 val = field.widget.attrs['data_cur_val']
-                metadata.update({name: val})
+                metadata.update({name: str(val)})
 
         
 

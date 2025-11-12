@@ -19,7 +19,7 @@ export class Infiltration extends ToolboxProject {
 
         this.enlarged_sink_area_min = data.enlarged_sink_area_min ?? null;
         this.enlarged_sink_area_max = data.enlarged_sink_area_max ?? null;
-        this.enlarged_sink_volume_min = data.enlarged_sink_volume_minn ?? null;
+        this.enlarged_sink_volume_min = data.enlarged_sink_volume_min ?? null;
         this.enlarged_sink_volume_max = data.enlarged_sink_volume_max ?? null;
         this.enlarged_sink_depth_min = data.enlarged_sink_depth_min ?? null;
         this.enlarged_sink_depth_max = data.enlarged_sink_depth_max ?? null;
@@ -84,16 +84,16 @@ export class Infiltration extends ToolboxProject {
             const hasStream = this.selected_streams.length > 0;
             const hasLake = this.selected_lakes.length > 0;
             const btn = document.getElementById("btnGetInfiltrationResults")
-            const btnDiv = document.getElementById('divBtnGetInfiltrationResults');
+            const btnSpan = document.getElementById('spanBtnGetInfiltrationResults');
     
             // Adjust to your actual button ID
             if ((hasSink || hasEnlargedSink) && (hasLake || hasStream)) {
                 btn.classList.remove('disabled');
-                btnDiv.removeAttribute('title');
+                btnSpan.removeAttribute('title');
 
             } else {
                 btn.classList.add('disabled');
-                btnDiv.setAttribute('title', 'Sie müssen mindestens eine Senke und ein Gewässer auswählen!');
+                btnSpan.setAttribute('title', 'Sie müssen mindestens eine Senke und ein Gewässer auswählen!');
 
             }
         }

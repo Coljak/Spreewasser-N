@@ -165,8 +165,6 @@ export function initializeInjection(data) {
     }); 
     
 
-  $('input[type="checkbox"][name="land_use"]').prop('checked', true);
-  $('input[type="checkbox"][name="land_use"]').trigger('change');
 
 const injection = Injection.loadFromLocalStorage();
 loadProjectToGui(injection)

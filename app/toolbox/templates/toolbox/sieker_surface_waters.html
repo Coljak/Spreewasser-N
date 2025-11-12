@@ -3,11 +3,19 @@
 
 <div id="divSiekerSurfaceWaters" class="tab-pane">
   
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Oberflächengewässer</h2>
-        <div>
-            <button class="toolbox-back-to-initial btn btn-secondary">Schließen</button>
-            <button class="btn btn-primary me-2 save-toolbox-project" data-type="sieker_surface_water">Speichern</button>
+    <div class="d-flex justify-content-between align-items-center mb-3 row">
+        <div class="row">
+            <h2 class="mb-0">Oberflächengewässer</h2>
+        </div>
+        <div class="row mt-4">
+            <div class="col-6">
+                <strong>Projekt: </strong><span class="title-project-name">Kein Projekt ausgewählt</span></br>
+                <strong>Suchgebiet: </strong><span class="title-user-field-name">Kein Suchgebiet ausgewählt</span></br>
+            </div>
+            <div class="col-6 text-end">
+                <button class="toolbox-back-to-initial btn btn-secondary mx-2">Schließen</button>
+                <button class="btn btn-primary mx-2 save-toolbox-project" data-type="sieker_surface_water">Speichern</button>
+            </div>
         </div>
     </div>
     <!-- Navigation -->
@@ -24,7 +32,7 @@
         </li>
 
         <li class="nav-item sieker_surface_water">
-            <a id="navSiekerSurfaceWatersResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersResult">Ergebnis</a>
+            <a id="navSiekerSurfaceWatersResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersResult">Ergebnisdownload</a>
         </li>
     </ul>
 
@@ -48,13 +56,14 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Filter seen</h5>
-                        <button id="toggleSiekerLakes" class="btn btn-secondary">ausblenden</button>                                                                                             
+                        <button id="toggleSiekerLakes" class="btn btn-secondary">Seen ausblenden</button>                                                                                             
                     </div>
                     
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy sieker_lake_filter.form %}
-                        <button id="btnFilterSiekerLakes"type="submit" class="btn btn-primary">Seen filtern</button>
+                        <button id="btnFilterSiekerLakes" type="submit" class="btn btn-primary filter-features" data-type="sieker_surface_water">Seen filtern</button>
+                        <button id="btnUnfilterSiekerLakes" type="submit" class="btn btn-primary">Alle Seen anzeigen</button>
                     </form>
                 </div>
             </div>
@@ -72,20 +81,43 @@
         <div id="tabSiekerSurfaceWatersLevels" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title">Pegel</h5>
-                        <button id="toggleSiekerLevels" class="btn btn-secondary">ausblenden</button>                                                                                             
+
+                    <!-- Header row -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="card-title mb-0">Pegel</h5>
+                        <button id="toggleSiekerLevels" class="btn btn-secondary">Pegel ausblenden</button>
                     </div>
-                    
+
+                    <!-- Inner card for the chart -->
+                    <div id="waterLevelCard" class="card mb-3 d-none">
+                        <div class="card-body">
+
+                            <h5 id="waterLevelSurfaceWaterTitle" class="card-title sieker-water-level-title mb-3"></h5>
+
+                            <div id="waterLevelSurfaceWaterSpinnerWrapper"
+                                class="d-flex justify-content-center align-items-center d-none"
+                                style="height: 200px;">
+                                <div id="waterLevelSurfaceWaterSpinner"
+                                    class="spinner-border text-primary"
+                                    role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+
+                        <!-- Scrollable canvas container -->
+                            <div class="overflow-auto" style="width: 100%; white-space: nowrap;">
+                                <canvas id="waterLevelSurfaceWaterChart" style="min-width: 800px;"></canvas>
+                            </div>
+
+                        </div>
+                    </div>
 
                 </div>
             </div>
+
             <div id="card-sieker_water_level-table" class="card mb-3 d-none">
                 <div class="card-body">
-                    <div id="sink-table-container"></div>
-                    {% comment %} <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button> {% endcomment %}
-                    {% comment %} <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button> {% endcomment %}
-
+                    <div id="sieker_water_level-table-container"></div>           
                 </div>
             </div>
         </div>

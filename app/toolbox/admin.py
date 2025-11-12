@@ -303,8 +303,8 @@ class SiekerSinkAdmin(LeafletGeoAdmin):
 
 @admin.register(models.SiekerWaterLevel)
 class SiekerWaterLevelAdmin(LeafletGeoAdmin):
-    list_display = ('id', 'messstelle', 'gewaesser', 'start_date', 'end_date', 'twenty_yr_trend')
-    search_fields = ('messstelle', 'gewaesser')
+    list_display = ('id', 'name', 'gewaesser', 'start_date', 'end_date', 'twenty_yr_trend')
+    search_fields = ('name', 'gewaesser')
     list_filter = ('region',)
     ordering = ('id',)
 

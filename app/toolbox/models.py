@@ -962,10 +962,21 @@ class PegelOnline(models.Model):
     water_shortname = models.CharField(max_length=100, null=True, blank=True)
     water_longname = models.CharField(max_length=200, null=True, blank=True)
 
+# TU Station
+class Station(models.Model):
+    name = models.CharField(max_length=50)
+    waterbody = models.CharField(max_length=64, null=True, blank=True)
+    geom = gis_models.PointField(srid=25833, null=True, blank=True)
+    data_provider = models.CharField(max_length=32)
+    absolute_elevation_of_sensor_m = models.FloatField(null=True, blank=True)
+    gauge_zero = models.FloatField(null=True, blank=True)
+    station_number = models.IntegerField(null=True, blank=True)
+
 class SiekerWaterLevel(models.Model):
     geom25833 = gis_models.PointField(srid=25833, null=True, blank=True)
     geom4326 = gis_models.PointField(srid=4326, null=True, blank=True)
-    messstelle = models.CharField(max_length=100, null=True, blank=True)
+    name = models.CharField(max_length=100, null=True, blank=True)#
+    station = models.ForeignKey(Station, on_delete=models.DO_NOTHING, null=True, blank=True)
     t_d = models.IntegerField(null=True, blank=True)  
     t_a = models.FloatField(null=True, blank=True)
     # startdatum = models.CharField(max_length=100, null=True, blank=True)
@@ -1008,7 +1019,8 @@ class SiekerWaterLevel(models.Model):
             start_date = self.start_date.isoformat()
             end_date = self.end_date.isoformat()
         return {
-            "messstelle": self.messstelle,
+            "id": self.id,
+            "name": self.name,
             "t_d": self.t_d,
             "t_a": round(self.t_a),
             "period": f"{start_date} - {end_date}",
@@ -1361,14 +1373,7 @@ class DataInfoProperty(models.Model):
 
 
 ## TU Berlin
-class Station(models.Model):
-    name = models.CharField(max_length=50)
-    waterbody = models.CharField(max_length=64, null=True, blank=True)
-    geom = gis_models.PointField(srid=25833, null=True, blank=True)
-    data_provider = models.CharField(max_length=32)
-    absolute_elevation_of_sensor_m = models.FloatField(null=True, blank=True)
-    gauge_zero = models.FloatField(null=True, blank=True)
-    station_number = models.IntegerField(null=True, blank=True)
+
 
 # TODO: what is this? amount m³/s. The data is directly obtained from the raw data
 # TODO delete. It is the ids 168, 170, 172, 173, 176,177 that are also in toolbox_timeseriesdailywaterlevel

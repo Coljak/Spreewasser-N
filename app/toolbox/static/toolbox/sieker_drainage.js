@@ -58,12 +58,9 @@ function hideButtonSpinner($button) {
   $button.prop('disabled', false);
 };
 
-function getFeatures(userField) {
+async function getFeatures(userField) {
   console.log('getFeatures', userField)
-  // const $buttons = $('.toggle-vector-layer')
-  // $buttons.each($button => {
-  //   showButtonSpinner($button)
-  // })
+
   fetch(`load_sieker_drainage_features/${userField}/`)
   .then(response => response.json())
   .then(data => {
@@ -96,7 +93,7 @@ function getFeatures(userField) {
   })
 }
 
-export function initializeDrainage(project) {
+export function initializeDrainage() {
 
   $('#toolboxPanel').off('change');
   $('#toolboxPanel').off('click');
@@ -105,7 +102,6 @@ export function initializeDrainage(project) {
   addLegendForWms(geoserverLayers['drainage_probability']);
   
 
-  console.log('Initialize Sieker Drainage with project:', project);
   // map.addLayer(siekerSinkFeatureGroup);
   
 
@@ -114,14 +110,14 @@ export function initializeDrainage(project) {
   addClickEventListenerToToolboxPanel(Drainage);
       
 
-  $('#id_drainage_threshold_slider').on('change', () => {   
-          const inputName = $target.attr('name'); 
-          const inputVal = $target.val();
-          project[inputName] = inputVal;
-          project.saveToLocalStorage();
-          // TODO implement live change of the raster map
-          return;
-      });
+  // $('#id_drainage_threshold_slider').on('change', () => {   
+  //         const inputName = $target.attr('name'); 
+  //         const inputVal = $target.val();
+  //         project[inputName] = inputVal;
+  //         project.saveToLocalStorage();
+  //         // TODO implement live change of the raster map
+  //         return;
+  //     });
 
   $('#toolboxPanel').on('click', function (event) {
       const $target = $(event.target);
@@ -153,7 +149,6 @@ export function initializeDrainage(project) {
 
   $('#toolboxPanel').on('change', function (event) {
     const $target = $(event.target);
-    const project = Drainage.loadFromLocalStorage();
     if ($target.hasClass('form-check-input')) {
             // checkboxes 
       const inputId = $target.attr('id');
@@ -202,7 +197,11 @@ export function initializeDrainage(project) {
             // for drainage network, prefix is drainage, drained_area
 
   })
-  getFeatures(project.userField);
+  const project = Drainage.loadFromLocalStorage();
+  getFeatures(project.userField)
+  .then(() => {
+    loadProjectToGui(project)
+  });
 
 // $('input[type="checkbox"]').trigger('change');
 };

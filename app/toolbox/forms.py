@@ -450,11 +450,12 @@ class MarWeightingForm(forms.ModelForm):
 
         # Apply the custom slider widget to all fields in the model
         for name, field in self.fields.items():
+            field.required=False
             attrs = default_attrs.copy()
             model_field = self._meta.model._meta.get_field(name)
-            if model_field.default is not NOT_PROVIDED:
-                attrs["data_cur_val"] = model_field.default
-                attrs["data_default_value"] = model_field.default
+            # if model_field.default is not NOT_PROVIDED:
+            attrs["data_cur_val"] = model_field.default
+            attrs["data_default_value"] = model_field.default
             attrs["id"] = f"id_weighting_{name}"
             attrs["name"] = f"weighting_{name}"
             field.widget = CustomSimpleSliderWidget(attrs=attrs)
@@ -498,6 +499,7 @@ class SuitabilityForm(forms.Form):
             label_text = getattr(label, label_field, label.name)
 
             self.fields[label.name] = forms.IntegerField(
+                required=False,
                 widget=CustomSimpleSliderWidget(attrs=attrs),
                 label=label_text,
             )

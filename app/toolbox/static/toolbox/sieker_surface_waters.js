@@ -32,24 +32,104 @@ function filterSiekersurfaceWaters() {
     headers: {
         'Content-Type': 'application/json',
         'X-CSRFToken': getCSRFToken(),
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message.success){
+            addFeatureCollectionToLayer(data.lakes)
+        addFeatureCollectionToTable(data.lakes)
+        } else {
+            handleAlerts(data.message);
+            $('#tabSiekerSurfaceWatersLakes button.reset-double-slider').trigger('click')
+        }
+        
+
+  });
+
+}
+
+
+function getAllSiekersurfaceWaters() {
+    const url = 'get_all_sieker_surface_waters/';
+    const project = SiekerSurfaceWaters.loadFromLocalStorage();
+    fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(project),
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message.success){
+            addFeatureCollectionToLayer(data.lakes)
+        addFeatureCollectionToTable(data.lakes)
+        } else {
+            handleAlerts(data.message)
+        }
+
   });
 
 }
 
 
 
-function addWaterLevelToResultCard(data) {
-    const dataInfo = data.dataInfo;
-    const featureCollection = data.featureCollection;
+
+
+function getWaterLevelTimeseries(waterLevelId) {
+    const canvasCard = document.querySelector('#waterLevelCard');
+    const spinner = document.querySelector('#waterLevelSurfaceWaterSpinnerWrapper');
+
+    spinner.classList.remove('d-none');
+    canvasCard.classList.remove('d-none')
+    const url = `get_sieker_surface_water_levels/${waterLevelId}/`;
+    fetch(url)
+    .then(response => response.json())
+    .then(data => {
+        console.log("Water level timeseries data: ", data);
+        $('#waterLevelSurfaceWaterTitle').text(data.station_name)
+         
+        const canvas = document.getElementById('waterLevelSurfaceWaterChart');
+        const ctx = canvas.getContext('2d');
+        if (canvas.chart) {
+            try {
+                canvas.chart.destroy();
+            } catch {;}
+            }
+        const deLocale = dateFns.locale?.de;
+        spinner.classList.add('d-none');
+
+        canvas.chart = new Chart(ctx, {
+          type: 'bar',
+          data: { 
+            datasets: [{ 
+              label: 'Wasserstand (cm)', 
+              data: data.chart_data }] 
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                type: 'time',
+                adapters: { date: { locale: deLocale } },
+                time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
+                title: { display: true, text: 'Datum' }
+              },
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Wasserstand (cm)' }
+              }
+            }
+          }
+        })
+    });
 }
 
 export function initializeSiekerSurfaceWaters(layers) {
     
-
+    
     console.log("Initializing Sieker surface waters...", layers);
 
 
@@ -60,37 +140,47 @@ export function initializeSiekerSurfaceWaters(layers) {
     addChangeEventListener(SiekerSurfaceWaters);
     // add lakes and water levels
 
-    addFeatureCollectionToLayer(layers.lakes)
-    addFeatureCollectionToTable(layers.lakes)
+    getAllSiekersurfaceWaters();
 
-    addPointFeatureCollectionToLayer(layers.water_levels)
-    addWaterLevelToResultCard(layers.water_levels)
+    addPointFeatureCollectionToLayer(layers)
+    addFeatureCollectionToTable(layers)
 
+    $('#toolboxPanel').on('click', function(event) {
+        console.log('click')
+        const $target = $(event.target);
+        if ($target.attr('id') === 'toggleSiekerLevels') {
+            console.log('toggleSiekerLevels!!')
+            if (map.hasLayer(Layers['sieker_water_level'])) {
+                map.removeLayer(Layers['sieker_water_level']);
+                $target.text('Pegel anzeigen');
+            } else {
+                map.addLayer(Layers['sieker_water_level']);
+                $target.text('Pegel ausblenden');
+            }
+        } else if ($target.attr('id') === 'toggleSiekerLakes') {
+            if (map.hasLayer(Layers['sieker_surface_water'])) {
+                map.removeLayer(Layers['sieker_surface_water']);
+                $target.text('Seen anzeigen');
+            } else {
+                map.addLayer(Layers['sieker_surface_water']);
+                $target.text('Seen ausblenden');
+            }
+         } else if ($target.attr('id') === 'btnFilterSiekerLakes') {
+            const project = SiekerSurfaceWaters.loadFromLocalStorage();
+            project.sieker_surface_water_filtered = true;
+            filterSiekersurfaceWaters()
+         } else if ($target.attr('id') === 'btnUnfilterSiekerLakes') {
+            getAllSiekersurfaceWaters()
 
-    // waterLevels.addTo(Layers['sieker_water_level']);
+        } else if ($target.closest('tr').length && !$target.is('input, button, a')) {
+            const $row = $target.closest('tr');
+            const $dataType = $row.data('type')
+            const $id = $row.data('id')
+            console.log('Tablerow x: ', $dataType, $row.data('id')) 
+            getWaterLevelTimeseries($id);
 
-
-    // map.addLayer(Layers['sieker_surface_water']);
-    // map.addLayer(Layers['sieker_water_level']);
-
-    document.getElementById('toggleSiekerLevels').addEventListener('click', function() {
-        if (map.hasLayer(Layers['sieker_water_level'])) {
-            map.removeLayer(Layers['sieker_water_level']);
-            this.textContent = 'Pegel anzeigen';
-        } else {
-            map.addLayer(Layers['sieker_water_level']);
-            this.textContent = 'Pegel ausblenden';
         }
-    });
-
-    document.getElementById('toggleSiekerLakes').addEventListener('click', function() {
-        if (map.hasLayer(Layers['sieker_surface_water'])) {
-            map.removeLayer(Layers['sieker_surface_water']);
-            this.textContent = 'Seen anzeigen';
-        } else {
-            map.addLayer(Layers['sieker_surface_water']);
-            this.textContent = 'Seen ausblenden';
-        }
+        
     });
     
     addClickEventListenerToToolboxPanel(SiekerSurfaceWaters);

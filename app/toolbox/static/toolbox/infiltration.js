@@ -219,9 +219,20 @@ function getInfiltrationResults() {
         console.log('data', data);
         // handleAlerts(data.message);
 
-        const enlarged_sink_indices = JSON.parse(localStorage.getItem('enlarged_sink_indices')) || {};
-        const sink_indices = JSON.parse(localStorage.getItem('sink_indices')) || {};
-;
+        let enlarged_sink_indices = {};
+        let sink_indices = {};
+        const enlarged_sink_indices_item = localStorage.getItem('enlarged_sink_indices');
+        try  {
+          enlarged_sink_indices = JSON.parse(enlarged_sink_indices_item);
+        } catch {
+          ;
+        }
+        const sink_indices_item = localStorage.getItem('sink_indices');
+        try {
+           sink_indices = JSON.parse(sink_indices_item);
+        } catch {
+          ;
+        }
         data.inlets_sinks.forEach(inlet => {
           console.log('inlet', inlet);
 
@@ -274,7 +285,7 @@ function getInfiltrationResults() {
 
         });
   
-        // $('#navInfiltrationResult').removeClass('disabled').addClass('active').trigger('click');
+       
          const resultTab = document.getElementById('navInfiltrationResult');
         resultTab.classList.remove('disabled');
         resultTab.removeAttribute('aria-disabled');
@@ -348,7 +359,7 @@ function toggleConnection(button) {
   }
 }
 
-export function initializeInfiltration(loadProject=false) {
+export function initializeInfiltration() {
   console.log('Initialize Infiltraion');
   let inletVolumeChart;
 
@@ -422,7 +433,6 @@ export function initializeInfiltration(loadProject=false) {
       });
     });
 
-    console.log('form: ', form)
     const resetBtn = form.querySelector('input.reset-all');
 
     // zhis is unique to infiltration
@@ -464,15 +474,10 @@ export function initializeInfiltration(loadProject=false) {
     }); 
 
 
-    if (loadProject){
-      const infiltration = Infiltration.loadFromLocalStorage();
-      loadProjectToGui(infiltration)
-    } else {
-      $('input[type="checkbox"][name="land_use"]').prop('checked', true);
-      $('input[type="checkbox"][name="land_use"]').trigger('change');
-    };
-  
-
+    
+    const infiltration = Infiltration.loadFromLocalStorage();
+    loadProjectToGui(infiltration);
+    
 
 }
 

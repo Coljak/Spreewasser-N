@@ -891,23 +891,15 @@ def sieker_surface_waters_gui(request, user_field_id):
         water_levels = models.SiekerWaterLevel.objects.filter(
             geom4326__within=user_field.geom
         )
-        lakes_feature_collection = create_feature_collection(lakes)
         water_levels_feature_collection = create_feature_collection(water_levels)
-
-        lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_dict()
         water_levels_data_info = models.DataInfo.objects.get(data_type='sieker_water_level').to_dict()
 
 
-        layers = {
-            'lakes': {
-                'featureCollection':lakes_feature_collection,
-                'dataInfo': lakes_data_info
-            },
-            'water_levels': {
+        water_levels = {
                 'featureCollection': water_levels_feature_collection,
                 'dataInfo': water_levels_data_info
                 }
-            }
+
 
         default_project = filters.create_default_project(
             user_field, 
@@ -921,7 +913,7 @@ def sieker_surface_waters_gui(request, user_field_id):
             'sieker_lake_filter': sieker_lake_filter,      
         }, request=request) 
 
-        return JsonResponse({'success': True, 'layers': layers , 'html': html, 'default_project': default_project})
+        return JsonResponse({'success': True, 'water_levels': water_levels , 'html': html, 'default_project': default_project})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet befinden sich keine geeigneten Seen.'})
 
@@ -934,23 +926,23 @@ def filter_sieker_surface_waters(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     user_field = models.UserField.objects.get(pk=project['userField'])
-    geom = GEOSGeometry(user_field.geom)
 
-    distance = int(project.get('lake_distance_to_userfield', 0))
-    lakes = None
-    if distance > 0:
+    # distance = int(project.get('lake_distance_to_userfield', 0))
+    # lakes = None
+    # if distance > 0:
         # Transform to EPSG:25833 (meters) and add the buffer
-        user_geom_25833 = user_field.geom.transform(25833, clone=True)
-        buffer_25833 = user_geom_25833.buffer(distance)
-        buffer_4326 = buffer_25833.transform(4326, clone=True)
-        lakes = models.SiekerLargeLake.objects.filter(Q(geom__intersects=buffer_4326) | Q(geom__within=buffer_4326))
-    else:
-        lakes = models.SiekerLargeLake.objects.filter(Q(geom__intersects=geom) | Q(geom__within=geom))
+    #     user_geom_25833 = user_field.geom.transform(25833, clone=True)
+    #     buffer_25833 = user_geom_25833.buffer(distance)
+    #     buffer_4326 = buffer_25833.transform(4326, clone=True)
+    #     lakes = models.SiekerLargeLake.objects.filter(Q(geom__intersects=buffer_4326) | Q(geom__within=buffer_4326))
+    # else:
+    lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_dict()
+    lakes = models.SiekerLargeLake.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
 
     filter = Q()
-    filter = add_range_filter(filter, project, 'lake_volume', 'area_ha')
-    filter = add_range_filter(filter, project, 'lake_volume', 'vol_mio_m3')
-    filter = add_range_filter(filter, project, 'lake_max_depth', 'd_max_m')
+    filter = add_range_filter(filter, project, 'sieker_surface_water_area_ha', 'area_ha')
+    filter = add_range_filter(filter, project, 'sieker_surface_water_vol_mio_m3', 'vol_mio_m3')
+    filter = add_range_filter(filter, project, 'sieker_surface_water_d_max_m', 'd_max_m')
     lakes = lakes.filter(filter)
 
 
@@ -961,12 +953,67 @@ def filter_sieker_surface_waters(request):
         return JsonResponse({'message': {'success': False, 'message': 'Keine Seen im Suchgebiet entsprechen den Filterkriterien.'}})
     else:
         
-        feature_collection = create_feature_collection(lakes)
+        lakes_feature_collection = create_feature_collection(lakes)
         message = {
             'success': True, 
         }
-        return JsonResponse({'feature_collection': feature_collection, 'message': message})
+        lakes = {
+                'featureCollection':lakes_feature_collection,
+                'dataInfo': lakes_data_info
+            }
+        return JsonResponse({'lakes': lakes, 'message': message})
+    
+
+def get_all_sieker_surface_waters(request):
+    """
+    Filter excludes lakes with missing data, therefore this
+    """
+    try:
+        project = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    user_field = models.UserField.objects.get(pk=project['userField'])
+
+    lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_dict()
+    lakes = models.SiekerLargeLake.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+
+    if lakes.count() == 0:
         
+        return JsonResponse({'message': {'success': False, 'message': 'Keine Seen im Suchgebiet entsprechen den Filterkriterien.'}})
+    else:
+        
+        lakes_feature_collection = create_feature_collection(lakes)
+        message = {
+            'success': True, 
+        }
+        lakes = {
+                'featureCollection':lakes_feature_collection,
+                'dataInfo': lakes_data_info
+            }
+        return JsonResponse({'lakes': lakes, 'message': message})
+
+
+def get_sieker_surface_water_levels(request, id):  
+    sieker_station = models.SiekerWaterLevel.objects.get(id=id)
+    station = sieker_station.station
+
+    chart_data_qs = (
+        models.TimeseriesDailyWaterlevel.objects
+        .filter(station=station)
+        .order_by('date')
+        .values('date', 'level')
+    )
+
+    chart_data = [
+        {
+            "x": record["date"].isoformat(),    
+            "y": float(record["level"] or 0)
+        }
+        for record in chart_data_qs
+    ]
+    return JsonResponse({"chart_data": chart_data, "station_name": sieker_station.name})
+
 
 ##### Sieker Sinks ######
    

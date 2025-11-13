@@ -30,10 +30,10 @@ import {
 } from '/static/shared/map_sidebar_utils.js';
 
 
-const siekerSinkFeatureGroup = Layers['sieker_sink']
+ 
 
 
-function filterSiekerSinks(dataType, featureGroup) {
+function filterSiekerSinks(dataType) {
   let url = 'filter_sieker_sinks/';
   
   const project = SiekerSink.loadFromLocalStorage();
@@ -47,25 +47,14 @@ function filterSiekerSinks(dataType, featureGroup) {
   })
   .then(response => response.json())
   .then(data => {
-    featureGroup.clearLayers();
+    Layers[dataType].clearLayers();
     console.log('project', project);
   
     // const selected_sinks = project['selected_sinks'];
     if (data.message.success) {
 
-
       addPointFeatureCollectionToLayer(data)
       addFeatureCollectionToTable(data)
-      
-
-
-      // const legendItems = [
-      //     getLegendItem('Leicht', getCircleMarkerSettings( 'green')),
-      //     getLegendItem('Mittel', getCircleMarkerSettings( 'orange')),
-      //     getLegendItem('Schwer', getCircleMarkerSettings( 'red')),
-      //   ]
-      // const legendSettings = getLegendSettings ('Umsetzbarkeit', legendItems);
-      // const legend =  L.control.Legend(legendSettings).addTo(map);
 
     } else {
 
@@ -77,9 +66,42 @@ function filterSiekerSinks(dataType, featureGroup) {
 .catch(error => console.error("Error fetching data:", error));
 };
 
+function getSiekerSinkResults() {
+  let url = 'get_sieker_sink_results/'
+  const project = SiekerSink.loadFromLocalStorage();
+  fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(project),
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    Layers['sieker_sink_result'].clearLayers();
+    console.log('project', project);
+  
+    // const selected_sinks = project['selected_sinks'];
+    if (data.message.success) {
+
+      // addPointFeatureCollectionToLayer(data)
+      // addFeatureCollectionToTable(data)
+
+    } else {
+
+      handleAlerts(data.message);
+      
+      clearAndRemoveTable(SiekerSink, dataType, data.message.message)
+    }
+})
+.catch(error => console.error("Error fetching data:", error));
+};
+
+ 
 
 
-export function initializeSiekerSink(loadProject=false) {
+export function initializeSiekerSink() {
   
 
   console.log('Initialize Sieker Sink');
@@ -88,39 +110,16 @@ export function initializeSiekerSink(loadProject=false) {
   initializeSliders();
       
   $('#toolboxPanel').off('change');
-
   addChangeEventListener(SiekerSink);
-  
+  $('#toolboxPanel').off('click');
   addClickEventListenerToToolboxPanel(SiekerSink)
   $('#btnFilterSiekerSinks').on('click', function (event) {
-
-      filterSiekerSinks('sieker_sink', siekerSinkFeatureGroup);
-    
+      filterSiekerSinks('sieker_sink');    
+    });
+  $('#btnGetSiekerSinkResults').on('click', function (event) {
+      getSiekerSinkResults();    
     });
   
-
-  function selectSink(event) {
-    if (event.target.classList.contains('select-sink')) {
-      const sinkId = event.target.getAttribute('sinkId');
-      const sinkType = event.target.getAttribute('data-type');
-      console.log('sinkId', sinkId);
-      console.log('sinkType', sinkType);
-
-      const checkbox = document.querySelector(`.sink-select-checkbox[data-type="${sinkType}"][data-id="${sinkId}"]`);
-      checkbox.checked = !checkbox.checked;
-      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  };
-
-  // TODO This is not really working because the checkboxes of the sink table are not always accessible - only the ones visible are accessible
-  $('#map').on('click', selectSink);
-  if (loadProject){
-      const project = SiekerSink.loadFromLocalStorage();
-      loadProjectToGui(project)
-    } else {
-      $('input[type="checkbox"][name="feasibility"][prefix="sieker_sink"]').prop('checked', true);
-      $('input[type="checkbox"][name="feasibility"][prefix="sieker_sink"]').trigger('change');
-    }
   const siekerSink = SiekerSink.loadFromLocalStorage();
   loadProjectToGui(siekerSink)
 };

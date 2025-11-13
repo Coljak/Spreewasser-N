@@ -442,101 +442,37 @@ def calculate_indices_df(sinks, project, sink_type='sink'):
     return sink_indices
 
 
-def filter_sinks(request):
+def filter_sinks(request, sink_type):
 
-    start = datetime.now()
     try:
         project = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
-    print('Filter sinks project: ', project)
+
     user_field = models.UserField.objects.get(pk=project['userField'])
-    
+    if sink_type == 'sink':
+        ProjectClass = models.Sink
+    else:
+        ProjectClass = models.EnlargedSink
+
     geom = GEOSGeometry(user_field.geom)
-    sinks = models.Sink.objects.filter(geom4326__within=geom)
+    sinks = ProjectClass.objects.filter(geom4326__within=geom)
     print("Sinks:", sinks.count())
     filters = Q()
-    filters = add_range_filter(filters, project, 'sink_area', 'area')
-    filters = add_range_filter(filters, project, 'sink_volume', 'volume')
-    filters = add_range_filter(filters, project, 'sink_depth', 'depth')
-    # filters = add_range_filter(filters, project, 'sink_index_soil', 'index_soil')
+    filters = add_range_filter(filters, project, f'{sink_type}_area', 'area')
+    filters = add_range_filter(filters, project, f'{sink_type}_volume', 'volume')
+    filters = add_range_filter(filters, project, f'{sink_type}_depth', 'depth')
+    if sink_type == 'enlarged_sink':
+        filters = add_range_filter(filters, project, 'enlarged_sink_volume_construction_barrier', 'volume_construction_barrier')
+        filters = add_range_filter(filters, project, 'enlarged_sink_volume_gained', 'volume_gained')
+
+
     sinks = sinks.filter(filters)
 
-    land_use_values = project.get('sink_land_use', [])
+    land_use_values = project.get(f'{sink_type}_land_use', [])
     land_use_values = [int(value) for value in land_use_values if value.isdigit()]
-    land_use_filter = (
-        Q(landuse_1__in=land_use_values) &
-        (Q(landuse_2__in=land_use_values) |
-        Q(landuse_2__isnull=True)) &
-        (Q(landuse_3__in=land_use_values) |
-        Q(landuse_3__isnull=True))
-        )
-    sinks = sinks.filter(land_use_filter)
-    if sinks.count() == 0:
-        message = {
-            'success': False, 
-            'message': 'Im Suchgebiet entsprechen keine Senken den Filterkriterien.'
-        }
-        return JsonResponse({'message': message})
-    else:
-        print("Sinks", sinks.count())
-        
-        sink_indices_soil = calculate_indices_df(sinks, project, sink_type='sink')
-
-        features = []
-        for sink in sinks:
-            # centroid = sink.centroid
-            geojson = sink.to_point_feature(language='de')
-
-            sink_id = sink.id
-            index_soil = sink_indices_soil.get(sink_id, 0)
-
-            if sink.index_hydrogeology:
-                index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / .04)  
-            else:       
-                index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
-            geojson['properties']["index_sink_total"] = index_sink_total/100
-            geojson['properties']["index_sink_total_str"] = index_sink_total
-
-            features.append(geojson)
-        feature_collection = {
-            "type": "FeatureCollection",
-            "features": features,
-            }
-        message = {
-            'success': True, 
-            'message': f'Es wurden {sinks.count()} Senken gefunden.'
-        }
-
-        data_info = models.DataInfo.objects.get(data_type='sink').to_dict()
-
-        return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
-    
-
-def filter_enlarged_sinks(request):
-    try:
-        project = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-    user_field = models.UserField.objects.get(pk=project['userField'])
-    geom = GEOSGeometry(user_field.geom)
-    sinks = models.EnlargedSink.objects.filter(geom4326__within=geom)
-
-    filters = Q()
-    filters = add_range_filter(filters, project, 'enlarged_sink_area', 'area')
-    filters = add_range_filter(filters, project, 'enlarged_sink_volume', 'volume')
-    filters = add_range_filter(filters, project, 'enlarged_sink_depth', 'depth')
-    filters = add_range_filter(filters, project, 'enlarged_sink_volume_construction_barrier', 'volume_construction_barrier')
-    filters = add_range_filter(filters, project, 'enlarged_sink_volume_gained', 'volume_gained')
-    # filters = add_range_filter(filters, project, 'enlarged_sink_index_soil', 'index_soil')
-    sinks = sinks.filter(filters)
-
-    land_use_values = project.get('enlarged_sink_land_use', [])
-    land_use_values = [int(value) for value in land_use_values if value.isdigit()]
-    land_use_filter = (
+    if sink_type == 'enlarged_sink':
+        land_use_filter = (
         Q(landuse_1__in=land_use_values) &
         (Q(landuse_2__in=land_use_values) |
         Q(landuse_2__isnull=True)) &
@@ -545,17 +481,30 @@ def filter_enlarged_sinks(request):
         (Q(landuse_4__in=land_use_values) |
         Q(landuse_4__isnull=True))
         )
+    else:
+        land_use_filter = (
+            Q(landuse_1__in=land_use_values) &
+            (Q(landuse_2__in=land_use_values) |
+            Q(landuse_2__isnull=True)) &
+            (Q(landuse_3__in=land_use_values) |
+            Q(landuse_3__isnull=True))
+            )
     sinks = sinks.filter(land_use_filter)
-
-    features = []
     if sinks.count() == 0:
+
         message = {
             'success': False, 
-            'message': 'Im Suchgebiet entsprechen keine vergrößerten Senken den Filterkriterien.'
+            'message': 'Im Suchgebiet entsprechen keine Senken den Filterkriterien.'
         }
+        if sink_type == 'enlarged_sink':
+            message['message'] = 'Im Suchgebiet entsprechen keine vergrößerten Senken den Filterkriterien.'
         return JsonResponse({'message': message})
     else:
-        sink_indices_soil = calculate_indices_df(sinks, project, sink_type='enlarged_sink')
+        print("Sinks", sinks.count())
+        
+        sink_indices_soil = calculate_indices_df(sinks, project, sink_type=sink_type)
+
+        features = []
         for sink in sinks:
             
             geojson = sink.to_point_feature(language='de')
@@ -569,7 +518,7 @@ def filter_enlarged_sinks(request):
                 index_sink_total = round(
                     (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
             geojson['properties']["index_sink_total"] = index_sink_total/100
-            geojson['properties']["index_sink_total_str"] = f'{index_sink_total}'
+            geojson['properties']["index_sink_total_str"] = index_sink_total
             features.append(geojson)
         feature_collection = {
             "type": "FeatureCollection",
@@ -577,12 +526,13 @@ def filter_enlarged_sinks(request):
             }
         message = {
             'success': True, 
-            'message': f'Es wurden {sinks.count()} vergrößerte Senken gefunden.'
+            'message': f'Es wurden {sinks.count()} Senken gefunden.'
         }
 
-        data_info = models.DataInfo.objects.get(data_type='enlarged_sink').to_dict()
+        data_info = models.DataInfo.objects.get(data_type=sink_type).to_dict()
 
         return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
+    
 
 def filter_waterbodies(request):
 
@@ -593,10 +543,10 @@ def filter_waterbodies(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     
-    if data_type == 'lake':
+    if data_type in ('lake', 'sieker_lake'):
         waterbody_class = models.Lake
         waterbody = 'Seen'
-    elif data_type == 'stream':
+    elif data_type in ('stream', 'sieker_stream'):
         waterbody = 'Flüsse'
         waterbody_class = models.Stream
 
@@ -1051,11 +1001,13 @@ def load_sieker_sink_gui(request, user_field_id):
         lake_form = filters.LakeFilter(
             request.GET,
             queryset=lakes,
+            prefix='sieker_lake',
             bounds=user_field.filter_bounds.get('lakes') if user_field.filter_bounds else None
         )
         stream_form = filters.StreamFilter(
             request.GET,
             queryset=streams,
+            prefix='sieker_stream',
             bounds=user_field.filter_bounds.get('streams') if user_field.filter_bounds else None
         )
 

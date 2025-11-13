@@ -312,7 +312,7 @@ class StreamFilter(FilterSet):
         # We don’t filter here – this is just a placeholder.
         return queryset
     
-    def __init__(self, *args, queryset=None, bounds=None, **kwargs):
+    def __init__(self, *args, queryset=None,  prefix='stream', bounds=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
 
         for name, filter_ in self.filters.items():
@@ -321,7 +321,7 @@ class StreamFilter(FilterSet):
                 filter_.queryset_for_bounds = queryset
                 filter_.set_bounds() 
 
-        prefix = 'stream'
+       
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f'{prefix}_{name}'
             field.widget.attrs['name'] = f'{prefix}_{name}'
@@ -360,7 +360,7 @@ class LakeFilter(FilterSet):
         # this is just a placeholder.
         return queryset
 
-    def __init__(self, *args, queryset=None, bounds=None, **kwargs):
+    def __init__(self, *args, queryset=None, prefix='lake', bounds=None, **kwargs):
         super().__init__(*args, queryset=queryset, **kwargs)
 
         for name, filter_ in self.filters.items():
@@ -371,7 +371,7 @@ class LakeFilter(FilterSet):
 
 
 
-        prefix = 'lake'
+        
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f'{prefix}_{name}'
             field.widget.attrs['name'] = f'{prefix}_{name}'
@@ -411,16 +411,13 @@ class SiekerLargeLakeFilter(FilterSet):
     
 ## Toolbox Sieker Sinks
 class SiekerSinkFilter(FilterSet):
-    area = MinMaxRangeFilter(
-        model=models.Sink, 
-        field_name='area', 
-        label="Fläche (m²)",
-        )
+
     volume = MinMaxRangeFilter(model=models.SiekerSink, field_name='volume', label="Volumen (m³)")
-    depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='depth', label="Depth (m)")
-    avg_depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='avg_depth', label="Average Depth (m)")
-    urbanarea_percent = MinMaxRangeFilter(model=models.SiekerSink, field_name='urbanarea_percent', label="Urban Area (%)")
-    wetlands_percent = MinMaxRangeFilter(model=models.SiekerSink, field_name='wetlands_percent', label="Wetlands Area (%)")
+    depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='depth', label="Tiefe")
+    area = MinMaxRangeFilter(model=models.SiekerSink, field_name='area', label="Fläche")
+    avg_depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='avg_depth', label="Durchschnittliche Tiefe")
+    urbanarea_percent = MinMaxRangeFilter(model=models.SiekerSink, field_name='urbanarea_percent', label="Urbane Fläche")
+    wetlands_percent = MinMaxRangeFilter(model=models.SiekerSink, field_name='wetlands_percent', label="Feuchtgebiet")
    
     feasibility = MultipleChoiceFilter(
         label="Umsetzbarkeit",

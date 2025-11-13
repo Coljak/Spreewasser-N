@@ -22,6 +22,8 @@ const projectClasses = {
     'filtered_sieker_gek': SiekerGek,
     'sieker_wetland': SiekerWetland,
     'sieker_sink': SiekerSink,
+    'sieker_lake': SiekerSink,
+    'sieker_stream': SiekerSink,
     'sieker_surface_water': SiekerSurfaceWaters,
     'sieker_water_level': SiekerSurfaceWaters,
     'sieker_gek': SiekerGek,
@@ -42,6 +44,7 @@ export function getWaterBodies($button, ProjectClass){
     // used in Infiltration and SiekerSink
     console.log('get waterbodies')
   const dataType = $button.data('type');
+  console.log('getWaterBodies', dataType)
   const spinner = $button.find('.spinner-border')
   spinner.show();
   $button.prop('disabled', true) 
@@ -558,15 +561,15 @@ const colorFunction = function (index) {
 };
 
 export function addFeatureCollectionToLayer(data){
-    console.log('addFeatureCollectionToLayer')
+    console.log('addFeatureCollectionToLayer dataInfo', data.dataInfo)
+    console.log('addFeatureCollectionToLayer dataInfo.colorByIndex', data.dataInfo.colorByIndex)
     let selectable = true;
     
     let featureCollection = data.featureCollection;
     let dataInfo = data.dataInfo;
     
     let colorByIndex = dataInfo.colorByIndex ? dataInfo.colorByIndex : false
-    console.log('addFeatureCollectionToLayer dataInfo', dataInfo)
-    console.log('addFeatureCollectionToLayer dataInfo.colorByIndex', dataInfo.colorByIndex)
+    
     const featureGroup = Layers[dataInfo.dataType]
     featureGroup.clearLayers();
 

@@ -13,7 +13,7 @@
             </div>
             <div class="col-6 text-end">
                 <span id="spanBtnGetInfiltrationResults">
-                <button id="btnGetInfiltrationResults" class="btn btn-primary mx-2">Ergebnis berechnen</button>
+                <button id="btnGetInfiltrationResults" class="btn btn-primary mx-2" data-type="infiltration">Ergebnis berechnen</button>
                 </span>
                 <button class="toolbox-back-to-initial btn btn-secondary mx-2">Schließen</button>
                 <button class="btn btn-primary mx-2 save-toolbox-project" data-type="infiltration">Speichern</button>
@@ -138,7 +138,7 @@
                     
                     <div class="card-body">
                         {% crispy lakes_form.form  %}
-                        <button id="btnFilterLakes" class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="lake">
+                        <button  class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="lake">
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
                             Seen filtern
                         </button>
@@ -165,7 +165,7 @@
                     
                     <div class="card-body">
                         {% crispy streams_form.form  %}
-                        <button id="btnFilterStreams" class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="stream">
+                        <button class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="stream">
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
                             Flüsse filtern
                         </button>

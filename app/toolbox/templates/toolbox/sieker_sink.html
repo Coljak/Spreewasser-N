@@ -13,6 +13,9 @@
                 <strong>Suchgebiet: </strong><span class="title-user-field-name">Kein Suchgebiet ausgewählt</span></br>
             </div>
             <div class="col-6 text-end">
+                <span id="spanBtnGetSiekerSinkResults">
+                <button id="btnGetSiekerSinkResults" class="btn btn-primary mx-2" data-type="sieker_sink">Ergebnis berechnen</button>
+                </span>
                 <button class="toolbox-back-to-initial btn btn-secondary mx-2">Schließen</button>
                 <button class="btn btn-primary mx-2 save-toolbox-project" data-type="sieker_sink">Speichern</button>
             </div>
@@ -29,7 +32,7 @@
         </li>
         
         <li class="nav-item sieker-sink">
-            <a id="navSiekerSinkLakes" class="toolbox nav-link" data-bs-toggle="tab" href="#tabLakes" aria-selected="false">Seen</a>
+            <a id="navSiekerSinkLakes" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerLakes" aria-selected="false">Seen</a>
         </li>
         <li class="nav-item sieker-sink">
             <a id="navSiekerSinkStreams" class="toolbox nav-link" data-bs-toggle="tab" href="#tabStreams" aria-selected="false">Flüsse</a>
@@ -78,28 +81,28 @@
             </div>
         </div>
 
-        <div id="tabLakes" class="tab-pane">
+        <div id="tabSiekerLakes" class="tab-pane">
             {% comment %} <h2 class="title">Oberflächengewässer</h2> {% endcomment %}
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title mb-0">Stehende Gewässer</h5>
-                        <button  class="btn btn-secondary toggle-feature-group" data-type="lake">ausblenden</button>                                                                                             
+                        <button  class="btn btn-secondary toggle-feature-group" data-type="sieker_lake">ausblenden</button>                                                                                             
                     </div>
 
                     
                     <div class="card-body">
                         {% crispy lakes_form.form  %}
-                        <button id="btnFilterLakes" class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="lake">
+                        <button class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="sieker_lake">
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
                             Seen filtern
                         </button>
                     </div>
                 </div>
             </div>
-            <div id="card-lake-table"  class="card mb-3 d-none">
+            <div id="card-sieker_lake-table"  class="card mb-3 d-none">
                 <div class="card-body">
-                    <div id="lake-table-container"></div>
+                    <div id="sieker_lake-table-container"></div>
                 </div>
             </div>
             
@@ -111,22 +114,22 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title mb-0">Fließgewässer</h5>
-                        <button  class="btn btn-secondary toggle-feature-group" data-type="stream">ausblenden</button>                                                                                             
+                        <button  class="btn btn-secondary toggle-feature-group" data-type="sieker_stream">ausblenden</button>                                                                                             
                     </div>
 
                     
                     <div class="card-body">
                         {% crispy streams_form.form  %}
-                        <button id="btnFilterStreams" class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="stream">
+                        <button class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="sieker_stream">
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
                             Flüsse filtern
                         </button>
                     </div>
                 </div>
             </div>
-            <div id="card-stream-table"  class="card mb-3 d-none">
+            <div id="card-sieker_stream-table"  class="card mb-3 d-none">
                 <div class="card-body">
-                    <div id="stream-table-container"></div>
+                    <div id="sieker_stream-table-container"></div>
                   
                 </div>
             </div>

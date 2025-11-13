@@ -26,8 +26,8 @@ urlpatterns = [
     # Zalf sinks   
     path('toolbox/load_infiltration_gui/<str:user_field_id>/', views.load_infiltration_gui, name='load_infiltration_gui'),
     path('toolbox/get_weighting_form/', views.get_weighting_forms, name='get_weighting_forms'),
-    path('toolbox/filter_sinks/', views.filter_sinks, name='filter_sinks'),
-    path('toolbox/filter_enlarged_sinks/', views.filter_enlarged_sinks, name='filter_enlarged_sinks'),
+    path('toolbox/filter_sinks/<str:sink_type>/', views.filter_sinks, name='filter_sinks'),
+    # path('toolbox/filter_enlarged_sinks/', views.filter_enlarged_sinks, name='filter_enlarged_sinks'),
     path('toolbox/filter_waterbodies/', views.filter_waterbodies, name='filter_waterbodies'),
     path('toolbox/get_infiltration_results/', views.get_infiltration_results, name='get_infiltration_results'),   
     path('toolbox/get_injection_volume_chart/<str:waterbody_type>/<int:id>/', views.get_injection_volume_chart, name='get_injection_volume_chart'),

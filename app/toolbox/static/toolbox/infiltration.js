@@ -37,7 +37,7 @@ function filterSinks( $button) {
   spinner.show();
   $button.prop('disabled', true)
   const featureGroup = Layers[sinkType]
-  let url = `filter_${sinkType}s/`;
+  let url = `filter_sinks/${sinkType}/`;
   const infiltration = Infiltration.loadFromLocalStorage();
   fetch(url, {
     method: 'POST',
@@ -274,8 +274,6 @@ function getInfiltrationResults() {
             groupLayers.push(sink_embankment)
           }
 
-          
-
           // Combine both into a LayerGroup
           const group = L.layerGroup(groupLayers).addTo(Layers.inletConnectionsFeatureGroup);
           
@@ -368,11 +366,9 @@ export function initializeInfiltration() {
   initializeSliders();
       
   const forms = document.querySelectorAll('.weighting-form')
-  forms.forEach(form => {
-    
+  forms.forEach(form => { 
     const sliderList = form.querySelectorAll('input.single-slider');
-    const length = sliderList.length;
-      
+    const length = sliderList.length;   
     const sliderObj = {};
     let index = 0;
     sliderList.forEach(slider => {
@@ -435,18 +431,18 @@ export function initializeInfiltration() {
 
     const resetBtn = form.querySelector('input.reset-all');
 
-    // zhis is unique to infiltration
+    // this is unique to infiltration
     resetBtn.addEventListener('click', function (e) {
-      const infiltration = Infiltration.loadFromLocalStorage(); // TODO this is not needed but check
-      // const sliderList = form.querySelectorAll('input.single-slider');
+      const infiltration = Infiltration.loadFromLocalStorage(); 
       Object.keys(sliderObj).forEach(idx => {
+        infiltration[sliderObj[idx].name] = parseFloat(sliderObj[idx].slider.dataset.defaultValue);
         sliderObj[idx].slider.value = parseFloat(sliderObj[idx].slider.dataset.defaultValue);
         sliderObj[idx].slider.dispatchEvent(new Event('input'));
         sliderObj[idx].val = parseFloat(sliderObj[idx].slider.dataset.defaultValue);
       });
       infiltration.saveToLocalStorage();
-      });
     });
+  });
 
 
 

@@ -419,6 +419,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // const isNewProject = (project.toolboxType === 'generic');
     const pageReload = $(this).data('page-reload')
     project.name = projectName;
+    try {
+      $('.title-project-name').text(project.name);
+    } catch {;}
     project.userField = $('#userFieldSelect').val();
     project.toolboxType = $('#projectTypeSelect').val();
     project.description = $('#id_project_description').val().trim();

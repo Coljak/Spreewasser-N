@@ -500,17 +500,16 @@ class Sink(models.Model):
             "depth": round(self.depth, 2),
             "area": round(self.area, 2),
             "volume": round(self.volume, 2),
-            "index_proportions": round(self.index_proportions * 100, 1),
+            "index_proportions": int(self.index_proportions * 100),
             "index_soil": round(self.index_soil * 100, 1),
             "land_use": landuse,
             "land_use_1": landuse_1,
             "land_use_2": landuse_2,
             "land_use_3": landuse_3,
-            "index_soil": round(self.index_soil * 100, 1),
             "soil_points": self.soil_points,
-            "index_feasibility": round(self.index_feasibility * 100, 1) if self.index_feasibility else "-",
+            "index_feasibility": int(self.index_feasibility * 100) if self.index_feasibility else "-",
             "hydrogeology": getattr(self.aquifer, f'name_{language}', None),
-            "index_hydrogeology": round(self.index_hydrogeology *100, 1) if self.index_hydrogeology else None,
+            "index_hydrogeology": int(self.index_hydrogeology *100) if self.index_hydrogeology else None,
         }
     
 

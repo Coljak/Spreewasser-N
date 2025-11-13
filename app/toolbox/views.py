@@ -439,7 +439,19 @@ def calculate_indices_df(sinks, project, sink_type='sink'):
     df['index_be'] = w_usability * df['index_1'] + w_soil * df['index_2']
     df['weighted_index'] = df['index_be'] * df['percent_of_total_area']
     sink_indices = df.groupby(sink_id)['weighted_index'].sum().round(3).to_dict()
-    return sink_indices
+
+    all_indices = {}
+    for sink in sinks:
+        if sink.index_hydrogeology:
+            index_sink_total = (sink_indices[sink.id] + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / 4  
+        else:       
+            index_sink_total = (sink_indices[sink.id] + sink.index_proportions + sink.index_feasibility ) / 3
+        all_indices[sink.id] = {
+            'index_soil': sink_indices[sink.id],
+            'index_sink_total': index_sink_total
+        }
+    print('Indices:', all_indices)
+    return all_indices
 
 
 def filter_sinks(request, sink_type):
@@ -502,24 +514,17 @@ def filter_sinks(request, sink_type):
     else:
         print("Sinks", sinks.count())
         
-        sink_indices_soil = calculate_indices_df(sinks, project, sink_type=sink_type)
+        all_indices = calculate_indices_df(sinks, project, sink_type=sink_type)
 
         features = []
         for sink in sinks:
             
-            geojson = sink.to_point_feature(language='de')
-            sink_id = sink.id
-            index_soil = sink_indices_soil.get(sink_id, 0)
-
-            if sink.index_hydrogeology:
-                index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / .04)  
-            else:       
-                index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
-            geojson['properties']["index_sink_total"] = index_sink_total/100
-            geojson['properties']["index_sink_total_str"] = index_sink_total
-            features.append(geojson)
+            feature = sink.to_point_feature(language='de')
+            
+            feature['properties']['index_soil'] = int(all_indices[sink.id]['index_soil'] * 100)
+            feature['properties']["index_sink_total"] = all_indices[sink.id]['index_sink_total']
+            feature['properties']["index_sink_total_str"] = str(int(all_indices[sink.id]['index_sink_total']*100))
+            features.append(feature)
         feature_collection = {
             "type": "FeatureCollection",
             "features": features,

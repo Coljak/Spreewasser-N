@@ -44,8 +44,7 @@ def get_buek_polygon_id_from_point_buek200(lat, lon):
     else:
         # the case where the coordinates are on the borders of more than one polygon returns only the first polygon's id 
         polygon_id = polygon_id[0].polygon_id
-    
-    print('Time elapsed getting soil profile: ', datetime.now() - start)
+
     return polygon_id
 
 
@@ -70,9 +69,8 @@ def get_buek_data_from_point(request, lat, lon):
     else:
         # the case where the coordinates are on the borders of more than one polygon returns only the first polygon's id 
         polygon = polygon[0]
-    print('Polygon:', polygon)
     serializer = MapSoilCLCSerializer(polygon, many=False)
-    print('Time elapsed getting soil profile: ', datetime.now() - start)
+
     return Response(serializer.data)
 
 
@@ -150,8 +148,7 @@ def get_profiles_from_point_buek200(request, lat, lon):
     soil_data = models.SoilProfile.objects.filter(polygon_id=polygon_id)
     # soil_serializer = SoilProfileSerializer(soil_data, many=True)
     response_dict = [soil.get_horizons_json() for soil in soil_data ]
-    
-    print('Time elapsed getting soil profile: ', datetime.now() - start)
+
     return Response(response_dict)
 
 

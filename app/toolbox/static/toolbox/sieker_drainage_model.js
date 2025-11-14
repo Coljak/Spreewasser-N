@@ -21,6 +21,10 @@ export class Drainage extends ToolboxProject {
         this.drainage_pipes = data.drainage_pipes ?? [];
         this.drainage_network_types = data.drainage_network_types ?? [];
         this.drained_area_types = data.drained_area_types ?? [];
+
+        this.result_probability_raster = data.result_probability_raster ?? [];
+        this.result_drainage_network = data.result_drainage_network ?? [];
+        this.result_drained_areas = data.result_drained_areas ?? [];
         
     }
    

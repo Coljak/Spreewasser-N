@@ -33,6 +33,10 @@
         <li class="nav-item sieker-gek">
             <a id="navSiekerGekResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerGekResult">Ergebnis</a>
         </li>
+
+        <li class="nav-item infiltration">
+            <a id="navSiekerGekResultDownload" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerGekResultDownload">Download</a>
+        </li>
     </ul>
 
     <!-- Tab Content Wrapper -->
@@ -75,9 +79,7 @@
         </div>
 
         <div id="tabSiekerGekMeasures" class="tab-pane">
-
             <div id="card-sieker_gek_measure-table" class="card mb-3">
-
                 
                 <div class="card-body">
                     <h5 class="card-title">Maßnahmen</h5>
@@ -86,9 +88,16 @@
                         <div id="sieker_gek-info-card-body" class="card-body"></div>
                     </div>
                 </div>
-            
-                    
+            </div>
+        </div>
 
+        <div id="tabSiekerGekResultDownload" class="tab-pane ">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ergebnis</h5>
+                    <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
+                    {% crispy result_form %}
+                </div>
             </div>
         </div>
 

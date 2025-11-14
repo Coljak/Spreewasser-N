@@ -17,6 +17,7 @@ export class SiekerWetland extends ToolboxProject {
 
         this.all_sieker_wetland_measure_ids = data.all_sieker_wetland_measure_ids ?? [];
         this.selected_sieker_wetland_measures = data.selected_sieker_wetland_measures ?? [];
+        this.result_wetlands = data.result_wetlands ?? [];
     }
 
 

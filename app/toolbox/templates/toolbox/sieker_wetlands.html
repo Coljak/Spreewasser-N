@@ -34,6 +34,11 @@
         <li class="nav-item sieker-wetland">
             <a id="navSiekerWetlandResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerWetlandResult">Ergebnis</a>
         </li>
+
+        <li class="nav-item infiltration">
+            <a id="navSiekerWetlandResultDownload" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerWetlandResultDownload">Download</a>
+        </li>
+
     </ul>
 
     <!-- Tab Content Wrapper -->
@@ -51,9 +56,7 @@
 
 
 
-        <div id="tabSiekerWetlands" class="tab-pane">
-
-            
+        <div id="tabSiekerWetlands" class="tab-pane">  
             <div class="card mb-3">
                 <div class="card-body">
                     <form method="POST" action="">
@@ -72,11 +75,21 @@
                     <button id="toggleSiekerWetlands" class="btn btn-secondary">ausblenden</button>                                                                                             
 
                     <div class="card-title">Gewässer</div>
-                    <div id="sieker_wetland-table-container"></div>
-                    
+                    <div id="sieker_wetland-table-container"></div>     
                 </div>
             </div>
         </div>
+
+        <div id="tabSiekerWetlandResultDownload" class="tab-pane ">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ergebnis</h5>
+                    <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
+                    {% crispy result_form %}
+                </div>
+            </div>
+        </div>
+
 
     </div>
 

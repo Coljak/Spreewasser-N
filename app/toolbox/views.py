@@ -9,7 +9,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry, LineString
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models import PointField
-from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.db.models import OuterRef, Subquery
+from django.contrib.gis.db.models.functions import Distance,AsGeoJSON
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from django.forms.models import model_to_dict
@@ -162,7 +163,6 @@ def load_toolbox_project(request, id):
 @login_required
 @csrf_protect
 def save_user_field(request):
-    print('Request:', request, request.user, request.method, request.body)
     if request.method == 'POST':
 
         if not request.headers.get('X-Csrftoken') == request.COOKIES.get('csrftoken'):
@@ -287,16 +287,10 @@ def load_infiltration_gui(request, user_field_id):
         Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
     ).order_by('-creation_date').reverse()
     project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='infiltration')
-    print("Time to load projects:", datetime.now() - start_load_projects)
-    
 
-    start_filter_sinks = datetime.now()
     # TODO these querysets are not necessary if the has_x attributes are implemented
     sinks = models.Sink.objects.filter(centroid__within=user_field.geom)    
     
-    print("Time to filter sinks:", datetime.now() - start_filter_sinks)
-
-    start_sink_loop = datetime.now()
     if user_field.has_infiltration:
         sinks = models.Sink.objects.filter(centroid__within=user_field.geom)
         enlarged_sinks = models.EnlargedSink.objects.filter(centroid__within=user_field.geom)
@@ -304,10 +298,8 @@ def load_infiltration_gui(request, user_field_id):
         lakes = models.Lake.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
 
         if user_field.filter_bounds.get('sinks') is None:
-            print('FOUND Sinks no bounds')
             user_field.compute_filter_bounds_infiltration()
 
-        print("Time to loop stream and lake filter:", datetime.now() - start_sink_loop)
         lake_form = filters.LakeFilter(
             request.GET,
             queryset=lakes,
@@ -329,13 +321,12 @@ def load_infiltration_gui(request, user_field_id):
             queryset=enlarged_sinks,
             bounds=user_field.filter_bounds.get('enlarged_sinks') if user_field.filter_bounds else None
         )
-        print("Time to loop end:", datetime.now() - start_sink_loop)
-
 
         overall_weighting = forms.OverallWeightingsForm()
         forest_weighting = forms.WeightingsForestForm()
         agriculture_weighting = forms.WeightingsAgricultureForm()
         grassland_weighting = forms.WeightingsGrasslandForm()
+        result_form = forms.InfiltrationResultDownloadForm()
 
 
         html = render_to_string('toolbox/infiltration.html', {
@@ -350,10 +341,21 @@ def load_infiltration_gui(request, user_field_id):
             'forest_weighting': forest_weighting,
             'agriculture_weighting': agriculture_weighting,
             'grassland_weighting': grassland_weighting, 
+            'result_form': result_form,
         }, request=request) 
         default_project = filters.create_default_project(
             user_field, 
-            [overall_weighting, forest_weighting, agriculture_weighting, grassland_weighting, sink_form, enlarged_sink_form, stream_form, lake_form], 
+            [
+                overall_weighting, 
+                forest_weighting, 
+                agriculture_weighting, 
+                grassland_weighting, 
+                sink_form, 
+                enlarged_sink_form, 
+                stream_form, 
+                lake_form,
+                result_form,
+                ], 
             'infiltration'
             )
         
@@ -646,6 +648,36 @@ def get_weighting_forms(request):
         return render(request, 'toolbox/weighting_tab.html', context)
 
 
+
+def new_shortest_connection(sinks, lakes, streams, data_type):
+
+    for sink in sinks:
+        lake_with_distance = lakes.annotate(
+            distance_to_sink=Distance('geom25833', sink.geom25833)
+            ).order_by('distance_to_sink').first()
+        
+        stream_with_distance = streams.annotate(
+            distance_to_sink=Distance('geom25833', sink.geom25833)
+            ).order_by('distance_to_sink').first()
+        
+        closest = lake_with_distance
+        
+        if lake_with_distance.distance_to_sink > lake_with_distance.distance_to_sink:
+            closest = stream_with_distance
+        type = closest.__class__ #.__name__
+
+        
+        sink.distance=closest.distance_to_sink.m
+        sink.waterbody_class=type
+        sink.waterbody = closest
+        
+    
+    
+
+    return sinks
+
+
+
 def get_shortest_connection_lines_utm(sinks, lakes, streams, is_enlarged_sink=False):
     """
     Get the shortest connection line between the sinks and the nearest selected lake or stream.
@@ -849,6 +881,8 @@ def sieker_surface_waters_gui(request, user_field_id):
         water_levels_feature_collection = create_feature_collection(water_levels)
         water_levels_data_info = models.DataInfo.objects.get(data_type='sieker_water_level').to_dict()
 
+        result_form = forms.SiekerSurfaceWaterResultDownloadForm()
+
 
         water_levels = {
                 'featureCollection': water_levels_feature_collection,
@@ -858,14 +892,18 @@ def sieker_surface_waters_gui(request, user_field_id):
 
         default_project = filters.create_default_project(
             user_field, 
-            [sieker_lake_filter], 
+            [
+                sieker_lake_filter, 
+                result_form
+            ], 
             'sieker_surface_water'
             )
         
 
         html = render_to_string('toolbox/sieker_surface_waters.html', {
             'project_select_form': project_select_form,
-            'sieker_lake_filter': sieker_lake_filter,      
+            'sieker_lake_filter': sieker_lake_filter,   
+            'result_form': result_form,   
         }, request=request) 
 
         return JsonResponse({'success': True, 'water_levels': water_levels , 'html': html, 'default_project': default_project})
@@ -1016,9 +1054,16 @@ def load_sieker_sink_gui(request, user_field_id):
             bounds=user_field.filter_bounds.get('streams') if user_field.filter_bounds else None
         )
 
+        result_form = forms.SiekerSinkDownloadForm()
+
         default_project = filters.create_default_project(
             user_field,
-            [sieker_sink_filter, lake_form, stream_form],
+            [
+                sieker_sink_filter, 
+                lake_form, 
+                stream_form,
+                result_form,
+                ],
             'sieker_sink'
         )
         print(default_project)
@@ -1028,6 +1073,7 @@ def load_sieker_sink_gui(request, user_field_id):
             'sieker_sink_filter': sieker_sink_filter,
             'lakes_form': lake_form,
             'streams_form': stream_form,
+            'result_form': result_form,
 
         }, request=request) 
 
@@ -1114,15 +1160,21 @@ def load_sieker_gek_gui(request, user_field_id):
         # streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
 
         # sieker_geks_filter = SiekerGekFilter(request.GET, queryset=geks)
+
+        result_form = forms.SiekerGekDownloadForm()
         default_project = filters.create_default_project(
             user_field,
-            [gek_filter_form],
+            [
+                gek_filter_form,
+                result_form,
+                ],
             'sieker_gek'
         )
 
         html = render_to_string('toolbox/sieker_gek.html', {
             'project_select_form': project_select_form,
-            'gek_filter_form': gek_filter_form  ,
+            'gek_filter_form': gek_filter_form ,
+            'result_form': result_form,
         }, request=request) 
         data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
 
@@ -1220,14 +1272,19 @@ def load_sieker_wetland_gui(request, user_field_id):
         filter_form = filters.HistoricalWetlandsFilter()
         slider_labels =  dict(models.WetlandFeasibility.objects.values_list('id', 'name_de').order_by('id'))
         # TODO This does not really make sense - more filters?
+        result_form = forms.SiekerWetlandDownloadForm()
         default_project = filters.create_default_project(
             user_field,
-            [filter_form],
+            [
+                filter_form,
+                result_form,
+                ],
             'sieker_wetland'
         )
         html = render_to_string('toolbox/sieker_wetlands.html', {
             'project_select_form': project_select_form,
             'wetlands_filter': filter_form,
+            'result_form': result_form,
             
         }, request=request) 
         data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
@@ -1301,6 +1358,7 @@ def load_injection_gui(request):
     slider_labels = dict(models.MarSliderDescription.objects.values_list('id', 'name_de').order_by('id'))
     slider_labels_suitability = dict(models.MarSuitabilitySliderDescription.objects.values_list('id', 'name_de').order_by('id'))
 
+    result_form = forms.InjectionDownloadForm()
 
     html = render_to_string('toolbox/injection.html', {
         # 'sink_form': sink_form, 
@@ -1314,13 +1372,20 @@ def load_injection_gui(request):
         'suitability_distance_to_source_form': suitability_distance_to_source_form,
         'suitability_distance_to_well_form': suitability_distance_to_well_form,
         'suitability_hydraulic_conductivity': suitability_hydraulic_conductivity,
+        'result_form': result_form,
 
     }, request=request) 
     default_project = filters.create_default_project(
         None, 
         [
-            injection_weightings_form, suitability_aquifer_thickness, suitability_depth_groundwater_form, 
-            suitability_land_use_form, suitability_distance_to_source_form, suitability_distance_to_well_form, suitability_hydraulic_conductivity,
+            injection_weightings_form, 
+            suitability_aquifer_thickness, 
+            suitability_depth_groundwater_form, 
+            suitability_land_use_form, 
+            suitability_distance_to_source_form, 
+            suitability_distance_to_well_form, 
+            suitability_hydraulic_conductivity,
+            result_form,
         ],
         'injection'
         )
@@ -1638,12 +1703,15 @@ def load_sieker_drainage_gui(request, user_field_id):
         colors = {di.data_type: di.feature_color for di in labels_colors_details}
         colors.update({di.data_type: di.feature_color for di in labels_colors_areas})
 
+        result_form = forms.SiekerDrainageDownloadForm()
         default_project = filters.create_default_project(
         user_field, 
         [
             drainage_probabiliy_filter_form, 
             drained_area_filter_form, 
             drainage_network_filter_form, 
+            result_form,
+
         ],
         'drainage'
         )
@@ -1656,6 +1724,7 @@ def load_sieker_drainage_gui(request, user_field_id):
             'drainage_network_filter_form': drainage_network_filter_form,
             'labels': drainage_network_labels,
             'details_exist': details_exist,
+            'result_form': result_form,
             
         }, request=request)
         

@@ -14,6 +14,16 @@ from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
 from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget,CustomSimpleSliderWidget, CustomDoubleSliderWidget
 
 
+class CheckboxSelectMultipleWithAttrs(forms.CheckboxSelectMultiple):
+    def __init__(self, attrs=None, choice_attrs=None):
+        super().__init__(attrs)
+        self.choice_attrs = choice_attrs or {}
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+        if str(value) in self.choice_attrs:
+            option['attrs'].update(self.choice_attrs[str(value)])
+        return option
 
   
 class SliderFilterForm(forms.Form):
@@ -42,7 +52,6 @@ class ToolboxProjectSelectionForm(forms.Form):
         
         if qs:
             self.fields['toolbox_project'].choices = [
-                # print(instance.id, instance.name) for instance in ToolboxProject.objects.filter(Q(user=user))
                 (instance.id, instance.name) for instance in qs
             ]
 
@@ -580,3 +589,248 @@ class DrainageNetworkFilterForm(forms.Form):
                         "value": detail.id,
                     })
                 )
+
+
+###### Download / Result forms #########
+
+class ResultForm(forms.Form):
+    def __init__(self, *args, toolbox_type=None, **kwargs):  # fixed signature
+        super().__init__(*args, **kwargs)
+
+        for key, field in self.fields.items():
+            field.widget.attrs.update({'prefix': 'result', 'name': key})
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = f'{toolbox_type}-result-download-form'
+        self.helper.form_class = 'form-horizontal download-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Submit(f'{toolbox_type}-results', 'Herunterladen', css_class='btn-primary'))
+
+class InfiltrationResultDownloadForm(ResultForm):
+    sinks = forms.MultipleChoiceField(
+        label="Senken", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('sinks_pt_shp', 'Punkte als Shapefile'),
+            ('sinks_pt_gjson', 'Punkte als GeoJSON'),
+            ('sinks_shp', 'Polygone als Shapefile'),
+            ('sinks_gjson', 'Polygone als GeoJSON'),
+        ]
+    )
+    enlarged_sinks = forms.MultipleChoiceField(
+        label="Vergrößerte Senken", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('enlarged_sinks_pt_shp', 'Punkte als Shapefile'),
+            ('enlarged_sinks_pt_gjson', 'Punkte als GeoJSON'),
+            ('enlarged_sinks_shp', 'Polygone als Shapefile'),
+            ('enlarged_sinks_gjson', 'Polygone als GeoJSON'),
+        ]
+    )
+
+    result = forms.MultipleChoiceField(
+        label="Ergebnisdarstellung", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('result_pt_shp', 'als Shapefile'),
+            ('result_pt_gjson', ' als GeoJSON'),
+        ]
+    )
+    timeseries = forms.MultipleChoiceField(
+        label="Ökologischer Abfluss",
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        choices=[
+            ('timeseries_csv', 'als CSV-Datei'),
+        ]
+    )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, toolbox_type='infiltration', **kwargs)
+
+    
+
+
+class SiekerSurfaceWaterResultDownloadForm(ResultForm):
+    
+    lakes = forms.MultipleChoiceField(
+        label="Seen", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('lakes_csv', 'als CSV-Datei'),
+            ('lakes_shp', 'als Shapefile'),
+            ('lakes_gjson', 'als GeoJSON'),
+            
+        ]
+    )
+    stations = forms.MultipleChoiceField(
+        label="Pegelstationen",
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        choices=[
+            ('level_csv', 'als CSV-Datei'),
+            ('level_shp', 'als Shapefile'),  
+            ('level_gjson', 'als GeoJSON'),      
+        ]
+    )
+    timeseries = forms.MultipleChoiceField(
+        label="Pegelzeitreihen",
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        choices=[
+            ('timeseries_csv', 'als CSV-Datei'),
+        ]
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, toolbox_type='sieker_surface_water', **kwargs)
+
+
+
+class SiekerSinkDownloadForm(ResultForm):
+    
+    sinks = forms.MultipleChoiceField(
+        label="Senken", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('sinks_pt_shp', 'Punkte als Shapefile'),
+            ('sinks_pt_gjson', 'Punkte als GeoJSON'),
+            ('sinks_shp', 'Polygone als Shapefile'),
+            ('sinks_gjson', 'Polygone als GeoJSON'),
+        ]
+    )
+
+    result = forms.MultipleChoiceField(
+        label="Ergebnisdarstellung", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('result_pt_shp', 'als Shapefile'),
+            ('result_pt_gjson', ' als GeoJSON'),
+        ]
+    )
+    timeseries = forms.MultipleChoiceField(
+        label="Ökologischer Abfluss",
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        choices=[
+            ('timeseries_csv', 'als CSV-Datei'),
+        ]
+    )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, toolbox_type='infiltration', **kwargs)
+
+
+
+class SiekerGekDownloadForm(ResultForm): #######
+    
+    map = forms.MultipleChoiceField(
+        label="Karte", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('map_shp', 'als Shapefile'),
+            ('map_gjson', 'als GeoJSON'),
+        ]
+    )
+
+    geks = forms.MultipleChoiceField(
+        label="Gewässerentwicklungskonzepte", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('gek_csv', 'als CSV-Datei'),
+        ]
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, toolbox_type='sieker_gek', **kwargs)
+
+
+class SiekerWetlandDownloadForm(ResultForm): #######
+    
+    wetlands = forms.MultipleChoiceField(
+        label="Feuchtgebiete", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('wetlands_shp', 'Polygone als Shapefile'),
+            ('wetlands_gjson', 'Polygone als GeoJSON'),
+            ('wetlands_csv', 'als CSV-Datei'),
+        ]
+    )
+    
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, toolbox_type='sieker_wetland', **kwargs)
+
+    
+class SiekerDrainageDownloadForm(ResultForm): #######
+    
+    probability_raster = forms.MultipleChoiceField(
+        label="Wahrscheinlichkeiten",
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('raster_tif', 'als GeoTIFF Datei'),
+        ]
+    )
+
+    drainage_network = forms.MultipleChoiceField(
+        label="Entwässerungsnetz",
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('drainage_network_shp', 'als Shapefile'),
+            ('drainage_network_gjson', 'als GeoJSON'),
+        ]
+    )
+
+    drained_areas = forms.MultipleChoiceField(
+        label="Entwässerte Flächen",
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('drained_areas_shp', 'als Shapefile'),
+            ('drained_areas_gjson', 'als GeoJSON'),
+        ]
+    )
+    
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, toolbox_type='drainage', **kwargs)
+
+
+
+class InjectionDownloadForm(ResultForm): #######
+    
+    raster = forms.MultipleChoiceField(
+        label="Rasterdaten",
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        # initial='lakes_csv',
+        choices=[
+            ('resulult_raster', 'Ergebnis als Rasterdatei (GeoTIFF)'),
+        ]
+    )
+    
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, toolbox_type='injection', **kwargs)

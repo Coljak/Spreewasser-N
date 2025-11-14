@@ -18,6 +18,9 @@ export class SiekerGek extends ToolboxProject {
 
         this.all_sieker_gek_measure_ids = data.all_sieker_gek_measure_ids ?? [];
         this.selected_sieker_gek_measures = data.selected_sieker_gek_measures ?? [];
+
+        this.result_map = data.result_map ?? [];
+        this.result_geks = data.result_geks ?? []; 
     }
    
 

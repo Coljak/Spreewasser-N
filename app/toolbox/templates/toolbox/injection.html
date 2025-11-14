@@ -46,6 +46,10 @@
         <li class="nav-item injection">
             <a id="navInjectionSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabInjectionWeighting" aria-selected="false">Gesamtgewichtung</a>
         </li>
+
+        <li class="nav-item infiltration">
+            <a id="navInjectionResultDownload" class="toolbox nav-link" data-bs-toggle="tab" href="#tabInjectionResultDownload">Download</a>
+        </li>
         
     </ul>
 
@@ -170,7 +174,7 @@
             </div>       
         </div>
 
-         <div id="tabInjectionSuitabilityHydraulicConductivity" class="tab-pane">
+        <div id="tabInjectionSuitabilityHydraulicConductivity" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
@@ -186,6 +190,16 @@
                     </form>
                 </div>
             </div>       
+        </div>
+
+        <div id="tabInjectionResultDownload" class="tab-pane ">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ergebnis</h5>
+                    <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
+                    {% crispy result_form %}
+                </div>
+            </div>
         </div>
 
         

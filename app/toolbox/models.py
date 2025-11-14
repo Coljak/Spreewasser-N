@@ -897,7 +897,7 @@ class SiekerLargeLake(models.Model):
     geom25833 = gis_models.PolygonField(srid=25833, null=True, blank=True)
     geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
     name = models.CharField(max_length=100, null=True, blank=True)
-    stand = models.DateField(null=True, blank=True)
+    stand = models.DateField(null=True, blank=True) ##
     wrrl_pg = models.CharField(max_length=100, null=True, blank=True)
     genese = models.CharField(max_length=100, null=True, blank=True)
     wrrl = models.IntegerField(null=True, blank=True)
@@ -909,7 +909,7 @@ class SiekerLargeLake(models.Model):
     einzugsgebiet_km2 = models.FloatField(null=True, blank=True) # Einzugsgebiet in km²
     d_max_m = models.IntegerField(null=True, blank=True) # max depth of lake in m
     verweilt = models.CharField(max_length=100, null=True, blank=True)
-    t_cm_per_a = models.FloatField(null=True, blank=True) # trend in cm /jahr
+    trend_cm_per_a = models.FloatField(null=True, blank=True) # trend in cm /jahr
     seetyp = models.IntegerField(null=True, blank=True)
     seetyp_txt = models.CharField(max_length=100, null=True, blank=True)
 
@@ -934,7 +934,7 @@ class SiekerLargeLake(models.Model):
                 "einzugsgebiet_km2": self.einzugsgebiet_km2,
                 "d_max_m": self.d_max_m,
                 "verweilt": self.verweilt,
-                "t_cm_per_a": self.t_cm_per_a,
+                "trend_cm_per_a": round(self.trend_cm_per_a, 2) if self.trend_cm_per_a else self.trend_cm_per_a,
                 "seetyp": self.seetyp,
                 "seetyp_txt": self.seetyp_txt
             }
@@ -984,10 +984,10 @@ class SiekerWaterLevel(models.Model):
     end_date = models.DateField(null=True, blank=True)
     min_cm = models.IntegerField(null=True, blank=True)  
     max_cm = models.IntegerField(null=True, blank=True)  
-    mw_10_19 = models.FloatField(null=True, blank=True)  
-    mw_90_99 = models.FloatField(null=True, blank=True)  
+    mw_10_19 = models.FloatField(null=True, blank=True)  # Mittelwert 2010-2019
+    mw_90_99 = models.FloatField(null=True, blank=True)  # Mittelwert 1990 - 1999
     stdev_cm = models.FloatField(null=True, blank=True)  
-    twenty_yr_trend = models.FloatField(null=True, blank=True)
+    twenty_yr_trend = models.FloatField(null=True, blank=True) 
     pkz = models.CharField(max_length=100, null=True, blank=True)
     pegelname = models.CharField(max_length=100, null=True, blank=True)
     gewaesser = models.CharField(max_length=100, null=True, blank=True)
@@ -1025,10 +1025,10 @@ class SiekerWaterLevel(models.Model):
             "period": f"{start_date} - {end_date}",
             "min_cm": self.min_cm,
             "max_cm": self.max_cm,
-            "mw_10_19": self.mw_10_19,
-            "mw_90_99": self.mw_90_99,
+            "mw_10_19": int(self.mw_10_19) if self.mw_10_19 else self.mw_10_19,
+            "mw_90_99": int(self.mw_90_99) if self.mw_90_99 else self.mw_90_99,
             "stdev_cm": self.stdev_cm,
-            "twenty_yr_trend": self.twenty_yr_trend,
+            "twenty_yr_trend": round(self.twenty_yr_trend, 2) if self.twenty_yr_trend else self.twenty_yr_trend,
             "pkz": self.pkz,
             "pegelname": self.pegelname,
             "gewaesser": self.gewaesser,
@@ -1085,10 +1085,12 @@ class SiekerSink(models.Model):
     umsetzbark = models.CharField(max_length=100, null=True, blank=True)
     index_feasibility = models.FloatField(null=True, blank=True)
     waterdist = models.CharField(max_length=100, null=True, blank=True)
-    distance_lake= models.FloatField(null=True, blank=True)
+    distance_lake = models.FloatField(null=True, blank=True)
     nearest_lake = models.ForeignKey(Lake, on_delete=models.DO_NOTHING, null=True, blank=True)
     distance_stream = models.FloatField(null=True, blank=True)
     nearest_stream = models.ForeignKey(Stream, on_delete=models.DO_NOTHING, null=True, blank=True)
+    
+    
 
     def to_json(self, language='de'):
         return {
@@ -1105,7 +1107,11 @@ class SiekerSink(models.Model):
                 "dist_lake": self.dist_lake,
                 "waterdist": self.waterdist,
                 "umsetzbark": self.umsetzbark,
-                "index_feasibility": self.index_feasibility
+                "index_feasibility": self.index_feasibility,
+                "distance_lake": int(self.distance_lake),
+                "nearest_lake": self.nearest_lake.name,
+                "distance_stream": int(self.distance_stream),
+                "nearest_stream": self.nearest_stream.name,
                
             }
     

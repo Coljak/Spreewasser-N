@@ -41,6 +41,12 @@
         <li class="nav-item sieker-sink">
             <a id="navSiekerSinkResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerSinkResult">Ergebnis</a>
         </li>
+
+        <li class="nav-item infiltration">
+            <a id="navSiekerSinkResultDownload" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerSinkResultDownload">Download</a>
+        </li>
+
+
     </ul>
 
     <!-- Tab Content Wrapper -->
@@ -135,6 +141,17 @@
             </div>
             
         </div>
+
+        <div id="tabSiekerSinkResultDownload" class="tab-pane ">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ergebnis</h5>
+                    <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
+                    {% crispy result_form %}
+                </div>
+            </div>
+        </div>
+
     </div>
 
 </div>

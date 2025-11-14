@@ -8,7 +8,7 @@ from django_filters.filters import RangeFilter, ChoiceFilter, MultipleChoiceFilt
 from django import forms
 from toolbox import utils
 from . import models
-from .forms import SliderFilterForm
+from .forms import SliderFilterForm, CheckboxSelectMultipleWithAttrs
 import json
 from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget
 import math
@@ -42,7 +42,6 @@ FIELD_UNITS = {
 
 def export_bounds_for_project(filter_set, metadata={}):
     for name, filter_ in filter_set.filters.items():
-        print(name, filter_)
         prefix = filter_set.form.fields[name].widget.attrs.get('prefix')
         if not prefix:
             continue
@@ -107,14 +106,34 @@ def create_default_project(user_filed, list_of_filters, toolbox_type):
             
             
         elif isinstance(l, forms.Form) or isinstance(l, forms.ModelForm):
+            print("Is Instance of Form or Modelform")
             for _, field in l.fields.items():
-                name = field.widget.attrs['name']
-                print(name, field)
-                val = field.widget.attrs['data_cur_val']
-                metadata.update({name: str(val)})
+                print(field)
+                print(field.widget.attrs)
+                # sliders:
+                if isinstance(field.widget, (CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget)):
+                    name = field.widget.attrs['name']
+                    val = field.widget.attrs['data_cur_val']
+                    metadata.update({name: str(val)})
+                    continue
 
-        
-
+                else:
+                    print("Not a slider widget")
+                    name = field.widget.attrs['name']
+                    prefix = field.widget.attrs['prefix']
+                    full_name = f"{prefix}_{name}"
+                    if isinstance(field.widget, forms.CheckboxSelectMultiple):
+                        selected_values = []
+                        for value, label in field.choices:
+                            # Check if the current choice is selected
+                            if field.initial and str(value) in field.initial:
+                                selected_values.append(str(value))
+                        metadata.update({full_name: selected_values})
+                    # else:
+                    #     val = field.widget.attrs.get('data_cur_val', '')
+                    #     metadata.update({full_name: str(val)})
+                # val = field.widget.attrs['data_cur_val']
+                # metadata.update({name: str(val)})
     
 
     project = {
@@ -599,16 +618,16 @@ class HistoricalWetlandsFilter(FilterSet):
         slider.attrs["data_cur_val"] = min_feasibility
         
 
-class CheckboxSelectMultipleWithAttrs(forms.CheckboxSelectMultiple):
-    def __init__(self, attrs=None, choice_attrs=None):
-        super().__init__(attrs)
-        self.choice_attrs = choice_attrs or {}
+# class CheckboxSelectMultipleWithAttrs(forms.CheckboxSelectMultiple):
+#     def __init__(self, attrs=None, choice_attrs=None):
+#         super().__init__(attrs)
+#         self.choice_attrs = choice_attrs or {}
 
-    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
-        option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
-        if str(value) in self.choice_attrs:
-            option['attrs'].update(self.choice_attrs[str(value)])
-        return option
+#     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+#         option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+#         if str(value) in self.choice_attrs:
+#             option['attrs'].update(self.choice_attrs[str(value)])
+#         return option
 
 class DrainageNetworkFilter(FilterSet):
     # assign the custom widget directly here

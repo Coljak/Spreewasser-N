@@ -32,8 +32,10 @@
         </li>
 
         <li class="nav-item sieker_surface_water">
-            <a id="navSiekerSurfaceWatersResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersResult">Ergebnisdownload</a>
+            <a id="navSiekerSurfaceWatersResultDownload" class="toolbox nav-link"  data-bs-toggle="tab" href="#tabSiekerSurfaceWatersResultDownload">Ergebnisdownload</a>
         </li>
+
+
     </ul>
 
     <!-- Tab Content Wrapper -->
@@ -62,7 +64,8 @@
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy sieker_lake_filter.form %}
-                        <button id="btnFilterSiekerLakes" type="submit" class="btn btn-primary filter-features" data-type="sieker_surface_water">Seen filtern</button>
+                        {% comment %} <button id="btnFilterSiekerLakes" type="submit" class="btn btn-primary filter-features" data-type="sieker_surface_water" >Seen filtern</button> {% endcomment %}
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterSiekerLakesModal">Seen filtern</button>
                         <button id="btnUnfilterSiekerLakes" type="submit" class="btn btn-primary">Alle Seen anzeigen</button>
                     </form>
                 </div>
@@ -127,27 +130,40 @@
         
 
 
-        <div id="tabSiekerSurfaceWatersResult" class="tab-pane ">
+        <div id="tabSiekerSurfaceWatersResultDownload" class="tab-pane ">
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>
-                    <table  class="table table-hover" id="inlet-table">
-                        <thead>
-                            <tr>
-                            <th>ID</th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                    <div id="water-level-info-card" class="card mt-3" style="display: none;"></div>
+                    <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
+                    {% crispy result_form %}
                 </div>
             </div>
         </div>
-        
+
 
     </div>
 
+</div>
+
+
+
+
+
+<!-- Alert modal -->
+ <div class="modal" id="filterSiekerLakesModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Achtung</h5>
+       
+      </div>
+      <div class="modal-body">
+        <p>Einige Seen haben keine Angaben zu Volumen und Tiefe. Diese Seen werden herausgefiltert.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnFilterSiekerLakes" class="btn btn-primary filter-features" data-bs-dismiss="modal" data-type="sieker_surface_water">Seen Filtern</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+      </div>
+    </div>
+  </div>
 </div>

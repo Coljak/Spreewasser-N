@@ -168,9 +168,8 @@ def load_tif_stacks(input_dir):
 
     
     for k, v in path_dict.items():
-        # print('KEY:', k, 'VALUE:', v)
+
         if k == 'meta':
-            print('Checked variable ', k)
             continue
         elif path_dict['meta'] is None:  
             path_dict['meta'] = {
@@ -180,7 +179,6 @@ def load_tif_stacks(input_dir):
                 'crs': v['tif_meta']['crs'],
                 'dates': v['dates']
             }      
-            print('Elif: Checked variable ', k, 'with dates:', v['dates'])
         else:
             if path_dict['meta']['width'] != v['tif_meta']['width']:
                 raise ValueError('Width of .tif files  in variable ' + k + 'does not match previous width!')
@@ -193,7 +191,6 @@ def load_tif_stacks(input_dir):
             if path_dict['meta']['dates'] != path_dict[k]['dates']:
 
                 raise ValueError('Dates of .tif files do not match in variable ' + k + ': 1. ' + str(path_dict['meta']['dates']) + ', 2. ' + str(path_dict[k]['dates']))
-            print('Else: Checked variable ', k, 'with dates:', v['dates'])
 
     return path_dict
 

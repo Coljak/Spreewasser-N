@@ -84,43 +84,6 @@ function filterSinks( $button) {
 };
 
 
-// function getWaterBodies($button){
-//   const dataType = $button.data('type');
-//   const spinner = $button.find('.spinner-border')
-//   spinner.show();
-//   $button.prop('disabled', true) 
-//   let url = `filter_waterbodies/`;
-//   const infiltration = Infiltration.loadFromLocalStorage();
-//   fetch(url, {
-//     method: 'POST',
-//     body: JSON.stringify({
-//       dataType: dataType,
-//       project: infiltration}),
-//     headers: {
-//         'Content-Type': 'application/json',
-//         'X-CSRFToken': getCSRFToken(),
-//     }
-//   })
-//   .then(response => response.json())
-//   .then(data => {
-//     console.log('data', data)
-//     if (data.message.success) {
-//       addFeatureCollectionToLayer(data)
-//       addFeatureCollectionToTable(data)
-//     }  else {
-//       // TODO clear layers
-//       clearAndRemoveTable(Infiltration, dataType, data.message.message)
-//       handleAlerts(data.message);
-//     } 
-//   })
-//   .catch(error => console.error("Error fetching data:", error))
-//   .finally(() => {
-//     // Always hide spinner & enable button
-//     spinner.hide();
-//     $button.prop('disabled', false);
-//   });
-// };
-
 function addToInletTable(inlet, connectionId) {
   const row = document.createElement('tr');
   row.setAttribute('data-waterbody-type', inlet.waterbody_type);
@@ -361,8 +324,6 @@ export function initializeInfiltration() {
   console.log('Initialize Infiltraion');
   let inletVolumeChart;
 
-
-      
   initializeSliders();
       
   const forms = document.querySelectorAll('.weighting-form')

@@ -56,6 +56,12 @@ export class SiekerSink extends ToolboxProject {
         this.all_sieker_stream_ids = data.all_sieker_stream_ids ?? [];
         this.selected_sieker_streams = data.selected_sieker_streams ?? [];
 
+        this.result_sinks = data.result_sinks ?? [];
+        this.result_streams = data.result_streams ?? [];
+        this.result_lakes = data.result_lakes ?? [];
+        this.result_timeseries = data.result_timeseries ?? [];
+        this.result_result = data.result_result ?? [];
+
     }
 
     updateButtonState() {

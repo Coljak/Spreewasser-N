@@ -111,10 +111,8 @@ def get_lat_lon_as_index(lat, lon):
         lat_idx = lat_idx - 1
 
     if (lons[lon_idx] + lons[lon_idx-1]) / 2 > lon:
-        print("lon is in if")
         lon_idx = lon_idx - 1
 
-    print('lat', lats[lat_idx], 'lon_idx', lons[lon_idx])
     return (lat_idx, lon_idx)
 
 

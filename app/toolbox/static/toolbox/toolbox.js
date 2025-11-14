@@ -239,7 +239,6 @@ export async function loadProjectFromDb(project_id) {
     } else {
         handleAlerts(data.message);
     }
-
 };
 
 export function addChangeEventListener(projectClass) {
@@ -390,7 +389,7 @@ export function loadProjectToGui(project) {
             const $checkbox = $(this);
             const val = $checkbox.val();
             const key = $checkbox.attr('prefix') + '_' + $checkbox.attr('name');
-            // console.log('checkbox val key', val, key, project[key].includes(val))
+            console.log('checkbox val key', val, key)
             
             $checkbox.prop('checked', project[key].includes(val));
 
@@ -818,6 +817,7 @@ export function addFeatureCollectionToTable( data ){
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
     // select all previously selected
+    console.log('addFeatureCollection dataType', dataInfo.dataType )
     project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink => project[`all_${dataInfo.dataType}_ids`].includes(sink));
     project.saveToLocalStorage();
 
@@ -878,4 +878,10 @@ export function getTileOverlay(wmsLayer, layersName, toolTag) {
 
 
 };
+
+
+
+
+
+
 

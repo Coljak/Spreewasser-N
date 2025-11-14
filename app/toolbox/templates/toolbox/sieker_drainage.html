@@ -43,6 +43,10 @@
         <li class="nav-item drainage">
             <a id="navSiekerDrainageResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabDrainageResult">Ergebnis</a>
         </li>
+
+        <li class="nav-item infiltration">
+            <a id="navDrainageResultDownload" class="toolbox nav-link" data-bs-toggle="tab" href="#tabDrainageResultDownload">Download</a>
+        </li>
     </ul>
 
     <!-- Tab Content Wrapper -->
@@ -198,28 +202,12 @@
 
         <!-- Result Tab -->
 
-        <div id="tabDrainageResult" class="tab-pane ">
+        <div id="tabDrainageResultDownload" class="tab-pane ">
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>
-                    <table  class="table table-hover" id="inlet-table">
-                        <thead>
-                            <tr>
-                            <th>ID</th>
-                            <th>Vergrößerte Senke</th>
-                            <th>Senkeneignung</th>
-                            <th>Wasserkörper</th>
-                            <th>Länge Zuleitung(m)</th>
-                            <th>Eignung Zuleitung</th>
-                            <th>Gesamtbewertung</th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                    <div id="drainage-info-card" class="card mt-3" style="display: none;"></div>
+                    <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
+                    {% crispy result_form %}
                 </div>
             </div>
         </div>

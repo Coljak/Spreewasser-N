@@ -26,7 +26,6 @@ def use_single_row_textarea(field):
     """
     if isinstance(field.widget, forms.Textarea):
         field.widget = SingleRowTextarea()
-        print("is textarea fieldform")
     return field
 
 
@@ -85,12 +84,10 @@ class MonicaNewProjectForm(forms.Form):
         # user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user is not None:
-            print("user is not none")
             monica_projects = models.MonicaProject.objects.filter(Q(user=user))
             mp = [( monica_project.monica_model_setup.id, monica_project.name) for monica_project in monica_projects]
             default_setup = models.ModelSetup.objects.filter(is_default=True)[0]
             setup_choices = [(default_setup.id, default_setup.name)] + mp
-            print(setup_choices, mp)
 
             self.fields['monica_model_setup'].choices = setup_choices
 

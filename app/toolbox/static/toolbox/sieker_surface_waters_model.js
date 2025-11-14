@@ -22,6 +22,17 @@ export class SiekerSurfaceWaters extends ToolboxProject {
         this.sieker_surface_water_area_ha_max = data.sieker_surface_water_area_ha_max ?? null;
         // TODO BADESEEN!
 
+        this.all_result_lakes_ids = data.all_result_lakes_ids ?? [];
+        
+        // this.selected_result_lakes = data.selected_result_lakes ?? [];
+        // this.all_result_water_level_ids = data.all_result_water_level_ids ?? [];
+        // this.selected_result_water_levels = data.selected_result_water_levels ?? [];
+        // this.all_result_timeseries_ids = data.all_result_timeseries_ids ?? [];
+        // this.selected_result_timeseriess = data.selected_result_timeseriess ?? [];
+
+        this.result_lakes = data.result_lakes ?? [];
+        this.result_stations = data.result_stations ?? [];
+        this.result_timeseries = data.result_timeseries ?? [];
 
 
     }

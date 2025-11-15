@@ -1095,6 +1095,7 @@ class SiekerSink(models.Model):
     def to_json(self, language='de'):
         return {
                 "id": self.id,
+                "name": 'Senke' if language=='de' else 'Sink',
                 "depth": round(self.depth, 2),
                 "area": round(self.area, 1),
                 "volume": round(self.volume, 1),
@@ -1323,13 +1324,15 @@ class DataInfo(models.Model):
     feature_type = models.CharField(max_length=255, default="polygon")
     table_caption = models.CharField(max_length=255)
     popup_header = models.CharField(max_length=255, null=True, blank=True)  # e.g. "name"
-    marker_cluster = models.BooleanField(default=False, null=True, blank=True)
+    marker_cluster = models.BooleanField(default=False, null=True, blank=True) # TODO not used!
     color_by_index = models.CharField(default=None, max_length=32, null=True, blank=True)
     # a legend is only created if color_by_index is not None 
     legend = models.ForeignKey(LeafletLegend, on_delete=models.CASCADE, default=None, null=True, blank=True)
     # icon path is relevant for point values, that have a custom pin icon
     icon_path = models.CharField(max_length=256, null=True, blank=True)
+    # style of a dashed line
     dash_array = models.CharField(max_length=8, null=True, blank=True)
+    select_feature_button = models.BooleanField(default=False)
 
     def to_dict(self, language="de"):
         dict = {
@@ -1341,6 +1344,7 @@ class DataInfo(models.Model):
             "popUp": {"header": self.popup_header},
             "properties": [p.to_dict(language) for p in self.properties.all().order_by('order_position')],
             "tableLength": self.properties.filter(table=True).count(),
+            "selectFeatureButton": self.select_feature_button,
             
         }
         if self.color_by_index:

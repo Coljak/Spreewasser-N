@@ -649,7 +649,10 @@ def get_weighting_forms(request):
 
 
 
-def new_shortest_connection(sinks, lakes, streams, data_type):
+def new_shortest_connection(sinks, lakes, streams, transform_to_4326=False):
+    """
+    This function works for sinks, enlarged sinks and sieker sinks.
+    """
 
     for sink in sinks:
         lake_with_distance = lakes.annotate(
@@ -670,9 +673,19 @@ def new_shortest_connection(sinks, lakes, streams, data_type):
         sink.distance=closest.distance_to_sink.m
         sink.waterbody_class=type
         sink.waterbody = closest
-        
-    
-    
+
+        pt1, pt2 = nearest_points(
+            shapely_shape(json.loads(sink.geom25833.geojson)),
+            shapely_shape(json.loads(closest.geom25833.geojson))
+        )
+        line = LineString([pt1.coords[0], pt2.coords[0]])
+        line_geom = GEOSGeometry(line.wkt, srid=25833)
+        sink.line_geom25833 = line_geom
+        if transform_to_4326:
+            line_4326 = line_geom.clone()
+            line_4326.transform(4326)
+            sink.line_geom4326 = line_4326
+
 
     return sinks
 
@@ -741,7 +754,7 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams, is_enlarged_sink=Fa
                 'line': json.loads(line_geom.geojson),
                 'length_m': round(length_m, 2),
                 'rating_connection': rating_length,
-                'index_total': rating_length
+                'index_total': rating_length # WRONG!!!!!
             }
 
 
@@ -757,8 +770,92 @@ def get_shortest_connection_lines_utm(sinks, lakes, streams, is_enlarged_sink=Fa
 
     return results
 
-
 def get_infiltration_results(request):
+    # POST request
+    if request.method != "POST":
+        return HttpResponseBadRequest("POST required")
+    try:
+        project = request.body
+        print('Project:', type(project))
+        project = json.loads(project)
+
+        sinks = models.Sink.objects.filter(id__in=project.get('selected_sinks', []))
+        enlarged_sinks = models.EnlargedSink.objects.filter(id__in=project.get('selected_enlarged_sinks', []))
+        lakes = models.Lake.objects.filter(id__in=project.get('selected_lakes', []))
+        streams = models.Stream.objects.filter(id__in=project.get('selected_streams', []))
+
+        def get_length_rating(sinks):
+            for sink in sinks:
+                if sink.distance >= 2000:
+                    sink.rating_length = 0
+                elif sink.distance >= 1000:
+                    sink.rating_length = 5
+                else:
+                    sink.rating_length = int((1000 - sink.distance)/10)
+                
+            return sinks
+        print("check 1")
+        results = []
+        if sinks.count() > 0:
+            all_indices_sinks = calculate_indices_df(sinks, project, sink_type='sink')
+            sinks_with_connection = new_shortest_connection(sinks, lakes, streams, transform_to_4326=True)
+            print("check 1a")
+            sinks_with_connection = get_length_rating(sinks_with_connection)
+            print("check 1b")
+            for sink in sinks_with_connection:
+                print("check 1c")
+                result = {
+                        'sink_id': sink.id,
+                        'sink_geom': sink.to_feature(),
+                        'is_enlarged_sink': False,
+                        'waterbody_type': sink.waterbody_class.__str__,
+                        'waterbody_id': sink.waterbody.id,
+                        'waterbody_name': sink.waterbody.name,
+                        'line': json.loads(sink.line_geom4326.geojson),
+                        'length_m': int(sink.distance),
+                        'rating_connection': sink.rating_length,
+                        'rating_waterbody_sink': min(sink.waterbody.mean_surplus_volume / sink.volume, 1),
+                        'index_total': sink.rating_length # WRONG!!!!!
+                    }
+                results.append(result)
+            print("check 1d")
+        print("check 2")
+        if enlarged_sinks.count() > 0:
+            all_indices_enlarged_sinks = calculate_indices_df(enlarged_sinks, project, sink_type='enlarged_sink')
+            enlarged_sinks_with_connection = new_shortest_connection(enlarged_sinks, lakes, streams, transform_to_4326=True)
+            enlarged_sinks_with_connection = get_length_rating(enlarged_sinks_with_connection)
+            for sink in enlarged_sinks_with_connection:
+                result = {
+                        'sink_id': sink.id,
+                        'sink_geom': json.loads(sink.to_feature()),
+                        'is_enlarged_sink': False,
+                        'sink_embankment':sink.sink_embankment.first().to_feature(),
+                        # 'waterbody_type': sink.waterbody_class.__str__,
+                        'waterbody_id': sink.waterbody.id,
+                        'waterbody_name': sink.waterbody.name,
+                        'line': json.loads(sink.line_geom4326.geojson),
+                        'length_m': int(sink.distance),
+                        'rating_connection': sink.rating_length,
+                        'rating_waterbody_sink': min(sink.waterbody.mean_surplus_volume / sink.volume, 1),
+                        'index_total': sink.rating_length # WRONG!!!!!
+                    }
+                results.append(result)
+        print("check 3")
+        print(results)
+        
+
+        
+        response = {
+            'inlets_sinks': results,
+            'message': {
+                'success': True,
+            }
+        }
+        return JsonResponse(response)
+    except:
+        return HttpResponseBadRequest("Error processing request")
+
+def get_infiltration_results_old(request):
     # POST request
     project = json.loads(request.body)
     print('Project:', project)

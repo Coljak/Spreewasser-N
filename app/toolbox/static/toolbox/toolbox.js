@@ -82,20 +82,19 @@ export function getWaterBodies($button, ProjectClass){
 
 // TODO I think      this is not working!
 $('#map').on('click', function (event) {
-    if (event.target.classList.contains('select-map-feature-button')) {
-    const dataType = event.target.getAttribute('data-type');
-    const dataId = event.target.getAttribute('data-id');
-    console.log('select-map-feature-button', dataType, 'ID:', dataId);
-        map.closePopup();
+    if (event.target.classList.contains('select-map-feature-checkbox')) {
+        const dataType = event.target.getAttribute('data-type');
+        const dataId = event.target.getAttribute('data-id');
+            // map.closePopup();
 
-   try {     
-    // the checkbox is not necessarily available
-    const checkbox = document.querySelector(`.table-select-checkbox[data-type="${dataType}"][data-id="${dataId}"]`);
-        checkbox.checked = !checkbox.checked;
-    } catch {;}
-    const project = projectClasses[dataType].loadFromLocalStorage()
-    project[`selected_${dataType}s`] = toggleNumberInArray(project[`selected_${dataType}s`])
-    project.saveToLocalStorage();
+    try {     
+        // the checkbox is not necessarily available
+        const checkbox = document.querySelector(`.table-select-checkbox[data-type="${dataType}"][data-id="${dataId}"]`);
+            checkbox.checked = event.target.checked;
+        } catch {;}
+        const project = projectClasses[dataType].loadFromLocalStorage()
+        project[`selected_${dataType}s`] = toggleNumberInArray(project[`selected_${dataType}s`], Number(dataId));
+        project.saveToLocalStorage();
     }
 });
 
@@ -306,24 +305,14 @@ export function addChangeEventListener(projectClass) {
             
             const key = `selected_${dataType}s`;
 
-            if ($target.is(':checked')) {
-                console.log("Selected Id:", $target.data('id'));
-                console.log("key:", key);
-                console.log('project[key]', project[key])
-                console.log(project)
-                project[key].push($target.data('id'));
-                project.saveToLocalStorage();
+            // in case checkable Popup is open
+            try {
+                const checkbox = document.querySelector(`.select-map-feature-checkbox[data-type="${dataType}"][data-id="${$target.data('id')}"]`);
+                checkbox.checked = $target.is(':checked');
+            } catch  {;};
 
-            } else {
-                const dataId = $target.data('id');
-                console.log("Selected Id:", dataId);
-                $('.table-select-all')[0].checked = false 
-                const index = project[key].indexOf(dataId);
-                if (index > -1) {
-                    project[key].splice(index, 1);
-                }
-                project.saveToLocalStorage();
-            }
+            toggleNumberInArray(project[key], $target.data('id'));
+            project.saveToLocalStorage();
             return;
         };
     });
@@ -414,10 +403,7 @@ export function loadProjectToGui(project) {
                      
         }
     }
-    
-
-   
-            
+                
 };
 
 
@@ -559,14 +545,78 @@ const colorFunction = function (index) {
   return color
 };
 
+function addPopUpsToFeature(dataInfo) {
+    return function onEachFeature(feature, layer) {
+        let popupContent = '';
+        if (feature.properties[dataInfo.popUp.header]) {
+            popupContent += `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
+        }
+        dataInfo.properties.forEach(property => {
+            if (property.popUp) { 
+                popupContent += property.href
+                ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
+                : `<b>${property.title}:</b> ${feature.properties[property.valueName] ?? '-'
+                    } ${feature.properties[property.valueName] ? property.unit ?? '' : ''}<br>`;
+            }
+        });
+        
+        const popupOptions = {
+            offset: [0, -30],   // shift popup upwards
+            autoPan: false      // don’t auto-pan map on hover
+        };
+
+        // Show popup on hover
+        layer.on('mouseover', function (event) {
+            // open popup at mouse location
+            const hoverPopup = L.popup(popupOptions)
+                .setLatLng(event.latlng)
+                .setContent(popupContent)
+                .openOn(map);
+
+            // close when mouse leaves feature
+            layer.once('mouseout', function () {
+                map.closePopup(hoverPopup);
+            });
+        });
+        let popupClickContent = '';
+        if (dataInfo.selectFeatureButton === true) {
+        popupClickContent = popupContent + 
+            `<div class="form-check">
+                <input type="checkbox" class="select-map-feature-checkbox form-check-input" data-type="${dataInfo.dataType}" data-id="${feature.properties.id}">
+                <label class="form-check-label">Auswählen</label>
+            </div>`;
+        };
+
+        // Show persistent popup on click
+        layer.on('click', function (event) {
+            // close any hover popup first
+            map.closePopup();
+
+            const popUp = L.popup(popupOptions)
+                .setLatLng(event.latlng)
+                .setContent(popupClickContent)
+                .openOn(map);
+            const project = projectClasses[dataInfo.dataType].loadFromLocalStorage();
+            const isSelected = project[`selected_${dataInfo.dataType}s`].includes(feature.properties.id);
+            console.log('isSelected', isSelected)
+            
+            const checkbox = document.querySelector(`.select-map-feature-checkbox[data-id="${feature.properties.id}"]`);
+            checkbox.checked = isSelected;
+            
+        });
+
+
+        Layers[dataInfo.dataType].addLayer(layer)
+    }
+}
+
+
 export function addFeatureCollectionToLayer(data){
     console.log('addFeatureCollectionToLayer dataInfo', data.dataInfo)
     console.log('addFeatureCollectionToLayer dataInfo.colorByIndex', data.dataInfo.colorByIndex)
-    let selectable = true;
     
     let featureCollection = data.featureCollection;
-    let dataInfo = data.dataInfo;
-    
+    let dataInfo = data.dataInfo;  
     let colorByIndex = dataInfo.colorByIndex ? dataInfo.colorByIndex : false
     
     const featureGroup = Layers[dataInfo.dataType]
@@ -587,75 +637,10 @@ export function addFeatureCollectionToLayer(data){
             if (dataInfo.dashArray) {
                 style.dashArray = dataInfo.dashArray;
             }
-
             return style;
         },
         pane: "polygonPane",
-        onEachFeature: function (feature, layer) {
-            // console.log('onEachFeature:', feature)
-            let popupContent = '';
-            if (feature.properties[dataInfo.popUp.header]) {
-                popupContent += `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
-            }
-            dataInfo.properties.forEach(property => {
-                if (property.popUp) { 
-                    popupContent += property.href
-                    ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
-                    : `<b>${property.title}:</b> ${feature.properties[property.valueName] ?? '-'} ${feature.properties[property.valueName] ? property.unit ?? '' : ''}<br>
-                        `;
-                    }    
-            });
-
-            const popupOptions = {
-                offset: [0, -30],   // shift popup upwards
-                autoPan: false      // don’t auto-pan map on hover
-            };
-
-            layer.on('mouseover', function (event) {
-                // open popup at mouse location
-                const hoverPopup = L.popup(popupOptions)
-                    .setLatLng(event.latlng)
-                    .setContent(popupContent)
-                    .openOn(map);
-
-                // close when mouse leaves feature
-                layer.once('mouseout', function () {
-                    map.closePopup(hoverPopup);
-                });
-            });
-    
-            layer.on('mouseout', function () {
-                // Only reset to default if not clicked
-                if (!this.options.isClicked) {
-                    // this.setStyle(defaultStyle);
-                }
-            });
-
-            if (selectable) {
-                let menuContent = popupContent + `<button class="btn btn-outline-secondary select-map-feature-button" data-type=${dataInfo.dataType} data-id="${feature.properties.id}">Auswählen</button>`;  
-    
-                layer.on('click', function (e) {
-                    // Remove clicked from all
-                    const popUp = L.popup().setContent(menuContent);
-                    map.openPopup(popUp, layer.getBounds().getCenter());
-                    document.querySelectorAll('.polygon.clicked')
-                    .forEach(el => el.classList.remove('clicked'));
-
-                // Add to this one
-                let pathEl = e.target._path; // The actual SVG path element
-                if (pathEl) {
-                    pathEl.classList.add('clicked');
-                }
-                });
-            }
-            layer.on('add', function () {
-                if (layer._path) {
-                    layer._path.setAttribute('data-type', dataInfo.dataType);
-                    layer._path.setAttribute('data-id', feature.properties.id);
-                }
-            });
-            layer.addTo(featureGroup);
-        }
+        onEachFeature: addPopUpsToFeature(dataInfo)
         });
   
     // let layerGroup = L.featureGroup([layer]).addTo(map);
@@ -666,6 +651,7 @@ export function addFeatureCollectionToLayer(data){
     featureGroup.addTo(map);
     layer.bringToFront();
 };
+
 
 
 export function addPointFeatureCollectionToLayer(data) {
@@ -696,68 +682,13 @@ export function addPointFeatureCollectionToLayer(data) {
             });
         },
         pane: "polygonPane",
-        onEachFeature: function (feature, layer) {
-            let popupContent = '';
-            if (feature.properties[dataInfo.popUp.header]) {
-                popupContent += `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
-            }
-            dataInfo.properties.forEach(property => {
-                if (property.popUp) { 
-                    popupContent += property.href
-                    ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
-                    : `<b>${property.title}:</b> ${feature.properties[property.valueName] ?? '-'
-                        } ${feature.properties[property.valueName] ? property.unit ?? '' : ''}<br>`;
-                }
-            });
-
-            let popupClickContent = popupContent + `
-                <button class="btn btn-outline-secondary select-map-feature-button" 
-                    data-type="${dataInfo.dataType}" 
-                    data-id=${feature.properties.id}>
-                    Auswählen
-                </button>
-            `;
-
-            const popupOptions = {
-                offset: [0, -30],   // shift popup upwards
-                autoPan: false      // don’t auto-pan map on hover
-            };
-
-            // Show popup on hover
-            layer.on('mouseover', function (event) {
-                // open popup at mouse location
-                const hoverPopup = L.popup(popupOptions)
-                    .setLatLng(event.latlng)
-                    .setContent(popupContent)
-                    .openOn(map);
-
-                // close when mouse leaves feature
-                layer.once('mouseout', function () {
-                    map.closePopup(hoverPopup);
-                });
-            });
-
-            // Show persistent popup on click
-            layer.on('click', function (event) {
-                // close any hover popup first
-                map.closePopup();
-
-                L.popup(popupOptions)
-                    .setLatLng(event.latlng)
-                    .setContent(popupClickContent)
-                    .openOn(map);
-            });
-
-
-            featureGroup.addLayer(layer)
-        }
+        onEachFeature: addPopUpsToFeature(dataInfo)           
     });
 
     map.addLayer(featureGroup)
     if (dataInfo.legendSettings) {
         addLegend(dataInfo.legendSettings)
       }
-
 };
 
 export function addFeatureCollectionToTable( data ){

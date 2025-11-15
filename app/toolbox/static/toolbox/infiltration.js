@@ -168,13 +168,16 @@ function addToInletTable(inlet, connectionId) {
 
 function getInfiltrationResults() {
     const infiltration = Infiltration.loadFromLocalStorage();
+    console.log(typeof infiltration, infiltration);              // should log "object"
+    console.log(typeof JSON.stringify(infiltration)); 
     fetch('get_infiltration_results/', {
       method: 'POST',
       body: JSON.stringify(infiltration),
       headers: {
           'Content-Type': 'application/json',
           'X-CSRFToken': getCSRFToken(),
-      }
+      },
+      credentials: 'same-origin'   
     })
     .then(response => response.json())
     .then(data => {

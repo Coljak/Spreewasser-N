@@ -37,7 +37,7 @@ function filterSiekersurfaceWaters() {
     .then(response => response.json())
     .then(data => {
         if (data.message.success){
-            addFeatureCollectionToLayer(data.lakes)
+            addFeatureCollectionToLayer(data.lakes, true)
         addFeatureCollectionToTable(data.lakes)
         } else {
             handleAlerts(data.message);
@@ -64,7 +64,7 @@ function getAllSiekersurfaceWaters() {
     .then(response => response.json())
     .then(data => {
         if (data.message.success){
-            addFeatureCollectionToLayer(data.lakes)
+            addFeatureCollectionToLayer(data.lakes, true)
         addFeatureCollectionToTable(data.lakes)
         } else {
             handleAlerts(data.message)

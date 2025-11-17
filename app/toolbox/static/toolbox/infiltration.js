@@ -10,6 +10,7 @@ import {
   addFeatureCollectionToLayer, 
   loadProjectToGui,
   clearAndRemoveTable,
+  createResultTable,
   getWaterBodies
  } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
@@ -58,9 +59,6 @@ function filterSinks( $button) {
       clearAndRemoveTable(Infiltration, sinkType, data.message.message)
       throw new Error('Filter returned 0 objects');
     }
-    // const selected_sinks = infiltration[`selected_${sinkType}s`];
-    // infiltration[`selected_${sinkType}s`] = [];
-    // infiltration[`selected_${sinkType}s`] = selected_sinks.filter(sink => infiltration[`all_${sinkType}_ids`].includes(sink));
 
     console.log('data', data);
     const sink_indices = {}
@@ -84,7 +82,7 @@ function filterSinks( $button) {
 };
 
 
-function addToInletTable(inlet, connectionId) {
+function addToInletTable(inlet) {
   const row = document.createElement('tr');
   row.setAttribute('data-waterbody-type', inlet.waterbody_type);
   row.setAttribute('data-waterbody-id', inlet.waterbody_id);
@@ -92,13 +90,12 @@ function addToInletTable(inlet, connectionId) {
   row.innerHTML = `
     <td>${inlet.sink_id}</td>
     <td>${inlet.is_enlarged_sink ? 'Ja' : 'Nein'}</td>  
-    <td>${inlet.waterbody_type} ${inlet.waterbody_id}: ${inlet.waterbody_name}</td>
-    <td>${inlet.length_m}</td>
-    <td>${inlet.rating_connection ?? inlet.rating_connection}%</td>
+    <td>${inlet.closest_waterbody_type} ${inlet.closest_waterbody_id}: ${inlet.closest_waterbody.name}</td>
+    <td>${inlet.distance_m}</td>
+    <td>${inlet.connection_feature.properties.index_total ?? inlet.connection_feature.properties.index_total}%</td>
     <td>${inlet.index_sink_total ?? inlet.index_sink_total}%</td>
-    <td>${((inlet.rating_connection + inlet.index_sink_total)/2)}%</td>
-    <td><button class="btn btn-sm btn-primary result-aquifer-recharge hide-connection" data-id="${connectionId}"">Hide</button></td>
-    <td><button class="btn btn-sm btn-primary result-aquifer-recharge edit-connection" data-id="${connectionId}">Zuleitung editieren</button></td>
+    <td>${inlet.index_total}%</td>
+    <td><button class="btn btn-sm btn-primary result-aquifer-recharge hide-connection" data-id="${inlet.id}"">Hide</button></td>
   `;
 
   // On row click: update info card
@@ -182,73 +179,62 @@ function getInfiltrationResults() {
     .then(response => response.json())
     .then(data => {
       if (data.message.success) {
-        console.log('data', data);
-        // handleAlerts(data.message);
+        console.log('getInfiltration data', data);
 
-        let enlarged_sink_indices = {};
-        let sink_indices = {};
-        const enlarged_sink_indices_item = localStorage.getItem('enlarged_sink_indices');
-        try  {
-          enlarged_sink_indices = JSON.parse(enlarged_sink_indices_item);
-        } catch {
-          ;
-        }
-        const sink_indices_item = localStorage.getItem('sink_indices');
-        try {
-           sink_indices = JSON.parse(sink_indices_item);
-        } catch {
-          ;
-        }
-        data.inlets_sinks.forEach(inlet => {
-          console.log('inlet', inlet);
 
-          if (inlet.is_enlarged_sink) {
-            inlet.index_sink_total = enlarged_sink_indices[inlet.sink_id]?.index_total || 0;
-          }
-          else {
-            inlet.index_sink_total = sink_indices[inlet.sink_id]?.index_total || 0;
-          }
+        createResultTable({dataInfo: data.result_data_info, inlets: data.results})
+        addFeatureCollectionToLayer({dataInfo: data.inlet_data_info, featureCollection: data.inlet_feature_collection}, true)
+        
+        addFeatureCollectionToLayer({dataInfo: data.sink_data_info, featureCollection: data.sink_feature_collection}, false)
 
-          const connectionId = `${inlet.is_enlarged_sink ? 'enl' : 'sink'}_${inlet.sink_id}_${inlet.waterbody_type}_${inlet.waterbody_id}`;
+        addFeatureCollectionToLayer({dataInfo: data.enlarged_sink_data_info, featureCollection: data.enlarged_sink_feature_collection}, false)
+        // NEW START ////
 
-          // Create sink marker
-          const sinkLayer = L.geoJSON(inlet.sink_geom, {
-              className: 'sink-outline',
-          })
 
-          // Create line
-          const lineLayer = L.geoJSON(inlet.line, {
-            className: `connection-line connection-${inlet.waterbody_type}`,
-            style: {
-              color: inlet.waterbody_type === 'lake' ? '#007bff' : '#28a745',
-              weight: 3,
-              dashArray: '4,4'
-            }
-          });
+      // createResultTable
+ 
 
-          const groupLayers = [sinkLayer, lineLayer]
+      ///NEW END///
+      // data.inlets_sinks.forEach(inlet => {
+      //   console.log('inlet', inlet);
 
-          if (inlet.sink_embankment) {
-            const sink_embankment = L.geoJSON(inlet.sink_embankment, {
-              className: 'sink-embankment',
-              style: {
-                fillColor: '#ff5722',
-                color: '#000',
-              }
+      //     // Create sink marker
+      //     const sinkLayer = L.geoJSON(inlet.sink_geom, {
+      //         className: 'sink-outline',
+      //     })
+
+      //     // Create line
+      //     const lineLayer = L.geoJSON(inlet.line, {
+      //       className: `connection-line connection-${inlet.waterbody_type}`,
+      //       style: {
+      //         color: inlet.waterbody_type === 'lake' ? '#007bff' : '#28a745',
+      //         weight: 3,
+      //         dashArray: '4,4'
+      //       }
+      //     });
+
+      //     const groupLayers = [sinkLayer, lineLayer]
+
+      //     if (inlet.sink_embankment) {
+      //       const sink_embankment = L.geoJSON(inlet.sink_embankment, {
+      //         className: 'sink-embankment',
+      //         style: {
+      //           fillColor: '#ff5722',
+      //           color: '#000',
+      //         }
               
-            })
-            groupLayers.push(sink_embankment)
-          }
+      //       })
+      //       groupLayers.push(sink_embankment)
+      //     }
 
-          // Combine both into a LayerGroup
-          const group = L.layerGroup(groupLayers).addTo(Layers.inletConnectionsFeatureGroup);
+      //     // Combine both into a LayerGroup
+      //     const group = L.layerGroup(groupLayers).addTo(Layers.inletConnectionsFeatureGroup);
           
-          connectionLayerMap[connectionId] = group;
+      //     connectionLayerMap[inlet.id] = group;
 
-          addToInletTable(inlet, connectionId);  // builds a row in the table
+      //     addToInletTable(inlet);  // builds a row in the table
 
-        });
-  
+      //   });
        
          const resultTab = document.getElementById('navInfiltrationResult');
         resultTab.classList.remove('disabled');
@@ -258,7 +244,7 @@ function getInfiltrationResults() {
         const tab = new bootstrap.Tab(resultTab);
         tab.show();
         
-        map.addLayer(Layers.inletConnectionsFeatureGroup)
+        // map.addLayer(Layers.inletConnectionsFeatureGroup)
         map.removeLayer(Layers.sink);
         map.removeLayer(Layers.enlarged_sink);
         map.addLayer(Layers.stream);
@@ -269,6 +255,8 @@ function getInfiltrationResults() {
       }
   });
 };
+
+
 
 function updateInletInfoCard(inlet) {
   const card = document.getElementById('inlet-info-card');
@@ -413,6 +401,31 @@ export function initializeInfiltration() {
 
     $('#toolboxPanel').off('change'); // Remove any previous change event handlers
     addChangeEventListener(Infiltration);
+    $('#toolboxPanel').on('change', function (event){
+      const $target = $(event.target);
+      if ($target.hasClass('toggle-sink-result')) {
+        const inletId = $target.data('id')
+        const inletLayerId = `infiltration_inlet_${inletId}`;
+        const sinkLayer = $target.attrs('layer-id');
+        const dataType = $target.data('type');
+        // if ($target.is(':checked')) {
+        //   Layers[dataType].eachLayer(layer => {
+        //     if (layer.customId === sinkLayer || layer.customId === inletLayerId) {
+        //       map.addLayer(layer);
+        //     }
+        //   });
+        // } else {
+        //   Layers[dataType].eachLayer(layer => {
+        //     if (layer.customId === sinkLayer || layer.customId === inletLayerId) {
+        //       map.removeLayer(layer);
+        //     }
+        //   })
+        // };
+      }
+    });
+
+
+
     $('#toolboxPanel').off('click');
     addClickEventListenerToToolboxPanel(Infiltration)
     $('#toolboxPanel').on('click', function (event) {
@@ -430,6 +443,12 @@ export function initializeInfiltration() {
     } else if ($target.attr('id') === 'navInfiltrationResult') {
         map.removeLayer(Layers.sink);
         map.removeLayer(Layers.enlarged_sink);
+    } else if ($target.attr('id') === 'buttonX') {
+      Layers['lake'].eachLayer(layer => {
+        if (layer.customId === 'lake_165') {
+          map.removeLayer(layer);
+        }
+      });
     } 
     }); 
 
@@ -438,6 +457,6 @@ export function initializeInfiltration() {
     const infiltration = Infiltration.loadFromLocalStorage();
     loadProjectToGui(infiltration);
     
-
+console.log('GETTING LAYER: ', Layers)
 }
 

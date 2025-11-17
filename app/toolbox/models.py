@@ -96,8 +96,14 @@ class UserField(models.Model):
                 'has_sieker_drainage': self.has_sieker_drainage,
         }
     
-    def to_feature(self):
-        geometry = json.loads(self.geom.geojson)
+    def to_feature(self, epsg=4326):
+        if epsg == 4326:
+            geometry = json.loads(self.geom.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
         properties = self.to_json()
         return {
             "type": "Feature",
@@ -105,7 +111,6 @@ class UserField(models.Model):
             "properties": properties
         }
 
-        #{"lakes": {"plus_days": [114, 182], "max_surplus_volume": [7, 22830600], "min_surplus_volume": [2, 2215500], "mean_surplus_volume": [4, 8374270]}, "sinks": {"area": [3, 190735], "depth": [0, 14], "volume": [1, 81540]}, "streams": {"plus_days": [94, 356], "max_surplus_volume": [4, 2872900], "min_surplus_volume": [0, 306334], "mean_surplus_volume": [2, 1028830]}, "enlarged_sinks": {"area": [2, 208162], "depth": [0, 12], "volume": [0, 243609], "volume_gained": [-17714, 243584], "volume_construction_barrier": [0, 1914]}}
     def compute_filter_bounds_infiltration(self):
         bounds = dict()
         lakes = Lake.objects.filter(Q(geom__intersects=self.geom) | Q(geom__within=self.geom))
@@ -210,11 +215,15 @@ class River(models.Model):
     w_sfk_lg = models.CharField(max_length=16, null=True, blank=True)
     w_id = models.IntegerField(null=True, blank=True)
 
-    def to_feature(self):
+    def to_feature(self, epsg=4326):
         """
         Convert the model instance to a GeoJSON feature.
         """
-        geometry = json.loads(self.geom.geojson) if self.geom else None
+        if epsg == 4326:
+            geometry = json.loads(self.geom.geojson) if self.geom else None
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
         return {
             "type": "Feature",
             "geometry": geometry,
@@ -257,11 +266,14 @@ class Lake25(models.Model):
     shape_len = models.FloatField(null=True, blank=True)
 
     
-    def to_feature(self):
+    def to_feature(self, epsg=4326):
         """
         Convert the model instance to a GeoJSON feature.
         """
-        geometry = json.loads(self.geom.geojson) if self.geom else None
+        if epsg == 4326:
+            geometry = json.loads(self.geom.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
         return {
             'type': "Feature",
             'geometry': geometry,
@@ -289,7 +301,7 @@ class OutlineInjection(gis_models.Model):
                 return self.name
     
     
-    def to_feature(self):
+    def to_feature(self, epsg=4326):
         geometry = json.loads(self.geom.geojson)
         return {
             "type": "Feature",
@@ -305,7 +317,7 @@ class OutlineSurfaceWater(gis_models.Model):
     def __str__(self):
             return self.name
 
-    def to_feature(self):
+    def to_feature(self, epsg=4326):
         geometry = json.loads(self.geom.geojson)
         return {
             "type": "Feature",
@@ -321,7 +333,7 @@ class OutlineInfiltration(gis_models.Model):
     def __str__(self):
             return self.name
 
-    def to_feature(self):
+    def to_feature(self, epsg=4326):
         geometry = json.loads(self.geom.geojson)
         return {
             "type": "Feature",
@@ -386,6 +398,9 @@ class Stream(models.Model):
     geom = gis_models.LineStringField(srid=4326, null=True, blank=True)
     geom25833 = gis_models.MultiLineStringField(srid=25833, null=True, blank=True)
 
+    def __data_type__(self):
+        return 'stream'
+
     def to_json(self):
         return {
                 'id': self.id,
@@ -399,8 +414,14 @@ class Stream(models.Model):
                 'plus_days': self.plus_days
         }
     
-    def to_feature(self):
-        geometry = json.loads(self.geom.geojson)
+    def to_feature(self, epsg=4326):
+        if epsg == 4326:
+            geometry = json.loads(self.geom.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
         properties = self.to_json()
         return {
             "type": "Feature",
@@ -427,6 +448,9 @@ class Lake(models.Model):
     plus_days = models.IntegerField()
     simple_geom = gis_models.PolygonField(srid=4326, null=True, blank=True)
 
+    def __data_type__(self):
+        return 'lake'
+
     def to_json(self):
         return {
                 'id': self.id,
@@ -441,8 +465,14 @@ class Lake(models.Model):
                 'plus_days': self.plus_days
         }
     
-    def to_feature(self):
-        geometry = json.loads(self.geom.geojson)
+    def to_feature(self, epsg=4326):
+        if epsg == 4326:
+            geometry = json.loads(self.geom.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
         properties = self.to_json()
         return {
             "type": "Feature",
@@ -480,9 +510,10 @@ class Sink(models.Model):
     aquifer = models.ForeignKey('Aquifer', on_delete=models.DO_NOTHING, null=True, blank=True)
     index_hydrogeology = models.FloatField(null=True, blank=True)
 
-
-    def to_json(self, language='de'):
-
+    def __data_type__(self):
+        return "sink"
+   
+    def to_json(self, indices, language='de'):
         landuse_1 = getattr(self.landuse_1, language, None)
         landuse_2 = getattr(self.landuse_2, language, '-')
         landuse_3 = getattr(self.landuse_3, language, '-')
@@ -493,7 +524,6 @@ class Sink(models.Model):
             landuse += landuse_2
             if self.landuse_3:
                 landuse += landuse_3
-
         return {
             "id": self.id,
             "name": 'Senke' if language=='de' else 'Sink',
@@ -501,30 +531,39 @@ class Sink(models.Model):
             "area": round(self.area, 2),
             "volume": round(self.volume, 2),
             "index_proportions": int(self.index_proportions * 100),
-            "index_soil": round(self.index_soil * 100, 1),
+            "index_soil": round(indices[self.id]['index_soil'] * 100, 1),
             "land_use": landuse,
             "land_use_1": landuse_1,
+            'land_use_1_percentage': round(self.land_use_1_percentage or 0, 1),
             "land_use_2": landuse_2,
+            'land_use_2_percentage': round(self.land_use_2_percentage or 0, 1),
             "land_use_3": landuse_3,
+            'land_use_3_percentage': round(self.land_use_3_percentage or 0, 1),
             "soil_points": self.soil_points,
             "index_feasibility": int(self.index_feasibility * 100) if self.index_feasibility else "-",
             "hydrogeology": getattr(self.aquifer, f'name_{language}', None),
             "index_hydrogeology": int(self.index_hydrogeology *100) if self.index_hydrogeology else None,
+            "index_sink_total_percent": min(int(indices[self.id]['index_sink_total'] * 100), 100),
+            "index_sink_total": indices[self.id]['index_sink_total'],
         }
-    
 
-    def to_point_feature(self, language='de'):      
+    def to_point_feature(self, indices, language='de'):      
         geometry = json.loads(self.centroid.geojson)
-        properties = self.to_json(language)
+        properties = self.to_json(indices, language)
         return {
             "type": "Feature",
             "geometry": geometry,
             "properties": properties
         }
-    
-    def to_feature(self, language='de'):      
-        geometry = json.loads(self.geom4326.geojson)
-        properties = self.to_json(language)
+
+    def to_feature(self, indices, epsg=4326, language='de'):      
+        if epsg == 4326:
+            geometry = json.loads(self.geom4326.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        properties = self.to_json(indices, language)
         return {
             "type": "Feature",
             "geometry": geometry,
@@ -575,10 +614,13 @@ class EnlargedSink(models.Model):
     hydrogeology_text = models.CharField(max_length=255, null=True, blank=True) # related table
     aquifer = models.ForeignKey('Aquifer', on_delete=models.DO_NOTHING, null=True, blank=True) # related table
     index_hydrogeology = models.FloatField(null=True, blank=True) # related table
+
+    def __data_type__(self):
+        return "enlarged_sink"
 # Intersect of LandusMap and Sink
 
     
-    def to_json(self, language='de'):
+    def to_json(self, indices, language='de'):
 
         landuse_1 = getattr(self.landuse_1, language, None)
         landuse_2 = getattr(self.landuse_2, language, None) if self.landuse_2 else '-'
@@ -601,34 +643,45 @@ class EnlargedSink(models.Model):
             "area": round(self.area, 2),
             "volume": round(self.volume, 2),
             "index_proportions": round(self.index_proportions * 100, 1),
-            "index_soil": round(self.index_soil * 100, 1),
+            "index_soil": round(indices[self.id]['index_soil'] * 100, 1),
             "land_use": landuse,
             "land_use_1": landuse_1,
+            "land_use_1_percentage": round(self.land_use_1_percentage or 0, 1),
             "land_use_2": landuse_2,
+            "land_use_2_percentage": round(self.land_use_2_percentage or 0, 1),
             "land_use_3": landuse_3,
+            "land_use_3_percentage": round(self.land_use_3_percentage or 0, 1),
             "land_use_4": landuse_4,
+            "land_use_4_percentage": round(self.land_use_4_percentage or 0, 1),
             "volume_gained": round(self.volume_gained, 2) if self.volume_gained else None,
-            "volume_construction_barrier": round(self.volume_construction_barrier, 2) if self.volume_construction_barrier else None,
-            "index_soil": round(self.index_soil * 100, 1),
+            "volume_construction_barrier": round(self.volume_construction_barrier, 2) if self.volume_construction_barrier else None,     
             "soil_points": self.soil_points,
             "index_feasibility": round(self.index_feasibility * 100, 1) if self.index_feasibility else "-",
             "hydrogeology": getattr(self.aquifer, f'name_{language}', None),
             "index_hydrogeology": round(self.index_hydrogeology *100, 1) if self.index_hydrogeology else None,
+            "index_sink_total_percent": min(int(indices[self.id]['index_sink_total'] * 100), 100),
+            "index_sink_total": indices[self.id]['index_sink_total'],
         }
     
      
-    def to_point_feature(self, language='de'):      
+    def to_point_feature(self, indices, language='de'):      
         geometry = json.loads(self.centroid.geojson)
-        properties = self.to_json(language)
+        properties = self.to_json(indices, language)
         return {
             "type": "Feature",
             "geometry": geometry,
             "properties": properties
         }
-    
-    def to_feature(self, language='de'):      
-        geometry = json.loads(self.geom4326.geojson)
-        properties = self.to_json(language)
+
+    def to_feature(self, indices, epsg=4326, language='de'):      
+        if epsg == 4326:
+            geometry = json.loads(self.geom4326.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+
+        properties = self.to_json(indices, language)
         return {
             "type": "Feature",
             "geometry": geometry,
@@ -716,10 +769,8 @@ class HydrogeologyEnlargedSinks(models.Model):
         super().save(*args, **kwargs)
 
 class EnlargedSinkEmbankment(models.Model):
-    geom = gis_models.MultiPolygonField(srid=25833)
-    centroid = gis_models.PointField(srid=25833, null=True, blank=True)
+    geom25833 = gis_models.MultiPolygonField(srid=25833)
     geom4326 = gis_models.MultiPolygonField(srid=4326, null=True, blank=True)
-    centroid4326 = gis_models.PointField(srid=4326, null=True, blank=True)
     enlarged_sink = models.ForeignKey(EnlargedSink, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='sink_embankment') 
 
     fid_sink = models.IntegerField()
@@ -732,13 +783,20 @@ class EnlargedSinkEmbankment(models.Model):
             self.centroid = self.geom.centroid  # Auto-generate centroid
         super().save(*args, **kwargs)
 
-    def to_feature(self):
+    def to_feature(self, epsg=4326):
         """
         Convert the model instance to a GeoJSON feature.
         """
+        if epsg == 4326:
+            geometry = json.loads(self.geom4326.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
         return {
             "type": "Feature",
-            "geometry": json.loads(self.geom4326.geojson),
+            "geometry": geometry,
             "properties": {
                 "fid_sink": self.fid_sink,
                 "height": self.height,
@@ -939,8 +997,14 @@ class SiekerLargeLake(models.Model):
                 "seetyp_txt": self.seetyp_txt
             }
 
-    def to_feature(self, language='de'):
-        geometry = json.loads(self.geom4326.geojson)
+    def to_feature(self, epsg=4326, language='de'):
+        if epsg == 4326:
+            geometry = json.loads(self.geom4326.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
         properties = self.to_json(language)
         return {
             "type": "Feature",
@@ -1051,9 +1115,16 @@ class SiekerWaterLevel(models.Model):
             "diff_cm": self.diff_cm,
         }
 
-    def to_feature(self, language='de'):
+    def to_feature(self, epsg=4326, language='de'):
         
-        geometry = json.loads(self.geom4326.geojson) if self.geom4326 else None
+        if epsg == 4326:
+            geometry = json.loads(self.geom4326.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
+
         properties = self.to_json(language)
         return {
             'type': 'Feature',
@@ -1090,7 +1161,8 @@ class SiekerSink(models.Model):
     distance_stream = models.FloatField(null=True, blank=True)
     nearest_stream = models.ForeignKey(Stream, on_delete=models.DO_NOTHING, null=True, blank=True)
     
-    
+    def __data_type__(self):
+        return "sieker_sink"
 
     def to_json(self, language='de'):
         return {
@@ -1125,8 +1197,14 @@ class SiekerSink(models.Model):
             "properties": properties
         }
     
-    def to_feature(self, language='de'):  
-        geometry = json.loads(self.geom4326.geojson)
+    def to_feature(self, epsg=4326, language='de'):  
+        if epsg == 4326:
+            geometry = json.loads(self.geom4326.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
         properties = self.to_json(language)
         return {
             "type": "Feature",
@@ -1182,8 +1260,14 @@ class GekRetention(models.Model):
             "number_of_measures": self.number_of_measures
         }
     
-    def to_feature(self):
-        geometry = json.loads(self.geom4326.geojson) if self.geom4326 else None
+    def to_feature(self, epsg=4326):
+        if epsg == 4326:
+            geometry = json.loads(self.geom.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
         properties = self.to_dict()
         return {
             "type": "Feature",
@@ -1278,8 +1362,13 @@ class HistoricalWetlands(models.Model):
                 "index_feasibility": self.feasibility.index,
             }
     
-    def to_feature(self):
-        geometry = json.loads(self.geom4326.geojson)
+    def to_feature(self, epsg=4326):
+        if epsg == 4326:
+            geometry = json.loads(self.geom4326.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
         properties = self.to_json()
         return {
             "type": "Feature",
@@ -1321,7 +1410,7 @@ class DataInfo(models.Model):
     data_type = models.CharField(max_length=255)  # e.g. 'sieker_gek'
     feature_color = models.CharField(max_length=255, default="var(--bs-secondary)") # string defining the (bootstrap) color
     class_name = models.CharField(max_length=255)
-    feature_type = models.CharField(max_length=255, default="polygon")
+    feature_type = models.CharField(max_length=255, default="polygon", null=True, blank=True)
     table_caption = models.CharField(max_length=255)
     popup_header = models.CharField(max_length=255, null=True, blank=True)  # e.g. "name"
     marker_cluster = models.BooleanField(default=False, null=True, blank=True) # TODO not used!
@@ -1511,8 +1600,14 @@ class DrainedArea(models.Model):
             'name': self.drained_area_type.name_de if language=='de' else self.drained_area_type.name_en,
             'drained_area_type': self.drained_area_type.name_tag,
         }
-    def to_feature(self, language='de'):
-        geometry = json.loads(self.geom4326.geojson)
+    def to_feature(self, epsg=4326, language='de'):
+        if epsg == 4326:
+            geometry = json.loads(self.geom4326.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
         properties = self.to_json(language=language)
         return {
             "type": "Feature",
@@ -1545,7 +1640,7 @@ class DrainageNetwork(models.Model):
             'network_type_id': self.network_type_detail.id,
             'network_type': self.network_type_detail.name_de if language=='de' else self.network_type_detail.name_en,
         }
-    def to_feature(self, language='de'):
+    def to_feature(self, epsg=4326, language='de'):
         geometry = json.loads(self.geom4326.geojson)
         properties = self.to_json(language=language)
         return {

@@ -11,24 +11,37 @@ import {Layers} from '/static/toolbox/layers.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 
 
-
+// all dataTypes mapped to their ProjectClass
 const projectClasses = {
     'sink': Infiltration,
     'enlarged_sink': Infiltration,
     'stream': Infiltration,
     'lake': Infiltration,
     'infiltration': Infiltration,
+    'infiltration_result': Infiltration,
+    'infiltration_result_sink': Infiltration,
+    'infiltration_result_enlarged_sink': Infiltration,
+    'infiltration_inlet': Infiltration,
+
     'injection': Injection,
+
     'filtered_sieker_gek': SiekerGek,
+    'sieker_gek': SiekerGek,
+
     'sieker_wetland': SiekerWetland,
+
     'sieker_sink': SiekerSink,
     'sieker_lake': SiekerSink,
     'sieker_stream': SiekerSink,
+    'sieker_sink_result': SiekerSink,
+    'sieker_sink_result_sink': SiekerSink,
+    'sieker_sink_inlet': SiekerSink,
+
     'sieker_surface_water': SiekerSurfaceWaters,
     'sieker_water_level': SiekerSurfaceWaters,
-    'sieker_gek': SiekerGek,
+    
     'drainage': Drainage,
-}
+};
 
 function toggleNumberInArray(list, num) {
   const index = list.indexOf(num);
@@ -38,6 +51,11 @@ function toggleNumberInArray(list, num) {
     list.push(num); // add
   }
   return list;
+};
+
+export function toggleInlet(dataType, inlet_id, layer_id) {
+    const featureGroup = Layers[dataType];
+    const sinkLayer = featureGroup.getLayer(layer_id)
 }
 
 export function getWaterBodies($button, ProjectClass){
@@ -64,7 +82,7 @@ export function getWaterBodies($button, ProjectClass){
   .then(data => {
     console.log('data', data)
     if (data.message.success) {
-      addFeatureCollectionToLayer(data)
+      addFeatureCollectionToLayer(data, true)
       addFeatureCollectionToTable(data)
     }  else {
       // TODO clear layers
@@ -545,73 +563,72 @@ const colorFunction = function (index) {
   return color
 };
 
-function addPopUpsToFeature(dataInfo) {
-    return function onEachFeature(feature, layer) {
-        let popupContent = '';
-        if (feature.properties[dataInfo.popUp.header]) {
-            popupContent += `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
-        }
-        dataInfo.properties.forEach(property => {
-            if (property.popUp) { 
-                popupContent += property.href
-                ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
-                : `<b>${property.title}:</b> ${feature.properties[property.valueName] ?? '-'
-                    } ${feature.properties[property.valueName] ? property.unit ?? '' : ''}<br>`;
-            }
-        });
-        
-        const popupOptions = {
-            offset: [0, -30],   // shift popup upwards
-            autoPan: false      // don’t auto-pan map on hover
-        };
-
-        // Show popup on hover
-        layer.on('mouseover', function (event) {
-            // open popup at mouse location
-            const hoverPopup = L.popup(popupOptions)
-                .setLatLng(event.latlng)
-                .setContent(popupContent)
-                .openOn(map);
-
-            // close when mouse leaves feature
-            layer.once('mouseout', function () {
-                map.closePopup(hoverPopup);
-            });
-        });
-        let popupClickContent = '';
-        if (dataInfo.selectFeatureButton === true) {
-        popupClickContent = popupContent + 
-            `<div class="form-check">
-                <input type="checkbox" class="select-map-feature-checkbox form-check-input" data-type="${dataInfo.dataType}" data-id="${feature.properties.id}">
-                <label class="form-check-label">Auswählen</label>
-            </div>`;
-        };
-
-        // Show persistent popup on click
-        layer.on('click', function (event) {
-            // close any hover popup first
-            map.closePopup();
-
-            const popUp = L.popup(popupOptions)
-                .setLatLng(event.latlng)
-                .setContent(popupClickContent)
-                .openOn(map);
-            const project = projectClasses[dataInfo.dataType].loadFromLocalStorage();
-            const isSelected = project[`selected_${dataInfo.dataType}s`].includes(feature.properties.id);
-            console.log('isSelected', isSelected)
-            
-            const checkbox = document.querySelector(`.select-map-feature-checkbox[data-id="${feature.properties.id}"]`);
-            checkbox.checked = isSelected;
-            
-        });
-
-
-        Layers[dataInfo.dataType].addLayer(layer)
+function addPopUpsToFeature(feature, layer, dataInfo) {
+    let popupContent = '';
+    if (feature.properties[dataInfo.popUp.header]) {
+        popupContent += `<h6><b> ${feature.properties[dataInfo.popUp.header]}</b></h6>`;
     }
+    dataInfo.properties.forEach(property => {
+        if (property.popUp) { 
+            popupContent += property.href
+            ? `<a href="${feature.properties[property.valueName]}" target="_blank">${property.title}</a><br>`
+            : `<b>${property.title}:</b> ${feature.properties[property.valueName] ?? '-'
+                } ${feature.properties[property.valueName] ? property.unit ?? '' : ''}<br>`;
+        }
+    });
+    
+    const popupOptions = {
+        offset: [0, -30],   // shift popup upwards
+        autoPan: false      // don’t auto-pan map on hover
+    };
+    
+    // Show popup on hover
+    layer.on('mouseover', function (event) {
+        // open popup at mouse location
+        const hoverPopup = L.popup(popupOptions)
+            .setLatLng(event.latlng)
+            .setContent(popupContent)
+            .openOn(map);
+
+        // close when mouse leaves feature
+        layer.once('mouseout', function () {
+            map.closePopup(hoverPopup);
+        });
+    });
+    let popupClickContent = '';
+    if (dataInfo.selectFeatureButton === true) {
+    popupClickContent = popupContent + 
+        `<div class="form-check">
+            <input type="checkbox" class="select-map-feature-checkbox form-check-input" data-type="${dataInfo.dataType}" data-id="${feature.properties.id}">
+            <label class="form-check-label">Auswählen</label>
+        </div>`;
+    };
+
+    // Show persistent popup on click
+    layer.on('click', function (event) {
+        // close any hover popup first
+        map.closePopup();
+
+        const popUp = L.popup(popupOptions)
+            .setLatLng(event.latlng)
+            .setContent(popupClickContent)
+            .openOn(map);
+        const project = projectClasses[dataInfo.dataType].loadFromLocalStorage();
+        const isSelected = project[`selected_${dataInfo.dataType}s`].includes(feature.properties.id);
+        console.log('isSelected', isSelected)
+        
+        const checkbox = document.querySelector(`.select-map-feature-checkbox[data-id="${feature.properties.id}"]`);
+        checkbox.checked = isSelected;
+        
+    });
+
+
+        
+    
 }
 
 
-export function addFeatureCollectionToLayer(data){
+export function addFeatureCollectionToLayer(data, clearLayer){
     console.log('addFeatureCollectionToLayer dataInfo', data.dataInfo)
     console.log('addFeatureCollectionToLayer dataInfo.colorByIndex', data.dataInfo.colorByIndex)
     
@@ -620,9 +637,12 @@ export function addFeatureCollectionToLayer(data){
     let colorByIndex = dataInfo.colorByIndex ? dataInfo.colorByIndex : false
     
     const featureGroup = Layers[dataInfo.dataType]
-    featureGroup.clearLayers();
+    if (clearLayer) {
+        featureGroup.clearLayers();
+    }
+    
 
-    let layer = L.geoJSON(featureCollection, {
+    let geojsonLayer = L.geoJSON(featureCollection, {
         style: function (feature) {
             let color = colorByIndex
                 ? colorFunction(feature.properties[colorByIndex])
@@ -640,16 +660,23 @@ export function addFeatureCollectionToLayer(data){
             return style;
         },
         pane: "polygonPane",
-        onEachFeature: addPopUpsToFeature(dataInfo)
+        onEachFeature: function(feature, layer) {
+            addPopUpsToFeature(feature, layer, dataInfo);
+            layer.customId = `${dataInfo.dataType}_${feature.properties.id}`;
+            Layers[dataInfo.dataType].addLayer(layer);
+            console.log('layer ids:', `${dataInfo.dataType}_${feature.properties.id}`);
+        }
+        
         });
-  
-    // let layerGroup = L.featureGroup([layer]).addTo(map);
+
+    // Layers[dataInfo.dataType].addLayer(geojsonLayer)
+    
     if (dataInfo.legendSettings) {
         addLegend(dataInfo.legendSettings)
       }
     
     featureGroup.addTo(map);
-    layer.bringToFront();
+    geojsonLayer.bringToFront();
 };
 
 
@@ -682,8 +709,14 @@ export function addPointFeatureCollectionToLayer(data) {
             });
         },
         pane: "polygonPane",
-        onEachFeature: addPopUpsToFeature(dataInfo)           
+        onEachFeature: function(feature, layer) {
+            addPopUpsToFeature(feature, layer, dataInfo);
+            layer.customId = `${dataInfo.dataType}_${feature.properties.id}`;
+            Layers[dataInfo.dataType].addLayer(layer);
+            console.log('layer ids:', `${dataInfo.dataType}_${feature.properties.id}`)
+        }           
     });
+    // Layers[dataInfo.dataType].addLayer(points)
 
     map.addLayer(featureGroup)
     if (dataInfo.legendSettings) {
@@ -691,6 +724,86 @@ export function addPointFeatureCollectionToLayer(data) {
       }
 };
 
+
+export function createResultTable( data ){
+    const inlets = data.inlets;
+    const dataInfo = data.dataInfo;
+    const ProjectClass = projectClasses[dataInfo.dataType];
+    const project = ProjectClass.loadFromLocalStorage();
+    const selected_items = project[`selected_${dataInfo.dataType}s`];
+    project[`selected_${dataInfo.dataType}s`] = [];
+    
+    project[`all_${dataInfo.dataType}_ids`] = [];
+
+    const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
+    let tableHTML = `
+        <table class="table table-bordered table-hover" id="${dataInfo.dataType}-table">
+        <caption>${dataInfo.tableCaption}</caption>
+        <thead>
+            <tr>`;
+            dataInfo.properties.forEach(property => {
+                if (property.table) {
+            if (property.valueName === 'id') {
+                tableHTML += `
+                <th>
+                    <div class="form-check form-switch m-0"">
+                        <input type="checkbox" class="form-check-input table-select-all"  data-type="${dataInfo.dataType}" checked="">
+                    </div>
+                </th>`;
+            } else {
+                tableHTML += `<th>${property.title}`
+            }
+        }
+        });
+    tableHTML += '</tr></thead><tbody>';
+    
+
+    inlets.forEach(inlet => {
+        project[`all_${dataInfo.dataType}_ids`].push(inlet.id)
+        
+        // Add to table
+        tableHTML += `
+            <tr data-id="${inlet.id}" data-type="${dataInfo.dataType}">`    
+        dataInfo.properties.forEach(property => {
+            if (property.table) {
+                if (property.valueName === 'id') {
+                tableHTML += `
+                    <td>
+                        <div class="form-check form-switch m-0">
+                            <input type="checkbox" class="form-check-input table-select-checkbox toggle-sink-result"  data-type="${dataInfo.dataType}" data-id="${inlet.id}" layer-id="${inlet.sink_type}_${inlet.sink_id}" checked="">
+                        </div>
+                    </td>
+                    `;
+                } else {
+                    const value = inlet[property.valueName];
+                    if (value !== undefined && value !== null){
+                        tableHTML += `<td data-order="${value}">${value} ${property.unit ?? ''}</td>` 
+                    } else {
+                        tableHTML += `<td data-order="0">--</td>` 
+                    }
+                }
+            }
+        });
+        tableHTML += '</tr>';
+        });
+    tableHTML += `</tbody></table>`;
+    tableContainer.innerHTML = tableHTML;
+    // select all previously selected
+    console.log('addFeatureCollection dataType', dataInfo.dataType )
+    project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink => project[`all_${dataInfo.dataType}_ids`].includes(sink));
+    project.saveToLocalStorage();
+
+    const tableSettings = createTableSettings(dataInfo);
+    $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
+    
+    $(`#card-${dataInfo.dataType}-table`).removeClass('d-none')
+};
+
+export function addSinkConnectionResult(feature, dataInfo) {
+    const layer= '';
+
+}
+///////////////////////////////////////////////////////
 export function addFeatureCollectionToTable( data ){
     const featureCollection = data.featureCollection
     const dataInfo = data.dataInfo

@@ -44,7 +44,7 @@ function filterSiekerGeks(project) {
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
       
 
-      addFeatureCollectionToLayer(data);
+      addFeatureCollectionToLayer(data, true);
       addFeatureCollectionToTable(data)
       addFeatureCollectionResultCards(data.dataInfo, data.measures)
 
@@ -132,7 +132,7 @@ export function initializeSiekerGek(data) {
   // end of string labelled slider
    
 
-    addFeatureCollectionToLayer(data)
+    addFeatureCollectionToLayer(data, true)
     addFeatureCollectionToTable(data)
     
   

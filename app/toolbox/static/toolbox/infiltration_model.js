@@ -72,7 +72,10 @@ export class Infiltration extends ToolboxProject {
         this.weighting_grassland_hydromorphy = data.weighting_grassland_hydromorphy ?? 25;
         this.weighting_grassland_soil_type = data.weighting_grassland_soil_type ?? 25;
         this.weighting_grassland_soil_water_ratio = data.weighting_grassland_soil_water_ratio ?? 25;
-
+        
+        this.selected_infiltration_results = data.selected_infiltration_results ?? [];
+        this.all_infiltration_result_ids = data.all_infiltration_result_ids ?? [];
+        // choices on download page
         this.result_sinks = data.result_sinks ?? [];
         this.result_enlarged_sinks = data.result_enlarged_sinks ?? [];
         this.result_streams = data.result_streams ?? [];

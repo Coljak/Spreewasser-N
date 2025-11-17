@@ -12,6 +12,7 @@
                 <strong>Suchgebiet: </strong><span class="title-user-field-name">Kein Suchgebiet ausgewählt</span></br>
             </div>
             <div class="col-6 text-end">
+                 <button id="buttonX" class="btn btn-primary"> TRY IT</button>
                 <span id="spanBtnGetInfiltrationResults">
                 <button id="btnGetInfiltrationResults" class="btn btn-primary mx-2" data-type="infiltration">Ergebnis berechnen</button>
                 </span>
@@ -65,9 +66,6 @@
             </div>
         </div>
 
-
-
-
         <div id="tabSinks" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
@@ -90,9 +88,7 @@
             <div id="card-sink-table" class="card mb-3 d-none">
                 <div class="card-body">
                     <div id="sink-table-container"></div>
-                    {% comment %} <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button> {% endcomment %}
-                    {% comment %} <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button> {% endcomment %}
-
+                    
                 </div>
             </div>
         </div>
@@ -119,18 +115,12 @@
             <div id="card-enlarged_sink-table"  class="card mb-3 d-none">
                 <div class="card-body">
                     <div id="enlarged_sink-table-container"></div>
-                    {% comment %} <button id="btnCntinueWithEnlargedSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks ">Auswahl bewerten</button> {% endcomment %}
-                    {% comment %} <button id="btnShowEnlargedSinkOutlines" type="button" class="btn btn-primary mt-3 show-enlarged-sink-outlines">Vergrößerte Senken anzeigen</button> {% endcomment %}
-                    {% comment %} <button id="btnShowEmbankments" type="button" class="btn btn-primary mt-3 show-embankment-outlines">Verwallungsstrukturen anzeigen</button> {% endcomment %}
+                   
                 </div>
             </div>
         </div>
 
-        
-        
-
         <div id="tabLakes" class="tab-pane">
-            {% comment %} <h2 class="title">Oberflächengewässer</h2> {% endcomment %}
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
@@ -157,15 +147,13 @@
         </div>
 
         <div id="tabStreams" class="tab-pane">
-            {% comment %} <h2 class="title">Seen</h2> {% endcomment %}
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title mb-0">Fließgewässer</h5>
                         <button  class="btn btn-secondary toggle-feature-group" data-type="stream">ausblenden</button>                                                                                             
                     </div>
-
-                    
+        
                     <div class="card-body">
                         {% crispy streams_form.form  %}
                         <button class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="stream">
@@ -185,7 +173,6 @@
         </div>
 
         <div id="tabWeightingForms" class="tab-pane">
-            {% comment %} <h2 class="title">Gewichtung der Senkeneigenschaften</h2> {% endcomment %}
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Gesamtgewichtung</h5>
@@ -225,15 +212,6 @@
                     </div>
                 </div>
             </div>
-            {% comment %} <h2 class="title">Gewichtung der Einlasspunkte</h2>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Distanz und Volumen</h5>
-                    <div class="card-body">
-                        {% crispy inlet_point_weighting %}            
-                    </div>
-                </div>
-            </div> {% endcomment %}
             
         </div>
 
@@ -241,7 +219,11 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>
-                    <table  class="table table-hover" id="inlet-table">
+                    <div id="infiltration_result-table-container"></div>
+
+                    <table id="infiltrationResultTable" class="table table-hover">
+                    </table>
+                    <table id="inlet-table" class="table table-hover">
                         <thead>
                             <tr>
                             <th>ID</th>
@@ -252,7 +234,6 @@
                             <th>Eignung Zuleitung</th>
                             <th>Senkeneignung</th>
                             <th>Gesamtbewertung</th>
-                            <th></th>
                             <th></th>
                             <th></th>
                             </tr>

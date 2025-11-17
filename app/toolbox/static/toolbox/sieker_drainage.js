@@ -71,13 +71,13 @@ async function getFeatures(userField) {
       if (data.drainage_type_feature_collections.length > 0) {
         data.drainage_type_feature_collections.forEach(dataset => {
           console.log('drainage_type:', dataset.drainedAreaTypeId, dataset.dataInfo.dataType, dataset.dataInfo);
-          addFeatureCollectionToLayer(dataset)
+          addFeatureCollectionToLayer(dataset, true)
         })  
       }
       if (data.network_type_detail_feature_collections.length > 0) {
         data.network_type_detail_feature_collections.forEach(dataset => {
           ('drainage_type:',  dataset.dataInfo.dataType, dataset.dataInfo);
-          addFeatureCollectionToLayer(dataset)
+          addFeatureCollectionToLayer(dataset, true)
         })  
       }
       

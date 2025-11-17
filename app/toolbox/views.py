@@ -39,12 +39,19 @@ from rasterio.enums import ColorInterp
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 FLOAT32_NODATA = np.float32(-3.4028235e+38)
 
+def boolean_translation(bool, language='de'):
+    translation = {
+        True: {'de': 'Ja', 'en': 'Yes'},
+        False: {'de': 'Nein', 'en': 'No'}
+    }
+    return translation[bool][language]
 
 def create_feature_collection(queryset):
     return {
         "type": "FeatureCollection",
         "features": [obj.to_feature() for obj in queryset],
     }
+
 
 
 def create_point_feature_collection(queryset):
@@ -83,8 +90,6 @@ def toolbox_dashboard(request):
         'outline_injection': outline_injection,
         'outline_surface_water': outline_surface_water,
         'outline_infiltration': outline_infiltration,
-        # 'all_lakes_feature_collection': all_lakes_feature_collection,
-        # 'all_rivers_feature_collection': all_rivers_feature_collection,
     }
 
     return render(request, 'toolbox/toolbox_three_split.html', context)
@@ -518,15 +523,7 @@ def filter_sinks(request, sink_type):
         
         all_indices = calculate_indices_df(sinks, project, sink_type=sink_type)
 
-        features = []
-        for sink in sinks:
-            
-            feature = sink.to_point_feature(language='de')
-            
-            feature['properties']['index_soil'] = int(all_indices[sink.id]['index_soil'] * 100)
-            feature['properties']["index_sink_total"] = all_indices[sink.id]['index_sink_total']
-            feature['properties']["index_sink_total_str"] = str(int(all_indices[sink.id]['index_sink_total']*100))
-            features.append(feature)
+        features = [sink.to_point_feature(all_indices, language='de') for sink in sinks]
         feature_collection = {
             "type": "FeatureCollection",
             "features": features,
@@ -649,233 +646,211 @@ def get_weighting_forms(request):
 
 
 
-def new_shortest_connection(sinks, lakes, streams, transform_to_4326=False):
+def new_shortest_connection(sink, lakes, streams, transform_to_4326=True, connection_id=0):
     """
     This function works for sinks, enlarged sinks and sieker sinks.
+    It returns a dictionary with the sink.id as key and a linefeature with properties as values.
     """
+    print('new_shortest_connection')
 
-    for sink in sinks:
-        lake_with_distance = lakes.annotate(
-            distance_to_sink=Distance('geom25833', sink.geom25833)
-            ).order_by('distance_to_sink').first()
-        
-        stream_with_distance = streams.annotate(
-            distance_to_sink=Distance('geom25833', sink.geom25833)
-            ).order_by('distance_to_sink').first()
-        
-        closest = lake_with_distance
-        
-        if lake_with_distance.distance_to_sink > lake_with_distance.distance_to_sink:
-            closest = stream_with_distance
-        type = closest.__class__ #.__name__
+    print('new_shortest_connection 1')
+    lake_with_distance = lakes.annotate(
+        distance_to_sink=Distance('geom25833', sink.geom25833)
+        ).order_by('distance_to_sink').first()
+    
+    stream_with_distance = streams.annotate(
+        distance_to_sink=Distance('geom25833', sink.geom25833)
+        ).order_by('distance_to_sink').first()
+    
+    closest = lake_with_distance if lake_with_distance is not None else stream_with_distance
+    print('new_shortest_connection 2')
+    if (
+        (lake_with_distance and stream_with_distance) and
+        (lake_with_distance.distance_to_sink.m > stream_with_distance.distance_to_sink.m)
+        ):
+        print('new_shortest_connection 2a')
+        closest = stream_with_distance
+    print('new_shortest_connection 3 closest', closest)
 
-        
-        sink.distance=closest.distance_to_sink.m
-        sink.waterbody_class=type
-        sink.waterbody = closest
+    distance_m=int(closest.distance_to_sink.m)
+    
 
-        pt1, pt2 = nearest_points(
-            shapely_shape(json.loads(sink.geom25833.geojson)),
-            shapely_shape(json.loads(closest.geom25833.geojson))
-        )
-        line = LineString([pt1.coords[0], pt2.coords[0]])
-        line_geom = GEOSGeometry(line.wkt, srid=25833)
-        sink.line_geom25833 = line_geom
-        if transform_to_4326:
-            line_4326 = line_geom.clone()
-            line_4326.transform(4326)
-            sink.line_geom4326 = line_4326
+    # create a line feature
+    pt1, pt2 = nearest_points(
+        shapely_shape(json.loads(sink.geom25833.geojson)),
+        shapely_shape(json.loads(closest.geom25833.geojson))
+    )
+    line = LineString([pt1.coords[0], pt2.coords[0]])
+    line_geom = GEOSGeometry(line.wkt, srid=25833)
 
-
-    return sinks
-
-
-
-def get_shortest_connection_lines_utm(sinks, lakes, streams, is_enlarged_sink=False):
-    """
-    Get the shortest connection line between the sinks and the nearest selected lake or stream.
-    Returns a list of dictionaries with sink_id, waterbody_type, waterbody_id, line (WKT), and length_m.
-    """
-    results = []
-    wos = []
-    if sinks != [] and (lakes != [] or streams != []):
-        for sink in sinks:
-            sink_geom = shapely_shape(json.loads(sink.geom25833.geojson))
-
-            min_dist = float('inf')
-            closest_geom = None
-            waterbody_type = None
-            waterbody_id = None
-
-            # Check lakes
-            for lake in lakes:
-                lake_geom = shapely_shape(json.loads(lake.geom25833.geojson))
-                dist = sink_geom.distance(lake_geom)
-                if dist < min_dist:
-                    min_dist = dist
-                    closest_geom = lake_geom
-                    waterbody_type = 'lake'
-                    waterbody_name = lake.name
-                    waterbody_id = lake.id
-
-            # Check streams
-            for stream in streams:
-                stream_geom = shapely_shape(json.loads(stream.geom25833.geojson))
-                dist = sink_geom.distance(stream_geom)
-                if dist < min_dist:
-                    min_dist = dist
-                    closest_geom = stream_geom
-                    waterbody_type = 'stream'
-                    waterbody_name = stream.name
-                    waterbody_id = stream.id
-
-            # Find nearest points and build LineString in EPSG:25833
-            nearest = nearest_points(sink_geom, closest_geom)
-            line = LineString([nearest[0].coords[0], nearest[1].coords[0]])
-            line_geom = GEOSGeometry(line.wkt, srid=25833)
-            line_geom.transform(4326)
-            length_m = line.length  # Already in meters (EPSG:25833 is a projected CRS)
-
-            if length_m >= 2000:
-                rating_length = 0
-            elif length_m >= 1000:
-                rating_length = 5
-            else:
-                rating_length = int((1000 - length_m)/10)
-
-            
-            result = {
+    print('new_shortest_connection 5')
+    if transform_to_4326:
+        line_geom.transform(4326)
+    print('new_shortest_connection 6')
+    connection_data = {
+        'id': connection_id,
+        'sink_id': sink.id,  
+        'sink_type': sink.__data_type__(),
+        'closest_waterbody_type': closest.__data_type__(),
+        'closest_waterbody_id': closest.id,
+        'closest_fgw_id': closest.fgw_id,
+        'closest_waterbody': closest.to_json(),   
+        'waterbody_name': closest.name,       
+        'distance_m': distance_m,
+        'connection_feature': {
+            "type": "Feature",
+            "geometry": json.loads(line_geom.geojson),
+            "properties": {
+                'id': connection_id,
                 'sink_id': sink.id,
-                'sink_geom': json.loads(sink.geom4326.geojson),
-                'is_enlarged_sink': is_enlarged_sink,
-                'waterbody_type': waterbody_type,
-                'waterbody_id': waterbody_id,
-                'waterbody_name': waterbody_name,
-                'line': json.loads(line_geom.geojson),
-                'length_m': round(length_m, 2),
-                'rating_connection': rating_length,
-                'index_total': rating_length # WRONG!!!!!
-            }
+                'closest_waterbody_type': closest.__data_type__(),
+                'closest_waterbody_id': closest.id,
+                'distance_m': distance_m,
+            },
+        },
+    }
 
+    
+    
+    print('new_shortest_connection 7')
+    return connection_data
+            
+def get_infiltration_result_list(project, epsg=4326):
+    '''
+    this gets the results from an infiltration project. 
+    The function is used for display and data download.
+    '''
 
-            if is_enlarged_sink:
-                if sink.sink_embankment.first():
-                    sink_embankment = sink.sink_embankment.first()
-                    result['sink_embankment'] = sink_embankment.to_feature()
-                
-
-            results.append(result)
-
-
-
-    return results
-
-def get_infiltration_results(request):
-    # POST request
-    if request.method != "POST":
-        return HttpResponseBadRequest("POST required")
-    try:
-        project = request.body
-        print('Project:', type(project))
-        project = json.loads(project)
-
-        sinks = models.Sink.objects.filter(id__in=project.get('selected_sinks', []))
-        enlarged_sinks = models.EnlargedSink.objects.filter(id__in=project.get('selected_enlarged_sinks', []))
-        lakes = models.Lake.objects.filter(id__in=project.get('selected_lakes', []))
-        streams = models.Stream.objects.filter(id__in=project.get('selected_streams', []))
-
-        def get_length_rating(sinks):
-            for sink in sinks:
-                if sink.distance >= 2000:
-                    sink.rating_length = 0
-                elif sink.distance >= 1000:
-                    sink.rating_length = 5
-                else:
-                    sink.rating_length = int((1000 - sink.distance)/10)
-                
-            return sinks
-        print("check 1")
-        results = []
-        if sinks.count() > 0:
-            all_indices_sinks = calculate_indices_df(sinks, project, sink_type='sink')
-            sinks_with_connection = new_shortest_connection(sinks, lakes, streams, transform_to_4326=True)
-            print("check 1a")
-            sinks_with_connection = get_length_rating(sinks_with_connection)
-            print("check 1b")
-            for sink in sinks_with_connection:
-                print("check 1c")
-                result = {
-                        'sink_id': sink.id,
-                        'sink_geom': sink.to_feature(),
-                        'is_enlarged_sink': False,
-                        'waterbody_type': sink.waterbody_class.__str__,
-                        'waterbody_id': sink.waterbody.id,
-                        'waterbody_name': sink.waterbody.name,
-                        'line': json.loads(sink.line_geom4326.geojson),
-                        'length_m': int(sink.distance),
-                        'rating_connection': sink.rating_length,
-                        'rating_waterbody_sink': min(sink.waterbody.mean_surplus_volume / sink.volume, 1),
-                        'index_total': sink.rating_length # WRONG!!!!!
-                    }
-                results.append(result)
-            print("check 1d")
-        print("check 2")
-        if enlarged_sinks.count() > 0:
-            all_indices_enlarged_sinks = calculate_indices_df(enlarged_sinks, project, sink_type='enlarged_sink')
-            enlarged_sinks_with_connection = new_shortest_connection(enlarged_sinks, lakes, streams, transform_to_4326=True)
-            enlarged_sinks_with_connection = get_length_rating(enlarged_sinks_with_connection)
-            for sink in enlarged_sinks_with_connection:
-                result = {
-                        'sink_id': sink.id,
-                        'sink_geom': json.loads(sink.to_feature()),
-                        'is_enlarged_sink': False,
-                        'sink_embankment':sink.sink_embankment.first().to_feature(),
-                        # 'waterbody_type': sink.waterbody_class.__str__,
-                        'waterbody_id': sink.waterbody.id,
-                        'waterbody_name': sink.waterbody.name,
-                        'line': json.loads(sink.line_geom4326.geojson),
-                        'length_m': int(sink.distance),
-                        'rating_connection': sink.rating_length,
-                        'rating_waterbody_sink': min(sink.waterbody.mean_surplus_volume / sink.volume, 1),
-                        'index_total': sink.rating_length # WRONG!!!!!
-                    }
-                results.append(result)
-        print("check 3")
-        print(results)
-        
-
-        
-        response = {
-            'inlets_sinks': results,
-            'message': {
-                'success': True,
-            }
-        }
-        return JsonResponse(response)
-    except:
-        return HttpResponseBadRequest("Error processing request")
-
-def get_infiltration_results_old(request):
-    # POST request
-    project = json.loads(request.body)
-    print('Project:', project)
-
+    language='de'
     sinks = models.Sink.objects.filter(id__in=project.get('selected_sinks', []))
     enlarged_sinks = models.EnlargedSink.objects.filter(id__in=project.get('selected_enlarged_sinks', []))
     lakes = models.Lake.objects.filter(id__in=project.get('selected_lakes', []))
     streams = models.Stream.objects.filter(id__in=project.get('selected_streams', []))
 
-    inlets_sinks = get_shortest_connection_lines_utm(sinks, lakes, streams)
-    inlets_enlarged_sinks = get_shortest_connection_lines_utm(enlarged_sinks, lakes, streams, is_enlarged_sink=True)
+
+    def rate_water_sink_distance(distance):
+        if distance >= 2000:
+            rating_length = 0
+        elif distance >= 1000:
+            rating_length = 5
+        else:
+            rating_length = int((1000 - distance)/10)
+        return rating_length
+    
+    
+    def rate_connection(connection_data, sink, indices):
+
+        index_length = \
+                rate_water_sink_distance(connection_data['distance_m'])
+        index_volumes = \
+            min(connection_data['closest_waterbody']['mean_surplus_volume'] / sink.volume, 1) *100
+        print('index_volume', index_volumes)
+        index_connection = (index_length + index_volumes)/ 2
+        print('index_connection', index_connection)
+        connection_data['connection_feature']['properties']['index_length'] = round(index_length)
+        connection_data['connection_feature']['properties']['index_volumes'] = round(index_volumes)
+        connection_data['connection_feature']['properties']['index_inlet'] = round(index_connection)
+        connection_data['index_inlet'] = round(index_connection)
+        index_sink = min(int(indices[sink.id]['index_sink_total'] *100), 100)
+        connection_data['index_sink'] = index_sink
+        index_total = int((index_connection + index_sink) / 2)
+        connection_data['index_total'] = round(index_total)
+
+        return connection_data
+    result_dict = {}
+    results = []
+    line_features = []
+    sink_count = sinks.count()
+    if sink_count > 0:
+        indices_sinks = calculate_indices_df(sinks, project, sink_type='sink')
+        sink_features = [sink.to_feature(indices_sinks, language='de') for sink in sinks]
+        result_dict['sink_feature_collection'] = {
+            "type": "FeatureCollection",
+            "features": sink_features,
+            }
+        for i, sink in enumerate(sinks):
+            connection_data = new_shortest_connection(sink, lakes, streams, i)
+            
+            
+            connection_data['is_enlarged_sink'] = boolean_translation(False, language)
+            # connection_data['sink_feature'] = sink.to_feature(indices_sinks, epsg=epsg)
+
+            connection_data = rate_connection(connection_data, sink, indices_sinks)
+            line_feature = connection_data['connection_feature']
+            connection_data.pop('connection_feature')
+            results.append(connection_data)
+            line_features.append(line_feature)
+            
+
+    if enlarged_sinks.count() > 0:
+        
+        indices_enlarged_sinks = calculate_indices_df(enlarged_sinks, project, sink_type='enlarged_sink')
+        sink_features = [sink.to_feature(indices_enlarged_sinks, language='de') for sink in enlarged_sinks]
+        result_dict['enlarged_sink_feature_collection'] = {
+            "type": "FeatureCollection",
+            "features": sink_features,
+            }
+        for i, sink in enumerate(enlarged_sinks):
+            connection_data = new_shortest_connection(sink, lakes, streams, sink_count + i)
+            connection_data['is_enlarged_sink'] = boolean_translation(True, language)
+            connection_data = rate_connection(connection_data, sink, indices_enlarged_sinks)
+            line_feature = connection_data['connection_feature']
+            connection_data.pop('connection_feature')
+            
+            # connection_data['sink_feature'] = sink.to_feature(indices_enlarged_sinks, epsg=epsg)
+            
+            results.append(connection_data)
+            line_features.append(line_feature)
+        
+    result_dict['inlet_feature_collection'] = {
+        "type": "FeatureCollection",
+        "features": line_features,
+    }
+    result_dict['results'] = results
+    print(results)
 
     
+    return result_dict
+
+### NEW 2025-11-15
+def get_infiltration_results(request):
+    # POST request
+    if request.method != "POST":
+        return HttpResponseBadRequest("POST required")
+    # try:
+    project = request.body
+    print('Project:', type(project))
+    project = json.loads(project)
+
+
+    results_dict = get_infiltration_result_list(project, epsg=4326)
+    result_data_info = models.DataInfo.objects.get(data_type='infiltration_result')
+    inlet_data_info = models.DataInfo.objects.get(data_type='infiltration_inlet')
+    sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_sink')
+    enlarged_sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_enlarged_sink')
+    
+    
     response = {
-        'inlets_sinks': inlets_sinks + inlets_enlarged_sinks,
+        'inlet_data_info': inlet_data_info.to_dict(),
+        'sink_data_info': sink_data_info.to_dict(),
+        'enlarged_sink_data_info': enlarged_sink_data_info.to_dict(), 
+        'result_data_info': result_data_info.to_dict(),
+
+        'results': results_dict['results'],
+
+        'inlet_feature_collection': results_dict.get('inlet_feature_collection', None),
+        'sink_feature_collection' : results_dict.get('sink_feature_collection', None),
+        'enlarged_sink_feature_collection': results_dict.get('enlarged_sink_feature_collection', None),
+        
         'message': {
             'success': True,
         }
     }
+    print('response', response)
     return JsonResponse(response)
+    # except:
+
+    #     return JsonResponse({'message': {'success': False, 'message': 'Get results failed.'}})
 
 
 def get_injection_volume_chart(request, waterbody_type, id):

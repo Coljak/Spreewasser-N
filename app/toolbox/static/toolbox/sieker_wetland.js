@@ -44,7 +44,7 @@ function filterSiekerWetlands(project) {
       Layers['filtered_sieker_wetland'].clearLayers();
       Layers['sieker_wetland'].clearLayers();
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LATTER!
-      addFeatureCollectionToLayer({featureCollection: data.featureCollection, dataInfo: data.dataInfo});
+      addFeatureCollectionToLayer({featureCollection: data.featureCollection, dataInfo: data.dataInfo}, true);
       addFeatureCollectionToTable({featureCollection: data.featureCollection, dataInfo: data.dataInfo});
       
 
@@ -137,7 +137,7 @@ export function initializeSiekerWetland(data) {
   addChangeEventListener(SiekerWetland);
   addClickEventListenerToToolboxPanel(SiekerWetland)
   
-  addFeatureCollectionToLayer({featureCollection: data.featureCollection, dataInfo: data.dataInfo})
+  addFeatureCollectionToLayer({featureCollection: data.featureCollection, dataInfo: data.dataInfo}, true)
   addFeatureCollectionToTable({featureCollection: data.featureCollection, dataInfo: data.dataInfo})
   
 

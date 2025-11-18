@@ -712,8 +712,10 @@ class DrainedAreaFilter(FilterSet):
         # self.form.fields['drained_area_types'].choices = drained_area_types.values_list('id', 'name_de')
 
         self.form.fields['types'].widget.attrs['prefix'] = 'drained_area'
+        
         self.form.fields['types'].widget.choice_attrs = choice_attrs
         self.form.fields['types'].choices = choices
+        print("DrainedAreaFilter initialized with choices:", choices)
 
 
 

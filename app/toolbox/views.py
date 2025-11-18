@@ -1752,7 +1752,7 @@ def load_sieker_drainage_gui(request, user_field_id):
         drainage_probabiliy_filter_form = forms.DrainageProbabilityFilterForm()
 
         # TODO check all objects.all()
-        drained_areas = models.DrainedArea.objects.all()
+        drained_areas = models.DrainedArea.objects.filter(geom4326__within=user_field.geom)
         drained_area_filter_form = filters.DrainedAreaFilter(queryset=drained_areas)
 
         

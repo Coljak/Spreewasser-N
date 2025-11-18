@@ -140,17 +140,13 @@ export function initializeDrainage() {
           console.log("`input[parent=${parent}]`", `input[parent=${parent}]`)
           $(`input[parent=${parent}]`).prop('disabled', !$target.is(':checked'));
 
-      } else if ($target.attr('id') === 'btnFilterDrainageNetwork') {
-        filterDrainages('Drainage', DrainageFeatureGroup);
-      } else if ($target.attr('id') === 'btnFilterDrainedArea') {
-        filterDrainedArea('KnownDrainage', KnownDrainageFeatureGroup);
-      } 
+      }
   });
 
   $('#toolboxPanel').on('change', function (event) {
     const $target = $(event.target);
     if ($target.hasClass('form-check-input')) {
-            // checkboxes 
+            // checkboxes in drainage network
       const inputId = $target.attr('id');
       const inputName = $target.attr('name'); //non_natural_creeks
       const inputPrefix = $target.attr('prefix'); /// 'parent' is parent of 'drainage', else 'drained_area'
@@ -160,22 +156,22 @@ export function initializeDrainage() {
       // console.log('the layer Layers[inputName]:', Layers[inputName])
       if (inputPrefix === 'parent') { 
         
-              if (!inputChecked) {
-                Layers[inputName].forEach(featureGroup => {
-                  map.removeLayer(featureGroup)
-                })
-              } else {
-                const checkboxes = $(`input[name=${inputName}][prefix="drainage"]`) 
-                // checkboxes.each(checkbox => {
-                console.log('checkbox', checkboxes)
-                checkboxes.each(function () {
-                  const name = $(this).attr('detail');
-                  if ($(this).is(':checked')) {
-                    console.log('add layer', name, $(this), $(this).is(':checked'))
-                    map.addLayer(Layers[name])
-                  } 
-                 })
-              } 
+        if (!inputChecked) {
+          Layers[inputName].forEach(featureGroup => {
+            map.removeLayer(featureGroup)
+          })
+        } else {
+          const checkboxes = $(`input[name=${inputName}][prefix="drainage"]`) 
+          // checkboxes.each(checkbox => {
+          console.log('checkbox', checkboxes)
+          checkboxes.each(function () {
+            const name = $(this).attr('detail');
+            if ($(this).is(':checked')) {
+              console.log('add layer', name, $(this), $(this).is(':checked'))
+              map.addLayer(Layers[name])
+            } 
+            })
+        } 
       } else if (inputPrefix === 'drainage') {
         
         const inputDetail = $target.attr('detail');

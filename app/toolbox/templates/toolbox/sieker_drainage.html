@@ -122,7 +122,7 @@
                                 {% with key=checkbox_set.name %}
                                     <div class="mb-3 card">
                                         <div class="card-body">
-                                            <div class="mb-3 form-check"> 
+                                            <div class="mb-3 form-check form-switch"> 
                                                 <input type="checkbox"
                                                     name="{{ checkbox_set.name }}"
                                                     prefix="parent"
@@ -171,7 +171,7 @@
                         <form method="POST" action="">
                             {% csrf_token %}
                             {% crispy  drainage_probabiliy_filter_form %}
-                            <button id="btnFilterDrainages"type="submit" class="btn btn-primary">Entwässerungsnetz filtern</button>
+                        
                         </form>
                     
                     
@@ -182,17 +182,35 @@
         <div id="tabDrainedArea" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title">Bekannte Entwässerungsflächen</h5>
-                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
-                        <button class="btn btn-secondary toggle-feature-group shown" data-type="drained_area">Ausblenden</button>                                                                                             
-                    </div>
-                        <form method="POST" action="">
-                            {% csrf_token %}
-                            {% crispy drained_area_filter_form.form %}
-                            <button id="btnFilterDrainedArea"type="submit" class="btn btn-primary">Entwässerungsnetz filtern</button>
-                        </form>
+                    {% if drained_area_filter_form.form.fields.types.choices %}
+                        <div class="d-flex align-items-center justify-content-between mb-2">                      
+                            <h5 class="card-title">Bekannte Entwässerungsflächen</h5>
+                            {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
+                            <button class="btn btn-secondary toggle-feature-group shown" data-type="drained_area">Ausblenden</button>                                                                                             
+                        </div>
+                        <div class="mb-3 card">
+                            <div class="card-body">
+                                <form method="POST" action="">
+                                    {% csrf_token %}
+                                    
+                                    {% for checkbox in drained_area_filter_form.form %}
+                                        {% if checkbox.field.choices %}
+                                            <div class="form-check form-switch">
+                                                {{ checkbox|as_crispy_field }}
+
+                                            </div>
                     
+                                        {% endif %}
+                                    {% endfor %}
+                                                         
+                                </form>
+                            </div>
+                        </div>
+                    {% else %}
+                        <h6>Es sind keine entwässerten Flächen im Suchgebiet bekannt.</h6>
+                
+                    {% endif %}
+                      
                     
                 </div>
             </div>       

@@ -43,12 +43,12 @@ const projectClasses = {
     'drainage': Drainage,
 };
 
-function toggleNumberInArray(list, num) {
-  const index = list.indexOf(num);
+function toggleValueInArray(list, val) {
+  const index = list.indexOf(val);
   if (index > -1) {
     list.splice(index, 1); // remove
   } else {
-    list.push(num); // add
+    list.push(val); // add
   }
   return list;
 };
@@ -111,7 +111,7 @@ $('#map').on('click', function (event) {
             checkbox.checked = event.target.checked;
         } catch {;}
         const project = projectClasses[dataType].loadFromLocalStorage()
-        project[`selected_${dataType}s`] = toggleNumberInArray(project[`selected_${dataType}s`], Number(dataId));
+        project[`selected_${dataType}s`] = toggleValueInArray(project[`selected_${dataType}s`], Number(dataId));
         project.saveToLocalStorage();
     }
 });
@@ -281,7 +281,6 @@ export function addChangeEventListener(projectClass) {
             return;
         } else if ($target.hasClass('form-check-input')) {
             // checkboxes 
-            const inputId = $target.attr('id');
             const inputName = $target.attr('name');
             const inputPrefix = $target.attr('prefix');
             const inputValue = $target.attr('value');
@@ -290,16 +289,9 @@ export function addChangeEventListener(projectClass) {
             const key = `${inputPrefix}_${inputName}`;
             console.log('key', key )
             const index = project[key].indexOf(inputValue);
-            if (index > -1) {
-                // Value exists — remove it
-                project[key] = project[key].filter(
-                (v) => v !== inputValue
-                );
-                console.log('Checkbox unchecked:', inputId, '=', inputValue);
-            } else {
-                // Value does not exist — add it; Dev purposes
-                project[key].push(inputValue);
-            }
+            console.log("eventListener change ($target.hasClass('form-check-input')")
+            toggleValueInArray(project[key], inputValue);
+
             project.saveToLocalStorage();
             return;
         } else if ($target.hasClass('table-select-all')) {
@@ -329,7 +321,7 @@ export function addChangeEventListener(projectClass) {
                 checkbox.checked = $target.is(':checked');
             } catch  {;};
 
-            toggleNumberInArray(project[key], $target.data('id'));
+            toggleValueInArray(project[key], $target.data('id'));
             project.saveToLocalStorage();
             return;
         };
@@ -390,6 +382,7 @@ export function loadProjectToGui(project) {
 
     // --- Checkboxes ---
     const $checkboxes = $('#toolboxPanel .form-check-input[prefix][name]');
+    // these checkboxes are in drainage network
     if ($checkboxes.length) {
         $checkboxes.each(function () {
             // console.log('checkbox this', this)

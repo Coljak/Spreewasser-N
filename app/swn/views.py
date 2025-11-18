@@ -317,11 +317,13 @@ def get_user_fields(request):
     if request.method == "GET":
         user_fields = models.UserField.objects.filter(user=request.user)
         user_projects = models.SwnProject.objects.filter(user=request.user)
-        ufs = []
-        for user_field in user_fields:
-            uf = user_field.to_feature()
-            uf['properties']['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
-            ufs.append(uf)
+        # ufs = []
+        # for user_field in user_fields:
+        #     uf = user_field.to_feature()
+        #     uf['properties']['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
+        #     ufs.append(uf)
+
+        ufs = [uf.to_feature() for uf in user_fields]
         # print('user_fields:', ufs)
     return JsonResponse({'user_fields': ufs})
 

@@ -53,16 +53,7 @@
   background-size: 20px 20px;
 }
 
-/* Leaflet Polygons */
-.leaflet-interactive:not(.circle-marker) {
-  fill: none;
-}
 
-.leaflet-interactive.user-field {
-    stroke: var(--bs-gray-600);
-    
-    stroke-width: 3px;
-  } 
 .leaflet-interactive.user-field.highlight {
     stroke: var(--bs-success);
 

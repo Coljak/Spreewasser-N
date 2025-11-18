@@ -151,6 +151,7 @@ class UserField(models.Model):
                 'id': self.id,
                 'name': self.name,
                 'user': self.user.id,
+                'projects': [project for project in self.swn_projects.all().values('id', 'name', 'creation_date', 'last_modified')],
                 'lat': self.centroid_lat,
                 'lon': self.centroid_lon,
         }

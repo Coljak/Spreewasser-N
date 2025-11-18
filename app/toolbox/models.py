@@ -87,6 +87,7 @@ class UserField(models.Model):
                 'id': self.id,
                 'name': self.name,
                 'user': self.user.id,
+                'projects': [project for project in self.toolbox_projects.all().values('id', 'name', 'creation_date', 'last_modified')],
                 'has_infiltration': self.has_infiltration,
                 'has_injection': self.has_injection,
                 'has_sieker_sink': self.has_sieker_sink,
@@ -174,7 +175,7 @@ class ToolboxProject(models.Model):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="toolbox_projects")
     description = models.TextField(null=True, blank=True)
-    user_field = models.ForeignKey('UserField', on_delete=models.CASCADE, null=True)
+    user_field = models.ForeignKey('UserField', on_delete=models.CASCADE, null=True, related_name="toolbox_projects")
     toolbox_type = models.ForeignKey('ToolboxType', on_delete=models.CASCADE)
     creation_date = models.DateTimeField(blank=True, default=now)
     last_modified = models.DateTimeField(auto_now=True, blank=True)
@@ -406,11 +407,11 @@ class Stream(models.Model):
                 'id': self.id,
                 'name': self.name,
                 'fgw_id': self.fgw.id if self.fgw else None,
-                'shape_length': round(self.shape_length, 2),
+                'shape_length': round(self.shape_length),
                 'minimum_environmental_flow': self.minimum_environmental_flow,
-                'min_surplus_volume': round(self.min_surplus_volume, 2),
-                'mean_surplus_volume': round(self.mean_surplus_volume, 2),
-                'max_surplus_volume': round(self.max_surplus_volume, 2),
+                'min_surplus_volume': round(self.min_surplus_volume),
+                'mean_surplus_volume': round(self.mean_surplus_volume),
+                'max_surplus_volume': round(self.max_surplus_volume),
                 'plus_days': self.plus_days
         }
     
@@ -457,11 +458,11 @@ class Lake(models.Model):
                 'name': self.name,
                 'fgw_id': self.fgw.id if self.fgw else None,
                 'shape_length': round(self.shape_length, 2),
-                'shape_area': round(self.shape_area, 2),
+                'shape_area': round(self.shape_area),
                 'minimum_environmental_flow': self.minimum_environmental_flow,
-                'min_surplus_volume': round(self.min_surplus_volume, 2),
-                'mean_surplus_volume': round(self.mean_surplus_volume, 2),
-                'max_surplus_volume': round(self.max_surplus_volume, 2),
+                'min_surplus_volume': round(self.min_surplus_volume),
+                'mean_surplus_volume': round(self.mean_surplus_volume),
+                'max_surplus_volume': round(self.max_surplus_volume),
                 'plus_days': self.plus_days
         }
     
@@ -528,10 +529,10 @@ class Sink(models.Model):
             "id": self.id,
             "name": 'Senke' if language=='de' else 'Sink',
             "depth": round(self.depth, 2),
-            "area": round(self.area, 2),
-            "volume": round(self.volume, 2),
-            "index_proportions": int(self.index_proportions * 100),
-            "index_soil": round(indices[self.id]['index_soil'] * 100, 1),
+            "area": round(self.area),
+            "volume": round(self.volume),
+            "index_proportions": round(self.index_proportions * 100),
+            "index_soil": round(indices[self.id]['index_soil'] * 100),
             "land_use": landuse,
             "land_use_1": landuse_1,
             'land_use_1_percentage': round(self.land_use_1_percentage or 0, 1),
@@ -640,10 +641,10 @@ class EnlargedSink(models.Model):
             "id": self.id,
             "name": 'Vergrößerte Senke' if language=='de' else 'Enlarged Sink',
             "depth": round(self.depth, 2),
-            "area": round(self.area, 2),
-            "volume": round(self.volume, 2),
-            "index_proportions": round(self.index_proportions * 100, 1),
-            "index_soil": round(indices[self.id]['index_soil'] * 100, 1),
+            "area": round(self.area),
+            "volume": round(self.volume),
+            "index_proportions": int(self.index_proportions * 100),
+            "index_soil": round(indices[self.id]['index_soil'] * 100),
             "land_use": landuse,
             "land_use_1": landuse_1,
             "land_use_1_percentage": round(self.land_use_1_percentage or 0, 1),
@@ -653,12 +654,12 @@ class EnlargedSink(models.Model):
             "land_use_3_percentage": round(self.land_use_3_percentage or 0, 1),
             "land_use_4": landuse_4,
             "land_use_4_percentage": round(self.land_use_4_percentage or 0, 1),
-            "volume_gained": round(self.volume_gained, 2) if self.volume_gained else None,
-            "volume_construction_barrier": round(self.volume_construction_barrier, 2) if self.volume_construction_barrier else None,     
+            "volume_gained": round(self.volume_gained) if self.volume_gained else None,
+            "volume_construction_barrier": round(self.volume_construction_barrier) if self.volume_construction_barrier else None,     
             "soil_points": self.soil_points,
-            "index_feasibility": round(self.index_feasibility * 100, 1) if self.index_feasibility else "-",
+            "index_feasibility": int(self.index_feasibility * 100) if self.index_feasibility else "-",
             "hydrogeology": getattr(self.aquifer, f'name_{language}', None),
-            "index_hydrogeology": round(self.index_hydrogeology *100, 1) if self.index_hydrogeology else None,
+            "index_hydrogeology": int(self.index_hydrogeology *100) if self.index_hydrogeology else None,
             "index_sink_total_percent": min(int(indices[self.id]['index_sink_total'] * 100), 100),
             "index_sink_total": indices[self.id]['index_sink_total'],
         }

@@ -201,11 +201,7 @@ def get_user_fields(request):
     if request.method == "GET":
         user_fields = models.UserField.objects.filter(user=request.user)
         user_projects = models.ToolboxProject.objects.filter(user=request.user)
-        ufs = []
-        for user_field in user_fields:
-            uf = user_field.to_feature()
-            uf['properties']['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
-            ufs.append(uf)
+        ufs = [uf.to_feature() for uf in user_fields]
     return JsonResponse({'user_fields': ufs})
 
 
@@ -229,7 +225,6 @@ def delete_user_field(request, id):
     
 @login_required
 def get_field_project_modal(request, id):
-    user_projects = models.ToolboxProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user)).order_by('name')
 
     user_field_projects = models.ToolboxProject.objects.filter(
         Q(user_field__id=id) & Q(user_field__user=request.user)
@@ -651,9 +646,6 @@ def new_shortest_connection(sink, lakes, streams, transform_to_4326=True, connec
     This function works for sinks, enlarged sinks and sieker sinks.
     It returns a dictionary with the sink.id as key and a linefeature with properties as values.
     """
-    print('new_shortest_connection')
-
-    print('new_shortest_connection 1')
     lake_with_distance = lakes.annotate(
         distance_to_sink=Distance('geom25833', sink.geom25833)
         ).order_by('distance_to_sink').first()
@@ -663,14 +655,14 @@ def new_shortest_connection(sink, lakes, streams, transform_to_4326=True, connec
         ).order_by('distance_to_sink').first()
     
     closest = lake_with_distance if lake_with_distance is not None else stream_with_distance
-    print('new_shortest_connection 2')
+
     if (
         (lake_with_distance and stream_with_distance) and
         (lake_with_distance.distance_to_sink.m > stream_with_distance.distance_to_sink.m)
         ):
-        print('new_shortest_connection 2a')
+
         closest = stream_with_distance
-    print('new_shortest_connection 3 closest', closest)
+
 
     distance_m=int(closest.distance_to_sink.m)
     
@@ -683,10 +675,9 @@ def new_shortest_connection(sink, lakes, streams, transform_to_4326=True, connec
     line = LineString([pt1.coords[0], pt2.coords[0]])
     line_geom = GEOSGeometry(line.wkt, srid=25833)
 
-    print('new_shortest_connection 5')
     if transform_to_4326:
         line_geom.transform(4326)
-    print('new_shortest_connection 6')
+
     connection_data = {
         'id': connection_id,
         'sink_id': sink.id,  
@@ -710,9 +701,7 @@ def new_shortest_connection(sink, lakes, streams, transform_to_4326=True, connec
         },
     }
 
-    
-    
-    print('new_shortest_connection 7')
+
     return connection_data
             
 def get_infiltration_result_list(project, epsg=4326):
@@ -745,15 +734,15 @@ def get_infiltration_result_list(project, epsg=4326):
         index_volumes = \
             min(connection_data['closest_waterbody']['mean_surplus_volume'] / sink.volume, 1) *100
         print('index_volume', index_volumes)
-        index_connection = (index_length + index_volumes)/ 2
-        print('index_connection', index_connection)
-        connection_data['connection_feature']['properties']['index_length'] = round(index_length)
-        connection_data['connection_feature']['properties']['index_volumes'] = round(index_volumes)
-        connection_data['connection_feature']['properties']['index_inlet'] = round(index_connection)
-        connection_data['index_inlet'] = round(index_connection)
+        index_inlet = (index_length + index_volumes)/ 2
+        print('index_connection', index_inlet)
+        connection_data['connection_feature']['properties']['index_length'] = int(index_length)
+        connection_data['connection_feature']['properties']['index_volumes'] = int(index_volumes)
+        connection_data['connection_feature']['properties']['index_inlet'] = int(index_inlet)
+        connection_data['index_inlet'] = round(index_inlet)
         index_sink = min(int(indices[sink.id]['index_sink_total'] *100), 100)
         connection_data['index_sink'] = index_sink
-        index_total = int((index_connection + index_sink) / 2)
+        index_total = int((index_inlet + index_sink) / 2)
         connection_data['index_total'] = round(index_total)
 
         return connection_data
@@ -769,7 +758,7 @@ def get_infiltration_result_list(project, epsg=4326):
             "features": sink_features,
             }
         for i, sink in enumerate(sinks):
-            connection_data = new_shortest_connection(sink, lakes, streams, i)
+            connection_data = new_shortest_connection(sink, lakes, streams, connection_id=(i))
             
             
             connection_data['is_enlarged_sink'] = boolean_translation(False, language)
@@ -791,7 +780,7 @@ def get_infiltration_result_list(project, epsg=4326):
             "features": sink_features,
             }
         for i, sink in enumerate(enlarged_sinks):
-            connection_data = new_shortest_connection(sink, lakes, streams, sink_count + i)
+            connection_data = new_shortest_connection(sink, lakes, streams, connection_id=(sink_count + i))
             connection_data['is_enlarged_sink'] = boolean_translation(True, language)
             connection_data = rate_connection(connection_data, sink, indices_enlarged_sinks)
             line_feature = connection_data['connection_feature']
@@ -807,9 +796,7 @@ def get_infiltration_result_list(project, epsg=4326):
         "features": line_features,
     }
     result_dict['results'] = results
-    print(results)
 
-    
     return result_dict
 
 ### NEW 2025-11-15
@@ -825,7 +812,7 @@ def get_infiltration_results(request):
 
     results_dict = get_infiltration_result_list(project, epsg=4326)
     result_data_info = models.DataInfo.objects.get(data_type='infiltration_result')
-    inlet_data_info = models.DataInfo.objects.get(data_type='infiltration_inlet')
+    inlet_data_info = models.DataInfo.objects.get(data_type='infiltration_result_inlet')
     sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_sink')
     enlarged_sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_enlarged_sink')
     
@@ -846,7 +833,7 @@ def get_infiltration_results(request):
             'success': True,
         }
     }
-    print('response', response)
+
     return JsonResponse(response)
     # except:
 
@@ -1167,7 +1154,7 @@ def filter_sieker_sinks(request):
     geom = GEOSGeometry(user_field.geom)
     
     sinks = models.SiekerSink.objects.filter(geom4326__within=geom)
-    print("Sinks before filtering:", sinks.count())
+
     filters = Q()
     filters = add_range_filter(filters, project, 'sieker_sink_area', 'area')
     filters = add_range_filter(filters, project, 'sieker_sink_volume', 'volume')
@@ -1177,13 +1164,11 @@ def filter_sieker_sinks(request):
     filters = add_range_filter(filters, project, 'sieker_sink_wetlands_percent', 'wetlands_percent')
     
     sinks = sinks.filter(filters)
-    print("Sinks FILTERED:", sinks.count())
 
     feasibility = project.get('sieker_sink_feasibility', [])
-    print('feasibility', feasibility)
 
     sinks = sinks.filter(Q(umsetzbark__in=feasibility))
-    print("Sieker Sinks feasibility FILTERED:", sinks.count())
+
     if sinks.count() == 0:
         message = {
             'success': False, 
@@ -1266,7 +1251,7 @@ def filter_sieker_geks(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     user_field = models.UserField.objects.get(pk=project['userField'])
-    print('FROM filter_sieker_geks project', project)
+
     
     # geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
     # filter landuses
@@ -1285,9 +1270,6 @@ def filter_sieker_geks(request):
         ).filter(filters)
     
     geks = models.GekRetention.objects.filter(measures__in=measures).distinct()
-
-
-    print("Geks FILTERED:", geks.count())
 
 
     if geks.count() == 0:
@@ -1406,7 +1388,6 @@ def filter_sieker_wetlands(request):
    
 
         data_info = models.DataInfo.objects.get(data_type='filtered_sieker_wetland').to_dict()
-        print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info})
 
 
@@ -1526,83 +1507,6 @@ def publish_raster_on_geoserver(layer_name, workspace='spreewassern_raster', sty
     print(f"Style '{style_name}' applied to layer '{layer_name}'")
 
 
-# requirements: rasterio, numpy, shapely (optional), pyproj
-# pip install rasterio numpy shapely
-
-# def compute_suitability_from_tifs(suitability_dict, user):
-
-#     with rasterio.open('raster_data/no_injection_area_mask.tif') as mask:
-#         nogo_mask = mask.read(1)
-#         dst_crs = mask.crs
-#         dst_transform = mask.transform
-#         dst_width = mask.width
-#         dst_height = mask.height
-#         dst_profile = mask.profile.copy()
-
-#     dst_profile['nodata'] = FLOAT32_NODATA
-
-#     length_stack = len(suitability_dict) + 1
-#     stack = np.zeros((length_stack, dst_height, dst_width), dtype=np.float32)
-#     weighted_stack = np.zeros((2, dst_height, dst_width), dtype=np.float32)
-
-#     stack[0] = nogo_mask
-#     weighted_stack[0] = nogo_mask
-
-
-#     mask_arr = None  # to store mask for polygon later
-#     layer_weight_sum = 0
-#     for key in suitability_dict:
-#         layer_weight_sum += suitability_dict[key]['weight']
-        
-#     i = 1
-#     for key in suitability_dict:
-        
-#         path = suitability_dict[key]['map_path']
-        
-#         # try:
-#         with rasterio.open(path) as src:
-#             dst_arr = src.read(1)
-        
-#             dst_nodata = src.nodata
-#         new_arr = dst_arr.copy()
-#         new_arr = np.where(
-#             new_arr==dst_nodata,
-#             FLOAT32_NODATA,
-#             new_arr
-#             )
-#         for k in suitability_dict[key]['mapping']:
-#             new_arr = np.where(
-#                 new_arr==float(suitability_dict[key]['mapping'][k]['map_value']),
-#                 suitability_dict[key]['mapping'][k]['score'],
-#                 new_arr
-#                 )
-#         stack[i] = new_arr
-#         weighted_stack[1] = weighted_stack[1] + (new_arr * suitability_dict[key]['weight'] / layer_weight_sum)
-        
-#         i +=1
-#         # except:
-#         #     print(path)
-#     result_2d = np.prod(weighted_stack, axis=0) * 100
-
-#     with rasterio.open(f'raster_data/{user.id}_mar_result.tif', 'w', **dst_profile) as f:
-
-#         f.write(result_2d.astype(np.float32),1)
-
-#     i = 0
-#     for key in suitability_dict:
-#         i += 1
-#         print(i)
-#         with rasterio.open(f'raster_data/{user.id}_weighted_stack_{key}.tif', 'w', **dst_profile) as f:
-
-#             f.write(stack[i].astype(np.float32),1)
-    
-#     publish_raster_on_geoserver(f"{user.id}_mar_result")
-
-
-#     return stack, weighted_stack, result_2d
-
-
-        
 
 def compute_suitability_from_tifs(suitability_dict, user):
     FLOAT32_NODATA = np.float32(-3.4028235e+38)
@@ -1646,8 +1550,7 @@ def compute_suitability_from_tifs(suitability_dict, user):
         weighted_stack = weighted_stack + (new_arr * suitability_dict[key]['weight'] / layer_weight_sum)
         
         i +=1
-        # except:
-        #     print(path)
+
     result_2d = weighted_stack * 100
     result_2d = np.where(nogo_mask == 0, 0, result_2d)
     result_2d = np.where(np.isnan(result_2d), np.nan, np.clip(result_2d, 0, 100))
@@ -1817,7 +1720,6 @@ def load_sieker_drainage_features(request, user_field_id):
     
         drained_area_type_ids = list(drained_areas.values_list('drained_area_type__id', flat=True).distinct())
         drained_area_types = models.DrainedAreaType.objects.filter(pk__in=drained_area_type_ids)
-        print('drainage_types', drained_area_types)
         drainage_type_feature_collections = []
         for dt in drained_area_types:          
             drainage_type_feature_collections.append({

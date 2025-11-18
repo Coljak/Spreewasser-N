@@ -131,7 +131,8 @@ export const Layers = {
     'enlarged_sink': enlargedSinkCluster,
     'lake': lakesFeatureGroup,
     'stream': streamsFeatureGroup,
-    'infiltration_inlet': inletConnectionsFeatureGroup,
+    'infiltration_result': inletConnectionsFeatureGroup,
+    'infiltration_result_inlet': inletConnectionsFeatureGroup,
     'infiltration_result_sink': inletConnectionsFeatureGroup,
     'infiltration_result_enlarged_sink': inletConnectionsFeatureGroup,
     // SiekerWetland

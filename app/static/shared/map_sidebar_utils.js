@@ -57,6 +57,13 @@ pane: "baselayerPane"
 export const projectRegion = new L.geoJSON(project_region, {
     attribution: 'Project Region',
     pane: "overlayPolygonPane",
+    style: {
+      color: 'var(--bs-primary)', 
+      weight: 3,                   
+      fill: false,                  
+      fillOpacity: 0,               
+      interactive: true             
+    },
     onEachFeature: function (feature, layer) {
       layer.bindTooltip(feature.properties.name, {
       direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
@@ -427,7 +434,11 @@ export function createNUTSSelectors({getFeatureGroup}) {
           }
           var geojsonLayer = new L.GeoJSON.AJAX(url, {
               style: {
-                  color: color 
+                  color: color,
+                  fill: false,
+                  weight: 3,
+                  fillOpacity: 0,
+                  interactive: true,
               },
               onEachFeature: function (feature, layer) {
                   layer.bindTooltip(`${feature.properties.nuts_name}`, {
@@ -689,9 +700,6 @@ export function initializeSidebarEventHandler({
           console.log('switchInput: ', switchInput);
             toggleUserField(switchInput, getFeatureGroup());
         } else if (switchInput.classList.contains('all-userfields-switch')) {
-          // event.prevent
-          // event.stopPropagation();
-          // TODO: Instead of switching all switches hide the layer and grey out switchwes; also preventPropagation!!??
 
           console.log('all-userfields-switch')
           $('.form-check-input.user-field-switch')
@@ -970,21 +978,22 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
       saveUserField(fieldName, null, layer)
       .then((data) => {
         console.log("Data: ", data);
-        var layerGeoJson = L.geoJSON(data.geometry,
-          {
-            className: 'user-field',
-            pane: 'polygonPane',
-            onEachFeature: function (f, l) {
-              l.bindTooltip(fieldName, {
-                  direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
-                  offset: [0, 0],         // x, y offset in pixels
-                  permanent: false,       // only show on hover
-                  sticky: true  
-              });
-              featureGroup.addLayer(l);
-            },
-          }
-        );
+        var layerGeoJson = addUserFieldToMap(data, featureGroup)
+        // var layerGeoJson = L.geoJSON(data.geometry,
+        //   {
+        //     className: 'user-field',
+        //     pane: 'polygonPane',
+        //     onEachFeature: function (f, l) {
+        //       l.bindTooltip(fieldName, {
+        //           direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
+        //           offset: [0, 0],         // x, y offset in pixels
+        //           permanent: false,       // only show on hover
+        //           sticky: true  
+        //       });
+        //       featureGroup.addLayer(l);
+        //     },
+        //   }
+        // );
         const userField = new UserField(
           data.properties.name,
           data.properties.id,  
@@ -1079,6 +1088,30 @@ export const addLayerToSidebar = (userField, layer) => {
     userFieldsAccordion.appendChild(accordion);
   };
 
+function addUserFieldToMap(feature, featureGroup) {
+  return L.geoJson(feature, {
+    className: 'user-field',
+    pane: 'polygonPane',
+    style: {
+      color: 'var(--bs-gray-600)', 
+      weight: 3,                   
+      fill: false,                  
+      fillOpacity: 0,               
+      interactive: true             
+    },
+    onEachFeature: function (feature, layer) {
+      layer.bindTooltip(feature.properties.name, {
+                  direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
+                  offset: [0, 0],         // x, y offset in pixels
+                  permanent: false,       // only show on hover
+                  sticky: true  
+              });
+      layer.userFieldId = feature.properties.id
+      featureGroup.addLayer(layer)
+    },
+  });
+}
+
   // Load all user fields from DB
 export async function getUserFieldsFromDb (featureGroup) {
   let userFields = {};
@@ -1097,22 +1130,8 @@ export async function getUserFieldsFromDb (featureGroup) {
     const userFieldsDb = data.user_fields;
     
     userFieldsDb.forEach((el) => {
-      // var layer = L.geoJSON(el.geom_json);
-      let layerGeoJson = L.geoJson(el.geometry, {
-        className: 'user-field',
-        pane: 'polygonPane',
-        onEachFeature: function (feature, layer) {
-          layer.bindTooltip(el.properties.name, {
-                  direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
-                  offset: [0, 0],         // x, y offset in pixels
-                  permanent: false,       // only show on hover
-                  sticky: true  
-              });
-          featureGroup.addLayer(layer);
-        },
-      });
-
-      // console.log("getData, element: ", el);
+      let layerGeoJson = addUserFieldToMap(el, featureGroup);
+      
       const userField = new UserField(
         el.properties.name,
         el.properties.id,  

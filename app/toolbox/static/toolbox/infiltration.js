@@ -182,61 +182,37 @@ function getInfiltrationResults() {
         console.log('getInfiltration data', data);
 
 
-        createResultTable({dataInfo: data.result_data_info, inlets: data.results})
-        addFeatureCollectionToLayer({dataInfo: data.inlet_data_info, featureCollection: data.inlet_feature_collection}, true)
         
-        addFeatureCollectionToLayer({dataInfo: data.sink_data_info, featureCollection: data.sink_feature_collection}, false)
+        let resultMap = addFeatureCollectionToLayer({dataInfo: data.inlet_data_info, featureCollection: data.inlet_feature_collection}, true)
+        
+        resultMap = addFeatureCollectionToLayer({dataInfo: data.sink_data_info, featureCollection: data.sink_feature_collection}, false, resultMap)
 
-        addFeatureCollectionToLayer({dataInfo: data.enlarged_sink_data_info, featureCollection: data.enlarged_sink_feature_collection}, false)
-        // NEW START ////
+        resultMap= addFeatureCollectionToLayer({dataInfo: data.enlarged_sink_data_info, featureCollection: data.enlarged_sink_feature_collection}, false, resultMap)
+        
+        // console.log(resultMap)
+        createResultTable({dataInfo: data.result_data_info, inlets: data.results})
+        // $('#toolboxPanel.toggle-sink-result').off('change')
+        $('#toolboxPanel').on('change', '.toggle-sink-result', function () {
+              const inletId = $(this).attr('inlet-id');
+              const sinkId  = $(this).attr('sink-id');
+              const show    = $(this).is(':checked');
+
+              // Direct map lookup - FAST and CLEAN
+              const inletLayer = resultMap[inletId];
+              const sinkLayer  = resultMap[sinkId];
+
+              if (inletLayer) {
+                  show ? map.addLayer(inletLayer) : map.removeLayer(inletLayer);
+              }
+              if (sinkLayer) {
+                  show ? map.addLayer(sinkLayer) : map.removeLayer(sinkLayer);
+              }
+          });
 
 
-      // createResultTable
- 
+        const resultTab = document.getElementById('navInfiltrationResult');
+        
 
-      ///NEW END///
-      // data.inlets_sinks.forEach(inlet => {
-      //   console.log('inlet', inlet);
-
-      //     // Create sink marker
-      //     const sinkLayer = L.geoJSON(inlet.sink_geom, {
-      //         className: 'sink-outline',
-      //     })
-
-      //     // Create line
-      //     const lineLayer = L.geoJSON(inlet.line, {
-      //       className: `connection-line connection-${inlet.waterbody_type}`,
-      //       style: {
-      //         color: inlet.waterbody_type === 'lake' ? '#007bff' : '#28a745',
-      //         weight: 3,
-      //         dashArray: '4,4'
-      //       }
-      //     });
-
-      //     const groupLayers = [sinkLayer, lineLayer]
-
-      //     if (inlet.sink_embankment) {
-      //       const sink_embankment = L.geoJSON(inlet.sink_embankment, {
-      //         className: 'sink-embankment',
-      //         style: {
-      //           fillColor: '#ff5722',
-      //           color: '#000',
-      //         }
-              
-      //       })
-      //       groupLayers.push(sink_embankment)
-      //     }
-
-      //     // Combine both into a LayerGroup
-      //     const group = L.layerGroup(groupLayers).addTo(Layers.inletConnectionsFeatureGroup);
-          
-      //     connectionLayerMap[inlet.id] = group;
-
-      //     addToInletTable(inlet);  // builds a row in the table
-
-      //   });
-       
-         const resultTab = document.getElementById('navInfiltrationResult');
         resultTab.classList.remove('disabled');
         resultTab.removeAttribute('aria-disabled');
 
@@ -404,23 +380,21 @@ export function initializeInfiltration() {
     $('#toolboxPanel').on('change', function (event){
       const $target = $(event.target);
       if ($target.hasClass('toggle-sink-result')) {
-        const inletId = $target.data('id')
-        const inletLayerId = `infiltration_inlet_${inletId}`;
-        const sinkLayer = $target.attrs('layer-id');
+        console.log('toggle-sink-result')
         const dataType = $target.data('type');
-        // if ($target.is(':checked')) {
-        //   Layers[dataType].eachLayer(layer => {
-        //     if (layer.customId === sinkLayer || layer.customId === inletLayerId) {
-        //       map.addLayer(layer);
-        //     }
-        //   });
-        // } else {
-        //   Layers[dataType].eachLayer(layer => {
-        //     if (layer.customId === sinkLayer || layer.customId === inletLayerId) {
-        //       map.removeLayer(layer);
-        //     }
-        //   })
-        // };
+        const inletId = `${dataType}_${$target.data('id')}`;
+        const sinkLayerId = `${dataType}_${$target.attr('layer-id')}`;
+        
+          Layers[dataType].eachLayer(layer => {
+            if (layer.customId === sinkLayerId || layer.customId === inletId) {
+              if ($target.is(':checked')) {
+                Layers[dataType].addLayer(layer);
+              } else {
+                Layers[dataType].removeLayer(layer)
+              }
+            }
+          });
+        
       }
     });
 

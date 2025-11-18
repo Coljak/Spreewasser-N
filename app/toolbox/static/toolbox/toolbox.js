@@ -465,7 +465,7 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 $target.addClass('shown')
               }
               
-            } else if ($target.hasClass('paginate_button')) {
+            } else if ($target.hasClass('paginate_button' || $target.hasClass('sorting'))) {
             console.log('Paginate')
             const dataType =  $target.attr('aria-controls').split('-')[0];
             tableCheckSelectedItems(project, dataType)

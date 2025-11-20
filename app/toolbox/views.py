@@ -1469,16 +1469,19 @@ def delete_geoserver_layer(workspace, layer_name):
     except:
         pass
 
+
 def publish_raster_on_geoserver(layer_name, workspace='spreewassern_raster', style_name="style_raster_percent_sieker_2"):
     """
     Publishes a GeoTIFF to GeoServer as a coverage store and attaches an existing style.
     """
+
     geo = Geoserver(
         settings.GEOSERVER_URL,
         username=settings.GEOSERVER_USER,
         password=settings.GEOSERVER_PASS
     )
 
+    geo.create_coveragestore(layer_name=layer_name, path=f'/app/raster_data/{layer_name}.tif', workspace=workspace)
     geo.publish_style(layer_name=layer_name, style_name=style_name, workspace=workspace)
 
 
@@ -1531,7 +1534,7 @@ def compute_suitability_from_tifs(suitability_dict, user):
     result_2d = np.where(np.isnan(result_2d), np.nan, np.clip(result_2d, 0, 100))
     result_2d_to_write = np.where(np.isnan(result_2d), FLOAT32_NODATA, result_2d).astype(np.float32)
 
-    with rasterio.open(f'raster_data/{user.id}_mar_result.geotiff', 'w', **mask_profile) as f:
+    with rasterio.open(f'raster_data/{user.id}_mar_result.tif', 'w', **mask_profile) as f:
 
         f.write(result_2d_to_write.astype(np.float32),1)
 

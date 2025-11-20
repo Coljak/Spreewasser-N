@@ -786,7 +786,7 @@ export function createResultTable( data ){
     const selected_items = project[`selected_${dataInfo.dataType}s`];
     project[`selected_${dataInfo.dataType}s`] = [];
     
-    project[`all_${dataInfo.dataType}_ids`] = [];
+    // project[`all_${dataInfo.dataType}_ids`] = [];
 
     const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
     let tableHTML = `
@@ -806,6 +806,7 @@ export function createResultTable( data ){
     
 
     inlets.forEach(inlet => {
+        project[`selected_${dataInfo.dataType}s`].push(inlet.id);
         console.log('Create table rows inlet', inlet)
         let sinkDataInfo
         if (inlet.sink_type === 'sink') {
@@ -1017,6 +1018,10 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
     console.log('getInletVolumeChart', waterbodyType, waterbodyId, inletId)
     // const spinner = document.querySelector('#inletChartSpinnerWrapper'); 
     const canvas = document.getElementById(`chart-${inletId}`);
+    if (Chart.getChart(canvas)) {
+        console.log(`Canvas chart-${inletId} is already in use. Skipping.`);
+        return; // Do nothing
+    };
     const ctx = canvas.getContext('2d');
     fetch(`get_injection_volume_chart/${waterbodyType}/${waterbodyId}/`)
     .then(response => response.json())
@@ -1059,7 +1064,7 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
             }
           }
         })
-        // .catch(err => console.error('Chart data error:', err));
+
 
     });
 

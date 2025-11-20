@@ -76,8 +76,6 @@ function filterSinks( $button) {
 };
 
 
-
-
 function getInfiltrationResults() {
     const infiltration = Infiltration.loadFromLocalStorage();
     console.log(typeof infiltration, infiltration);              // should log "object"
@@ -169,10 +167,6 @@ function getInfiltrationResults() {
       }
   });
 };
-
-
-
-
 
 export function initializeInfiltration() {
   console.log('Initialize Infiltraion');

@@ -716,10 +716,11 @@ def get_infiltration_result_list(project, epsg=4326):
     '''
 
     language='de'
-    sinks = models.Sink.objects.filter(id__in=project.get('selected_sinks', []))
-    enlarged_sinks = models.EnlargedSink.objects.filter(id__in=project.get('selected_enlarged_sinks', []))
-    lakes = models.Lake.objects.filter(id__in=project.get('selected_lakes', []))
-    streams = models.Stream.objects.filter(id__in=project.get('selected_streams', []))
+    # the items are ordered by id to ensure that the result ids will be identical if the project is reloaded
+    sinks = models.Sink.objects.filter(id__in=project.get('selected_sinks', [])).order_by('id')
+    enlarged_sinks = models.EnlargedSink.objects.filter(id__in=project.get('selected_enlarged_sinks', [])).order_by('id')
+    lakes = models.Lake.objects.filter(id__in=project.get('selected_lakes', [])).order_by('id')
+    streams = models.Stream.objects.filter(id__in=project.get('selected_streams', [])).order_by('id')
 
 
     def rate_water_sink_distance(distance):
@@ -742,8 +743,10 @@ def get_infiltration_result_list(project, epsg=4326):
         index_inlet = (index_length * int(project.get('weighting_inlet_length', 70)) + index_volumes * int(project.get('weighting_inlet_volume', 30))) / 100
         print('index_connection', index_inlet)
         connection_data['connection_feature']['properties']['index_length'] = int(index_length)
-        connection_data['connection_feature']['properties']['index_volumes'] = int(index_volumes)
-        connection_data['connection_feature']['properties']['index_inlet'] = int(index_inlet)
+        connection_data['index_length'] = round(index_length)
+        connection_data['connection_feature']['properties']['index_volumes'] = round(index_volumes)
+        connection_data['index_volumes'] = round(index_volumes)
+        connection_data['connection_feature']['properties']['index_inlet'] = round(index_inlet)
         connection_data['index_inlet'] = round(index_inlet)
         index_sink = min(int(indices[sink.id]['index_sink_total'] *100), 100)
         connection_data['index_sink'] = index_sink
@@ -785,6 +788,7 @@ def get_infiltration_result_list(project, epsg=4326):
             }
         sink_embankments = models.EnlargedSinkEmbankment.objects.filter(enlarged_sink__in=enlarged_sinks)
         sink_embankment_feature_collection = create_feature_collection(sink_embankments)
+        result_dict['sink_embankment_feature_collection'] = sink_embankment_feature_collection
         for i, sink in enumerate(enlarged_sinks):
             connection_data = get_shortest_connection(sink, lakes, streams, connection_id=(sink_count + i))
 
@@ -806,7 +810,7 @@ def get_infiltration_result_list(project, epsg=4326):
         "type": "FeatureCollection",
         "features": line_features,
     }
-    result_dict['sink_embankment_feature_collection'] = sink_embankment_feature_collection
+    
     result_dict['results'] = results
 
     return result_dict

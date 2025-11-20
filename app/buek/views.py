@@ -77,10 +77,11 @@ def get_buek_data_from_point(request, lat, lon):
 
 def get_soil_profile(profile_type, lat, lon):
     """
-    This function returns all references to soilprofiles in one point.
-    tkle_nr is the id of the polygon in the BUEK200 database,
-    polygon_id id the id of the polygon used to provide the soil data in cases where either no data or no appropriate data is available in the Buek200,
-    ....
+    This produces soil profiles at the given longitude and latitude. 
+    The profile_type general provides a soilprofile according to the CLC landuse.
+    The profile_types agriculture and forest produce profiles agricultural and forest 
+    profiles where such a profile exists in the buek and where the landuse is agricultural or forests.
+    In all other cases, the profile is according to the landuse.  
     """ 
     lat = float(lat)
     lon = float(lon)

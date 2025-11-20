@@ -18,7 +18,7 @@ logging.basicConfig(
 
 
 class Command(BaseCommand):
-    help = "Connect to the CheckGlobe FTP server and download the latest data. Creation of NetCDF file from downloaded tif files."
+    help = "Connect to the CzechGlobe FTP server and download the latest data. Creation of NetCDF file from downloaded tif files."
 
     def handle(self, *args, **kwargs):
         try:
@@ -39,16 +39,16 @@ class Command(BaseCommand):
             if not local_dates or local_dates[-1] < latest_date:
                 local_dir = os.path.join(local_dir, latest_date)
                 try:
-                    self.stdout.write("Trying to download data from CheckGlobe FTP ...")
+                    self.stdout.write("Trying to download data from ChechGlobe FTP ...")
                     remote_dir = f"data/{latest_date}"
                     
                     download_directory(sftp, remote_dir, local_dir)
-                    self.stdout.write("Data downloaded from CheckGlobe FTP ...")
+                    self.stdout.write("Data downloaded from ChechGlobe FTP ...")
 
                     data_dir = os.path.join(local_dir, 'Data')
                     
                 except Exception as e:
-                    self.stdout.write(f"Download from CheckGlobe FTP failed after connection was established: {e}")
+                    self.stdout.write(f"Download from ChechGlobe FTP failed after connection was established: {e}")
                     shutil.rmtree(local_dir)
 
                 try:
@@ -59,7 +59,7 @@ class Command(BaseCommand):
                     self.stdout.write(f"Creation of NetCDF file failed: {e}")
 
             else:
-                self.stdout.write("No new data on CheckGlobe FTP ...")
+                self.stdout.write("No new data on ChechGlobe FTP ...")
 
             sftp.close()
             transport.close()

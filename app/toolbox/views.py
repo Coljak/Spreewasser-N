@@ -19,6 +19,7 @@ from django.template.loader import render_to_string
 from django.db import connection
 from django.db.models import Max, Min, F, Q
 import json, requests
+from geo.Geoserver import Geoserver
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
 
@@ -1472,39 +1473,13 @@ def publish_raster_on_geoserver(layer_name, workspace='spreewassern_raster', sty
     """
     Publishes a GeoTIFF to GeoServer as a coverage store and attaches an existing style.
     """
-
-    delete_geoserver_layer(workspace, layer_name)
-
-    
-    url = f"{settings.GEOSERVER_URL}/rest/workspaces/{workspace}/coveragestores/{layer_name}/file.geotiff"
-    with open(f"/app/raster_data/{layer_name}.tif", "rb") as f:
-        r = requests.put(
-            url,
-            auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS),
-            headers={"Content-type": "image/tiff"},
-            params={"configure": "all", "coverageName": layer_name},
-            data=f
-        )
-    r.raise_for_status()
-    print(f"Raster {layer_name} uploaded successfully")
-
-    # Apply style
-    layer_url = f"{settings.GEOSERVER_URL}/rest/layers/{workspace}:{layer_name}"
-    style_xml = f"""
-    <layer>
-        <defaultStyle>
-            <name>{style_name}</name>
-        </defaultStyle>
-    </layer>
-    """
-    r = requests.put(
-        layer_url,
-        auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS),
-        headers={"Content-type": "application/xml"},
-        data=style_xml
+    geo = Geoserver(
+        settings.GEOSERVER_URL,
+        username=settings.GEOSERVER_USER,
+        password=settings.GEOSERVER_PASS
     )
-    r.raise_for_status()
-    print(f"Style '{style_name}' applied to layer '{layer_name}'")
+
+    geo.publish_style(layer_name=layer_name, style_name=style_name, workspace=workspace)
 
 
 
@@ -1556,7 +1531,7 @@ def compute_suitability_from_tifs(suitability_dict, user):
     result_2d = np.where(np.isnan(result_2d), np.nan, np.clip(result_2d, 0, 100))
     result_2d_to_write = np.where(np.isnan(result_2d), FLOAT32_NODATA, result_2d).astype(np.float32)
 
-    with rasterio.open(f'raster_data/{user.id}_mar_result.tif', 'w', **mask_profile) as f:
+    with rasterio.open(f'raster_data/{user.id}_mar_result.geotiff', 'w', **mask_profile) as f:
 
         f.write(result_2d_to_write.astype(np.float32),1)
 

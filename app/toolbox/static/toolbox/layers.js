@@ -135,6 +135,7 @@ export const Layers = {
     'infiltration_result_inlet': inletConnectionsFeatureGroup,
     'infiltration_result_sink': inletConnectionsFeatureGroup,
     'infiltration_result_enlarged_sink': inletConnectionsFeatureGroup,
+    'sink_embankment': inletConnectionsFeatureGroup,
     // SiekerWetland
     'sieker_wetland': siekerWetlandFeatureGroup,
     'filtered_sieker_wetland': siekerFilteredWetlandFeatureGroup,

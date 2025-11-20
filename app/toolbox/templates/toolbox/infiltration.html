@@ -12,7 +12,6 @@
                 <strong>Suchgebiet: </strong><span class="title-user-field-name">Kein Suchgebiet ausgewählt</span></br>
             </div>
             <div class="col-6 text-end">
-                 <button id="buttonX" class="btn btn-primary"> TRY IT</button>
                 <span id="spanBtnGetInfiltrationResults">
                 <button id="btnGetInfiltrationResults" class="btn btn-primary mx-2" data-type="infiltration">Ergebnis berechnen</button>
                 </span>
@@ -44,6 +43,9 @@
         </li>
         <li class="nav-item infiltration">
             <a id="navInfiltrationStreams" class="toolbox nav-link" data-bs-toggle="tab" href="#tabStreams" aria-selected="false">Flüsse</a>
+        </li>
+        <li class="nav-item infiltration">
+            <a id="navWeightingInlet" class="toolbox nav-link" data-bs-toggle="tab" href="#tabWeightingInlet" aria-selected="false">Gewichtung Zuleitung</a>
         </li>
         
         <li class="nav-item infiltration">
@@ -215,13 +217,23 @@
             
         </div>
 
+        <div id="tabWeightingInlet" class="tab-pane ">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Gewichtung der Zuleitung</h5>
+                    <div class="card-body">
+                        {% crispy inlet_weighting %}    
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
         <div id="tabToolboxResult" class="tab-pane ">
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>
-                    <div id="infiltration_result-table-container"></div>
-
-                    
+                    <div id="infiltration_result-table-container"></div>  
                     <div id="inlet-info-card" class="card mt-3" style="display: none;"></div>
                     
                 </div>

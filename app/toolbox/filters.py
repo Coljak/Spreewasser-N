@@ -198,14 +198,14 @@ class SinkFilter(FilterSet):
     area = MinMaxRangeFilter(
         model=models.Sink, 
         field_name='area', 
-        label="Area (m²)",
+        label="Fläche",
         )
-    volume = MinMaxRangeFilter(model=models.Sink, field_name='volume', label="Volume (m³)")
-    depth = MinMaxRangeFilter(model=models.Sink, field_name='depth', label="Depth (m)")
+    volume = MinMaxRangeFilter(model=models.Sink, field_name='volume', label="Volumen")
+    depth = MinMaxRangeFilter(model=models.Sink, field_name='depth', label="Tiefe")
     # index_soil = MinMaxRangeFilter(model=models.Sink, field_name='index_soil', label="Soil Index (%)")
 
     land_use = MultipleChoiceFilter(
-        label="Land Use",
+        label="Landnutzung",
         choices=[],  # Will be set in __init__
         # method='filter_land_use',
         widget=forms.CheckboxSelectMultiple,
@@ -250,16 +250,16 @@ class SinkFilter(FilterSet):
         form = SliderFilterForm
 
 class EnlargedSinkFilter(FilterSet):
-    area = MinMaxRangeFilter(model=models.EnlargedSink, field_name='area', label="Area (m²)")
-    volume = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume', label="Volume (m³)")
-    depth = MinMaxRangeFilter(model=models.EnlargedSink, field_name='depth', label="Depth (m)")
-    volume_construction_barrier = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume_construction_barrier', label="Volume Construction Barrier (m³)")
-    volume_gained = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume_gained', label="Volume Gained (m³)")
+    area = MinMaxRangeFilter(model=models.EnlargedSink, field_name='area', label="Fläche")
+    volume = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume', label="Volumen")
+    depth = MinMaxRangeFilter(model=models.EnlargedSink, field_name='depth', label="Tiefe")
+    volume_construction_barrier = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume_construction_barrier', label="Volumen der Barriere")
+    volume_gained = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume_gained', label="Zusätzliches Volumen")
     # index_soil = MinMaxRangeFilter(model=models.EnlargedSink, field_name='index_soil', label="Soil Index (%)")
 
     # Placeholder for land_use — choices will be set dynamically
     land_use = MultipleChoiceFilter(
-        label="Land Use",
+        label="Landnutzung",
         choices=[],  # Will be set in __init__
         widget=forms.CheckboxSelectMultiple,
     )
@@ -305,13 +305,13 @@ class EnlargedSinkFilter(FilterSet):
     
 
 class StreamFilter(FilterSet):
-    min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Min Surplus Volume (m³)")
-    mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mean Surplus Volume (m³)")
-    max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Max Surplus Volume (m³)")
-    plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Surplus Days")
+    min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Minimales Überschussvolumen")
+    mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mittleres Überschussvolumen")
+    max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Maximales Überschussvolumen")
+    plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Tage mit Überschuss")
 
     distance_to_userfield = NumberFilter(
-        label="Distance to userfield (m)",
+        label="Suchradius erweitern",
         method='filter_distance_placeholder',
         widget=CustomSimpleSliderWidget(attrs = {
             "id": "stream_distance_to_userfield",
@@ -353,13 +353,13 @@ class StreamFilter(FilterSet):
         form = SliderFilterForm
 
 class LakeFilter(FilterSet):
-    min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Min. Überschussvolumen")
+    min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Minimales Überschussvolumen")
     mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mittleres Überschussvolumen ")
-    max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Max. Überschussvolumen")
-    plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Überschusstage")
+    max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Maximales Überschussvolumen")
+    plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Tage mit Überschuss")
 
     distance_to_userfield = NumberFilter(
-        label="Abstand zum Suchgebiet erweitern",
+        label="Suchradius erweitern",
         method='filter_distance_placeholder',
         widget=CustomSimpleSliderWidget(attrs = {
             "id": "lake_distance_to_userfield",

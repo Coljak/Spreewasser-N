@@ -26,12 +26,6 @@ import {Infiltration} from '/static/toolbox/infiltration_model.js';
 import { Layers } from '/static/toolbox/layers.js';
 
 
-
-
-//TODO: this is not pretty
-const connectionLayerMap = {};
-
-
 function filterSinks( $button) {
   const sinkType = $button.data('type')
   const spinner = $button.find('.spinner-border')
@@ -82,86 +76,7 @@ function filterSinks( $button) {
 };
 
 
-function addToInletTable(inlet) {
-  const row = document.createElement('tr');
-  row.setAttribute('data-waterbody-type', inlet.waterbody_type);
-  row.setAttribute('data-waterbody-id', inlet.waterbody_id);
-  console.log('inlet.rating_connection + inlet.index_sink_total)/2', inlet.rating_connection, inlet.index_sink_total)
-  row.innerHTML = `
-    <td>${inlet.sink_id}</td>
-    <td>${inlet.is_enlarged_sink ? 'Ja' : 'Nein'}</td>  
-    <td>${inlet.closest_waterbody_type} ${inlet.closest_waterbody_id}: ${inlet.closest_waterbody.name}</td>
-    <td>${inlet.distance_m}</td>
-    <td>${inlet.connection_feature.properties.index_total ?? inlet.connection_feature.properties.index_total}%</td>
-    <td>${inlet.index_sink_total ?? inlet.index_sink_total}%</td>
-    <td>${inlet.index_total}%</td>
-    <td><button class="btn btn-sm btn-primary result-aquifer-recharge hide-connection" data-id="${inlet.id}"">Hide</button></td>
-  `;
 
-  // On row click: update info card
-  row.addEventListener('click', (e) => {
-    updateInletInfoCard(inlet);
-    console.log('Show injection chart for', inlet.waterbody_id), inlet.waterbody_type;
-    const spinner = document.querySelector('#inletChartSpinnerWrapper'); // 🌀 find spinner
-    const canvas = document.getElementById('inletVolumeChart');
-    const ctx = canvas.getContext('2d');
-    fetch(`get_injection_volume_chart/${inlet.waterbody_type}/${inlet.waterbody_id}/`)
-    .then(response => response.json())
-    .then(data => {
-        console.log('Chart data', data);
-        const chartData = data.chart_data;
-        // Render chart in the canvas
-
-        if (inletVolumeChart) {
-          try {
-            inletVolumeChart.destroy();
-          } catch {;}
-            
-        }
-        const deLocale = dateFns.locale?.de;
-        // Hide spinner once data is ready
-
-        spinner.classList.add('d-none');
-        // canvas.style.display = 'block';
-
-        inletVolumeChart = new Chart(ctx, {
-          type: 'bar',
-          data: { 
-            datasets: [{ 
-              label: 'Abfluss (m³/s)', 
-              data: chartData }] 
-          },
-          options: {
-            responsive: true,
-            scales: {
-              x: {
-                type: 'time',
-                adapters: { date: { locale: deLocale } },
-                time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
-                title: { display: true, text: 'Datum' }
-              },
-              y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Abfluss (m³/s)' }
-              }
-            }
-          }
-        })
-        // .catch(err => console.error('Chart data error:', err));
-
-    });
-    if (e.target.classList.contains('result-aquifer-recharge')) {
-      if (e.target.classList.contains('hide-connection')) {
-        toggleConnection(e.target);
-      } else if (e.target.classList.contains('edit-connection')) {
-        editConnection(e.target);
-
-      }
-    }
-});
-
-  document.querySelector('#inlet-table tbody').appendChild(row);
-};
 
 function getInfiltrationResults() {
     const infiltration = Infiltration.loadFromLocalStorage();
@@ -179,22 +94,39 @@ function getInfiltrationResults() {
     .then(response => response.json())
     .then(data => {
       if (data.message.success) {
-        console.log('getInfiltration data', data);
-
-
-        
+        console.log('getInfiltration data', data);     
         let resultMap = addFeatureCollectionToLayer({dataInfo: data.inlet_data_info, featureCollection: data.inlet_feature_collection}, true)
         
         resultMap = addFeatureCollectionToLayer({dataInfo: data.sink_data_info, featureCollection: data.sink_feature_collection}, false, resultMap)
 
         resultMap= addFeatureCollectionToLayer({dataInfo: data.enlarged_sink_data_info, featureCollection: data.enlarged_sink_feature_collection}, false, resultMap)
+
+        resultMap = addFeatureCollectionToLayer({dataInfo: data.sink_embankment_data_info, featureCollection: data.sink_embankment_feature_collection}, false, resultMap)
+
+        console.log('Result Map: ', resultMap)
+
         
         // console.log(resultMap)
-        createResultTable({dataInfo: data.result_data_info, inlets: data.results})
+        createResultTable({
+          dataInfo: data.result_data_info, 
+          inlets: data.results,
+          inletDataInfo: data.inlet_data_info,
+          waterbodyDataInfo: {
+            'lake': data.lake_data_info, 
+            'stream': data.stream_data_info
+          },
+          sinkDataInfo: {
+            'sink': data.sink_data_info, 
+            'enlarged_sink': data.enlarged_sink_data_info,           
+          },
+        })
+
+
         // $('#toolboxPanel.toggle-sink-result').off('change')
         $('#toolboxPanel').on('change', '.toggle-sink-result', function () {
               const inletId = $(this).attr('inlet-id');
               const sinkId  = $(this).attr('sink-id');
+              const sinkEmbankmentId = $(this).attr('sink-embankment-id');
               const show    = $(this).is(':checked');
 
               // Direct map lookup - FAST and CLEAN
@@ -207,6 +139,12 @@ function getInfiltrationResults() {
               if (sinkLayer) {
                   show ? map.addLayer(sinkLayer) : map.removeLayer(sinkLayer);
               }
+              if (sinkEmbankmentId) {
+                const sinkEmbankmentLayer = resultMap[sinkEmbankmentId];
+                if (sinkEmbankmentLayer) {
+                    show ? map.addLayer(sinkEmbankmentLayer) : map.removeLayer(sinkEmbankmentLayer);
+                }
+            } 
           });
 
 
@@ -234,58 +172,7 @@ function getInfiltrationResults() {
 
 
 
-function updateInletInfoCard(inlet) {
-  const card = document.getElementById('inlet-info-card');
-  card.innerHTML = `
-    <div class="row">
-      <div class="card-body col-4">
-        <h5 class="card-title">Sink ${inlet.sink_id} ${inlet.is_enlarged_sink ? '(Enlarged)' : ''}</h5>
-        <p class="card-text">
-          Connected to: ${inlet.waterbody_type} (ID ${inlet.waterbody_id})<br>
-          Distance: ${inlet.length_m} meters
-        </p>
-       
-      </div>
-      <div class="card-body col-8">
-        <h5 class="card-title">Tägliches Anreicherungsvolumen </h5>
-        <div id="inletChartSpinnerWrapper" class="d-flex justify-content-center align-items-center" style="height: 200px;">
-          <div id="inletChartSpinner" class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-        <canvas id="inletVolumeChart"></canvas>
-      </div>
-    </div>
-  `;
-  card.style.display = 'block';
-}
 
-function toggleConnection(button) {
-  
-  const id = button.getAttribute('data-id');
-  const layer = connectionLayerMap[id];
-  console.log(toggleConnection, 'id', id, 'layer', layer);
-
-  if (!layer) {
-    console.warn(`No layer found for connectionId: ${id}`);
-    return;
-  }
-
-  if (Layers.inletConnectionsFeatureGroup.hasLayer(layer)) {
-    Layers.inletConnectionsFeatureGroup.removeLayer(layer);
-    button.textContent = 'Show';
-    button.classList.replace('btn-primary', 'btn-outline-secondary');
-  } else {
-    console.log('Trying to show layer again...');
-    console.log('Map has layer already?', map.hasLayer(layer));
-    
-    // TODO : this is not correct!!! The layer needs to be added to the inletConnectionsFeatureGroup, not directly to the map
-    layer.addTo(Layers.inletConnectionsFeatureGroup);
-
-    button.textContent = 'Hide';
-    button.classList.replace('btn-outline-secondary', 'btn-primary');
-  }
-}
 
 export function initializeInfiltration() {
   console.log('Initialize Infiltraion');
@@ -417,12 +304,6 @@ export function initializeInfiltration() {
     } else if ($target.attr('id') === 'navInfiltrationResult') {
         map.removeLayer(Layers.sink);
         map.removeLayer(Layers.enlarged_sink);
-    } else if ($target.attr('id') === 'buttonX') {
-      Layers['lake'].eachLayer(layer => {
-        if (layer.customId === 'lake_165') {
-          map.removeLayer(layer);
-        }
-      });
     } 
     }); 
 

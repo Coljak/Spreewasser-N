@@ -328,6 +328,7 @@ def load_infiltration_gui(request, user_field_id):
         agriculture_weighting = forms.WeightingsAgricultureForm()
         grassland_weighting = forms.WeightingsGrasslandForm()
         result_form = forms.InfiltrationResultDownloadForm()
+        inlet_weighting = forms.InletWeightingsForm()
 
 
         html = render_to_string('toolbox/infiltration.html', {
@@ -342,6 +343,7 @@ def load_infiltration_gui(request, user_field_id):
             'forest_weighting': forest_weighting,
             'agriculture_weighting': agriculture_weighting,
             'grassland_weighting': grassland_weighting, 
+            'inlet_weighting': inlet_weighting,
             'result_form': result_form,
         }, request=request) 
         default_project = filters.create_default_project(
@@ -356,6 +358,7 @@ def load_infiltration_gui(request, user_field_id):
                 stream_form, 
                 lake_form,
                 result_form,
+                inlet_weighting,
                 ], 
             'infiltration'
             )
@@ -583,66 +586,66 @@ def filter_waterbodies(request):
         return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': {'success': True}})
         
 
-def get_weighting_forms(request):
-    if request.method == 'POST':
-        project = json.loads(request.body)
-        print('Project:', project)
-        sinks = project.get('selected_sinks', [])
-        enlarged_sinks = project.get('selected_enlarged_sinks', [])
+# def get_weighting_forms(request):
+#     if request.method == 'POST':
+#         project = json.loads(request.body)
+#         print('Project:', project)
+#         sinks = project.get('selected_sinks', [])
+#         enlarged_sinks = project.get('selected_enlarged_sinks', [])
         
-        land_use_values = {}
-        if len(sinks) > 0:
-            sinks = [int(sink) for sink in sinks]
-            queryset = models.Sink.objects.filter(id__in=sinks)
-            land_use_values = set(
-                queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
-            ).union(
-                queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
-            ).union(
-                queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
-            )
-        if len(enlarged_sinks) > 0:
-            enlarged_sinks = [int(sink) for sink in enlarged_sinks]
-            queryset = models.EnlargedSink.objects.filter(id__in=sinks)
-            land_use_values.union(set(
-                    queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
-                ).union(
-                    queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
-                ).union(
-                    queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
-                ).union(
-                    queryset.exclude(land_use_4__isnull=True).values_list('land_use_4', flat=True)
-                )
-            )
+#         land_use_values = {}
+#         if len(sinks) > 0:
+#             sinks = [int(sink) for sink in sinks]
+#             queryset = models.Sink.objects.filter(id__in=sinks)
+#             land_use_values = set(
+#                 queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
+#             ).union(
+#                 queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
+#             ).union(
+#                 queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
+#             )
+#         if len(enlarged_sinks) > 0:
+#             enlarged_sinks = [int(sink) for sink in enlarged_sinks]
+#             queryset = models.EnlargedSink.objects.filter(id__in=sinks)
+#             land_use_values.union(set(
+#                     queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
+#                 ).union(
+#                     queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
+#                 ).union(
+#                     queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
+#                 ).union(
+#                     queryset.exclude(land_use_4__isnull=True).values_list('land_use_4', flat=True)
+#                 )
+#             )
         
-        land_use_values = list(land_use_values)
+#         land_use_values = list(land_use_values)
 
-        context = {
-            'forest_weighting': forms.WeightingsForestForm(),
-            'agriculture_weighting': forms.WeightingsAgricultureForm(),
-            'grassland_weighting': forms.WeightingsGrasslandForm(),
-            'forms': {
-                'grassland': False,
-                'forest': False,
-                'agriculture': False,
-            }
-        }
-        # TODO weighting forms
+#         context = {
+#             'forest_weighting': forms.WeightingsForestForm(),
+#             'agriculture_weighting': forms.WeightingsAgricultureForm(),
+#             'grassland_weighting': forms.WeightingsGrasslandForm(),
+#             'forms': {
+#                 'grassland': False,
+#                 'forest': False,
+#                 'agriculture': False,
+#             }
+#         }
+#         # TODO weighting forms
 
-        if 'forest_conifers' in land_use_values or 'forest_deciduous_trees' in land_use_values \
-            or 'forest_conifers_and_deciduous_trees' in land_use_values:
-            context['forms']['forest'] = True
-        if 'agricultural_area_without_information' in land_use_values or 'farmland' in land_use_values:
-            context['forms']['agriculture'] = True
-        if 'grassland' in land_use_values:
-            context['forms']['grassland'] = True
+#         if 'forest_conifers' in land_use_values or 'forest_deciduous_trees' in land_use_values \
+#             or 'forest_conifers_and_deciduous_trees' in land_use_values:
+#             context['forms']['forest'] = True
+#         if 'agricultural_area_without_information' in land_use_values or 'farmland' in land_use_values:
+#             context['forms']['agriculture'] = True
+#         if 'grassland' in land_use_values:
+#             context['forms']['grassland'] = True
         
 
-        return render(request, 'toolbox/weighting_tab.html', context)
+#         return render(request, 'toolbox/weighting_tab.html', context)
 
 
 
-def new_shortest_connection(sink, lakes, streams, transform_to_4326=True, connection_id=0):
+def get_shortest_connection(sink, lakes, streams, transform_to_4326=True, connection_id=0):
     """
     This function works for sinks, enlarged sinks and sieker sinks.
     It returns a dictionary with the sink.id as key and a linefeature with properties as values.
@@ -665,7 +668,7 @@ def new_shortest_connection(sink, lakes, streams, transform_to_4326=True, connec
         closest = stream_with_distance
 
 
-    distance_m=int(closest.distance_to_sink.m)
+    distance_m = int(closest.distance_to_sink.m)
     
 
     # create a line feature
@@ -683,10 +686,10 @@ def new_shortest_connection(sink, lakes, streams, transform_to_4326=True, connec
         'id': connection_id,
         'sink_id': sink.id,  
         'sink_type': sink.__data_type__(),
-        'closest_waterbody_type': closest.__data_type__(),
-        'closest_waterbody_id': closest.id,
-        'closest_fgw_id': closest.fgw_id,
-        'closest_waterbody': closest.to_json(),   
+        'waterbody_type': closest.__data_type__(),
+        'waterbody_id': closest.id,
+        'fgw_id': closest.fgw_id,
+        'waterbody': closest.to_json(),   
         'waterbody_name': closest.name,       
         'distance_m': distance_m,
         'connection_feature': {
@@ -694,9 +697,10 @@ def new_shortest_connection(sink, lakes, streams, transform_to_4326=True, connec
             "geometry": json.loads(line_geom.geojson),
             "properties": {
                 'id': connection_id,
+                'name': 'Zuleitung',
                 'sink_id': sink.id,
-                'closest_waterbody_type': closest.__data_type__(),
-                'closest_waterbody_id': closest.id,
+                'waterbody_type': closest.__data_type__(),
+                'waterbody_id': closest.id,
                 'distance_m': distance_m,
             },
         },
@@ -733,9 +737,9 @@ def get_infiltration_result_list(project, epsg=4326):
         index_length = \
                 rate_water_sink_distance(connection_data['distance_m'])
         index_volumes = \
-            min(connection_data['closest_waterbody']['mean_surplus_volume'] / sink.volume, 1) *100
+            min(connection_data['waterbody']['mean_surplus_volume'] / sink.volume, 1) *100
         print('index_volume', index_volumes)
-        index_inlet = (index_length + index_volumes)/ 2
+        index_inlet = (index_length * int(project.get('weighting_inlet_length', 70)) + index_volumes * int(project.get('weighting_inlet_volume', 30))) / 100
         print('index_connection', index_inlet)
         connection_data['connection_feature']['properties']['index_length'] = int(index_length)
         connection_data['connection_feature']['properties']['index_volumes'] = int(index_volumes)
@@ -759,12 +763,11 @@ def get_infiltration_result_list(project, epsg=4326):
             "features": sink_features,
             }
         for i, sink in enumerate(sinks):
-            connection_data = new_shortest_connection(sink, lakes, streams, connection_id=(i))
-            
-            
-            connection_data['is_enlarged_sink'] = boolean_translation(False, language)
-            # connection_data['sink_feature'] = sink.to_feature(indices_sinks, epsg=epsg)
-
+            connection_data = get_shortest_connection(sink, lakes, streams, connection_id=(i))
+            connection_data.update({    
+                'sink': sink.to_json(indices_sinks),
+                'is_enlarged_sink': boolean_translation(False, language),
+                })
             connection_data = rate_connection(connection_data, sink, indices_sinks)
             line_feature = connection_data['connection_feature']
             connection_data.pop('connection_feature')
@@ -780,13 +783,20 @@ def get_infiltration_result_list(project, epsg=4326):
             "type": "FeatureCollection",
             "features": sink_features,
             }
+        sink_embankments = models.EnlargedSinkEmbankment.objects.filter(enlarged_sink__in=enlarged_sinks)
+        sink_embankment_feature_collection = create_feature_collection(sink_embankments)
         for i, sink in enumerate(enlarged_sinks):
-            connection_data = new_shortest_connection(sink, lakes, streams, connection_id=(sink_count + i))
-            connection_data['is_enlarged_sink'] = boolean_translation(True, language)
+            connection_data = get_shortest_connection(sink, lakes, streams, connection_id=(sink_count + i))
+
+            connection_data.update({
+                'sink': sink.to_json(indices_enlarged_sinks),
+                'is_enlarged_sink': boolean_translation(True, language),
+                })
             connection_data = rate_connection(connection_data, sink, indices_enlarged_sinks)
             line_feature = connection_data['connection_feature']
             connection_data.pop('connection_feature')
-            
+            if sink.sink_embankment.exists():
+                connection_data['sink_embankment_id'] = sink.sink_embankment.first().id
             # connection_data['sink_feature'] = sink.to_feature(indices_enlarged_sinks, epsg=epsg)
             
             results.append(connection_data)
@@ -796,6 +806,7 @@ def get_infiltration_result_list(project, epsg=4326):
         "type": "FeatureCollection",
         "features": line_features,
     }
+    result_dict['sink_embankment_feature_collection'] = sink_embankment_feature_collection
     result_dict['results'] = results
 
     return result_dict
@@ -816,20 +827,26 @@ def get_infiltration_results(request):
     inlet_data_info = models.DataInfo.objects.get(data_type='infiltration_result_inlet')
     sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_sink')
     enlarged_sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_enlarged_sink')
-    
-    
+    lake_data_info = models.DataInfo.objects.get(data_type='lake')
+    stream_data_info = models.DataInfo.objects.get(data_type='stream')
+    sink_embankment_data_info = models.DataInfo.objects.get(data_type='sink_embankment')
+     
     response = {
         'inlet_data_info': inlet_data_info.to_dict(),
         'sink_data_info': sink_data_info.to_dict(),
         'enlarged_sink_data_info': enlarged_sink_data_info.to_dict(), 
         'result_data_info': result_data_info.to_dict(),
+        'lake_data_info': lake_data_info.to_dict(),
+        'stream_data_info': stream_data_info.to_dict(),
+        'sink_embankment_data_info': sink_embankment_data_info.to_dict(),
 
         'results': results_dict['results'],
 
         'inlet_feature_collection': results_dict.get('inlet_feature_collection', None),
         'sink_feature_collection' : results_dict.get('sink_feature_collection', None),
         'enlarged_sink_feature_collection': results_dict.get('enlarged_sink_feature_collection', None),
-        
+        'sink_embankment_feature_collection': results_dict.get('sink_embankment_feature_collection', None),
+
         'message': {
             'success': True,
         }
@@ -849,8 +866,6 @@ def get_injection_volume_chart(request, waterbody_type, id):
         wb = models.Stream.objects.get(pk=id)
     elif waterbody_type == 'lake':
         wb = models.Lake.objects.get(pk=id)
-
-    
 
     chart_data_qs = (
         models.DischargeTimeseries.objects

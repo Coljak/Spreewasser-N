@@ -25,7 +25,7 @@ urlpatterns = [
     path('toolbox/proxy/wms/', views.geoserver_wms, name='geoserver_wms'),
     # Zalf sinks   
     path('toolbox/load_infiltration_gui/<str:user_field_id>/', views.load_infiltration_gui, name='load_infiltration_gui'),
-    path('toolbox/get_weighting_form/', views.get_weighting_forms, name='get_weighting_forms'),
+    # path('toolbox/get_weighting_form/', views.get_weighting_forms, name='get_weighting_forms'),
     path('toolbox/filter_sinks/<str:sink_type>/', views.filter_sinks, name='filter_sinks'),
     # path('toolbox/filter_enlarged_sinks/', views.filter_enlarged_sinks, name='filter_enlarged_sinks'),
     path('toolbox/filter_waterbodies/', views.filter_waterbodies, name='filter_waterbodies'),

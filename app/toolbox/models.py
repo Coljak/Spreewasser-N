@@ -525,6 +525,8 @@ class Sink(models.Model):
             landuse += landuse_2
             if self.landuse_3:
                 landuse += landuse_3
+
+        
         return {
             "id": self.id,
             "name": 'Senke' if language=='de' else 'Sink',
@@ -543,9 +545,8 @@ class Sink(models.Model):
             "soil_points": self.soil_points,
             "index_feasibility": int(self.index_feasibility * 100) if self.index_feasibility else "-",
             "hydrogeology": getattr(self.aquifer, f'name_{language}', None),
-            "index_hydrogeology": int(self.index_hydrogeology *100) if self.index_hydrogeology else None,
-            "index_sink_total_percent": min(int(indices[self.id]['index_sink_total'] * 100), 100),
-            "index_sink_total": indices[self.id]['index_sink_total'],
+            "index_hydrogeology": int(self.index_hydrogeology * 100) if self.index_hydrogeology else None,
+            "index_sink_total": min(int(indices[self.id]['index_sink_total'] * 100), 100),
         }
 
     def to_point_feature(self, indices, language='de'):      
@@ -659,9 +660,8 @@ class EnlargedSink(models.Model):
             "soil_points": self.soil_points,
             "index_feasibility": int(self.index_feasibility * 100) if self.index_feasibility else "-",
             "hydrogeology": getattr(self.aquifer, f'name_{language}', None),
-            "index_hydrogeology": int(self.index_hydrogeology *100) if self.index_hydrogeology else None,
-            "index_sink_total_percent": min(int(indices[self.id]['index_sink_total'] * 100), 100),
-            "index_sink_total": indices[self.id]['index_sink_total'],
+            "index_hydrogeology": int(self.index_hydrogeology * 100) if self.index_hydrogeology else None,
+            "index_sink_total": min(int(indices[self.id]['index_sink_total'] * 100), 100),
         }
     
      
@@ -784,7 +784,7 @@ class EnlargedSinkEmbankment(models.Model):
             self.centroid = self.geom.centroid  # Auto-generate centroid
         super().save(*args, **kwargs)
 
-    def to_feature(self, epsg=4326):
+    def to_feature(self, epsg=4326, language='de'):
         """
         Convert the model instance to a GeoJSON feature.
         """
@@ -799,7 +799,9 @@ class EnlargedSinkEmbankment(models.Model):
             "type": "Feature",
             "geometry": geometry,
             "properties": {
-                "fid_sink": self.fid_sink,
+                "id": self.id,
+                "name": 'Barriere' if language=='de' else 'Embankment',
+                "enlargedSinkId": self.enlarged_sink.id if self.enlarged_sink else None,
                 "height": self.height,
                 "plat_width": self.plat_width,
                 "volume": self.volume,

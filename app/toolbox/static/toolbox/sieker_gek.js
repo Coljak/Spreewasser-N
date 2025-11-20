@@ -8,17 +8,7 @@ import {
   projectRegion, 
   baseMaps, 
   map, 
-  initializeMapEventlisteners, 
-  openUserFieldNameModal,
-  highlightLayer, 
-  selectUserField,
-  handleSaveUserField,
-  dismissPolygon,
-  getCircleMarkerSettings, 
-  getLegendItem,
-  getLegendSettings,
-  removeLegendFromMap,
-  
+
 } from '/static/shared/map_sidebar_utils.js';
 
 

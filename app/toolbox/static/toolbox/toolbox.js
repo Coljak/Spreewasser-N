@@ -39,7 +39,7 @@ const projectClasses = {
 
     'sieker_surface_water': SiekerSurfaceWaters,
     'sieker_water_level': SiekerSurfaceWaters,
-    
+
     'drainage': Drainage,
 };
 
@@ -190,7 +190,7 @@ export function addLegend(legendSettings) {
 
             labels.push({
                 label: label,
-                radius: 5,
+                radius: 6,
                 type: 'circle',
                 // sides: 4,
                 weight: 2,
@@ -324,10 +324,7 @@ export function addChangeEventListener(projectClass) {
             toggleValueInArray(project[key], $target.data('id'));
             project.saveToLocalStorage();
             return;
-        // } else if ($target.hasClass('toggle-sink-result')) {
-        //     const dataType = $target.data('type');
-        //     const inletId = `${dataType}_${$target.data('id')}` 
-        //     const layerId = `${dataType}_${$target.attr('layer-id')}` 
+ 
         };
     });
 };
@@ -482,8 +479,12 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 openResultCard($dataType, $id)
             } else if ($row.hasClass('inlet-header-row')) {
                 console.log('Tablerow: ', $dataType, $row.data('id'))
+                $row.toggleClass('table-success')
+                const $waterbodyType = $row.attr('waterbody-type');
+                const $waterbodyId = $row.attr('waterbody-id');
                 const $detailRow = $row.next('.detail-row'); 
                 $detailRow.toggle(200); 
+                getInletVolumeChart($waterbodyType, $waterbodyId, $row.data('id'));
             }
             return;
 
@@ -555,26 +556,20 @@ function createTableSettings(dataInfo) {
 
 const colorFunction = function (index) {
     console.log('colorFunction index:', index)
-    let hue;
-    // if the index is an integer, it has a value of 0-100, if not it is 0.0-1.0
-    if (Number.isInteger(index)){
-       hue  = index
-    } else {
-        hue  = index * 100
-    }
+    // let hue;
+    // // if the index is an integer, it has a value of 0-100, if not it is 0.0-1.0
+    // if (Number.isInteger(index)){
+    //    hue  = index
+    // } else {
+    //     hue  = index * 100
+    // }
   
-  let color = `hsl(${hue}, 90%, 50%)`;
+  let color = `hsl(${index}, 90%, 50%)`;
   console.log('colorFunction, color: ', color)
   return color
 };
 
-function getLayerByCustomId(layerGroup, customId) {
-  let found = null;
-  layerGroup.eachLayer(layer => {
-    if (layer.customId === customId) found = layer;
-  });
-  return found;
-};
+
 
 function addPopUpsToFeature(feature, layer, dataInfo) {
     let popupContent = '';
@@ -591,7 +586,6 @@ function addPopUpsToFeature(feature, layer, dataInfo) {
                 ? `<a href="${value}" target="_blank">${property.title}</a><br>`
                 : `<b>${property.title}:</b> ${value != null ? value : '-'} ${value != null ? (property.unit ?? '') : ''}<br>`;
         }
-
     });
     
     const popupOptions = {
@@ -636,14 +630,8 @@ function addPopUpsToFeature(feature, layer, dataInfo) {
             const isSelected = project[`selected_${dataInfo.dataType}s`].includes(feature.properties.id);
             console.log('isSelected', isSelected);
             checkbox.checked = isSelected;
-        }
-        
-        
-    });
-
-
-        
-    
+        }   
+    });  
 }
 
 
@@ -759,9 +747,38 @@ export function addPointFeatureCollectionToLayer(data) {
       }
 };
 
+function createPropertiesTable(properties, dataInfo) {
+    let tableHTML = `
+    <div class="col-md-4">
+        <table class="${dataInfo.dataType} table-sm table-bordered properties-table">
+        <tr><td colspan="2">${dataInfo?.tableCaption}</td></tr>
+        <tbody>`;
+    dataInfo.properties.forEach(property => {
+            if (property.table) {
+                tableHTML += `
+                <tr>
+                    <td><strong>${property.title}</strong></td>
+                    <td>
+                `;
+                const value = properties ? properties[property.valueName] : null;
+                if (value !== undefined && value !== null){
+                    tableHTML += `${value} ${property.unit ?? ''}` 
+                } else {
+                    tableHTML += `--` 
+                }
+                tableHTML += `
+                    </td>
+                </tr>
+                `;
+            }
+        })
+    tableHTML += `</tbody></table></div>`;
+    return tableHTML;
+}
+
 
 export function createResultTable( data ){
-
+    console.log('createResultTable data', data )
     const inlets = data.inlets;
     const dataInfo = data.dataInfo;
     const ProjectClass = projectClasses[dataInfo.dataType];
@@ -774,20 +791,14 @@ export function createResultTable( data ){
     const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
     let tableHTML = `
         <table class="table table-bordered table-hover result-table" id="${dataInfo.dataType}-table">
-        <caption>${dataInfo.tableCaption}</caption>
         <thead>
             <tr>`;
             dataInfo.properties.forEach(property => {
                 if (property.table) {
             if (property.valueName === 'id') {
-                tableHTML += `
-                <th>
-                    <div class="form-check form-switch m-0"">
-                        <input type="checkbox" class="form-check-input table-select-all"  data-type="${dataInfo.dataType}" checked="">
-                    </div>
-                </th>`;
+                tableHTML += `<th></th>`;
             } else {
-                tableHTML += `<th>${property.title}`
+                tableHTML += `<th>${property.title}</th>`;
             }
         }
         });
@@ -795,11 +806,28 @@ export function createResultTable( data ){
     
 
     inlets.forEach(inlet => {
-        console.log('Create table inlet', inlet)
-        project[`all_${dataInfo.dataType}_ids`].push(inlet.id)        
+        console.log('Create table rows inlet', inlet)
+        let sinkDataInfo
+        if (inlet.sink_type === 'sink') {
+            sinkDataInfo = data.sinkDataInfo.sink;
+        } else if (inlet.sink_type === 'enlarged_sink') {
+            sinkDataInfo = data.sinkDataInfo.enlarged_sink;
+        } else if (inlet.sink_type === 'sieker_sink') {
+            sinkDataInfo = data.sinkDataInfo.sieker_sink;
+        }
+        let waterbodyDataInfo;
+        if (inlet.waterbody_type === 'lake') {
+            waterbodyDataInfo = data.waterbodyDataInfo.lake;
+        } else if (inlet.waterbody_type === 'stream') {
+            waterbodyDataInfo = data.waterbodyDataInfo.stream;
+        }
+        const sinkTable = createPropertiesTable(inlet.sink, sinkDataInfo);
+        const waterbodyTable = createPropertiesTable(inlet.waterbody, waterbodyDataInfo);
+        const inletTable = createPropertiesTable(inlet, data.inletDataInfo);
+
+        // project[`all_${dataInfo.dataType}_ids`].push(inlet.id);
         // Add to table
-        tableHTML += `
-            <tr data-id="${inlet.id}" data-type="${dataInfo.dataType}" class="inlet-header-row">`    
+        tableHTML += `<tr data-id="${inlet.id}" data-type="${dataInfo.dataType}" waterbody-type="${inlet.waterbody_type}" waterbody-id="${inlet.waterbody_id}" class="inlet-header-row">`    
         dataInfo.properties.forEach(property => {
             if (property.table) {
                 if (property.valueName === 'id') {
@@ -810,7 +838,8 @@ export function createResultTable( data ){
                             class="form-check-input table-select-checkbox toggle-sink-result"  
                             data-type="${dataInfo.dataType}" 
                             inlet-id="${dataInfo.dataType}_inlet_${inlet.id}" 
-                            sink-id="${dataInfo.dataType}_${inlet.sink_type}_${inlet.sink_id}" 
+                            sink-id="${dataInfo.dataType}_${inlet.sink_type}_${inlet.sink_id}"
+                            sink-embankment-id="${inlet.sink_embankment_id ? 'sink_embankment_' + inlet.sink_embankment_id : ''}"
                             checked="">
                         </div>
                     </td>
@@ -826,27 +855,17 @@ export function createResultTable( data ){
             }
         });
         tableHTML += '</tr>';
-        // details and chart row
 
+        /////// DETAIL DATA ROW
         tableHTML += `
         <tr class="detail-row" data-id="${inlet.id}" style="display:none;">
             <td colspan="${dataInfo.properties.filter(p => p.table).length}">
                 <div class="container-fluid">
                     <div class="row mb-2">
-                        <div class="col-md-4">
-                            <!-- Table 1 -->
-                            <table class="table table-sm table-bordered"> 
-                            
-                             </table>
-                        </div>
-                        <div class="col-md-4">
-                            <!-- Table 2 -->
-                            <table class="table table-sm table-bordered"> ... </table>
-                        </div>
-                        <div class="col-md-4">
-                            <!-- Table 3 -->
-                            <table class="table table-sm table-bordered"> ... </table>
-                        </div>
+                    <!-- SINK TABLE -->                       
+                        ${sinkTable}                   
+                        ${waterbodyTable}           
+                        ${inletTable}
                     </div>
                     <div class="row">
                         <div class="col-12">
@@ -871,10 +890,7 @@ export function createResultTable( data ){
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none')
 };
 
-export function addSinkConnectionResult(feature, dataInfo) {
-    const layer= '';
 
-}
 ///////////////////////////////////////////////////////
 export function addFeatureCollectionToTable( data ){
     const featureCollection = data.featureCollection
@@ -963,8 +979,7 @@ export function addLegendForWms(wmsLayerName) {
   legend.onAdd = function (map) {
       var div = L.DomUtil.create("div", "leaflet-legend leaflet-bar");
       var url = `${wmsUrl}?REQUEST=GetLegendGraphic&VERSION=1.1.1&FORMAT=image/png&LAYER=${wmsLayerName}`;
-     
-      
+       
       div.innerHTML +=
         "<img src=" +
         url +
@@ -991,13 +1006,62 @@ export function getTileOverlay(wmsLayer, layersName, toolTag) {
     _t: Date.now() // this is only a cache buster - necessary to alter request 
     }).addTo(map);
     Layers[layersName].toolTag = toolTag
-
-
 };
 
 
 
 
 
+function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
+    
+    console.log('getInletVolumeChart', waterbodyType, waterbodyId, inletId)
+    // const spinner = document.querySelector('#inletChartSpinnerWrapper'); 
+    const canvas = document.getElementById(`chart-${inletId}`);
+    const ctx = canvas.getContext('2d');
+    fetch(`get_injection_volume_chart/${waterbodyType}/${waterbodyId}/`)
+    .then(response => response.json())
+    .then(data => {
+        console.log('Chart data', data);
+        const chartData = data.chart_data;
+        // Render chart in the canvas
+        // if (inletVolumeChart) {
+        //   try {
+        //     inletVolumeChart.destroy();
+        //   } catch {;}
+            
+        // }
+        const deLocale = dateFns.locale?.de;
+        // Hide spinner once data is ready
 
+        // spinner.classList.add('d-none');
+        // canvas.style.display = 'block';
+
+        let inletVolumeChart = new Chart(ctx, {
+          type: 'bar',
+          data: { 
+            datasets: [{ 
+              label: 'Abfluss (m³/s)', 
+              data: chartData }] 
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                type: 'time',
+                adapters: { date: { locale: deLocale } },
+                time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
+                title: { display: true, text: 'Datum' }
+              },
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Abfluss (m³/s)' }
+              }
+            }
+          }
+        })
+        // .catch(err => console.error('Chart data error:', err));
+
+    });
+
+};
 

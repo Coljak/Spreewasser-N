@@ -124,6 +124,58 @@ class ToolboxProjectForm(forms.Form):
         model = models.ToolboxProject
         exclude = ['id', 'user']
 
+
+class InletWeightingsForm(forms.Form):
+    weighting_inlet_length = forms.IntegerField(
+        required=False,
+        min_value=0,
+        max_value=100,
+        widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_inlet_length",
+            "name": "weighting_inlet_length",
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 70,
+            "data_default_value": 70,
+            "units": "%",
+        }),
+        label="Gewichtung der Länge der Zuleitung",
+        help_text=(
+            "Die Gewichtung der Länge der Zuleitung "
+        )
+    )
+
+    weighting_inlet_volume = forms.IntegerField(
+        required=False,
+        min_value=0,
+        max_value=100,
+        widget=CustomSimpleSliderWidget(attrs={
+            "id": "id_weighting_inlet_volume",
+            "name": "weighting_inlet_volume",
+            "data_range_min": 0,
+            "data_range_max": 100,
+            "data_cur_val": 30,
+            "data_default_value": 30,
+            "units": "%",
+        }),
+        label="Gewichtung des Verhältnisses ökologischer Mindestabflusses zu Senkenvolumen",
+        help_text=(
+            "Gewichtung der ... "
+        )
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'GET'
+        self.helper.form_id = 'overall-weighting-form'
+        self.helper.form_class = 'form-horizontal weighting-form'
+        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
+        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
+        self.helper.add_input(Button(
+            'overall-weighting-reset', 
+            'Reset', 
+            css_class='btn-secondary reset-all'))
 class OverallWeightingsForm(forms.Form):
     overall_usability = forms.IntegerField(
         required=False,
@@ -195,7 +247,7 @@ class WeightingsForestForm(forms.Form):
             "units": "%",
             
         }),
-        label="Feldkapazität (%)",
+        label="Feldkapazität",
         help_text = (
             "Die Feldkapazität ist das Wasservolumen das über längere Zeit entgegen der "
             "Schwerkraft im Boden gehalten werden kann. Eine geringere Feldkapazität begünstigt "
@@ -216,7 +268,7 @@ class WeightingsForestForm(forms.Form):
             "data_default_value": 33,
             "units": "%",
         }),
-        label="Hydraulische Leitfähigkeit 1m (%)",
+        label="Hydraulische Leitfähigkeit 1m",
         help_text=(
             "Die hydraulische Leitfähigkeit ist die gesättigte Wasserleitfähigkeit des Bodens bis in eine "
             "Tiefe von einem Meter. Bei aktiver Nutzung werden gesättigte Bedingungen unterhalb der Geländeoberkante "
@@ -237,7 +289,7 @@ class WeightingsForestForm(forms.Form):
             "data_default_value": 33,
             "units": "%",
         }),
-        label="Hydraulische Leitfähigkeit 2m (%)",
+        label="Hydraulische Leitfähigkeit 2m",
         help_text=(
             "Die hydraulische Leitfähigkeit ist die gesättigte Wasserleitfähigkeit des Bodens bis in eine "
             "Tiefe von zwei Metern. Bei aktiver Nutzung werden gesättigte Bedingungen unterhalb der Geländeoberkante "
@@ -273,7 +325,7 @@ class WeightingsAgricultureForm(forms.Form):
             "data_default_value": 33,
             "units": "%",
         }),
-        label="Feldkapazität (%)",
+        label="Feldkapazität",
         help_text = (
             "Die Feldkapazität ist das Wasservolumen das über längere Zeit entgegen der "
             "Schwerkraft im Boden gehalten werden kann. Eine geringere Feldkapazität begünstigt "
@@ -294,7 +346,7 @@ class WeightingsAgricultureForm(forms.Form):
             "data_default_value": 33,
             "units": "%",
         }),
-        label="Hydromorphie (%)",
+        label="Hydromorphie",
         help_text = (
             "Die Hydromorphie unterscheidet zwischen grund-, stau- und sickerwasserdominierten landwirtschaftlichen "
             "Standorten. Für Versickerungsmaßnahmen sind letztere zu bevorzugen."
@@ -314,7 +366,7 @@ class WeightingsAgricultureForm(forms.Form):
             "data_default_value": 33,
             "units": "%",
         }),
-        label="Bodenart (%)",
+        label="Bodenart",
         help_text = (
             "Bewertung der Eignung der vorliegenden Bodenarten landwirtschaftlicher Standorte für Versickerungmaßnahmen." 
         )
@@ -345,7 +397,7 @@ class WeightingsGrasslandForm(forms.Form):
             "data_default_value": 25,
             "units": "%",
         }),
-        label="Feldkapazität (%)",
+        label="Feldkapazität",
         help_text = (
             "Die Feldkapazität ist das Wasservolumen das über längere Zeit entgegen der "
             "Schwerkraft im Boden gehalten werden kann. Eine geringere Feldkapazität begünstigt "
@@ -366,7 +418,7 @@ class WeightingsGrasslandForm(forms.Form):
             "data_default_value": 25,
             "units": "%",
         }),
-        label="Hydromorphie (%)",
+        label="Hydromorphie",
         help_text = (
             "Die Hydromorphie unterscheidet zwischen grund-, stau- und sickerwasserdominierten landwirtschaftlichen "
             "Standorten. Für Versickerungsmaßnahmen sind letztere zu bevorzugen."
@@ -386,7 +438,7 @@ class WeightingsGrasslandForm(forms.Form):
             "data_default_value": 25,
             "units": "%",
         }),
-        label="Bodenart (%)",
+        label="Bodenart",
         help_text = (
             "Bewertung der Eignung der vorliegenden Bodenarten landwirtschaftlicher Standorte für Versickerungmaßnahmen." 
         )
@@ -405,7 +457,7 @@ class WeightingsGrasslandForm(forms.Form):
             "data_default_value": 25,
             "units": "%",
         }),
-        label="Bodenfeuchte (%)",
+        label="Bodenfeuchte",
         help_text= (
             "Bewertung der Sättigungsgrade von Böden auf Graslandstandorten."
         )

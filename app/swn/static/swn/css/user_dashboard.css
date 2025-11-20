@@ -6,6 +6,8 @@
 
   }
 
+
+
   /* avoid chromium default focus*/
   .leaflet-interactive:focus {
     outline: none;

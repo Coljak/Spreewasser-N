@@ -17,20 +17,6 @@ import {
   projectRegion, 
   baseMaps, 
   map, 
-  initializeMapEventlisteners, 
-  initializeDrawControl,
-  openUserFieldNameModal,
-  addLayerToSidebar, 
-  getUserFieldIdByLeafletId, 
-  getLeafletIdByUserFieldId, 
-  highlightLayer, 
-  selectUserField,
-  handleSaveUserField,
-  dismissPolygon,
-  getCircleMarkerSettings, 
-  getLegendItem,
-  getLegendSettings,
-  removeLegendFromMap,
 } from '/static/shared/map_sidebar_utils.js';
 
 

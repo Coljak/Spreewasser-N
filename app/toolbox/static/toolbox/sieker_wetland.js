@@ -4,24 +4,8 @@ import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerWetland } from '/static/toolbox/sieker_wetland_model.js';
 import {Layers} from '/static/toolbox/layers.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
-import { 
-  projectRegion, 
-  baseMaps, 
+import {  
   map, 
-  initializeMapEventlisteners, 
-  initializeDrawControl,
-  addLayerToSidebar, 
-  getUserFieldIdByLeafletId, 
-  getLeafletIdByUserFieldId, 
-  getUserFieldsFromDb, 
-  highlightLayer, 
-  selectUserField,
-  handleSaveUserField,
-  dismissPolygon,
-  getCircleMarkerSettings, 
-  getLegendItem,
-  getLegendSettings,
-  removeLegendFromMap,
   
 } from '/static/shared/map_sidebar_utils.js';
 

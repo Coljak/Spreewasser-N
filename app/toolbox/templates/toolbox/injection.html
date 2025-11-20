@@ -13,6 +13,7 @@
                 
             </div>
             <div class="col-6 text-end">
+                <button class="btn btn-primary calculate-area" data-type="injection_weightings">Fläche berechnen</button>
                 <button class="toolbox-back-to-initial btn btn-secondary mx-2">Schließen</button>
                 <button class="btn btn-primary mx-2 save-toolbox-project" data-type="injection">Speichern</button>
             </div>
@@ -78,7 +79,7 @@
                     <form method="GET" id="{{ injection_weightings_form.helper.form_id }}" class="{{ injection_weightings_form.helper.form_class }}">
                         {% csrf_token %}
                         {% crispy injection_weightings_form %}
-                        <button  type="submit" class="btn btn-primary calculate-area" data-type="injection_weightings">Fläche berechnen</button>
+                       
                     </form>
                 </div>
             </div>       

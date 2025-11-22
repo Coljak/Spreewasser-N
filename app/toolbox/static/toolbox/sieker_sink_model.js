@@ -61,6 +61,7 @@ export class SiekerSink extends ToolboxProject {
         this.result_lakes = data.result_lakes ?? [];
         this.result_timeseries = data.result_timeseries ?? [];
         this.result_result = data.result_result ?? [];
+        this.selected_sieker_sink_results = data.selected_sieker_sink_results ?? [];
 
     }
 

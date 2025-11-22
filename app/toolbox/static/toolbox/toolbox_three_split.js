@@ -117,11 +117,10 @@ async function startSurfaceWaters() {
         const surfaceWaters = new SiekerSurfaceWaters(data.default_project);
         surfaceWaters.saveToLocalStorage();
       }
-      return data.water_levels;
+
     })
-    .then((data) => {
-      console.log('Before initialize, ', data)
-      initializeSiekerSurfaceWaters(data); 
+    .then(() => {
+      initializeSiekerSurfaceWaters(); 
       return true;
     })
   

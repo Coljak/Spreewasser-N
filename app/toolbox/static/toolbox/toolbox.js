@@ -84,12 +84,14 @@ export function getWaterBodies($button, ProjectClass){
     if (data.message.success) {
       addFeatureCollectionToLayer(data, true)
       addFeatureCollectionToTable(data)
+      return {'project': project}
     }  else {
       // TODO clear layers
       clearAndRemoveTable(ProjectClass, dataType, data.message.message)
       handleAlerts(data.message);
     } 
   })
+  .then(data => tableCheckSelectedItems(data.project, dataType))
   .catch(error => console.error("Error fetching data:", error))
   .finally(() => {
     // Always hide spinner & enable button
@@ -468,14 +470,14 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             console.log('Paginate')
             const dataType =  $target.attr('aria-controls').split('-')[0];
             tableCheckSelectedItems(project, dataType)
+            colorTable(dataType)
             return;
         } else if ($target.closest('tr').length && !$target.is('input, button, a')) {
             const $row = $target.closest('tr');
             const $dataType = $row.data('type')
             const $id = $row.data('id')
              console.log('Tablerow: ', $dataType, $row.data('id'))
-            if ($dataType === 'filtered_sieker_gek') {
-                
+            if ($dataType === 'filtered_sieker_gek') {            
                 openResultCard($dataType, $id)
             } else if ($row.hasClass('inlet-header-row')) {
                 console.log('Tablerow: ', $dataType, $row.data('id'))
@@ -485,8 +487,10 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 const $detailRow = $row.next('.detail-row'); 
                 $detailRow.toggle(200); 
                 getInletVolumeChart($waterbodyType, $waterbodyId, $row.data('id'));
+            // } else if ($dataType === 'sieker_water_level') {
+            //     getWaterLevelTimeseries($id);
+
             }
-            return;
 
         } else if ($target.hasClass('toggle-feature-group')) {
             
@@ -556,15 +560,16 @@ function createTableSettings(dataInfo) {
 
 const colorFunction = function (index) {
     console.log('colorFunction index:', index)
-    // let hue;
-    // // if the index is an integer, it has a value of 0-100, if not it is 0.0-1.0
-    // if (Number.isInteger(index)){
-    //    hue  = index
-    // } else {
-    //     hue  = index * 100
-    // }
   
   let color = `hsl(${index}, 90%, 50%)`;
+  console.log('colorFunction, color: ', color)
+  return color
+};
+
+const tableColorFunction = function (index) {
+    console.log('colorTableFunction index:', index)
+  
+  let color = `hsl(${index}, 80%, 60%)`;
   console.log('colorFunction, color: ', color)
   return color
 };
@@ -641,8 +646,10 @@ export function addFeatureCollectionToLayer(data, clearLayer, resultMap={}){
     
     let featureCollection = data.featureCollection;
     let dataInfo = data.dataInfo;  
+    console.log(dataInfo)
     let colorByIndex = dataInfo.colorByIndex ? dataInfo.colorByIndex : false
     
+    console.log('dataInfo.dataType', dataInfo.dataType)
     const featureGroup = Layers[dataInfo.dataType]
     if (clearLayer) {
         featureGroup.clearLayers();
@@ -680,11 +687,7 @@ export function addFeatureCollectionToLayer(data, clearLayer, resultMap={}){
             addPopUpsToFeature(feature, layer, dataInfo);
 
             resultMap[`${dataInfo.dataType}_${feature.properties.id}`] = layer;
-
-            // layer.customId = `${dataInfo.dataType}_${feature.properties.id}`;
-            console.log('feature properties: ', feature.properties);
             Layers[dataInfo.dataType].addLayer(layer);
-            console.log('layer ids:', `${dataInfo.dataType}_${feature.properties.id}`);
         }
         
         });
@@ -700,7 +703,6 @@ export function addFeatureCollectionToLayer(data, clearLayer, resultMap={}){
 
     return resultMap;
 };
-
 
 
 export function addPointFeatureCollectionToLayer(data) {
@@ -734,9 +736,7 @@ export function addPointFeatureCollectionToLayer(data) {
         onEachFeature: function(feature, layer) {
             addPopUpsToFeature(feature, layer, dataInfo);
             layer.customId = `${dataInfo.dataType}_${feature.properties.id}`;
-            console.log('customId:', `${dataInfo.dataType}_${feature.properties.id}`)
             Layers[dataInfo.dataType].addLayer(layer);
-            console.log('layer ids:', `${dataInfo.dataType}_${feature.properties.id}`)
         }           
     });
     // Layers[dataInfo.dataType].addLayer(points)
@@ -776,123 +776,190 @@ function createPropertiesTable(properties, dataInfo) {
     return tableHTML;
 }
 
+export function createResultDetailTableRow(dataInfo) {
+    console.log('createResultDetailTableRow data', dataInfo);
 
-export function createResultTable( data ){
-    console.log('createResultTable data', data )
+
+    // Get DataTable instance
+    const table = $(`#${dataInfo.dataType}-table`).DataTable();
+
+    $(`#${dataInfo.dataType}-table tr`).each((i, row) => {
+        const id = $(row).data('id') || $(row).attr('data-id');
+
+        if (!id) return;
+
+        const detailHtml = `
+            <div class="container-fluid">
+                <div id="card-sieker_water_level-${id}" class="card container-fluid mb-3">
+                    <div class="card-body">
+                        <h5>Wasserstand Verlauf</h5>
+
+                        <div class="d-flex justify-content-center align-items-center d-none"
+                             style="height: 200px;">
+                            <div id="water_level-surface-water-spinner-${id}"
+                                 class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+
+                        <div class="overflow-auto" style="width: 100%; white-space: nowrap;">
+                            <canvas id="chart-sieker_water_level-${id}"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // IMPORTANT: use DataTable API
+        const dtRow = table.row(row);
+        dtRow.child(detailHtml).hide();
+    });
+
+    // Toggle child rows
+    $('#' + dataInfo.dataType + '-table tbody').on('click', `tr[data-type="${dataInfo.dataType}"]`, function () {
+        const dtRow = table.row(this);
+        if (dtRow.child.isShown()) {
+            dtRow.child.hide();
+            $(this).removeClass('shown');
+        } else {
+            dtRow.child.show();
+            $(this).addClass('shown');
+        }
+    });
+
+    $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
+}
+
+
+
+export function createResultTable(data) {
+    // used in zalf sinks and sieker sinks
+    console.log('createResultTable data', data);
+
     const inlets = data.inlets;
     const dataInfo = data.dataInfo;
     const ProjectClass = projectClasses[dataInfo.dataType];
     const project = ProjectClass.loadFromLocalStorage();
     const selected_items = project[`selected_${dataInfo.dataType}s`];
     project[`selected_${dataInfo.dataType}s`] = [];
-    
-    // project[`all_${dataInfo.dataType}_ids`] = [];
 
     const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
+    console.log('Data_type for table', dataInfo.dataType);
+
+    // Build table HTML (only main header rows)
     let tableHTML = `
         <table class="table table-bordered table-hover result-table" id="${dataInfo.dataType}-table">
         <thead>
             <tr>`;
-            dataInfo.properties.forEach(property => {
-                if (property.table) {
+    dataInfo.properties.forEach(property => {
+        if (property.table) {
             if (property.valueName === 'id') {
-                tableHTML += `<th></th>`;
+                tableHTML += `<th></th>`; // for checkbox
             } else {
                 tableHTML += `<th>${property.title}</th>`;
             }
         }
-        });
+    });
     tableHTML += '</tr></thead><tbody>';
-    
 
+    // Main rows (inlet-header-row)
     inlets.forEach(inlet => {
         project[`selected_${dataInfo.dataType}s`].push(inlet.id);
-        console.log('Create table rows inlet', inlet)
-        let sinkDataInfo
-        if (inlet.sink_type === 'sink') {
-            sinkDataInfo = data.sinkDataInfo.sink;
-        } else if (inlet.sink_type === 'enlarged_sink') {
-            sinkDataInfo = data.sinkDataInfo.enlarged_sink;
-        } else if (inlet.sink_type === 'sieker_sink') {
-            sinkDataInfo = data.sinkDataInfo.sieker_sink;
-        }
-        let waterbodyDataInfo;
-        if (inlet.waterbody_type === 'lake') {
-            waterbodyDataInfo = data.waterbodyDataInfo.lake;
-        } else if (inlet.waterbody_type === 'stream') {
-            waterbodyDataInfo = data.waterbodyDataInfo.stream;
-        }
+
+        tableHTML += `<tr class="inlet-header-row" data-id="${inlet.id}" data-type="${dataInfo.dataType}" waterbody-type="${inlet.waterbody_type}" waterbody-id="${inlet.waterbody_id}">`;
+
+        dataInfo.properties.forEach(property => {
+            if (property.table) {
+                if (property.valueName === 'id') {
+                    tableHTML += `
+                        <td>
+                            <div class="form-check form-switch m-0">
+                                <input type="checkbox" 
+                                    class="form-check-input table-select-checkbox toggle-sink-result"  
+                                    data-type="${dataInfo.dataType}" 
+                                    inlet-id="${dataInfo.dataType}_inlet_${inlet.id}" 
+                                    sink-id="${dataInfo.dataType}_${inlet.sink_type}_${inlet.sink_id}"
+                                    sink-embankment-id="${inlet.sink_embankment_id ? 'sink_embankment_' + inlet.sink_embankment_id : ''}"
+                                    checked="">
+                            </div>
+                        </td>`;
+                } else {
+                    const value = inlet[property.valueName];
+                    tableHTML += `<td data-order="${value ?? 0}">${value ?? '--'} ${property.unit ?? ''}</td>`;
+                }
+            }
+        });
+
+        tableHTML += '</tr>';
+    });
+
+    tableHTML += `</tbody></table>`;
+    tableContainer.innerHTML = tableHTML;
+
+    // Save selected items back to local storage
+    project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink =>
+        project[`all_${dataInfo.dataType}_ids`]?.includes(sink)
+    );
+    project.saveToLocalStorage();
+
+    // Initialize DataTable
+    const tableSettings = createTableSettings(dataInfo);
+    const table = $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
+    
+
+    // Attach child rows (detail rows: sink, waterbody, inlet tables + chart)
+    inlets.forEach(inlet => {
+        const mainRow = table.row($(`tr.inlet-header-row[data-id="${inlet.id}"]`));
+        let sinkDataInfo, waterbodyDataInfo;
+
+        if (inlet.sink_type === 'sink') sinkDataInfo = data.sinkDataInfo.sink;
+        else if (inlet.sink_type === 'enlarged_sink') sinkDataInfo = data.sinkDataInfo.enlarged_sink;
+        else if (inlet.sink_type === 'sieker_sink') sinkDataInfo = data.sinkDataInfo.sink;
+
+        if (inlet.waterbody_type === 'lake') waterbodyDataInfo = data.waterbodyDataInfo.lake;
+        else if (inlet.waterbody_type === 'stream') waterbodyDataInfo = data.waterbodyDataInfo.stream;
+
         const sinkTable = createPropertiesTable(inlet.sink, sinkDataInfo);
         const waterbodyTable = createPropertiesTable(inlet.waterbody, waterbodyDataInfo);
         const inletTable = createPropertiesTable(inlet, data.inletDataInfo);
 
-        // project[`all_${dataInfo.dataType}_ids`].push(inlet.id);
-        // Add to table
-        tableHTML += `<tr data-id="${inlet.id}" data-type="${dataInfo.dataType}" waterbody-type="${inlet.waterbody_type}" waterbody-id="${inlet.waterbody_id}" class="inlet-header-row">`    
-        dataInfo.properties.forEach(property => {
-            if (property.table) {
-                if (property.valueName === 'id') {
-                tableHTML += `
-                    <td>
-                        <div class="form-check form-switch m-0">
-                            <input type="checkbox" 
-                            class="form-check-input table-select-checkbox toggle-sink-result"  
-                            data-type="${dataInfo.dataType}" 
-                            inlet-id="${dataInfo.dataType}_inlet_${inlet.id}" 
-                            sink-id="${dataInfo.dataType}_${inlet.sink_type}_${inlet.sink_id}"
-                            sink-embankment-id="${inlet.sink_embankment_id ? 'sink_embankment_' + inlet.sink_embankment_id : ''}"
-                            checked="">
-                        </div>
-                    </td>
-                    `;
-                } else {
-                    const value = inlet[property.valueName];
-                    if (value !== undefined && value !== null){
-                        tableHTML += `<td data-order="${value}">${value} ${property.unit ?? ''}</td>` 
-                    } else {
-                        tableHTML += `<td data-order="0">--</td>` 
-                    }
-                }
-            }
-        });
-        tableHTML += '</tr>';
-
-        /////// DETAIL DATA ROW
-        tableHTML += `
-        <tr class="detail-row" data-id="${inlet.id}" style="display:none;">
-            <td colspan="${dataInfo.properties.filter(p => p.table).length}">
-                <div class="container-fluid">
-                    <div class="row mb-2">
-                    <!-- SINK TABLE -->                       
-                        ${sinkTable}                   
-                        ${waterbodyTable}           
-                        ${inletTable}
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <canvas id="chart-${inlet.id}"></canvas>
-                        </div>
+        const detailHtml = `
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    ${sinkTable}                   
+                    ${waterbodyTable}           
+                    ${inletTable}
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <canvas id="chart-${inlet.id}"></canvas>
                     </div>
                 </div>
-            </td>
-        </tr>
-    `;
-        });
-    tableHTML += `</tbody></table>`;
-    tableContainer.innerHTML = tableHTML;
-    // select all previously selected
-    console.log('addFeatureCollection dataType', dataInfo.dataType )
-    project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink => project[`all_${dataInfo.dataType}_ids`].includes(sink));
-    project.saveToLocalStorage();
+            </div>`;
 
-    // const tableSettings = createTableSettings(dataInfo);
-    // $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
-    
-    $(`#card-${dataInfo.dataType}-table`).removeClass('d-none')
-};
+        // Attach child row and hide initially
+        mainRow.child(detailHtml).hide();
+    });
+
+    // Toggle child row on click
+    $('#'+dataInfo.dataType+'-table tbody').on('click', 'tr.inlet-header-row', function () {
+        const row = table.row(this);
+        if (row.child.isShown()) {
+            row.child.hide();
+            $(this).removeClass('shown');
+        } else {
+            row.child.show();
+            $(this).addClass('shown');
+        }
+    });
+
+    $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
+}
 
 
-///////////////////////////////////////////////////////
+
+
+
 export function addFeatureCollectionToTable( data ){
     const featureCollection = data.featureCollection
     const dataInfo = data.dataInfo
@@ -906,7 +973,7 @@ export function addFeatureCollectionToTable( data ){
     const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
     let tableHTML = `
         <table class="table table-bordered table-hover" id="${dataInfo.dataType}-table">
-        <caption>${dataInfo.tableCaption}</caption>
+        
         <thead>
             <tr>`;
     dataInfo.properties.forEach(property => {
@@ -920,13 +987,19 @@ export function addFeatureCollectionToTable( data ){
         });
     tableHTML += '</tr></thead><tbody>';
     
+    
 
     featureCollection.features.forEach(feature => {
         project[`all_${dataInfo.dataType}_ids`].push(feature.properties.id)
-        
+        let color = dataInfo.colorByIndex ? tableColorFunction(feature.properties[dataInfo.colorByIndex]) : ''
+   
         // Add to table
         tableHTML += `
-            <tr data-id="${feature.properties.id}" data-type="${dataInfo.dataType}">`
+            <tr 
+                data-id="${feature.properties.id}" 
+                data-type="${dataInfo.dataType}"
+                data-base-color="${color}"
+                >`
 
         
         dataInfo.properties.forEach(property => {
@@ -949,16 +1022,25 @@ export function addFeatureCollectionToTable( data ){
         });
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
-    // select all previously selected
-    console.log('addFeatureCollection dataType', dataInfo.dataType )
+    
     project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink => project[`all_${dataInfo.dataType}_ids`].includes(sink));
     project.saveToLocalStorage();
 
     const tableSettings = createTableSettings(dataInfo);
     $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
+    colorTable(dataInfo.dataType)
     
-    $(`#card-${dataInfo.dataType}-table`).removeClass('d-none')
-};
+}
+
+
+function colorTable(dataType) {
+    document.querySelectorAll(`#${dataType}-table tbody tr`).forEach(row => {
+        const base = row.dataset.baseColor;
+        if (base) row.style.setProperty("--bs-table-bg", base);
+        });
+        
+        $(`#card-${dataType}-table`).removeClass('d-none')
+    };
 
 export function clearAndRemoveTable(ProjectClass, dataType, message) {
     console.log('clearAndRemove dataType:', dataType, 'Class:', ProjectClass, 'msg', message)
@@ -1011,8 +1093,6 @@ export function getTileOverlay(wmsLayer, layersName, toolTag) {
 
 
 
-
-
 function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
     
     console.log('getInletVolumeChart', waterbodyType, waterbodyId, inletId)
@@ -1022,24 +1102,16 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
         console.log(`Canvas chart-${inletId} is already in use. Skipping.`);
         return; // Do nothing
     };
+    if (!canvas){return;}
     const ctx = canvas.getContext('2d');
     fetch(`get_injection_volume_chart/${waterbodyType}/${waterbodyId}/`)
     .then(response => response.json())
     .then(data => {
         console.log('Chart data', data);
         const chartData = data.chart_data;
-        // Render chart in the canvas
-        // if (inletVolumeChart) {
-        //   try {
-        //     inletVolumeChart.destroy();
-        //   } catch {;}
-            
-        // }
-        const deLocale = dateFns.locale?.de;
-        // Hide spinner once data is ready
 
-        // spinner.classList.add('d-none');
-        // canvas.style.display = 'block';
+        const deLocale = dateFns.locale?.de;
+
 
         let inletVolumeChart = new Chart(ctx, {
           type: 'bar',

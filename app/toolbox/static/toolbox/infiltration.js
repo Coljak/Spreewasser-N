@@ -49,25 +49,25 @@ function filterSinks( $button) {
     if (!data.message.success) {
       handleAlerts(data.message);
       infiltration[`selected_${sinkType}s`] = [];
-      localStorage.setItem(`${sinkType}_indices`,{})
+      // localStorage.setItem(`${sinkType}_indices`,{})
       clearAndRemoveTable(Infiltration, sinkType, data.message.message)
       throw new Error('Filter returned 0 objects');
     }
 
     console.log('data', data);
-    const sink_indices = {}
+    // const sink_indices = {}
     
     addPointFeatureCollectionToLayer(data);
 
     addFeatureCollectionToTable(data)
     
-    localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
+    // localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
 
     return {'infiltration': infiltration, sinkType: sinkType}
 }).then(data => {
   tableCheckSelectedItems(data.infiltration, data.sinkType)
 })
-.catch(error => console.error("Error fetching data:", error))
+// .catch(error => console.error("Error fetching data:", error))
 .finally(() => {
     // Always hide spinner & enable button
     spinner.hide();
@@ -93,6 +93,8 @@ function getInfiltrationResults() {
     .then(data => {
       if (data.message.success) {
         console.log('getInfiltration data', data);     
+        Layers['infiltration_result'].clearLayers();
+
         let resultMap = addFeatureCollectionToLayer({dataInfo: data.inlet_data_info, featureCollection: data.inlet_feature_collection}, true)
         
         resultMap = addFeatureCollectionToLayer({dataInfo: data.sink_data_info, featureCollection: data.sink_feature_collection}, false, resultMap)
@@ -286,9 +288,7 @@ export function initializeInfiltration() {
     $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
     if ($target.hasClass('filter-sinks')) {
-      filterSinks($target);   
-    // } else if ($target.hasClass('filter-waterbodies')) {
-    //   getWaterBodies($target);  
+      filterSinks($target);    
     } else if ($target.attr('id') === 'btnGetInfiltrationResults') {
         getInfiltrationResults(); 
     } else if ($target.attr('id') === 'navInfiltrationSinks') {

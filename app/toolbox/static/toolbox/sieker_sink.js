@@ -9,6 +9,8 @@ import {
   loadProjectToGui,
   getWaterBodies, 
   clearAndRemoveTable,
+  createResultTable,
+  tableCheckSelectedItems,
 } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerSink } from '/static/toolbox/sieker_sink_model.js';
@@ -28,6 +30,7 @@ import {
   getLegendSettings,
   removeLegendFromMap,
 } from '/static/shared/map_sidebar_utils.js';
+
 
 
  
@@ -55,15 +58,16 @@ function filterSiekerSinks(dataType) {
 
       addPointFeatureCollectionToLayer(data)
       addFeatureCollectionToTable(data)
-
+      return {'project': project}
     } else {
 
       handleAlerts(data.message);
-      
+      project['selected_sieker_sinks'] = [];
       clearAndRemoveTable(SiekerSink, dataType, data.message.message)
     }
 })
-.catch(error => console.error("Error fetching data:", error));
+.then(data => tableCheckSelectedItems(data.project, 'sieker_sink'))
+// .catch(error => console.error("Error fetching data:", error));
 };
 
 function getSiekerSinkResults() {
@@ -79,14 +83,57 @@ function getSiekerSinkResults() {
   })
   .then(response => response.json())
   .then(data => {
-    Layers['sieker_sink_result'].clearLayers();
-    console.log('project', project);
-  
-    // const selected_sinks = project['selected_sinks'];
     if (data.message.success) {
+      console.log('getSiekerSinkResult data', data);  
+      Layers['sieker_sink_result'].clearLayers();
+      
+      let resultMap = addFeatureCollectionToLayer({dataInfo: data.inlet_data_info, featureCollection: data.inlet_feature_collection}, true)
+      resultMap = addFeatureCollectionToLayer({dataInfo: data.sink_data_info, featureCollection: data.sink_feature_collection}, false, resultMap)
+      console.log('Result Map: ', resultMap)
+    
+      createResultTable({
+          dataInfo: data.result_data_info, 
+          inlets: data.results,
+          inletDataInfo: data.inlet_data_info,
+          waterbodyDataInfo: {
+            'lake': data.lake_data_info, 
+            'stream': data.stream_data_info
+          },
+          sinkDataInfo: {
+            'sink': data.sink_data_info,   
 
-      // addPointFeatureCollectionToLayer(data)
-      // addFeatureCollectionToTable(data)
+          },
+        });
+
+      $('#toolboxPanel').on('change', '.toggle-sink-result', function () {
+              const inletId = $(this).attr('inlet-id');
+              const sinkId  = $(this).attr('sink-id');
+             
+              const show    = $(this).is(':checked');
+
+              // Direct map lookup - FAST and CLEAN
+              const inletLayer = resultMap[inletId];
+              const sinkLayer  = resultMap[sinkId];
+
+              if (inletLayer) {
+                  show ? map.addLayer(inletLayer) : map.removeLayer(inletLayer);
+              }
+              if (sinkLayer) {
+                  show ? map.addLayer(sinkLayer) : map.removeLayer(sinkLayer);
+              }
+              
+          });
+    
+
+      const resultTab = document.getElementById('navSiekerSinkResult');
+      resultTab.classList.remove('disabled');
+      resultTab.removeAttribute('aria-disabled');
+      const tab = new bootstrap.Tab(resultTab);
+      tab.show();
+
+      map.removeLayer(Layers.sieker_sink);
+      map.addLayer(Layers.sieker_stream);
+      map.addLayer(Layers.sieker_lake);
 
     } else {
 

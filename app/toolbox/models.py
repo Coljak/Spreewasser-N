@@ -1139,9 +1139,7 @@ class SiekerWaterLevel(models.Model):
 
 class SiekerSink(models.Model):
     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-    geom_single = gis_models.PolygonField(srid=25833, null=True, blank=True)
-    geom_remaining = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
-    geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
+    geom4326 = gis_models.MultiPolygonField(srid=4326, null=True, blank=True)
     centroid = gis_models.PointField(srid=4326, null=True, blank=True)
     fid = models.FloatField(null=True, blank=True)
     volume = models.FloatField(null=True, blank=True)
@@ -1165,16 +1163,16 @@ class SiekerSink(models.Model):
     nearest_stream = models.ForeignKey(Stream, on_delete=models.DO_NOTHING, null=True, blank=True)
     
     def __data_type__(self):
-        return "sieker_sink"
+        return "sink"
 
     def to_json(self, language='de'):
         return {
                 "id": self.id,
                 "name": 'Senke' if language=='de' else 'Sink',
                 "depth": round(self.depth, 2),
-                "area": round(self.area, 1),
-                "volume": round(self.volume, 1),
-                "avg_depth": round(self.avg_depth, 1),
+                "area": round(self.area),
+                "volume": round(self.volume),
+                "avg_depth": round(self.avg_depth, 2),
                 "max_elevation": round(self.max_elevation, 1),
                 "min_elevation": round(self.min_elevation, 1),
                 "urbanarea_percent": self.urbanarea_percent,
@@ -1183,7 +1181,7 @@ class SiekerSink(models.Model):
                 "dist_lake": self.dist_lake,
                 "waterdist": self.waterdist,
                 "umsetzbark": self.umsetzbark,
-                "index_feasibility": self.index_feasibility,
+                "index_feasibility": int(self.index_feasibility * 100),
                 "distance_lake": int(self.distance_lake),
                 "nearest_lake": self.nearest_lake.name,
                 "distance_stream": int(self.distance_stream),
@@ -1651,4 +1649,5 @@ class DrainageNetwork(models.Model):
             "geometry": geometry,
             "properties": properties
         }
+
 

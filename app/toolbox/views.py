@@ -653,20 +653,23 @@ def get_shortest_connection(sink, lakes, streams, transform_to_4326=True, connec
     lake_with_distance = lakes.annotate(
         distance_to_sink=Distance('geom25833', sink.geom25833)
         ).order_by('distance_to_sink').first()
+    print('lake_with_distance', lake_with_distance)
     
     stream_with_distance = streams.annotate(
         distance_to_sink=Distance('geom25833', sink.geom25833)
         ).order_by('distance_to_sink').first()
     
+    print('stream_with_distance', stream_with_distance)
+    
     closest = lake_with_distance if lake_with_distance is not None else stream_with_distance
-
+    print('closest 1', closest)
     if (
         (lake_with_distance and stream_with_distance) and
         (lake_with_distance.distance_to_sink.m > stream_with_distance.distance_to_sink.m)
         ):
 
         closest = stream_with_distance
-
+    print('closest 2', closest)
 
     distance_m = int(closest.distance_to_sink.m)
     
@@ -708,6 +711,16 @@ def get_shortest_connection(sink, lakes, streams, transform_to_4326=True, connec
 
 
     return connection_data
+
+
+def rate_water_sink_distance(distance):
+        if distance >= 2000:
+            rating_length = 0
+        elif distance >= 1000:
+            rating_length = 5
+        else:
+            rating_length = int((1000 - distance)/10)
+        return rating_length
             
 def get_infiltration_result_list(project, epsg=4326):
     '''
@@ -723,22 +736,13 @@ def get_infiltration_result_list(project, epsg=4326):
     streams = models.Stream.objects.filter(id__in=project.get('selected_streams', [])).order_by('id')
 
 
-    def rate_water_sink_distance(distance):
-        if distance >= 2000:
-            rating_length = 0
-        elif distance >= 1000:
-            rating_length = 5
-        else:
-            rating_length = int((1000 - distance)/10)
-        return rating_length
+    
     
     
     def rate_connection(connection_data, sink, indices):
 
-        index_length = \
-                rate_water_sink_distance(connection_data['distance_m'])
-        index_volumes = \
-            min(connection_data['waterbody']['mean_surplus_volume'] / sink.volume, 1) *100
+        index_length = rate_water_sink_distance(connection_data['distance_m'])
+        index_volumes = min(connection_data['waterbody']['mean_surplus_volume'] / sink.volume, 1) *100
         print('index_volume', index_volumes)
         index_inlet = (index_length * int(project.get('weighting_inlet_length', 70)) + index_volumes * int(project.get('weighting_inlet_volume', 30))) / 100
         print('index_connection', index_inlet)
@@ -754,6 +758,7 @@ def get_infiltration_result_list(project, epsg=4326):
         connection_data['index_total'] = round(index_total)
 
         return connection_data
+    
     result_dict = {}
     results = []
     line_features = []
@@ -766,7 +771,7 @@ def get_infiltration_result_list(project, epsg=4326):
             "features": sink_features,
             }
         for i, sink in enumerate(sinks):
-            connection_data = get_shortest_connection(sink, lakes, streams, connection_id=(i))
+            connection_data = get_shortest_connection(sink, lakes, streams, connection_id=i)
             connection_data.update({    
                 'sink': sink.to_json(indices_sinks),
                 'is_enlarged_sink': boolean_translation(False, language),
@@ -812,6 +817,8 @@ def get_infiltration_result_list(project, epsg=4326):
     }
     
     result_dict['results'] = results
+    with open('zalf_sink_result_dict.json', 'w') as f:
+        json.dump(result_dict, f)
 
     return result_dict
 
@@ -820,29 +827,30 @@ def get_infiltration_results(request):
     # POST request
     if request.method != "POST":
         return HttpResponseBadRequest("POST required")
-    # try:
-    project = request.body
-    print('Project:', type(project))
-    project = json.loads(project)
+    try:
+        project = request.body
+        project = json.loads(project)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid project JSON'}, status=400)
 
 
     results_dict = get_infiltration_result_list(project, epsg=4326)
-    result_data_info = models.DataInfo.objects.get(data_type='infiltration_result')
-    inlet_data_info = models.DataInfo.objects.get(data_type='infiltration_result_inlet')
-    sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_sink')
-    enlarged_sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_enlarged_sink')
-    lake_data_info = models.DataInfo.objects.get(data_type='lake')
-    stream_data_info = models.DataInfo.objects.get(data_type='stream')
-    sink_embankment_data_info = models.DataInfo.objects.get(data_type='sink_embankment')
-     
+    result_data_info = models.DataInfo.objects.get(data_type='infiltration_result').to_dict()
+    inlet_data_info = models.DataInfo.objects.get(data_type='infiltration_result_inlet').to_dict()
+    sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_sink').to_dict()
+    enlarged_sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_enlarged_sink').to_dict()
+    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_dict()
+    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_dict()
+    sink_embankment_data_info = models.DataInfo.objects.get(data_type='sink_embankment').to_dict()
+
     response = {
-        'inlet_data_info': inlet_data_info.to_dict(),
-        'sink_data_info': sink_data_info.to_dict(),
-        'enlarged_sink_data_info': enlarged_sink_data_info.to_dict(), 
-        'result_data_info': result_data_info.to_dict(),
-        'lake_data_info': lake_data_info.to_dict(),
-        'stream_data_info': stream_data_info.to_dict(),
-        'sink_embankment_data_info': sink_embankment_data_info.to_dict(),
+        'inlet_data_info': inlet_data_info,
+        'sink_data_info': sink_data_info,
+        'enlarged_sink_data_info': enlarged_sink_data_info,
+        'result_data_info': result_data_info,
+        'lake_data_info': lake_data_info,
+        'stream_data_info': stream_data_info,
+        'sink_embankment_data_info': sink_embankment_data_info,
 
         'results': results_dict['results'],
 
@@ -954,19 +962,11 @@ def sieker_surface_waters_gui(request, user_field_id):
             bounds=user_field.filter_bounds.get('lakes') if user_field.filter_bounds else None
             )
 
-        water_levels = models.SiekerWaterLevel.objects.filter(
-            geom4326__within=user_field.geom
-        )
-        water_levels_feature_collection = create_feature_collection(water_levels)
-        water_levels_data_info = models.DataInfo.objects.get(data_type='sieker_water_level').to_dict()
-
+        
         result_form = forms.SiekerSurfaceWaterResultDownloadForm()
 
 
-        water_levels = {
-                'featureCollection': water_levels_feature_collection,
-                'dataInfo': water_levels_data_info
-                }
+        
 
 
         default_project = filters.create_default_project(
@@ -985,12 +985,30 @@ def sieker_surface_waters_gui(request, user_field_id):
             'result_form': result_form,   
         }, request=request) 
 
-        return JsonResponse({'success': True, 'water_levels': water_levels , 'html': html, 'default_project': default_project})
+        return JsonResponse({'success': True,  'html': html, 'default_project': default_project})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet befinden sich keine geeigneten Seen.'})
 
     
-## Sieker Oberflächengewässer / Large Lakes / Surface Waters
+def get_water_levels(request, user_field_id):
+    user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))        
+
+    water_levels = models.SiekerWaterLevel.objects.filter(
+            geom4326__within=user_field.geom
+        )
+    if water_levels.count() == 0:
+        return JsonResponse({'message': {'success': False, 'message': 'Im Suchgebiet existieren keine Pegel.'}})
+    
+    water_levels_feature_collection = create_feature_collection(water_levels)
+    water_levels_data_info = models.DataInfo.objects.get(data_type='sieker_water_level').to_dict()
+
+    water_levels = {
+                'featureCollection': water_levels_feature_collection,
+                'dataInfo': water_levels_data_info
+                }
+    return JsonResponse({'water_levels':water_levels, 'message': {'success': True}})
+
+
 def filter_sieker_surface_waters(request):
     try:
         project = json.loads(request.body)
@@ -1205,7 +1223,99 @@ def filter_sieker_sinks(request):
         }
         return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
     
+
+def get_sieker_sink_result_list(project, epsg=4326):
+    '''
+    this gets the results from a sieker sink project. 
+    The function is used for display and data download.
+    '''
+
+    language='de'
+    # the items are ordered by id to ensure that the result ids will be identical if the project is reloaded
+    sinks = models.SiekerSink.objects.filter(id__in=project.get('selected_sieker_sinks', [])).order_by('id')
+    lakes = models.Lake.objects.filter(id__in=project.get('selected_sieker_lakes', [])).order_by('id')
+    streams = models.Stream.objects.filter(id__in=project.get('selected_sieker_streams', [])).order_by('id')
+
+    def rate_connection(connection_data, sink):
+        index_length = rate_water_sink_distance(connection_data['distance_m'])
+        index_volumes = min(connection_data['waterbody']['mean_surplus_volume'] / sink.volume, 1) *100
+        print('index_volume', index_volumes)
+
+        connection_data['connection_feature']['properties']['index_length'] = int(index_length)
+        connection_data['index_length'] = round(index_length)
+        connection_data['connection_feature']['properties']['index_volumes'] = round(index_volumes)
+        connection_data['index_volumes'] = round(index_volumes)
+        connection_data['umsetzbark'] = sink.umsetzbark
+
+        return connection_data
+
+    results = []
+    line_features = []
+
+    for i, sink in enumerate(sinks):
+        connection_data = get_shortest_connection(sink, lakes, streams, connection_id=i)
+        connection_data.update({'sink': sink.to_json()})
+        connection_data = rate_connection(connection_data, sink)
+        line_feature = connection_data['connection_feature']
+        connection_data.pop('connection_feature')
+        results.append(connection_data)
+        line_features.append(line_feature)
    
+
+    sink_feature_collection = create_feature_collection(sinks)
+    result_dict= {
+        'sink_feature_collection': sink_feature_collection,
+        'inlet_feature_collection': {
+            "type": "FeatureCollection",
+            "features": line_features,
+        },
+        'results': results,
+    }
+    with open('sieker_sink_result_dict.json', 'w') as f:
+        json.dump(result_dict, f)
+
+    return result_dict
+
+def get_sieker_sink_results(request):
+    # POST request
+    if request.method != "POST":
+        return HttpResponseBadRequest("POST required")
+    try:
+        project = request.body
+        print('Project:', type(project))
+        project = json.loads(project)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid project JSON'}, status=400)
+
+    results_dict = get_sieker_sink_result_list(project, epsg=4326)
+    result_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result').to_dict()
+    inlet_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_inlet').to_dict()
+    sink_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_sink').to_dict()
+    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_dict()
+    lake_data_info['dataType'] = 'sieker_lake'
+
+    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_dict()
+    stream_data_info['dataType'] = 'sieker_stream'
+
+    response = {
+        'inlet_data_info': inlet_data_info,
+        'sink_data_info': sink_data_info,
+        'result_data_info': result_data_info,
+        'lake_data_info': lake_data_info,
+        'stream_data_info': stream_data_info,
+
+        'results': results_dict['results'],
+
+        'inlet_feature_collection': results_dict.get('inlet_feature_collection', None),
+        'sink_feature_collection' : results_dict.get('sink_feature_collection', None),
+    
+        'message': {
+            'success': True,
+        }
+    }
+    return JsonResponse(response)
+
+##### Sieker Gewässerentwicklungskonzepte ######
 def load_sieker_gek_gui(request, user_field_id):
     if user_field_id == "null":
          return JsonResponse({'message':{'success': False, 'message': 'Es ist kein Suchgebiet ausgewählt oder es existiert nicht.'}})

@@ -29,10 +29,12 @@ siekerFilteredWetlandFeatureGroup.toolTag = 'sieker_wetland';
 //SiekerSink
 const siekerSinkFeatureGroup = new L.markerClusterGroup();
 siekerSinkFeatureGroup.toolTag = 'sieker_sink';
-const siekerLakeFeatureGroup = new L.markerClusterGroup();
+const siekerLakeFeatureGroup = new L.FeatureGroup();
 siekerLakeFeatureGroup.toolTag = 'sieker_sink';
-const siekerStreamFeatureGroup = new L.markerClusterGroup();
+const siekerStreamFeatureGroup = new L.FeatureGroup();
 siekerStreamFeatureGroup.toolTag = 'sieker_sink';
+const siekerSinkResultFeatureGroup = new L.FeatureGroup()
+siekerSinkResultFeatureGroup.toolTag = 'sieker_sink';
 
 // SierkerSurfaceWaters
 const siekerLakesFeatureGroup = new L.FeatureGroup();
@@ -147,6 +149,9 @@ export const Layers = {
     'sieker_sink': siekerSinkFeatureGroup, 
     'sieker_lake' : siekerLakeFeatureGroup,
     'sieker_stream': siekerStreamFeatureGroup,
+    'sieker_sink_result': siekerSinkResultFeatureGroup,
+    'sieker_sink_result_inlet': siekerSinkResultFeatureGroup,
+    'sieker_sink_result_sink': siekerSinkResultFeatureGroup,
     // SiekerGek
     'sieker_gek': siekerGekFeatureGroup,
     'filtered_sieker_gek': siekerFilteredGekFeatureGroup,

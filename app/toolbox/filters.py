@@ -404,9 +404,9 @@ class LakeFilter(FilterSet):
 
 ## Toolbox Sieker Surface Waters
 class SiekerLargeLakeFilter(FilterSet):
-    area_ha = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='area_ha', label="Fläche (ha)")
-    vol_mio_m3 = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='vol_mio_m3', label="Volumen (Mio m³)")
-    d_max_m = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='d_max_m', label="Max. Tiefe (m)")
+    area_ha = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='area_ha', label="Fläche")
+    vol_mio_m3 = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='vol_mio_m3', label="Volumen")
+    d_max_m = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='d_max_m', label="Max. Tiefe")
 
 
     def __init__(self, *args, queryset=None, bounds=None, **kwargs):
@@ -431,7 +431,7 @@ class SiekerLargeLakeFilter(FilterSet):
 ## Toolbox Sieker Sinks
 class SiekerSinkFilter(FilterSet):
 
-    volume = MinMaxRangeFilter(model=models.SiekerSink, field_name='volume', label="Volumen (m³)")
+    volume = MinMaxRangeFilter(model=models.SiekerSink, field_name='volume', label="Volumen")
     depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='depth', label="Tiefe")
     area = MinMaxRangeFilter(model=models.SiekerSink, field_name='area', label="Fläche")
     avg_depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='avg_depth', label="Durchschnittliche Tiefe")

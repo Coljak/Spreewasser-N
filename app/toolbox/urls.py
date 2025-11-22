@@ -36,12 +36,14 @@ urlpatterns = [
     #### Sieker ####
     # Surface Waters
     path('toolbox/load_surface_waters_gui/<int:user_field_id>/', views.sieker_surface_waters_gui, name='sieker_surface_waters_gui'),
+    path('toolbox/get_water_levels/<int:user_field_id>/', views.get_water_levels, name='get_water_levels'),
     path('toolbox/filter_sieker_surface_waters/', views.filter_sieker_surface_waters, name='filter_sieker_surface_waters'),
     path('toolbox/get_all_sieker_surface_waters/', views.get_all_sieker_surface_waters, name='get_all_sieker_surface_waters'),
     path('toolbox/get_sieker_surface_water_levels/<int:id>/', views.get_sieker_surface_water_levels, name='get_sieker_surface_water_levels'),
     # Sieker sinks
     path('toolbox/load_sieker_sink_gui/<str:user_field_id>/', views.load_sieker_sink_gui, name='load_sieker_sink_gui'),
     path('toolbox/filter_sieker_sinks/', views.filter_sieker_sinks, name='filter_sieker_sinks'),
+    path('toolbox/get_sieker_sink_results/', views.get_sieker_sink_results, name='get_sieker_sink_results'),
     # Sieker Gek
     path('toolbox/load_sieker_gek_gui/<str:user_field_id>/', views.load_sieker_gek_gui, name='load_sieker_gek_gui'),
     path('toolbox/filter_sieker_geks/', views.filter_sieker_geks, name='filter_sieker_gek'),

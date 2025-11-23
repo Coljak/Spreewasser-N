@@ -10,6 +10,7 @@ import {
     tableCheckSelectedItems,
     createResultDetailTableRow,
     clearAndRemoveTable,
+    createDetailTable,
 } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerSurfaceWaters } from '/static/toolbox/sieker_surface_waters_model.js';
@@ -78,65 +79,6 @@ function getAllSiekersurfaceWaters() {
 }
 
 
-
-
-
-function getWaterLevelTimeseries(waterLevelId) {
-    const canvas = document.getElementById(`chart-sieker_water_level-${waterLevelId}`);
-    if (Chart.getChart(canvas)) {
-        console.log(`Canvas chart ${waterLevelId} is already in use. Skipping.`);
-        return; // Do nothing
-    } else if (canvas){
-        console.log('canvas', canvas);
-        const canvasCard = document.querySelector(`#card-sieker_water_level-${waterLevelId}`);
-        const spinner = document.querySelector(`#water_level-surface-water-spinner-${waterLevelId}`);
-
-        spinner.classList.remove('d-none');
-        canvasCard.classList.remove('d-none')
-        const url = `get_sieker_surface_water_levels/${waterLevelId}/`;
-        fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            console.log("Water level timeseries data: ", data);
-            $('#waterLevelSurfaceWaterTitle').text(data.station_name)
-            const canvas = document.getElementById(`chart-sieker_water_level-${waterLevelId}`);
-            const ctx = canvas.getContext('2d');
-            if (canvas.chart) {
-                try {
-                    canvas.chart.destroy();
-                } catch {;}
-                }
-            const deLocale = dateFns.locale?.de;
-            spinner.classList.add('d-none');
-
-            canvas.chart = new Chart(ctx, {
-            type: 'bar',
-            data: { 
-                datasets: [{ 
-                label: 'Wasserstand (cm)', 
-                data: data.chart_data }] 
-            },
-            options: {
-                responsive: true,
-                scales: {
-                x: {
-                    type: 'time',
-                    adapters: { date: { locale: deLocale } },
-                    time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
-                    title: { display: true, text: 'Datum' }
-                },
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Wasserstand (cm)' }
-                }
-                }
-            }
-            })
-        });
-    } else return;
-
-}
-
 export function initializeSiekerSurfaceWaters() {
     const project = SiekerSurfaceWaters.loadFromLocalStorage();
     fetch(`get_water_levels/${project.userField}/`, {
@@ -151,15 +93,14 @@ export function initializeSiekerSurfaceWaters() {
         if (data.message.success) {
             console.log("Water levels data: ", data);
             addPointFeatureCollectionToLayer(data.water_levels, true);
-            addFeatureCollectionToTable(data.water_levels);
-            createResultDetailTableRow(data.water_levels.dataInfo)
+            // createResultTable(data.water_levels);
+            // createResultDetailTableRow(data.water_levels.dataInfo)
+            createDetailTable(data.water_levels)
         } else {
             clearAndRemoveTable(SiekerSurfaceWaters, data.water_levels.dataType, data.message.message)
             handleAlerts(data.message);
         }
     });
-
-
 
     $('#toolboxPanel').off('change');
     initializeSliders();
@@ -195,14 +136,7 @@ export function initializeSiekerSurfaceWaters() {
          } else if ($target.attr('id') === 'btnUnfilterSiekerLakes') {
             getAllSiekersurfaceWaters()
 
-        } else if ($target.closest('tr').length && !$target.is('input, button, a')) {
-            const $row = $target.closest('tr');
-            const $dataType = $row.data('type')
-            const $id = $row.data('id') 
-            getWaterLevelTimeseries($id);
-
-        }
-        
+        }   
     });
     
     addClickEventListenerToToolboxPanel(SiekerSurfaceWaters);

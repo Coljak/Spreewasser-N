@@ -100,6 +100,71 @@ export function getWaterBodies($button, ProjectClass){
   });
 };
 
+
+function getWaterLevelTimeseries(waterLevelId) {
+    const canvas = document.getElementById(`chart-sieker_water_level-${waterLevelId}`);
+    // const observer = new MutationObserver((mutations) => {
+    //         mutations.forEach(mutation => {
+    //             console.log('Mutation:', mutation);
+    //     });
+    // });
+    // observer.observe(canvas, { attributes: true });
+
+    if (Chart.getChart(canvas)) {
+        console.log(`Canvas chart ${waterLevelId} is already in use. Skipping.`);
+        return; // Do nothing
+    } else if (canvas){
+        console.log('canvas', canvas);
+        const canvasCard = document.querySelector(`#card-sieker_water_level-${waterLevelId}`);
+        const spinner = document.querySelector(`#sieker_water_level-spinner-${waterLevelId}`);
+        spinner.classList.remove('d-none');
+        canvasCard.classList.remove('d-none')
+        const url = `get_sieker_surface_water_levels/${waterLevelId}/`;
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log("Water level timeseries data: ", data);
+            $('#waterLevelSurfaceWaterTitle').text(data.station_name)
+            // const canvas = document.getElementById(`chart-sieker_water_level-${waterLevelId}`);
+            const ctx = canvas.getContext('2d');
+            if (canvas.chart) {
+                try {
+                    canvas.chart.destroy();
+                } catch {;}
+                }
+            const deLocale = dateFns.locale?.de;
+            spinner.classList.add('d-none');
+
+            canvas.chart = new Chart(ctx, {
+            type: 'bar',
+            data: { 
+                datasets: [{ 
+                label: 'Wasserstand (cm)', 
+                data: data.chart_data }] 
+            },
+            options: {
+                responsive: true,
+                // aspectRation:3,
+                maintainAspectRatio: false,
+                scales: {
+                x: {
+                    type: 'time',
+                    adapters: { date: { locale: deLocale } },
+                    time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
+                    title: { display: true, text: 'Datum' }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Wasserstand (cm)' }
+                }
+                }
+            }
+            })
+        });
+    } else return;
+
+}
+
 // TODO I think      this is not working!
 $('#map').on('click', function (event) {
     if (event.target.classList.contains('select-map-feature-checkbox')) {
@@ -472,26 +537,39 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             tableCheckSelectedItems(project, dataType)
             colorTable(dataType)
             return;
-        } else if ($target.closest('tr').length && !$target.is('input, button, a')) {
+        } else if (
+            $target.closest('tr').length && 
+            !$target.is('input, button, a')) {
             const $row = $target.closest('tr');
-            const $dataType = $row.data('type')
-            const $id = $row.data('id')
-             console.log('Tablerow: ', $dataType, $row.data('id'))
-            if ($dataType === 'filtered_sieker_gek') {            
-                openResultCard($dataType, $id)
-            } else if ($row.hasClass('inlet-header-row')) {
+            if ($row.hasClass('table-parent-row')) {
+                const $dataType = $row.data('type')
+                const $id = $row.data('id')
                 console.log('Tablerow: ', $dataType, $row.data('id'))
-                $row.toggleClass('table-success')
-                const $waterbodyType = $row.attr('waterbody-type');
-                const $waterbodyId = $row.attr('waterbody-id');
-                const $detailRow = $row.next('.detail-row'); 
-                $detailRow.toggle(200); 
-                getInletVolumeChart($waterbodyType, $waterbodyId, $row.data('id'));
-            // } else if ($dataType === 'sieker_water_level') {
-            //     getWaterLevelTimeseries($id);
-
-            }
-
+                if ($dataType === 'filtered_sieker_gek') {            
+                    openResultCard($dataType, $id)
+                } else if ($row.hasClass('inlet-header-row')) {
+                    console.log('Tablerow: ', $dataType, $row.data('id'))
+                    $row.toggleClass('table-success')
+                    const $waterbodyType = $row.attr('waterbody-type');
+                    const $waterbodyId = $row.attr('waterbody-id');
+                    const $detailRow = $row.next('.detail-row'); 
+                    $detailRow.toggle(200); 
+                    getInletVolumeChart($waterbodyType, $waterbodyId, $row.data('id'));
+                } else if ($dataType === 'sieker_water_level') {
+                    const table = $(`#${$dataType}-table`).DataTable();
+                    // Toggle child rows
+                    // $('#' + dataInfo.dataType + '-table tbody').on('click', `tr[data-type="${dataInfo.dataType}"]`, function () {
+                    const dtRow = table.row($row);
+                    if (dtRow.child.isShown()) {
+                        dtRow.child.hide();
+                        $row.removeClass('shown');
+                    } else {
+                        dtRow.child.show();
+                        $row.addClass('shown');
+                    }
+                    getWaterLevelTimeseries($id);
+                }
+        }
         } else if ($target.hasClass('toggle-feature-group')) {
             
             const dataType = $target.attr('data-type')
@@ -554,24 +632,17 @@ function createTableSettings(dataInfo) {
     return {
         "order": [[1, "asc"]],
         "searching": false,
-        "columnDefs": columnDefs
+        "columnDefs": columnDefs,
+        "stripeClasses": [],
     }
 };
 
 const colorFunction = function (index) {
-    console.log('colorFunction index:', index)
-  
-  let color = `hsl(${index}, 90%, 50%)`;
-  console.log('colorFunction, color: ', color)
-  return color
+  return `hsl(${index}, 90%, 50%)`;
 };
 
-const tableColorFunction = function (index) {
-    console.log('colorTableFunction index:', index)
-  
-  let color = `hsl(${index}, 80%, 60%)`;
-  console.log('colorFunction, color: ', color)
-  return color
+const tableColorFunction = function (index) { 
+  return `hsl(${index}, 80%, 60%)`;
 };
 
 
@@ -641,8 +712,6 @@ function addPopUpsToFeature(feature, layer, dataInfo) {
 
 
 export function addFeatureCollectionToLayer(data, clearLayer, resultMap={}){
-    console.log('addFeatureCollectionToLayer dataInfo', data.dataInfo)
-    console.log('addFeatureCollectionToLayer dataInfo.colorByIndex', data.dataInfo.colorByIndex)
     
     let featureCollection = data.featureCollection;
     let dataInfo = data.dataInfo;  
@@ -756,18 +825,18 @@ function createPropertiesTable(properties, dataInfo) {
     dataInfo.properties.forEach(property => {
             if (property.table) {
                 tableHTML += `
-                <tr>
-                    <td><strong>${property.title}</strong></td>
-                    <td>
-                `;
-                const value = properties ? properties[property.valueName] : null;
-                if (value !== undefined && value !== null){
-                    tableHTML += `${value} ${property.unit ?? ''}` 
-                } else {
-                    tableHTML += `--` 
-                }
-                tableHTML += `
-                    </td>
+                    <tr>
+                        <td><strong>${property.title}</strong></td>
+                        <td>
+                    `;
+                    const value = properties ? properties[property.valueName] : null;
+                    if (value !== undefined && value !== null){
+                        tableHTML += `${value} ${property.unit ?? ''}` 
+                    } else {
+                        tableHTML += `--` 
+                    }
+                    tableHTML += `
+                        </td>
                 </tr>
                 `;
             }
@@ -777,9 +846,6 @@ function createPropertiesTable(properties, dataInfo) {
 }
 
 export function createResultDetailTableRow(dataInfo) {
-    console.log('createResultDetailTableRow data', dataInfo);
-
-
     // Get DataTable instance
     const table = $(`#${dataInfo.dataType}-table`).DataTable();
 
@@ -793,17 +859,15 @@ export function createResultDetailTableRow(dataInfo) {
                 <div id="card-sieker_water_level-${id}" class="card container-fluid mb-3">
                     <div class="card-body">
                         <h5>Wasserstand Verlauf</h5>
-
-                        <div class="d-flex justify-content-center align-items-center d-none"
+                        <div id="${dataInfo.dataType}-spinner-${id}" 
+                            class="d-flex justify-content-center align-items-center d-none"
                              style="height: 200px;">
-                            <div id="water_level-surface-water-spinner-${id}"
-                                 class="spinner-border text-primary" role="status">
+                            <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
                         </div>
-
-                        <div class="overflow-auto" style="width: 100%; white-space: nowrap;">
-                            <canvas id="chart-sieker_water_level-${id}"></canvas>
+                        <div class="chart-container">
+                            <canvas id="chart-sieker_water_level-${id}" class="chart-canvas" ></canvas>
                         </div>
                     </div>
                 </div>
@@ -813,30 +877,23 @@ export function createResultDetailTableRow(dataInfo) {
         // IMPORTANT: use DataTable API
         const dtRow = table.row(row);
         dtRow.child(detailHtml).hide();
+
+        const childTr = $(dtRow.node()).next('tr');
+        childTr.addClass('child-row'); 
+        
     });
 
-    // Toggle child rows
-    $('#' + dataInfo.dataType + '-table tbody').on('click', `tr[data-type="${dataInfo.dataType}"]`, function () {
-        const dtRow = table.row(this);
-        if (dtRow.child.isShown()) {
-            dtRow.child.hide();
-            $(this).removeClass('shown');
-        } else {
-            dtRow.child.show();
-            $(this).addClass('shown');
-        }
-    });
+    
 
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
 }
 
 
-
-export function createResultTable(data) {
+export function createDetailTable(data) {
     // used in zalf sinks and sieker sinks
-    console.log('createResultTable data', data);
+    console.log('createDetailTable data', data);
 
-    const inlets = data.inlets;
+    const featureCollection = data.featureCollection;
     const dataInfo = data.dataInfo;
     const ProjectClass = projectClasses[dataInfo.dataType];
     const project = ProjectClass.loadFromLocalStorage();
@@ -848,7 +905,7 @@ export function createResultTable(data) {
 
     // Build table HTML (only main header rows)
     let tableHTML = `
-        <table class="table table-bordered table-hover result-table" id="${dataInfo.dataType}-table">
+        <table class="table detail-table" id="${dataInfo.dataType}-table">
         <thead>
             <tr>`;
     dataInfo.properties.forEach(property => {
@@ -863,10 +920,140 @@ export function createResultTable(data) {
     tableHTML += '</tr></thead><tbody>';
 
     // Main rows (inlet-header-row)
+
+    featureCollection.features.forEach(feature => {
+        project[`selected_${dataInfo.dataType}s`].push(feature.properties.id);
+        let color = dataInfo.colorByIndex ? tableColorFunction(feature.properties[dataInfo.colorByIndex]) : ''
+
+
+        tableHTML += `
+        <tr class=" table-parent-row" 
+            data-id="${feature.properties.id}" 
+            data-type="${dataInfo.dataType}" 
+            data-base-color="${color}"
+            >`;
+
+        dataInfo.properties.forEach(property => {
+            if (property.table) {
+                if (property.valueName === 'id') {
+                    tableHTML += `
+                        <td>
+                            <div class="form-check form-switch m-0">
+                                <input type="checkbox" 
+                                    class="form-check-input table-select-checkbox toggle-sink-result"  
+                                    data-type="${dataInfo.dataType}" 
+                                    data-id="${dataInfo.dataType}_${property.id}" 
+                                    >
+                            </div>
+                        </td>`;
+                } else {
+                    const value = feature.properties[property.valueName];
+                    tableHTML += `<td data-order="${value ?? 0}">${value ?? '--'} ${property.unit ?? ''}</td>`;
+                }
+            }
+        });
+
+        tableHTML += '</tr>';
+   
+    });
+         tableHTML += `</tbody></table>`;
+        tableContainer.innerHTML = tableHTML;
+    
+
+    const tableSettings = createTableSettings(dataInfo);
+    const table = $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
+
+    featureCollection.features.forEach(feature => {
+        const mainRow = table.row($(`tr.table-parent-row[data-id="${feature.properties.id}"]`))
+        const detailHtml = `
+            <div class="container-fluid">
+                <div id="card-sieker_water_level-${feature.properties.id}" class="card container-fluid mb-3">
+                    <div class="card-body">
+                        <h5>Wasserstand Verlauf</h5>
+                        <div id="${dataInfo.dataType}-spinner-${feature.properties.id}" 
+                            class="d-flex justify-content-center align-items-center d-none"
+                             style="height: 200px;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-sieker_water_level-${feature.properties.id}" class="chart-canvas" ></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        mainRow.child(detailHtml).hide();
+        
+    });
+      
+
+    
+
+    
+
+    // Save selected items back to local storage
+    project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink =>
+    project[`all_${dataInfo.dataType}_ids`]?.includes(sink)
+    );
+    project.saveToLocalStorage();
+
+
+
+    
+
+    // Toggle child row on click
+    // $('#'+dataInfo.dataType+'-table tbody').on('click', 'tr.inlet-header-row', function () {
+    //     const row = table.row(this);
+    //     if (row.child.isShown()) {
+    //         row.child.hide();
+    //         $(this).removeClass('shown');
+    //     } else {
+    //         row.child.show();
+    //         $(this).addClass('shown');
+    //     }
+    // });
+
+    $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
+}
+
+export function createSinkResultTable(data) {
+    // used in zalf sinks and sieker sinks
+    console.log('createSinkResultTable data', data);
+
+    const inlets = data.inlets;
+    const dataInfo = data.dataInfo;
+    const ProjectClass = projectClasses[dataInfo.dataType];
+    const project = ProjectClass.loadFromLocalStorage();
+    const selected_items = project[`selected_${dataInfo.dataType}s`];
+    project[`selected_${dataInfo.dataType}s`] = [];
+
+    const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
+    console.log('Data_type for table', dataInfo.dataType);
+
+    // Build table HTML (only main header rows)
+    let tableHTML = `
+        <table class="table detail-table" id="${dataInfo.dataType}-table">
+        <thead>
+            <tr>`;
+    dataInfo.properties.forEach(property => {
+        if (property.table) {
+            if (property.valueName === 'id') {
+                tableHTML += `<th></th>`; // for checkbox
+            } else {
+                tableHTML += `<th>${property.title}</th>`;
+            }
+        }
+    });
+    tableHTML += '</tr></thead><tbody>';
+
+    // Main rows (inlet-header-row)
+
     inlets.forEach(inlet => {
         project[`selected_${dataInfo.dataType}s`].push(inlet.id);
 
-        tableHTML += `<tr class="inlet-header-row" data-id="${inlet.id}" data-type="${dataInfo.dataType}" waterbody-type="${inlet.waterbody_type}" waterbody-id="${inlet.waterbody_id}">`;
+        tableHTML += `<tr class="inlet-header-row table-parent-row" data-id="${inlet.id}" data-type="${dataInfo.dataType}" waterbody-type="${inlet.waterbody_type}" waterbody-id="${inlet.waterbody_id}">`;
 
         dataInfo.properties.forEach(property => {
             if (property.table) {
@@ -892,6 +1079,9 @@ export function createResultTable(data) {
 
         tableHTML += '</tr>';
     });
+      
+
+    
 
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
@@ -924,21 +1114,23 @@ export function createResultTable(data) {
         const inletTable = createPropertiesTable(inlet, data.inletDataInfo);
 
         const detailHtml = `
-            <div class="container-fluid">
+            <div class="container-fluid overflow-auto"  style="white-space: nowrap;">
                 <div class="row mb-2">
                     ${sinkTable}                   
                     ${waterbodyTable}           
                     ${inletTable}
                 </div>
                 <div class="row">
-                    <div class="col-12">
-                        <canvas id="chart-${inlet.id}"></canvas>
+                    <div class="col-12 chart-container">
+                        <canvas id="inlet-chart-${inlet.id}" class="inlet-chart"></canvas>
                     </div>
                 </div>
             </div>`;
 
         // Attach child row and hide initially
         mainRow.child(detailHtml).hide();
+
+        
     });
 
     // Toggle child row on click
@@ -956,10 +1148,6 @@ export function createResultTable(data) {
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
 }
 
-
-
-
-
 export function addFeatureCollectionToTable( data ){
     const featureCollection = data.featureCollection
     const dataInfo = data.dataInfo
@@ -972,7 +1160,7 @@ export function addFeatureCollectionToTable( data ){
 
     const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
     let tableHTML = `
-        <table class="table table-bordered table-hover" id="${dataInfo.dataType}-table">
+        <table class="table table-hover table-hover" id="${dataInfo.dataType}-table">
         
         <thead>
             <tr>`;
@@ -996,6 +1184,7 @@ export function addFeatureCollectionToTable( data ){
         // Add to table
         tableHTML += `
             <tr 
+                class="table-parent-row"
                 data-id="${feature.properties.id}" 
                 data-type="${dataInfo.dataType}"
                 data-base-color="${color}"
@@ -1097,9 +1286,18 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
     
     console.log('getInletVolumeChart', waterbodyType, waterbodyId, inletId)
     // const spinner = document.querySelector('#inletChartSpinnerWrapper'); 
-    const canvas = document.getElementById(`chart-${inletId}`);
+    const canvas = document.getElementById(`inlet-chart-${inletId}`);
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            console.log('Mutation:', mutation);
+        });
+        });
+    observer.observe(canvas, { attributes: true });                                                         
+
+
+
     if (Chart.getChart(canvas)) {
-        console.log(`Canvas chart-${inletId} is already in use. Skipping.`);
+        console.log(`Canvas inlet-chart-${inletId} is already in use. Skipping.`);
         return; // Do nothing
     };
     if (!canvas){return;}
@@ -1122,6 +1320,8 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
           },
           options: {
             responsive: true,
+            // aspectRation:4,
+            maintainAspectRatio: false,
             scales: {
               x: {
                 type: 'time',
@@ -1136,8 +1336,6 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
             }
           }
         })
-
-
     });
 
 };

@@ -9,7 +9,7 @@ import {
   loadProjectToGui,
   getWaterBodies, 
   clearAndRemoveTable,
-  createResultTable,
+  createSinkResultTable,
   tableCheckSelectedItems,
 } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
@@ -91,7 +91,7 @@ function getSiekerSinkResults() {
       resultMap = addFeatureCollectionToLayer({dataInfo: data.sink_data_info, featureCollection: data.sink_feature_collection}, false, resultMap)
       console.log('Result Map: ', resultMap)
     
-      createResultTable({
+      createSinkResultTable({
           dataInfo: data.result_data_info, 
           inlets: data.results,
           inletDataInfo: data.inlet_data_info,

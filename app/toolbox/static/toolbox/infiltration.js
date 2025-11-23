@@ -10,7 +10,7 @@ import {
   addFeatureCollectionToLayer, 
   loadProjectToGui,
   clearAndRemoveTable,
-  createResultTable,
+  createSinkResultTable,
   getWaterBodies
  } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
@@ -107,7 +107,7 @@ function getInfiltrationResults() {
 
         
         // console.log(resultMap)
-        createResultTable({
+        createSinkResultTable({
           dataInfo: data.result_data_info, 
           inlets: data.results,
           inletDataInfo: data.inlet_data_info,

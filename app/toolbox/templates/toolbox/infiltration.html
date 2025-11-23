@@ -22,7 +22,7 @@
     </div>
     
     <!-- Navigation -->
-    <ul class="nav nav-tabs">
+    <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
             <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
         </li>
@@ -87,9 +87,9 @@
                     </form>
                 </div>
             </div>
-            <div id="card-sink-table" class="card mb-3 d-none">
+            <div id="card-sink-table" class="card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="sink-table-container"></div>
+                    <div id="sink-table-container" class="table-responsive"></div>
                     
                 </div>
             </div>
@@ -114,9 +114,9 @@
                 </div>
             </div>
             
-            <div id="card-enlarged_sink-table"  class="card mb-3 d-none">
+            <div id="card-enlarged_sink-table"  class="card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="enlarged_sink-table-container"></div>
+                    <div id="enlarged_sink-table-container" class="table-responsive"></div>
                    
                 </div>
             </div>
@@ -140,9 +140,9 @@
                     </div>
                 </div>
             </div>
-            <div id="card-lake-table"  class="card mb-3 d-none">
+            <div id="card-lake-table"  class="card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="lake-table-container"></div>
+                    <div id="lake-table-container" class="table-responsive"></div>
                 </div>
             </div>
             
@@ -165,9 +165,9 @@
                     </div>
                 </div>
             </div>
-            <div id="card-stream-table"  class="card mb-3 d-none">
+            <div id="card-stream-table"  class="card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="stream-table-container"></div>
+                    <div id="stream-table-container" class="table-responsive"></div>
                   
                 </div>
             </div>
@@ -233,7 +233,7 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>
-                    <div id="infiltration_result-table-container"></div>  
+                    <div id="infiltration_result-table-container" class="table-responsive"></div>  
                                 
                 </div>
             </div>
@@ -242,7 +242,7 @@
         <div id="tabInfiltrationResultDownload" class="tab-pane ">
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Ergebnis</h5>
+                    <h5 class="card-title">Ergebnisdownload</h5>
                     <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
                     {% crispy result_form %}
                 </div>

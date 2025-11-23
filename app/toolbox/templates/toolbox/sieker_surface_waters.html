@@ -19,7 +19,7 @@
         </div>
     </div>
     <!-- Navigation -->
-    <ul class="nav nav-tabs">
+    <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
             <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersProject" aria-selected="true">Projekt</a>
         </li>
@@ -70,10 +70,10 @@
                     </form>
                 </div>
             </div>
-            <div id="card-sieker_surface_water-table" class="card mb-3">
+            <div id="card-sieker_surface_water-table" class="card mb-3 overflow-auto">
                 <div class="card-body">
-                    {% comment %} <div id="sieker-lake-table-container"></div> {% endcomment %}
-                    <div id="sieker_surface_water-table-container"></div>
+                    {% comment %} <div id="sieker-lake-table-container" class="table-responsive"></div> {% endcomment %}
+                    <div id="sieker_surface_water-table-container" class="table-responsive"></div>
                     {% comment %} <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button> {% endcomment %}
                     {% comment %} <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button> {% endcomment %}
 
@@ -90,37 +90,13 @@
                         <h5 class="card-title mb-0">Pegel</h5>
                         <button id="toggleSiekerLevels" class="btn btn-secondary">Pegel ausblenden</button>
                     </div>
+                
 
-                    <!-- Inner card for the chart -->
-                    <div id="waterLevelCard" class="card mb-3 d-none">
+                    <div id="card-sieker_water_level-table" class="card mb-3 d-none">
                         <div class="card-body">
-
-                            <h5 id="waterLevelSurfaceWaterTitle" class="card-title sieker-water-level-title mb-3"></h5>
-
-                            <div id="waterLevelSurfaceWaterSpinnerWrapper"
-                                class="d-flex justify-content-center align-items-center d-none"
-                                style="height: 200px;">
-                                <div id="waterLevelSurfaceWaterSpinner"
-                                    class="spinner-border text-primary"
-                                    role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                            </div>
-
-                        <!-- Scrollable canvas container -->
-                            <div class="overflow-auto" style="width: 100%; white-space: nowrap;">
-                                <canvas id="waterLevelSurfaceWaterChart" style="min-width: 800px;"></canvas>
-                            </div>
-
+                            <div id="sieker_water_level-table-container" class="table-responsive"></div>           
                         </div>
                     </div>
-
-                </div>
-            </div>
-
-            <div id="card-sieker_water_level-table" class="card mb-3 d-none">
-                <div class="card-body">
-                    <div id="sieker_water_level-table-container"></div>           
                 </div>
             </div>
         </div>

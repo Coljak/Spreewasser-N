@@ -46,62 +46,82 @@
 {% endblock left_panel %}
 
 {% block bottom_panel %}
+    <div id="toolboxButtons" class="card mb-3">
+        <div class="card-body">
 
-<div id="toolboxButtons" class="overflow-auto row">
-    <card class="card mb-3 col-3">
-        <div class="card-header">
-            <button id="startInfiltration" class="btn btn-outline-secondary mt-3"><b>Grundwasseranreicherung durch Versickerung</b></button>
-        </div>
-        <div class="card-body">
-            <p>Das Tool bietet eine Auswahl von vorbewerteten Standorten zur Anreicherung des Grundwassers durch naturnahe und baulich angelegte Versickerungsmaßnahmen.</p>
-        </div>
-    </card>
-    <card class="card mb-3 col-3">
-        <div class="card-header">
-            <button id="startInjection" class="btn btn-outline-secondary mt-3"><b>Grundwasseranreicherung durch  Injektion</b></button>
-        </div>
-        <div class="card-body">
-            <p>Das Tool ermöglicht die Auswahl von Standorten zur Anreicherung des Grundwassers mittels Injektion in die tiefer gelegenen gespannten Grundwasserleiter.</p>
-        </div>
-    </card>
-    <card class="card mb-3 col-3">
-      
-        <div class="dropdown">
-            <div class="card-header">
-                <button class="btn btn-outline-secondary mt-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <b>Gewässertool</b>
-                </button>
-            
-                <ul class="dropdown-menu">
-                    <li><a id="startSurfaceWaters" class="dropdown-item" href="#">Oberflächengewässer</a></li>
-                    <li><a id="startSiekerSinks" class="dropdown-item" href="#">Gewässernahe Senken</a></li>
-                    <li><a id="startWaterDevelopment" class="dropdown-item" href="#">Gewässerentwicklungskonzepte</a></li>
-                    <li><a id="startFormerWetlands" class="dropdown-item" href="#">Ehemalige Feuchtgebiete</a></li>
-                </ul>
+            <div class="row g-3 overflow-auto">
+                <div class="col-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <button id="startInfiltration" class="btn mt-3">
+                                <b>Grundwasseranreicherung durch Versickerung</b>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <p>Das Tool bietet eine Auswahl von vorbewerteten Standorten zur Anreicherung des Grundwassers durch naturnahe und baulich angelegte Versickerungsmaßnahmen.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <button id="startInjection" class="btn mt-3">
+                                <b>Grundwasseranreicherung durch Injektion</b>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <p>Das Tool ermöglicht die Auswahl von Standorten zur Anreicherung des Grundwassers mittels Injektion in die tiefer gelegenen gespannten Grundwasserleiter.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <button class="btn mt-3 dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown">
+                                <b>Gewässertool</b>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a id="startSurfaceWaters" class="dropdown-item">Oberflächengewässer</a></li>
+                                <li><a id="startSiekerSinks" class="dropdown-item">Gewässernahe Senken</a></li>
+                                <li><a id="startWaterDevelopment" class="dropdown-item">Gewässerentwicklungskonzepte</a></li>
+                                <li><a id="startFormerWetlands" class="dropdown-item">Ehemalige Feuchtgebiete</a></li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <p>Das Tool bietet Möglichkeiten zur Auswahl von Standorten, die sich für Renaturierungs- und Versickerungsmaßnahmen in Ufernähe eignen.
+                            Hierbei können Sie zwischen vier verschiedenen Speichermethoden wählen.           
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <button id="startDrainage" class="btn mt-3">
+                                <b>Drän-Speicher Tool</b>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <p>Dieses Tool zeigt potenzielle Standorte von Entwässerungsgräben und Drainagesystemen, in denen Wasser durch Einstau zurückgehalten werden kann. Sind in der Datenbank keine bestehenden Entwässerungssysteme verzeichnet, weist das Tool Bereiche aus, in denen mit hoher Wahrscheinlichkeit in der Vergangenheit Drainagen oder Gräben angelegt wurden.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="card-body">
-            <p>Das Tool bietet Möglichkeiten zur Auswahl von Standorten, die sich für Renaturierungs- und Versickerungsmaßnahmen in Ufernähe eignen.
-            Hierbei können Sie zwischen vier verschiedenen Speichermethoden wählen.           
-            </p>
-        
-        </div>
 
-        
-
-    </card>
-    <card class="card mb-3 col-3">
-        <div class="card-header">
-            <button id="startDrainage" class="btn btn-outline-secondary mt-3"><b>Drän-Speicher Tool</b></button>
         </div>
-        <div class="card-body">
-            <p>Dieses Tool zeigt potenzielle Standorte von Entwässerungsgräben und Drainagesystemen, in denen Wasser durch Einstau zurückgehalten werden kann. Sind in der Datenbank keine bestehenden Entwässerungssysteme verzeichnet, weist das Tool Bereiche aus, in denen mit hoher Wahrscheinlichkeit in der Vergangenheit Drainagen oder Gräben angelegt wurden.</p>
-        </div>
-    </card>
-</div>
+    </div>
 
-<div id="toolboxPanel" class="overflow-auto">
-</div>
+
+    
+
+    {% comment %} <div id="toolboxPanel" class="overflow-auto"> {% endcomment %}
+    <div id="toolboxPanel">
+    </div>
 
 
 

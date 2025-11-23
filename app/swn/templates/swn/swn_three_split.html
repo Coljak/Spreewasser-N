@@ -45,7 +45,7 @@
     <div class="overflow-auto" >
         {% include 'monica/hidden_rotation_forms.html' %}
     <!-- navigation in monica -->
-        <ul class="nav nav-tabs">
+        <ul class="nav nav-tabs mb-3">
             <li class="nav-item">
                 <a class="monica nav-link" aria-current="page" href="#tabProject">Project</a>
             </li>
@@ -96,10 +96,7 @@
         {% render_tab_crop_rotation %}
         {% render_tab_soil user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
         {% render_tab_result %}
-        <button id="previousButton" class="btn btn-primary mt-3">Previous</button>
-        <button id="nextButton" class="btn btn-primary mt-3">Next</button>
-        <button id="runSimulationButton" class="btn btn-primary mt-3">Run Simulation</button>
-
+        
 
         <button id="monica-project-save" class="btn btn-primary mt-3 ">Save Project</button>
         

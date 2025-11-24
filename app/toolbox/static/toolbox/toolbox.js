@@ -457,7 +457,7 @@ export function loadProjectToGui(project) {
             const $checkbox = $(this);
             const val = $checkbox.val();
             const key = $checkbox.attr('prefix') + '_' + $checkbox.attr('name');
-            console.log('checkbox val key', val, key)
+            // console.log('checkbox val key', val, key)
             
             $checkbox.prop('checked', project[key].includes(val));
 
@@ -486,9 +486,18 @@ export function loadProjectToGui(project) {
 };
 
 export function clearToolboxPanel(){
+    // destroy all charts
+    $('canvas').each(function () {
+        const chart = Chart.getChart(this);   // this = canvas element
+        if (chart) {
+            chart.destroy();
+        }
+    });
+    // clear the toolboxPanel
     $('#toolboxButtons').removeClass('d-none');
     $('#toolboxPanel').html('') 
     $('#toolboxPanel').addClass('d-none');
+    // clear all legends from map
     removeLegendFromMap(map);
     map.eachLayer(function(layer) {
         console.log(layer.toolTag);
@@ -511,6 +520,7 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
         const $target = $(event.target);
         const project = ProjectClass.loadFromLocalStorage();
         if ($target.hasClass('toolbox-back-to-initial')) {
+            
             clearToolboxPanel();
             return;
         // table related
@@ -547,27 +557,8 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 console.log('Tablerow: ', $dataType, $row.data('id'))
                 if ($dataType === 'filtered_sieker_gek') {            
                     openResultCard($dataType, $id)
-                } else if ($row.hasClass('inlet-header-row')) {
-                    console.log('Tablerow: ', $dataType, $row.data('id'))
-                    $row.toggleClass('table-success')
-                    const $waterbodyType = $row.attr('waterbody-type');
-                    const $waterbodyId = $row.attr('waterbody-id');
-                    const $detailRow = $row.next('.detail-row'); 
-                    $detailRow.toggle(200); 
-                    getInletVolumeChart($waterbodyType, $waterbodyId, $row.data('id'));
-                } else if ($dataType === 'sieker_water_level') {
-                    const table = $(`#${$dataType}-table`).DataTable();
-                    // Toggle child rows
-                    // $('#' + dataInfo.dataType + '-table tbody').on('click', `tr[data-type="${dataInfo.dataType}"]`, function () {
-                    const dtRow = table.row($row);
-                    if (dtRow.child.isShown()) {
-                        dtRow.child.hide();
-                        $row.removeClass('shown');
-                    } else {
-                        dtRow.child.show();
-                        $row.addClass('shown');
-                    }
-                    getWaterLevelTimeseries($id);
+
+                    
                 }
         }
         } else if ($target.hasClass('toggle-feature-group')) {
@@ -612,6 +603,10 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
         } 
     });
 };
+
+$('tr.table-parent-row').on('hover', function (event) {
+    console.log('hover', event)
+});
 
 // for all tables userd in the toolbox
 function createTableSettings(dataInfo) {
@@ -845,48 +840,6 @@ function createPropertiesTable(properties, dataInfo) {
     return tableHTML;
 }
 
-export function createResultDetailTableRow(dataInfo) {
-    // Get DataTable instance
-    const table = $(`#${dataInfo.dataType}-table`).DataTable();
-
-    $(`#${dataInfo.dataType}-table tr`).each((i, row) => {
-        const id = $(row).data('id') || $(row).attr('data-id');
-
-        if (!id) return;
-
-        const detailHtml = `
-            <div class="container-fluid">
-                <div id="card-sieker_water_level-${id}" class="card container-fluid mb-3">
-                    <div class="card-body">
-                        <h5>Wasserstand Verlauf</h5>
-                        <div id="${dataInfo.dataType}-spinner-${id}" 
-                            class="d-flex justify-content-center align-items-center d-none"
-                             style="height: 200px;">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="chart-sieker_water_level-${id}" class="chart-canvas" ></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // IMPORTANT: use DataTable API
-        const dtRow = table.row(row);
-        dtRow.child(detailHtml).hide();
-
-        const childTr = $(dtRow.node()).next('tr');
-        childTr.addClass('child-row'); 
-        
-    });
-
-    
-
-    $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
-}
 
 
 export function createDetailTable(data) {
@@ -971,8 +924,7 @@ export function createDetailTable(data) {
                     <div class="card-body">
                         <h5>Wasserstand Verlauf</h5>
                         <div id="${dataInfo.dataType}-spinner-${feature.properties.id}" 
-                            class="d-flex justify-content-center align-items-center d-none"
-                             style="height: 200px;">
+                            class="d-flex justify-content-center align-items-center in-table-spinner  d-none">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
@@ -985,35 +937,29 @@ export function createDetailTable(data) {
             </div>
         `;
         mainRow.child(detailHtml).hide();
+        console.log('childrow created')
         
     });
-      
-
-    
-
-    
-
-    // Save selected items back to local storage
+      // Save selected items back to local storage
     project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink =>
     project[`all_${dataInfo.dataType}_ids`]?.includes(sink)
     );
     project.saveToLocalStorage();
 
-
-
-    
-
     // Toggle child row on click
-    // $('#'+dataInfo.dataType+'-table tbody').on('click', 'tr.inlet-header-row', function () {
-    //     const row = table.row(this);
-    //     if (row.child.isShown()) {
-    //         row.child.hide();
-    //         $(this).removeClass('shown');
-    //     } else {
-    //         row.child.show();
-    //         $(this).addClass('shown');
-    //     }
-    // });
+    $(`#${dataInfo.dataType}-table tbody`).on('click', 'tr.table-parent-row', function () {
+        const row = table.row(this);
+        if (row.child.isShown()) {
+            row.child.hide();
+            $(this).removeClass('shown table-success');
+        } else {
+            row.child.show();
+            $(this).addClass('shown table-success');
+            if (dataInfo.dataType === 'sieker_water_level') {
+                getWaterLevelTimeseries($(this).data('id'));
+            }
+        }
+    });
 
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
 }
@@ -1094,6 +1040,7 @@ export function createSinkResultTable(data) {
 
     // Initialize DataTable
     const tableSettings = createTableSettings(dataInfo);
+    // tableSettings['hover'] = false;
     const table = $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
     
 
@@ -1128,22 +1075,32 @@ export function createSinkResultTable(data) {
             </div>`;
 
         // Attach child row and hide initially
-        mainRow.child(detailHtml).hide();
-
-        
+        mainRow.child(detailHtml).hide();     
     });
 
     // Toggle child row on click
-    $('#'+dataInfo.dataType+'-table tbody').on('click', 'tr.inlet-header-row', function () {
+    $(`#${dataInfo.dataType}-table tbody`).on('click', 'tr.inlet-header-row', function () {
         const row = table.row(this);
         if (row.child.isShown()) {
             row.child.hide();
-            $(this).removeClass('shown');
+            $(this).removeClass('shown table-success');
         } else {
             row.child.show();
-            $(this).addClass('shown');
+            $(this).addClass('shown table-success');
+            const $waterbodyType = $(this).attr('waterbody-type');
+            const $waterbodyId = $(this).attr('waterbody-id');
+            const $detailRow = $(this).next('.detail-row'); 
+            const $id = $(this).data('id')
+            getInletVolumeChart($waterbodyType, $waterbodyId, $id);
         }
     });
+    $(`#${dataInfo.dataType}-table tbody`).on('hover', 'tr.table-parent-row', function () {
+        const row = table.row(this);
+        
+        console.log('hover')
+        
+    });
+
 
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
 }
@@ -1283,16 +1240,16 @@ export function getTileOverlay(wmsLayer, layersName, toolTag) {
 
 
 function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
-    
+    // 
     console.log('getInletVolumeChart', waterbodyType, waterbodyId, inletId)
     // const spinner = document.querySelector('#inletChartSpinnerWrapper'); 
     const canvas = document.getElementById(`inlet-chart-${inletId}`);
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach(mutation => {
-            console.log('Mutation:', mutation);
-        });
-        });
-    observer.observe(canvas, { attributes: true });                                                         
+    // const observer = new MutationObserver((mutations) => {
+    //     mutations.forEach(mutation => {
+    //         console.log('Mutation:', mutation);
+    //     });
+    //     });
+    // observer.observe(canvas, { attributes: true });                                                         
 
 
 
@@ -1316,7 +1273,11 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
           data: { 
             datasets: [{ 
               label: 'Abfluss (m³/s)', 
-              data: chartData }] 
+              data: chartData ,
+              backgroundColor: 'rgba(30, 144, 255, 1)',   // DodgerBlue, fully opaque
+              borderColor: 'rgba(30, 144, 255, 1)',
+              borderWidth: 1
+            }] 
           },
           options: {
             responsive: true,

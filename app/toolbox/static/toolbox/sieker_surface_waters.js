@@ -8,7 +8,6 @@ import {
     addFeatureCollectionToTable, 
     loadProjectToGui,
     tableCheckSelectedItems,
-    createResultDetailTableRow,
     clearAndRemoveTable,
     createDetailTable,
 } from '/static/toolbox/toolbox.js';

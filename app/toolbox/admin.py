@@ -9,15 +9,15 @@ class ToolboxTypeAdmin(ModelAdmin):
     search_fields = ('name_de', 'name_en', 'name_tag', 'description')
     list_display_links = ('id', 'name_de', 'name_en', 'name_tag', 'description')
 
-@admin.register(models.AboveGroundWaters)
-class AboveGroundWatersAdmin(LeafletGeoAdmin):
-    list_display = ('id', 'uezg_id', 'hapt_ezg', 'teil_ezg', 'qru_m3_s', 'flaeche_m2', 'bg_id')
+@admin.register(models.BelowGroundCatchmentArea)
+class BelowGroundCatchmentAreaAdmin(LeafletGeoAdmin):
+    list_display = ('id', 'uezg_id', 'haupt_ezg', 'teil_ezg', 'qru_m3_s', 'flaeche_m2', 'bg_id')
     search_fields = ('uezg_id',)
-    ordering = ('id', 'uezg_id', 'hapt_ezg', 'teil_ezg', 'qru_m3_s', 'flaeche_m2', 'bg_id')
-    list_display_links = ('id', 'uezg_id', 'hapt_ezg', 'teil_ezg', 'qru_m3_s', 'flaeche_m2', 'bg_id')
+    ordering = ('id', 'uezg_id', 'haupt_ezg', 'teil_ezg', 'qru_m3_s', 'flaeche_m2', 'bg_id')
+    list_display_links = ('id', 'uezg_id', 'haupt_ezg', 'teil_ezg', 'qru_m3_s', 'flaeche_m2', 'bg_id')
 
-@admin.register(models.BelowGroundWaters)
-class BelowGroundWatersAdmin(LeafletGeoAdmin):
+@admin.register(models.AboveGroundCatchmentArea)
+class AboveGroundCatchmentAreaAdmin(LeafletGeoAdmin):
     list_display = ('id', 'kennzahl', 'gewaesser', 'gew_alias',)
     search_fields = ('gewaesser',)
     ordering = ('id',)

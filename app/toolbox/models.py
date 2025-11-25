@@ -23,21 +23,50 @@ class ToolboxType(models.Model):
 
 # gw_ezg
 # TODO: not used - delete or geoserver
-class AboveGroundWaters(models.Model):
+class BelowGroundCatchmentArea(models.Model):
     uezg_id = models.CharField(max_length=100)
-    hapt_ezg = models.CharField(max_length=100, null=True)
+    haupt_ezg = models.CharField(max_length=100, null=True)
     teil_ezg = models.CharField(max_length=100,null=True)
     qru_m3_s = models.FloatField(null=True)
     flaeche_m2 = models.FloatField(null=True)
     bg_id = models.FloatField(null=True)
-    geom = gis_models.MultiPolygonField(srid=25833)
+    geom25833 = gis_models.MultiPolygonField(srid=25833)
+    geom4326 = gis_models.MultiPolygonField(srid=4326, null=True)
+ 
 
     def __str__(self):
         return self.uezg_id
+    
+    def to_json(self, language='de'):
+        return {
+            'id': self.id,
+            'uezg_id': self.uezg_id,
+            'name': self.hapt_ezg,
+            'qru_m3_s': self.qru_m3_s,
+            'area_ha': round(self.flaeche_m2/10000, 1),
+            'bg_id': self.bg_id,
+            'haupt_ezg': self.haupt_ezg
+
+            }
+    
+    def to_feature(self, epsg=4326):
+        if epsg == 4326:
+            geometry = json.loads(self.geom4326.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
+        properties = self.to_json()
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
 
 # ezg25 
 # TODO: not used - delete or geoserver
-class BelowGroundWaters(models.Model):
+class AboveGroundCatchmentArea(models.Model):
     kennzahl = models.CharField(max_length=16,null=True)
     gewaesser = models.CharField(max_length=60,null=True)
     gew_alias = models.CharField(max_length=60, null=True)
@@ -57,10 +86,49 @@ class BelowGroundWaters(models.Model):
     wrrl_bg = models.CharField(max_length=40,null=True)
     shape_area = models.FloatField(null=True)
     shape_len = models.FloatField(null=True)
-    geom = gis_models.MultiPolygonField(srid=25833)
+    geom25833 = gis_models.MultiPolygonField(srid=25833)
+    geom4326 = gis_models.MultiPolygonField(srid=4326, null=True)
 
     def __str__(self):
         return self.kennzahl
+    
+    def to_json(self):
+        return {
+            "name": 'Oberirdisches Einzugsgebiet',
+            "kennzahl": self.kennzahl,
+            "gewaesser": self.gewaesser,
+            "gew_alias": self.gew_alias,
+            "gew_kennz": self.gew_kennz,
+            "beschr_von": self.beschr_von,
+            "beschr_bis": self.beschr_bis,
+            "land": self.land,
+            "ordnung": self.ordnung,
+            "fl_art": self.fl_art,
+            "wrrl_kr": self.wrrl_kr,
+            "area_qkm": self.area_qkm,
+            "area_ha": self.area_ha,
+            "ezg_id": self.ezg_id,
+            "bemerkung": self.bemerkung,
+            "wrrl_fge": self.wrrl_fge,
+            "wrrl_bg": self.wrrl_bg,
+            "color_index": int(self.shape_len) % 255
+        }
+    
+    def to_feature(self, epsg=4326):
+        if epsg == 4326:
+            geometry = json.loads(self.geom4326.geojson)
+        elif epsg == 25833:
+            geometry = json.loads(self.geom25833.geojson)
+        else:
+            raise ValueError("Unsupported EPSG code")
+        
+        properties = self.to_json()
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": properties
+        }
+        
     
 
     

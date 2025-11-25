@@ -100,16 +100,22 @@ export function enhanceMap (map) {
   map.getPane("baselayerPane").style.zIndex = 200;
 
   map.createPane("overlayRasterPane");
-  map.getPane("overlayRasterPane").style.zIndex = 400;
+  map.getPane("overlayRasterPane").style.zIndex = 300;
+  
+  map.createPane("backgroundPane");
+  map.getPane("backgroundPane").style.zIndex = 350;
 
   map.createPane("overlayPolygonPane");
   map.getPane("overlayPolygonPane").style.zIndex = 500;
 
   map.createPane("polygonPane");
-  map.getPane("polygonPane").style.zIndex = 600;
+  map.getPane("polygonPane").style.zIndex = 580;
+
+  map.createPane("pinPane");
+  map.getPane("pinPane").style.zIndex = 590;
 
   map.createPane("resultPane");
-  map.getPane("resultPane").style.zIndex = 700;
+  map.getPane("resultPane").style.zIndex = 630;
   
   $(".leaflet-control-zoom").append(
     '<a class="leaflet-control-home" href="#" role="button" title="Project area" aria-label="Project area"><i class="bi bi-bullseye"></i></a>',

@@ -40,6 +40,7 @@ urlpatterns = [
     path('toolbox/filter_sieker_surface_waters/', views.filter_sieker_surface_waters, name='filter_sieker_surface_waters'),
     path('toolbox/get_all_sieker_surface_waters/', views.get_all_sieker_surface_waters, name='get_all_sieker_surface_waters'),
     path('toolbox/get_sieker_surface_water_levels/<int:id>/', views.get_sieker_surface_water_levels, name='get_sieker_surface_water_levels'),
+    path('toolbox/get_all_above_ground_catchment_areas/', views.get_all_above_ground_catchment_areas, name='get_all_above_ground_catchment_areas'),
     # Sieker sinks
     path('toolbox/load_sieker_sink_gui/<str:user_field_id>/', views.load_sieker_sink_gui, name='load_sieker_sink_gui'),
     path('toolbox/filter_sieker_sinks/', views.filter_sieker_sinks, name='filter_sieker_sinks'),
@@ -55,6 +56,10 @@ urlpatterns = [
     path('toolbox/load_sieker_drainage_gui/<int:user_field_id>/', views.load_sieker_drainage_gui, name='load_sieker_drainage_gui' ),
     path('toolbox/load_sieker_drainage_features/<int:user_field_id>/', views.load_sieker_drainage_features, name='load_sieker_drainage_features' ),
    
+
+
+    path('toolbox/test/', views.test_html, name='test_html'),
+    path('toolbox/test_2/', views.test_html_2, name='test_html_2'),
     
 
 ]

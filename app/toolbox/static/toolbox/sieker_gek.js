@@ -149,14 +149,14 @@ export function initializeSiekerGek(data) {
       }
       
     
-    } else if ($target.attr('id') === 'toggleSiekerGeks') {
-      if (map.hasLayer(Layers['sieker_gek'])) {
-        map.removeLayer(Layers['sieker_gek']);
-        $target.text('Senken einblenden');
-      } else {
-          map.addLayer(Layers['sieker_gek']);
-          $target.text('Senken ausblenden');
-      }
+    // } else if ($target.attr('id') === 'toggleSiekerGeks') {
+    //   if (map.hasLayer(Layers['sieker_gek'])) {
+    //     map.removeLayer(Layers['sieker_gek']);
+    //     $target.text('Senken einblenden');
+    //   } else {
+    //       map.addLayer(Layers['sieker_gek']);
+    //       $target.text('Senken ausblenden');
+    //   }
     }
     }); 
 

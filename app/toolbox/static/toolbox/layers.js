@@ -1,15 +1,12 @@
 // Zalf Innfiltration
-const sinkFeatureGroup = new L.FeatureGroup()
-sinkFeatureGroup.toolTag = 'infiltration';
-const sinkPointFeatureGroup = new L.FeatureGroup()
-sinkPointFeatureGroup.toolTag = 'infiltration';
-const enlargedSinkFeatureGroup = new L.FeatureGroup()
-enlargedSinkFeatureGroup.toolTag = 'infiltration';
+
+
+    
 const lakesFeatureGroup = new L.FeatureGroup()
 lakesFeatureGroup.toolTag = 'infiltration';
 const streamsFeatureGroup = new L.FeatureGroup()
 streamsFeatureGroup.toolTag = 'infiltration';
-const inletConnectionsFeatureGroup = new L.featureGroup()
+const inletConnectionsFeatureGroup = new L.FeatureGroup()
 inletConnectionsFeatureGroup.toolTag = 'infiltration';
 let sinkCluster = L.markerClusterGroup();
 sinkCluster.toolTag = 'infiltration';
@@ -21,9 +18,9 @@ const tubInjectionTileLayer = new L.TileLayer();
 tubInjectionTileLayer.toolTag = 'injection';
 
 // SiekerWetlands
-const siekerWetlandFeatureGroup = new L.FeatureGroup()
+const siekerWetlandFeatureGroup = new L.FeatureGroup();
 siekerWetlandFeatureGroup.toolTag = 'sieker_wetland';
-const siekerFilteredWetlandFeatureGroup = new L.FeatureGroup()
+const siekerFilteredWetlandFeatureGroup = new L.FeatureGroup();
 siekerFilteredWetlandFeatureGroup.toolTag = 'sieker_wetland';
 
 //SiekerSink
@@ -33,7 +30,7 @@ const siekerLakeFeatureGroup = new L.FeatureGroup();
 siekerLakeFeatureGroup.toolTag = 'sieker_sink';
 const siekerStreamFeatureGroup = new L.FeatureGroup();
 siekerStreamFeatureGroup.toolTag = 'sieker_sink';
-const siekerSinkResultFeatureGroup = new L.FeatureGroup()
+const siekerSinkResultFeatureGroup = new L.FeatureGroup();
 siekerSinkResultFeatureGroup.toolTag = 'sieker_sink';
 
 // SierkerSurfaceWaters
@@ -43,6 +40,9 @@ const waterLevelsFeatureGroup = new L.FeatureGroup();
 waterLevelsFeatureGroup.toolTag = 'sieker_surface_water';
 const filteredLakesFeatureGroup = new L.FeatureGroup();
 filteredLakesFeatureGroup.toolTag = 'sieker_surface_water';
+const abovegroundCatchmentFeatureGroup = new L.FeatureGroup();
+abovegroundCatchmentFeatureGroup.toolTag = 'sieker_surface_water';
+
 
 //siekerGek
 const siekerGekFeatureGroup = new L.FeatureGroup()
@@ -145,6 +145,7 @@ export const Layers = {
     'sieker_surface_water': siekerLakesFeatureGroup,
     'sieker_water_level': waterLevelsFeatureGroup,
     'filtered_sieker_surface_water': filteredLakesFeatureGroup,
+    'above_ground_catchment_area': abovegroundCatchmentFeatureGroup,
     // SiekerSink
     'sieker_sink': siekerSinkFeatureGroup, 
     'sieker_lake' : siekerLakeFeatureGroup,

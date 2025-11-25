@@ -35,7 +35,11 @@ from rasterio.warp import reproject, Resampling, calculate_default_transform, tr
 from rasterio.mask import mask
 from rasterio.enums import ColorInterp
 
-
+# TODO DELETE
+def test_html(request):
+    return render(request, 'toolbox/test.html')
+def test_html_2(request):
+    return render(request, 'toolbox/test_2.html')
 
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 FLOAT32_NODATA = np.float32(-3.4028235e+38)
@@ -1017,15 +1021,6 @@ def filter_sieker_surface_waters(request):
 
     user_field = models.UserField.objects.get(pk=project['userField'])
 
-    # distance = int(project.get('lake_distance_to_userfield', 0))
-    # lakes = None
-    # if distance > 0:
-        # Transform to EPSG:25833 (meters) and add the buffer
-    #     user_geom_25833 = user_field.geom.transform(25833, clone=True)
-    #     buffer_25833 = user_geom_25833.buffer(distance)
-    #     buffer_4326 = buffer_25833.transform(4326, clone=True)
-    #     lakes = models.SiekerLargeLake.objects.filter(Q(geom__intersects=buffer_4326) | Q(geom__within=buffer_4326))
-    # else:
     lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_dict()
     lakes = models.SiekerLargeLake.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
 
@@ -1081,6 +1076,7 @@ def get_all_sieker_surface_waters(request):
                 'featureCollection':lakes_feature_collection,
                 'dataInfo': lakes_data_info
             }
+        print("{'lakes': lakes, 'message': message}", {'lakes': lakes, 'message': message})
         return JsonResponse({'lakes': lakes, 'message': message})
 
 
@@ -1104,6 +1100,34 @@ def get_sieker_surface_water_levels(request, id):
     ]
     return JsonResponse({"chart_data": chart_data, "station_name": sieker_station.name})
 
+def get_all_above_ground_catchment_areas(request):
+    """
+    Get all above ground catchments in the area
+    """
+    try:
+        project = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    user_field = models.UserField.objects.get(pk=project['userField'])
+
+    catchment_info = models.DataInfo.objects.get(data_type='above_ground_catchment_area').to_dict()
+    catchments = models.AboveGroundCatchmentArea.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+
+    if catchments.count() == 0:
+        
+        return JsonResponse({'message': {'success': False, 'message': 'Es sind keine Einzugsgebiete in Ihrem Suchgebiet in der Datenbank hinterlegt.'}})
+    else:
+        
+        catchment_feature_collection = create_feature_collection(catchments)
+        message = {
+            'success': True, 
+        }
+        catchments = {
+                'featureCollection':catchment_feature_collection,
+                'dataInfo': catchment_info
+            }
+        return JsonResponse({'catchments': catchments, 'message': message})
 
 ##### Sieker Sinks ######
    

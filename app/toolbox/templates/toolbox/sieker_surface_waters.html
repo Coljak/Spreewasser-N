@@ -32,6 +32,10 @@
         </li>
 
         <li class="nav-item sieker_surface_water">
+            <a id="navSiekerAbovegroundCatchmentArea" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerAbovegroundCatchmentArea" aria-selected="false">Oberirdische Einzugsgebiete</a>
+        </li>
+
+        <li class="nav-item sieker_surface_water">
             <a id="navSiekerSurfaceWatersResultDownload" class="toolbox nav-link"  data-bs-toggle="tab" href="#tabSiekerSurfaceWatersResultDownload">Ergebnisdownload</a>
         </li>
 
@@ -58,7 +62,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Filter seen</h5>
-                        <button id="toggleSiekerLakes" class="btn btn-secondary">Seen ausblenden</button>                                                                                             
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sieker_surface_water">Layer ausblenden</button>                                                                                             
                     </div>
                     
                     <form method="POST" action="">
@@ -88,7 +92,7 @@
                     <!-- Header row -->
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <h5 class="card-title mb-0">Pegel</h5>
-                        <button id="toggleSiekerLevels" class="btn btn-secondary">Pegel ausblenden</button>
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sieker_water_level">Pegel ausblenden</button>
                     </div>
                 
 
@@ -97,6 +101,19 @@
                             <div id="sieker_water_level-table-container" class="table-responsive"></div>           
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tabSiekerAbovegroundCatchmentArea" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Oberirdische Einzugsgebiete</h5>
+                        <button class="btn btn-secondary toggle-feature-group" data-type="above_ground_catchment_area">Layer ausblenden</button>                                                                                             
+                    </div>
+                    {% comment %} <div id="sieker-lake-table-container" class="table-responsive"></div> {% endcomment %}
+                    <div id="above_ground_catchment_area-table-container" class="table-responsive"></div>
                 </div>
             </div>
         </div>

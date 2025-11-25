@@ -1,0 +1,51 @@
+/* ------- Arrow-shaped tabs ------- */
+.flow-tabs .nav-link {
+    position: relative;
+    padding: 10px 25px 10px 35px;
+    margin-right: 12px;
+    background: #e0e0e0;
+    color: #333;
+    border-radius: 0;
+    border: 1px solid #ccc;
+    font-weight: 500;
+}
+
+/* The right-pointing arrow */
+.flow-tabs .nav-link::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: -20px;
+    width: 0;
+    height: 0;
+    border-top: 21px solid transparent;
+    border-bottom: 21px solid transparent;
+    border-left: 20px solid #e0e0e0;   /* same as background */
+}
+
+/* Active tab */
+.flow-tabs .nav-link.active {
+    background: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+.flow-tabs .nav-link.active::after {
+    border-left-color: #0d6efd;
+}
+
+/* ------- VISITED / COMPLETED TABS ------- */
+.flow-tabs .nav-link.visited {
+    background: #7fc37f !important;      /* green */
+    color: white !important;
+    border-color: #7fc37f !important;
+}
+
+.flow-tabs .nav-link.visited::after {
+    border-left-color: #7fc37f !important;
+}
+
+/* ------- Remove arrow from last tab ------- */
+.flow-tabs .nav-item:last-child .nav-link::after {
+    display: none;
+}

@@ -23,6 +23,8 @@ export class SiekerSurfaceWaters extends ToolboxProject {
         // TODO BADESEEN!
 
         this.all_result_lakes_ids = data.all_result_lakes_ids ?? [];
+
+        this.selected_above_ground_catchment_areas = data.selected_above_ground_catchment_areas ?? [];
         
         // this.selected_result_lakes = data.selected_result_lakes ?? [];
         // this.all_result_water_level_ids = data.all_result_water_level_ids ?? [];

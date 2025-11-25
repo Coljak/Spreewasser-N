@@ -286,7 +286,7 @@ export function initializeInfiltration() {
     $('#toolboxPanel').off('click');
     addClickEventListenerToToolboxPanel(Infiltration)
     $('#toolboxPanel').on('click', function (event) {
-    const $target = $(event.target);
+    const $target = $(event.target).closest('button');
     if ($target.hasClass('filter-sinks')) {
       filterSinks($target);    
     } else if ($target.attr('id') === 'btnGetInfiltrationResults') {

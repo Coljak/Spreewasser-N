@@ -39,6 +39,7 @@ const projectClasses = {
 
     'sieker_surface_water': SiekerSurfaceWaters,
     'sieker_water_level': SiekerSurfaceWaters,
+    'above_ground_catchment_area': SiekerSurfaceWaters, 
 
     'drainage': Drainage,
 };
@@ -518,22 +519,23 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
     const ProjectClass = projectClass;
     $('#toolboxPanel').on('click',function (event) {
         const $target = $(event.target);
+        const button = $target.closest('button')
         const project = ProjectClass.loadFromLocalStorage();
         if ($target.hasClass('toolbox-back-to-initial')) {
             
             clearToolboxPanel();
             return;
         // table related
-        } else if ($target.hasClass('toggle-tile-layer')) {
+        } else if (button.hasClass('toggle-tile-layer')) {
             console.log('toggle-tile-layer')
               const dataType = $target.data('type')
               if ($target.hasClass('shown')) {
                 $('button.toggle-tile-layer').removeClass('shown');
-                $('button.toggle-tile-layer').text('einblenden')
+                $('button.toggle-tile-layer').text('Layer einblenden')
                 document.querySelector('.leaflet-overlayRaster-pane').hidden = true;
                 document.querySelector('.leaflet-legend').hidden = true; 
               } else {
-                $('button.toggle-tile-layer').text('ausblenden')
+                $('button.toggle-tile-layer').text('Layer ausblenden')
                 $('button.toggle-tile-layer').addClass('shown');
                 
                 document.querySelector('.leaflet-overlayRaster-pane').hidden = false;
@@ -556,30 +558,37 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 const $id = $row.data('id')
                 console.log('Tablerow: ', $dataType, $row.data('id'))
                 if ($dataType === 'filtered_sieker_gek') {            
-                    openResultCard($dataType, $id)
-
-                    
+                    openResultCard($dataType, $id)      
                 }
-        }
-        } else if ($target.hasClass('toggle-feature-group')) {
+            }
+        } else if (button.hasClass('filter-features')) {
+            console.log('hasClass filter-features')
+            const dataType = button.data('type')
+            const $displayButton = $(`button.toggle-feature-group[data-type="${dataType}"]`)
+            if ($displayButton && $displayButton.hasClass('d-none')) {
+                console.log('hasClass d-none')
+                $displayButton.removeClass('d-none')
+            }
+        } else if (button.hasClass('toggle-feature-group')) {
             
-            const dataType = $target.attr('data-type')
-            console.log('toggle-feature-group', dataType)
+            const dataType = button.attr('data-type')
+            console.log('toggle-feature-group!', dataType)
             
             if (map.hasLayer(Layers[dataType])) {
                 map.removeLayer(Layers[dataType]);
-                $target.text('einblenden');
+                console.log('Layer removed:', Layers[dataType]);
+                button.text('Layer einblenden');
             } else {
                 map.addLayer(Layers[dataType]);
-                $target.text('ausblenden');
+                button.text('Layer ausblenden');
             }
-        } else if ($target.hasClass('save-toolbox-project')) {
+        } else if (button.hasClass('save-toolbox-project')) {
             if (!project.id || project.name === '') {
                 $('#userFieldSelect').val(project.userField);
                 $('#toolboxProjectModal').modal('show');
                 
                 $('#id_project_name').focus();
-                $('#projectTypeSelect').val($target.data('type'));
+                $('#projectTypeSelect').val(button.data('type'));
                 $('#projectTypeSelect').prop('disabled', true);
                 $('#userFieldSelect').prop('disabled', true);
                 $('#saveToolboxProjectButton').data('page-reload', false);
@@ -587,7 +596,7 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             } else {
                 project.saveToDB();
             }
-        } else if ($target.hasClass('toolbox-load-project')) {
+        } else if (button.hasClass('toolbox-load-project')) {
             const project_id = $('#id_toolbox_project').val();
             const loadedProject = loadProjectFromDb(project_id);
             loadedProject.then(project => {
@@ -597,10 +606,12 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 // $('input[type="checkbox"]').trigger('change');
 
             });
-        } else if ($target.hasClass('filter-waterbodies')) {
-            console.log('Click eventlistener filter-waterbodies')
-            getWaterBodies($target, ProjectClass);  
         } 
+        if (button.hasClass('filter-waterbodies')) {
+            console.log('Click eventlistener filter-waterbodies')
+            getWaterBodies(button, ProjectClass);  
+        
+        }
     });
 };
 
@@ -719,7 +730,6 @@ export function addFeatureCollectionToLayer(data, clearLayer, resultMap={}){
         featureGroup.clearLayers();
     }
     
-
     let geojsonLayer = L.geoJSON(featureCollection, {
         style: function (feature) {
             let color = colorByIndex
@@ -730,15 +740,15 @@ export function addFeatureCollectionToLayer(data, clearLayer, resultMap={}){
                 className: dataInfo.className,
                 weight: 3,
             };
-            if (dataInfo.featureType === "polygon" && colorByIndex) {
+            if (dataInfo.featureType === "polygon" && colorByIndex && dataInfo.featureColor) {
                 style.fillColor = color;                  // dynamic fill
                 style.color = dataInfo.featureColor;      // outline color
-                style.fillOpacity = 0.7;                 // optional
+                style.fillOpacity = 0.5;                 // optional
             }
             // CASE 2: everything else
             else {
                 style.color = color;
-                // style.fillColor = color;
+                style.fillOpacity = 0;
             }
 
             if (dataInfo.dashArray) {
@@ -746,7 +756,7 @@ export function addFeatureCollectionToLayer(data, clearLayer, resultMap={}){
             }
             return style;
         },
-        pane: "polygonPane",
+        pane: data.pane ?? "polygonPane",
         onEachFeature: function(feature, layer) {
             addPopUpsToFeature(feature, layer, dataInfo);
 
@@ -796,7 +806,7 @@ export function addPointFeatureCollectionToLayer(data) {
                 icon: pin
             });
         },
-        pane: "polygonPane",
+        pane: data.pane ?? "pinPane",
         onEachFeature: function(feature, layer) {
             addPopUpsToFeature(feature, layer, dataInfo);
             layer.customId = `${dataInfo.dataType}_${feature.properties.id}`;
@@ -840,10 +850,8 @@ function createPropertiesTable(properties, dataInfo) {
     return tableHTML;
 }
 
-
-
 export function createDetailTable(data) {
-    // used in zalf sinks and sieker sinks
+    // Creates a table with detailrows, for waterlevels!
     console.log('createDetailTable data', data);
 
     const featureCollection = data.featureCollection;
@@ -893,7 +901,7 @@ export function createDetailTable(data) {
                         <td>
                             <div class="form-check form-switch m-0">
                                 <input type="checkbox" 
-                                    class="form-check-input table-select-checkbox toggle-sink-result"  
+                                    class="form-check-input table-select-checkbox toggle-detail-result"  
                                     data-type="${dataInfo.dataType}" 
                                     data-id="${dataInfo.dataType}_${property.id}" 
                                     >
@@ -1022,13 +1030,9 @@ export function createSinkResultTable(data) {
                 }
             }
         });
-
         tableHTML += '</tr>';
     });
       
-
-    
-
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
 
@@ -1040,10 +1044,8 @@ export function createSinkResultTable(data) {
 
     // Initialize DataTable
     const tableSettings = createTableSettings(dataInfo);
-    // tableSettings['hover'] = false;
     const table = $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
     
-
     // Attach child rows (detail rows: sink, waterbody, inlet tables + chart)
     inlets.forEach(inlet => {
         const mainRow = table.row($(`tr.inlet-header-row[data-id="${inlet.id}"]`));
@@ -1096,9 +1098,7 @@ export function createSinkResultTable(data) {
     });
     $(`#${dataInfo.dataType}-table tbody`).on('hover', 'tr.table-parent-row', function () {
         const row = table.row(this);
-        
-        console.log('hover')
-        
+ 
     });
 
 

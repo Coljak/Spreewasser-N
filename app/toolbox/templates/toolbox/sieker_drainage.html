@@ -110,8 +110,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Entwässerungsnetz</h5>
-                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
-                        <button class="btn btn-secondary toggle-feature-group shown" data-type="drainage_network">Ausblenden</button>                                                                                             
+                        <button class="btn btn-secondary toggle-feature-group shown" data-type="drainage_network">Layer ausblenden</button>                                                                                             
                     </div>
                     <form method="POST" action="">
                         {% csrf_token %}
@@ -159,8 +158,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Entwässerungswahrscheinlichkeit</h5>
-                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
-                        <button class="btn btn-secondary toggle-tile-layer shown" data-type="drainage_probability">Ausblenden</button>                                                                                             
+                        <button class="btn btn-secondary toggle-tile-layer shown" data-type="drainage_probability">Layer ausblenden</button>                                                                                             
                     </div>
                         <form method="POST" action="">
                             {% csrf_token %}
@@ -179,8 +177,7 @@
                     {% if drained_area_filter_form.form.fields.types.choices %}
                         <div class="d-flex align-items-center justify-content-between mb-2">                      
                             <h5 class="card-title">Bekannte Entwässerungsflächen</h5>
-                            {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
-                            <button class="btn btn-secondary toggle-feature-group shown" data-type="drained_area">Ausblenden</button>                                                                                             
+                            <button class="btn btn-secondary toggle-feature-group shown" data-type="drained_area">Layer ausblenden</button>                                                                                             
                         </div>
                         <div class="mb-3 card">
                             <div class="card-body">

@@ -73,8 +73,8 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Filter Natürliche Senken als Versickerungsstandorte</h5>
-                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
-                        <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
+                
+                        <button class="btn btn-secondary toggle-feature-group d-none" data-type="sink">Layer ausblenden</button>                                                                                             
                     </div>
                     
                     <form method="POST" action="">
@@ -100,7 +100,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Filter Baulich modifizierte Senken als Versickerungsstandorte</h5>
-                        <button class="btn btn-secondary toggle-feature-group" data-type="enlarged_sink">ausblenden</button>                                                                                             
+                        <button class="btn btn-secondary toggle-feature-group d-none" data-type="enlarged_sink">Layer ausblenden</button>                                                                                             
                     </div>
                     
                     <form method="POST" action="">
@@ -127,7 +127,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title mb-0">Stehende Gewässer</h5>
-                        <button  class="btn btn-secondary toggle-feature-group" data-type="lake">ausblenden</button>                                                                                             
+                        <button  class="btn btn-secondary toggle-feature-group d-none" data-type="lake">Layer ausblenden</button>                                                                                             
                     </div>
 
                     
@@ -153,7 +153,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title mb-0">Fließgewässer</h5>
-                        <button  class="btn btn-secondary toggle-feature-group" data-type="stream">ausblenden</button>                                                                                             
+                        <button  class="btn btn-secondary toggle-feature-group d-none" data-type="stream">Layer ausblenden</button>                                                                                             
                     </div>
         
                     <div class="card-body">

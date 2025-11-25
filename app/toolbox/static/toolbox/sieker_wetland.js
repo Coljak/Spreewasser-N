@@ -143,14 +143,14 @@ export function initializeSiekerWetland(data) {
         filterSiekerWetlands(project);
       }
       return;  
-    } else if ($target.attr('id') === 'toggleSiekerWetlands') {
-      if (map.hasLayer(Layers['sieker_wetland'])) {
-        map.removeLayer(Layers['sieker_wetland']);
-        $target.text('Feuchtgebiete einblenden');
-      } else {
-          map.addLayer(Layers['sieker_wetland']);
-          $target.text('Feuchtgebiete ausblenden');
-      }
+    // } else if ($target.attr('id') === 'toggleSiekerWetlands') {
+    //   if (map.hasLayer(Layers['sieker_wetland'])) {
+    //     map.removeLayer(Layers['sieker_wetland']);
+    //     $target.text('Feuchtgebiete einblenden');
+    //   } else {
+    //       map.addLayer(Layers['sieker_wetland']);
+    //       $target.text('Feuchtgebiete ausblenden');
+    //   }
     }
     }); 
 

@@ -189,6 +189,8 @@ async function startSiekerGeks() {
       $('#toolboxPanel').html(data.html);
       if (!project.id) {
         const siekerGeks = new SiekerGek(data.default_project);
+        console.log('SiekerGek from backend: ', data.default_project)
+        console.log('SiekerGek from frontend: ', siekerGeks)
         siekerGeks.saveToLocalStorage();
       }
 
@@ -196,7 +198,8 @@ async function startSiekerGeks() {
         'sliderLabels': data.slider_labels,
         'dataInfo': data.dataInfo,
         'featureCollection': data.featureCollection,
-        'all_ids': data.all_ids
+        'all_ids': data.all_ids,
+        'default_project': data.default_project
       };
     })
     .then(data => {

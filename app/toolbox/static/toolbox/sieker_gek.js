@@ -30,7 +30,7 @@ function filterSiekerGeks(project) {
     
     console.log(data)
     if(data.message.success) {
-      Layers['filtered_sieker_gek'].clearLayers();
+      Layers['sieker_gek'].clearLayers();
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
       
 
@@ -43,9 +43,13 @@ function filterSiekerGeks(project) {
       tab.show();
 
     } else {
-      clearAndRemoveTable(SiekerGek, 'filtered_sieker_gek', data.message.message)
+      clearAndRemoveTable(SiekerGek, 'sieker_gek', data.message.message)
     }
+    return data.dataInfo
   })
+  .then(dataInfo => 
+    tableCheckSelectedItems(project, dataInfo.dataType)
+  )
 
 };
 
@@ -137,26 +141,15 @@ export function initializeSiekerGek(data) {
 
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
-    if ($target.attr('id') === 'btnFilterSiekerGeks') {
+    if ($target.hasClass('filter-geks')) {
       const project = SiekerGek.loadFromLocalStorage();
       if (project.selected_sieker_geks.length === 0) {
         handleAlerts({'success': false, 'message': 'Bitte wählen Sie Gewässer aus!'})
       } else {
-        map.removeLayer(Layers['sieker_gek']);
-        map.addLayer(Layers['filtered_sieker_gek']);
-        // TODO: unsauber- filtered_sieker_gek macht keien Sinn, oder? Toggle nicht eindeutig.
+        
         filterSiekerGeks(project);
       }
-      
-    
-    // } else if ($target.attr('id') === 'toggleSiekerGeks') {
-    //   if (map.hasLayer(Layers['sieker_gek'])) {
-    //     map.removeLayer(Layers['sieker_gek']);
-    //     $target.text('Senken einblenden');
-    //   } else {
-    //       map.addLayer(Layers['sieker_gek']);
-    //       $target.text('Senken ausblenden');
-    //   }
+
     }
     }); 
 
@@ -182,7 +175,9 @@ export function initializeSiekerGek(data) {
   $('input[type="checkbox"][name="landuse"][prefix="gek"]').trigger('change');
 
   $('input[type="range"]').trigger('change');
-  const siekerGek = SiekerGek.loadFromLocalStorage();
+  // const siekerGek = SiekerGek.loadFromLocalStorage();
+  const siekerGek = new SiekerGek(data.default_project);
+  siekerGek.saveToLocalStorage();
   loadProjectToGui(siekerGek);
 
 };

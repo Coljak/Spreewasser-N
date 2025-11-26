@@ -357,7 +357,7 @@ export function addChangeEventListener(projectClass) {
             const key = `${inputPrefix}_${inputName}`;
             console.log('key', key )
             const index = project[key].indexOf(inputValue);
-            console.log("eventListener change ($target.hasClass('form-check-input')")
+            // console.log("eventListener change ($target.hasClass('form-check-input')")
             toggleValueInArray(project[key], inputValue);
 
             project.saveToLocalStorage();
@@ -451,6 +451,7 @@ export function loadProjectToGui(project) {
 
     // --- Checkboxes ---
     const $checkboxes = $('#toolboxPanel .form-check-input[prefix][name]');
+    console.log(`checkboxes: $('#toolboxPanel .form-check-input[prefix][name]')`)
     // these checkboxes are in drainage network
     if ($checkboxes.length) {
         $checkboxes.each(function () {
@@ -543,24 +544,17 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 $target.addClass('shown')
               }
               
-            } else if ($target.hasClass('paginate_button' || $target.hasClass('sorting'))) {
-            console.log('Paginate')
-            const dataType =  $target.attr('aria-controls').split('-')[0];
-            tableCheckSelectedItems(project, dataType)
-            colorTable(dataType)
-            return;
         } else if (
-            $target.closest('tr').length && 
-            !$target.is('input, button, a')) {
-            const $row = $target.closest('tr');
-            if ($row.hasClass('table-parent-row')) {
-                const $dataType = $row.data('type')
-                const $id = $row.data('id')
-                console.log('Tablerow: ', $dataType, $row.data('id'))
-                if ($dataType === 'filtered_sieker_gek') {            
-                    openResultCard($dataType, $id)      
-                }
-            }
+            $target.hasClass('paginate_button') || 
+            $target.hasClass('sorting') ||
+            $target.hasClass('sorting_asc') ||
+            $target.hasClass('sorting_desc')) {
+                console.log('Paginate')
+                const dataType =  $target.attr('aria-controls').split('-')[0];
+                tableCheckSelectedItems(project, dataType)
+                colorTable(dataType)
+            return;
+        
         } else if (button.hasClass('filter-features')) {
             console.log('hasClass filter-features')
             const dataType = button.data('type')
@@ -606,7 +600,25 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 // $('input[type="checkbox"]').trigger('change');
 
             });
-        } 
+        } else if ($target.closest('tr').hasClass('table-parent-row') &&
+                    !$target.is('input, button, a')) {
+            const tRow = $target.closest('tr');
+            const dataType = tRow.data('type');
+            const table = $(`#${dataType}-table`).DataTable();
+            const row = table.row(tRow);
+            if (row.child.isShown()) {
+                row.child.hide();
+                $(tRow).removeClass('shown table-success');
+            } else {
+                row.child.show();
+                $(tRow).addClass('shown table-success');
+                if (dataType === 'sieker_water_level') {
+                    getWaterLevelTimeseries($(tRow).data('id'));
+                } else if (dataType === 'filtered_sieker_gek') {
+                    openResultCard(dataType, id);
+                }
+            }
+        }
         if (button.hasClass('filter-waterbodies')) {
             console.log('Click eventlistener filter-waterbodies')
             getWaterBodies(button, ProjectClass);  
@@ -848,129 +860,7 @@ function createPropertiesTable(properties, dataInfo) {
         })
     tableHTML += `</tbody></table></div>`;
     return tableHTML;
-}
-
-export function createDetailTable(data) {
-    // Creates a table with detailrows, for waterlevels!
-    console.log('createDetailTable data', data);
-
-    const featureCollection = data.featureCollection;
-    const dataInfo = data.dataInfo;
-    const ProjectClass = projectClasses[dataInfo.dataType];
-    const project = ProjectClass.loadFromLocalStorage();
-    const selected_items = project[`selected_${dataInfo.dataType}s`];
-    project[`selected_${dataInfo.dataType}s`] = [];
-
-    const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
-    console.log('Data_type for table', dataInfo.dataType);
-
-    // Build table HTML (only main header rows)
-    let tableHTML = `
-        <table class="table detail-table" id="${dataInfo.dataType}-table">
-        <thead>
-            <tr>`;
-    dataInfo.properties.forEach(property => {
-        if (property.table) {
-            if (property.valueName === 'id') {
-                tableHTML += `<th></th>`; // for checkbox
-            } else {
-                tableHTML += `<th>${property.title}</th>`;
-            }
-        }
-    });
-    tableHTML += '</tr></thead><tbody>';
-
-    // Main rows (inlet-header-row)
-
-    featureCollection.features.forEach(feature => {
-        project[`selected_${dataInfo.dataType}s`].push(feature.properties.id);
-        let color = dataInfo.colorByIndex ? tableColorFunction(feature.properties[dataInfo.colorByIndex]) : ''
-
-
-        tableHTML += `
-        <tr class=" table-parent-row" 
-            data-id="${feature.properties.id}" 
-            data-type="${dataInfo.dataType}" 
-            data-base-color="${color}"
-            >`;
-
-        dataInfo.properties.forEach(property => {
-            if (property.table) {
-                if (property.valueName === 'id') {
-                    tableHTML += `
-                        <td>
-                            <div class="form-check form-switch m-0">
-                                <input type="checkbox" 
-                                    class="form-check-input table-select-checkbox toggle-detail-result"  
-                                    data-type="${dataInfo.dataType}" 
-                                    data-id="${dataInfo.dataType}_${property.id}" 
-                                    >
-                            </div>
-                        </td>`;
-                } else {
-                    const value = feature.properties[property.valueName];
-                    tableHTML += `<td data-order="${value ?? 0}">${value ?? '--'} ${property.unit ?? ''}</td>`;
-                }
-            }
-        });
-
-        tableHTML += '</tr>';
-   
-    });
-         tableHTML += `</tbody></table>`;
-        tableContainer.innerHTML = tableHTML;
-    
-
-    const tableSettings = createTableSettings(dataInfo);
-    const table = $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
-
-    featureCollection.features.forEach(feature => {
-        const mainRow = table.row($(`tr.table-parent-row[data-id="${feature.properties.id}"]`))
-        const detailHtml = `
-            <div class="container-fluid">
-                <div id="card-sieker_water_level-${feature.properties.id}" class="card container-fluid mb-3">
-                    <div class="card-body">
-                        <h5>Wasserstand Verlauf</h5>
-                        <div id="${dataInfo.dataType}-spinner-${feature.properties.id}" 
-                            class="d-flex justify-content-center align-items-center in-table-spinner  d-none">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="chart-sieker_water_level-${feature.properties.id}" class="chart-canvas" ></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        mainRow.child(detailHtml).hide();
-        console.log('childrow created')
-        
-    });
-      // Save selected items back to local storage
-    project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink =>
-    project[`all_${dataInfo.dataType}_ids`]?.includes(sink)
-    );
-    project.saveToLocalStorage();
-
-    // Toggle child row on click
-    $(`#${dataInfo.dataType}-table tbody`).on('click', 'tr.table-parent-row', function () {
-        const row = table.row(this);
-        if (row.child.isShown()) {
-            row.child.hide();
-            $(this).removeClass('shown table-success');
-        } else {
-            row.child.show();
-            $(this).addClass('shown table-success');
-            if (dataInfo.dataType === 'sieker_water_level') {
-                getWaterLevelTimeseries($(this).data('id'));
-            }
-        }
-    });
-
-    $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
-}
+};
 
 export function createSinkResultTable(data) {
     // used in zalf sinks and sieker sinks
@@ -1105,77 +995,133 @@ export function createSinkResultTable(data) {
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
 }
 
-export function addFeatureCollectionToTable( data ){
-    const featureCollection = data.featureCollection
-    const dataInfo = data.dataInfo
-    const ProjectClass = projectClasses[dataInfo.dataType]
-    const project = ProjectClass.loadFromLocalStorage()
+
+export function addFeatureCollectionToTable(data) {
+    const featureCollection = data.featureCollection;
+    const dataInfo = data.dataInfo;
+    const tableClasses = data.tableClasses ?? "table table-hover"
+    const rowClasses = data.rowClasses ?? "";
+    const switchInput = data.switchInput ?? false
+
+    const ProjectClass = projectClasses[dataInfo.dataType];
+    const project = ProjectClass.loadFromLocalStorage();
     const selected_items = project[`selected_${dataInfo.dataType}s`];
+
     project[`selected_${dataInfo.dataType}s`] = [];
-    
     project[`all_${dataInfo.dataType}_ids`] = [];
 
     const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
-    let tableHTML = `
-        <table class="table table-hover table-hover" id="${dataInfo.dataType}-table">
-        
-        <thead>
-            <tr>`;
+
+    // ---- TABLE ELEMENTS ----
+    const table = document.createElement("table");
+    table.className = tableClasses;
+    table.id = `${dataInfo.dataType}-table`;
+
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+
+    // ---- BUILD THEAD ----
     dataInfo.properties.forEach(property => {
         if (property.table) {
-            if (property.valueName === 'id') {
-                tableHTML += `<th><input type="checkbox" class="table-select-all" data-type="${dataInfo.dataType}"> Alle</th>`;
+            const th = document.createElement("th");
+
+            if (property.valueName === "id") {
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.className = "table-select-all form-check-input";
+                checkbox.dataset.type = dataInfo.dataType;
+                th.append(" Alle");
+                th.appendChild(checkbox);
+                
             } else {
-                tableHTML += `<th>${property.title}`
+                th.textContent = property.title;
             }
+
+            headRow.appendChild(th);
         }
-        });
-    tableHTML += '</tr></thead><tbody>';
-    
-    
+    });
+
+    thead.appendChild(headRow);
+
+    // ---- TBODY ----
+    const tbody = document.createElement("tbody");
 
     featureCollection.features.forEach(feature => {
-        project[`all_${dataInfo.dataType}_ids`].push(feature.properties.id)
-        let color = dataInfo.colorByIndex ? tableColorFunction(feature.properties[dataInfo.colorByIndex]) : ''
-   
-        // Add to table
-        tableHTML += `
-            <tr 
-                class="table-parent-row"
-                data-id="${feature.properties.id}" 
-                data-type="${dataInfo.dataType}"
-                data-base-color="${color}"
-                >`
+        const id = feature.properties.id;
+        project[`all_${dataInfo.dataType}_ids`].push(id);
 
-        
+        const row = document.createElement("tr");
+        row.className = rowClasses;
+        row.dataset.id = id;
+        row.dataset.type = dataInfo.dataType;
+
+        const color = dataInfo.colorByIndex
+            ? tableColorFunction(feature.properties[dataInfo.colorByIndex])
+            : "";
+
+        row.dataset.baseColor = color;
+
+        // ---- BUILD ROW CELLS ----
         dataInfo.properties.forEach(property => {
-            if (property.table) {
-                if (property.valueName === 'id') {
-                tableHTML += `
-                    <td><input type="checkbox" class="table-select-checkbox" data-type="${dataInfo.dataType}" data-id="${feature.properties.id}"></td>
-                    `;
+            if (!property.table) return;
+
+            const td = document.createElement("td");
+
+            if (property.valueName === "id") {
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.className = "table-select-checkbox form-check-input";
+                checkbox.dataset.type = dataInfo.dataType;
+                checkbox.dataset.id = id;
+                td.appendChild(checkbox);
+            } else {
+                const value = feature.properties[property.valueName];
+
+                if (value !== undefined && value !== null) {
+                    td.dataset.order = value;
+                    td.textContent = `${value} ${property.unit ?? ""}`;
                 } else {
-                    const value = feature.properties[property.valueName];
-                    if (value !== undefined && value !== null){
-                        tableHTML += `<td data-order="${value}">${value} ${property.unit ?? ''}</td>` 
-                    } else {
-                        tableHTML += `<td data-order="0">--</td>` 
-                    }
+                    td.dataset.order = "0";
+                    td.textContent = "--";
                 }
             }
+            row.appendChild(td);
         });
-        tableHTML += '</tr>';
-        });
-    tableHTML += `</tbody></table>`;
-    tableContainer.innerHTML = tableHTML;
-    
-    project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink => project[`all_${dataInfo.dataType}_ids`].includes(sink));
+        tbody.appendChild(row);
+    });
+
+    // ---- ASSEMBLE TABLE ----
+    table.appendChild(thead);
+    table.appendChild(tbody);
+
+    // Clear container & insert table
+    tableContainer.innerHTML = "";
+    tableContainer.appendChild(table);
+
+    // ---- Restore selection ----
+    project[`selected_${dataInfo.dataType}s`] = selected_items
+        .filter(id => project[`all_${dataInfo.dataType}_ids`].includes(id));
+
     project.saveToLocalStorage();
 
+    // ---- DATATABLE INIT + coloring ----
     const tableSettings = createTableSettings(dataInfo);
-    $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
-    colorTable(dataInfo.dataType)
-    
+    const dataTable = $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
+
+    colorTable(dataInfo.dataType);
+    return dataTable;
+}
+
+export function createDetailRows(table, featureCollection, dataInfo, callback) {
+    featureCollection.features.forEach(feature => {
+        const mainRow = table.row($(`tr.table-parent-row[data-id="${feature.properties.id}"]`))
+        const detailHtml = callback(dataInfo, feature.properties)
+        mainRow.child(detailHtml).hide();
+        console.log('childrow created')    
+        });
+
+
+    $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
 }
 
 

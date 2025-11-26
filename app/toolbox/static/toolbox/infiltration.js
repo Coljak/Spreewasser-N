@@ -64,11 +64,11 @@ function filterSinks( $button) {
     // localStorage.setItem(`${sinkType}_indices`, JSON.stringify(sink_indices));
 
     return {'infiltration': infiltration, sinkType: sinkType}
-}).then(data => {
-  tableCheckSelectedItems(data.infiltration, data.sinkType)
-})
-// .catch(error => console.error("Error fetching data:", error))
-.finally(() => {
+  }).then(data => {
+    tableCheckSelectedItems(data.infiltration, data.sinkType)
+  })
+  // .catch(error => console.error("Error fetching data:", error))
+  .finally(() => {
     // Always hide spinner & enable button
     spinner.hide();
     $button.prop('disabled', false);
@@ -256,27 +256,25 @@ export function initializeInfiltration() {
   });
 
 
-
-
-    $('#toolboxPanel').off('change'); // Remove any previous change event handlers
-    addChangeEventListener(Infiltration);
-    $('#toolboxPanel').on('change', function (event){
-      const $target = $(event.target);
-      if ($target.hasClass('toggle-sink-result')) {
-        console.log('toggle-sink-result')
-        const dataType = $target.data('type');
-        const inletId = `${dataType}_${$target.data('id')}`;
-        const sinkLayerId = `${dataType}_${$target.attr('layer-id')}`;
-        
-          Layers[dataType].eachLayer(layer => {
-            if (layer.customId === sinkLayerId || layer.customId === inletId) {
-              if ($target.is(':checked')) {
-                Layers[dataType].addLayer(layer);
-              } else {
-                Layers[dataType].removeLayer(layer)
-              }
+  $('#toolboxPanel').off('change'); // Remove any previous change event handlers
+  addChangeEventListener(Infiltration);
+  $('#toolboxPanel').on('change', function (event){
+    const $target = $(event.target);
+    if ($target.hasClass('toggle-sink-result')) {
+      console.log('toggle-sink-result')
+      const dataType = $target.data('type');
+      const inletId = `${dataType}_${$target.data('id')}`;
+      const sinkLayerId = `${dataType}_${$target.attr('layer-id')}`;
+      
+        Layers[dataType].eachLayer(layer => {
+          if (layer.customId === sinkLayerId || layer.customId === inletId) {
+            if ($target.is(':checked')) {
+              Layers[dataType].addLayer(layer);
+            } else {
+              Layers[dataType].removeLayer(layer)
             }
-          });
+          }
+        });
         
       }
     });

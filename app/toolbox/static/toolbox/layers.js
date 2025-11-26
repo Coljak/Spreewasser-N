@@ -47,8 +47,7 @@ abovegroundCatchmentFeatureGroup.toolTag = 'sieker_surface_water';
 //siekerGek
 const siekerGekFeatureGroup = new L.FeatureGroup()
 siekerGekFeatureGroup.toolTag = 'sieker-gek';
-const siekerFilteredGekFeatureGroup = new L.FeatureGroup()
-siekerFilteredGekFeatureGroup.toolTag = 'sieker-gek';
+
 
 // SiekerDrainage
 // probabilty
@@ -155,7 +154,7 @@ export const Layers = {
     'sieker_sink_result_sink': siekerSinkResultFeatureGroup,
     // SiekerGek
     'sieker_gek': siekerGekFeatureGroup,
-    'filtered_sieker_gek': siekerFilteredGekFeatureGroup,
+  
     
     'drainage_probability': siekerDrainageRasterTile,
     // drained Areas

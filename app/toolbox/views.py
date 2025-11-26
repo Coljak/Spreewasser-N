@@ -1076,7 +1076,7 @@ def get_all_sieker_surface_waters(request):
                 'featureCollection':lakes_feature_collection,
                 'dataInfo': lakes_data_info
             }
-        print("{'lakes': lakes, 'message': message}", {'lakes': lakes, 'message': message})
+        # print("{'lakes': lakes, 'message': message}", {'lakes': lakes, 'message': message})
         return JsonResponse({'lakes': lakes, 'message': message})
 
 
@@ -1381,6 +1381,8 @@ def load_sieker_gek_gui(request, user_field_id):
                 ],
             'sieker_gek'
         )
+        default_project['all_sieker_gek_ids'] = list(geks.values_list('id', flat=True))
+        default_project['selected_sieker_geks'] = default_project['all_sieker_gek_ids']
 
         html = render_to_string('toolbox/sieker_gek.html', {
             'project_select_form': project_select_form,
@@ -1437,7 +1439,7 @@ def filter_sieker_geks(request):
         
         feature_collection = create_feature_collection(geks)
         data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
-        data_info['featureColor'] = 'var(--bs-success)'
+
 
         dict_list = []
         for gek in geks:
@@ -1447,7 +1449,7 @@ def filter_sieker_geks(request):
             
         print('measures: ', dict_list)
 
-        data_info = models.DataInfo.objects.get(data_type='filtered_sieker_gek').to_dict()
+        # data_info = models.DataInfo.objects.get(data_type='filtered_sieker_gek').to_dict()
         print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info, 'measures': dict_list})
 

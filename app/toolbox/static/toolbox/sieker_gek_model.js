@@ -7,7 +7,8 @@ export class SiekerGek extends ToolboxProject {
         // this.userField = data.userField ?? null;
         this.gek_priority = data.gek_priority ?? null;
         // gek retention filters
-        this.gek_landuse = data.gek_landuse ?? [];        
+        this.gek_landuse = data.gek_landuse ?? [];   
+        // this.selected_gek_landuses = data.selected_gek_landuses ?? [];     
         this.gek_costs_max = data.gek_costs_max ?? null;
         this.gek_costs_min = data.gek_costs_min ?? null;
 

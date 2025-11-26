@@ -1331,7 +1331,7 @@ class GekRetention(models.Model):
     
     def to_feature(self, epsg=4326):
         if epsg == 4326:
-            geometry = json.loads(self.geom.geojson)
+            geometry = json.loads(self.geom4326.geojson)
         elif epsg == 25833:
             geometry = json.loads(self.geom25833.geojson)
         else:

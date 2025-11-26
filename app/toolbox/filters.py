@@ -305,9 +305,9 @@ class EnlargedSinkFilter(FilterSet):
     
 
 class StreamFilter(FilterSet):
-    min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Minimales Überschussvolumen")
+    # min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Minimales Überschussvolumen")
     mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mittleres Überschussvolumen")
-    max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Maximales Überschussvolumen")
+    # max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Maximales Überschussvolumen")
     plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Tage mit Überschuss")
 
     distance_to_userfield = NumberFilter(
@@ -349,13 +349,13 @@ class StreamFilter(FilterSet):
 
     class Meta:
         model = models.Stream
-        fields = ['min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days']
+        fields = [ 'mean_surplus_volume',  'plus_days']
         form = SliderFilterForm
 
 class LakeFilter(FilterSet):
-    min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Minimales Überschussvolumen")
+    # min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Minimales Überschussvolumen")
     mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mittleres Überschussvolumen ")
-    max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Maximales Überschussvolumen")
+    # max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Maximales Überschussvolumen")
     plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Tage mit Überschuss")
 
     distance_to_userfield = NumberFilter(
@@ -399,7 +399,7 @@ class LakeFilter(FilterSet):
 
     class Meta:
         model = models.Lake
-        fields = ['min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days']
+        fields = [ 'mean_surplus_volume',  'plus_days']
         form = SliderFilterForm
 
 ## Toolbox Sieker Surface Waters
@@ -512,7 +512,7 @@ class GekRetentionFilter(FilterSet):
         landuses = (
             models.GekLanduse.objects
             .filter(gek_retention__in=self.queryset)
-            .values_list('clc_landuse', 'clc_landuse__label_level_2')
+            .values_list('clc_landuse', 'clc_landuse__label_level_2_de')
             .distinct()
         )
         self.filters['landuse'].extra['choices'] = [(id, lu) for id, lu in landuses]
@@ -551,7 +551,7 @@ class GekRetentionFilter(FilterSet):
 
     def filter_by_landuse(self, queryset, name, value):
         # value is a list of selected landuse strings
-        return queryset.filter(landuses__clc_landuse__label_level_2__in=value).distinct()
+        return queryset.filter(landuses__clc_landuse__label_level_2_de__in=value).distinct()
     
     def filter_by_costs(self, queryset, name, value):
         """

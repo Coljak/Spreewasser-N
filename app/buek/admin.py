@@ -26,7 +26,7 @@ class BuekPolygonAdmin(admin.ModelAdmin):
     list_display = ('polygon_id', 'bgl', 'symbol', 'legende')
 
 class CorineLandCover2018Admin(admin.ModelAdmin):
-    list_display = ('id', 'label_level_1', 'label_level_2', 'label_level_3', 'label_de', 'corine_landcover_code')
+    list_display = ('id', 'label_level_1_en', 'label_level_1_de', 'label_level_2_en', 'label_level_2_de', 'label_level_3_en', 'label_level_3_de', 'corine_landcover_code')
 
 class SoilProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'system_unit', 'legacy_bodsysteinh', 'legacy_bodtyp', 'legacy_bo_subtyp', 'legacy_bo_subtyp_txt', 'area_percentage', 'landusage_corine_code')

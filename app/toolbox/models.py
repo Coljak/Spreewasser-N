@@ -999,7 +999,7 @@ class SinkSoilProperties(models.Model):
     geom = gis_models.GeometryField(srid=4326, blank=True, null=True)
     partial_sink_area = models.FloatField(blank=True, null=True)
     percent_of_total_area = models.FloatField(blank=True, null=True)
-    soil_properties = models.ForeignKey(SoilProperties, on_delete=models.DO_NOTHING, blank=True, null=True)
+    soil_properties = models.ForeignKey(SoilProperties, on_delete=models.DO_NOTHING, blank=True, null=True, )
     sink = models.ForeignKey(Sink, on_delete=models.DO_NOTHING, null=True, related_name='sink_soil_properties')   
     sink_fid = models.IntegerField(null=True, blank=True)  # former fid_sink
 # Intersection of SoilProperties and EnlargedSink
@@ -1316,6 +1316,7 @@ class GekRetention(models.Model):
     datum_zugr = models.CharField(max_length=100, null=True, blank=True) # not necessary
 
     def to_dict(self):
+        
         return {
             "id": self.id,
             "name": self.name,
@@ -1326,7 +1327,8 @@ class GekRetention(models.Model):
             "planning_segment": self.planning_segment,
             "hrsg": self.hrsg,
             "document": self.gek_document.link,
-            "number_of_measures": self.number_of_measures
+            "number_of_measures": self.number_of_measures,
+            
         }
     
     def to_feature(self, epsg=4326):

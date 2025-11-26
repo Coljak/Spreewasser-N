@@ -47,6 +47,7 @@ urlpatterns = [
     path('toolbox/get_sieker_sink_results/', views.get_sieker_sink_results, name='get_sieker_sink_results'),
     # Sieker Gek
     path('toolbox/load_sieker_gek_gui/<str:user_field_id>/', views.load_sieker_gek_gui, name='load_sieker_gek_gui'),
+    path('toolbox/get_all_sieker_geks/', views.get_all_sieker_geks, name='get_all_sieker_geks'),
     path('toolbox/filter_sieker_geks/', views.filter_sieker_geks, name='filter_sieker_gek'),
     # Wetlands
     path('toolbox/load_sieker_wetland_gui/<str:user_field_id>/', views.load_sieker_wetland_gui, name='load_sieker_wetland_gui'),

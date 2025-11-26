@@ -16,6 +16,7 @@ export class SiekerGek extends ToolboxProject {
         this.selected_sieker_geks = data.selected_sieker_geks ?? [];
 
         this.all_filtered_sieker_gek_ids = data.all_filtered_sieker_gek_ids ?? [];
+        this.selected_filtered_sieker_geks = data.selected_filtered_sieker_geks ?? [];
 
         this.all_sieker_gek_measure_ids = data.all_sieker_gek_measure_ids ?? [];
         this.selected_sieker_gek_measures = data.selected_sieker_gek_measures ?? [];

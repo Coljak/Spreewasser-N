@@ -196,10 +196,10 @@ async function startSiekerGeks() {
 
       return {
         'sliderLabels': data.slider_labels,
-        'dataInfo': data.dataInfo,
-        'featureCollection': data.featureCollection,
+        // 'dataInfo': data.dataInfo,
+        // 'featureCollection': data.featureCollection,
         'all_ids': data.all_ids,
-        'default_project': data.default_project
+        // 'default_project': data.default_project
       };
     })
     .then(data => {

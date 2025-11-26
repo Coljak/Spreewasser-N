@@ -190,7 +190,7 @@ class OverallWeightingsForm(forms.Form):
             "data_default_value": 20,
             "units": "%",
         }),
-        label="Gewichtung der allgemeine Nutzbarkeit",
+        label="Gewichtung des Untergrundspeichervolumens",
         help_text=(
             "Die allgemeine Nutzbarkeit ist eine Bewertung der Eignung des Standorts für "
             "Versickerungsmaßnahmen. Eine hohe Bewertung begünstigt Versickerungsmaßnahmen."
@@ -696,7 +696,7 @@ class InfiltrationResultDownloadForm(ResultForm):
         ]
     )
     timeseries = forms.MultipleChoiceField(
-        label="Ökologischer Abfluss",
+        label="Ökologischer Mindestabfluss",
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
@@ -773,7 +773,7 @@ class SiekerSinkDownloadForm(ResultForm):
         ]
     )
     timeseries = forms.MultipleChoiceField(
-        label="Ökologischer Abfluss",
+        label="Ökologischer Mindestabfluss",
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[

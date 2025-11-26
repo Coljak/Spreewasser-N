@@ -748,7 +748,10 @@ def get_infiltration_result_list(project, epsg=4326):
         index_length = rate_water_sink_distance(connection_data['distance_m'])
         index_volumes = min(connection_data['waterbody']['mean_surplus_volume'] / sink.volume, 1) *100
         print('index_volume', index_volumes)
-        index_inlet = (index_length * int(project.get('weighting_inlet_length', 70)) + index_volumes * int(project.get('weighting_inlet_volume', 30))) / 100
+        if index_length > 0:
+            index_inlet = (index_length * int(project.get('weighting_inlet_length', 70)) + index_volumes * int(project.get('weighting_inlet_volume', 30))) / 100
+        else:
+            index_inlet = 0
         print('index_connection', index_inlet)
         connection_data['connection_feature']['properties']['index_length'] = int(index_length)
         connection_data['index_length'] = round(index_length)
@@ -758,7 +761,10 @@ def get_infiltration_result_list(project, epsg=4326):
         connection_data['index_inlet'] = round(index_inlet)
         index_sink = min(int(indices[sink.id]['index_sink_total'] *100), 100)
         connection_data['index_sink'] = index_sink
-        index_total = int((index_inlet + index_sink) / 2)
+        if index_inlet > 0:
+            index_total = int((index_inlet + index_sink) / 2)
+        else:
+            index_total = 0
         connection_data['index_total'] = round(index_total)
 
         return connection_data
@@ -1382,7 +1388,7 @@ def load_sieker_gek_gui(request, user_field_id):
             'sieker_gek'
         )
         default_project['all_sieker_gek_ids'] = list(geks.values_list('id', flat=True))
-        default_project['selected_sieker_geks'] = default_project['all_sieker_gek_ids']
+        # default_project['selected_sieker_geks'] = default_project['all_sieker_gek_ids']
 
         html = render_to_string('toolbox/sieker_gek.html', {
             'project_select_form': project_select_form,
@@ -1397,6 +1403,24 @@ def load_sieker_gek_gui(request, user_field_id):
 
 
 
+def get_all_sieker_geks(request):
+    try:
+        project = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    
+    user_field = models.UserField.objects.get(pk=project['userField'])
+    geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+    if geks.count() == 0:
+        return JsonResponse({'message': {'success': False, 'message': 'Im Suchgebiet sind keine Gewässerentwicklungskonzepte bekannt.'}})
+    
+    feature_collection = create_feature_collection(geks)
+    data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
+
+    return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': {'success': True}})
+
+
+
 # TODO: turn into filter gek
 def filter_sieker_geks(request):
    # add_range_filter(filters, obj, field,  model_field=None)
@@ -1405,12 +1429,8 @@ def filter_sieker_geks(request):
         project = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-    user_field = models.UserField.objects.get(pk=project['userField'])
-
-    
-    # geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
     # filter landuses
+    print('Project', project)
     ids = project.get('selected_sieker_geks')
     geks = models.GekRetention.objects.filter(pk__in=ids)
     landuses = models.GekLanduse.objects.filter(Q(gek_retention__in=geks) & Q(clc_landuse__id__in=project['gek_landuse']))
@@ -1438,7 +1458,9 @@ def filter_sieker_geks(request):
         print("Geks", geks.count())
         
         feature_collection = create_feature_collection(geks)
-        data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
+        # data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
+        # for feature in feature_collection['features']:
+        #     feature['properties']['measures']
 
 
         dict_list = []
@@ -1446,10 +1468,17 @@ def filter_sieker_geks(request):
             d = gek.to_dict()
             d['measures'] = [m.to_dict() for m in measures if m.gek_retention == gek]
             dict_list.append(d)
-            
-        print('measures: ', dict_list)
 
-        # data_info = models.DataInfo.objects.get(data_type='filtered_sieker_gek').to_dict()
+        features = []
+        for gek in geks:
+            feature = gek.to_feature()
+            feature['properties']['measures'] = [m.to_dict() for m in measures if m.gek_retention == gek]
+            features.append(feature)
+
+        print('measures: ', dict_list)
+        feature_collection['features'] = features
+
+        data_info = models.DataInfo.objects.get(data_type='filtered_sieker_gek').to_dict()
         print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info, 'measures': dict_list})
 

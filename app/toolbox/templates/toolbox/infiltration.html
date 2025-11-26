@@ -29,8 +29,14 @@
         <li class="nav-item infiltration">
             <a id="navInfiltrationWeightingForms" class="toolbox nav-link" data-bs-toggle="tab" href="#tabWeightingForms" aria-selected="false"
             data-toggle="tooltip" data-placement="top" title="Erklärung zur Gewichtung Erklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur Gewichtung"
-            >Gewichtung der Senkeneigenschaften</a>
+            >Gewichtung Bodenbewertung</a>
         </li>
+        <li class="nav-item infiltration">
+            <a id="navOverallWeighting" class="toolbox nav-link" data-bs-toggle="tab" href="#tabOverallWeighting" aria-selected="false"
+            data-toggle="tooltip" data-placement="top" title="Erklärung zur Gewichtung Erklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur Gewichtung"
+            >Gewichtung Untergrundbewertung</a>
+        </li>
+        
         <li class="nav-item infiltration">
             <a id="navInfiltrationSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSinks" aria-selected="false">Senken</a>
         </li>
@@ -173,22 +179,21 @@
             </div>
             
         </div>
-
-        <div id="tabWeightingForms" class="tab-pane">
+        <div id="tabOverallWeighting" class="tab-pane">
+            
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Gesamtgewichtung</h5>
-                    <p>Gewichtungen können verstellt werden müssen aber nicht.</p>
-                </div>
-            </div>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Gesamtgewichtung</h5>
+                    <h5 class="card-title">Gewichtung Untergrundbewertung</h5>
                     <div class="card-body">
                         {% crispy overall_weighting %}            
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div id="tabWeightingForms" class="tab-pane">
+            
+            
             
             <div class="card mb-3">
                 <div class="card-body">

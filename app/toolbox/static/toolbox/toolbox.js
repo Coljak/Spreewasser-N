@@ -9,7 +9,7 @@ import { Drainage } from '/static/toolbox/sieker_drainage_model.js';
 import {map, removeLegendFromMap, getSelectedUserField} from '/static/shared/map_sidebar_utils.js';
 import {Layers} from '/static/toolbox/layers.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
-
+import { dataTableGerman } from '/static/toolbox/dataTable_german.js'
 
 // all dataTypes mapped to their ProjectClass
 const projectClasses = {
@@ -470,9 +470,14 @@ export function loadProjectToGui(project) {
     for (const [key, value] of Object.entries(project)) {
         if (key.startsWith('all_') && key.endsWith('_ids') && value.length > 0) {
             const name = key.replace('all_', '').replace('_ids', '');
-            if (!project.toolboxType === 'sieker_surface_water') {
+            if (
+                !project.toolboxType === 'sieker_surface_water' || 
+                (!project.toolboxType === 'sieker_gek' && project.all_filtered_sieker_gek_ids.length > 0)
+            ) {
+                console.log('Toolbox Type', project.toolboxType)
                 $(`button.filter-features[data-type="${name}"]`).trigger('click')
-            } else {
+            } else if (project.toolboxType === 'sieker_surface_water') {
+                console.log('Special case for sieker_surface_water and sieker_gek')
                 if (project.sieker_surface_water_filtered === false){
                     tableCheckSelectedItems(project, 'sieker_surface_water')
                 } else {
@@ -602,20 +607,30 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             });
         } else if ($target.closest('tr').hasClass('table-parent-row') &&
                     !$target.is('input, button, a')) {
+            
             const tRow = $target.closest('tr');
+            const id = tRow.data('id');
             const dataType = tRow.data('type');
             const table = $(`#${dataType}-table`).DataTable();
             const row = table.row(tRow);
             if (row.child.isShown()) {
                 row.child.hide();
-                $(tRow).removeClass('shown table-success');
+                tRow.removeClass('shown table-success');
             } else {
                 row.child.show();
-                $(tRow).addClass('shown table-success');
+                tRow.addClass('shown table-success');
                 if (dataType === 'sieker_water_level') {
-                    getWaterLevelTimeseries($(tRow).data('id'));
+                    getWaterLevelTimeseries(id);
                 } else if (dataType === 'filtered_sieker_gek') {
-                    openResultCard(dataType, id);
+                    // openResultCard(dataType, id);
+                    ;
+                } else if (tRow.hasClass('inlet-header-row')) {
+                    // several dataTypes therefore inlet-header-row
+                    const waterbodyType = tRow.attr('waterbody-type');
+                    const waterbodyId = tRow.attr('waterbody-id');
+                    // const $detailRow = tRow.next('.detail-row'); 
+                    console.log('Inlet eventlistener')
+                    getInletVolumeChart(waterbodyType, waterbodyId, id);
                 }
             }
         }
@@ -652,6 +667,7 @@ function createTableSettings(dataInfo) {
         "searching": false,
         "columnDefs": columnDefs,
         "stripeClasses": [],
+        "language": dataTableGerman,
     }
 };
 
@@ -970,28 +986,6 @@ export function createSinkResultTable(data) {
         mainRow.child(detailHtml).hide();     
     });
 
-    // Toggle child row on click
-    $(`#${dataInfo.dataType}-table tbody`).on('click', 'tr.inlet-header-row', function () {
-        const row = table.row(this);
-        if (row.child.isShown()) {
-            row.child.hide();
-            $(this).removeClass('shown table-success');
-        } else {
-            row.child.show();
-            $(this).addClass('shown table-success');
-            const $waterbodyType = $(this).attr('waterbody-type');
-            const $waterbodyId = $(this).attr('waterbody-id');
-            const $detailRow = $(this).next('.detail-row'); 
-            const $id = $(this).data('id')
-            getInletVolumeChart($waterbodyType, $waterbodyId, $id);
-        }
-    });
-    $(`#${dataInfo.dataType}-table tbody`).on('hover', 'tr.table-parent-row', function () {
-        const row = table.row(this);
- 
-    });
-
-
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
 }
 
@@ -1115,6 +1109,7 @@ export function addFeatureCollectionToTable(data) {
 export function createDetailRows(table, featureCollection, dataInfo, callback) {
     featureCollection.features.forEach(feature => {
         const mainRow = table.row($(`tr.table-parent-row[data-id="${feature.properties.id}"]`))
+        console.log('mainRow',  mainRow)
         const detailHtml = callback(dataInfo, feature.properties)
         mainRow.child(detailHtml).hide();
         console.log('childrow created')    

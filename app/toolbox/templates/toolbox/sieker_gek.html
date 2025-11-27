@@ -80,10 +80,13 @@
         </div>
 
         <div id="tabSiekerGekMeasures" class="tab-pane">
-            <div id="card-sieker_gek_measure-table" class="card mb-3">
-                
+            <div id="card-sieker_gek_measure-table" class="card mb-3">    
                 <div class="card-body">
-                    <h5 class="card-title">Maßnahmen</h5>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Maßnahmen</h5>
+                        <button class="btn btn-secondary toggle-feature-group" data-type="filtered_sieker_gek">Layer ausblenden</button>                                                                                             
+                    </div>
+                    
                     <div id="filtered_sieker_gek-table-container" class="table-responsive"></div>
                     <div id="sieker_gek-info-card" class="card mt-3" style="display: none;">
                         <div id="sieker_gek-info-card-body" class="card-body"></div>

@@ -253,7 +253,7 @@ class EnlargedSinkFilter(FilterSet):
     area = MinMaxRangeFilter(model=models.EnlargedSink, field_name='area', label="Fläche")
     volume = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume', label="Volumen")
     depth = MinMaxRangeFilter(model=models.EnlargedSink, field_name='depth', label="Tiefe")
-    volume_construction_barrier = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume_construction_barrier', label="Volumen der Barriere")
+    volume_construction_barrier = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume_construction_barrier', label="Volumen der Verwallung")
     volume_gained = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume_gained', label="Zusätzliches Volumen")
     # index_soil = MinMaxRangeFilter(model=models.EnlargedSink, field_name='index_soil', label="Soil Index (%)")
 
@@ -303,7 +303,6 @@ class EnlargedSinkFilter(FilterSet):
         form = SliderFilterForm
 
     
-
 class StreamFilter(FilterSet):
     # min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Minimales Überschussvolumen")
     mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mittleres Überschussvolumen")
@@ -491,10 +490,10 @@ class GekRetentionFilter(FilterSet):
             # "id": "gek_priority",
             # "name": "gek_priority",
             # "prefix": "gek",
-            "data_range_min": 4,
-            "data_range_max": 8,
+            "data_range_min": 10,
+            "data_range_max": 30,
             "string_label": True,
-            "data_cur_val": 4,
+            "data_cur_val": 10,
             "class": "hiddeninput",
         }) 
     )

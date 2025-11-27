@@ -8,6 +8,7 @@ import {
   addFeatureCollectionToLayer, 
   loadProjectToGui,
   createDetailRows, 
+  clearAndRemoveTable,
 } from '/static/toolbox/toolbox.js';
 import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerGek } from '/static/toolbox/sieker_gek_model.js';
@@ -46,7 +47,8 @@ function getAllSiekerGeks(project) {
         dataInfo: data.dataInfo,
         tableClasses: 'table table-hover',
         // rowClasses: 'table-parent-row',
-      })
+      });
+      tableCheckSelectedItems(project, data.dataInfo.dataType)
 
 
     } else {
@@ -73,7 +75,7 @@ function filterSiekerGeks(project) {
     
     console.log(data)
     if(data.message.success) {
-      Layers['sieker_gek'].clearLayers();
+      // Layers['sieker_gek'].clearLayers();
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
       
       console.log('GEK', data)
@@ -95,10 +97,9 @@ function filterSiekerGeks(project) {
     } else {
       clearAndRemoveTable(SiekerGek, 'sieker_gek', data.message.message)
     }
-    return data.dataInfo
+
   })
-  .then(dataInfo => 
-    tableCheckSelectedItems(project, dataInfo.dataType)
+  .then(tableCheckSelectedItems(project, 'sieker_gek')
   )
 };
 
@@ -128,11 +129,13 @@ function addResultCards( dataInfo, featureProperties) {
 
             const innerCardBody = document.createElement('div');
             innerCardBody.classList.add("card-body")
+            const items = measure.description.split(',').map(s => s.trim()).filter(Boolean);
+            const bulletPoints = `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
             innerCardBody.innerHTML = `
                 <h5 class="card-title">${measure.gek_measure}</h5>
                 <b>Anzahl:</b><span> ${measure.quantity}</span></br>
                 <b>Kosten:</b><span> ${measure.costs} €</span></br>
-                <div class="result-text-box">${measure.description}</div>
+                <div class="result-text-box">${bulletPoints}</div>
             `;
         
             innerCard.appendChild(innerCardBody)
@@ -162,10 +165,14 @@ export function initializeSiekerGek(data) {
 
   if (slider && sliderLabels) {
     slider.addEventListener('change', function() {
-      console.log('sliderChanged', slider.value);
-      if (slider.value in sliderLabels) {
-        sliderLabelLeft.innerText = sliderLabels[slider.value];
-      }
+      console.log(sliderLabels)
+      let sliderVal = slider.value
+      if (!(slider.value in sliderLabels)) {
+        const keys = Object.keys(sliderLabels).map(Number).filter(k => k <= slider.value); 
+        sliderVal = Math.max(...keys);
+        console.log(sliderVal)
+      } 
+      sliderLabelLeft.innerText = sliderLabels[sliderVal];
     });
   }
   // end of string labelled slider

@@ -1,5 +1,6 @@
 from django import forms
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django.contrib.auth.models import User
 from django.db.models import Max, Min, NOT_PROVIDED
 from . import models
@@ -13,6 +14,20 @@ from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
 
 from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget,CustomSimpleSliderWidget, CustomDoubleSliderWidget
 
+class InfoLabelFormMixin():
+    # Helper method to add info icon to labels if a help_text exists
+    def label_with_info(self, field_name):
+        field = self.fields[field_name]
+        if field.help_text:
+            info_icon = f'<i class="bi bi-info-circle" data-help="{field.help_text}"></i>'
+            field.help_text = ""   # ⬅️ remove normal help_text output
+            return mark_safe(f"{field.label} {info_icon}")
+        return field.label
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.label = self.label_with_info(name)
 
 class CheckboxSelectMultipleWithAttrs(forms.CheckboxSelectMultiple):
     def __init__(self, attrs=None, choice_attrs=None):
@@ -26,7 +41,7 @@ class CheckboxSelectMultipleWithAttrs(forms.CheckboxSelectMultiple):
         return option
 
   
-class SliderFilterForm(forms.Form):
+class SliderFilterForm(InfoLabelFormMixin, forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -39,7 +54,7 @@ class SliderFilterForm(forms.Form):
         self.helper.layout = Layout(*[Field(name) for name in self.fields])
 
 
-class ToolboxProjectSelectionForm(forms.Form):
+class ToolboxProjectSelectionForm(InfoLabelFormMixin, forms.Form):
     toolbox_project = forms.ChoiceField(
         required=False,
         choices=[],
@@ -84,7 +99,7 @@ class ToolboxProjectSelectionForm(forms.Form):
 
 
 
-class ToolboxProjectForm(forms.Form):
+class ToolboxProjectForm(InfoLabelFormMixin, forms.Form):
     user_field = forms.ModelChoiceField(
         # TODO this line should be deleted
         queryset=models.UserField.objects.all(),
@@ -125,7 +140,7 @@ class ToolboxProjectForm(forms.Form):
         exclude = ['id', 'user']
 
 
-class InletWeightingsForm(forms.Form):
+class InletWeightingsForm(InfoLabelFormMixin, forms.Form):
     weighting_inlet_length = forms.IntegerField(
         required=False,
         min_value=0,
@@ -176,7 +191,7 @@ class InletWeightingsForm(forms.Form):
             'overall-weighting-reset', 
             'Reset', 
             css_class='btn-secondary reset-all'))
-class OverallWeightingsForm(forms.Form):
+class OverallWeightingsForm(InfoLabelFormMixin, forms.Form):
     overall_usability = forms.IntegerField(
         required=False,
         min_value=0,
@@ -231,7 +246,7 @@ class OverallWeightingsForm(forms.Form):
 
 
       
-class WeightingsForestForm(forms.Form):
+class WeightingsForestForm(InfoLabelFormMixin, forms.Form):
     field_capacity = forms.IntegerField(
         required=False,
         min_value=0, 
@@ -310,7 +325,7 @@ class WeightingsForestForm(forms.Form):
             css_class='btn-secondary reset-all'))
 
 
-class WeightingsAgricultureForm(forms.Form):
+class WeightingsAgricultureForm(InfoLabelFormMixin, forms.Form):
     field_capacity = forms.IntegerField(
         required=False,
         min_value=0, 
@@ -382,7 +397,7 @@ class WeightingsAgricultureForm(forms.Form):
         self.helper.add_input(Button('agriculture-weighting-reset', 'Reset', css_class='btn-secondary reset-all'))
         
 
-class WeightingsGrasslandForm(forms.Form):
+class WeightingsGrasslandForm(InfoLabelFormMixin, forms.Form):
     field_capacity = forms.IntegerField(
         required=False,
         min_value=0, 
@@ -474,7 +489,7 @@ class WeightingsGrasslandForm(forms.Form):
 
         self.helper.add_input(Button('grassland-weighting-reset', 'Reset', css_class='btn-secondary reset-all'))
         
-class MarWeightingForm(forms.ModelForm):
+class MarWeightingForm(InfoLabelFormMixin, forms.ModelForm):
     class Meta:
         model = models.MarWeighting
         fields = '__all__'
@@ -537,7 +552,7 @@ class MarWeightingForm(forms.ModelForm):
 
 
 
-class SuitabilityForm(forms.Form):
+class SuitabilityForm(InfoLabelFormMixin, forms.Form):
     def __init__(self, suitability, language='de', *args, **kwargs):
         super().__init__(*args, **kwargs)
         labels = models.MapLabels.objects.filter(suitability=suitability).order_by("order_position")
@@ -579,7 +594,7 @@ class SuitabilityForm(forms.Form):
         ))
 
 
-class DrainageProbabilityFilterForm(forms.Form):
+class DrainageProbabilityFilterForm(InfoLabelFormMixin, forms.Form):
     threshold  = forms.IntegerField(
         min_value=0, 
         max_value=100, 
@@ -612,7 +627,7 @@ class DrainageProbabilityFilterForm(forms.Form):
         self.helper.layout = Layout(*[Field(name) for name in self.fields])
 
 
-class DrainageNetworkFilterForm(forms.Form):
+class DrainageNetworkFilterForm(InfoLabelFormMixin, forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -645,7 +660,7 @@ class DrainageNetworkFilterForm(forms.Form):
 
 ###### Download / Result forms #########
 
-class ResultForm(forms.Form):
+class ResultForm(InfoLabelFormMixin, forms.Form):
     def __init__(self, *args, toolbox_type=None, **kwargs):  # fixed signature
         super().__init__(*args, **kwargs)
 
@@ -660,41 +675,43 @@ class ResultForm(forms.Form):
         self.helper.add_input(Submit(f'{toolbox_type}-results', 'Herunterladen', css_class='btn-primary'))
 
 class InfiltrationResultDownloadForm(ResultForm):
-    sinks = forms.MultipleChoiceField(
-        label="Senken", 
-        required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
-        choices=[
-            ('sinks_pt_shp', 'Punkte als Shapefile'),
-            ('sinks_pt_gjson', 'Punkte als GeoJSON'),
-            ('sinks_shp', 'Polygone als Shapefile'),
-            ('sinks_gjson', 'Polygone als GeoJSON'),
-        ]
-    )
-    enlarged_sinks = forms.MultipleChoiceField(
-        label="Vergrößerte Senken", 
-        required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
-        choices=[
-            ('enlarged_sinks_pt_shp', 'Punkte als Shapefile'),
-            ('enlarged_sinks_pt_gjson', 'Punkte als GeoJSON'),
-            ('enlarged_sinks_shp', 'Polygone als Shapefile'),
-            ('enlarged_sinks_gjson', 'Polygone als GeoJSON'),
-        ]
-    )
-
     result = forms.MultipleChoiceField(
         label="Ergebnisdarstellung", 
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
         choices=[
-            ('result_pt_shp', 'als Shapefile'),
-            ('result_pt_gjson', ' als GeoJSON'),
-        ]
+            ('result_shp', 'als Shapefile'),
+            ('result_gjson', ' als GeoJSON'),
+        ],
+        initial=['result_shp'],
     )
+
+    sinks = forms.MultipleChoiceField(
+        label="Senken", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        choices=[
+            ('sinks_shp', 'Polygone als Shapefile'),
+            ('sinks_gjson', 'Polygone als GeoJSON'),
+            ('sinks_pt_shp', 'Punkte als Shapefile'),
+            ('sinks_pt_gjson', 'Punkte als GeoJSON'),    
+        ],
+        # initial=['sinks_shp']
+    )
+    enlarged_sinks = forms.MultipleChoiceField(
+        label="Vergrößerte Senken", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,        
+        choices=[
+            ('enlarged_sinks_shp', 'Polygone als Shapefile'),
+            ('enlarged_sinks_gjson', 'Polygone als GeoJSON'),
+            ('enlarged_sinks_pt_shp', 'Punkte als Shapefile'),
+            ('enlarged_sinks_pt_gjson', 'Punkte als GeoJSON'),
+        ],
+        # initial=['enlarged_sinks_shp'],
+    )
+
+    
     timeseries = forms.MultipleChoiceField(
         label="Ökologischer Mindestabfluss",
         required=False,
@@ -714,24 +731,24 @@ class SiekerSurfaceWaterResultDownloadForm(ResultForm):
     lakes = forms.MultipleChoiceField(
         label="Seen", 
         required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
+        widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
-            ('lakes_csv', 'als CSV-Datei'),
             ('lakes_shp', 'als Shapefile'),
             ('lakes_gjson', 'als GeoJSON'),
-            
-        ]
+            ('lakes_csv', 'als CSV-Datei'),
+        ],
+        initial=['lakes_shp'],
     )
     stations = forms.MultipleChoiceField(
         label="Pegelstationen",
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
-            ('level_csv', 'als CSV-Datei'),
             ('level_shp', 'als Shapefile'),  
-            ('level_gjson', 'als GeoJSON'),      
-        ]
+            ('level_gjson', 'als GeoJSON'),   
+            ('level_csv', 'als CSV-Datei'),   
+        ],
+        initial=['level_shp'],
     )
     timeseries = forms.MultipleChoiceField(
         label="Pegelzeitreihen",
@@ -749,29 +766,30 @@ class SiekerSurfaceWaterResultDownloadForm(ResultForm):
 
 class SiekerSinkDownloadForm(ResultForm):
     
-    sinks = forms.MultipleChoiceField(
-        label="Senken", 
-        required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
-        choices=[
-            ('sinks_pt_shp', 'Punkte als Shapefile'),
-            ('sinks_pt_gjson', 'Punkte als GeoJSON'),
-            ('sinks_shp', 'Polygone als Shapefile'),
-            ('sinks_gjson', 'Polygone als GeoJSON'),
-        ]
-    )
-
     result = forms.MultipleChoiceField(
         label="Ergebnisdarstellung", 
         required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
+        widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
-            ('result_pt_shp', 'als Shapefile'),
-            ('result_pt_gjson', ' als GeoJSON'),
+            ('result_shp', 'als Shapefile'),
+            ('result_gjson', ' als GeoJSON'),
+        ],
+        initial=['result_shp'],
+    )
+    
+    sinks = forms.MultipleChoiceField(
+        label="Senken", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,        
+        choices=[
+            ('sinks_shp', 'Polygone als Shapefile'),
+            ('sinks_gjson', 'Polygone als GeoJSON'),
+            ('sinks_pt_shp', 'Punkte als Shapefile'),
+            ('sinks_pt_gjson', 'Punkte als GeoJSON'),
         ]
     )
+
+    
     timeseries = forms.MultipleChoiceField(
         label="Ökologischer Mindestabfluss",
         required=False,
@@ -790,22 +808,22 @@ class SiekerGekDownloadForm(ResultForm): #######
     map = forms.MultipleChoiceField(
         label="Karte", 
         required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
+        widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
             ('map_shp', 'als Shapefile'),
             ('map_gjson', 'als GeoJSON'),
-        ]
+        ],
+        initial=['map_shp'],
     )
 
     geks = forms.MultipleChoiceField(
         label="Gewässerentwicklungskonzepte", 
         required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
+        widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
             ('gek_csv', 'als CSV-Datei'),
-        ]
+        ],
+        initial=['gek_csv'],
     )
     
     def __init__(self, *args, **kwargs):
@@ -817,13 +835,13 @@ class SiekerWetlandDownloadForm(ResultForm): #######
     wetlands = forms.MultipleChoiceField(
         label="Feuchtgebiete", 
         required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
+        widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
             ('wetlands_shp', 'Polygone als Shapefile'),
             ('wetlands_gjson', 'Polygone als GeoJSON'),
             ('wetlands_csv', 'als CSV-Datei'),
-        ]
+        ],
+        initial=['wetlands_shp'],
     )
     
 
@@ -836,33 +854,33 @@ class SiekerDrainageDownloadForm(ResultForm): #######
     probability_raster = forms.MultipleChoiceField(
         label="Wahrscheinlichkeiten",
         required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
+        widget=CheckboxSelectMultipleWithAttrs,  
         choices=[
             ('raster_tif', 'als GeoTIFF Datei'),
-        ]
+        ],
+        initial=['raster_tif']
     )
 
     drainage_network = forms.MultipleChoiceField(
         label="Entwässerungsnetz",
         required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
+        widget=CheckboxSelectMultipleWithAttrs,   
         choices=[
             ('drainage_network_shp', 'als Shapefile'),
             ('drainage_network_gjson', 'als GeoJSON'),
-        ]
+        ],
+        initial=['drainage_network_shp'],
     )
 
     drained_areas = forms.MultipleChoiceField(
         label="Entwässerte Flächen",
         required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
+        widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
             ('drained_areas_shp', 'als Shapefile'),
             ('drained_areas_gjson', 'als GeoJSON'),
-        ]
+        ],
+        initial=['drained_areas_shp'],
     )
     
 
@@ -876,11 +894,11 @@ class InjectionDownloadForm(ResultForm): #######
     raster = forms.MultipleChoiceField(
         label="Rasterdaten",
         required=False,
-        widget=CheckboxSelectMultipleWithAttrs,
-        # initial='lakes_csv',
+        widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
-            ('resulult_raster', 'Ergebnis als Rasterdatei (GeoTIFF)'),
-        ]
+            ('result_raster', 'Ergebnis als Rasterdatei (GeoTIFF)'),
+        ],
+        initial=['result_raster']
     )
     
 

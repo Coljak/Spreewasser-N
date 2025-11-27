@@ -868,7 +868,7 @@ class EnlargedSinkEmbankment(models.Model):
             "geometry": geometry,
             "properties": {
                 "id": self.id,
-                "name": 'Barriere' if language=='de' else 'Embankment',
+                "name": 'Verwallung' if language=='de' else 'Embankment',
                 "enlargedSinkId": self.enlarged_sink.id if self.enlarged_sink else None,
                 "height": self.height,
                 "plat_width": self.plat_width,
@@ -1351,7 +1351,7 @@ class GekRetention(models.Model):
 class GekLanduse(models.Model):
     gek_retention = models.ForeignKey(GekRetention, on_delete=models.CASCADE, related_name='landuses')
     current_landuse = models.CharField(max_length=100, null=True, blank=True) # derz_nutzu Original Data!
-    first_two_clc_digits = models.CharField(max_length=2, null=True, blank=True) # CLC code
+    first_two_clc_digits = models.CharField(max_length=3, null=True, blank=True) # CLC code
     clc_landuse = models.ForeignKey(CorineLandCover2018, on_delete=models.CASCADE, null=True, blank=True, related_name='gek_landuses')
     area_total = models.FloatField(null=True, blank=True) # Total area of the landuse in m²
     area_of_landuse = models.FloatField(null=True, blank=True) # Area of the landuse in m²
@@ -1379,10 +1379,13 @@ class GekRetentionMeasure(models.Model):
     quantity = models.FloatField(null=True, blank=True) # anz
     description_de = models.CharField(max_length=255, null=True, blank=True)
     priority = models.ForeignKey(GekPriority, on_delete=models.CASCADE, null=True, blank=True, related_name='measures')
+    priority_value = models.FloatField(null=True, blank=True) 
     kosten = models.CharField(max_length=100, null=True, blank=True)
     costs_2013 = models.IntegerField(null=True, blank=True)  # Kosten in Euro
-    costs = models.IntegerField(null=True, blank=True) # Adjusted for 2025
+    costs = models.IntegerField(null=True, blank=True) # Adjusted for 2025 1st Quarter
     measure_number = models.IntegerField(null=True, blank=True)  # Maßnahme Nummer (2 in 2MNT_ID)
+    specific_document = models.CharField(max_length=255, null=True, blank=True)
+    kosten_aktuell = models.CharField(max_length=100, null=True, blank=True)
 
     def to_dict(self, language='de'):
         return {
@@ -1391,6 +1394,7 @@ class GekRetentionMeasure(models.Model):
             "quantity": self.quantity,
             "description": getattr(self, f'description_{language}', None),
             "priority": self.priority.id if self.priority else None,
+            "priority_value": self.priority_value,
             "kosten": self.kosten,
             "costs": self.costs,
             "measure_number": self.measure_number
@@ -1603,6 +1607,8 @@ class TimeseriesValues(models.Model):
     waterlevel_above_sensor_cm = models.FloatField(null=True, blank=True)
     absolute_water_level_elevation_m = models.FloatField(null=True, blank=True)
 
+
+######## TU MAR ##################
 # only used for forms
 class MarWeighting(models.Model):
     aquifer_thickness = models.IntegerField(default=5)
@@ -1671,6 +1677,7 @@ class DrainedArea(models.Model):
             'name': self.drained_area_type.name_de if language=='de' else self.drained_area_type.name_en,
             'drained_area_type': self.drained_area_type.name_tag,
         }
+    
     def to_feature(self, epsg=4326, language='de'):
         if epsg == 4326:
             geometry = json.loads(self.geom4326.geojson)

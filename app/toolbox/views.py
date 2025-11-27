@@ -1388,7 +1388,7 @@ def load_sieker_gek_gui(request, user_field_id):
             'sieker_gek'
         )
         default_project['all_sieker_gek_ids'] = list(geks.values_list('id', flat=True))
-        # default_project['selected_sieker_geks'] = default_project['all_sieker_gek_ids']
+        default_project['selected_sieker_geks'] = default_project['all_sieker_gek_ids']
 
         html = render_to_string('toolbox/sieker_gek.html', {
             'project_select_form': project_select_form,
@@ -1438,7 +1438,7 @@ def filter_sieker_geks(request):
     print("Geks:", geks.count())
 
     # filter measures
-    filters = Q(priority__priority_level__gte=project['gek_priority'])
+    filters = Q(priority_value__gte=project['gek_priority'])
     filters = add_range_filter(filters, project, 'gek_costs', 'costs') 
 
     measures = models.GekRetentionMeasure.objects.filter(

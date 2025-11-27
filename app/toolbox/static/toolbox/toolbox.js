@@ -460,7 +460,7 @@ export function loadProjectToGui(project) {
             const val = $checkbox.val();
             const key = $checkbox.attr('prefix') + '_' + $checkbox.attr('name');
             // console.log('checkbox val key', val, key)
-            
+            console.log('checkbox checked key', key, val)
             $checkbox.prop('checked', project[key].includes(val));
 
         });
@@ -470,13 +470,8 @@ export function loadProjectToGui(project) {
     for (const [key, value] of Object.entries(project)) {
         if (key.startsWith('all_') && key.endsWith('_ids') && value.length > 0) {
             const name = key.replace('all_', '').replace('_ids', '');
-            if (
-                !project.toolboxType === 'sieker_surface_water' || 
-                (!project.toolboxType === 'sieker_gek' && project.all_filtered_sieker_gek_ids.length > 0)
-            ) {
-                console.log('Toolbox Type', project.toolboxType)
-                $(`button.filter-features[data-type="${name}"]`).trigger('click')
-            } else if (project.toolboxType === 'sieker_surface_water') {
+            
+           if (project.toolboxType === 'sieker_surface_water') {
                 console.log('Special case for sieker_surface_water and sieker_gek')
                 if (project.sieker_surface_water_filtered === false){
                     tableCheckSelectedItems(project, 'sieker_surface_water')
@@ -484,9 +479,24 @@ export function loadProjectToGui(project) {
                     $(`button.filter-features[data-type="${name}"]`).trigger('click')
                 }
                 tableCheckSelectedItems(project, 'sieker_water_level')
-                        
-            }
-                     
+
+            } else if (project.toolboxType === 'sieker_gek') {
+                console.log('Toolbox Type sieker_gek key', key)
+                if (project[key].length >0) {
+
+                    console.log('Special case for sieker_gek, key > 0', project[key])
+                    tableCheckSelectedItems(project, name)
+                }
+                
+                if (project.all_filtered_sieker_gek_ids.length > 0) {
+                    console.log('Special case', name, project.all_filtered_sieker_gek_ids)
+                    $(`button.filter-features[data-type="${name}"]`).trigger('click')
+                }
+
+            } else {
+                console.log('Toolbox Type', project.toolboxType)
+                $(`button.filter-features[data-type="${name}"]`).trigger('click')
+            }    
         }
     }
                 

@@ -36,6 +36,45 @@ import {
   dismissPolygon,
 } from '/static/shared/map_sidebar_utils.js';
 
+// fir info elements with help text
+function getInfoText(el) {
+    // Destroy any existing popover on other elements
+    $('.bi-info-circle').each(function () {
+        if (this !== el) {
+            const existing = bootstrap.Popover.getInstance(this);
+            if (existing) existing.dispose();
+        }
+    });
+
+    // Get instance if it already exists
+    let popover = bootstrap.Popover.getInstance(el);
+
+    if (popover) {
+        // Toggle off if already open
+        popover.dispose();
+        return;
+    }
+
+    // Create a new popover
+    popover = new bootstrap.Popover(el, {
+        content: el.getAttribute("data-help"),
+        trigger: "manual",       // popover will open manually
+        placement: "right",
+        html: true,
+    });
+
+    popover.show();
+
+    // Close all popovers when clicking outside
+    document.addEventListener('click', function handler(e) {
+        if (!el.contains(e.target)) {
+            popover.dispose();
+            document.removeEventListener('click', handler);
+        }
+    });
+}
+
+
 // from db: ToolboxType
 const TOOLBOX_TYPES = {
   '1': 'drainage',
@@ -365,7 +404,10 @@ export function startToolbox(project) {
   }
 }
 
-
+$(document).on('click', 'i.bi.bi-info-circle', function() {
+    console.log('icon clicked');
+    getInfoText(this);
+});
 
 document.addEventListener("DOMContentLoaded", () => {
  
@@ -398,9 +440,15 @@ document.addEventListener("DOMContentLoaded", () => {
     var userFieldId = $(this).val();
     let project = ToolboxProject.loadFromLocalStorage();
     // TODO: featureGroup as getFeatureGroup
-    selectUserField(userFieldId,  project, featureGroup);
-    
+    selectUserField(userFieldId,  project, featureGroup);  
   });
+
+  // $('.bi.bi-info-circle').on('click', function() {
+  //   console.log('getInfoText clicked');
+  //   getInfoText(this);
+  // });
+
+
 
   $('#saveToolboxProjectButton').on('click', async function () {
     console.log('saveToolboxProjectButton clicked');

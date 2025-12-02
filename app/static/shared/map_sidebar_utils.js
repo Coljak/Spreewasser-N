@@ -4,6 +4,60 @@ import { MonicaProject } from '/static/monica/monica.js';
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
 import { getCSRFToken, handleAlerts, getBsColor } from '/static/shared/utils.js';
 
+
+
+
+
+
+const wmtsBase = 'https://sgx.geodatenzentrum.de/wmts_basemapde_schummerung/tile/1.0.0/de_basemapde_web_raster_combshade/default/DE_EPSG_3857_ADV/{TileMatrix}/{TileRow}/{TileCol}.png';
+
+// TileMatrix offset for DE_EPSG_3857_ADV (TileMatrix N -> leafetz = N + offset)
+const TILEMATRIX_OFFSET = 5; // <-- the important number we discovered
+
+    // Custom tile layer that maps Leaflet z,x,y -> WMTS TileMatrix, TileRow, TileCol
+const wmtsLayer = L.TileLayer.extend({
+getTileUrl: function(coords) {
+  const zLeaf = coords.z;     // Leaflet zoom
+  const x = coords.x;
+  const y = coords.y;
+
+  // Convert Leaflet zoom to WMTS TileMatrix
+  const tm = zLeaf - TILEMATRIX_OFFSET;
+
+  // If the tilematrix is outside WMTS range, return a transparent PNG (or a blank)
+  if (tm < 0 || tm > 13) {
+    // 1x1 transparent PNG data URI
+    return 'data:image/gif;base64,R0lGODlhAQABAIABAP///wAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+  }
+
+  // format TileMatrix as two digits (capabilities show 00, 01, 02, ...)
+  const tmStr = String(tm).padStart(2, '0');
+
+  // For DE_EPSG_3857_ADV the TileMatrix width = 2^(tm + 5) which equals 2^zLeaf,
+  // so TileCol = x and TileRow = y (Leaflet and WMTS align when using the correct TileMatrix).
+  const tileCol = x;
+  const tileRow = y;
+
+  // Replace placeholders in template
+  return wmtsBase
+    .replace('{TileMatrix}', tmStr)
+    .replace('{TileRow}', tileRow)
+    .replace('{TileCol}', tileCol);
+}
+});
+
+// Instantiate and add the layer
+export const demOverlay = new wmtsLayer('', {
+  attribution: 'Kartengrundlage: basemap.de / BKG — dl-de/by-2-0',
+  minZoom: 0,
+  maxZoom: 18, // Leaflet zoom; WMTS available TileMatrix 00..13 => LeafletZoom 5..18
+  tileSize: 256,
+  pane: 'overlayPolygonPane'
+})
+
+
+
+
 export class UserField {
   constructor(name, id=null, lat=null, lon=null, userProjects=[], properties={} ) {
     this.name = name;
@@ -37,25 +91,18 @@ const satellite = L.tileLayer(satelliteUrl, {
   pane: "baselayerPane"
 });
 
-const topoUrl = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
-const topoAttrib =
-  'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
-const topo = L.tileLayer(topoUrl, { 
-  maxZoom: 18, 
-  attribution: topoAttrib,
-pane: "baselayerPane"
- });
 
 
- const stamenUrl = 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}@2x.png'
- const topo2 = L.tileLayer(stamenUrl, {
-    attribution: 'Map tiles by Stamen Design, CC BY 3.0 — Map data © OpenStreetMap contributors',
+ const greyMapUrl = 'https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web_grau/default/WEBMERCATOR/{z}/{y}/{x}.png'
+ const greyMap = L.tileLayer(greyMapUrl, {
+    attribution: '© BKG 2025 — Daten: TopPlusOpen <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a> ',
     maxZoom: 18,
     pane: "baselayerPane",
 })
+// https://sgx.geodatenzentrum.de/wmts_topplus_open/legend/web_scale.png  legende
 
 export const projectRegion = new L.geoJSON(project_region, {
-    attribution: 'Project Region',
+    attribution: 'Spreewasser:N Projektregion',
     pane: "overlayPolygonPane",
     style: {
       color: 'var(--bs-primary)', 
@@ -74,25 +121,13 @@ export const projectRegion = new L.geoJSON(project_region, {
   }
 });
 
-export const demOverlay = L.tileLayer.wms(wmsUrl, {
-      layers: 'spreewassern_raster:dgm200_singleband',
-      format: 'image/png',
-      transparent: true,
-      opacity: 0.5,
-      version: '1.1.1',
-      attribution: `© GeoBasis-DE / <a href="https://www.bkg.bund.de/DE/Home/home.html" target="_blank">BKG</a> (Jahr des letzten Datenbezugs) 
-                    <a href="https://www.govdata.de/dl-de/by-2-0" target="_blank">dl-de/by-2-0</a>`,
-      pane: 'overlayRasterPane'
-                    
-  });
-
 
 // basemaps
 export const baseMaps = {
     "Open Street Maps": osm,
     Satellit: satellite,
-    Topomap: topo,
-    Topmap2: topo2,
+    // Topomap: basemap,
+    Topmap2: greyMap,
   };
 
 export function enhanceMap (map) {
@@ -199,7 +234,23 @@ export function openUserFieldNameModal(layer, featureGroup) {
 
 
 export function initializeDrawControl(map, featureGroup) {
-  
+
+
+  map.on('click', function () {
+    // TODO click point conversion for data retrieval
+      const z = map.getZoom();
+      const center = map.getCenter();
+      // compute center tile coords (approx)
+      const worldSize = 256 * Math.pow(2, z);
+      const projection = map.options.crs.project(center); // Point in meters for EPSG3857
+      // convert projection point to tile coords:
+      const resolution = (2 * 20037508.342789244) / worldSize; // meter per pixel
+      const tx = Math.floor((projection.x + 20037508.342789244) / (256 * resolution));
+      const ty = Math.floor((20037508.342789244 - projection.y) / (256 * resolution));
+      console.log('Leaflet zoom', z, 'tile x/y', tx, ty, 'WMTS TileMatrix', (z - TILEMATRIX_OFFSET));
+      // const url = basemap.getTileUrl({x: tx, y: ty, z: z});
+      // console.log('Example tile URL for center:', url);
+    });
 
 
   const drawControl = new L.Control.Draw({
@@ -308,7 +359,7 @@ export function createNUTSSelectors({getFeatureGroup}) {
     let clickedLayer = event.layer;
     
     // Confirm action with the user
-    if (confirm("Save this region as a user field?")) {
+    if (confirm("Als Suchgebiet nutzen?")) {
       openUserFieldNameModal(clickedLayer, getFeatureGroup()) 
     }
   });
@@ -321,22 +372,34 @@ export function createNUTSSelectors({getFeatureGroup}) {
   // Handle dropdown menu change event
   // Multiple Select from https://www.cssscript.com/select-box-virtual-scroll/
   VirtualSelect.init({ 
-    ele: '#stateSelect',
+    ele: '#statesSelect',
     placeholder: 'Bundesland',
     required: false,
     disableSelectAll: true,
+    additionalClasses: 'bootstrap-vs', 
+    additionalDropboxContainerClasses: 'bootstrap-vs',
+    additionalDropboxClasses: 'bootstrap-vs',
+    additionalToggleButtonClasses: 'bootstrap-vs',
   });
   VirtualSelect.init({ 
-    ele: '#districtSelect',
+    ele: '#districtsSelect',
     placeholder: 'Regierungsbezirk',
     required: false,
     disableSelectAll: true,
+    additionalClasses: 'bootstrap-vs', 
+    additionalDropboxContainerClasses: 'bootstrap-vs',
+    additionalDropboxClasses: 'bootstrap-vs',
+    additionalToggleButtonClasses: 'bootstrap-vs',
   });
   VirtualSelect.init({ 
-    ele: '#countySelect',
+    ele: '#countiesSelect',
     placeholder: 'Landkreis',
     required: false,
     disableSelectAll: true,
+    additionalClasses: 'bootstrap-vs', 
+    additionalDropboxContainerClasses: 'bootstrap-vs',
+    additionalDropboxClasses: 'bootstrap-vs',
+    additionalToggleButtonClasses: 'bootstrap-vs',
   });
   
   var administrativeAreaDiv = document.querySelectorAll('div.administrative-area');

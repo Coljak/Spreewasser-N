@@ -23,6 +23,7 @@ export class SiekerGek extends ToolboxProject {
 
         this.result_map = data.result_map ?? [];
         this.result_geks = data.result_geks ?? []; 
+        this.result_crs = data.result_crs ?? [];
     }
    
 

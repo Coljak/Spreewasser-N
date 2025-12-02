@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_filters',
 
-    'utils',
+    'utilities',
 
     'swn',
     'toolbox',
@@ -196,7 +196,7 @@ MEDIA_ROOT = MEDIA_DIR
 MEDIA_URL = 'media/'
 
 LOGIN_URL = 'login/'
-LOGIN_REDIRECT_URL = '/drought/'
+LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 # for Debug Toolbar, the internal IPS are necessary

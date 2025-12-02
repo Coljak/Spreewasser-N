@@ -56,6 +56,8 @@ urlpatterns = [
     # Drainage
     path('toolbox/load_sieker_drainage_gui/<int:user_field_id>/', views.load_sieker_drainage_gui, name='load_sieker_drainage_gui' ),
     path('toolbox/load_sieker_drainage_features/<int:user_field_id>/', views.load_sieker_drainage_features, name='load_sieker_drainage_features' ),
+
+    path('toolbox/download_toolbox_results/', views.download_toolbox_results, name='download_toolbox_results'),
    
 
 

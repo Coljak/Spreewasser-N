@@ -91,9 +91,17 @@ class AboveGroundCatchmentArea(models.Model):
 
     def __str__(self):
         return self.kennzahl
+
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Oberirdisches_Einzugsgebiet"
+        elif language == 'en':
+            return "Above_Ground_Catchment_Area"
     
     def to_json(self):
         return {
+            "id": self.id,
             "name": 'Oberirdisches Einzugsgebiet',
             "kennzahl": self.kennzahl,
             "gewaesser": self.gewaesser,
@@ -105,8 +113,8 @@ class AboveGroundCatchmentArea(models.Model):
             "ordnung": self.ordnung,
             "fl_art": self.fl_art,
             "wrrl_kr": self.wrrl_kr,
-            "area_qkm": self.area_qkm,
-            "area_ha": self.area_ha,
+            "area_qkm": round(self.area_qkm, 2),
+            "area_ha": round(self.area_ha, 2),
             "ezg_id": self.ezg_id,
             "bemerkung": self.bemerkung,
             "wrrl_fge": self.wrrl_fge,
@@ -114,6 +122,30 @@ class AboveGroundCatchmentArea(models.Model):
             "color_index": int(self.shape_len) % 255
         }
     
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            'name': {'field_type': "C", 'decimal': 0},
+            "kennzahl": {'field_type': "C", 'decimal': 0},
+            "gewaesser": {'field_type': "C", 'decimal': 0},
+            "gew_alias": {'field_type': "C", 'decimal': 0},
+            "gew_kennz": {'field_type': "C", 'decimal': 0},
+            "beschr_von": {'field_type': "C", 'decimal': 0},
+            "beschr_bis": {'field_type': "C", 'decimal': 0},
+            "land": {'field_type': "C", 'decimal': 0},
+            "ordnung": {'field_type': "C", 'decimal': 0},
+            "fl_art": {'field_type': "C", 'decimal': 0},
+            "wrrl_kr": {'field_type': "C", 'decimal': 0},
+            "area_qkm": {'field_type': "N", 'decimal': 0},
+            "area_ha": {'field_type': "N", 'decimal': 0},
+            "ezg_id": {'field_type': "N", 'decimal': 0},
+            "bemerkung": {'field_type': "C", 'decimal': 0},
+            "wrrl_fge": {'field_type': "C", 'decimal': 0},
+            "wrrl_bg": {'field_type': "C", 'decimal': 0},
+
+        }
+
     def to_feature(self, epsg=4326):
         if epsg == 4326:
             geometry = json.loads(self.geom4326.geojson)
@@ -149,7 +181,15 @@ class UserField(models.Model):
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Suchgebiet"
     
+        elif language == 'en':
+            return "Search_Area"
+
     def to_json(self):
         return {
                 'id': self.id,
@@ -163,6 +203,12 @@ class UserField(models.Model):
                 'has_sieker_surface_water': self.has_sieker_surface_water,
                 'has_sieker_wetland': self.has_sieker_wetland,
                 'has_sieker_drainage': self.has_sieker_drainage,
+        }
+    
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'name': {'field_type': "C", 'decimal': 0},
         }
     
     def to_feature(self, epsg=4326):
@@ -470,7 +516,14 @@ class Stream(models.Model):
     def __data_type__(self):
         return 'stream'
 
-    def to_json(self):
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Fliessgewaesser"
+        elif language == 'en':
+            return "Streams"
+
+    def to_json(self, language='de'):
         return {
                 'id': self.id,
                 'name': self.name,
@@ -483,7 +536,21 @@ class Stream(models.Model):
                 'plus_days': self.plus_days
         }
     
-    def to_feature(self, epsg=4326):
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+                'id': {'field_type': "N", 'decimal': 0},
+                'name': {'field_type': "C", 'decimal': 0},
+                'fgw_id': {'field_type': "N", 'decimal': 0},
+                'shape_length': {'field_type': "N", 'decimal': 0},
+                'minimum_environmental_flow': {'field_type': "F", 'decimal': 2},
+                'min_surplus_volume': {'field_type': "F", 'decimal': 4},
+                'mean_surplus_volume': {'field_type': "F", 'decimal': 0},
+                'max_surplus_volume': {'field_type': "F", 'decimal': 0},
+                'plus_days': {'field_type': "F", 'decimal': 0},
+        }
+    
+    def to_feature(self, language='de', epsg=4326):
         if epsg == 4326:
             geometry = json.loads(self.geom.geojson)
         elif epsg == 25833:
@@ -491,7 +558,7 @@ class Stream(models.Model):
         else:
             raise ValueError("Unsupported EPSG code")
         
-        properties = self.to_json()
+        properties = self.to_json(language=language)
         return {
             "type": "Feature",
             "geometry": geometry,
@@ -519,13 +586,20 @@ class Lake(models.Model):
 
     def __data_type__(self):
         return 'lake'
+    
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Seen"
+        elif language == 'en':
+            return "Lakes"
 
-    def to_json(self):
+    def to_json(self, language='de'):
         return {
                 'id': self.id,
                 'name': self.name,
                 'fgw_id': self.fgw.id if self.fgw else None,
-                'shape_length': round(self.shape_length, 2),
+                # 'shape_length': round(self.shape_length, 2),
                 'shape_area': round(self.shape_area),
                 'minimum_environmental_flow': self.minimum_environmental_flow,
                 'min_surplus_volume': round(self.min_surplus_volume),
@@ -534,7 +608,22 @@ class Lake(models.Model):
                 'plus_days': self.plus_days
         }
     
-    def to_feature(self, epsg=4326):
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+                'id': {'field_type': "N", 'decimal': 0},
+                'name': {'field_type': "C", 'decimal': 0},
+                'fgw_id': {'field_type': "N", 'decimal': 0},
+                # 'shape_length': {'field_type': "N", 'decimal': 0},
+                'shape_area': {'field_type': "N", 'decimal': 0},
+                'minimum_environmental_flow': {'field_type': "F", 'decimal': 2},
+                'min_surplus_volume': {'field_type': "F", 'decimal': 4},
+                'mean_surplus_volume': {'field_type': "F", 'decimal': 0},
+                'max_surplus_volume': {'field_type': "F", 'decimal': 0},
+                'plus_days': {'field_type': "F", 'decimal': 0},
+        }
+    
+    def to_feature(self, language='de', epsg=4326):
         if epsg == 4326:
             geometry = json.loads(self.geom.geojson)
         elif epsg == 25833:
@@ -542,7 +631,7 @@ class Lake(models.Model):
         else:
             raise ValueError("Unsupported EPSG code")
         
-        properties = self.to_json()
+        properties = self.to_json(language=language)
         return {
             "type": "Feature",
             "geometry": geometry,
@@ -581,6 +670,13 @@ class Sink(models.Model):
 
     def __data_type__(self):
         return "sink"
+
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Senken"
+        elif language == 'en':
+            return "Sinks"
    
     def to_json(self, indices, language='de'):
         landuse_1 = getattr(self.landuse_1, language, None)
@@ -604,12 +700,12 @@ class Sink(models.Model):
             "index_proportions": round(self.index_proportions * 100),
             "index_soil": round(indices[self.id]['index_soil'] * 100),
             "land_use": landuse,
-            "land_use_1": landuse_1,
-            'land_use_1_percentage': round(self.land_use_1_percentage or 0, 1),
-            "land_use_2": landuse_2,
-            'land_use_2_percentage': round(self.land_use_2_percentage or 0, 1),
-            "land_use_3": landuse_3,
-            'land_use_3_percentage': round(self.land_use_3_percentage or 0, 1),
+            "landuse_1": landuse_1,
+            'landuse_1_percentage': round(self.land_use_1_percentage or 0, 1),
+            "landuse_2": landuse_2,
+            'landuse_2_percentage': round(self.land_use_2_percentage or 0, 1),
+            "landuse_3": landuse_3,
+            'landuse_3_percentage': round(self.land_use_3_percentage or 0, 1),
             "soil_points": self.soil_points,
             "index_feasibility": int(self.index_feasibility * 100) if self.index_feasibility else "-",
             "hydrogeology": getattr(self.aquifer, f'name_{language}', None),
@@ -617,8 +713,34 @@ class Sink(models.Model):
             "index_sink_total": min(int(indices[self.id]['index_sink_total'] * 100), 100),
         }
 
-    def to_point_feature(self, indices, language='de'):      
-        geometry = json.loads(self.centroid.geojson)
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            'name': {'field_type': "C", 'decimal': 0},
+            'depth': {'field_type': "F", 'decimal': 2},
+            'area': {'field_type': "N", 'decimal': 0},
+            'volume': {'field_type': "N", 'decimal': 0},
+            'index_proportions': {'field_type': "F", 'decimal': 2},
+            'index_soil': {'field_type': "F", 'decimal': 2},
+            'landuse_1': {'field_type': "C", 'decimal': 0},
+            'landuse_1_percentage': {'field_type': "F", 'decimal': 1},
+            'landuse_2': {'field_type': "C", 'decimal': 0},
+            'landuse_2_percentage': {'field_type': "F", 'decimal': 1},
+            'landuse_3': {'field_type': "C", 'decimal': 0},
+            'landuse_3_percentage': {'field_type': "F", 'decimal': 1},
+            'soil_points': {'field_type': "C", 'decimal': 0},
+            'index_feasibility': {'field_type': "F", 'decimal': 2},
+            'hydrogeology_text': {'field_type': "C", 'decimal': 0},
+            'index_hydrogeology': {'field_type': "F", 'decimal': 2},
+            'index_sink_total': {'field_type': "F", 'decimal': 0},
+        }
+
+    def to_point_feature(self, indices, epsg=4326, language='de'):  
+        if epsg == 25833:
+            geometry = json.loads(self.geom25833.centroid.geojson)    
+        else:
+            geometry = json.loads(self.centroid.geojson)
         properties = self.to_json(indices, language)
         return {
             "type": "Feature",
@@ -687,9 +809,14 @@ class EnlargedSink(models.Model):
 
     def __data_type__(self):
         return "enlarged_sink"
-# Intersect of LandusMap and Sink
 
-    
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Vergroesserte_Senken"
+        elif language == 'en':
+            return "Enlarged_Sinks"
+
     def to_json(self, indices, language='de'):
 
         landuse_1 = getattr(self.landuse_1, language, None)
@@ -715,14 +842,14 @@ class EnlargedSink(models.Model):
             "index_proportions": int(self.index_proportions * 100),
             "index_soil": round(indices[self.id]['index_soil'] * 100),
             "land_use": landuse,
-            "land_use_1": landuse_1,
-            "land_use_1_percentage": round(self.land_use_1_percentage or 0, 1),
-            "land_use_2": landuse_2,
-            "land_use_2_percentage": round(self.land_use_2_percentage or 0, 1),
-            "land_use_3": landuse_3,
-            "land_use_3_percentage": round(self.land_use_3_percentage or 0, 1),
-            "land_use_4": landuse_4,
-            "land_use_4_percentage": round(self.land_use_4_percentage or 0, 1),
+            "landuse_1": landuse_1,
+            "landuse_1_percentage": round(self.land_use_1_percentage or 0, 1),
+            "landuse_2": landuse_2,
+            "landuse_2_percentage": round(self.land_use_2_percentage or 0, 1),
+            "landuse_3": landuse_3,
+            "landuse_3_percentage": round(self.land_use_3_percentage or 0, 1),
+            "landuse_4": landuse_4,
+            "landuse_4_percentage": round(self.land_use_4_percentage or 0, 1),
             "volume_gained": round(self.volume_gained) if self.volume_gained else None,
             "volume_construction_barrier": round(self.volume_construction_barrier) if self.volume_construction_barrier else None,     
             "soil_points": self.soil_points,
@@ -731,10 +858,40 @@ class EnlargedSink(models.Model):
             "index_hydrogeology": int(self.index_hydrogeology * 100) if self.index_hydrogeology else None,
             "index_sink_total": min(int(indices[self.id]['index_sink_total'] * 100), 100),
         }
+
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            'name': {'field_type': "C", 'decimal': 0},
+            'depth': {'field_type': "F", 'decimal': 2},
+            'area': {'field_type': "N", 'decimal': 0},
+            'volume': {'field_type': "N", 'decimal': 0},
+            'index_proportions': {'field_type': "F", 'decimal': 2},
+            'index_soil': {'field_type': "F", 'decimal': 2},
+            'landuse_1': {'field_type': "C", 'decimal': 0},
+            'landuse_1_percentage': {'field_type': "F", 'decimal': 1},
+            'landuse_2': {'field_type': "C", 'decimal': 0},
+            'landuse_2_percentage': {'field_type': "F", 'decimal': 1},
+            'landuse_3': {'field_type': "C", 'decimal': 0},
+            'landuse_3_percentage': {'field_type': "F", 'decimal': 1},
+            'landuse_4': {'field_type': "C", 'decimal': 0},
+            'landuse_4_percentage': {'field_type': "F", 'decimal': 1},
+            'volume_construction_barrier': {'field_type': "N", 'decimal': 0},
+            'volume_gained': {'field_type': "N", 'decimal': 0},
+            'soil_points': {'field_type': "C", 'decimal': 0},
+            'index_feasibility': {'field_type': "F", 'decimal': 2},
+            'hydrogeology_text': {'field_type': "C", 'decimal': 0},
+            'index_hydrogeology': {'field_type': "F", 'decimal': 2},
+            'index_sink_total': {'field_type': "N", 'decimal': 0},
+        }
+       
     
-     
-    def to_point_feature(self, indices, language='de'):      
-        geometry = json.loads(self.centroid.geojson)
+    def to_point_feature(self, indices, epsg=4326, language='de'):  
+        if epsg == 25833:
+            geometry = json.loads(self.geom25833.centroid.geojson)    
+        else:
+            geometry = json.loads(self.centroid.geojson)
         properties = self.to_json(indices, language)
         return {
             "type": "Feature",
@@ -852,6 +1009,14 @@ class EnlargedSinkEmbankment(models.Model):
             self.centroid = self.geom.centroid  # Auto-generate centroid
         super().save(*args, **kwargs)
 
+
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Verwallungen"
+        elif language == 'en':
+            return "Embankments"
+
     def to_feature(self, epsg=4326, language='de'):
         """
         Convert the model instance to a GeoJSON feature.
@@ -874,6 +1039,16 @@ class EnlargedSinkEmbankment(models.Model):
                 "plat_width": self.plat_width,
                 "volume": self.volume,
             }
+        }
+    
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            # 'enlargedSinkId': {'field_type': "N", 'decimal': 0},
+            'height': {'field_type': "F", 'decimal': 2},
+            'plat_width': {'field_type': "F", 'decimal': 2},
+            'volume': {'field_type': "N", 'decimal': 0},
         }
 
 
@@ -1042,6 +1217,13 @@ class SiekerLargeLake(models.Model):
     seetyp = models.IntegerField(null=True, blank=True)
     seetyp_txt = models.CharField(max_length=100, null=True, blank=True)
 
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Grosse_Seen"
+        elif language == 'en':
+            return "Large_Lakes"
+
     def to_json(self, language='de'):
         if (language == 'de'):
             stand = datetime.strftime(self.stand, '%d.%m.%Y')
@@ -1067,6 +1249,27 @@ class SiekerLargeLake(models.Model):
                 "seetyp": self.seetyp,
                 "seetyp_txt": self.seetyp_txt
             }
+
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            'name': {'field_type': "C", 'decimal': 0},
+            'stand': {'field_type': "C", 'decimal': 0},
+            'wrrl_pg': {'field_type': "C", 'decimal': 0},
+            'genese': {'field_type': "C", 'decimal': 0},
+            'wrrl': {'field_type': "N", 'decimal': 0},
+            'number_of_swimming_spots': {'field_type': "N", 'decimal': 0},
+            'area_m2': {'field_type': "N", 'decimal': 0},
+            'area_ha': {'field_type': "F", 'decimal': 1},
+            'vol_mio_m3': {'field_type': "N", 'decimal': 0},
+            'einzugsgebiet_km2': {'field_type': "F", 'decimal': 2},
+            'd_max_m': {'field_type': "N", 'decimal': 0},
+            'verweilt': {'field_type': "C", 'decimal': 0},
+            'trend_cm_per_a': {'field_type': "F", 'decimal': 2},
+            'seetyp': {'field_type': "N", 'decimal': 0},
+            'seetyp_txt': {'field_type': "C", 'decimal': 0},
+        }
 
     def to_feature(self, epsg=4326, language='de'):
         if epsg == 4326:
@@ -1145,6 +1348,14 @@ class SiekerWaterLevel(models.Model):
     diff_cm = models.IntegerField(null=True, blank=True)  
     bilddatei = models.CharField(max_length=100, null=True, blank=True)
 
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Wasserstand_Pegel"
+        elif language == 'en':
+            return "WaterLevel_Stations"
+        
+
     def to_json(self, language='de'):
         if (language == 'de'):
             start_date = datetime.strftime(self.start_date, '%d.%m.%Y')
@@ -1184,6 +1395,42 @@ class SiekerWaterLevel(models.Model):
             "ent_quell": self.ent_quell,
             "ent_muend": self.ent_muend,
             "diff_cm": self.diff_cm,
+        }
+    
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            'name': {'field_type': "C", 'decimal': 0},
+            't_d': {'field_type': "N", 'decimal': 0},
+            't_a': {'field_type': "F", 'decimal': 2},
+            'period': {'field_type': "C", 'decimal': 0},
+            'min_cm': {'field_type': "N", 'decimal': 0},
+            'max_cm': {'field_type': "N", 'decimal': 0},
+            'mw_10_19': {'field_type': "N", 'decimal': 0},
+            'mw_90_99': {'field_type': "N", 'decimal': 0},
+            'stdev_cm': {'field_type': "F", 'decimal': 2},
+            'twenty_yr_trend': {'field_type': "F", 'decimal': 2},
+            'pkz': {'field_type': "C", 'decimal': 0},
+            'pegelname': {'field_type': "C", 'decimal': 0},
+            'gewaesser': {'field_type': "C", 'decimal': 0},
+            'pegelart': {'field_type': "C", 'decimal': 0},
+            'mess_w': {'field_type': "C", 'decimal': 0},
+            'mess_q': {'field_type': "C", 'decimal': 0},
+            'soll_w': {'field_type': "C", 'decimal': 0},
+            'soll_q': {'field_type': "C", 'decimal': 0},
+            'region': {'field_type': "C", 'decimal': 0},
+            'hwmp': {'field_type': "N", 'decimal': 0},
+            'dgjp': {'field_type': "N", 'decimal': 0},
+            'gwk': {'field_type': "C", 'decimal': 0},
+            'gbk': {'field_type': "C", 'decimal': 0},
+            'a_ezg': {'field_type': "F", 'decimal': 2},
+            'bemerkung': {'field_type': "C", 'decimal': 0},
+            'anfrage': {'field_type': "C", 'decimal': 0},
+            'stat': {'field_type': "C", 'decimal': 0},
+            'ent_quell': {'field_type': "N", 'decimal': 0},
+            'ent_muend': {'field_type': "N", 'decimal': 0},
+            'diff_cm': {'field_type': "N", 'decimal': 0},
         }
 
     def to_feature(self, epsg=4326, language='de'):
@@ -1233,6 +1480,13 @@ class SiekerSink(models.Model):
     def __data_type__(self):
         return "sink"
 
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Senken"
+        elif language == 'en':
+            return "Sinks"
+
     def to_json(self, language='de'):
         return {
                 "id": self.id,
@@ -1256,9 +1510,35 @@ class SiekerSink(models.Model):
                 "nearest_stream": self.nearest_stream.name,
                
             }
-    
-    def to_point_feature(self, language='de'):      
-        geometry = json.loads(self.centroid.geojson)
+
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            'depth': {'field_type': "F", 'decimal': 2},
+            'area': {'field_type': "N", 'decimal': 0},
+            'volume': {'field_type': "N", 'decimal': 0},
+            'avg_depth': {'field_type': "F", 'decimal': 2},
+            'max_elevation': {'field_type': "F", 'decimal': 1},
+            'min_elevation': {'field_type': "F", 'decimal': 1},
+            'urbanarea_percent': {'field_type': "F", 'decimal': 2},
+            'wetlands_percent': {'field_type': "F", 'decimal': 2},
+            'distance_t': {'field_type': "N", 'decimal': 0},
+            'dist_lake': {'field_type': "C", 'decimal': 0},
+            'waterdist': {'field_type': "C", 'decimal': 0},
+            'umsetzbark': {'field_type': "C", 'decimal': 0},
+            'index_feasibility': {'field_type': "N", 'decimal': 0},
+            'distance_lake': {'field_type': "N", 'decimal': 0},
+            'nearest_lake': {'field_type': "C", 'decimal': 0},
+            'distance_stream': {'field_type': "N", 'decimal': 0},
+            'nearest_stream': {'field_type': "C", 'decimal': 0},
+        }
+
+    def to_point_feature(self, epsg=4326, language='de'):      
+        if epsg == 25833:
+            geometry = json.loads(self.geom25833.centroid.geojson)
+        else:
+            geometry = json.loads(self.centroid.geojson)
         properties = self.to_json(language)
         return {
             "type": "Feature",
@@ -1315,22 +1595,33 @@ class GekRetention(models.Model):
     number_of_measures = models.IntegerField(null=True, blank=True)
     datum_zugr = models.CharField(max_length=100, null=True, blank=True) # not necessary
 
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Wasserrueckhalteraeume"
+        elif language == 'en':
+            return "Water_Retention_Areas"
+
     def to_dict(self):
+        landuses = self.landuses.all().order_by('-area_percentage')
+        landuses_list = [f'{lu.clc_landuse.label_level_3_de} {round(lu.area_percentage *100)}%' for lu in landuses]
+        landuses_str = ', \n'.join(landuses_list)
         
         return {
             "id": self.id,
             "name": self.name,
             "quelle_1": self.quelle_1,
             "quelle_2": self.quelle_2,
-            "current_landusage": self.current_landusage,
+            "current_landusage": landuses_str,
             "association": self.association,
             "planning_segment": self.planning_segment,
             "hrsg": self.hrsg,
             "document": self.gek_document.link,
             "number_of_measures": self.number_of_measures,
-            
         }
     
+    
+
     def to_feature(self, epsg=4326):
         if epsg == 4326:
             geometry = json.loads(self.geom4326.geojson)
@@ -1387,6 +1678,15 @@ class GekRetentionMeasure(models.Model):
     specific_document = models.CharField(max_length=255, null=True, blank=True)
     kosten_aktuell = models.CharField(max_length=100, null=True, blank=True)
 
+    
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Massnahmen_Wasserruekhalteraeume"
+        elif language == 'en':
+            return "Measures_Water_Retention_Areas"
+
+
     def to_dict(self, language='de'):
         return {
             "id": self.id,
@@ -1399,6 +1699,21 @@ class GekRetentionMeasure(models.Model):
             "costs": self.costs,
             "measure_number": self.measure_number
             }
+
+    # TODO: Implement SHP writer fields; for shp export it needs the geom and retention infos
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            'gek_measure': {'field_type': "C", 'decimal': 0},
+            'quantity': {'field_type': "F", 'decimal': 2},
+            'description': {'field_type': "C", 'decimal': 0},
+            'priority': {'field_type': "N", 'decimal': 0},
+            'priority_value': {'field_type': "F", 'decimal': 2},
+            'kosten': {'field_type': "C", 'decimal': 0},
+            'costs': {'field_type': "N", 'decimal': 0},
+            'measure_number': {'field_type': "N", 'decimal': 0},
+        }
 class WetlandFeasibility(models.Model):
     name_de = models.CharField(max_length=32, blank=True, null=True)
     name_en = models.CharField(max_length=32, blank=True, null=True)
@@ -1423,6 +1738,13 @@ class HistoricalWetlands(models.Model):
     # index_feasibility = models.IntegerField(null=True, blank=True)
     feasibility = models.ForeignKey(WetlandFeasibility, blank=True, null=True, on_delete=models.CASCADE)
 
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Historische_Feuchtgebiete"
+        elif language == 'en':
+            return "Historical_Wetlands"
+
     def to_json(self, language='de'):
         return {
                 "id": self.id,
@@ -1436,6 +1758,22 @@ class HistoricalWetlands(models.Model):
                 "feasibility": getattr(self.feasibility, f'name_{language}', None),
                 "index_feasibility": self.feasibility.index,
             }
+
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            'name': {'field_type': "C", 'decimal': 0},
+            'comment': {'field_type': "C", 'decimal': 0},
+            'current_landusage': {'field_type': "C", 'decimal': 0},
+            'association': {'field_type': "C", 'decimal': 0},
+            'source_1': {'field_type': "C", 'decimal': 0},
+            'source_2': {'field_type': "C", 'decimal': 0},
+            'source_3': {'field_type': "C", 'decimal': 0},
+            'feasibility': {'field_type': "C", 'decimal': 0},
+            'index_feasibility': {'field_type': "F", 'decimal': 2},
+        }
+    
     
     def to_feature(self, epsg=4326):
         if epsg == 4326:
@@ -1669,6 +2007,13 @@ class DrainedArea(models.Model):
     geom4326 = gis_models.PolygonField(srid=4326, null=True, blank=True)
     drained_area_type = models.ForeignKey(DrainedAreaType, on_delete=models.DO_NOTHING,  null=True, blank=True)
 
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Entwaesserte_Gebiete"
+        elif language == 'en':
+            return "Drained_Areas"
+
     def to_json(self, language='de'):
         return {
             'id': self.id,
@@ -1676,6 +2021,16 @@ class DrainedArea(models.Model):
             'area': int(self.geom25833.area),
             'name': self.drained_area_type.name_de if language=='de' else self.drained_area_type.name_en,
             'drained_area_type': self.drained_area_type.name_tag,
+        }
+
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            'drained_area_type_id': {'field_type': "N", 'decimal': 0},
+            'area': {'field_type': "N", 'decimal': 0},
+            'name': {'field_type': "C", 'decimal': 0},
+            'drained_area_type': {'field_type': "C", 'decimal': 0},
         }
     
     def to_feature(self, epsg=4326, language='de'):
@@ -1710,6 +2065,13 @@ class DrainageNetwork(models.Model):
     total_length_m = models.FloatField(null=True, blank=True)
     network_type_detail = models.ForeignKey(DrainageNetworkTypeDetail, on_delete=models.DO_NOTHING, null=True, blank=True)
 
+    @classmethod
+    def get_filename(cls, language='de'):
+        if language == 'de':
+            return "Entwaesserungsnetz"
+        return "drainage_network"
+
+
     def to_json(self, language='de'):
         return {
             'id': self.id,
@@ -1718,6 +2080,18 @@ class DrainageNetwork(models.Model):
             'network_type_id': self.network_type_detail.id,
             'network_type': self.network_type_detail.name_de if language=='de' else self.network_type_detail.name_en,
         }
+
+    @classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            'name': {'field_type': "C", 'decimal': 0},
+            'length_m': {'field_type': "N", 'decimal': 0},
+            'network_type_id': {'field_type': "N", 'decimal': 0},
+            'network_type': {'field_type': "C", 'decimal': 0},
+        }
+    
+
     def to_feature(self, epsg=4326, language='de'):
         geometry = json.loads(self.geom4326.geojson)
         properties = self.to_json(language=language)

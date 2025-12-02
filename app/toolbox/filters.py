@@ -10,7 +10,7 @@ from toolbox import utils
 from . import models
 from .forms import SliderFilterForm, CheckboxSelectMultipleWithAttrs
 import json
-from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget
+from utilities.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget
 import math
 from datetime import datetime
 
@@ -122,7 +122,8 @@ def create_default_project(user_filed, list_of_filters, toolbox_type):
                     name = field.widget.attrs['name']
                     prefix = field.widget.attrs['prefix']
                     full_name = f"{prefix}_{name}"
-                    if isinstance(field.widget, forms.CheckboxSelectMultiple):
+                    if isinstance(field.widget, forms.CheckboxSelectMultiple) or \
+                        isinstance(field.widget, forms.RadioSelect):
                         selected_values = []
                         for value, label in field.choices:
                             # Check if the current choice is selected
@@ -490,6 +491,7 @@ class GekRetentionFilter(FilterSet):
             # "id": "gek_priority",
             # "name": "gek_priority",
             # "prefix": "gek",
+            "reset": True,
             "data_range_min": 10,
             "data_range_max": 30,
             "string_label": True,
@@ -511,7 +513,7 @@ class GekRetentionFilter(FilterSet):
         landuses = (
             models.GekLanduse.objects
             .filter(gek_retention__in=self.queryset)
-            .values_list('clc_landuse', 'clc_landuse__label_level_2_de')
+            .values_list('clc_landuse', 'clc_landuse__label_level_3_de')
             .distinct()
         )
         self.filters['landuse'].extra['choices'] = [(id, lu) for id, lu in landuses]
@@ -550,7 +552,7 @@ class GekRetentionFilter(FilterSet):
 
     def filter_by_landuse(self, queryset, name, value):
         # value is a list of selected landuse strings
-        return queryset.filter(landuses__clc_landuse__label_level_2_de__in=value).distinct()
+        return queryset.filter(landuses__clc_landuse__label_level_3_de__in=value).distinct()
     
     def filter_by_costs(self, queryset, name, value):
         """

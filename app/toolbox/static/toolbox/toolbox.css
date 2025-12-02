@@ -215,3 +215,10 @@ table.dataTable.display tbody tr:hover.selected {
 }
 
 
+.properties-table {
+    /* table-layout: fixed; */
+    width: 100%;
+}
+ td {
+    white-space: normal !important;
+}

@@ -45,11 +45,12 @@ const projectClasses = {
 };
 
 function toggleValueInArray(list, val) {
-  const index = list.indexOf(val);
+    let value = String(val);
+  const index = list.indexOf(value);
   if (index > -1) {
     list.splice(index, 1); // remove
   } else {
-    list.push(val); // add
+    list.push(value); // add
   }
   return list;
 };
@@ -104,12 +105,7 @@ export function getWaterBodies($button, ProjectClass){
 
 function getWaterLevelTimeseries(waterLevelId) {
     const canvas = document.getElementById(`chart-sieker_water_level-${waterLevelId}`);
-    // const observer = new MutationObserver((mutations) => {
-    //         mutations.forEach(mutation => {
-    //             console.log('Mutation:', mutation);
-    //     });
-    // });
-    // observer.observe(canvas, { attributes: true });
+
 
     if (Chart.getChart(canvas)) {
         console.log(`Canvas chart ${waterLevelId} is already in use. Skipping.`);
@@ -125,7 +121,8 @@ function getWaterLevelTimeseries(waterLevelId) {
         .then(response => response.json())
         .then(data => {
             console.log("Water level timeseries data: ", data);
-            $('#waterLevelSurfaceWaterTitle').text(data.station_name)
+            // $('#waterLevelSurfaceWaterTitle').text(data.station_name)
+            $(`#waterLevelChartTitle-${waterLevelId}`).text(`Wasserstand Verlauf ${data.station_name}`);
             // const canvas = document.getElementById(`chart-sieker_water_level-${waterLevelId}`);
             const ctx = canvas.getContext('2d');
             if (canvas.chart) {
@@ -138,10 +135,12 @@ function getWaterLevelTimeseries(waterLevelId) {
 
             canvas.chart = new Chart(ctx, {
             type: 'bar',
-            data: { 
-                datasets: [{ 
-                label: 'Wasserstand (cm)', 
-                data: data.chart_data }] 
+            backgroundColor: 'rgb(54, 162, 235 )',
+            data: {
+                datasets: [{
+                    label: 'Wasserstand (cm)',
+                    data: data.chart_data
+                }]
             },
             options: {
                 responsive: true,
@@ -239,7 +238,9 @@ export function tableCheckSelectedItems(project, dataType) {
     console.log('tableCheckSelectedItems behind first if: ', dataType)
     const checkboxes = document.querySelectorAll(`.table-select-checkbox[data-type="${dataType}"]`)
     checkboxes.forEach(checkbox => {
-        const checked = project[`selected_${dataType}s`].includes(Number(checkbox.dataset.id)) ? true : false;
+        const checked = project[`selected_${dataType}s`].includes(String(checkbox.dataset.id)) ? true : false;
+        // const checked = project[`selected_${dataType}s`].includes(checkbox.dataset.id) ? true : false;
+
         checkbox.checked = checked;
         })
     }
@@ -389,7 +390,7 @@ export function addChangeEventListener(projectClass) {
                 checkbox.checked = $target.is(':checked');
             } catch  {;};
 
-            toggleValueInArray(project[key], $target.data('id'));
+            toggleValueInArray(project[key], String($target.data('id')));
             project.saveToLocalStorage();
             return;
  
@@ -408,13 +409,13 @@ export function openResultCard(dataType, id) {
         });
 };
 
-export function loadProjectToGui(project) {
-
-    console.log('loadProjectToGui', project);
+export function setProjectInfoHeader(project) {
+    console.log('setProjectInfoHeader', project);
     if (project.name) {
         $('.title-project-name').text(project.name);
     }
     if (project.userField) {
+
         const userFields = JSON.parse(localStorage.getItem('userFields')) || [];
         const userFieldName = Object.values(userFields).find((uf => uf.id === project.userField)).name;
         
@@ -424,6 +425,12 @@ export function loadProjectToGui(project) {
             $('.title-user-field-name').text('ID', project.userField);
         }
     }
+}
+
+export function loadProjectToGui(project) {
+
+    console.log('loadProjectToGui', project);
+    setProjectInfoHeader(project)
     
     const doubleSliders = $('#toolboxPanel input.double-slider');
     if (doubleSliders.length) {
@@ -470,6 +477,8 @@ export function loadProjectToGui(project) {
     for (const [key, value] of Object.entries(project)) {
         if (key.startsWith('all_') && key.endsWith('_ids') && value.length > 0) {
             const name = key.replace('all_', '').replace('_ids', '');
+
+
             
            if (project.toolboxType === 'sieker_surface_water') {
                 console.log('Special case for sieker_surface_water and sieker_gek')
@@ -532,9 +541,12 @@ export function clearToolboxPanel(){
 
 
 export function addClickEventListenerToToolboxPanel(projectClass) {
+
     const ProjectClass = projectClass;
     $('#toolboxPanel').on('click',function (event) {
+        console.log('click')
         const $target = $(event.target);
+        // !!! button if the button is wrapped with a spinner or info
         const button = $target.closest('button')
         const project = ProjectClass.loadFromLocalStorage();
         if ($target.hasClass('toolbox-back-to-initial')) {
@@ -584,20 +596,22 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             console.log('toggle-feature-group!', dataType)
             
             if (map.hasLayer(Layers[dataType])) {
+                // console.log('Layer exists:', dataType);
                 map.removeLayer(Layers[dataType]);
-                console.log('Layer removed:', Layers[dataType]);
+                // console.log('Layer removed:', Layers[dataType]);
                 button.text('Layer einblenden');
             } else {
+                // console.log('Layer added:', dataType);
                 map.addLayer(Layers[dataType]);
                 button.text('Layer ausblenden');
             }
-        } else if (button.hasClass('save-toolbox-project')) {
+        } else if ($target.hasClass('save-toolbox-project')) {
             if (!project.id || project.name === '') {
                 $('#userFieldSelect').val(project.userField);
                 $('#toolboxProjectModal').modal('show');
                 
                 $('#id_project_name').focus();
-                $('#projectTypeSelect').val(button.data('type'));
+                $('#projectTypeSelect').val($target.data('type'));
                 $('#projectTypeSelect').prop('disabled', true);
                 $('#userFieldSelect').prop('disabled', true);
                 $('#saveToolboxProjectButton').data('page-reload', false);
@@ -605,7 +619,8 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             } else {
                 project.saveToDB();
             }
-        } else if (button.hasClass('toolbox-load-project')) {
+        } else if ($target.hasClass('toolbox-load-project')) {
+            console.log('button has class')
             const project_id = $('#id_toolbox_project').val();
             const loadedProject = loadProjectFromDb(project_id);
             loadedProject.then(project => {
@@ -620,9 +635,13 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             
             const tRow = $target.closest('tr');
             const id = tRow.data('id');
-            const dataType = tRow.data('type');
+            const dataType = $(tRow).data('type');
+            console.log('dataType', dataType)
             const table = $(`#${dataType}-table`).DataTable();
+
             const row = table.row(tRow);
+            console.log('row', row)
+            console.log('child', row.child)
             if (row.child.isShown()) {
                 row.child.hide();
                 tRow.removeClass('shown table-success');
@@ -632,18 +651,42 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 if (dataType === 'sieker_water_level') {
                     getWaterLevelTimeseries(id);
                 } else if (dataType === 'filtered_sieker_gek') {
-                    // openResultCard(dataType, id);
+                    // just toggles the row
                     ;
                 } else if (tRow.hasClass('inlet-header-row')) {
                     // several dataTypes therefore inlet-header-row
                     const waterbodyType = tRow.attr('waterbody-type');
                     const waterbodyId = tRow.attr('waterbody-id');
-                    // const $detailRow = tRow.next('.detail-row'); 
                     console.log('Inlet eventlistener')
                     getInletVolumeChart(waterbodyType, waterbodyId, id);
                 }
             }
+        } else if ($target.hasClass('download-results')) {
+            event.preventDefault();
+            console.log('download-results', $target)
+            const project = ProjectClass.loadFromLocalStorage();
+
+            let url = `download_toolbox_results/`;
+            fetch(url, {
+                method: 'POST',
+                body: JSON.stringify(project),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                }
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                console.log('blob', blob)
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `${project.toolboxType}.zip`;   // filename for user
+                link.click();
+                window.URL.revokeObjectURL(link.href);
+            });
+
         }
+
         if (button.hasClass('filter-waterbodies')) {
             console.log('Click eventlistener filter-waterbodies')
             getWaterBodies(button, ProjectClass);  
@@ -747,7 +790,7 @@ function addPopUpsToFeature(feature, layer, dataInfo) {
         const checkbox = document.querySelector(`.select-map-feature-checkbox[data-id="${feature.properties.id}"]`)
         if (checkbox){
             const project = projectClasses[dataInfo.dataType].loadFromLocalStorage();
-            const isSelected = project[`selected_${dataInfo.dataType}s`].includes(feature.properties.id);
+            const isSelected = project[`selected_${dataInfo.dataType}s`].includes(String(feature.properties.id));
             console.log('isSelected', isSelected);
             checkbox.checked = isSelected;
         }   
@@ -861,15 +904,15 @@ export function addPointFeatureCollectionToLayer(data) {
 
 function createPropertiesTable(properties, dataInfo) {
     let tableHTML = `
-    <div class="col-md-4">
+    <div class="col-4 g-3 mb-1">
         <table class="${dataInfo.dataType} table-sm table-bordered properties-table">
-        <tr><td colspan="2">${dataInfo?.tableCaption}</td></tr>
+        <tr><td colspan="2"><h5>${dataInfo?.tableCaption}</h5></td></tr>
         <tbody>`;
     dataInfo.properties.forEach(property => {
             if (property.table) {
                 tableHTML += `
                     <tr>
-                        <td><strong>${property.title}</strong></td>
+                        <th><h6>${property.title}</h6></th>
                         <td>
                     `;
                     const value = properties ? properties[property.valueName] : null;
@@ -934,10 +977,11 @@ export function createSinkResultTable(data) {
                                 <input type="checkbox" 
                                     class="form-check-input table-select-checkbox toggle-sink-result"  
                                     data-type="${dataInfo.dataType}" 
+                                    data-id="${dataInfo.dataType}_${inlet.sink_type}_${inlet.sink_id}"
                                     inlet-id="${dataInfo.dataType}_inlet_${inlet.id}" 
                                     sink-id="${dataInfo.dataType}_${inlet.sink_type}_${inlet.sink_id}"
                                     sink-embankment-id="${inlet.sink_embankment_id ? 'sink_embankment_' + inlet.sink_embankment_id : ''}"
-                                    checked="">
+                                    checked="true">
                             </div>
                         </td>`;
                 } else {
@@ -979,7 +1023,7 @@ export function createSinkResultTable(data) {
         const inletTable = createPropertiesTable(inlet, data.inletDataInfo);
 
         const detailHtml = `
-            <div class="container-fluid overflow-auto"  style="white-space: nowrap;">
+            <div class="container-fluid overflow-auto">
                 <div class="row mb-2">
                     ${sinkTable}                   
                     ${waterbodyTable}           
@@ -995,7 +1039,7 @@ export function createSinkResultTable(data) {
         // Attach child row and hide initially
         mainRow.child(detailHtml).hide();     
     });
-
+    $(`#${dataInfo.dataType}-table`).resizableColumns();
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
 }
 
@@ -1034,8 +1078,13 @@ export function addFeatureCollectionToTable(data) {
                 checkbox.type = "checkbox";
                 checkbox.className = "table-select-all form-check-input";
                 checkbox.dataset.type = dataInfo.dataType;
-                th.append(" Alle");
-                th.appendChild(checkbox);
+
+                const label = document.createElement("label");
+                label.className = "form-check-label ms-1";
+                label.appendChild(checkbox);
+                label.append(" Alle"); 
+
+                th.appendChild(label);
                 
             } else {
                 th.textContent = property.title;
@@ -1051,7 +1100,7 @@ export function addFeatureCollectionToTable(data) {
     const tbody = document.createElement("tbody");
 
     featureCollection.features.forEach(feature => {
-        const id = feature.properties.id;
+        const id = String(feature.properties.id);
         project[`all_${dataInfo.dataType}_ids`].push(id);
 
         const row = document.createElement("tr");
@@ -1111,8 +1160,11 @@ export function addFeatureCollectionToTable(data) {
     // ---- DATATABLE INIT + coloring ----
     const tableSettings = createTableSettings(dataInfo);
     const dataTable = $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
+    
 
     colorTable(dataInfo.dataType);
+
+    $(`#${dataInfo.dataType}-table`).resizableColumns();
     return dataTable;
 }
 
@@ -1127,6 +1179,7 @@ export function createDetailRows(table, featureCollection, dataInfo, callback) {
 
 
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
+    $(`#${dataInfo.dataType}-table`).resizableColumns();
 }
 
 
@@ -1219,35 +1272,108 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
         const deLocale = dateFns.locale?.de;
 
 
+        // let inletVolumeChart = new Chart(ctx, {
+        //   type: 'bar',
+        //   data: { 
+        //     datasets: [{ 
+        //       label: 'Abfluss (m³/s)', 
+        //       data: chartData ,
+        //       backgroundColor: 'rgb(54, 162, 235 )',   // DodgerBlue, fully opaque
+        //       borderColor: 'rgb(54, 162, 235 )',
+        //       hoverBackgroundColor: 'rgb(54, 162, 235 )', // DodgerBlue, semi-transparent
+        //       borderWidth: 1
+        //     }] 
+        //   },
+        //   options: {
+        //     transitions: {
+        //         active: {
+        //             animation: {
+        //             duration: 0 // disables fade animation
+        //             }
+        //         }
+        //     },
+        //     transitions: {
+        //         active: {
+        //             animation: {
+        //             duration: 0
+        //             }
+        //         }
+        //     },
+
+        //     interaction: {
+        //         mode: 'nearest',
+        //         intersect: true,
+        //     },
+        //     plugins: {
+        //         tooltip: {
+        //             enabled: true,
+        //             },
+                
+        //     },
+        //     elements: {
+        //         bar: {
+        //         backgroundColor: 'rgb(54, 162, 235)',
+        //         hoverBackgroundColor: 'rgb(54, 162, 235)',  // stays same on hover
+        //         borderSkipped: false,
+        //         hoverStyle: false,
+        //         }
+        //     },
+            
+
+        //     responsive: true,
+        //     // aspectRation:4,
+        //     maintainAspectRatio: false,
+        //     scales: {
+        //       x: {
+        //         type: 'time',
+        //         adapters: { date: { locale: deLocale } },
+        //         time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
+        //         title: { display: true, text: 'Datum' }
+        //       },
+        //       y: {
+        //         beginAtZero: true,
+        //         title: { display: true, text: 'Abfluss (m³/s)' }
+        //       }
+        //     }
+        //   }
+        // })
+
         let inletVolumeChart = new Chart(ctx, {
-          type: 'bar',
-          data: { 
-            datasets: [{ 
-              label: 'Abfluss (m³/s)', 
-              data: chartData ,
-              backgroundColor: 'rgba(30, 144, 255, 1)',   // DodgerBlue, fully opaque
-              borderColor: 'rgba(30, 144, 255, 1)',
-              borderWidth: 1
-            }] 
-          },
-          options: {
+        type: 'bar',
+        backgroundColor: 'rgb(54,162,235)',
+        data: {
+            datasets: [{
+            label: 'Abfluss (m³/s)',
+            data: chartData,        
+            }]
+        },
+        options: {
+
+            transitions: {
+            active: {
+                animation: { duration: 0 } // disable active transition
+            }
+            },
+
+
             responsive: true,
-            // aspectRation:4,
             maintainAspectRatio: false,
+
             scales: {
-              x: {
+            x: {
                 type: 'time',
                 adapters: { date: { locale: deLocale } },
                 time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
                 title: { display: true, text: 'Datum' }
-              },
-              y: {
+            },
+            y: {
                 beginAtZero: true,
                 title: { display: true, text: 'Abfluss (m³/s)' }
-              }
             }
-          }
-        })
+            }
+        }
+        });
+
     });
 
 };

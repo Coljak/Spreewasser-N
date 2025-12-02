@@ -12,7 +12,7 @@ from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 from django_select2.forms import Select2Widget
 from .widgets import SingleRowTextarea
 from django.utils.translation import gettext_lazy as _
-from utils.widgets import UnitInputWrapper
+from utilities.widgets import UnitInputWrapper
 
 from crispy_forms.layout import Field, Layout, Row, Column
 from django.core.validators import MinValueValidator, MaxValueValidator

@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import {  toolboxSinksOutline, updateDropdown, loadProjectFromDb } from '/static/toolbox/toolbox.js';
+import {  toolboxSinksOutline, updateDropdown, loadProjectFromDb, setProjectInfoHeader } from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
 import { SiekerSink } from '/static/toolbox/sieker_sink_model.js';
@@ -68,7 +68,10 @@ function getInfoText(el) {
     // Close all popovers when clicking outside
     document.addEventListener('click', function handler(e) {
         if (!el.contains(e.target)) {
+          if (popover  && popover._element) {
             popover.dispose();
+          }
+
             document.removeEventListener('click', handler);
         }
     });
@@ -469,13 +472,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // const isNewProject = (project.toolboxType === 'generic');
     const pageReload = $(this).data('page-reload')
     project.name = projectName;
-    try {
-      $('.title-project-name').text(project.name);
-    } catch {;}
     project.userField = $('#userFieldSelect').val();
+    const userFieldName = localStorage.getItem('userFields')[project.userField]['name'];
     project.toolboxType = $('#projectTypeSelect').val();
     project.description = $('#id_project_description').val().trim();
     project.saveToLocalStorage();
+    try {
+      setProjectInfoHeader(project);
+    } catch {;}
+    
 
     $('#toolboxProjectModal').modal('hide');
     try {

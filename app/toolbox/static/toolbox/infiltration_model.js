@@ -81,10 +81,10 @@ export class Infiltration extends ToolboxProject {
         // choices on download page
         this.result_sinks = data.result_sinks ?? [];
         this.result_enlarged_sinks = data.result_enlarged_sinks ?? [];
-        this.result_streams = data.result_streams ?? [];
-        this.result_lakes = data.result_lakes ?? [];
+        this.result_waterbodies = data.result_waterbodies ?? [];
         this.result_timeseries = data.result_timeseries ?? [];
         this.result_result = data.result_result ?? [];
+        this.result_crs = data.result_crs ?? [];
 
     }
 

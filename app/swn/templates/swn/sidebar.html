@@ -65,13 +65,14 @@
                 </div>
               </div>
             </li>
-
             {% for field in state_county_district_form.visible_fields %}
 
               <li  class="list-group-item">
                 {{ field }}
               </li>
             {% endfor %} 
+            
+            
             <!-- NetCDF animation -->
             {% comment %} <li class="list-group-item drought-overlay-sidebar-item" id="liElementNetCDF">
               <div class="row">

@@ -1,8 +1,10 @@
 <div class="row">
     {% if widget.attrs.reset %}
         {% if widget.attrs.prefix %}
-        <div class="col-2 text-start">
-        </div>
+        {% comment %} <div class="col-2 text-start">
+        </div> {% endcomment %}
+        <div id="{{ widget.attrs.id }}_start_text" class="col-2 text-start">
+            </div>
         <div class="col-7">
         
         {% else %}

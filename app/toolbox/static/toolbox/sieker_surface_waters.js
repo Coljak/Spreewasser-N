@@ -53,7 +53,7 @@ function detailHtml(dataInfo, property) {
     return `<div class="container-fluid">
                 <div id="card-sieker_water_level-${property.id}" class="card container-fluid mb-3">
                     <div class="card-body">
-                        <h5>Wasserstand Verlauf</h5>
+                        <h5 id="waterLevelChartTitle-${property.id}">Wasserstand Verlauf</h5>
                         <div id="${dataInfo.dataType}-spinner-${property.id}" 
                             class="d-flex justify-content-center align-items-center in-table-spinner  d-none">
                             <div class="spinner-border text-primary" role="status">
@@ -86,7 +86,7 @@ function getAllCatchments() {
         if (data.message.success){
             data.catchments['pane'] = 'backgroundPane';
             addFeatureCollectionToLayer(data.catchments, true)
-
+            addFeatureCollectionToTable(data.catchments)
             Layers['sieker_water_level'].bringToFront();
         } else {
             handleAlerts(data.message)

@@ -25,6 +25,7 @@ export class Drainage extends ToolboxProject {
         this.result_probability_raster = data.result_probability_raster ?? [];
         this.result_drainage_network = data.result_drainage_network ?? [];
         this.result_drained_areas = data.result_drained_areas ?? [];
+        this.result_crs = data.result_crs ?? [];
         
     }
    

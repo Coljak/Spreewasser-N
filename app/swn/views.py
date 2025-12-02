@@ -260,34 +260,48 @@ def user_logout(request):
 def swn_dashboard(request):
     print("Request.user", request.user)
     user = request.user
-    
+    start = datetime.now()
     context = monica_views.get_monica_forms(user)
-
+    first = datetime.now()
+    print("first - start", first - start)
     default_project = monica_views.create_default_project(user)
-
+    second = datetime.now()
+    print("second - first", second - first)
 
     state_county_district_form = forms.PolygonSelectionForm(request.POST or None)
-    
+    third = datetime.now()
+    print("third - second", third - second)
     project_region = models.ProjectRegion.objects.first().to_feature()
-
+    fourth = datetime.now()
+    print("fourth - third", fourth - third)
     project_select_form = forms.SwnProjectSelectionForm(user=user)
+    fifth = datetime.now()
+    print("fifth - fourth", fifth - fourth)
     new_swn_project_form = forms.SwnNewProjectForm(user=user)
+    sixth = datetime.now()
+    print("sixth - fifth", sixth - fifth)
     project_modal_title = 'Create new project'
 
     coordinate_form = monica_forms.CoordinateForm()
-   
+    seventh = datetime.now()
+    print("seventh - sixth", seventh - sixth)
     user_simulation_settings_select_form = monica_forms.UserSimulationSettingsInstanceSelectionForm(user=user)
-
+    eigth = datetime.now()
+    print("eigth - seventh", eigth - seventh)
     user_crop_parameters_select_form = monica_forms.UserCropParametersSelectionForm(user=user)
     # user_crop_parameters_form = monica_forms.UserCropParametersForm()
-
+    ninth = datetime.now()
+    print("ninth - eigth", ninth - eigth)
     user_environment_parameters_select_form = monica_forms.UserEnvironmentParametersSelectionForm(user=user)
     # user_environment_parameters_form = monica_forms.UserEnvironmentParametersForm(user=user)
-
+    tenth = datetime.now()
+    print("tenth - ninth", tenth - ninth)
     user_soil_moisture_select_form = monica_forms.UserSoilMoistureInstanceSelectionForm(user=user)
     user_soil_organic_select_form = monica_forms.UserSoilOrganicInstanceSelectionForm(user=user)
     soil_temperature_module_select_form = monica_forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
     user_soil_transport_parameters_select_form = monica_forms.UserSoilTransportParametersInstanceSelectionForm(user=user)
+    eleventh = datetime.now()
+    print("eleventh - tenth", eleventh - tenth)
 
     data = {
             'default_project': default_project,

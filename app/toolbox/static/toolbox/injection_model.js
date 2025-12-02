@@ -56,6 +56,7 @@ export class Injection extends ToolboxProject {
         this.hydraulic_conductivity_conductivity_lt_5 = data.hydraulic_conductivity_conductivity_lt_5 ?? 1;
 
         this.result_raster = data.result_raster ?? [];
+        this.result_crs = data.result_crs ?? [];
 
     }
  

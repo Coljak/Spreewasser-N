@@ -4,6 +4,8 @@ from django.utils.safestring import mark_safe
 from django.contrib.auth.models import User
 from django.db.models import Max, Min, NOT_PROVIDED
 from . import models
+from swn import models as swn_models
+# from swn import forms as swn_forms
 # from .utils import widgets
 from django.db.models import Q
 
@@ -12,7 +14,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
 
 
-from utils.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget,CustomSimpleSliderWidget, CustomDoubleSliderWidget
+from utilities.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget,CustomSimpleSliderWidget, CustomDoubleSliderWidget
 
 class InfoLabelFormMixin():
     # Helper method to add info icon to labels if a help_text exists
@@ -54,6 +56,38 @@ class SliderFilterForm(InfoLabelFormMixin, forms.Form):
         self.helper.layout = Layout(*[Field(name) for name in self.fields])
 
 
+
+### SIDEBAR #####
+# toolbox/forms.py
+
+# Todo make this a ModelForm, model = NUTS5000_N3 ?
+class PolygonSelectionForm(forms.Form):
+
+    counties = forms.MultipleChoiceField(
+        choices=[],
+        widget=forms.SelectMultiple(attrs={'id': 'countiesSelect', 'class': 'county-dropdown administrative-area btn'}),
+        label=False,
+        required=False,
+    )
+
+    selected_counties = forms.CharField(widget=forms.HiddenInput, required=False)
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        try:
+            pr = swn_models.ProjectRegion.objects.first()
+            self.fields['counties'].choices = sorted(
+                [(c.id, c.nuts_name) for c in swn_models.NUTS5000_N3.objects.filter(Q(geom__intersects=pr.geom) | Q(geom__within=pr.geom))],
+                key=lambda x: x[1]
+            )
+        except Exception as e:
+            # When DB is not ready (e.g. migrations), silently skip
+            print(f"PolygonSelectionForm init skipped: {e}")
+
+
+
+
 class ToolboxProjectSelectionForm(InfoLabelFormMixin, forms.Form):
     toolbox_project = forms.ChoiceField(
         required=False,
@@ -79,22 +113,22 @@ class ToolboxProjectSelectionForm(InfoLabelFormMixin, forms.Form):
             'load-project', 
             'Laden', 
             css_class='toolbox-load-project btn btn-secondary',
-            attrs={'data-type': data_type}))
+            **{'data-type': data_type}))
         self.helper.add_input(Button(
             'delete-project', 
             'Löschen', 
             css_class='toolbox-delete-project btn btn-secondary',
-            attrs={'data-type': data_type}))
+            **{'data-type': data_type}))
         self.helper.add_input(Button(
             'info-project', 
             'Projektinfo', 
             css_class='toolbox-project-info btn btn-secondary',
-            attrs={'data-type': data_type}))
+            **{'data-type': data_type}))
         self.helper.add_input(Button(
             'new-project', 
             'Neues Projekt', 
             css_class='toolbox-new-project btn btn-secondary',
-            attrs={'data-type': data_type}))
+            **{'data-type': data_type}))
         
 
 
@@ -672,16 +706,28 @@ class ResultForm(InfoLabelFormMixin, forms.Form):
         self.helper.form_class = 'form-horizontal download-form'
         self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
         self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
-        self.helper.add_input(Submit(f'{toolbox_type}-results', 'Herunterladen', css_class='btn-primary'))
+        self.helper.add_input(Button(f'{toolbox_type}-results', 'Herunterladen', css_class='btn-primary download-results', **{'data-type': toolbox_type}))
 
+
+EPSG_CHOICES = [
+    ('25833', 'EPSG:25833'),
+    ('4326', 'EPSG:4326')
+] 
 class InfiltrationResultDownloadForm(ResultForm):
+    crs = forms.ChoiceField(
+        label='CRS',
+        widget=forms.RadioSelect,
+        choices = EPSG_CHOICES,
+        initial='25833',
+        required=False,      
+    )
     result = forms.MultipleChoiceField(
         label="Ergebnisdarstellung", 
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
-            ('result_shp', 'als Shapefile'),
-            ('result_gjson', ' als GeoJSON'),
+            ('shp', 'als Shapefile'),
+            ('gjson', ' als GeoJSON')
         ],
         initial=['result_shp'],
     )
@@ -691,10 +737,10 @@ class InfiltrationResultDownloadForm(ResultForm):
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
-            ('sinks_shp', 'Polygone als Shapefile'),
-            ('sinks_gjson', 'Polygone als GeoJSON'),
-            ('sinks_pt_shp', 'Punkte als Shapefile'),
-            ('sinks_pt_gjson', 'Punkte als GeoJSON'),    
+            ('shp', 'Polygone als Shapefile'),
+            ('gjson', 'Polygone als GeoJSON'),
+            ('pt_shp', 'Punkte als Shapefile'),
+            ('pt_gjson', 'Punkte als GeoJSON'),    
         ],
         # initial=['sinks_shp']
     )
@@ -703,12 +749,23 @@ class InfiltrationResultDownloadForm(ResultForm):
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
-            ('enlarged_sinks_shp', 'Polygone als Shapefile'),
-            ('enlarged_sinks_gjson', 'Polygone als GeoJSON'),
-            ('enlarged_sinks_pt_shp', 'Punkte als Shapefile'),
-            ('enlarged_sinks_pt_gjson', 'Punkte als GeoJSON'),
+            ('shp', 'Polygone als Shapefile'),
+            ('gjson', 'Polygone als GeoJSON'),
+            ('pt_shp', 'Punkte als Shapefile'),
+            ('pt_gjson', 'Punkte als GeoJSON'),
         ],
-        # initial=['enlarged_sinks_shp'],
+        # initial=['shp'],
+    )
+
+    waterbodies = forms.MultipleChoiceField(
+        label="Gewässer", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        choices=[
+            ('shp', 'als Shapefile'),
+            ('gjson', ' als GeoJSON'),
+        ],
+        initial=['shp'],
     )
 
     
@@ -717,7 +774,7 @@ class InfiltrationResultDownloadForm(ResultForm):
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
-            ('timeseries_csv', 'als CSV-Datei'),
+            ('csv', 'als CSV-Datei'),
         ]
     )
     def __init__(self, *args, **kwargs):
@@ -725,17 +782,33 @@ class InfiltrationResultDownloadForm(ResultForm):
 
     
 
-
+waterbodies = forms.MultipleChoiceField(
+        label="Gewässer", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        choices=[
+            ('shp', 'als Shapefile'),
+            ('gjson', ' als GeoJSON'),
+        ],
+        initial=['shp'],
+    )
 class SiekerSurfaceWaterResultDownloadForm(ResultForm):
+    crs = forms.ChoiceField(
+        label='CRS',
+        widget=forms.RadioSelect,
+        choices = EPSG_CHOICES,
+        initial='25833',
+        required=False,      
+    )
     
     lakes = forms.MultipleChoiceField(
         label="Seen", 
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
-            ('lakes_shp', 'als Shapefile'),
-            ('lakes_gjson', 'als GeoJSON'),
-            ('lakes_csv', 'als CSV-Datei'),
+            ('shp', 'als Shapefile'),
+            ('gjson', 'als GeoJSON'),
+            ('csv', 'als CSV-Datei'),
         ],
         initial=['lakes_shp'],
     )
@@ -744,18 +817,18 @@ class SiekerSurfaceWaterResultDownloadForm(ResultForm):
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
-            ('level_shp', 'als Shapefile'),  
-            ('level_gjson', 'als GeoJSON'),   
+            ('shp', 'als Shapefile'),  
+            ('gjson', 'als GeoJSON'),   
             ('level_csv', 'als CSV-Datei'),   
         ],
-        initial=['level_shp'],
+        initial=['shp'],
     )
     timeseries = forms.MultipleChoiceField(
         label="Pegelzeitreihen",
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
-            ('timeseries_csv', 'als CSV-Datei'),
+            ('csv', 'als CSV-Datei'),
         ]
     )
 
@@ -765,16 +838,23 @@ class SiekerSurfaceWaterResultDownloadForm(ResultForm):
 
 
 class SiekerSinkDownloadForm(ResultForm):
+    crs = forms.ChoiceField(
+        label='CRS',
+        widget=forms.RadioSelect,
+        choices = EPSG_CHOICES,
+        initial='25833',
+        required=False,      
+    )
     
     result = forms.MultipleChoiceField(
         label="Ergebnisdarstellung", 
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
-            ('result_shp', 'als Shapefile'),
-            ('result_gjson', ' als GeoJSON'),
+            ('shp', 'als Shapefile'),
+            ('gjson', ' als GeoJSON'),
         ],
-        initial=['result_shp'],
+        initial=['shp'],
     )
     
     sinks = forms.MultipleChoiceField(
@@ -782,11 +862,22 @@ class SiekerSinkDownloadForm(ResultForm):
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
-            ('sinks_shp', 'Polygone als Shapefile'),
-            ('sinks_gjson', 'Polygone als GeoJSON'),
-            ('sinks_pt_shp', 'Punkte als Shapefile'),
-            ('sinks_pt_gjson', 'Punkte als GeoJSON'),
+            ('shp', 'Polygone als Shapefile'),
+            ('gjson', 'Polygone als GeoJSON'),
+            ('pt_shp', 'Punkte als Shapefile'),
+            ('pt_gjson', 'Punkte als GeoJSON'),
         ]
+    )
+
+    waterbodies = forms.MultipleChoiceField(
+        label="Gewässer", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        choices=[
+            ('shp', 'als Shapefile'),
+            ('gjson', ' als GeoJSON'),
+        ],
+        initial=['shp'],
     )
 
     
@@ -795,7 +886,7 @@ class SiekerSinkDownloadForm(ResultForm):
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
-            ('timeseries_csv', 'als CSV-Datei'),
+            ('csv', 'als CSV-Datei'),
         ]
     )
     def __init__(self, *args, **kwargs):
@@ -804,16 +895,23 @@ class SiekerSinkDownloadForm(ResultForm):
 
 
 class SiekerGekDownloadForm(ResultForm): #######
+    crs = forms.ChoiceField(
+        label='CRS',
+        widget=forms.RadioSelect,
+        choices = EPSG_CHOICES,
+        initial='25833',
+        required=False,      
+    )
     
     map = forms.MultipleChoiceField(
         label="Karte", 
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
-            ('map_shp', 'als Shapefile'),
-            ('map_gjson', 'als GeoJSON'),
+            ('shp', 'als Shapefile'),
+            ('gjson', 'als GeoJSON'),
         ],
-        initial=['map_shp'],
+        initial=['shp'],
     )
 
     geks = forms.MultipleChoiceField(
@@ -821,9 +919,9 @@ class SiekerGekDownloadForm(ResultForm): #######
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
-            ('gek_csv', 'als CSV-Datei'),
+            ('csv', 'als CSV-Datei'),
         ],
-        initial=['gek_csv'],
+        initial=['csv'],
     )
     
     def __init__(self, *args, **kwargs):
@@ -831,17 +929,24 @@ class SiekerGekDownloadForm(ResultForm): #######
 
 
 class SiekerWetlandDownloadForm(ResultForm): #######
+    crs = forms.ChoiceField(
+        label='CRS',
+        widget=forms.RadioSelect,
+        choices = EPSG_CHOICES,
+        initial='25833',
+        required=False,      
+    )
     
     wetlands = forms.MultipleChoiceField(
         label="Feuchtgebiete", 
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
-            ('wetlands_shp', 'Polygone als Shapefile'),
-            ('wetlands_gjson', 'Polygone als GeoJSON'),
-            ('wetlands_csv', 'als CSV-Datei'),
+            ('shp', 'Polygone als Shapefile'),
+            ('gjson', 'Polygone als GeoJSON'),
+            ('csv', 'als CSV-Datei'),
         ],
-        initial=['wetlands_shp'],
+        initial=['shp'],
     )
     
 
@@ -850,6 +955,13 @@ class SiekerWetlandDownloadForm(ResultForm): #######
 
     
 class SiekerDrainageDownloadForm(ResultForm): #######
+    crs = forms.ChoiceField(
+        label='CRS',
+        widget=forms.RadioSelect,
+        choices = EPSG_CHOICES,
+        initial='25833',
+        required=False,      
+    )
     
     probability_raster = forms.MultipleChoiceField(
         label="Wahrscheinlichkeiten",
@@ -866,10 +978,10 @@ class SiekerDrainageDownloadForm(ResultForm): #######
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,   
         choices=[
-            ('drainage_network_shp', 'als Shapefile'),
-            ('drainage_network_gjson', 'als GeoJSON'),
+            ('shp', 'als Shapefile'),
+            ('gjson', 'als GeoJSON'),
         ],
-        initial=['drainage_network_shp'],
+        initial=['shp'],
     )
 
     drained_areas = forms.MultipleChoiceField(
@@ -877,10 +989,10 @@ class SiekerDrainageDownloadForm(ResultForm): #######
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
-            ('drained_areas_shp', 'als Shapefile'),
-            ('drained_areas_gjson', 'als GeoJSON'),
+            ('shp', 'als Shapefile'),
+            ('gjson', 'als GeoJSON'),
         ],
-        initial=['drained_areas_shp'],
+        initial=['shp'],
     )
     
 

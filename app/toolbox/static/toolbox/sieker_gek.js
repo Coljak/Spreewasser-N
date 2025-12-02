@@ -46,7 +46,6 @@ function getAllSiekerGeks(project) {
         featureCollection: data.featureCollection,
         dataInfo: data.dataInfo,
         tableClasses: 'table table-hover',
-        // rowClasses: 'table-parent-row',
       });
       tableCheckSelectedItems(project, data.dataInfo.dataType)
 
@@ -146,6 +145,17 @@ function addResultCards( dataInfo, featureProperties) {
   return cardBody.outerHTML;
 }
 
+function getLowerSliderVal(sliderLabels, sliderValue) {
+  const keys = Object.keys(sliderLabels).map(Number).filter(k => k <= sliderValue); 
+  return Math.max(...keys);
+}
+
+function getUpperSliderVal(sliderLabels, sliderValue) {
+  const keys = Object.keys(sliderLabels).map(Number).filter(k => k <= sliderValue); 
+  return Math.min(...keys);
+}
+
+
 
 export function initializeSiekerGek(data) {
   const project = SiekerGek.loadFromLocalStorage();
@@ -166,12 +176,7 @@ export function initializeSiekerGek(data) {
   if (slider && sliderLabels) {
     slider.addEventListener('change', function() {
       console.log(sliderLabels)
-      let sliderVal = slider.value
-      if (!(slider.value in sliderLabels)) {
-        const keys = Object.keys(sliderLabels).map(Number).filter(k => k <= slider.value); 
-        sliderVal = Math.max(...keys);
-        console.log(sliderVal)
-      } 
+      let sliderVal = getLowerSliderVal(sliderLabels, slider.value)
       sliderLabelLeft.innerText = sliderLabels[sliderVal];
     });
   }

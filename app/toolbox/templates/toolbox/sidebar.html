@@ -64,7 +64,7 @@
                 </div>
               </li>
 
-              {% for field in state_county_district_form.visible_fields %}
+              {% for field in counties_form.visible_fields %}
 
                 <li  class="list-group-item">
                   {{ field }}
@@ -105,7 +105,7 @@
               </li>
 
               <!-- Toolbox overlays -->
-              <li class="list-group-item toolbox-overlay-sidebar-item">
+              {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item">
                 <div class="row">
                   <div class="form-check form-switch col">
                     <input type="checkbox" data-layer="allRivers" class="form-check-input overlay-switch" id="toolboxOverlayRiverswitch"/>
@@ -125,7 +125,7 @@
                     </label>
                   </div>
                 </div>
-              </li>
+              </li> {% endcomment %}
 
               {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item">
                 <div class="row">
@@ -149,7 +149,7 @@
                 </div>
               </li> {% endcomment %}
 
-              <li class="list-group-item toolbox-overlay-sidebar-item ">
+              {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item ">
                 <div class="row">
                   <div class="form-check form-switch col">
                     <input type="checkbox" data-layer="toolboxOutlineInjection" class="form-check-input overlay-switch" id="toolboxOverlayInjectionSwitch"/>
@@ -190,7 +190,7 @@
                     </label>
                   </div>
                 </div>
-              </li>
+              </li> {% endcomment %}
               
             </ul>
           </div>

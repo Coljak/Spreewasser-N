@@ -1182,9 +1182,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const workstepType = event.target.closest('.rotation').querySelector('.workstep-type-select').value;
             
-            project.addWorkstep(workstepType, null, rotationIndex);
+            const workstep = project.addWorkstep(workstepType, null, rotationIndex);
+            console.log('added workstep ', workstep)
             // addWorkstepToGui(workstepType, rotationIndex, project.rotation[rotationIndex].workstepIndex, event.target.closest('.rotation').querySelector('.card-body'));
-            addWorkstepToGui(workstepType, rotationIndex, project.rotation[rotationIndex].workstepIndex);
+            addWorkstepToGui(workstepType, rotationIndex, workstep.workstepIndex, workstep);
             // project.saveToLocalStorage();
         } else if (event.target.classList.contains('delete-rotation-button')) {
             
@@ -1222,19 +1223,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     $('#cropRotation').on('change', (event) => {
-        if (!window.isLoading) {
+        if (!window.isLoading && !$(event.target).hasClass('workstep-type-select')) {
         console.log("EvenLister cropRotation change")
         const rotationIndex = event.target.closest('.rotation').getAttribute('rotation-index');
         
-        const workstepIndex = event.target.getAttribute('workstep-index');
+        const workstepIndex = Number(event.target.getAttribute('workstep-index'));
         const workstepType = event.target.getAttribute('workstep-type');
         const name = event.target.getAttribute('name');
         console.log('crop rotation change', rotationIndex, workstepIndex, workstepType);
 
         const project = MonicaProject.loadFromLocalStorage();
-        var workstep = project.rotation[rotationIndex][workstepType].find(workstep => workstep.workstepIndex == workstepIndex);
-        
         console.log('workstep...on change:', rotationIndex, workstepIndex, workstepType, name);
+        var workstep = project.rotation[rotationIndex][workstepType].find(workstep => workstep.workstepIndex == workstepIndex);
+        console.log('project.rotation[rotationIndex]', project.rotation[rotationIndex])
+        console.log('project.rotation[rotationIndex][workstepType]', project.rotation[rotationIndex][workstepType])
+        
 
         if (event.target.closest('.species-parameters')) {
             console.log('if species-parameters', workstep)

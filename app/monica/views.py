@@ -241,8 +241,8 @@ def get_climate_data_as_json_from_hindcast(start_date, end_date, lat_idx, lon_id
                 print(f"⚠️ Error reading {file_path}: {e}")
 
     print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
-    climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
-
+    # climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
+    climate_json['8'] = [x * .0036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
 
     return climate_json
 
@@ -281,7 +281,8 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
             #     print(f"⚠️ Error reading {file_path}: {e}")
 
     print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
-    climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
+    # climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
+    climate_json['8'] = [x * .036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
 
     return climate_json
 

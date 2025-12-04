@@ -503,10 +503,10 @@ export function loadProjectToGui(project) {
             } else if (project.toolboxType === 'infiltration' && dataType === 'infiltration_result' && project.selected_infiltration_results.length > 0) {
                 console.log('Special case for infiltration_result', project.selected_infiltration_results)
                 $(`#btnGetInfiltrationResults`).trigger('click')
-            } else if (project.toolboxType === 'sieker_sink' && dataType === 'sieker_sink_result' && project.selected_infiltration_results.length > 0) {
-                console.log('Special case for infiltration_result', project.selected_infiltration_results)
-                $(`#btnGetInfiltrationResults"]`).trigger('click')
-            }else {
+            } else if (project.toolboxType === 'sieker_sink' && dataType === 'sieker_sink_result' && project.selected_sieker_sink_results.length > 0) {
+                console.log('Special case for sieker_sink_result', project.selected_sieker_sink_results)
+                $(`#btnGetSiekerSinkResults`).trigger('click')
+            } else {
                 console.log('Toolbox Type', project.toolboxType)
                 $(`button.filter-features[data-type="${dataType}"]`).trigger('click')
             }    
@@ -1011,9 +1011,8 @@ export function createSinkResultTable(data) {
         );
     }
     tableCheckSelectedItems(project, dataInfo.dataType);
-    // project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink =>
-    //     project[`all_${dataInfo.dataType}_ids`]?.includes(sink)
-    // );
+
+
     project.saveToLocalStorage();
 
     // Initialize DataTable

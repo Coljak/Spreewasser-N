@@ -75,7 +75,7 @@
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy sieker_sink_filter.form %}
-                        <button id="btnFilterSiekerSinks"type="submit" class="btn btn-primary">Senken filtern</button>
+                        <button id="btnFilterSiekerSinks"type="submit" class="btn btn-primary filter-features" data-type="sieker_sink">Senken filtern</button>
                     </form>
                 </div>
             </div>

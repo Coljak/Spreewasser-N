@@ -235,7 +235,7 @@ export const updateDropdown = (parameterType, newId) => {
 export function tableCheckSelectedItems(project, dataType) {
     console.log('tableCheckSelectedItems', dataType, project)
   if (project[`selected_${dataType}s`] !== undefined) {
-    console.log('tableCheckSelectedItems behind first if: ', dataType)
+    console.log('tableCheckSelectedItems behind first if: ', dataType, project[`selected_${dataType}s`])
     const checkboxes = document.querySelectorAll(`.table-select-checkbox[data-type="${dataType}"]`)
     checkboxes.forEach(checkbox => {
         const checked = project[`selected_${dataType}s`].includes(String(checkbox.dataset.id)) ? true : false;
@@ -476,16 +476,14 @@ export function loadProjectToGui(project) {
     
     for (const [key, value] of Object.entries(project)) {
         if (key.startsWith('all_') && key.endsWith('_ids') && value.length > 0) {
-            const name = key.replace('all_', '').replace('_ids', '');
-
-
-            
+            const dataType = key.replace('all_', '').replace('_ids', '');
+      
            if (project.toolboxType === 'sieker_surface_water') {
                 console.log('Special case for sieker_surface_water and sieker_gek')
                 if (project.sieker_surface_water_filtered === false){
                     tableCheckSelectedItems(project, 'sieker_surface_water')
                 } else {
-                    $(`button.filter-features[data-type="${name}"]`).trigger('click')
+                    $(`button.filter-features[data-type="${dataType}"]`).trigger('click')
                 }
                 tableCheckSelectedItems(project, 'sieker_water_level')
 
@@ -494,17 +492,23 @@ export function loadProjectToGui(project) {
                 if (project[key].length >0) {
 
                     console.log('Special case for sieker_gek, key > 0', project[key])
-                    tableCheckSelectedItems(project, name)
+                    tableCheckSelectedItems(project, dataType)
                 }
                 
                 if (project.all_filtered_sieker_gek_ids.length > 0) {
-                    console.log('Special case', name, project.all_filtered_sieker_gek_ids)
-                    $(`button.filter-features[data-type="${name}"]`).trigger('click')
+                    console.log('Special case', dataType, project.all_filtered_sieker_gek_ids)
+                    $(`button.filter-features[data-type="${dataType}"]`).trigger('click')
                 }
 
-            } else {
+            } else if (project.toolboxType === 'infiltration' && dataType === 'infiltration_result' && project.selected_infiltration_results.length > 0) {
+                console.log('Special case for infiltration_result', project.selected_infiltration_results)
+                $(`#btnGetInfiltrationResults`).trigger('click')
+            } else if (project.toolboxType === 'sieker_sink' && dataType === 'sieker_sink_result' && project.selected_infiltration_results.length > 0) {
+                console.log('Special case for infiltration_result', project.selected_infiltration_results)
+                $(`#btnGetInfiltrationResults"]`).trigger('click')
+            }else {
                 console.log('Toolbox Type', project.toolboxType)
-                $(`button.filter-features[data-type="${name}"]`).trigger('click')
+                $(`button.filter-features[data-type="${dataType}"]`).trigger('click')
             }    
         }
     }
@@ -941,6 +945,7 @@ export function createSinkResultTable(data) {
     const project = ProjectClass.loadFromLocalStorage();
     const selected_items = project[`selected_${dataInfo.dataType}s`];
     project[`selected_${dataInfo.dataType}s`] = [];
+    project[`all_${dataInfo.dataType}_ids`] = [];
 
     const tableContainer = document.getElementById(`${dataInfo.dataType}-table-container`);
     console.log('Data_type for table', dataInfo.dataType);
@@ -964,7 +969,8 @@ export function createSinkResultTable(data) {
     // Main rows (inlet-header-row)
 
     inlets.forEach(inlet => {
-        project[`selected_${dataInfo.dataType}s`].push(inlet.id);
+        const resultSinkId = `${dataInfo.dataType}_${inlet.sink_type}_${inlet.sink_id}`
+        project[`all_${dataInfo.dataType}_ids`].push(resultSinkId);
 
         tableHTML += `<tr class="inlet-header-row table-parent-row" data-id="${inlet.id}" data-type="${dataInfo.dataType}" waterbody-type="${inlet.waterbody_type}" waterbody-id="${inlet.waterbody_id}">`;
 
@@ -977,11 +983,11 @@ export function createSinkResultTable(data) {
                                 <input type="checkbox" 
                                     class="form-check-input table-select-checkbox toggle-sink-result"  
                                     data-type="${dataInfo.dataType}" 
-                                    data-id="${dataInfo.dataType}_${inlet.sink_type}_${inlet.sink_id}"
+                                    data-id="${resultSinkId}"
                                     inlet-id="${dataInfo.dataType}_inlet_${inlet.id}" 
-                                    sink-id="${dataInfo.dataType}_${inlet.sink_type}_${inlet.sink_id}"
+                                    sink-id="${resultSinkId}"
                                     sink-embankment-id="${inlet.sink_embankment_id ? 'sink_embankment_' + inlet.sink_embankment_id : ''}"
-                                    checked="true">
+                                    checked="">
                             </div>
                         </td>`;
                 } else {
@@ -997,9 +1003,17 @@ export function createSinkResultTable(data) {
     tableContainer.innerHTML = tableHTML;
 
     // Save selected items back to local storage
-    project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink =>
-        project[`all_${dataInfo.dataType}_ids`]?.includes(sink)
-    );
+    if (selected_items.length === 0) {
+        project[`selected_${dataInfo.dataType}s`] = project[`all_${dataInfo.dataType}_ids`] ?? [];
+    } else {
+        project[`selected_${dataInfo.dataType}s`] = selected_items.filter(resultId =>
+            project[`all_${dataInfo.dataType}_ids`]?.includes(resultId)
+        );
+    }
+    tableCheckSelectedItems(project, dataInfo.dataType);
+    // project[`selected_${dataInfo.dataType}s`] = selected_items.filter(sink =>
+    //     project[`all_${dataInfo.dataType}_ids`]?.includes(sink)
+    // );
     project.saveToLocalStorage();
 
     // Initialize DataTable

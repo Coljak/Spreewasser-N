@@ -56,7 +56,7 @@ export class SiekerSink extends ToolboxProject {
         this.all_sieker_stream_ids = data.all_sieker_stream_ids ?? [];
         this.selected_sieker_streams = data.selected_sieker_streams ?? [];
 
-        this.selected_sieker_sink_results = data.selected_sieker_sink_results ?? [];
+        
 
         this.result_sinks = data.result_sinks ?? [];
         this.result_streams = data.result_streams ?? [];
@@ -64,6 +64,7 @@ export class SiekerSink extends ToolboxProject {
         this.result_timeseries = data.result_timeseries ?? [];
         this.result_result = data.result_result ?? [];
         this.result_waterbodies = data.result_waterbodies ?? [];
+        this.all_sieker_sink_result_ids = data.all_sieker_sink_result_ids ?? [];
         this.selected_sieker_sink_results = data.selected_sieker_sink_results ?? [];
         this.result_crs = data.result_crs ?? [];
     }

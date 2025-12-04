@@ -915,7 +915,7 @@ class SiekerGekDownloadForm(ResultForm): #######
     )
 
     geks = forms.MultipleChoiceField(
-        label="Gewässerentwicklungskonzepte", 
+        label="Maßnahmen", 
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,        
         choices=[

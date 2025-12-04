@@ -54,7 +54,7 @@ class MonicaNewProjectForm(forms.Form):
         required=False
     )
     name = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_project_name', 'required': 'required',}),
+        widget=forms.TextInput(attrs={'class': 'form-control monica-project-name', 'id': 'id_project_name', 'required': 'required',}),
         label='Project Name',
         required=True,
     )

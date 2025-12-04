@@ -28,4 +28,5 @@ urlpatterns = [
     # path('model/save_simulation_settings/', views.save_simulation_settings, name='save_simulation_settings'),
     
     path('run-simulation/', views.run_simulation, name='run_simulation'),
+    path('download_irrigation_csv/', views.download_irrigation_csv, name='download_irrigation_csv'),
 ]

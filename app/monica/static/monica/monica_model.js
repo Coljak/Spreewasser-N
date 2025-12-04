@@ -22,11 +22,49 @@ function createChartDataset() {
             yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
             label: resultTranslation.Precip,
             data: listOfResults[0].daily.Precip,
-            backgroundColor: 'rgba(0, 0, 255, 0.5)',  // Semi-transparent blue
+            backgroundColor: 'rgba(0, 0, 255, 0.8)',  // Semi-transparent blue
             borderColor: 'rgba(0, 0, 255, 0.7)',
             borderWidth: 1,
         })
     }
+
+    let minMaxDatasets = {};
+    const parameters = [
+        'Yield', 'AbBiom', 'Irrig', 'organ', 
+        'PASW_AVG', 'Mois_1', 'Mois_2', 'Mois_3', 
+        'SOC_1', 'SOC_2', 'SOC_3', 'LAI'
+    ];
+    parameters.forEach(p => {
+        minMaxDatasets[p] = { min: Infinity, max: -Infinity };
+    });
+    listOfResults.forEach(result => {
+        const daily = result.daily;
+
+        parameters.forEach(p => {
+            if (daily[p]) {
+                const values = Object.values(daily[p]).filter(v => !isNaN(v));
+                if (values.length) {
+                    const minVal = Math.min(...values);
+                    const maxVal = Math.max(...values);
+
+                    // Update global min/max
+                    minMaxDatasets[p].min = Math.min(minMaxDatasets[p].min, minVal);
+                    minMaxDatasets[p].max = Math.max(minMaxDatasets[p].max, maxVal);
+                }
+            }
+        });
+    });
+    minMaxDatasets['Mois'] = {'min': Infinity, 'max': -Infinity};
+    minMaxDatasets['SOC'] = {'min': Infinity, 'max': -Infinity};
+    minMaxDatasets['Irrig'] = {'min': Infinity, 'max': -Infinity};
+    minMaxDatasets['Mois']['min'] = Math.min(minMaxDatasets['Mois_1'].min, minMaxDatasets['Mois_2'].min, minMaxDatasets['Mois_3'].min);
+    minMaxDatasets['Mois']['max'] = Math.max(minMaxDatasets['Mois_1'].max, minMaxDatasets['Mois_2'].max, minMaxDatasets['Mois_3'].max);
+    minMaxDatasets['SOC']['min'] = Math.min(minMaxDatasets['SOC_1'].min, minMaxDatasets['SOC_2'].min, minMaxDatasets['SOC_3'].min);
+    minMaxDatasets['SOC']['max'] = Math.max(minMaxDatasets['SOC_1'].max, minMaxDatasets['SOC_2'].max, minMaxDatasets['SOC_3'].max);
+    minMaxDatasets['Irrig']['min'] = Math.min(Math.min(...listOfResults[0].daily.Precip), minMaxDatasets['Irrig']['min']);
+    minMaxDatasets['Irrig']['max'] = Math.max(Math.max(...listOfResults[0].daily.Precip), minMaxDatasets['Irrig']['max']);
+    console.log('minMaxDatasets', minMaxDatasets);
+
     for (let i = 0; i < listOfResults.length; i++) {
         console.log(i);
         var msg = listOfResults[i].daily
@@ -34,7 +72,7 @@ function createChartDataset() {
         if (resultOutput.Yield) {
             datasets.push({
                 yAxisID: 'y2',
-                label: `${resultTranslation.Yield} ${i}`,
+                label: `${i} ${resultTranslation.Yield}`,
                 data: msg.Yield,
                 borderWidth: 2,
                 borderColor: colors[i],
@@ -43,8 +81,8 @@ function createChartDataset() {
         };
         if (resultOutput.AbBiom) {
             datasets.push({
-                yAxisID: 'y2',
-                label: `${resultTranslation.AbBiom} ${i}`,
+                yAxisID: 'y5',
+                label: `${i} ${resultTranslation.AbBiom}`,
                 data: msg.AbBiom,
                 borderWidth: 2,
                 borderColor: colors[i],
@@ -56,7 +94,7 @@ function createChartDataset() {
             datasets.push({
                 type: 'bar',  
                 yAxisID: 'y1',  
-                label: `${resultTranslation.Irrig} ${i}`,
+                label: ` ${i} ${resultTranslation.Irrig}`,
                 data: msg.Irrig,
                 backgroundColor: colors[i],  // Semi-transparent blue
                 borderColor: colors[i],
@@ -69,7 +107,7 @@ function createChartDataset() {
             datasets.push({
                 type: 'bar',  // Specifies the type as bar for precipitation
                 yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
-                label: `${resultTranslation.organ} ${i}`,
+                label: ` ${i} ${resultTranslation.organ}`,
                 data: msg.Stage,
                 backgroundColor: colors[i],  // Semi-transparent blue
                 borderColor: colors[i],
@@ -80,7 +118,7 @@ function createChartDataset() {
         if (resultOutput.PASW_AVG) {
             datasets.push({
                 yAxisID: 'y4',
-                label: `${resultTranslation.PASW_AVG} ${i}`,
+                label: ` ${i} ${resultTranslation.PASW_AVG}`,
                 data: msg.PASW_AVG,
                 borderWidth: 2,
                 borderColor: colors[i],
@@ -90,7 +128,7 @@ function createChartDataset() {
         // if (resultOutput.PASW_2) {
         //     datasets.push({
         //         yAxisID: 'y4',
-        //         label: `${resultTranslation.PASW_2} ${i}`,
+        //         label: ` ${i} ${resultTranslation.PASW_2}`,
         //         data: msg.PASW_2,
         //         borderWidth: 2,
         //         borderColor: colors[i],
@@ -100,7 +138,7 @@ function createChartDataset() {
         // if (resultOutput.PASW_3) {
         //     datasets.push({
         //         yAxisID: 'y4',
-        //         label: `${resultTranslation.PASW_3} ${i}`,
+        //         label: ` ${i} ${resultTranslation.PASW_3}`,
         //         data: msg.PASW_3,
         //         borderWidth: 2,
         //         borderColor: colors[i],
@@ -110,7 +148,7 @@ function createChartDataset() {
         // if (resultOutput.PASW_4) {
         //     datasets.push({
         //         yAxisID: 'y4',
-        //         label: `${resultTranslation.PASW_4} ${i}`,
+        //         label: ` ${i} ${resultTranslation.PASW_4}`,
         //         data: msg.PASW_4,
         //         borderWidth: 2,
         //         borderColor: colors[i],
@@ -120,7 +158,7 @@ function createChartDataset() {
         // if (resultOutput.PASW_5) {
         //     datasets.push({
         //         yAxisID: 'y4',
-        //         label: `${resultTranslation.PASW_5} ${i}`,
+        //         label: `${i} ${resultTranslation.PASW_5}`,
         //         data: msg.PASW_5,
         //         borderWidth: 2,
         //         borderColor: colors[i],
@@ -130,7 +168,7 @@ function createChartDataset() {
         if (resultOutput.Mois_1) {
             datasets.push({
                 yAxisID: 'y3',
-                label: `${resultTranslation.Mois_1} ${i}`,
+                label: `${i} ${resultTranslation.Mois_1}`,
                 data: msg.Mois_1,
                 borderWidth: 2,
                 borderColor: colors[i],
@@ -140,7 +178,7 @@ function createChartDataset() {
         if (resultOutput.Mois_2) {
             datasets.push({
                 yAxisID: 'y3',
-                label: `${resultTranslation.Mois_2} ${i}`,
+                label: `${i} ${resultTranslation.Mois_2}`,
                 data: msg.Mois_2,
                 borderWidth: 2,
                 borderColor: colors[i],
@@ -150,7 +188,7 @@ function createChartDataset() {
         if (resultOutput.Mois_3) {
             datasets.push({
                 yAxisID: 'y3',
-                label: `${resultTranslation.Mois_3} ${i}`,
+                label: `${i} ${resultTranslation.Mois_3}`,
                 data: msg.Mois_3,
                 borderWidth: 2,
                 borderColor: colors[i],
@@ -160,7 +198,7 @@ function createChartDataset() {
         if (resultOutput.SOC_1) {
             datasets.push({
                 yAxisID: 'y4',
-                label: `${resultTranslation.SOC_1} ${i}`,
+                label: `${i} ${resultTranslation.SOC_1}`,
                 data: msg.SOC_1,
                 borderWidth: 2,
                 borderColor: colors[i],
@@ -170,7 +208,7 @@ function createChartDataset() {
         if (resultOutput.SOC_2) {
             datasets.push({
                 yAxisID: 'y4',
-                label: `${resultTranslation.SOC_2} ${i}`,
+                label: `${i} ${resultTranslation.SOC_2}`,
                 data: msg.SOC_2,
                 borderWidth: 2,
                 borderColor: colors[i],
@@ -180,7 +218,7 @@ function createChartDataset() {
         if (resultOutput.SOC_3) {
             datasets.push({
                 yAxisID: 'y4',
-                label: `${resultTranslation.SOC_3} ${i}`,
+                label: `${i} ${resultTranslation.SOC_3}`,
                 data: msg.SOC_3,
                 borderWidth: 2,
                 borderColor: colors[i],
@@ -190,7 +228,7 @@ function createChartDataset() {
         if (resultOutput.LAI) {
             datasets.push({
                 yAxisID: 'y5',
-                label: `${resultTranslation.LAI} ${i}`,
+                label: `${i} ${resultTranslation.LAI}`,
                 data: msg.LAI,
                 borderWidth: 2,
                 borderColor: colors[i],
@@ -213,12 +251,56 @@ function createChartDataset() {
             datasets: datasets,
         },
         options: {
+            scales: {
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    title: 'Precipitation / Irrigation (mm)',
+                    beginAtZero: true,
+                    min: 0,
+                    max: minMaxDatasets['Irrig'].max * 1.1,
+                },
+                y2: {
+                    type: 'linear',
+                    position: 'left',
+                    title: 'Ertrag (t/ha)',
+                    beginAtZero: true,
+                    min: 0,
+                    max: Math.ceil(minMaxDatasets['Yield'].max * 1.3),
+                },
+                y3: {
+                    type: 'linear',
+                    position: 'right',
+                    title: 'Soil Moisture (%)',
+                    beginAtZero: true,
+                    min: 0,
+                    max: Math.ceil(minMaxDatasets['Mois'].max * 1.1),
+                },
+                y4: {
+                    type: 'linear',
+                    position: 'left',
+                    title: 'pflanzenverfügbares Wasser',
+                    beginAtZero: true,
+                    min: 0,
+                    max: Math.ceil(minMaxDatasets['PASW_AVG'].max * 1.1),
+                },
+                y5: {
+                    type: 'linear',
+                    position: 'left',
+                    title: 'Biomasse (t/ha)',
+                    beginAtZero: true,
+                    min: 0,
+                    max: Math.ceil(minMaxDatasets['AbBiom'].max * 1.1),
+                },
+            },
             elements: {
                 point: {
                 radius: 0,
                 },
             },
             responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
             plugins: {
                 // title: {
                 //     display: true,
@@ -264,12 +346,12 @@ const runSimulation = (monicaProject) => {
             createChartDataset();
             
             $('#runSimulationButton').prop('disabled', false);
-            $('#runSimulationButton').text('Run Simulation');
+            $('#runSimulationButton').text('Simulation starten');
 
         } else {
             handleAlerts(data.message);
             $('#runSimulationButton').prop('disabled', false);
-            $('#runSimulationButton').text('Run Simulation');
+            $('#runSimulationButton').text('Simulation starten');
         }    
     })
     .then(() => {
@@ -953,7 +1035,9 @@ const validateProject = (project) => {
                 saveProject(project);
                 // saveProjectDialog.hide();
             } else {
-                document.querySelector('#projectName').focus()
+                $('#monicaNewProjectModal').find('.modal-title').text('Neues Projekt erstellen');
+                $('#monicaNewProjectModal').modal('show');
+                document.querySelector('.monica-project-name').focus()
                 handleAlerts({'success': false, 'message': 'Please provide a project name'});
             }
         });
@@ -1004,12 +1088,12 @@ document.addEventListener('DOMContentLoaded', () => {
             'rgba(0, 255, 100, 0.7)'],
     
         resultOutput: {
-            'Precip': true,
+            'Precip': false,
             'Yield': true,
-            'Irrig': true,
+            'Irrig': false,
             // 'organ': false,
             'AbBiom': false,
-            'PASW_AVG': true,
+            'PASW_AVG': false,
             // 'PASW_2': true,
             // 'PASW_3': true,
             // 'PASW_4': true,
@@ -1143,6 +1227,21 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             $('.advanced').hide(); 
             $(this).text('Switch to Advanced Mode'); 
+        } 
+        console.log('Advanced mode:', advancedMode); // Log the current mode
+    });
+
+    $('#toggle-advanced-mode-de').on('click', function () {
+        // Toggle the advancedMode variable
+        advancedMode = !advancedMode;
+    
+        // Show or hide elements based on advancedMode
+        if (advancedMode) {
+            $('.advanced').show(); 
+            $(this).text('Einfache Ansicht'); 
+        } else {
+            $('.advanced').hide(); 
+            $(this).text('Erweiterte Ansicht'); 
         } 
         console.log('Advanced mode:', advancedMode); // Log the current mode
     });
@@ -1502,6 +1601,7 @@ document.addEventListener('DOMContentLoaded', () => {
         project.modelSetupId = $('#id_project_model_setup').val();
     
         project.saveToLocalStorage();
+        $('#monica-project-name').text(project.name);
     
         fetch('save-project/', {
             method: 'POST',
@@ -1536,6 +1636,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
 
     $('#projectName').on('change', function () {
+        // TODO obsolete!!??
         if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
             project.name = $(this).val();

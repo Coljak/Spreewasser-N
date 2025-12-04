@@ -56,7 +56,33 @@ document.addEventListener("DOMContentLoaded", () => {
   // all other datepickers are managed in monica_model.js
   $('#todaysDatePicker').on('changeDate focusout', handleDateChange);
 
-  
+  $('#btnDownloadCsv').on('click', function() {
+    fetch('/monica/download_irrigation_csv/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+      },
+      body: JSON.stringify({
+        // You can send additional data if needed
+      }),
+    })
+    .then(response => response.blob())
+    .then(blob => {
+      // Create a link to download the file
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bewaesserungsempfehlung.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    })
+    .catch(error => {
+      console.error('Error downloading CSV:', error);
+      handleAlerts({ success: false, message: error.message });
+    });
+});
 
 // Bounds for DEM image overlay
 const demBounds = [[47.136744752, 15.57241882],[55.058996788, 5.564783468],];

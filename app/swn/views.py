@@ -544,9 +544,9 @@ def create_automatic_irrigation_envs(envs, data):
     print("CREATING EXTRA ENV", today)
 
     simulation_settings = [
-        monica_models.UserSimulationSettings.objects.get(id=28).to_json(),
+        # monica_models.UserSimulationSettings.objects.get(id=28).to_json(),
         monica_models.UserSimulationSettings.objects.get(id=31).to_json(),
-        monica_models.UserSimulationSettings.objects.get(id=32).to_json()
+        # monica_models.UserSimulationSettings.objects.get(id=32).to_json()
     ]
     for sim in simulation_settings:
         # sim["AutoIrrigationParams"]["startDate"] = today.strftime('%Y-%m-%d')
@@ -556,6 +556,18 @@ def create_automatic_irrigation_envs(envs, data):
         envs.append(env2)
 
     return envs
+
+def generate_irrigation_csv(json_msgs):
+    """
+    This function generates a CSV string from the irrigation events in the simulation messages.
+    """
+    csv_output = "Date,Amount (mm)\n"
+    for msg in json_msgs:
+        for event in msg.get('irrigationEvents', []):
+            date = event.get('date')
+            amount = event.get('amount')
+            csv_output += f"{date},{amount}\n"
+    return csv_output
 
     
 def run_simulation(request):
@@ -582,8 +594,9 @@ def run_simulation(request):
         
         envs = create_automatic_irrigation_envs(envs, data)
         json_msgs = monica_views.run_monica_simulation(envs)
-        
-        return JsonResponse({'message': {'success': True, 'message': json_msgs}})
+        csv_irrigation = generate_irrigation_csv(json_msgs)
+
+        return JsonResponse({'message': {'success': True, 'message': json_msgs, 'csv': csv_irrigation}})
     else:
         return JsonResponse({'message': {'success': False, 'message': 'Simulation not started.'}})
 

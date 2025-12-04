@@ -1004,11 +1004,12 @@ export function createSinkResultTable(data) {
 
     // Initialize DataTable
     const tableSettings = createTableSettings(dataInfo);
-    const table = $(`#${dataInfo.dataType}-table`).DataTable(tableSettings);
+    const table = $(`#${dataInfo.dataType}-table`)
+    const dataTable = table.DataTable(tableSettings);
     
     // Attach child rows (detail rows: sink, waterbody, inlet tables + chart)
     inlets.forEach(inlet => {
-        const mainRow = table.row($(`tr.inlet-header-row[data-id="${inlet.id}"]`));
+        const mainRow = dataTable.row($(`tr.inlet-header-row[data-id="${inlet.id}"]`));
         let sinkDataInfo, waterbodyDataInfo;
 
         if (inlet.sink_type === 'sink') sinkDataInfo = data.sinkDataInfo.sink;
@@ -1039,7 +1040,15 @@ export function createSinkResultTable(data) {
         // Attach child row and hide initially
         mainRow.child(detailHtml).hide();     
     });
-    $(`#${dataInfo.dataType}-table`).resizableColumns();
+
+    if (table.length && table.is(':visible')) {
+        try {
+            table.resizableColumns();
+        } catch (e) {
+            console.warn("ResizableColumns failed:", e);
+        }
+    }
+
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
 }
 
@@ -1164,7 +1173,14 @@ export function addFeatureCollectionToTable(data) {
 
     colorTable(dataInfo.dataType);
 
-    $(`#${dataInfo.dataType}-table`).resizableColumns();
+
+    if ($(`#${dataInfo.dataType}-table`).length && $(`#${dataInfo.dataType}-table`).is(':visible')) {
+        try {
+            $(`#${dataInfo.dataType}-table`).resizableColumns();
+        } catch (e) {
+            console.warn("ResizableColumns failed:", e);
+        }
+    }
     return dataTable;
 }
 
@@ -1179,7 +1195,15 @@ export function createDetailRows(table, featureCollection, dataInfo, callback) {
 
 
     $(`#card-${dataInfo.dataType}-table`).removeClass('d-none');
-    $(`#${dataInfo.dataType}-table`).resizableColumns();
+    const dataTable = $(`#${dataInfo.dataType}-table`);
+
+    if (dataTable.length && dataTable.is(':visible')) {
+        try {
+            dataTable.resizableColumns();
+        } catch (e) {
+            console.warn("ResizableColumns failed:", e);
+        }
+    }
 }
 
 

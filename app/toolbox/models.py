@@ -1,3 +1,4 @@
+import random
 from django.db import models
 from django.db.models import Min, Max, Q
 from django.contrib.gis.db import models as gis_models
@@ -119,7 +120,7 @@ class AboveGroundCatchmentArea(models.Model):
             "bemerkung": self.bemerkung,
             "wrrl_fge": self.wrrl_fge,
             "wrrl_bg": self.wrrl_bg,
-            "color_index": int(self.shape_len) % 255
+            "color_index": (self.id % 50) * 5,  # different fill color for each catchment area
         }
     
     @classmethod
@@ -1247,7 +1248,8 @@ class SiekerLargeLake(models.Model):
                 "verweilt": self.verweilt,
                 "trend_cm_per_a": round(self.trend_cm_per_a, 2) if self.trend_cm_per_a else self.trend_cm_per_a,
                 "seetyp": self.seetyp,
-                "seetyp_txt": self.seetyp_txt
+                "seetyp_txt": self.seetyp_txt,
+                "color_index": 195, # fixed fill color for lakes
             }
 
     @classmethod
@@ -1738,6 +1740,10 @@ class HistoricalWetlands(models.Model):
     # index_feasibility = models.IntegerField(null=True, blank=True)
     feasibility = models.ForeignKey(WetlandFeasibility, blank=True, null=True, on_delete=models.CASCADE)
 
+    def __data_type__(self):
+        return 'wetland'
+
+
     @classmethod
     def get_filename(cls, language='de'):
         if language == 'de':
@@ -1775,14 +1781,14 @@ class HistoricalWetlands(models.Model):
         }
     
     
-    def to_feature(self, epsg=4326):
+    def to_feature(self, language='de', epsg=4326):
         if epsg == 4326:
             geometry = json.loads(self.geom4326.geojson)
         elif epsg == 25833:
             geometry = json.loads(self.geom25833.geojson)
         else:
             raise ValueError("Unsupported EPSG code")
-        properties = self.to_json()
+        properties = self.to_json(language=language)
         return {
             "type": "Feature",
             "geometry": geometry,

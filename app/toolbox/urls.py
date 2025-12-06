@@ -35,7 +35,7 @@ urlpatterns = [
     path('toolbox/mar_calculate_area/', views.mar_calculate_area, name='mar_calculate_area'),
     #### Sieker ####
     # Surface Waters
-    path('toolbox/load_surface_waters_gui/<int:user_field_id>/', views.sieker_surface_waters_gui, name='sieker_surface_waters_gui'),
+    path('toolbox/load_surface_waters_gui/<int:user_field_id>/', views.load_sieker_surface_waters_gui, name='sieker_surface_waters_gui'),
     path('toolbox/get_water_levels/<int:user_field_id>/', views.get_water_levels, name='get_water_levels'),
     path('toolbox/filter_sieker_surface_waters/', views.filter_sieker_surface_waters, name='filter_sieker_surface_waters'),
     path('toolbox/get_all_sieker_surface_waters/', views.get_all_sieker_surface_waters, name='get_all_sieker_surface_waters'),
@@ -52,6 +52,8 @@ urlpatterns = [
     # Wetlands
     path('toolbox/load_sieker_wetland_gui/<str:user_field_id>/', views.load_sieker_wetland_gui, name='load_sieker_wetland_gui'),
     path('toolbox/filter_sieker_wetlands/', views.filter_sieker_wetlands, name='filter_sieker_wetland'),
+    path('toolbox/get_sieker_wetland_results/', views.get_sieker_wetland_results, name='get_sieker_wetland_results'),
+    # Injection
     path('toolbox/load_injection_gui/', views.load_injection_gui, name='load_injection_gui' ),
     # Drainage
     path('toolbox/load_sieker_drainage_gui/<int:user_field_id>/', views.load_sieker_drainage_gui, name='load_sieker_drainage_gui' ),

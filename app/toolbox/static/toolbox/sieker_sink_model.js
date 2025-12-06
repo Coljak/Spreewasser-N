@@ -3,8 +3,7 @@ export class SiekerSink extends ToolboxProject {
     constructor (data = {}) {
         super(data);
         this.toolboxType = 'sieker_sink';
-        // this.id = data.id ?? null;
-        // this.userField = data.userField ?? null;
+
         this.sieker_sink_volume_max = data.sieker_sink_volume_max ?? null;
         this.sieker_sink_volume_min = data.sieker_sink_volume_min ?? null;
         this.sieker_sink_area_max = data.sieker_sink_area_max ?? null;
@@ -31,22 +30,14 @@ export class SiekerSink extends ToolboxProject {
         this.all_sieker_sink_ids = data.all_sieker_sink_ids ?? [];
         this.selected_sieker_sinks = data.selected_sieker_sinks ?? [];
 
-        this.sieker_stream_min_surplus_volume_min = data.sieker_stream_min_surplus_volume_min ?? null;
-        this.sieker_stream_min_surplus_volume_max = data.sieker_stream_min_surplus_volume_max ?? null;
         this.sieker_stream_mean_surplus_volume_min = data.sieker_stream_mean_surplus_volume_min ?? null;
         this.sieker_stream_mean_surplus_volume_max = data.sieker_stream_mean_surplus_volume_max ?? null;
-        this.sieker_stream_max_surplus_volume_min = data.sieker_stream_max_surplus_volume_min ?? null;
-        this.sieker_stream_max_surplus_volume_max = data.sieker_stream_max_surplus_volume_max ?? null;
         this.sieker_stream_plus_days_min = data.sieker_stream_plus_days_min ?? null;
         this.sieker_stream_plus_days_max = data.sieker_stream_plus_days_max ?? null;
         this.sieker_stream_distance_to_userfield = data.sieker_stream_distance_to_userfield ?? 0;
 
-        this.sieker_lake_min_surplus_volume_min = data.sieker_lake_min_surplus_volume_min ?? null;
-        this.sieker_lake_min_surplus_volume_max = data.sieker_lake_min_surplus_volume_max ?? null;
         this.sieker_lake_mean_surplus_volume_min = data.sieker_lake_mean_surplus_volume_min ?? null;
         this.sieker_lake_mean_surplus_volume_max = data.sieker_lake_mean_surplus_volume_max ?? null;
-        this.sieker_lake_max_surplus_volume_min = data.sieker_lake_max_surplus_volume_min ?? null;
-        this.sieker_lake_max_surplus_volume_max = data.sieker_lake_max_surplus_volume_max ?? null;
         this.sieker_lake_plus_days_min = data.sieker_lake_plus_days_min ?? null;
         this.sieker_lake_plus_days_max = data.sieker_lake_plus_days_max ?? null;
         this.sieker_lake_distance_to_userfield = data.sieker_lake_distance_to_userfield ?? 0;

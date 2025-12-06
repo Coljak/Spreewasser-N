@@ -86,7 +86,7 @@ const TOOLBOX_TYPES = {
   '4': 'sieker_gek',
   '5': 'sieker_surface_water',
   '6': 'sieker_sink',
-  '7': 'sieker_wetland'
+  '7': 'wetland'
 }; 
 
 
@@ -99,14 +99,20 @@ async function startInfiltration() {
     handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'});
     return Promise.reject('No userField selected');
   }
-
-  const response = await fetch('load_infiltration_gui/' + project.userField + '/');
-  const data = await response.json();
-  if (!data.success) {
-    handleAlerts(data);
-    throw new Error('Data load failed gracefully');
+    
+  let data = null;
+  try {
+    const response = await fetch('load_infiltration_gui/' + project.userField + '/');
+    data = await response.json();
+    if (!data.success) {
+      handleAlerts(data)
+      return null
+    }
+  } catch (error) {
+    
+    return null;
   }
-
+  
   // Replace HTML content
   $('#toolboxButtons').addClass('d-none');
   $('#toolboxPanel').removeClass('d-none');
@@ -123,87 +129,127 @@ async function startInfiltration() {
 
 
 // Sieker
+
 async function startSurfaceWaters() {
-  console.log('startSurfaceWaters')
-  // const userField = project.userField;
+  console.log("startSurfaceWaters");
+
+  // Load stored project
   const project = SiekerSurfaceWaters.loadFromLocalStorage();
-  if (!project.userField || project.userField === undefined) {
-    handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'});
-    return Promise.reject('No userField selected');
+
+  // Early validation
+  if (!project.userField) {
+    handleAlerts({
+      success: false,
+      message: "Bitte wählen Sie ein Suchgebiet aus!"
+    });
+    return null; // fail silent
   }
-  return fetch('load_surface_waters_gui/' + project.userField + '/')
-    .then(response => response.text())
-    .then(text => {
-      try { 
-        return JSON.parse(text);
-      } catch (e) {
-        handleAlerts({success: false, message: 'Ihre Suche liefert zu viele Ergebnisse. Bitte verkleinern Sie das Suchgebiet!'})
-        throw new Error(`Probably received partial Json due to large search area. Error: ${e}`)
-      }
-    })
-    .then(data => {
-      // console.log('data received', data)
-      if (!data.success) {
-        handleAlerts(data);
-        throw new Error('Data load failed gracefully');
-      }
 
-      // const surfaceWaters = new SiekerSurfaceWaters({ userField: userField });
-      // surfaceWaters.saveToLocalStorage();
-      // Replace HTML content
-      $('#toolboxButtons').addClass('d-none');
-      $('#toolboxPanel').removeClass('d-none');
-      $('#toolboxPanel').html(data.html);
+  let rawText;
 
-      if (!project.id) {
-        const surfaceWaters = new SiekerSurfaceWaters(data.default_project);
-        surfaceWaters.saveToLocalStorage();
-      }
+  // ----- Fetch + parse JSON safely -----
+  try {
+    const response = await fetch(
+      `load_surface_waters_gui/${project.userField}/`
+    );
 
-    })
-    .then(() => {
-      initializeSiekerSurfaceWaters(); 
-      return true;
-    })
-  
-};
+    rawText = await response.text();
+  } catch (e) {
+    handleAlerts({
+      success: false,
+      message: "Bitte verkleinern Sie das Suchgebiet - die Datenmenge ist zu groß und kann nicht vollständig geladen werden."
+    });
+    return null;
+  }
+
+  let data;
+
+  try {
+    data = JSON.parse(rawText);
+  } catch (e) {
+    handleAlerts({
+      success: false,
+      message:
+        "Ihre Suche liefert zu viele Ergebnisse. Bitte verkleinern Sie das Suchgebiet!"
+    });
+    return null; // stop here!
+  }
+
+  // ----- Stop early if backend returned an error -----
+  if (!data.success) {
+    handleAlerts(data);
+    return null; // STOP — nothing more runs
+  }
+
+  // ----- Success: update the UI -----
+  $("#toolboxButtons").addClass("d-none");
+  $("#toolboxPanel").removeClass("d-none").html(data.html);
+
+  // Create new project if needed
+  if (!project.id) {
+    const surfaceWaters = new SiekerSurfaceWaters(data.default_project);
+    surfaceWaters.saveToLocalStorage();
+  }
+
+  // Initialize
+  initializeSiekerSurfaceWaters();
+
+  return true;
+}
 
 
 async function startSiekerSinks() {
-  console.log('start Infiltration')
-  // const userField = project.userField;
+  console.log("start Infiltration");
+
   const project = SiekerSink.loadFromLocalStorage();
-  if (!project.userField || project.userField === undefined) {
-    handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'});
-    return Promise.reject('No userField selected');
+
+  // Early validation
+  if (!project.userField) {
+    handleAlerts({
+      success: false,
+      message: "Bitte wählen Sie ein Suchgebiet aus!"
+    });
+    return null; // silent fail
   }
-  return fetch('load_sieker_sink_gui/' + project.userField + '/')
-    .then(response => response.json())
-    .then(data => {
-      if (!data.success) {
-        handleAlerts(data);
-        throw new Error('Data load failed gracefully');
-      }
 
-      // const siekerSink = SiekerSink({ userField: userField });
-      // siekerSink.saveToLocalStorage();
-      // Replace HTML content
-      $('#toolboxButtons').addClass('d-none');
-      $('#toolboxPanel').removeClass('d-none');
-      $('#toolboxPanel').html(data.html);
-      if (!project.id) {
-        const siekerSink = new SiekerSink(data.default_project);
-        siekerSink.saveToLocalStorage();
-      }
+  let data;
 
-      // return project;
-    })
-    .then(() => {
-      initializeSiekerSink();
-      return true;
-    })
+  // ---- Load JSON safely ----
+  try {
+    const response = await fetch(
+      `load_sieker_sink_gui/${project.userField}/`
+    );
+    data = await response.json();
+  } catch (e) {
+    handleAlerts({
+      success: false,
+      message: "Fehler beim Laden der Senkendaten."
+    });
+    return null;
+  }
 
-};
+  // ---- Backend returned an application error ----
+  if (!data.success) {
+    handleAlerts(data);
+    return null; // stop immediately
+  }
+
+  // ---- Success: update UI ----
+  $("#toolboxButtons").addClass("d-none");
+  $("#toolboxPanel").removeClass("d-none").html(data.html);
+
+  // Create project if needed
+  if (!project.id) {
+    const siekerSink = new SiekerSink(data.default_project);
+    siekerSink.saveToLocalStorage();
+  }
+
+  // Initialize GUI
+  initializeSiekerSink();
+
+  return true;
+}
+
 
 
 async function startSiekerGeks() {
@@ -215,40 +261,40 @@ async function startSiekerGeks() {
     return Promise.reject('No userField selected');
   }
 
-  return fetch('load_sieker_gek_gui/' + project.userField + '/')
-    .then(response => response.json())
-    .then(data => {
-      if (!data.success) {
-        handleAlerts(data);
-        throw new Error('Data load failed gracefully');
-      }
+  let data;
 
-      // const siekerGeks = new SiekerGek({ userField: userField });
-      // siekerGeks.saveToLocalStorage();
-      // Replace HTML content
-      $('#toolboxButtons').addClass('d-none');
-      $('#toolboxPanel').removeClass('d-none');
-      $('#toolboxPanel').html(data.html);
-      if (!project.id) {
-        const siekerGeks = new SiekerGek(data.default_project);
-        console.log('SiekerGek from backend: ', data.default_project)
-        console.log('SiekerGek from frontend: ', siekerGeks)
-        siekerGeks.saveToLocalStorage();
-      }
+    try {
+    const response = await fetch(
+      `load_sieker_gek_gui/${project.userField}/`
+    );
+    data = await response.json();
+  } catch (e) {
+    handleAlerts({
+      success: false,
+      message: "Fehler beim Laden der Senkendaten."
+    });
+    return null;
+  }
 
-      return {
-        'sliderLabels': data.slider_labels,
-        // 'dataInfo': data.dataInfo,
-        // 'featureCollection': data.featureCollection,
-        'all_ids': data.all_ids,
-        // 'default_project': data.default_project
-      };
-    })
-    .then(data => {
-        initializeSiekerGek(data);
-        return true;
-    })
- 
+  // ---- Backend returned an application error ----
+  if (!data.success) {
+    handleAlerts(data);
+    return null; // stop immediately
+  }
+
+  // Replace HTML content
+  $('#toolboxButtons').addClass('d-none');
+  $('#toolboxPanel').removeClass('d-none');
+  $('#toolboxPanel').html(data.html);
+  if (!project.id) {
+    const siekerGeks = new SiekerGek(data.default_project);
+    siekerGeks.saveToLocalStorage();
+  }
+  initializeSiekerGek({
+    'sliderLabels': data.slider_labels,
+    'all_ids': data.all_ids,
+  });
+  return true;
 };                              
 
 
@@ -261,37 +307,38 @@ async function startFormerWetlands() {
     handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'});
     return Promise.reject('No userField selected');
   }
-
-  return fetch('load_sieker_wetland_gui/' + project.userField + '/')
-    .then(response => response.json())
-    .then(data => {
-      if (!data.success) {
-        handleAlerts(data);
-        throw new Error('Data load failed gracefully');
-      }
-
-      // const formerWetlands = new SiekerWetland({ userField: userField });
-      // formerWetlands.saveToLocalStorage();
+  let data;
+  try {
+    const response = await fetch('load_sieker_wetland_gui/' + project.userField + '/');
+    data = await response.json();
+  } catch (e) {
+    handleAlerts({
+      success: false,
+      message: "Fehler beim Laden der Senkendaten."
+    });
+    return null;
+  }
+  if (!data.success) {
+    handleAlerts(data);
+    return null;
+  }
       // Replace HTML content
-      $('#toolboxButtons').addClass('d-none');
-      $('#toolboxPanel').removeClass('d-none');
-      $('#toolboxPanel').html(data.html);
-      if (!project.id) {
-        const formerWetlands = new SiekerWetland(data.default_project);
-        formerWetlands.saveToLocalStorage();
-      }
+  $('#toolboxButtons').addClass('d-none');
+  $('#toolboxPanel').removeClass('d-none');
+  $('#toolboxPanel').html(data.html);
 
-      return {
-        'sliderLabels': data.slider_labels,
-        'dataInfo': data.dataInfo,
-        'featureCollection': data.featureCollection,
-        'all_ids': data.all_ids
-      };
-    })
-    .then(data => {
-        initializeSiekerWetland(data);
-        return true;
-    });  
+  if (!project.id) {
+    const formerWetlands = new SiekerWetland(data.default_project);
+    formerWetlands.saveToLocalStorage();
+  }
+
+  initializeSiekerWetland({
+    'sliderLabels': data.slider_labels,
+    'dataInfo': data.dataInfo,
+    'featureCollection': data.featureCollection,
+    'all_ids': data.all_ids
+  });
+  return true; 
 };
 
 // TU-Berlin
@@ -335,42 +382,45 @@ async function startDrainage() {
   const project = Drainage.loadFromLocalStorage();
   if (!project.userField || project.userField === undefined) {
     handleAlerts({'success': false, 'message': 'Bitte wählen Sie ein Suchgebiet aus!'});
-    return Promise.reject('No userField selected');
+    return null;
   }
   
-  return fetch('load_sieker_drainage_gui/' + project.userField + '/')
-  .then(response => response.json())
-  .then(data => {
-    if (!data.success) {
-      handleAlerts(data);
-      throw new Error('Data load failed gracefully');
-    }
-    
-    // const drainage = new Drainage({ userField: userField });
-    // drainage.saveToLocalStorage();}
-      // Replace HTML content
-    $('#toolboxButtons').addClass('d-none');
-    $('#toolboxPanel').removeClass('d-none');
-    $('#toolboxPanel').html(data.html);
-    if (!project.id) {
-      const drainage = new Drainage(data.default_project);
-      drainage.saveToLocalStorage();
-    }
-    return data.colors
-  })
-  .then(colors => {
-      
-    $('input[detail]').each(function() {
-        const detail = $(this).attr('detail');         // get the key
-        const color = colors[detail];                  // look up color
-        if (color) {
-            const id = $(this).attr('id');            // get input id
-            $(`label[for="${id}"]`).css('color', color); // set label color
-        }
+  let data;
+  try {
+    const response = await fetch('load_sieker_drainage_gui/' + project.userField + '/');
+    data = await response.json();
+  } catch (e) {
+    handleAlerts({
+      success: false,
+      message: "Fehler beim Laden der Senkendaten."
     });
-      initializeDrainage();
-      return true;
-  })
+    return null;
+  }
+
+  if (!data.success) {
+    handleAlerts(data);
+    return null;
+  }
+    
+      // Replace HTML content
+  $('#toolboxButtons').addClass('d-none');
+  $('#toolboxPanel').removeClass('d-none');
+  $('#toolboxPanel').html(data.html);
+  if (!project.id) {
+    const drainage = new Drainage(data.default_project);
+    drainage.saveToLocalStorage();
+  }
+   
+  $('input[detail]').each(function() {
+      const detail = $(this).attr('detail');         // get the key
+      const color = data.colors[detail];                  // look up color
+      if (color) {
+          const id = $(this).attr('id');            // get input id
+          $(`label[for="${id}"]`).css('color', color); // set label color
+      }
+  });
+  initializeDrainage();
+  return true;
 
 };
 
@@ -396,8 +446,8 @@ export function startToolbox(project) {
     case 'sieker_gek':
       console.log('startToolbox sieker_gek');
       return Promise.resolve(startSiekerGeks());
-    case 'sieker_wetland':
-      console.log('startFormerWetlands sieker_wetland');
+    case 'wetland':
+      console.log('startFormerWetlands wetland');
       return Promise.resolve(startFormerWetlands());
     case 'drainage':
       console.log('startToolbox drainage');
@@ -679,51 +729,51 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
 
   $('#startInfiltration').on('click', () => {
     console.log('startInfiltration clicked');
-    const userField = ToolboxProject.loadFromLocalStorage().userField;
-    const project = new Infiltration({ userField: userField });
-    project.saveToLocalStorage();
+    // const userField = ToolboxProject.loadFromLocalStorage().userField;
+    // const project = new Infiltration({ userField: userField });
+    // project.saveToLocalStorage();
     startInfiltration();
   });
   $('#startInjection').on('click', () => {
     console.log('startInjection clicked');
-    const userField = ToolboxProject.loadFromLocalStorage().userField;
-    const project = new Injection({ userField: userField });
-    project.saveToLocalStorage();
+    // const userField = ToolboxProject.loadFromLocalStorage().userField;
+    // const project = new Injection({ userField: userField });
+    // project.saveToLocalStorage();
     startInjection();
     // startInjection()
   });
   $('#startSurfaceWaters').on('click', () => {
     console.log('startSurfaceWaters clicked');
-    const userField = ToolboxProject.loadFromLocalStorage().userField;
-    const project = new SiekerSurfaceWaters({ userField: userField });
-    project.saveToLocalStorage();
+    // const userField = ToolboxProject.loadFromLocalStorage().userField;
+    // const project = new SiekerSurfaceWaters({ userField: userField });
+    // project.saveToLocalStorage();
     startSurfaceWaters();
   });
   $('#startSiekerSinks').on('click', () => {
-    const userField = ToolboxProject.loadFromLocalStorage().userField;
-    const project = new SiekerSink({ userField: userField });
-    project.saveToLocalStorage();
+    // const userField = ToolboxProject.loadFromLocalStorage().userField;
+    // const project = new SiekerSink({ userField: userField });
+    // project.saveToLocalStorage();
     startSiekerSinks();
   });
   $('#startWaterDevelopment').on('click', () => {
     console.log('startGek clicked');
-    const userField = ToolboxProject.loadFromLocalStorage().userField;
-    const project = new SiekerGek({ userField: userField });
-    project.saveToLocalStorage();
+    // const userField = ToolboxProject.loadFromLocalStorage().userField;
+    // const project = new SiekerGek({ userField: userField });
+    // project.saveToLocalStorage();
     startSiekerGeks();
   });
   $('#startFormerWetlands').on('click', () => {
     console.log('startFormerWetlands clicked');
-    const userField = ToolboxProject.loadFromLocalStorage().userField;
-    const project = new SiekerWetland({ userField: userField });
-    project.saveToLocalStorage();
+    // const userField = ToolboxProject.loadFromLocalStorage().userField;
+    // const project = new SiekerWetland({ userField: userField });
+    // project.saveToLocalStorage();
     startFormerWetlands();
   });
   $('#startDrainage').on('click', () => {
     console.log('startDrainage clicked');
-    const userField = ToolboxProject.loadFromLocalStorage().userField;
-    const project = new Drainage({ userField: userField });
-    project.saveToLocalStorage();
+    // const userField = ToolboxProject.loadFromLocalStorage().userField;
+    // const project = new Drainage({ userField: userField });
+    // project.saveToLocalStorage();
    startDrainage()
   });
 

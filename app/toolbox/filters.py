@@ -353,9 +353,7 @@ class StreamFilter(FilterSet):
         form = SliderFilterForm
 
 class LakeFilter(FilterSet):
-    # min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Minimales Überschussvolumen")
     mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mittleres Überschussvolumen ")
-    # max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Maximales Überschussvolumen")
     plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Tage mit Überschuss")
 
     distance_to_userfield = NumberFilter(
@@ -592,7 +590,7 @@ class HistoricalWetlandsFilter(FilterSet):
         widget=CustomSimpleSliderWidget(attrs = {
             "id": "wetland_feasibility",
             "name": "feasibility",
-            "prefix": "sieker_wetland",
+            "prefix": "wetland",
             "string_label": True,
             "class": "hiddeninput",
         }) 

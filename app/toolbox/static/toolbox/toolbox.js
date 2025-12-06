@@ -28,7 +28,10 @@ const projectClasses = {
     'filtered_sieker_gek': SiekerGek,
     'sieker_gek': SiekerGek,
 
-    'sieker_wetland': SiekerWetland,
+    'wetland': SiekerWetland,
+    'wetland_lake': SiekerWetland,
+    'wetland_stream': SiekerWetland,
+    'wetland_result': SiekerWetland,
 
     'sieker_sink': SiekerSink,
     'sieker_lake': SiekerSink,
@@ -364,6 +367,7 @@ export function addChangeEventListener(projectClass) {
             project.saveToLocalStorage();
             return;
         } else if ($target.hasClass('table-select-all')) {
+            
         
             const allSelected = $target.is(':checked');
             const dataType = $target.data('type');
@@ -376,6 +380,7 @@ export function addChangeEventListener(projectClass) {
             } else {
                 project[key] = project[`all_${dataType}_ids`]                
             }
+           
             tableCheckSelectedItems(project, dataType);
             project.saveToLocalStorage();
             return;
@@ -383,13 +388,15 @@ export function addChangeEventListener(projectClass) {
             const dataType = $target.data('type');
             
             const key = `selected_${dataType}s`;
-
+            const isChecked = $target.is(':checked')
             // in case checkable Popup is open
             try {
                 const checkbox = document.querySelector(`.select-map-feature-checkbox[data-type="${dataType}"][data-id="${$target.data('id')}"]`);
-                checkbox.checked = $target.is(':checked');
+                checkbox.checked = isChecked;
             } catch  {;};
-
+            if (!isChecked && $(`.table-select-all[data-type="${dataType}"]`)[0].checked) {
+                $(`.table-select-all[data-type="${dataType}"]`)[0].checked = false;
+            } 
             toggleValueInArray(project[key], String($target.data('id')));
             project.saveToLocalStorage();
             return;
@@ -506,6 +513,8 @@ export function loadProjectToGui(project) {
             } else if (project.toolboxType === 'sieker_sink' && dataType === 'sieker_sink_result' && project.selected_sieker_sink_results.length > 0) {
                 console.log('Special case for sieker_sink_result', project.selected_sieker_sink_results)
                 $(`#btnGetSiekerSinkResults`).trigger('click')
+            } else if (project.toolboxType === 'wetland' && dataType === 'wetland_result' && project.selected_wetland_results.length > 0) {
+                $(`#btnGetSiekerWetlandResults`).trigger('click')
             } else {
                 console.log('Toolbox Type', project.toolboxType)
                 $(`button.filter-features[data-type="${dataType}"]`).trigger('click')
@@ -803,7 +812,7 @@ function addPopUpsToFeature(feature, layer, dataInfo) {
 
 
 export function addFeatureCollectionToLayer(data, clearLayer, resultMap={}){
-    
+    console.log('addFeatureCollectionToLayer', data)
     let featureCollection = data.featureCollection;
     let dataInfo = data.dataInfo;  
     console.log(dataInfo)
@@ -907,6 +916,7 @@ export function addPointFeatureCollectionToLayer(data) {
 };
 
 function createPropertiesTable(properties, dataInfo) {
+    // console.log('createPropertiesTable', properties, dataInfo);
     let tableHTML = `
     <div class="col-4 g-3 mb-1">
         <table class="${dataInfo.dataType} table-sm table-bordered properties-table">
@@ -958,7 +968,15 @@ export function createSinkResultTable(data) {
     dataInfo.properties.forEach(property => {
         if (property.table) {
             if (property.valueName === 'id') {
-                tableHTML += `<th></th>`; // for checkbox
+                tableHTML += `
+                <th>
+                    <div class="form-check form-switch m-0">
+                    <input type="checkbox" 
+                        class="form-check-input table-select-all switch-input"  
+                        data-type="${dataInfo.dataType}" 
+                        checked="">
+                    </div>
+                </th>`; // for checkbox
             } else {
                 tableHTML += `<th>${property.title}</th>`;
             }
@@ -1025,9 +1043,9 @@ export function createSinkResultTable(data) {
         const mainRow = dataTable.row($(`tr.inlet-header-row[data-id="${inlet.id}"]`));
         let sinkDataInfo, waterbodyDataInfo;
 
-        if (inlet.sink_type === 'sink') sinkDataInfo = data.sinkDataInfo.sink;
-        else if (inlet.sink_type === 'enlarged_sink') sinkDataInfo = data.sinkDataInfo.enlarged_sink;
-        else if (inlet.sink_type === 'sieker_sink') sinkDataInfo = data.sinkDataInfo.sink;
+        
+        if (inlet.sink_type === 'enlarged_sink') sinkDataInfo = data.sinkDataInfo.enlarged_sink;
+        else sinkDataInfo = data.sinkDataInfo.sink;
 
         if (inlet.waterbody_type === 'lake') waterbodyDataInfo = data.waterbodyDataInfo.lake;
         else if (inlet.waterbody_type === 'stream') waterbodyDataInfo = data.waterbodyDataInfo.stream;

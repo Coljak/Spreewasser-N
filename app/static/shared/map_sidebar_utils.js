@@ -532,8 +532,8 @@ export function selectUserField(userFieldId, project, featureGroup) {
         (
             (project.userField && project.userField !== userFieldId) ||
             (!project.userField || project.userField === '')
-        )
-    );
+        ) 
+    ) || (project.toolboxType && project.toolboxType !== 'generic' && project.userField && project.userField !== userFieldId);
     console.log('needsConfirmation', needsConfirmation, userFieldId, userField);
 
     if (needsConfirmation) {
@@ -544,7 +544,7 @@ export function selectUserField(userFieldId, project, featureGroup) {
             title: "Auswahl des Suchbereichs",
             text: isChangingExisting
                 ? "Wollen Sie den Suchbereich wechseln?"
-                : "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.",
+                : "Falls ein Projekt geöffnet ist, wird es ohne zu speichern geschlossen.",
             onConfirm: () => {
                 commitSwitchUserField(project, userFieldId, userField, featureGroup);
             }

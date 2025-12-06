@@ -727,7 +727,7 @@ class InfiltrationResultDownloadForm(ResultForm):
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
             ('shp', 'als Shapefile'),
-            ('gjson', ' als GeoJSON')
+            ('gjson', 'als GeoJSON')
         ],
         initial=['result_shp'],
     )
@@ -763,7 +763,7 @@ class InfiltrationResultDownloadForm(ResultForm):
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
             ('shp', 'als Shapefile'),
-            ('gjson', ' als GeoJSON'),
+            ('gjson', 'als GeoJSON'),
         ],
         initial=['shp'],
     )
@@ -788,7 +788,7 @@ waterbodies = forms.MultipleChoiceField(
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
             ('shp', 'als Shapefile'),
-            ('gjson', ' als GeoJSON'),
+            ('gjson', 'als GeoJSON'),
         ],
         initial=['shp'],
     )
@@ -852,7 +852,7 @@ class SiekerSinkDownloadForm(ResultForm):
         widget=CheckboxSelectMultipleWithAttrs,        
         choices=[
             ('shp', 'als Shapefile'),
-            ('gjson', ' als GeoJSON'),
+            ('gjson', 'als GeoJSON'),
         ],
         initial=['shp'],
     )
@@ -875,7 +875,7 @@ class SiekerSinkDownloadForm(ResultForm):
         widget=CheckboxSelectMultipleWithAttrs,
         choices=[
             ('shp', 'als Shapefile'),
-            ('gjson', ' als GeoJSON'),
+            ('gjson', 'als GeoJSON'),
         ],
         initial=['shp'],
     )
@@ -948,10 +948,32 @@ class SiekerWetlandDownloadForm(ResultForm): #######
         ],
         initial=['shp'],
     )
+
+    waterbodies = forms.MultipleChoiceField(
+        label="Gewässer", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,
+        choices=[
+            ('shp', 'als Shapefile'),
+            ('gjson', 'als GeoJSON'),
+        ],
+        initial=['shp'],
+    )
+
+    result = forms.MultipleChoiceField(
+        label="Ergebnisdarstellung", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,        
+        choices=[
+            ('shp', 'als Shapefile'),
+            ('gjson', 'als GeoJSON'),
+        ],
+        initial=['shp'],
+    )
     
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, toolbox_type='sieker_wetland', **kwargs)
+        super().__init__(*args, toolbox_type='wetland', **kwargs)
 
     
 class SiekerDrainageDownloadForm(ResultForm): #######

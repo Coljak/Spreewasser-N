@@ -7,6 +7,10 @@ from toolbox import forms as forms_module
 from toolbox import filters as filters_module
 import csv
 
+"""
+Utility to generate a json/ dictionary for the help functions/icons in the toolbox
+"""
+
 def get_all_form_labels(forms_module, filters_module):
     """
     Returns a dictionary with form/filter class names as keys and 

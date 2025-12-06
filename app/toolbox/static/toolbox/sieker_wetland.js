@@ -1,5 +1,14 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown, getBsColor } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
+import { 
+  updateDropdown, 
+  addChangeEventListener, 
+  addClickEventListenerToToolboxPanel,  
+  tableCheckSelectedItems, 
+  addFeatureCollectionToTable, 
+  addFeatureCollectionToLayer, 
+  loadProjectToGui,
+  createSinkResultTable, 
+} from '/static/toolbox/toolbox.js';
 import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerWetland } from '/static/toolbox/sieker_wetland_model.js';
 import {Layers} from '/static/toolbox/layers.js';
@@ -25,75 +34,112 @@ function filterSiekerWetlands(project) {
     
     console.log(data)
     if(data.message.success) {
-      Layers['filtered_sieker_wetland'].clearLayers();
-      Layers['sieker_wetland'].clearLayers();
-      // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LATTER!
+      Layers['wetland'].clearLayers();
+ 
       addFeatureCollectionToLayer({featureCollection: data.featureCollection, dataInfo: data.dataInfo}, true);
       addFeatureCollectionToTable({featureCollection: data.featureCollection, dataInfo: data.dataInfo});
-      
-
-      // addFeatureCollectionResultCards(data.dataInfo, data.measures)
-
-      // const measuresTab = $('#navSiekerWetlandMeasures')
-      // const tab = new bootstrap.Tab(measuresTab);
-      // tab.show();
     } else {
       handleAlerts(data.message);
-      clearAndRemoveTable(SiekerWetland, 'sieker_wetland', data.message.message)
+      clearAndRemoveTable(SiekerWetland, 'wetland', data.message.message)
     }
+
   })
+  .then(() => tableCheckSelectedItems(project, 'wetland'));
 };
 
-function addFeatureCollectionResultCards( dataInfo, wetlandMeasures) {
-    console.log(wetlandMeasures)
-    console.log("Creating card")
-    const infoCard = document.getElementById('sieker_wetland-info-card');
-    const infoCardBody = document.getElementById('sieker_wetland-info-card-body');
-    infoCardBody.innerHTML = '';
-    wetlandMeasures.forEach(wetland => {
-        const cardBody = document.createElement('div');
-        cardBody.classList.add('card-body')
-        // card
-        cardBody.innerHTML = `<h4 class="card-title m-3">${wetland.name} Abschnitt ${wetland.planning_segment}</h4>`;
-        
-        const card = document.createElement('div');
-        card.classList.add("card")
-        card.classList.add("mb-3")
-        card.classList.add("wetland-result-card")
-        card.setAttribute('data-type', dataInfo.dataType)
-        card.setAttribute('data-id', wetland.id)
+function getSiekerWetlandResults() {
+  let url = 'get_sieker_wetland_results/'
+  const project = SiekerWetland.loadFromLocalStorage();
+  fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(project),
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.message.success) {
+      console.log('getSiekerWetlandResult data', data);  
+      Layers['wetland_result'].clearLayers();
 
+      let resultMap = addFeatureCollectionToLayer({dataInfo: data.inlet_data_info, featureCollection: data.inlet_feature_collection}, true)
+      resultMap = addFeatureCollectionToLayer({dataInfo: data.wetland_data_info, featureCollection: data.sink_feature_collection}, false, resultMap)
+      console.log('Result Map: ', resultMap)
+    
+      createSinkResultTable({
+          dataInfo: data.result_data_info, 
+          inlets: data.results,
+          inletDataInfo: data.inlet_data_info,
+          waterbodyDataInfo: {
+            'lake': data.lake_data_info, 
+            'stream': data.stream_data_info
+          },
+          sinkDataInfo: {
+            'sink': data.wetland_data_info,   
 
-        wetland.measures.forEach(measure => {
-            const innerCard = document.createElement('div');
-            innerCard.classList.add("card")
-            innerCard.classList.add("mb-3")
-            // innerCard.setAttribute('data-type', measure.dataType)
-            innerCard.setAttribute('data-id',measure.id)
+          },
+        });
 
-            const innerCardBody = document.createElement('div');
-            innerCardBody.classList.add("card-body")
-            innerCardBody.innerHTML = `
-                <h5 class="card-title">${measure.wetland_measure}</h5>
-                <b>Anzahl:</b><span> ${measure.quantity}</span></br>
-                <b>Kosten:</b><span> ${measure.costs} €</span></br>
-                <div class="result-text-box">${measure.description}</div>
-            `;
-        
-            innerCard.appendChild(innerCardBody)
-            cardBody.append(innerCard)
-        })
-        card.appendChild(cardBody)
-        infoCardBody.appendChild(card)
-    })
-    infoCard.style.display = '';
-    $('.wetland-result-card').hide();
-}
+      $('#toolboxPanel').on('change', '.toggle-sink-result', function () {
+              const inletId = $(this).attr('inlet-id');
+              const sinkId  = $(this).attr('sink-id');
+             
+              const show    = $(this).is(':checked');
+
+              // Direct map lookup - FAST and CLEAN
+              const inletLayer = resultMap[inletId];
+              const sinkLayer  = resultMap[sinkId];
+
+              if (inletLayer) {
+                  show ? map.addLayer(inletLayer) : map.removeLayer(inletLayer);
+              }
+              if (sinkLayer) {
+                  show ? map.addLayer(sinkLayer) : map.removeLayer(sinkLayer);
+              }
+              
+          });
+
+        $('#toolboxPanel').on('change', '.table-select-all.switch-input', function () {
+             
+              const show    = $(this).is(':checked');
+              if (show) {
+                Object.keys(resultMap).forEach(key => {
+                  map.addLayer(resultMap[key]);
+                }) 
+              } else {
+                Object.keys(resultMap).forEach(key => {
+                  map.removeLayer(resultMap[key]);
+                })
+              } 
+  
+              
+          });
+    
+
+      const resultTab = document.getElementById('navSiekerWetlandsResult');
+      resultTab.classList.remove('disabled');
+      resultTab.removeAttribute('aria-disabled');
+      const tab = new bootstrap.Tab(resultTab);
+      tab.show();
+
+      map.removeLayer(Layers.wetland);
+      map.addLayer(Layers.wetland_lake);
+      map.addLayer(Layers.wetland_stream);
+
+    } else {
+
+      handleAlerts(data.message);
+      
+      clearAndRemoveTable(SiekerWetland, dataType, data.message.message)
+    }
+})
+.catch(error => console.error("Error fetching data:", error));
+};
 
 
 export function initializeSiekerWetland(data) {
-
-  
 
 
   $('#toolboxPanel').off('change');
@@ -125,9 +171,6 @@ export function initializeSiekerWetland(data) {
   addFeatureCollectionToTable({featureCollection: data.featureCollection, dataInfo: data.dataInfo})
   
 
-    
-  $('.table-select-all').prop('checked', true);
-  $('.table-select-all').trigger('change')
   $('#cardSiekerWetlandTable').removeClass('d-none');
   
 
@@ -135,40 +178,28 @@ export function initializeSiekerWetland(data) {
     const $target = $(event.target);
   if ($target.attr('id') === 'btnFilterSiekerWetlands') {
       const project = SiekerWetland.loadFromLocalStorage();
-      if (project.selected_sieker_wetlands.length === 0) {
+      if (project.selected_wetlands.length === 0) {
         handleAlerts({'success': false, 'message': 'Bitte wählen Sie Gewässer aus!'})
       } else {
-        map.removeLayer(Layers['sieker_wetland']);
-        map.addLayer(Layers['filtered_sieker_wetland']);
+        map.removeLayer(Layers['wetland']);
+        // map.addLayer(Layers['filtered_wetland']);
         filterSiekerWetlands(project);
       }
       return;  
-    // } else if ($target.attr('id') === 'toggleSiekerWetlands') {
-    //   if (map.hasLayer(Layers['sieker_wetland'])) {
-    //     map.removeLayer(Layers['sieker_wetland']);
-    //     $target.text('Feuchtgebiete einblenden');
-    //   } else {
-    //       map.addLayer(Layers['sieker_wetland']);
-    //       $target.text('Feuchtgebiete ausblenden');
-    //   }
+
+    } else if ($target.attr('id') === 'btnGetSiekerWetlandResults') {
+      getSiekerWetlandResults();
+      return;
     }
-    }); 
+  });
 
   $('#navSiekerWetland').on('shown.bs.tab', function (event) {
     const targetPane = $($(event.target).attr('href')); 
     if (targetPane.hasClass('active')) {
-      map.addLayer(Layers['sieker_wetland']);
-      map.removeLayer(Layers['filtered_sieker_wetland']);
+      map.addLayer(Layers['wetland']);
     }
   });
 
-  $('#navSiekerWetlandMeasures').on('click', function (event) {
-    const targetPane = $($(event.target).attr('href'));
-    if (targetPane.hasClass('active')) {
-      map.removeLayer(Layers['sieker_wetland']);
-      map.addLayer(Layers['filtered_sieker_wetland']);
-    }
-  });
 
 
   function selectWetland(event) {
@@ -187,10 +218,7 @@ export function initializeSiekerWetland(data) {
   // TODO This is not really working because the checkboxes of the wetland table are not always accessible - only the ones visible are accessible
   $('#map').on('click', selectWetland);
 
-  // $('input[type="checkbox"][type="sieker"][prefix="wetland"]').prop('checked', true);
-  // $('input[type="checkbox"][name="landuse"][prefix="wetland"]').trigger('change');
 
-  // $('input[type="range"]').trigger('change');
   const siekerWetland = SiekerWetland.loadFromLocalStorage();
   loadProjectToGui(siekerWetland)
 

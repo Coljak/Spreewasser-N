@@ -570,10 +570,10 @@ def filter_waterbodies(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     
-    if data_type in ('lake', 'sieker_lake'):
+    if data_type in ('lake', 'sieker_lake', 'wetland_lake'):
         waterbody_class = models.Lake
         waterbody = 'Seen'
-    elif data_type in ('stream', 'sieker_stream'):
+    elif data_type in ('stream', 'sieker_stream', 'wetland_stream'):
         waterbody = 'Flüsse'
         waterbody_class = models.Stream
 
@@ -924,7 +924,7 @@ def get_elevations_for_line(line_geom):
 ####### SIEKER TOOLBOX ########################
 
 ##### Surface Waters ######
-def sieker_surface_waters_gui(request, user_field_id):
+def load_sieker_surface_waters_gui(request, user_field_id):
     if user_field_id == "null":
 
         return JsonResponse({'message':{'success': False, 'message': 'Das Suchgebiet konnte nicht gefunden werden.'}})
@@ -1229,17 +1229,13 @@ def filter_sieker_sinks(request):
         return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
     
 
-def get_sieker_sink_result_list(project, epsg=4326):
+def get_sieker_sink_result_list(sinks, lakes, streams, epsg=4326):
     '''
     this gets the results from a sieker sink project. 
-    The function is used for display and data download.
     '''
 
     language='de'
     # the items are ordered by id to ensure that the result ids will be identical if the project is reloaded
-    sinks = models.SiekerSink.objects.filter(id__in=project.get('selected_sieker_sinks', [])).order_by('id')
-    lakes = models.Lake.objects.filter(id__in=project.get('selected_sieker_lakes', [])).order_by('id')
-    streams = models.Stream.objects.filter(id__in=project.get('selected_sieker_streams', [])).order_by('id')
 
     def rate_connection(connection_data, sink):
         index_length = rate_water_sink_distance(connection_data['distance_m'])
@@ -1295,8 +1291,11 @@ def get_sieker_sink_results(request):
         project = json.loads(project)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid project JSON'}, status=400)
+    sinks = models.SiekerSink.objects.filter(id__in=project.get(f'selected_sieker_sinks', []))
+    lakes = models.Lake.objects.filter(id__in=project.get(f'selected_sieker_lakes', []))
+    streams = models.Stream.objects.filter(id__in=project.get(f'selected_sieker_streams', []))
 
-    results_dict = get_sieker_sink_result_list(project, epsg=4326)
+    results_dict = get_sieker_sink_result_list(sinks, lakes, streams, epsg=4326)
     result_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result').to_dict()
     inlet_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_inlet').to_dict()
     sink_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_sink').to_dict()
@@ -1312,9 +1311,7 @@ def get_sieker_sink_results(request):
         'result_data_info': result_data_info,
         'lake_data_info': lake_data_info,
         'stream_data_info': stream_data_info,
-
         'results': results_dict['results'],
-
         'inlet_feature_collection': results_dict.get('inlet_feature_collection', None),
         'sink_feature_collection' : results_dict.get('sink_feature_collection', None),
     
@@ -1472,7 +1469,7 @@ def load_sieker_wetland_gui(request, user_field_id):
         user_field_id = int(user_field_id)
 
     user = request.user
-    toolbox_type = models.ToolboxType.objects.get(name_tag='sieker_wetland')
+    toolbox_type = models.ToolboxType.objects.get(name_tag='wetland')
     user_field = models.UserField.objects.get(Q(id=int(user_field_id))&Q(user=user))
     
     
@@ -1484,28 +1481,50 @@ def load_sieker_wetland_gui(request, user_field_id):
         qs = models.ToolboxProject.objects.filter(
                 Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
             ).order_by('-creation_date').reverse()
-        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='sieker_wetland')
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='wetland')
         
         feature_collection = create_feature_collection(wetlands)
         filter_form = filters.HistoricalWetlandsFilter()
         slider_labels =  dict(models.WetlandFeasibility.objects.values_list('id', 'name_de').order_by('id'))
+        streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
+        lakes = models.Lake.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
+
+        lake_form = filters.LakeFilter(
+            request.GET,
+            queryset=lakes,
+            prefix='wetland_lake',
+            bounds=user_field.filter_bounds.get('lakes') if user_field.filter_bounds else None
+        )
+        stream_form = filters.StreamFilter(
+            request.GET,
+            queryset=streams,
+            prefix='wetland_stream',
+            bounds=user_field.filter_bounds.get('streams') if user_field.filter_bounds else None
+        )
         # TODO This does not really make sense - more filters?
         result_form = forms.SiekerWetlandDownloadForm()
+
         default_project = filters.create_default_project(
             user_field,
             [
                 filter_form,
+                lake_form,
+                stream_form,
                 result_form,
                 ],
-            'sieker_wetland'
+            'wetland'
         )
+        default_project['selected_wetlands'] = list(wetlands.values_list('id', flat=True))
+
         html = render_to_string('toolbox/sieker_wetlands.html', {
             'project_select_form': project_select_form,
             'wetlands_filter': filter_form,
+            'lakes_form': lake_form,
+            'streams_form': stream_form,
             'result_form': result_form,
             
         }, request=request) 
-        data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
+        data_info = models.DataInfo.objects.get(data_type='wetland').to_dict()
 
         return JsonResponse({'success': True, 'html': html, 'featureCollection': feature_collection,  'dataInfo': data_info, 'slider_labels': slider_labels, 'default_project': default_project})
     else:
@@ -1523,10 +1542,10 @@ def filter_sieker_wetlands(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     user_field = models.UserField.objects.get(pk=project['userField'])
-    print('FROM filter_sieker_wetlands project', project)
+    print('FROM filter_wetlands project', project)
     
     # filter landuses
-    ids = project.get('selected_sieker_wetlands')
+    ids = project.get('selected_wetlands')
     wetlands = models.HistoricalWetlands.objects.filter(pk__in=ids)
 
     # filter measures
@@ -1545,15 +1564,108 @@ def filter_sieker_wetlands(request):
         print("wetlands", wetlands.count())
         
         feature_collection = create_feature_collection(wetlands)
-        data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
-        data_info['featureColor'] = 'var(--bs-success)'
-        data_info['dataType'] = 'filtered_sieker_wetland'
-
-   
-
-        data_info = models.DataInfo.objects.get(data_type='filtered_sieker_wetland').to_dict()
+        data_info = models.DataInfo.objects.get(data_type='wetland').to_dict()
+ 
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info})
 
+
+
+def get_sieker_wetland_result_list(wetlands, lakes, streams, epsg=4326):
+    '''
+    this gets the results from a sieker wetland project. 
+    '''
+
+    language='de'
+    # the items are ordered by id to ensure that the result ids will be identical if the project is reloaded
+
+    def rate_connection(connection_data, wetland):
+        index_length = rate_water_sink_distance(connection_data['distance_m'])
+        # index_volumes = min(connection_data['waterbody']['mean_surplus_volume'] / wetland.volume, 1) *100
+        # print('index_volume', index_volumes)
+
+        connection_data['connection_feature']['properties']['index_length'] = int(index_length)
+        connection_data['index_length'] = round(index_length)
+        # connection_data['connection_feature']['properties']['index_volumes'] = round(index_volumes)
+        # connection_data['index_volumes'] = round(index_volumes)
+        connection_data['feasibility'] = wetland.feasibility.name_de if language == 'de' else wetland.feasibility.name_en
+
+        return connection_data
+
+    results = []
+    line_features = []
+
+    for i, wetland in enumerate(wetlands):
+        connection_data = get_shortest_connection(wetland, lakes, streams, epsg=epsg, connection_id=i)
+        connection_data.update({'sink': wetland.to_json()})
+        connection_data = rate_connection(connection_data, wetland)
+        line_feature = connection_data['connection_feature']
+        connection_data.pop('connection_feature')
+        results.append(connection_data)
+        line_features.append(line_feature)
+   
+
+    wetland_feature_collection = create_feature_collection(wetlands)
+    result_dict= {
+        'sink_feature_collection': wetland_feature_collection,
+        'inlet_feature_collection': {
+            "type": "FeatureCollection",
+            "features": line_features,
+            "crs": {
+                "type": "name",
+                "properties": {"name": "EPSG:4326"}
+            }
+        },
+        'results': results,
+    }
+    with open('sieker_wetland_result_dict.json', 'w') as f:
+        json.dump(result_dict, f)
+
+    return result_dict
+
+
+def get_sieker_wetland_results(request):
+    # POST request
+    if request.method != "POST":
+        return HttpResponseBadRequest("POST required")
+    try:
+        project = request.body
+        print('Project:', type(project))
+        project = json.loads(project)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid project JSON'}, status=400)
+
+    wetlands = models.HistoricalWetlands.objects.filter(id__in=project.get(f'selected_wetlands', []))
+    lakes = models.Lake.objects.filter(id__in=project.get(f'selected_wetland_lakes', []))
+    streams = models.Stream.objects.filter(id__in=project.get(f'selected_wetland_streams', []))
+
+    results_dict = get_sieker_wetland_result_list(wetlands, lakes, streams, epsg=4326)
+    result_data_info = models.DataInfo.objects.get(data_type='wetland_result').to_dict()
+    inlet_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_inlet').to_dict()
+    inlet_data_info['dataType'] = 'wetland_result_inlet'
+    wetland_data_info = models.DataInfo.objects.get(data_type='wetland').to_dict()
+    wetland_data_info['dataType'] = 'wetland_result_wetland'
+    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_dict()
+    lake_data_info['dataType'] = 'wetland_lake'
+
+    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_dict()
+    stream_data_info['dataType'] = 'wetland_stream'
+
+    response = {
+        'inlet_data_info': inlet_data_info, #inletDataInfo
+        'wetland_data_info': wetland_data_info, # sinkDataInfo.sink
+        'result_data_info': result_data_info, # in js dataInfo
+        'lake_data_info': lake_data_info, # waterbodyDataInfo.lake
+        'stream_data_info': stream_data_info, # waterbodyDataInfo.stream
+        'results': results_dict['results'], # inlets
+        'inlet_feature_collection': results_dict.get('inlet_feature_collection', None),
+        'sink_feature_collection' : results_dict.get('sink_feature_collection', None),
+    
+        'message': {
+            'success': True,
+        }
+    }
+    return JsonResponse(response)
+    
 
 def load_injection_gui(request):
     user = request.user
@@ -1978,6 +2090,16 @@ def create_sink_download(project, sinks, tmpdir, epsg, sink_type, result_sinks, 
 
 
 def create_download(data, tmpdir, epsg, result_list, language='de'):
+    """
+    Docstring for create_download
+    
+    :param data: queryset of model instances
+    :param tmpdir: temporary directory path
+    :param epsg: EPSG code for coordinate reference system
+    :param result_list: list of result download-file types
+    :param language: language code for localization
+    """
+
 
     filename = data.model.get_filename(language=language)
     pt_feature_collection = {}
@@ -2009,12 +2131,25 @@ def create_download(data, tmpdir, epsg, result_list, language='de'):
             filename = filename + '_points'
         else:
             fc = feature_collection
+            
 
         if filetype.split('_')[-1] == 'shp':
             writer_fields = data.model.shp_writer_fields()
             create_shp_from_feature_collection(tmpdir, fc, epsg, filename, writer_fields)
         elif filetype.split('_')[-1] == 'gjson':
             create_geojson_from_feature_collection(fc, tmpdir, filename)
+        elif filetype == 'csv':
+            file_path = os.path.join(tmpdir, f'{filename}.csv')
+            dataset = [obj.to_json(language=language) for obj in data]
+            rows = [row for row in dataset[0].keys()]
+            with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(rows)
+                
+                for obj in dataset:
+                    writer.writerow([obj[key] for key in rows])
+                    
+
 
 
 def download_toolbox_results(request):
@@ -2162,11 +2297,11 @@ def download_toolbox_results(request):
         
         if len(result_result) > 0:
            
-            sinks = models.SiekerSink.objects.filter(id__in=project.get(f'selected_sinks', []))
-            lakes = models.Lake.objects.filter(id__in=project.get(f'selected_lakes', []))
-            streams = models.Stream.objects.filter(id__in=project.get(f'selected_streams', []))
-            
-            result = get_sieker_sink_result_list(project, epsg=epsg)
+            sinks = models.SiekerSink.objects.filter(id__in=project.get(f'selected_sieker_sinks', []))
+            lakes = models.Lake.objects.filter(id__in=project.get(f'selected_sieker_lakes', []))
+            streams = models.Stream.objects.filter(id__in=project.get(f'selected_sieker_streams', []))
+
+            result = get_sieker_sink_result_list(sinks, lakes, streams, epsg=epsg)
             inlet_fc = result.get('inlet_feature_collection')
             sink_fc = result.get('sink_feature_collection')
             for filetype in result_result:
@@ -2225,12 +2360,23 @@ def download_toolbox_results(request):
                     for row in timeseries:
                         writer.writerow([row["date"], row["discharge_m3s"]])
 
-    elif project_type == 'sieker_wetland':
+    elif project_type == 'wetland':
         result_wetlands = project.get('result_wetlands', [])
+        result_waterbodies = project.get('result_waterbodies', [])
+
         if len(result_wetlands) > 0:
-            wetland_ids = project.get('selected_sieker_wetlands', [])
+            wetland_ids = project.get('selected_wetlands', [])
             wetlands = models.HistoricalWetlands.objects.filter(id__in=wetland_ids)
             create_download(wetlands, tmpdir, epsg=epsg, result_list=result_wetlands, language='de')
+
+        if len(result_waterbodies) > 0:
+            stream_ids = project.get('selected_wetland_streams', [])
+            streams = models.Stream.objects.filter(id__in=stream_ids)
+            create_download(streams, tmpdir, epsg=epsg, result_list=result_waterbodies, language='de')
+
+            lake_ids = project.get('selected_wetland_lakes', [])
+            lakes = models.Lake.objects.filter(id__in=lake_ids)
+            create_download(lakes, tmpdir, epsg=epsg, result_list=result_waterbodies, language='de')
 
     elif project_type == 'drainage':
         user_field_id = project.get('userField')
@@ -2257,6 +2403,9 @@ def download_toolbox_results(request):
             target_path = os.path.join(tmpdir, "Entwaesserungswahrscheinlichkeit.tif")
             # copy file into tmpdir
             shutil.copy(filename, target_path)
+
+
+
 
 
     #### zip and return

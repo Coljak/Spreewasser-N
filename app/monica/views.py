@@ -1465,7 +1465,7 @@ def run_monica_simulation(envs):
                 writer.writerow(["Date", "Irrigation"])
                 writer.writerows(rows)
 
-        print("check 10b: ")
+
     print('json_msgs is a  ', type(json_msgs))
     return json_msgs
 

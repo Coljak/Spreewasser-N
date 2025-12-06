@@ -13,8 +13,11 @@
                 <strong>Suchgebiet: </strong><span class="title-user-field-name">Kein Suchgebiet ausgewählt</span></br>
             </div>
             <div class="col-6 text-end">
+                <span class="spinner-span" data-type="wetland_result" id="spanBtnGetSiekerWetlandResults">
+                <button id="btnGetSiekerWetlandResults" class="btn btn-primary mx-2 get-result-button" data-type="wetland">Ergebnis berechnen</button>
+                </span>
                 <button class="toolbox-back-to-initial btn btn-secondary mx-2">Schließen</button>
-                <button class="btn btn-primary mx-2 save-toolbox-project" data-type="sieker_wetland">Speichern</button>
+                <button class="btn btn-primary mx-2 save-toolbox-project" data-type="wetland">Speichern</button>
             </div>
         </div>
     </div>
@@ -27,12 +30,15 @@
         <li class="nav-item sieker-wetland">
             <a id="navSiekerWetland" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerWetlands" aria-selected="false">Ehemalige Feuchtgebiete</a>
         </li>
-        {% comment %} <li class="nav-item sieker-wetland">
-            <a id="navSiekerWetlandMeasures" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerWetlandMeasures" aria-selected="false">Maßnahmen</a>
-        </li> {% endcomment %}
+        <li class="nav-item sieker-wetland">
+            <a id="navSiekerWetlandsLakes" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerWetlandsLakes" aria-selected="false">Seen</a>
+        </li>
+        <li class="nav-item sieker-wetland">
+            <a id="navSiekerWetlandsStreams" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerWetlandsStreams" aria-selected="false">Flüsse</a>
+        </li>
         
         <li class="nav-item sieker-wetland">
-            <a id="navSiekerWetlandResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerWetlandResult">Ergebnis</a>
+            <a id="navSiekerWetlandsResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerWetlandsResult">Ergebnis</a>
         </li>
 
         <li class="nav-item infiltration">
@@ -54,31 +60,95 @@
         </div>
 
 
-
-
         <div id="tabSiekerWetlands" class="tab-pane">  
             <div class="card mb-3">
                 <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title mb-0">Ehemalige Feuchtgebiete</h5>
+                        <button class="btn btn-secondary toggle-feature-group" data-type="wetland_lake">Layer ausblenden</button>  
+                    </div>
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy wetlands_filter.form %}
                         <button id="btnFilterSiekerWetlands"type="submit" class="btn btn-primary">Ehemalige Feuchtgebiete filtern</button>
                     </form>
-                    
-            
                 </div>
             </div>
             
             
-            <div id="card-sieker_wetland-table" class="card mb-3 d-none">
+            <div id="card-wetland-table" class="card mb-3 d-none">
                 <div class="card-body">
-                    <button class="btn btn-secondary toggle-feature-group">Layer ausblenden</button>                                                                                             
-
-                    <div class="card-title">Gewässer</div>
-                    <div id="sieker_wetland-table-container" class="table-responsive"></div>     
+                                                                                                               
+                    <div id="wetland-table-container" class="table-responsive"></div>     
                 </div>
             </div>
         </div>
+
+
+        <div id="tabSiekerWetlandsLakes" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title mb-0">Stehende Gewässer</h5>
+                        <button  class="btn btn-secondary toggle-feature-group" data-type="wetland_lake">Layer ausblenden</button>                                                                                             
+                    </div>
+
+                    
+                    <div class="card-body">
+                        {% crispy lakes_form.form  %}
+                        <button class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="wetland_lake">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Seen filtern
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="card-wetland_lake-table"  class="card mb-3 d-none">
+                <div class="card-body">
+                    <div id="wetland_lake-table-container" class="table-responsive"></div>
+                </div>
+            </div>
+            
+        </div>
+
+        <div id="tabSiekerWetlandsStreams" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title mb-0">Fließgewässer</h5>
+                        <button  class="btn btn-secondary toggle-feature-group" data-type="wetland_stream">Layer ausblenden</button>                                                                                             
+                    </div>
+
+                    
+                    <div class="card-body">
+                        {% crispy streams_form.form  %}
+                        <button class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="wetland_stream">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Flüsse filtern
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="card-wetland_stream-table"  class="card mb-3 d-none">
+                <div class="card-body">
+                    <div id="wetland_stream-table-container" class="table-responsive"></div>
+                  
+                </div>
+            </div>
+            
+        </div>
+
+        <div id="tabSiekerWetlandsResult" class="tab-pane ">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ergebnis</h5>
+                    <div id="wetland_result-table-container" class="table-responsive"></div>  
+                    
+                </div>
+            </div>
+        </div>
+
+
 
         <div id="tabSiekerWetlandResultDownload" class="tab-pane ">
             <div class="card mb-3">

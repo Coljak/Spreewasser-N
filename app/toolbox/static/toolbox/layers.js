@@ -19,9 +19,13 @@ tubInjectionTileLayer.toolTag = 'injection';
 
 // SiekerWetlands
 const siekerWetlandFeatureGroup = new L.FeatureGroup();
-siekerWetlandFeatureGroup.toolTag = 'sieker_wetland';
-const siekerFilteredWetlandFeatureGroup = new L.FeatureGroup();
-siekerFilteredWetlandFeatureGroup.toolTag = 'sieker_wetland';
+siekerWetlandFeatureGroup.toolTag = 'wetland';
+const siekerWetlandLakeFeatureGroup = new L.FeatureGroup();
+siekerWetlandLakeFeatureGroup.toolTag = 'wetland';
+const siekerWetlandStreamFeatureGroup = new L.FeatureGroup();
+siekerWetlandStreamFeatureGroup.toolTag = 'wetland';
+const siekerWetlandResultFeatureGroup = new L.FeatureGroup();
+siekerWetlandResultFeatureGroup.toolTag = 'wetland';
 
 //SiekerSink
 const siekerSinkFeatureGroup = new L.markerClusterGroup();
@@ -46,9 +50,9 @@ abovegroundCatchmentFeatureGroup.toolTag = 'sieker_surface_water';
 
 //siekerGek
 const siekerGekFeatureGroup = new L.FeatureGroup()
-siekerGekFeatureGroup.toolTag = 'sieker-gek';
+siekerGekFeatureGroup.toolTag = 'sieker_gek';
 const filteredSiekerGekFeatureGroup = new L.FeatureGroup();
-filteredSiekerGekFeatureGroup.toolTag = 'sieker-gek'
+filteredSiekerGekFeatureGroup.toolTag = 'sieker_gek'
 
 
 // SiekerDrainage
@@ -140,8 +144,13 @@ export const Layers = {
     'infiltration_result_enlarged_sink': inletConnectionsFeatureGroup,
     'sink_embankment': inletConnectionsFeatureGroup,
     // SiekerWetland
-    'sieker_wetland': siekerWetlandFeatureGroup,
-    'filtered_sieker_wetland': siekerFilteredWetlandFeatureGroup,
+    'wetland': siekerWetlandFeatureGroup,
+    'wetland_lake': siekerWetlandLakeFeatureGroup,
+    'wetland_stream': siekerWetlandStreamFeatureGroup,
+    'wetland_result': siekerWetlandResultFeatureGroup,
+    'wetland_result_inlet': siekerWetlandResultFeatureGroup,
+    'wetland_result_wetland': siekerWetlandResultFeatureGroup,
+
     // SiekerSurfaceWaters
     'sieker_surface_water': siekerLakesFeatureGroup,
     'sieker_water_level': waterLevelsFeatureGroup,

@@ -191,8 +191,6 @@ export function initializeSiekerGek(data) {
   addChangeEventListener(SiekerGek);
   addClickEventListenerToToolboxPanel(SiekerGek)
 
-  // $('.table-select-all').prop('checked', true);
-  // $('.table-select-all').trigger('change')
 
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);

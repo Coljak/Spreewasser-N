@@ -618,6 +618,29 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 map.addLayer(Layers[dataType]);
                 button.text('Layer ausblenden');
             }
+        } else if (button.hasClass('toggle-grouped-feature-group')) {
+            const dataType = button.attr('data-type')
+            if (button.hasClass('shown')) {
+                Layers[dataType].forEach((layer) => {
+                    map.removeLayer(layer);
+                    
+                }) 
+                button.removeClass('shown');
+                button.text('Layer einblenden');
+            } else {
+                $(`input[data-type="${dataType}"]`).each((_, input) => {
+                    const prefix = $(input).attr('prefix');
+                    const isChecked = $(input).is(':checked');
+                    console.log('prefix is checked:', input, prefix, isChecked)
+                    
+                    if (isChecked && (prefix === 'parent' || prefix === 'drained_area')) {
+                        $(input).trigger('change');
+                    }
+                });
+                button.addClass('shown');
+                button.text('Layer ausblenden');
+            };
+            
         } else if ($target.hasClass('save-toolbox-project')) {
             if (!project.id || project.name === '') {
                 $('#userFieldSelect').val(project.userField);
@@ -738,7 +761,12 @@ function createTableSettings(dataInfo) {
 };
 
 const colorFunction = function (index) {
-  return `hsl(${index}, 90%, 50%)`;
+    if (index === '==') {
+        return '#ffffff';
+    } else {
+        return `hsl(${index}, 90%, 50%)`;
+    }
+  r
 };
 
 const tableColorFunction = function (index) { 
@@ -823,12 +851,18 @@ export function addFeatureCollectionToLayer(data, clearLayer, resultMap={}){
     if (clearLayer) {
         featureGroup.clearLayers();
     }
-    
+    let color;
     let geojsonLayer = L.geoJSON(featureCollection, {
         style: function (feature) {
-            let color = colorByIndex
-                ? colorFunction(feature.properties[colorByIndex])
-                : dataInfo.featureColor;
+            if (dataInfo.colorByIndex) {
+                if (dataInfo.colorByIndex === '==') {
+                    color = dataInfo.featureColor;
+                } else {
+                    color = colorFunction(feature.properties[dataInfo.colorByIndex]);
+            }
+            } else {
+                color = dataInfo.featureColor;
+            }
 
             const style = {
                 className: dataInfo.className,

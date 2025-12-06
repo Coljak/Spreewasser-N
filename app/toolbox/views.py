@@ -38,6 +38,7 @@ import os
 import io
 import csv
 import shutil
+from copy import copy
 
 from rasterio.warp import reproject, Resampling, calculate_default_transform, transform_geom
 from rasterio.mask import mask
@@ -2029,7 +2030,7 @@ def create_shp_from_feature_collection(tmpdir, feature_collection, epsg, filenam
         record_values = [props.get(field) or 0 if writer_fields[field]['field_type'] in ('N', 'F') else props.get(field, '') 
                         for field in writer_fields]
         
-        writer.record(*record_values)
+        writer.record(*record_values) 
 
     writer.close()  
  
@@ -2044,15 +2045,15 @@ def check_for_point_results(download_list):
             full = True
     return point, full
 
-def create_sink_download(project, sinks, tmpdir, epsg, sink_type, result_sinks, language='de'):
-    print('create_sink_download', sink_type, result_sinks, tmpdir, epsg, project)
+def create_fc_for_sink_download(project, sinks, epsg, sink_type, result_list, language='de'):
+
     
     
-    filename = sinks.model.get_filename(language=language)
+    
     indices = calculate_indices_df(sinks, project, sink_type=sink_type)
     pt_feature_collection = {}
     feature_collection = {}
-    point, full = check_for_point_results(result_sinks)
+    point, full = check_for_point_results(result_list)
     if point:
 
         pt_feature_collection = {
@@ -2072,36 +2073,38 @@ def create_sink_download(project, sinks, tmpdir, epsg, sink_type, result_sinks, 
                     "properties": {"name": f"EPSG:{epsg}"}
                 }
             }
+        
+    return {'feature_collection': feature_collection, 'pt_feature_collection': pt_feature_collection, 'filename': sinks.model.get_filename(language=language)}
 
-    for filetype in result_sinks: 
-        if filetype.split('_')[0] == 'pt':
-            fc = pt_feature_collection
-            filename = filename + '_points'
-        else:
-            fc = feature_collection
+    # for filetype in result_list: 
+    #     filename = sinks.model.get_filename(language=language)
+    #     if filetype.split('_')[0] == 'pt':
+    #         fc = pt_feature_collection
+    #         filename = filename + '_points'
+    #     else:
+    #         fc = feature_collection
 
-        filename = f'{filename}_EPSG_{epsg}'
+    #     filename = f'{filename}_EPSG_{epsg}'
 
-        if filetype.split('_')[-1] == 'shp':
-            writer_fields = sinks.model.shp_writer_fields()
-            create_shp_from_feature_collection(tmpdir, fc, epsg, filename, writer_fields)
-        elif filetype.split('_')[-1] == 'gjson':
-            create_geojson_from_feature_collection(fc, tmpdir, filename)
+    #     if filetype.split('_')[-1] == 'shp':
+    #         writer_fields = sinks.model.shp_writer_fields()
+    #         create_shp_from_feature_collection(tmpdir, fc, epsg, filename, writer_fields)
+    #     elif filetype.split('_')[-1] == 'gjson':
+    #         create_geojson_from_feature_collection(fc, tmpdir, filename)
 
 
-def create_download(data, tmpdir, epsg, result_list, language='de'):
+def create_fc_for_download(data, epsg, result_list, language='de'):
     """
     Docstring for create_download
     
     :param data: queryset of model instances
-    :param tmpdir: temporary directory path
     :param epsg: EPSG code for coordinate reference system
     :param result_list: list of result download-file types
     :param language: language code for localization
     """
 
 
-    filename = data.model.get_filename(language=language)
+    
     pt_feature_collection = {}
     feature_collection = {}
     point, full = check_for_point_results(result_list)
@@ -2124,13 +2127,22 @@ def create_download(data, tmpdir, epsg, result_list, language='de'):
                     "properties": {"name": f"EPSG:{epsg}"}
                 }
             }
+        
+    return {'feature_collection': feature_collection, 'pt_feature_collection': pt_feature_collection, 'filename': data.model.get_filename(language=language)}
 
+def create_download_files(feature_collections, data, tmpdir, epsg, result_list, language='de'):
+    """
+    data : dictionary with pt_feature_collection and feature_collection
+    tmpdir : temporary directory path
+    """
+    base_filename = feature_collections['filename']
     for filetype in result_list: 
+        filename = copy(base_filename)
         if filetype.split('_')[0] == 'pt':
-            fc = pt_feature_collection
+            fc = feature_collections['pt_feature_collection']
             filename = filename + '_points'
         else:
-            fc = feature_collection
+            fc = feature_collections['feature_collection']
             
 
         if filetype.split('_')[-1] == 'shp':
@@ -2209,16 +2221,26 @@ def download_toolbox_results(request):
 
         if len(result_sinks) > 0:
             sinks = models.Sink.objects.filter(id__in=project.get(f'selected_sinks', []))
-            create_sink_download(project, sinks, tmpdir, epsg, 'sink', result_sinks, language=language)
+            sink_fc = create_fc_for_sink_download(project, sinks, epsg, 'sink', result_sinks, language=language)
+            create_download_files(sink_fc, sinks, tmpdir, epsg, result_sinks, language=language)
         if len(result_enlarged_sinks) > 0:
             sinks = models.EnlargedSink.objects.filter(id__in=project.get(f'selected_enlarged_sinks', []))
-            create_sink_download(project, sinks, tmpdir, epsg, 'enlarged_sink', result_enlarged_sinks, language=language)
+            enlarged_sink_fc = create_fc_for_sink_download(project, sinks, epsg, 'enlarged_sink', result_enlarged_sinks, language=language)
+            create_download_files(enlarged_sink_fc, sinks, tmpdir, epsg, result_enlarged_sinks, language=language)
+            sink_embankments = models.SinkEmbankment.objects.filter(enlarged_sink__in=sinks)
+            if sink_embankments.count() > 0:
+                embankment_fc = create_fc_for_download(sink_embankments, epsg, result_enlarged_sinks, language=language)
+                create_download_files(embankment_fc, sink_embankments, tmpdir, epsg, result_enlarged_sinks, language=language)
         
         if len(result_waterbodies) > 0:
             lakes = models.Lake.objects.filter(id__in=project.get(f'selected_lakes', []))
             streams = models.Stream.objects.filter(id__in=project.get(f'selected_streams', []))
-            create_download(lakes, tmpdir, epsg, result_waterbodies, language=language)
-            create_download(streams, tmpdir, epsg, result_waterbodies, language=language)
+            lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
+            
+            create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
+            streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
+            
+            create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
             if len(result_timeseries) > 0:
                 fgw_ids = list(lakes.values_list('fgw_id', flat=True)) + \
                     list(streams.values_list('fgw_id', flat=True))
@@ -2259,12 +2281,14 @@ def download_toolbox_results(request):
         if len(result_lakes) > 0:
             lake_ids = project.get('selected_sieker_surface_waters', [])
             lakes = models.SiekerLargeLake.objects.filter(id__in=lake_ids)
-            create_download(lakes, tmpdir, epsg=epsg, result_list=result_lakes, language='de')
+            lakes_fc = create_fc_for_download(lakes, epsg, result_lakes, language=language)
+            create_download_files(lakes_fc, lakes, tmpdir, epsg, result_lakes, language=language)
             
         if len(result_stations) > 0:
             wl_ids = project.get('selected_sieker_water_levels', [])
             stations = models.SiekerWaterLevel.objects.filter(id__in=wl_ids)
-            create_download(stations, tmpdir, epsg=epsg, result_list=result_stations, language='de')
+            stations_fc = create_fc_for_download(stations, epsg, result_stations, language=language)
+            create_download_files(stations_fc, stations, tmpdir, epsg, result_stations, language=language)
 
         if len(result_timeseries) > 0:
             wl_ids = project.get('selected_sieker_water_levels', [])
@@ -2326,13 +2350,16 @@ def download_toolbox_results(request):
         if len(result_sinks) > 0:
             sinks = models.Sink.objects.filter(id__in=project.get(f'selected_sinks', []))
 
-            create_download(sinks, tmpdir, epsg, result_sinks, language=language)
+            sink_fc = create_fc_for_download(sinks, epsg, result_sinks, language=language)
+            create_download_files(sink_fc, sinks, tmpdir, epsg, result_sinks, language=language)
 
         if len(result_waterbodies) > 0:
             lakes = models.Lake.objects.filter(id__in=project.get(f'selected_lakes', []))
             streams = models.Stream.objects.filter(id__in=project.get(f'selected_streams', []))
-            create_download(lakes, tmpdir, epsg, result_waterbodies, language=language)
-            create_download(streams, tmpdir, epsg, result_waterbodies, language=language)
+            lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
+            create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
+            streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
+            create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
         if len(result_timeseries) > 0:
             fgw_ids = list(lakes.values_list('fgw_id', flat=True)) + \
                 list(streams.values_list('fgw_id', flat=True))
@@ -2367,16 +2394,19 @@ def download_toolbox_results(request):
         if len(result_wetlands) > 0:
             wetland_ids = project.get('selected_wetlands', [])
             wetlands = models.HistoricalWetlands.objects.filter(id__in=wetland_ids)
-            create_download(wetlands, tmpdir, epsg=epsg, result_list=result_wetlands, language='de')
+            wetland_fc = create_fc_for_download(wetlands, epsg, result_wetlands, language=language)
+            create_download_files(wetland_fc, wetlands, tmpdir, epsg, result_wetlands, language=language)
 
         if len(result_waterbodies) > 0:
             stream_ids = project.get('selected_wetland_streams', [])
             streams = models.Stream.objects.filter(id__in=stream_ids)
-            create_download(streams, tmpdir, epsg=epsg, result_list=result_waterbodies, language='de')
+            streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
+            create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
 
             lake_ids = project.get('selected_wetland_lakes', [])
             lakes = models.Lake.objects.filter(id__in=lake_ids)
-            create_download(lakes, tmpdir, epsg=epsg, result_list=result_waterbodies, language='de')
+            lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
+            create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
 
     elif project_type == 'drainage':
         user_field_id = project.get('userField')
@@ -2390,14 +2420,16 @@ def download_toolbox_results(request):
                 Q(geom4326__within=user_field.geom) |
                 Q(geom4326__intersects=user_field.geom)
             )
-            create_download(drainage_network, tmpdir, epsg=epsg, result_list=result_drainage_network, language='de')
+            drainage_network_fc = create_fc_for_download(drainage_network, epsg, result_drainage_network, language=language)
+            create_download_files(drainage_network_fc, drainage_network, tmpdir, epsg, result_drainage_network, language=language)
 
         if len(result_drained_areas) > 0:
             drained_area = models.DrainedArea.objects.filter(
                 Q(geom4326__within=user_field.geom) |
                 Q(geom4326__intersects=user_field.geom)
             )
-            create_download(drained_area, tmpdir, epsg=epsg, result_list=result_drained_areas, language='de')
+            drained_area_fc = create_fc_for_download(drained_area, epsg, result_drained_areas, language=language)
+            create_download_files(drained_area_fc, drained_area, tmpdir, epsg, result_drained_areas, language=language)
         if len(result_probability_raster)> 0:
             filename= f'/app/raster_data/Entwaesserungswahrscheinlichkeit_9Parameter_v2.tif'
             target_path = os.path.join(tmpdir, "Entwaesserungswahrscheinlichkeit.tif")

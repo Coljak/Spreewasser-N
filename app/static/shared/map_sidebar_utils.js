@@ -185,6 +185,8 @@ export var map = enhanceMap(
   }).addLayer(osm)
 );
 
+document.dispatchEvent(new CustomEvent('leaflet-map-ready', { detail: map }));
+
 export function getCircleMarkerSettings (fillColor) {
   return {
     radius: 5,

@@ -172,12 +172,22 @@ export const Layers = {
     // drained Areas
     'pumping_station': drainedAreaPumpingStations,
     'drainage': drainedAreaDrainages,
-    // 'parents'
-    // 'natural_creeks': naturalCreeksFeatureGroup,
-    // 'ditches':  ditchesFeatureGroup,
-    // 'non_natural_creeks':  nonNaturalCreeksFeatureGroup,
-    // 'pipes': pipesFeatureGroup,
-    // 'rivers': riversFeatureGroup,
+    'drained_area': [ drainedAreaPumpingStations, drainedAreaDrainages ],
+    // drainage network
+    'drainage_network': [
+        naturalCreekUnshadedFeatureGroup,
+        naturalCreekShadedFeatureGroup,
+        ditchFeatureGroup,
+        canalShadedFeatureGroup,
+        canalUnshadedFeatureGroup,
+        nonNaturalCreekShadedFeatureGroup,
+        nonNaturalCreekPartlyShadedFeatureGroup,
+        nonNaturalCreekUnshadedFeatureGroup,
+        drainagePipeFeatureGroup,
+        suckerFeatureGroup,
+        collectorFeatureGroup,
+        naturalRiverFeatureGroup
+    ],
 
     // 'parents'
     'natural_creeks': [   naturalCreekUnshadedFeatureGroup,

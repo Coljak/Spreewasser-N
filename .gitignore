@@ -175,6 +175,7 @@ cython_debug/
 # The PostgreSQL database
 data_temp/
 database/
+database_old/
 notes/
 
 model_exports/

@@ -1,8 +1,13 @@
+// import {map} from '/static/shared/map_sidebar_utils.js';
+
 
   $(document).ready(function () {
     // Vertical resizable panel (left/right)
 
-
+      let leafletMap;
+      document.addEventListener('leaflet-map-ready', function (e) {
+          leafletMap = e.detail;
+      });
       // Corner resizer
       $('#cornerSplitter').on('mousedown', function (e) {
         e.preventDefault();
@@ -23,18 +28,16 @@
           $('.panel-top').css('height', startHeightTop + deltaY + 'px');
           $('.panel-bottom').css('height', startHeightBottom - deltaY + 'px');
 
-          // if (window.map) {
-          //   console.log('Resizing map due to corner resize');
-          //   clearTimeout(window.mapResizeTimeout);
-          //   window.mapResizeTimeout = setTimeout(() => {
-          //     window.map.invalidateSize();
-          //   }, 100);
-          // }
-
         });
     
         $(document).on('mouseup.cornerResize', function () {
           $(document).off('.cornerResize');
+          if (leafletMap && typeof leafletMap.invalidateSize === 'function') {
+            
+              setTimeout(function () {
+                  leafletMap.invalidateSize();
+              }, 50);
+          }
           
         });
       });

@@ -741,6 +741,7 @@ class InfiltrationResultDownloadForm(ResultForm):
             ('gjson', 'Polygone als GeoJSON'),
             ('pt_shp', 'Punkte als Shapefile'),
             ('pt_gjson', 'Punkte als GeoJSON'),    
+            ('csv', 'als CSV-Datei'),
         ],
         # initial=['sinks_shp']
     )
@@ -753,6 +754,7 @@ class InfiltrationResultDownloadForm(ResultForm):
             ('gjson', 'Polygone als GeoJSON'),
             ('pt_shp', 'Punkte als Shapefile'),
             ('pt_gjson', 'Punkte als GeoJSON'),
+            ('csv', 'als CSV-Datei'),
         ],
         # initial=['shp'],
     )
@@ -764,6 +766,7 @@ class InfiltrationResultDownloadForm(ResultForm):
         choices=[
             ('shp', 'als Shapefile'),
             ('gjson', 'als GeoJSON'),
+            ('csv', 'als CSV-Datei'),
         ],
         initial=['shp'],
     )
@@ -789,6 +792,7 @@ waterbodies = forms.MultipleChoiceField(
         choices=[
             ('shp', 'als Shapefile'),
             ('gjson', 'als GeoJSON'),
+            ('csv', 'als CSV-Datei'),
         ],
         initial=['shp'],
     )
@@ -819,7 +823,7 @@ class SiekerSurfaceWaterResultDownloadForm(ResultForm):
         choices=[
             ('shp', 'als Shapefile'),  
             ('gjson', 'als GeoJSON'),   
-            ('level_csv', 'als CSV-Datei'),   
+            ('csv', 'als CSV-Datei'),   
         ],
         initial=['shp'],
     )
@@ -866,6 +870,7 @@ class SiekerSinkDownloadForm(ResultForm):
             ('gjson', 'Polygone als GeoJSON'),
             ('pt_shp', 'Punkte als Shapefile'),
             ('pt_gjson', 'Punkte als GeoJSON'),
+            ('csv', 'als CSV-Datei'),
         ]
     )
 
@@ -876,6 +881,7 @@ class SiekerSinkDownloadForm(ResultForm):
         choices=[
             ('shp', 'als Shapefile'),
             ('gjson', 'als GeoJSON'),
+            ('csv', 'als CSV-Datei'),
         ],
         initial=['shp'],
     )
@@ -910,19 +916,20 @@ class SiekerGekDownloadForm(ResultForm): #######
         choices=[
             ('shp', 'als Shapefile'),
             ('gjson', 'als GeoJSON'),
+            ('csv', 'als CSV-Datei'),
         ],
         initial=['shp'],
     )
 
-    geks = forms.MultipleChoiceField(
-        label="Maßnahmen", 
-        required=False,
-        widget=CheckboxSelectMultipleWithAttrs,        
-        choices=[
-            ('csv', 'als CSV-Datei'),
-        ],
-        initial=['csv'],
-    )
+    # geks = forms.MultipleChoiceField(
+    #     label="Maßnahmen", 
+    #     required=False,
+    #     widget=CheckboxSelectMultipleWithAttrs,        
+    #     choices=[
+    #         ('csv', 'als CSV-Datei'),
+    #     ],
+    #     initial=['csv'],
+    # )
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, toolbox_type='sieker_gek', **kwargs)
@@ -956,6 +963,7 @@ class SiekerWetlandDownloadForm(ResultForm): #######
         choices=[
             ('shp', 'als Shapefile'),
             ('gjson', 'als GeoJSON'),
+            ('csv', 'als CSV-Datei'),
         ],
         initial=['shp'],
     )

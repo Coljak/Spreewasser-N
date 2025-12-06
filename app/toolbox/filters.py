@@ -669,6 +669,7 @@ class DrainageNetworkFilter(FilterSet):
         ).distinct()
 
         prefix = 'drainage'
+        data_type = 'drainage_network'
         for network_type in network_types:
             details = queryset.filter(network_type=network_type)
 
@@ -676,7 +677,7 @@ class DrainageNetworkFilter(FilterSet):
             choices = [(d.id, d.name_de) for d in details]
 
             # Build per-choice attributes
-            choice_attrs = {str(d.id): {'detail': d.name_tag} for d in details}
+            choice_attrs = {str(d.id): {'detail': d.name_tag, 'data-type': data_type} for d in details}
 
             # assign choices and per-choice attrs
             field = self.form.fields[network_type.name_tag]
@@ -686,6 +687,7 @@ class DrainageNetworkFilter(FilterSet):
             # Also keep your other widget attrs
             field.widget.attrs['parent'] = network_type.id
             field.widget.attrs['prefix'] = prefix
+            field.widget.attrs['data_type'] = data_type
             
             
 
@@ -706,7 +708,7 @@ class DrainedAreaFilter(FilterSet):
         drained_area_types = models.DrainedAreaType.objects.filter(
             drainedarea__in=queryset
         ).distinct()
-        choice_attrs = {str(d.id): {'drained_area_type': d.name_tag} for d in drained_area_types}
+        choice_attrs = {str(d.id): {'drained_area_type': d.name_tag, 'data-type': 'drained_area'} for d in drained_area_types}
         choices = [(d.id, d.name_de) for d in drained_area_types]
         # self.form.fields['drained_area_types'].choices = drained_area_types.values_list('id', 'name_de')
 

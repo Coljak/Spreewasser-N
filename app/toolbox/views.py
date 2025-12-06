@@ -1865,7 +1865,7 @@ ALLOWED_WMS_PARAMS = {
     "version",
     "layers",
     "layer",
-    "styles",
+    # "styles",
     "bbox",
     "width",
     "height",
@@ -1885,6 +1885,128 @@ def geoserver_wms(request):
     # Keep only allowed WMS params
     wms_params = {k: v for k, v in params.items() if k.lower() in ALLOWED_WMS_PARAMS}
 
+    response = requests.get(
+        geoserver_url,
+        params=wms_params,
+    )
+
+    return HttpResponse(
+        response.content,
+        content_type=response.headers.get("Content-Type")
+    )
+
+
+COLORMAP_RED_GREEN = [
+    (0, "#d7191c"),
+    (25, "#fdae61"),
+    (50, "#ffffc0"),
+    (75, "#a6d96a"),
+    (100, "#1a9641")
+]
+
+COLORMAP_BLUE_BROWN = [
+    (0, "#2b83ba"),    # watery blue
+    (25, "#abd9e9"),   # light blue / wet
+    (50, "#ffffbf"),   # beige / neutral
+    (75, "#fdae61"),   # light brown / drier
+    (100, "#8c510a")   # dark brown / very dry
+]
+
+def hex_to_rgb(hex_color):
+    hex_color = hex_color.lstrip("#")
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def rgb_to_hex(rgb):
+    return "#{:02x}{:02x}{:02x}".format(*rgb)
+
+def interpolate_color(val, colormap):
+    # Find the two surrounding entries
+    for i in range(len(colormap) - 1):
+        q1, c1 = colormap[i]
+        q2, c2 = colormap[i + 1]
+        if q1 <= val <= q2:
+            ratio = (val - q1) / (q2 - q1)
+            r1, g1, b1 = hex_to_rgb(c1)
+            r2, g2, b2 = hex_to_rgb(c2)
+            r = int(r1 + (r2 - r1) * ratio)
+            g = int(g1 + (g2 - g1) * ratio)
+            b = int(b1 + (b2 - b1) * ratio)
+            return rgb_to_hex((r, g, b))
+    # If outside range, clamp
+    if val < colormap[0][0]:
+        return colormap[0][1]
+    return colormap[-1][1]
+
+def geoserver_wms_sld(request):
+    geoserver_url = f"{settings.GEOSERVER_URL}/spreewassern_raster/wms"
+    params = request.GET.dict()
+    threshold = float(params.get("threshold", 0))
+
+    # Keep only allowed WMS params
+    
+    hex_color = interpolate_color(threshold, COLORMAP_BLUE_BROWN)
+    
+    entries = []
+
+    # Interpolated color at threshold
+    threshold_color = interpolate_color(threshold, COLORMAP_BLUE_BROWN)
+
+    for q, color in COLORMAP_BLUE_BROWN:
+        if q < threshold:
+            entries.append(f'<ColorMapEntry color="{color}" quantity="{q}" opacity="0.0"/>')
+    
+    entries.append(f'<ColorMapEntry color="{threshold_color}" quantity="{threshold - 0.01}" opacity="0.0"/>')
+    entries.append(f'<ColorMapEntry color="{threshold_color}" quantity="{threshold}" opacity="1.0"/>')
+
+    for q, color in COLORMAP_BLUE_BROWN:
+        if q > threshold:
+            entries.append(f'<ColorMapEntry color="{color}" quantity="{q}" opacity="1.0"/>')
+
+
+    colormap_xml = "\n".join(entries)
+
+    sld = f"""
+    <?xml version="1.0" encoding="UTF-8"?>
+    <StyledLayerDescriptor 
+        version="1.0.0"
+        xmlns="http://www.opengis.net/sld"
+        xmlns:sld="http://www.opengis.net/sld"
+        xmlns:ogc="http://www.opengis.net/ogc"
+        xmlns:gml="http://www.opengis.net/gml">
+
+    <NamedLayer>
+        <Name>spreewassern_raster:Entwaesserungswahrscheinlichkeit_9Parameter_v2</Name>
+        <UserStyle>
+        <Name>threshold_style</Name>
+
+        <FeatureTypeStyle>
+            <Rule>
+            <RasterSymbolizer>
+                <sld:ChannelSelection>
+                    <sld:GrayChannel>
+                        <sld:SourceChannelName>1</sld:SourceChannelName>
+                    </sld:GrayChannel>
+                </sld:ChannelSelection>
+                <!-- ORIGINAL COLORMAP -->
+                <ColorMap type="ramp">
+                {colormap_xml}
+                </ColorMap>
+
+            </RasterSymbolizer>
+            </Rule>
+        </FeatureTypeStyle>
+
+        </UserStyle>
+    </NamedLayer>
+    </StyledLayerDescriptor>
+
+    """
+
+    print('_________________sld________________________________')
+    print(sld)
+
+    wms_params = {k: v for k, v in params.items() if k.lower() in ALLOWED_WMS_PARAMS}
+    wms_params['SLD_BODY'] = sld
     response = requests.get(
         geoserver_url,
         params=wms_params,

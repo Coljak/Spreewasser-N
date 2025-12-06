@@ -13,7 +13,7 @@
                 
             </div>
             <div class="col-6 text-end">
-                <button class="btn btn-primary calculate-area" data-type="injection_weightings">Fläche berechnen</button>
+                
                 <button class="toolbox-back-to-initial btn btn-secondary mx-2">Schließen</button>
                 <button class="btn btn-primary mx-2 save-toolbox-project" data-type="injection">Speichern</button>
             </div>
@@ -104,8 +104,10 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Gesamtgewichtung</h5>
-                        <button id="btn-mar-result-map" class="btn btn-secondary disabled" data-type="result">Ergebnis einblenden</button>
-
+                        <div>
+                            <button class="btn btn-primary calculate-area" data-type="injection_weightings">Fläche berechnen</button>
+                            <button id="btn-mar-result-map" class="btn btn-secondary disabled" data-type="result">Ergebnis einblenden</button>
+                        </div>
                     </div>
                     
                     <form method="GET" id="{{ injection_weightings_form.helper.form_id }}" class="{{ injection_weightings_form.helper.form_class }}">
@@ -123,7 +125,7 @@
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Eignungen Mächtigkeit des Grundwasserleiters</h5>
             
-                        <button class="btn btn-secondary toggle-tile-layer" data-type="aquifer_thickness">Layer ausblenden</button>                                                                                             
+                        <button class="btn btn-secondary toggle-tile-layer shown" data-type="aquifer_thickness">Layer ausblenden</button>                                                                                             
                     </div>
                     
                     <form method="GET" id="{{ suitability_aquifer_thickness.helper.form_id }}" class="{{ suitability_aquifer_thickness.helper.form_class }}">

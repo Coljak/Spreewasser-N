@@ -1330,6 +1330,26 @@ export function getTileOverlay(wmsLayer, layersName, toolTag) {
     Layers[layersName].toolTag = toolTag
 };
 
+export function getTileOverlayWithThreshold(wmsLayer, layersName, toolTag, threshold) {
+    const wmsUrl = '/toolbox/proxy/wms_sld/';
+    if (Layers[layersName]) {
+        Layers[layersName].remove()
+        // removeLegendFromMap(map)
+    }
+  Layers[layersName] = L.tileLayer.wms(wmsUrl, {
+    layers: wmsLayer,
+    pane: 'overlayRasterPane',
+    format: "image/png",
+    transparent: true,
+    threshold: threshold,
+    tileSize: 256,   
+    keepBuffer: 10,  
+    updateWhenZooming: false, // don’t request tiles mid-zoom
+    _t: Date.now() // this is only a cache buster - necessary to alter request 
+    }).addTo(map);
+    Layers[layersName].toolTag = toolTag
+};
+
 
 
 function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {

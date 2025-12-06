@@ -14,7 +14,7 @@
             </div>
             <div class="col-6 text-end">
                 <span class="spinner-span" data-type="sieker_sink_result" id="spanBtnGetSiekerSinkResults">
-                <button id="btnGetSiekerSinkResults" class="btn btn-primary mx-2 get-result-button" data-type="sieker_sink">Ergebnis berechnen</button>
+                    <button id="btnGetSiekerSinkResults" class="btn btn-primary mx-2 get-result-button" data-type="sieker_sink">Ergebnis berechnen</button>
                 </span>
                 <button class="toolbox-back-to-initial btn btn-secondary mx-2">Schließen</button>
                 <button class="btn btn-primary mx-2 save-toolbox-project" data-type="sieker_sink">Speichern</button>
@@ -75,7 +75,10 @@
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy sieker_sink_filter.form %}
-                        <button id="btnFilterSiekerSinks"type="submit" class="btn btn-primary filter-features" data-type="sieker_sink">Senken filtern</button>
+                        <button id="btnFilterSiekerSinks"type="submit" class="btn btn-primary filter-features" data-type="sieker_sink">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Senken filtern
+                        </button>
                     </form>
                 </div>
             </div>

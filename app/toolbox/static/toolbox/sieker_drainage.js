@@ -5,6 +5,7 @@ import {
    addClickEventListenerToToolboxPanel, 
    addFeatureCollectionToTable, 
    getTileOverlay, 
+   getTileOverlayWithThreshold,
    addFeatureCollectionToLayer, 
    addPointFeatureCollectionToLayer, 
    loadProjectToGui,
@@ -65,10 +66,8 @@ async function getFeatures(userField) {
           ('drainage_type:',  dataset.dataInfo.dataType, dataset.dataInfo);
           addFeatureCollectionToLayer(dataset, true)
         })  
-      }
-      
-    }
-    
+      } 
+    }   
   })
   .catch(err => console.log('getFeatures', err))
   .finally(() => {
@@ -84,7 +83,9 @@ export function initializeDrainage() {
   $('#toolboxPanel').off('change');
   $('#toolboxPanel').off('click');
 
-  getTileOverlay(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage');
+  // getTileOverlay(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage');
+  const threshold = $('#id_drainage_threshold_slider').val();
+  getTileOverlayWithThreshold(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage', threshold)
   addLegendForWms(geoserverLayers['drainage_probability']);
   
 
@@ -126,6 +127,9 @@ export function initializeDrainage() {
           console.log("`input[parent=${parent}]`", `input[parent=${parent}]`)
           $(`input[parent=${parent}]`).prop('disabled', !$target.is(':checked'));
 
+      } else if ($target.attr('id') == 'button-id-apply-threshold')  {
+        const th = $('#id_drainage_threshold_slider').val();
+        getTileOverlayWithThreshold(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage', th)
       }
   });
 

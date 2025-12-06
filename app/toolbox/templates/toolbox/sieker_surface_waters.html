@@ -68,9 +68,15 @@
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy sieker_lake_filter.form %}
-                        {% comment %} <button id="btnFilterSiekerLakes" type="submit" class="btn btn-primary filter-features" data-type="sieker_surface_water" >Seen filtern</button> {% endcomment %}
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterSiekerLakesModal">Seen filtern</button>
-                        <button id="btnUnfilterSiekerLakes" type="submit" class="btn btn-primary">Alle Seen anzeigen</button>
+        
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterSiekerLakesModal">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Seen filtern
+                        </button>
+                        <button id="btnUnfilterSiekerLakes" type="submit" class="btn btn-primary">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Alle Seen anzeigen
+                        </button>
                     </form>
                 </div>
             </div>
@@ -154,7 +160,10 @@
         <p>Einige Seen haben keine Angaben zu Volumen und Tiefe. Diese Seen werden herausgefiltert.</p>
       </div>
       <div class="modal-footer">
-        <button type="button" id="btnFilterSiekerLakes" class="btn btn-primary filter-features" data-bs-dismiss="modal" data-type="sieker_surface_water">Seen Filtern</button>
+        <button type="button" id="btnFilterSiekerLakes" class="btn btn-primary filter-features" data-bs-dismiss="modal" data-type="sieker_surface_water">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+            Seen Filtern
+        </button>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
       </div>
     </div>

@@ -23,6 +23,7 @@ urlpatterns = [
     path('toolbox/load_polygon/', views.load_nuts_polygon, name='load_nuts_polygon'),
     path('toolbox/load_polygon/<str:entity>/<int:polygon_id>/', views.load_nuts_polygon, name='load_nuts_polygon_entity'),
     path('toolbox/proxy/wms/', views.geoserver_wms, name='geoserver_wms'),
+    path('toolbox/proxy/wms_sld/', views.geoserver_wms_sld, name='geoserver_wms_sld'),
     # Zalf sinks   
     path('toolbox/load_infiltration_gui/<str:user_field_id>/', views.load_infiltration_gui, name='load_infiltration_gui'),
     # path('toolbox/get_weighting_form/', views.get_weighting_forms, name='get_weighting_forms'),

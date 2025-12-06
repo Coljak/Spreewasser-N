@@ -64,7 +64,10 @@
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy gek_filter_form.form %}
-                        <button id="btnFilterSiekerGeks"  class="btn btn-primary filter-features filter-geks" data-type="sieker_gek">Maßnahmen filtern</button>
+                        <button id="btnFilterSiekerGeks"  class="btn btn-primary filter-features filter-geks" data-type="sieker_gek">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Maßnahmen filtern
+                        </button>
                         <button id="btnFilterSiekerGeks"  class="btn btn-primary filter-reset-geks" data-type="sieker_gek">Zurücksetzen</button>
                     </form>
                 </div>

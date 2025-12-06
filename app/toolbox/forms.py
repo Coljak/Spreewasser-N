@@ -660,6 +660,12 @@ class DrainageProbabilityFilterForm(InfoLabelFormMixin, forms.Form):
         self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
         self.helper.layout = Layout(*[Field(name) for name in self.fields])
 
+        self.helper.add_input(Button(
+            'apply-threshold', 
+            'Anwenden', 
+            css_class='apply-threshold btn btn-primary',
+            **{'data-type': 'drainage_threshold'}))
+
 
 class DrainageNetworkFilterForm(InfoLabelFormMixin, forms.Form):
 

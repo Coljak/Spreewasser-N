@@ -164,6 +164,7 @@ export function initializeSiekerSurfaceWaters() {
     get_all_water_levels();
 
     $('#toolboxPanel').off('change');
+    $('#toolboxPanel').off('click');
     initializeSliders();
     
     

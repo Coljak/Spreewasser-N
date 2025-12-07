@@ -13,6 +13,7 @@ import {
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { Drainage } from '/static/toolbox/sieker_drainage_model.js';
 import {Layers} from '/static/toolbox/layers.js';
+import {geoserverLayers} from '/static/toolbox/geoserver_layers.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { 
   projectRegion, 
@@ -20,11 +21,6 @@ import {
   map, 
 } from '/static/shared/map_sidebar_utils.js';
 
-
-const geoserverLayers = {
-  // 'result': `spreewassern_raster:${userId}_mar_result`,
-  'drainage_probability':'spreewassern_raster:Entwaesserungswahrscheinlichkeit_9Parameter_v2',
-  }
 
 
 function filterDrainages(type, featureGroup) {
@@ -85,7 +81,7 @@ export function initializeDrainage() {
 
   // getTileOverlay(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage');
   const threshold = $('#id_drainage_threshold_slider').val();
-  getTileOverlayWithThreshold(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage', threshold)
+  // getTileOverlayWithThreshold(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage', threshold)
   addLegendForWms(geoserverLayers['drainage_probability']);
   
 
@@ -127,7 +123,7 @@ export function initializeDrainage() {
           console.log("`input[parent=${parent}]`", `input[parent=${parent}]`)
           $(`input[parent=${parent}]`).prop('disabled', !$target.is(':checked'));
 
-      } else if ($target.attr('id') == 'button-id-apply-threshold')  {
+      } else if ($target.attr('id') == 'button-id-apply-drainage_threshold')  {
         const th = $('#id_drainage_threshold_slider').val();
         getTileOverlayWithThreshold(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage', th)
       }

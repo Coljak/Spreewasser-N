@@ -3,12 +3,13 @@
         {% if widget.attrs.prefix %}
         {% comment %} <div class="col-2 text-start">
         </div> {% endcomment %}
-        <div id="{{ widget.attrs.id }}_start_text" class="col-2 text-start">
-            </div>
-        <div class="col-7">
-        
+            <div id="{{ widget.attrs.id }}_start_text" class="col-2 text-start">
+                </div>
+            <div class="col-7">
+        {% elif widget.attrs.extra_button %}
+            <div class="col-7">
         {% else %}
-        <div class="col-9">
+            <div class="col-9">
         {% endif %}
     {% else %}
         {% if widget.attrs.prefix %}
@@ -17,6 +18,7 @@
             </div>
             
             <div class="col-7">
+        
         
         {% else %}
             <div class="col-10">
@@ -61,6 +63,20 @@
                 onclick="const slider = document.querySelector('#{{ widget.attrs.id }}_slider'); slider.value = slider.defaultValue; slider.dispatchEvent(new Event('input'));"
             >
                 <i class="bi bi-arrow-clockwise"></i>
+            </button>
+        </div>
+    {% endif %}
+    
+    {% if widget.attrs.extra_button %}
+        <div class="col-2">
+            <button
+                id="button-id-apply-{{ widget.attrs.name }}"
+                type="button"
+                class="btn btn-primary btn-sm float-end slider-apply apply-{{ widget.attrs.name }}"
+                title="Apply threshold"
+                data-type="{{ widget.attrs.name }}"
+            >
+                Anwenden
             </button>
         </div>
     {% endif %}

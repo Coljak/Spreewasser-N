@@ -447,7 +447,7 @@ export function startToolbox(project) {
       console.log('startToolbox sieker_gek');
       return Promise.resolve(startSiekerGeks());
     case 'wetland':
-      console.log('startFormerWetlands wetland');
+      console.log('startToolbox wetland');
       return Promise.resolve(startFormerWetlands());
     case 'drainage':
       console.log('startToolbox drainage');
@@ -523,7 +523,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const pageReload = $(this).data('page-reload')
     project.name = projectName;
     project.userField = $('#userFieldSelect').val();
-    const userFieldName = localStorage.getItem('userFields')[project.userField]['name'];
     project.toolboxType = $('#projectTypeSelect').val();
     project.description = $('#id_project_description').val().trim();
     project.saveToLocalStorage();
@@ -540,11 +539,18 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.success) {
 
         handleAlerts({ success: data.success, message: data.message });
-        // console.log('Is generic project?', isNewProject);
-        if (pageReload) { startToolbox(project); }
+        if (pageReload) {
+           startToolbox(project); 
+        } else {
+          $('#id_toolbox_project').prepend(
+            $('<option>', { value: project.id, text: project.name })
+          );
+          $('#id_toolbox_project').val(project.id);
+        }
 
         // }
       } else {
+        
         handleAlerts(data.message);
       }
 

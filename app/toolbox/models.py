@@ -1238,7 +1238,7 @@ class SiekerLargeLake(models.Model):
                 "wrrl_pg": self.wrrl_pg,
                 "genese": self.genese,
                 "wrrl": self.wrrl,
-                "number_of_swimming_spots": '-' if self.number_of_swimming_spots == -1 else self.number_of_swimming_spots,
+                "number_of_swimming_spots": self.number_of_swimming_spots,
                 "quelldat": self.quelldat.isoformat() if self.quelldat else None,
                 "area_m2": round(self.area_m2) if self.area_m2 else None,
                 "area_ha": round(self.area_ha, 1) if self.area_ha else None,
@@ -1604,7 +1604,7 @@ class GekRetention(models.Model):
         elif language == 'en':
             return "Water_Retention_Areas"
 
-    def to_dict(self):
+    def to_json(self, language='de'):
         landuses = self.landuses.all().order_by('-area_percentage')
         landuses_list = [f'{lu.clc_landuse.label_level_3_de} {round(lu.area_percentage *100)}%' for lu in landuses]
         landuses_str = ', \n'.join(landuses_list)
@@ -1624,7 +1624,7 @@ class GekRetention(models.Model):
     
     
 
-    def to_feature(self, epsg=4326):
+    def to_feature(self, epsg=4326, language='de'):
         if epsg == 4326:
             geometry = json.loads(self.geom4326.geojson)
         elif epsg == 25833:
@@ -1632,11 +1632,26 @@ class GekRetention(models.Model):
         else:
             raise ValueError("Unsupported EPSG code")
         
-        properties = self.to_dict()
+        properties = self.to_json()
         return {
             "type": "Feature",
             "geometry": geometry,
             "properties": properties
+        }
+    
+    @ classmethod
+    def shp_writer_fields(cls):
+        return {
+            'id': {'field_type': "N", 'decimal': 0},
+            'name': {'field_type': "C", 'decimal': 0},
+            'quelle_1': {'field_type': "C", 'decimal': 0},
+            'quelle_2': {'field_type': "C", 'decimal': 0},
+            'current_landusage': {'field_type': "C", 'decimal': 0},
+            'association': {'field_type': "C", 'decimal': 0},
+            'planning_segment': {'field_type': "C", 'decimal': 0},
+            'hrsg': {'field_type': "C", 'decimal': 0},
+            'document': {'field_type': "C", 'decimal': 0},
+            'number_of_measures': {'field_type': "N", 'decimal': 0},
         }
 
 
@@ -1689,15 +1704,15 @@ class GekRetentionMeasure(models.Model):
             return "Measures_Water_Retention_Areas"
 
 
-    def to_dict(self, language='de'):
+    def to_json(self, language='de'):
         return {
             "id": self.id,
             "gek_measure": self.gek_measure.description_de if language == 'de' else self.gek_measure.description_en,
             "quantity": self.quantity,
             "description": getattr(self, f'description_{language}', None),
-            "priority": self.priority.id if self.priority else None,
+            "priority": self.priority.description_de if language == 'de' else self.priority.description_en,
             "priority_value": self.priority_value,
-            "kosten": self.kosten,
+            # "kosten": self.kosten,
             "costs": self.costs,
             "measure_number": self.measure_number
             }
@@ -1707,12 +1722,21 @@ class GekRetentionMeasure(models.Model):
     def shp_writer_fields(cls):
         return {
             'id': {'field_type': "N", 'decimal': 0},
+            'name': {'field_type': "C", 'decimal': 0},
+            'quelle_1': {'field_type': "C", 'decimal': 0},
+            'quelle_2': {'field_type': "C", 'decimal': 0},
+            'current_landusage': {'field_type': "C", 'decimal': 0},
+            'association': {'field_type': "C", 'decimal': 0},
+            'planning_segment': {'field_type': "C", 'decimal': 0},
+            'hrsg': {'field_type': "C", 'decimal': 0},
+            'document': {'field_type': "C", 'decimal': 0},
+            'number_of_measures': {'field_type': "N", 'decimal': 0},
             'gek_measure': {'field_type': "C", 'decimal': 0},
             'quantity': {'field_type': "F", 'decimal': 2},
             'description': {'field_type': "C", 'decimal': 0},
-            'priority': {'field_type': "N", 'decimal': 0},
+            'priority': {'field_type': "C", 'decimal': 0},
             'priority_value': {'field_type': "F", 'decimal': 2},
-            'kosten': {'field_type': "C", 'decimal': 0},
+            # 'kosten': {'field_type': "C", 'decimal': 0},
             'costs': {'field_type': "N", 'decimal': 0},
             'measure_number': {'field_type': "N", 'decimal': 0},
         }
@@ -1808,7 +1832,7 @@ class LeafletLegend(models.Model):
     def __str__(self):
         return self.header_de
 
-    def to_dict(self, language='de'):
+    def to_json(self, language='de'):
         
         return {
             'header': getattr(self, f'header_{language}'),
@@ -1842,7 +1866,7 @@ class DataInfo(models.Model):
     dash_array = models.CharField(max_length=8, null=True, blank=True)
     select_feature_button = models.BooleanField(default=False)
 
-    def to_dict(self, language="de"):
+    def to_json(self, language="de"):
         dict = {
             "dataType": self.data_type,
             "featureColor": self.feature_color,
@@ -1850,7 +1874,7 @@ class DataInfo(models.Model):
             "featureType": self.feature_type,
             "tableCaption": self.table_caption,
             "popUp": {"header": self.popup_header},
-            "properties": [p.to_dict(language) for p in self.properties.all().order_by('order_position')],
+            "properties": [p.to_json(language) for p in self.properties.all().order_by('order_position')],
             "tableLength": self.properties.filter(table=True).count(),
             "selectFeatureButton": self.select_feature_button,
             
@@ -1860,7 +1884,7 @@ class DataInfo(models.Model):
         if self.icon_path:
             dict.update({"pinIconPath": self.icon_path})
         if self.legend:
-            dict.update({"legendSettings": self.legend.to_dict(language)})
+            dict.update({"legendSettings": self.legend.to_json(language)})
         if self.dash_array:
             dict.update({"dashArray": self.dash_array})
 
@@ -1878,7 +1902,7 @@ class DataInfoProperty(models.Model):
     value_name = models.CharField(max_length=255)  # e.g. "name" or "gek_document__link"
     href = models.BooleanField(default=False)
 
-    def to_dict(self, language="de"):
+    def to_json(self, language="de"):
         return {
             "popUp": self.popup,
             "table": self.table,

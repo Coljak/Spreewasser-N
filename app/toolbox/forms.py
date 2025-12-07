@@ -11,7 +11,7 @@ from django.db.models import Q
 
 from django.core import validators
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
+from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Column, Field
 
 
 from utilities.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget,CustomSimpleSliderWidget, CustomDoubleSliderWidget
@@ -637,6 +637,7 @@ class DrainageProbabilityFilterForm(InfoLabelFormMixin, forms.Form):
             "id": "id_drainage_threshold",
             "name": "drainage_threshold",
             "reset": True,
+            "extra_button": True,
             "data_range_min": 0,
             "data_range_max": 100,
             "data_cur_val": 40,
@@ -650,6 +651,7 @@ class DrainageProbabilityFilterForm(InfoLabelFormMixin, forms.Form):
         )
     )
 
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -660,11 +662,7 @@ class DrainageProbabilityFilterForm(InfoLabelFormMixin, forms.Form):
         self.helper.field_class = 'col-lg-10 col-md-10 col-sm-auto'
         self.helper.layout = Layout(*[Field(name) for name in self.fields])
 
-        self.helper.add_input(Button(
-            'apply-threshold', 
-            'Anwenden', 
-            css_class='apply-threshold btn btn-primary',
-            **{'data-type': 'drainage_threshold'}))
+
 
 
 class DrainageNetworkFilterForm(InfoLabelFormMixin, forms.Form):
@@ -915,7 +913,7 @@ class SiekerGekDownloadForm(ResultForm): #######
         required=False,      
     )
     
-    map = forms.MultipleChoiceField(
+    geks = forms.MultipleChoiceField(
         label="Karte", 
         required=False,
         widget=CheckboxSelectMultipleWithAttrs,        
@@ -927,15 +925,17 @@ class SiekerGekDownloadForm(ResultForm): #######
         initial=['shp'],
     )
 
-    # geks = forms.MultipleChoiceField(
-    #     label="Maßnahmen", 
-    #     required=False,
-    #     widget=CheckboxSelectMultipleWithAttrs,        
-    #     choices=[
-    #         ('csv', 'als CSV-Datei'),
-    #     ],
-    #     initial=['csv'],
-    # )
+    measures = forms.MultipleChoiceField(
+        label="Maßnahmen", 
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,        
+        choices=[
+            ('shp', 'als Shapefile'),
+            ('gjson', 'als GeoJSON'),
+            ('csv', 'als CSV-Datei'),
+        ],
+        initial=['csv'],
+    )
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, toolbox_type='sieker_gek', **kwargs)

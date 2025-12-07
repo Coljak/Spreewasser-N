@@ -8,6 +8,7 @@ import {SiekerWetland} from '/static/toolbox/sieker_wetland_model.js';
 import { Drainage } from '/static/toolbox/sieker_drainage_model.js';
 import {map, removeLegendFromMap, getSelectedUserField} from '/static/shared/map_sidebar_utils.js';
 import {Layers} from '/static/toolbox/layers.js';
+import {geoserverLayers} from '/static/toolbox/geoserver_layers.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { dataTableGerman } from '/static/toolbox/dataTable_german.js'
 
@@ -192,8 +193,10 @@ $('#toolboxProjectModal').on('hidden.bs.modal', function () {
         $('#id_project_name').val('')
         $('#projectTypeSelect').prop('disabled', false);
         $('#userFieldSelect').prop('disabled', false);
-        $('#saveToolboxProjectButton').data('page-reload', true);
+        $('#saveToolboxProjectButton').attr('data-page-reload', true);
     });
+
+
 
 export function makeColoredPin(color, iconPath = null, label = "") {
     const iconHtml = iconPath
@@ -424,6 +427,7 @@ export function setProjectInfoHeader(project) {
     if (project.userField) {
 
         const userFields = JSON.parse(localStorage.getItem('userFields')) || [];
+        console.log('userFields', userFields);
         const userFieldName = Object.values(userFields).find((uf => uf.id === project.userField)).name;
         
         if (userFieldName) {
@@ -442,7 +446,6 @@ export function loadProjectToGui(project) {
     const doubleSliders = $('#toolboxPanel input.double-slider');
     if (doubleSliders.length) {
         doubleSliders.each(function () {
-            // console.log('double slider this', this)
             const $slider = $(this);
             const min = parseFloat(project[`${$slider.attr('name')}_min`]);
             const max = parseFloat(project[`${$slider.attr('name')}_max`]);
@@ -476,7 +479,6 @@ export function loadProjectToGui(project) {
             // console.log('checkbox val key', val, key)
             console.log('checkbox checked key', key, val)
             $checkbox.prop('checked', project[key].includes(val));
-
         });
     }
 
@@ -520,6 +522,11 @@ export function loadProjectToGui(project) {
                 $(`button.filter-features[data-type="${dataType}"]`).trigger('click')
             }    
         }
+    }
+
+    if (project.toolboxType === 'drainage') {
+        const threshold = project['drainage_threshold'];
+        getTileOverlayWithThreshold(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage', threshold)
     }
                 
 };
@@ -647,13 +654,15 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 $('#toolboxProjectModal').modal('show');
                 
                 $('#id_project_name').focus();
+                
                 $('#projectTypeSelect').val($target.data('type'));
                 $('#projectTypeSelect').prop('disabled', true);
                 $('#userFieldSelect').prop('disabled', true);
-                $('#saveToolboxProjectButton').data('page-reload', false);
+                $('#saveToolboxProjectButton').attr('data-page-reload', false);
 
             } else {
                 project.saveToDB();
+                handleAlerts({success: true, message: `${project.name} wurde gespeichert.`});
             }
         } else if ($target.hasClass('toolbox-load-project')) {
             console.log('button has class')
@@ -662,9 +671,6 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             loadedProject.then(project => {
                 console.log('Loaded project:', project);
                 loadProjectToGui(project);
-                // necessary for drainage
-                // $('input[type="checkbox"]').trigger('change');
-
             });
         } else if ($target.closest('tr').hasClass('table-parent-row') &&
                     !$target.is('input, button, a')) {
@@ -840,13 +846,13 @@ function addPopUpsToFeature(feature, layer, dataInfo) {
 
 
 export function addFeatureCollectionToLayer(data, clearLayer, resultMap={}){
-    console.log('addFeatureCollectionToLayer', data)
+    // console.log('addFeatureCollectionToLayer', data)
     let featureCollection = data.featureCollection;
     let dataInfo = data.dataInfo;  
-    console.log(dataInfo)
+    // console.log(dataInfo)
     let colorByIndex = dataInfo.colorByIndex ? dataInfo.colorByIndex : false
     
-    console.log('dataInfo.dataType', dataInfo.dataType)
+    // console.log('dataInfo.dataType', dataInfo.dataType)
     const featureGroup = Layers[dataInfo.dataType]
     if (clearLayer) {
         featureGroup.clearLayers();

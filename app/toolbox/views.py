@@ -557,7 +557,7 @@ def filter_sinks(request, sink_type):
             'message': f'Es wurden {sinks.count()} Senken gefunden.'
         }
 
-        data_info = models.DataInfo.objects.get(data_type=sink_type).to_dict()
+        data_info = models.DataInfo.objects.get(data_type=sink_type).to_json()
 
         return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
     
@@ -578,7 +578,7 @@ def filter_waterbodies(request):
         waterbody = 'Flüsse'
         waterbody_class = models.Stream
 
-    data_info = models.DataInfo.objects.get(data_type=data_type).to_dict()
+    data_info = models.DataInfo.objects.get(data_type=data_type).to_json()
 
     user_field = models.UserField.objects.get(pk=project['userField'])
     geom = GEOSGeometry(user_field.geom)
@@ -821,13 +821,13 @@ def get_infiltration_results(request):
 
 
     results_dict = get_infiltration_result_list(project, epsg=4326)
-    result_data_info = models.DataInfo.objects.get(data_type='infiltration_result').to_dict()
-    inlet_data_info = models.DataInfo.objects.get(data_type='infiltration_result_inlet').to_dict()
-    sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_sink').to_dict()
-    enlarged_sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_enlarged_sink').to_dict()
-    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_dict()
-    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_dict()
-    sink_embankment_data_info = models.DataInfo.objects.get(data_type='sink_embankment').to_dict()
+    result_data_info = models.DataInfo.objects.get(data_type='infiltration_result').to_json()
+    inlet_data_info = models.DataInfo.objects.get(data_type='infiltration_result_inlet').to_json()
+    sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_sink').to_json()
+    enlarged_sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_enlarged_sink').to_json()
+    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_json()
+    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_json()
+    sink_embankment_data_info = models.DataInfo.objects.get(data_type='sink_embankment').to_json()
 
     response = {
         'inlet_data_info': inlet_data_info,
@@ -986,7 +986,7 @@ def get_water_levels(request, user_field_id):
         return JsonResponse({'message': {'success': False, 'message': 'Im Suchgebiet existieren keine Pegel.'}})
     
     water_levels_feature_collection = create_feature_collection(water_levels)
-    water_levels_data_info = models.DataInfo.objects.get(data_type='sieker_water_level').to_dict()
+    water_levels_data_info = models.DataInfo.objects.get(data_type='sieker_water_level').to_json()
 
     water_levels = {
                 'featureCollection': water_levels_feature_collection,
@@ -1003,7 +1003,7 @@ def filter_sieker_surface_waters(request):
 
     user_field = models.UserField.objects.get(pk=project['userField'])
 
-    lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_dict()
+    lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_json()
     lakes = models.SiekerLargeLake.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
 
     filter = Q()
@@ -1042,7 +1042,7 @@ def get_all_sieker_surface_waters(request):
 
     user_field = models.UserField.objects.get(pk=project['userField'])
 
-    lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_dict()
+    lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_json()
     lakes = models.SiekerLargeLake.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
 
     if lakes.count() == 0:
@@ -1093,7 +1093,7 @@ def get_all_above_ground_catchment_areas(request):
 
     user_field = models.UserField.objects.get(pk=project['userField'])
 
-    catchment_info = models.DataInfo.objects.get(data_type='above_ground_catchment_area').to_dict()
+    catchment_info = models.DataInfo.objects.get(data_type='above_ground_catchment_area').to_json()
     catchments = models.AboveGroundCatchmentArea.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
 
     if catchments.count() == 0:
@@ -1221,7 +1221,7 @@ def filter_sieker_sinks(request):
         return JsonResponse({'message': message})
     else:
         
-        data_info = models.DataInfo.objects.get(data_type='sieker_sink').to_dict()
+        data_info = models.DataInfo.objects.get(data_type='sieker_sink').to_json()
         feature_collection = create_point_feature_collection(sinks)
         message = {
             'success': True, 
@@ -1297,13 +1297,13 @@ def get_sieker_sink_results(request):
     streams = models.Stream.objects.filter(id__in=project.get(f'selected_sieker_streams', []))
 
     results_dict = get_sieker_sink_result_list(sinks, lakes, streams, epsg=4326)
-    result_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result').to_dict()
-    inlet_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_inlet').to_dict()
-    sink_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_sink').to_dict()
-    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_dict()
+    result_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result').to_json()
+    inlet_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_inlet').to_json()
+    sink_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_sink').to_json()
+    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_json()
     lake_data_info['dataType'] = 'sieker_lake'
 
-    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_dict()
+    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_json()
     stream_data_info['dataType'] = 'sieker_stream'
 
     response = {
@@ -1372,7 +1372,7 @@ def load_sieker_gek_gui(request, user_field_id):
             'gek_filter_form': gek_filter_form ,
             'result_form': result_form,
         }, request=request) 
-        data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
+        data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_json()
 
         return JsonResponse({'success': True, 'html': html, 'featureCollection': feature_collection, 'slider_labels': slider_labels, 'dataInfo': data_info, 'default_project': default_project})
     else:
@@ -1392,22 +1392,11 @@ def get_all_sieker_geks(request):
         return JsonResponse({'message': {'success': False, 'message': 'Im Suchgebiet sind keine Gewässerentwicklungskonzepte bekannt.'}})
     
     feature_collection = create_feature_collection(geks)
-    data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
+    data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_json()
 
     return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': {'success': True}})
 
-
-
-# TODO: turn into filter gek
-def filter_sieker_geks(request):
-   # add_range_filter(filters, obj, field,  model_field=None)
-    start = datetime.now()
-    try:
-        project = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
-    # filter landuses
-    print('Project', project)
+def get_geks_and_measures(project):
     ids = project.get('selected_sieker_geks')
     geks = models.GekRetention.objects.filter(pk__in=ids)
     landuses = models.GekLanduse.objects.filter(Q(gek_retention__in=geks) & Q(clc_landuse__id__in=project['gek_landuse']))
@@ -1423,7 +1412,20 @@ def filter_sieker_geks(request):
         ).filter(filters)
     
     geks = models.GekRetention.objects.filter(measures__in=measures).distinct()
+    return geks, measures
 
+# TODO: turn into filter gek
+def filter_sieker_geks(request):
+   # add_range_filter(filters, obj, field,  model_field=None)
+    start = datetime.now()
+    try:
+        project = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    # filter landuses
+    print('Project', project)
+    
+    geks, measures = get_geks_and_measures(project)
 
     if geks.count() == 0:
         message = {
@@ -1435,28 +1437,25 @@ def filter_sieker_geks(request):
         print("Geks", geks.count())
         
         feature_collection = create_feature_collection(geks)
-        # data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
-        # for feature in feature_collection['features']:
-        #     feature['properties']['measures']
-
 
         dict_list = []
         for gek in geks:
-            d = gek.to_dict()
-            d['measures'] = [m.to_dict() for m in measures if m.gek_retention == gek]
+            d = gek.to_json()
+            d['measures'] = [m.to_json() for m in measures if m.gek_retention == gek]
             dict_list.append(d)
 
         features = []
         for gek in geks:
             feature = gek.to_feature()
-            feature['properties']['measures'] = [m.to_dict() for m in measures if m.gek_retention == gek]
+            feature['properties']['measures'] = [m.to_json() for m in measures if m.gek_retention == gek]
             features.append(feature)
 
         print('measures: ', dict_list)
         feature_collection['features'] = features
 
-        data_info = models.DataInfo.objects.get(data_type='filtered_sieker_gek').to_dict()
+        data_info = models.DataInfo.objects.get(data_type='filtered_sieker_gek').to_json()
         print('Time for filter_sinks:', datetime.now() - start)
+        
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info, 'measures': dict_list})
 
 
@@ -1525,7 +1524,7 @@ def load_sieker_wetland_gui(request, user_field_id):
             'result_form': result_form,
             
         }, request=request) 
-        data_info = models.DataInfo.objects.get(data_type='wetland').to_dict()
+        data_info = models.DataInfo.objects.get(data_type='wetland').to_json()
 
         return JsonResponse({'success': True, 'html': html, 'featureCollection': feature_collection,  'dataInfo': data_info, 'slider_labels': slider_labels, 'default_project': default_project})
     else:
@@ -1565,7 +1564,7 @@ def filter_sieker_wetlands(request):
         print("wetlands", wetlands.count())
         
         feature_collection = create_feature_collection(wetlands)
-        data_info = models.DataInfo.objects.get(data_type='wetland').to_dict()
+        data_info = models.DataInfo.objects.get(data_type='wetland').to_json()
  
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info})
 
@@ -1640,15 +1639,15 @@ def get_sieker_wetland_results(request):
     streams = models.Stream.objects.filter(id__in=project.get(f'selected_wetland_streams', []))
 
     results_dict = get_sieker_wetland_result_list(wetlands, lakes, streams, epsg=4326)
-    result_data_info = models.DataInfo.objects.get(data_type='wetland_result').to_dict()
-    inlet_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_inlet').to_dict()
+    result_data_info = models.DataInfo.objects.get(data_type='wetland_result').to_json()
+    inlet_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_inlet').to_json()
     inlet_data_info['dataType'] = 'wetland_result_inlet'
-    wetland_data_info = models.DataInfo.objects.get(data_type='wetland').to_dict()
+    wetland_data_info = models.DataInfo.objects.get(data_type='wetland').to_json()
     wetland_data_info['dataType'] = 'wetland_result_wetland'
-    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_dict()
+    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_json()
     lake_data_info['dataType'] = 'wetland_lake'
 
-    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_dict()
+    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_json()
     stream_data_info['dataType'] = 'wetland_stream'
 
     response = {
@@ -1942,10 +1941,7 @@ def geoserver_wms_sld(request):
     params = request.GET.dict()
     threshold = float(params.get("threshold", 0))
 
-    # Keep only allowed WMS params
-    
-    hex_color = interpolate_color(threshold, COLORMAP_BLUE_BROWN)
-    
+
     entries = []
 
     # Interpolated color at threshold
@@ -2001,10 +1997,7 @@ def geoserver_wms_sld(request):
     </StyledLayerDescriptor>
 
     """
-
-    print('_________________sld________________________________')
-    print(sld)
-
+    # keep only allowed params
     wms_params = {k: v for k, v in params.items() if k.lower() in ALLOWED_WMS_PARAMS}
     wms_params['SLD_BODY'] = sld
     response = requests.get(
@@ -2100,7 +2093,7 @@ def load_sieker_drainage_features(request, user_field_id):
         for dt in drained_area_types:          
             drainage_type_feature_collections.append({
                 'drainedAreaTypeId': dt.id,
-                'dataInfo': models.DataInfo.objects.get(data_type=dt.name_tag).to_dict(),
+                'dataInfo': models.DataInfo.objects.get(data_type=dt.name_tag).to_json(),
                 'featureCollection': create_feature_collection(drained_areas.filter(drained_area_type__id=dt.id)),
                 })
 
@@ -2115,7 +2108,7 @@ def load_sieker_drainage_features(request, user_field_id):
                 'drainageNetworkTypeId': detail.network_type.id,
                 'drainageNetworkTye': detail.network_type.name_tag,
                 'drainageNetworkTypeDetailId': detail.id,
-                'dataInfo': models.DataInfo.objects.get(data_type=detail.name_tag).to_dict(),
+                'dataInfo': models.DataInfo.objects.get(data_type=detail.name_tag).to_json(),
                 'featureCollection': create_feature_collection(drainage_network.filter(network_type_detail=detail))
                 })
 
@@ -2282,6 +2275,21 @@ def create_download_files(feature_collections, data, tmpdir, epsg, result_list, 
                 
                 for obj in dataset:
                     writer.writerow([obj[key] for key in rows])
+
+def create_download_csv_from_feature_collection(feature_collection, tmpdir, filename, language='de'):   
+    file_path = os.path.join(tmpdir, f'{filename}.csv')
+    features = feature_collection.get('features', [])
+
+    if len(features) == 0:
+        return
+    rows = [row for row in features[0]['properties'].keys()]
+    with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(rows)
+        
+        for feature in features:
+            props = feature['properties']
+            writer.writerow([props.get(key, '') for key in rows])
                     
 
 
@@ -2558,6 +2566,44 @@ def download_toolbox_results(request):
             # copy file into tmpdir
             shutil.copy(filename, target_path)
 
+    elif project_type == 'sieker_gek':
+        result_geks = project.get('result_geks', [])
+        result_measures = project.get('result_measures', [])
+
+        geks, measures = get_geks_and_measures(project)
+        gek_measures_features=[]
+
+        for m in measures:
+            ft = m.gek_retention.to_feature( epsg=epsg, language=language)
+            m_dict = m.to_json(language=language)
+            m_dict['measure_id'] = m_dict.pop('id')
+            ft['properties'].update(m_dict)
+            gek_measures_features.append(ft)
+
+        measures_fc = {
+            "type": "FeatureCollection",
+            "features": gek_measures_features,
+            "crs": {
+                "type": "name",
+                "properties": {"name": f"EPSG:{epsg}"}
+            }
+        }
+
+        
+        filename = f'Sieker_GEKs_EPSG_{epsg}'
+        geks_fc = create_fc_for_download(geks, epsg, result_geks, language=language)
+        create_download_files(geks_fc, geks, tmpdir, epsg, result_geks, language=language) 
+        if 'csv' in result_measures:
+            result_measures.remove('csv')
+            create_download_csv_from_feature_collection(measures_fc, tmpdir, 'Gewaesserentwicklungsmassnahmen', language=language)
+
+
+        create_download_files({
+            'feature_collection': measures_fc,
+            'filename': 'Gewaesserentwicklungsmassnahmen',
+            }, measures, tmpdir, epsg, result_measures, language=language)
+     
+       
 
 
 

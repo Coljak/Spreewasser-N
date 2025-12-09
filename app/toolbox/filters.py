@@ -9,14 +9,12 @@ from django import forms
 from toolbox import utils
 from . import models
 from .forms import SliderFilterForm, CheckboxSelectMultipleWithAttrs
-import json
 from utilities.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget, CustomDoubleSliderWidget, CustomSimpleSliderWidget
-import math
-from datetime import datetime
+from .toolbox_documentation import helptexts
 
 
 
-
+# this unit dictionary is for the sliders' units in the forms and filters
 FIELD_UNITS = {
     "area": "m²",
     "volume": "m³",
@@ -48,9 +46,7 @@ def export_bounds_for_project(filter_set, metadata={}):
         base_name = f'{prefix}_{name}'
         # --- Range filters ---
         if isinstance(filter_, MinMaxRangeFilter):
-            # first determine bounds
-
-            
+            # first determine bounds      
             if filter_.precomputed_bounds and filter_.field_name in filter_.precomputed_bounds:
                 min_val, max_val = filter_.precomputed_bounds[filter_.field_name]
             else:
@@ -83,11 +79,20 @@ def export_bounds_for_project(filter_set, metadata={}):
             })
             continue
 
-
     return metadata
 
 
 def create_default_project(user_filed, list_of_filters, toolbox_type):
+    """
+    Docstring for create_default_project
+    
+    :param user_filed: the project's userField, of type UserField
+    :param list_of_filters: list of filter classes
+    :param toolbox_type: string of ToolboxType.name
+
+    A default project is created from all used forms and their checked or unchecked items. 
+    It differs according to UserField.
+    """ 
     metadata = {}
     for l in list_of_filters:
         if isinstance(l, FilterSet):
@@ -98,7 +103,6 @@ def create_default_project(user_filed, list_of_filters, toolbox_type):
                 for name, field in l.form.fields.items():
                     parent_name = 'parent_' + name
                     parent_id = field.widget.attrs.get('parent')
-
 
                     if parent_id:
                         metadata.update({parent_name: [str(parent_id)]})
@@ -130,13 +134,8 @@ def create_default_project(user_filed, list_of_filters, toolbox_type):
                             if field.initial and str(value) in field.initial:
                                 selected_values.append(str(value))
                         metadata.update({full_name: selected_values})
-                    # else:
-                    #     val = field.widget.attrs.get('data_cur_val', '')
-                    #     metadata.update({full_name: str(val)})
-                # val = field.widget.attrs['data_cur_val']
-                # metadata.update({name: str(val)})
-    
 
+    
     project = {
         "userField": user_filed.id if user_filed else None,
         "toolboxType": toolbox_type
@@ -145,9 +144,6 @@ def create_default_project(user_filed, list_of_filters, toolbox_type):
     project.update(metadata)
     print(project)
     return project
-
-
-
 
 
 
@@ -200,15 +196,24 @@ class SinkFilter(FilterSet):
         model=models.Sink, 
         field_name='area', 
         label="Fläche",
+        help_text=helptexts['zalf_sink'].get('area', None)
         )
-    volume = MinMaxRangeFilter(model=models.Sink, field_name='volume', label="Volumen")
-    depth = MinMaxRangeFilter(model=models.Sink, field_name='depth', label="Tiefe")
-    # index_soil = MinMaxRangeFilter(model=models.Sink, field_name='index_soil', label="Soil Index (%)")
-
+    volume = MinMaxRangeFilter(
+        model=models.Sink, 
+        field_name='volume', 
+        label="Volumen",
+        help_text=helptexts['zalf_sink'].get('volume', None)
+    )
+    depth = MinMaxRangeFilter(
+        model=models.Sink, 
+        field_name='depth', 
+        label="Tiefe",
+        help_text=helptexts['zalf_sink'].get('depth', None)
+        )
     land_use = MultipleChoiceFilter(
         label="Landnutzung",
         choices=[],  # Will be set in __init__
-        # method='filter_land_use',
+        help_text=helptexts['zalf_sink'].get('land_use', None),
         widget=forms.CheckboxSelectMultiple,
     )
 
@@ -228,9 +233,6 @@ class SinkFilter(FilterSet):
             land_uses = models.Landuse.objects.filter(id__in=land_use_ids)
             choices = sorted([(lu.id, lu.de or f"Landuse {lu.id}") for lu in land_uses])
             self.filters['land_use'].extra['choices'] = choices
-            # choices = sorted([(lu, lu) for lu in land_use_values])
-            # self.filters['land_use'].extra['choices'] = choices
-
 
         for name, filter_ in self.filters.items():
             if isinstance(filter_, MinMaxRangeFilter):
@@ -243,26 +245,49 @@ class SinkFilter(FilterSet):
             field.widget.attrs['id'] = f"{prefix}_{name}"
             field.widget.attrs['name'] = f"{prefix}_{name}"
             field.widget.attrs['prefix'] = prefix
-
-
+            
     class Meta:
         model = models.Sink
         fields = ['area', 'volume', 'depth',  'land_use']
         form = SliderFilterForm
 
-class EnlargedSinkFilter(FilterSet):
-    area = MinMaxRangeFilter(model=models.EnlargedSink, field_name='area', label="Fläche")
-    volume = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume', label="Volumen")
-    depth = MinMaxRangeFilter(model=models.EnlargedSink, field_name='depth', label="Tiefe")
-    volume_construction_barrier = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume_construction_barrier', label="Volumen der Verwallung")
-    volume_gained = MinMaxRangeFilter(model=models.EnlargedSink, field_name='volume_gained', label="Zusätzliches Volumen")
-    # index_soil = MinMaxRangeFilter(model=models.EnlargedSink, field_name='index_soil', label="Soil Index (%)")
 
-    # Placeholder for land_use — choices will be set dynamically
+class EnlargedSinkFilter(FilterSet):
+    area = MinMaxRangeFilter(
+        model=models.EnlargedSink, 
+        field_name='area', 
+        label="Fläche",
+        help_text=helptexts['zalf_sink'].get('area', None)
+        )
+    volume = MinMaxRangeFilter(
+        model=models.EnlargedSink, 
+        field_name='volume', 
+        label="Volumen",
+        help_text=helptexts['zalf_sink'].get('volume', None)
+    )
+    depth = MinMaxRangeFilter(
+        model=models.EnlargedSink, 
+        field_name='depth', 
+        label="Tiefe",
+        help_text=helptexts['zalf_sink'].get('depth', None)
+    )
+    volume_construction_barrier = MinMaxRangeFilter(
+        model=models.EnlargedSink, 
+        field_name='volume_construction_barrier', 
+        label="Volumen der Verwallung",
+        help_text=helptexts['zalf_sink'].get('volume_construction_barrier', None)
+    )
+    volume_gained = MinMaxRangeFilter(
+        model=models.EnlargedSink, 
+        field_name='volume_gained', 
+        label="Zusätzliches Volumen",
+        help_text=helptexts['zalf_sink'].get('volume_gained', None)
+    )
     land_use = MultipleChoiceFilter(
         label="Landnutzung",
         choices=[],  # Will be set in __init__
         widget=forms.CheckboxSelectMultiple,
+        help_text=helptexts['zalf_sink'].get('land_use', None)
     )
 
     def __init__(self, *args, queryset=None, bounds=None, **kwargs):
@@ -305,10 +330,18 @@ class EnlargedSinkFilter(FilterSet):
 
     
 class StreamFilter(FilterSet):
-    # min_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='min_surplus_volume', label="Minimales Überschussvolumen")
-    mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mittleres Überschussvolumen")
-    # max_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='max_surplus_volume', label="Maximales Überschussvolumen")
-    plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Tage mit Überschuss")
+    mean_surplus_volume = MinMaxRangeFilter(
+        model=models.Stream, 
+        field_name='mean_surplus_volume', 
+        label="Mittleres Überschussvolumen",
+        help_text=helptexts['stream'].get('mean_surplus_volume', None)
+        )
+    plus_days = MinMaxRangeFilter(
+        model=models.Stream, 
+        field_name='plus_days', 
+        label="Tage mit Überschuss",
+        help_text=helptexts['stream'].get('plus_days', None)
+        )
 
     distance_to_userfield = NumberFilter(
         label="Suchradius erweitern",
@@ -323,12 +356,13 @@ class StreamFilter(FilterSet):
             "data_cur_val": 0,
             "units": "m",
             "class": "hiddeninput",
-        }) 
+        }) ,
+        help_text=helptexts['stream'].get('distance_to_userfield', None)
     )
    
 
     def filter_distance_placeholder(self, queryset, name, value):
-        # We don’t filter here – this is just a placeholder.
+        # this is just a placeholder.
         return queryset
     
     def __init__(self, *args, queryset=None,  prefix='stream', bounds=None, **kwargs):
@@ -352,9 +386,20 @@ class StreamFilter(FilterSet):
         fields = [ 'mean_surplus_volume',  'plus_days']
         form = SliderFilterForm
 
+
 class LakeFilter(FilterSet):
-    mean_surplus_volume = MinMaxRangeFilter(model=models.Stream, field_name='mean_surplus_volume', label="Mittleres Überschussvolumen ")
-    plus_days = MinMaxRangeFilter(model=models.Stream, field_name='plus_days', label="Tage mit Überschuss")
+    mean_surplus_volume = MinMaxRangeFilter(
+        model=models.Stream, 
+        field_name='mean_surplus_volume', 
+        label="Mittleres Überschussvolumen ",
+        help_text=helptexts['stream'].get('mean_surplus_volume', None)
+    )
+    plus_days = MinMaxRangeFilter(
+        model=models.Stream, 
+        field_name='plus_days', 
+        label="Tage mit Überschuss",
+        help_text=helptexts['stream'].get('plus_days', None)
+    )
 
     distance_to_userfield = NumberFilter(
         label="Suchradius erweitern",
@@ -369,7 +414,8 @@ class LakeFilter(FilterSet):
             "data_cur_val": 0,
             "units": " m",
             "class": "hiddeninput",
-        }) 
+        }) ,
+        help_text=helptexts['stream'].get('distance_to_userfield', None)
     )
    
 
@@ -386,9 +432,6 @@ class LakeFilter(FilterSet):
                 filter_.queryset_for_bounds = queryset
                 filter_.set_bounds()
 
-
-
-        
         for name, field in self.form.fields.items():
             field.widget.attrs['id'] = f'{prefix}_{name}'
             field.widget.attrs['name'] = f'{prefix}_{name}'
@@ -400,11 +443,27 @@ class LakeFilter(FilterSet):
         fields = [ 'mean_surplus_volume',  'plus_days']
         form = SliderFilterForm
 
+
 ## Toolbox Sieker Surface Waters
 class SiekerLargeLakeFilter(FilterSet):
-    area_ha = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='area_ha', label="Fläche")
-    vol_mio_m3 = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='vol_mio_m3', label="Volumen")
-    d_max_m = MinMaxRangeFilter(model=models.SiekerLargeLake, field_name='d_max_m', label="Max. Tiefe")
+    area_ha = MinMaxRangeFilter(
+        model=models.SiekerLargeLake, 
+        field_name='area_ha', 
+        label="Fläche",
+        help_text=helptexts['SiekerLargeLakeFilter'].get('area_ha', None)
+    )
+    vol_mio_m3 = MinMaxRangeFilter(
+        model=models.SiekerLargeLake, 
+        field_name='vol_mio_m3', 
+        label="Volumen",
+        help_text=helptexts['SiekerLargeLakeFilter'].get('vol_mio_m3', None)
+    )
+    d_max_m = MinMaxRangeFilter(
+        model=models.SiekerLargeLake, 
+        field_name='d_max_m', 
+        label="Max. Tiefe",
+        help_text=helptexts['SiekerLargeLakeFilter'].get('d_max_m', None)
+    )
 
 
     def __init__(self, *args, queryset=None, bounds=None, **kwargs):
@@ -425,16 +484,47 @@ class SiekerLargeLakeFilter(FilterSet):
         model = models.SiekerLargeLake
         fields = ['area_ha', 'vol_mio_m3', 'd_max_m']
         form = SliderFilterForm
+
     
 ## Toolbox Sieker Sinks
 class SiekerSinkFilter(FilterSet):
 
-    volume = MinMaxRangeFilter(model=models.SiekerSink, field_name='volume', label="Volumen")
-    depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='depth', label="Tiefe")
-    area = MinMaxRangeFilter(model=models.SiekerSink, field_name='area', label="Fläche")
-    avg_depth = MinMaxRangeFilter(model=models.SiekerSink, field_name='avg_depth', label="Durchschnittliche Tiefe")
-    urbanarea_percent = MinMaxRangeFilter(model=models.SiekerSink, field_name='urbanarea_percent', label="Urbane Fläche")
-    wetlands_percent = MinMaxRangeFilter(model=models.SiekerSink, field_name='wetlands_percent', label="Feuchtgebiet")
+    volume = MinMaxRangeFilter(
+        model=models.SiekerSink, 
+        field_name='volume', 
+        label="Volumen",
+        help_text=helptexts['SiekerSinkFilter'].get('volume', None)
+    )
+    depth = MinMaxRangeFilter(
+        model=models.SiekerSink, 
+        field_name='depth', 
+        label="Tiefe",
+        help_text=helptexts['SiekerSinkFilter'].get('depth', None)
+    )
+    area = MinMaxRangeFilter(
+        model=models.SiekerSink, 
+        field_name='area', 
+        label="Fläche",
+        help_text=helptexts['SiekerSinkFilter'].get('area', None)
+    )
+    avg_depth = MinMaxRangeFilter(
+        model=models.SiekerSink, 
+        field_name='avg_depth', 
+        label="Durchschnittliche Tiefe",
+        help_text=helptexts['SiekerSinkFilter'].get('avg_depth', None)
+    )
+    urbanarea_percent = MinMaxRangeFilter(
+        model=models.SiekerSink, 
+        field_name='urbanarea_percent', 
+        label="Überlappung mit Siedlungsgebieten",
+        help_text=helptexts['SiekerSinkFilter'].get('urbanarea_percent', None)
+    )
+    wetlands_percent = MinMaxRangeFilter(
+        model=models.SiekerSink, 
+        field_name='wetlands_percent', 
+        label="Überlappung mit Feuchtgebieten",
+        help_text=helptexts['SiekerSinkFilter'].get('wetlands_percent', None)
+    )
    
     feasibility = MultipleChoiceFilter(
         label="Umsetzbarkeit",
@@ -465,12 +555,14 @@ class SiekerSinkFilter(FilterSet):
         form = SliderFilterForm
 
 
+
 class GekRetentionFilter(FilterSet):
     costs = MinMaxRangeFilter(
         model=models.GekRetentionMeasure, 
         field_name='costs', 
         label="Kosten",
         method='filter_by_costs',
+        help_text=helptexts['GekRetentionFilter'].get('costs', None),
     )
     
     # Landuse filter
@@ -478,32 +570,29 @@ class GekRetentionFilter(FilterSet):
         choices = [],
         widget=forms.CheckboxSelectMultiple,
         label="Landnutzung",
-        method="filter_by_landuse"
+        method="filter_by_landuse",
+        help_text=helptexts['GekRetentionFilter'].get('landuse', None)
     )
-
 
     priority = NumberFilter(
         label="Priorität",
         method='filter_priorities',
         widget=CustomSimpleSliderWidget(attrs = {
-            # "id": "gek_priority",
-            # "name": "gek_priority",
-            # "prefix": "gek",
             "reset": True,
             "data_range_min": 10,
             "data_range_max": 30,
             "string_label": True,
             "data_cur_val": 10,
             "class": "hiddeninput",
-        }) 
+        }),
+        help_text=helptexts['GekRetentionFilter'].get('priority', None)
     )
 
     class Meta:
         model = models.GekRetention
         fields = ['costs', 'landuse']
-        # Use the custom slider form for the range filter
         form = SliderFilterForm
-
+        
     def __init__(self, *args, bounds=None, **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -593,19 +682,19 @@ class HistoricalWetlandsFilter(FilterSet):
             "prefix": "wetland",
             "string_label": True,
             "class": "hiddeninput",
-        }) 
+        }),
+        help_text=helptexts['HistoricalWetlandsFilter'].get('feasibility', None)
     )
     
-
     class Meta:
         model = models.HistoricalWetlands
         fields = ['feasibility']
         # Use the custom slider form for the range filter
         form = SliderFilterForm
+        help_texts = {'feasibility': 'Einschätzung der Machbarkeit zur Wiederherstellung historischer Feuchtgebiete'}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
 
         ids_feasibilities = models.WetlandFeasibility.objects.values_list('id', flat=True).distinct()
         min_feasibility = min(ids_feasibilities)
@@ -615,18 +704,7 @@ class HistoricalWetlandsFilter(FilterSet):
         slider.attrs["data_range_min"] = min_feasibility
         slider.attrs["data_range_max"] = max_feasibility
         slider.attrs["data_cur_val"] = min_feasibility
-        
 
-# class CheckboxSelectMultipleWithAttrs(forms.CheckboxSelectMultiple):
-#     def __init__(self, attrs=None, choice_attrs=None):
-#         super().__init__(attrs)
-#         self.choice_attrs = choice_attrs or {}
-
-#     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
-#         option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
-#         if str(value) in self.choice_attrs:
-#             option['attrs'].update(self.choice_attrs[str(value)])
-#         return option
 
 class DrainageNetworkFilter(FilterSet):
     # assign the custom widget directly here
@@ -712,17 +790,8 @@ class DrainedAreaFilter(FilterSet):
         choices = [(d.id, d.name_de) for d in drained_area_types]
         # self.form.fields['drained_area_types'].choices = drained_area_types.values_list('id', 'name_de')
 
-        self.form.fields['types'].widget.attrs['prefix'] = 'drained_area'
-        
+        self.form.fields['types'].widget.attrs['prefix'] = 'drained_area' 
         self.form.fields['types'].widget.choice_attrs = choice_attrs
         self.form.fields['types'].choices = choices
         print("DrainedAreaFilter initialized with choices:", choices)
-
-
-
-    # class Meta:
-    #     model = models.DrainedArea
-    #     fields = ['drained_area_types']
-    #     form = SliderFilterForm
-
 

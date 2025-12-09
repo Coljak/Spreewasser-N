@@ -1901,9 +1901,10 @@ class DataInfoProperty(models.Model):
     unit = models.CharField(max_length=16, null=True, blank=True)
     value_name = models.CharField(max_length=255)  # e.g. "name" or "gek_document__link"
     href = models.BooleanField(default=False)
+    help_text = models.CharField(max_length=512, null=True, blank=True)
 
     def to_json(self, language="de"):
-        return {
+        property = {
             "popUp": self.popup,
             "table": self.table,
             "title": getattr(self, f'title_{language}', None),
@@ -1911,6 +1912,11 @@ class DataInfoProperty(models.Model):
             "unit": self.unit,
             "href": self.href,
         }
+        if self.help_text:
+            property.update({"helpText": self.help_text})
+         
+        return property
+    
 
 
 ## TU Berlin

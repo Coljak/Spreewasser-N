@@ -186,7 +186,7 @@ export var map = enhanceMap(
 );
 
 document.dispatchEvent(new CustomEvent('leaflet-map-ready', { detail: map }));
-
+window.DEBUG_MAP = map;
 export function getCircleMarkerSettings (fillColor) {
   return {
     radius: 5,
@@ -644,21 +644,27 @@ $('#toggleBottomFullscreen').on('click', function () {
 
     if (isFullscreen) {
       // Exit fullscreen - restore layout
-      $('.panel-top').css('height', '60%');
-      $('.panel-left').css('visibility', 'visible');
+      // $('.panel-top').css('height', '20%');
+      // $('.panel-left').css('visibility', 'visible');
       $('#main-navbar').show();
-      $('.leaflet-control-container').show(); 
+      // $('.leaflet-control-container').show(); 
       $('#toggleBottomFullscreen').html('<i class="bi bi-arrows-fullscreen"></i>');
-      map.invalidateSize();
+
+      setTimeout(() => map.invalidateSize(), 0);
+      setTimeout(() => map.invalidateSize(), 120);
+   
 
     } else {
       // Enter fullscreen mode - shrink top, hide left
-      $('.panel-top').css('height', '20%'); // or even '5%' if you want it smaller
+      // $('.panel-top').css('height', '50%'); // or even '5%' if you want it smaller
       // $('.panel-left').css('visibility', 'hidden');
             // hide the sidebar
       $('#main-navbar').hide(); // hide the navbar
-      $('.leaflet-control-container').hide(); // hide Leaflet controls
-      map.invalidateSize()
+      // $('.leaflet-control-container').hide(); // hide Leaflet controls
+
+
+      setTimeout(() => map.invalidateSize(), 0);
+      setTimeout(() => map.invalidateSize(), 120);
       const highlightedElement = $('#userFieldsAccordion').find('li.highlight')
       if (highlightedElement.length > 0) {
         console.log(highlightedElement)

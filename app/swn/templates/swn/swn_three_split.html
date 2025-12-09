@@ -117,7 +117,7 @@
 {% block javascript %}
     {{ block.super }}
     <script>
-        const demUrl = "{% static 'data/dem_3857.png' %}";
+
         const droughtUrl = "{% static 'data/4326_reprojected_3857.png' %}" ;   
         const project_region = {{ project_region|safe }} ;
         const runSimulationUrl = "{% url 'swn:run_simulation' %}";

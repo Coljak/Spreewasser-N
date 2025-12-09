@@ -24,7 +24,7 @@
 
     <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.legend.css' %}" />
     <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
-    {% comment %} <link rel="stylesheet" href="{% static 'css/custom_bootstrap_navbar.css' %}" /> {% endcomment %}
+
     <link rel="stylesheet" href="{% static 'toolbox/toolbox.css' %}" />
     
 
@@ -33,9 +33,7 @@
 
 
 {% block right_panel %}
-        <div id="map" style="height: 100%; width: 100%">
-            
-        </div>
+        <div id="map"></div>
 {% endblock right_panel %}
 
 
@@ -120,9 +118,6 @@
     </div>
 
 
-    
-
-    {% comment %} <div id="toolboxPanel" class="overflow-auto"> {% endcomment %}
     <div id="toolboxPanel">
     </div>
 
@@ -140,11 +135,6 @@
 
 
         const getUserFieldsUrl = "{% url 'toolbox:get-user-fields' %}";  
-
-        const demUrl= "{% static 'data/dem_3857.png' %}"
-        const toolboxUrl= "{% static 'data/soil_4326_rendered_image_2.png' %}"
-        const toolboxSinksUrl = "{% static 'data/sinks_3857_pink.png' %}"
-    
         const project_region = {{ project_region|safe }}   
 
         const outline_injection = {{ outline_injection|safe }}   

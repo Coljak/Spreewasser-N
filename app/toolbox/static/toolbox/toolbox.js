@@ -589,8 +589,7 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 document.querySelector('.leaflet-overlayRaster-pane').hidden = false;
                 document.querySelector('.leaflet-legend').hidden = false; 
                 $target.addClass('shown')
-              }
-              
+              }           
         } else if (
             $target.hasClass('paginate_button') || 
             $target.hasClass('sorting') ||
@@ -673,8 +672,7 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 loadProjectToGui(project);
             });
         } else if ($target.closest('tr').hasClass('table-parent-row') &&
-                    !$target.is('input, button, a')) {
-            
+                    !$target.is('input, button, a')) {           
             const tRow = $target.closest('tr');
             const id = tRow.data('id');
             const dataType = $(tRow).data('type');
@@ -727,6 +725,8 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
                 window.URL.revokeObjectURL(link.href);
             });
 
+        } else if ($target.hasClass('.bi-info-circle')) {
+            console.log('.bi-info-circle')
         }
 
         if (button.hasClass('filter-waterbodies')) {
@@ -1168,6 +1168,12 @@ export function addFeatureCollectionToTable(data) {
                 
             } else {
                 th.textContent = property.title;
+                if (property.helpText) {
+                    th.setAttribute('data-bs-toggle', 'tooltip');
+                    th.title = property.helpText   ;
+                // th.title = property.title;
+                }
+               
             }
 
             headRow.appendChild(th);

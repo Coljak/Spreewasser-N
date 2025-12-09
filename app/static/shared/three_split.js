@@ -7,6 +7,7 @@
       let leafletMap;
       document.addEventListener('leaflet-map-ready', function (e) {
           leafletMap = e.detail;
+          console.log('Leaflet map ready event received in three_split.js', e.detail);
       });
       // Corner resizer
       $('#cornerSplitter').on('mousedown', function (e) {
@@ -33,7 +34,7 @@
         $(document).on('mouseup.cornerResize', function () {
           $(document).off('.cornerResize');
           if (leafletMap && typeof leafletMap.invalidateSize === 'function') {
-            
+            console.log('Invalidate map size after corner resize');
               setTimeout(function () {
                   leafletMap.invalidateSize();
               }, 50);

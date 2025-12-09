@@ -5,13 +5,12 @@ from django.contrib.auth.models import User
 from django.db.models import Max, Min, NOT_PROVIDED
 from . import models
 from swn import models as swn_models
-# from swn import forms as swn_forms
-# from .utils import widgets
 from django.db.models import Q
 
 from django.core import validators
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Column, Field
+from .toolbox_documentation import helptexts
 
 
 from utilities.widgets import CustomRangeSliderWidget, CustomSingleSliderWidget,CustomSimpleSliderWidget, CustomDoubleSliderWidget
@@ -22,7 +21,7 @@ class InfoLabelFormMixin():
         field = self.fields[field_name]
         if field.help_text:
             info_icon = f'<i class="bi bi-info-circle" data-help="{field.help_text}"></i>'
-            field.help_text = ""   # ⬅️ remove normal help_text output
+            field.help_text = ""   #  remove normal help_text output
             return mark_safe(f"{field.label} {info_icon}")
         return field.label
 
@@ -58,9 +57,6 @@ class SliderFilterForm(InfoLabelFormMixin, forms.Form):
 
 
 ### SIDEBAR #####
-# toolbox/forms.py
-
-# Todo make this a ModelForm, model = NUTS5000_N3 ?
 class PolygonSelectionForm(forms.Form):
 
     counties = forms.MultipleChoiceField(
@@ -189,9 +185,7 @@ class InletWeightingsForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Gewichtung der Länge der Zuleitung",
-        help_text=(
-            "Die Gewichtung der Länge der Zuleitung "
-        )
+        help_text=helptexts['InletWeightingsForm'].get('weighting_inlet_length', None)
     )
 
     weighting_inlet_volume = forms.IntegerField(
@@ -208,9 +202,7 @@ class InletWeightingsForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Gewichtung des Verhältnisses ökologischer Mindestabflusses zu Senkenvolumen",
-        help_text=(
-            "Gewichtung der ... "
-        )
+        help_text=helptexts['InletWeightingsForm'].get('weighting_inlet_volume', None),
     )
 
     def __init__(self, *args, **kwargs):
@@ -225,6 +217,7 @@ class InletWeightingsForm(InfoLabelFormMixin, forms.Form):
             'overall-weighting-reset', 
             'Reset', 
             css_class='btn-secondary reset-all'))
+        
 class OverallWeightingsForm(InfoLabelFormMixin, forms.Form):
     overall_usability = forms.IntegerField(
         required=False,
@@ -240,10 +233,7 @@ class OverallWeightingsForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Gewichtung des Untergrundspeichervolumens",
-        help_text=(
-            "Die allgemeine Nutzbarkeit ist eine Bewertung der Eignung des Standorts für "
-            "Versickerungsmaßnahmen. Eine hohe Bewertung begünstigt Versickerungsmaßnahmen."
-        )
+        help_text=helptexts['OverallWeightingsForm'].get('overall_usability', None),
     )
 
     soil_index = forms.IntegerField(
@@ -260,9 +250,7 @@ class OverallWeightingsForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Gewichtung der Bodenbewertung",
-        help_text=(
-            "Gewichtung der Bodenbewertung ist eine Bewertung der Eignung des Standorts für "
-        )
+        help_text=helptexts['OverallWeightingsForm'].get('soil_index', None),
     )
 
     def __init__(self, *args, **kwargs):
@@ -297,11 +285,7 @@ class WeightingsForestForm(InfoLabelFormMixin, forms.Form):
             
         }),
         label="Feldkapazität",
-        help_text = (
-            "Die Feldkapazität ist das Wasservolumen das über längere Zeit entgegen der "
-            "Schwerkraft im Boden gehalten werden kann. Eine geringere Feldkapazität begünstigt "
-            "Versickerungsmaßnahmen."
-        )
+        help_text = helptexts['WeightingsForestForm'].get('field_capacity', None),
     )
     hydraulic_conductivity_1m = forms.IntegerField(
         required=False,
@@ -318,11 +302,7 @@ class WeightingsForestForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Hydraulische Leitfähigkeit 1m",
-        help_text=(
-            "Die hydraulische Leitfähigkeit ist die gesättigte Wasserleitfähigkeit des Bodens bis in eine "
-            "Tiefe von einem Meter. Bei aktiver Nutzung werden gesättigte Bedingungen unterhalb der Geländeoberkante "
-            "angenommen. Eine hohe Leitfähigkeit begünstigt hohe Versickerungsraten."
-        )
+        help_text=helptexts['WeightingsForestForm'].get('hydraulic_conductivity_1m', None)
     )
     hydraulic_conductivity_2m = forms.IntegerField(
         required=False,
@@ -339,11 +319,7 @@ class WeightingsForestForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Hydraulische Leitfähigkeit 2m",
-        help_text=(
-            "Die hydraulische Leitfähigkeit ist die gesättigte Wasserleitfähigkeit des Bodens bis in eine "
-            "Tiefe von zwei Metern. Bei aktiver Nutzung werden gesättigte Bedingungen unterhalb der Geländeoberkante "
-            "angenommen. Eine hohe Leitfähigkeit begünstigt hohe Versickerungsraten."
-        )
+        help_text=helptexts['WeightingsForestForm'].get('hydraulic_conductivity_2m', None)
     )
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -375,11 +351,7 @@ class WeightingsAgricultureForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Feldkapazität",
-        help_text = (
-            "Die Feldkapazität ist das Wasservolumen das über längere Zeit entgegen der "
-            "Schwerkraft im Boden gehalten werden kann. Eine geringere Feldkapazität begünstigt "
-            "Versickerungsmaßnahmen."
-        )
+        help_text = helptexts['WeightingsAgricultureForm'].get('field_capacity', None),
     )
     hydromorphy = forms.IntegerField(
         required=False,
@@ -396,10 +368,7 @@ class WeightingsAgricultureForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Hydromorphie",
-        help_text = (
-            "Die Hydromorphie unterscheidet zwischen grund-, stau- und sickerwasserdominierten landwirtschaftlichen "
-            "Standorten. Für Versickerungsmaßnahmen sind letztere zu bevorzugen."
-        )
+        help_text = helptexts['WeightingsAgricultureForm'].get('hydromorphy', None)
     )
     soil_type = forms.IntegerField(
         required=False,
@@ -416,9 +385,7 @@ class WeightingsAgricultureForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Bodenart",
-        help_text = (
-            "Bewertung der Eignung der vorliegenden Bodenarten landwirtschaftlicher Standorte für Versickerungmaßnahmen." 
-        )
+        help_text = helptexts['WeightingsAgricultureForm'].get('soil_type', None),
     )
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -447,11 +414,7 @@ class WeightingsGrasslandForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Feldkapazität",
-        help_text = (
-            "Die Feldkapazität ist das Wasservolumen das über längere Zeit entgegen der "
-            "Schwerkraft im Boden gehalten werden kann. Eine geringere Feldkapazität begünstigt "
-            "Versickerungsmaßnahmen."
-        )
+        help_text = helptexts['WeightingsGrasslandForm'].get('field_capacity', None),
     )
     hydromorphy = forms.IntegerField(
         required=False,
@@ -468,10 +431,7 @@ class WeightingsGrasslandForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Hydromorphie",
-        help_text = (
-            "Die Hydromorphie unterscheidet zwischen grund-, stau- und sickerwasserdominierten landwirtschaftlichen "
-            "Standorten. Für Versickerungsmaßnahmen sind letztere zu bevorzugen."
-        )
+        help_text = helptexts['WeightingsGrasslandForm'].get('hydromorphy', None),
     )
     soil_type = forms.IntegerField(
         required=False,
@@ -488,9 +448,7 @@ class WeightingsGrasslandForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Bodenart",
-        help_text = (
-            "Bewertung der Eignung der vorliegenden Bodenarten landwirtschaftlicher Standorte für Versickerungmaßnahmen." 
-        )
+        help_text = helptexts['WeightingsGrasslandForm'].get('soil_type', None),
     )
     soil_water_ratio = forms.IntegerField(
         required=False,
@@ -507,9 +465,7 @@ class WeightingsGrasslandForm(InfoLabelFormMixin, forms.Form):
             "units": "%",
         }),
         label="Bodenfeuchte",
-        help_text= (
-            "Bewertung der Sättigungsgrade von Böden auf Graslandstandorten."
-        )
+        help_text= helptexts['WeightingsGrasslandForm'].get('soil_water_ratio', None),
     )
 
     def __init__(self, *args, **kwargs):
@@ -537,14 +493,7 @@ class MarWeightingForm(InfoLabelFormMixin, forms.ModelForm):
             'distance_to_well': "Entfernung zum Brunnen",
         }
 
-        help_texts = {
-            'aquifer_thickness': "Gewichtung der Mächtigkeit des Grundwasserleiters",
-            'depth_groundwater': "Gewichtung der Tiefe zum Grundwasserleiter 2",
-            'hydraulic_conductivity': "Gewichtung der hydraulischen Leitfähigkeit",
-            'land_use': "Gewichtung der Landnutzung",
-            'distance_to_source_water': "Gewichtung der Entfernung zum Rohwasser",
-            'distance_to_well': "Gewichtung der Entfernung zum Brunnen (m)",
-        }
+        help_texts = helptexts['MarWeightingForm']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -608,11 +557,14 @@ class SuitabilityForm(InfoLabelFormMixin, forms.Form):
             label_field = f"label_{language}"
             label_text = getattr(label, label_field, label.name)
 
-            self.fields[label.name] = forms.IntegerField(
+            self.fields[label.name] = forms.IntegerField(   
                 required=False,
                 widget=CustomSimpleSliderWidget(attrs=attrs),
                 label=label_text,
+                help_text=helptexts['SuitabilityForm'].get(label.name, None),
+               
             )
+            self.fields[label.name].label = self.label_with_info(label.name)
 
         # Crispy forms helper
         self.helper = FormHelper(self)
@@ -646,9 +598,7 @@ class DrainageProbabilityFilterForm(InfoLabelFormMixin, forms.Form):
         }),
         label="Schwellenwert",
         required=False,
-        help_text= (
-            "Schwellenwert für die dargestellte Entwässerungswahrscheinlichkeit."
-        )
+        help_text=helptexts['DrainageProbabilityFilterForm'].get('threshold', None),
     )
 
 

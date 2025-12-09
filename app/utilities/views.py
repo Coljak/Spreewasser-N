@@ -11,7 +11,7 @@ import csv
 Utility to generate a json/ dictionary for the help functions/icons in the toolbox
 """
 
-def get_all_form_labels(forms_module, filters_module):
+def get_all_form_labels():
     """
     Returns a dictionary with form/filter class names as keys and 
     dicts of {field_name: label} as values.
@@ -55,7 +55,7 @@ def get_all_labels_as_csv(file_path="all_form_labels.csv"):
     Collects all field names, labels, and help_texts from forms and filters
     and writes them to a CSV file with columns: form_name, field_name, label, help_text
     """
-    all_forms, faulty = get_all_form_labels(forms_module, filters_module)
+    all_forms, faulty = get_all_form_labels()
 
     with open(file_path, mode='w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)

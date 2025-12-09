@@ -632,30 +632,6 @@ class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
 
 class UserSimulationSettingsForm(ParametersModelForm):
     
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-
-    #     self.helper = FormHelper()
-    #     self.helper.form_tag = False
-
-    #     layout_fields = []
-
-    #     for field_name, field in self.fields.items():
-    #         if isinstance(field, forms.BooleanField):
-    #             # Keep BooleanFields as regular stacked checkboxes
-    #             layout_fields.append(
-    #                 Field(field_name, css_class='form-check-input mb-3')
-    #             )
-    #         else:
-    #             # Set label/field alignment only for non-Boolean fields
-    #             layout_fields.append(Field(field_name))
-
-    #     # Set horizontal layout classes globally (affects only non-Boolean fields above)
-    #     self.helper.label_class = 'col-5 col-form-label'
-    #     self.helper.field_class = 'col-7'
-
-    #     self.helper.layout = Layout(*layout_fields)
-
     
     class Meta:
         model = models.UserSimulationSettings
@@ -675,28 +651,7 @@ class UserSimulationSettingsForm(ParametersModelForm):
                 original_widget = self.fields[field_name].widget
                 self.fields[field_name].widget = UnitInputWrapper(widget=original_widget, unit=unit)
 
-        # self.helper = get_parameters_form_helper()
-        # self.helper.layout = Layout(
-        #     *[
-        #         Field(field_name, wrapper_class='row')
-        #         for field_name in self.fields
-        #     ]
-        # )
-        # self.helper.layout.append(
-        #     Row(
-        #         Div(
-        #             Field('name', wrapper_class='row'),
-        #             css_class='col-11'
-        #         ), 
-        #         HTML(
-        #             """
-        #                 <button type="button" data-parameters="user-simulation-settings" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
-        #                 <span><i class="bi bi-pencil-square"></i></span>
-        #                 </button>
-        #             """
-        #         )
-        #     )
-        #     )
+       
     
 
 class UserSimulationSettingsInstanceSelectionForm(forms.Form):

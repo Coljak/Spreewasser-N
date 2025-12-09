@@ -2313,64 +2313,183 @@ def download_toolbox_results(request):
     tmpdir = tempfile.mkdtemp()
 
     
-    
-    if project_type == 'infiltration':
-        print('is Infiltration')
-        
-        result_result = project.get('result_result', [])
-        result_sinks = project.get('result_sinks', [])
-        result_enlarged_sinks = project.get('result_enlarged_sinks', [])
-        result_waterbodies = project.get('result_waterbodies', [])
-        result_timeseries = project.get('result_timeseries', [])
-        
-        if len(result_result) > 0:
-            result = get_infiltration_result_list(project, epsg=epsg)
-            fc = result.get('inlet_feature_collection')
-            for filetype in result_result:
-                if filetype.split('_')[-1] == 'shp':
-                    # writer_fields = data.model.shp_writer_fields()
-                    writer_fields = {
-                        'distance_m':{'field_type': "N", 'decimal': 0},
-                        'index_length':{'field_type': "N", 'decimal': 0},
-                        'index_volumes':{'field_type': "N", 'decimal': 0},
-                        'index_inlet': {'field_type': "N", 'decimal': 0},
-                    }
-                    filename = f'Zuleitungen_EPSG_{epsg}'
-                    create_shp_from_feature_collection(tmpdir, fc, epsg, filename, writer_fields)
-                    if 'shp' not in result_sinks:
-                        result_sinks.append('shp')
-                    if 'shp' not in result_sinks:
-                        result_sinks.append('shp')
-                elif filetype.split('_')[-1] == 'gjson':
-                    create_geojson_from_feature_collection(fc, tmpdir, filename)
-                    if 'gjson' not in result_sinks:
-                        result_sinks.append('gjson')
-                    if 'gjson' not in result_sinks:
-                        result_sinks.append('gjson')
+    match project_type:
+        case 'infiltration':
+            print('is Infiltration')
+            
+            result_result = project.get('result_result', [])
+            result_sinks = project.get('result_sinks', [])
+            result_enlarged_sinks = project.get('result_enlarged_sinks', [])
+            result_waterbodies = project.get('result_waterbodies', [])
+            result_timeseries = project.get('result_timeseries', [])
+            
+            if len(result_result) > 0:
+                result = get_infiltration_result_list(project, epsg=epsg)
+                fc = result.get('inlet_feature_collection')
+                for filetype in result_result:
+                    if filetype.split('_')[-1] == 'shp':
+                        # writer_fields = data.model.shp_writer_fields()
+                        writer_fields = {
+                            'distance_m':{'field_type': "N", 'decimal': 0},
+                            'index_length':{'field_type': "N", 'decimal': 0},
+                            'index_volumes':{'field_type': "N", 'decimal': 0},
+                            'index_inlet': {'field_type': "N", 'decimal': 0},
+                        }
+                        filename = f'Zuleitungen_EPSG_{epsg}'
+                        create_shp_from_feature_collection(tmpdir, fc, epsg, filename, writer_fields)
+                        if 'shp' not in result_sinks:
+                            result_sinks.append('shp')
+                        if 'shp' not in result_sinks:
+                            result_sinks.append('shp')
+                    elif filetype.split('_')[-1] == 'gjson':
+                        create_geojson_from_feature_collection(fc, tmpdir, filename)
+                        if 'gjson' not in result_sinks:
+                            result_sinks.append('gjson')
+                        if 'gjson' not in result_sinks:
+                            result_sinks.append('gjson')
 
 
-        if len(result_sinks) > 0:
-            sinks = models.Sink.objects.filter(id__in=project.get(f'selected_sinks', []))
-            sink_fc = create_fc_for_sink_download(project, sinks, epsg, 'sink', result_sinks, language=language)
-            create_download_files(sink_fc, sinks, tmpdir, epsg, result_sinks, language=language)
-        if len(result_enlarged_sinks) > 0:
-            sinks = models.EnlargedSink.objects.filter(id__in=project.get(f'selected_enlarged_sinks', []))
-            enlarged_sink_fc = create_fc_for_sink_download(project, sinks, epsg, 'enlarged_sink', result_enlarged_sinks, language=language)
-            create_download_files(enlarged_sink_fc, sinks, tmpdir, epsg, result_enlarged_sinks, language=language)
-            sink_embankments = models.SinkEmbankment.objects.filter(enlarged_sink__in=sinks)
-            if sink_embankments.count() > 0:
-                embankment_fc = create_fc_for_download(sink_embankments, epsg, result_enlarged_sinks, language=language)
-                create_download_files(embankment_fc, sink_embankments, tmpdir, epsg, result_enlarged_sinks, language=language)
-        
-        if len(result_waterbodies) > 0:
-            lakes = models.Lake.objects.filter(id__in=project.get(f'selected_lakes', []))
-            streams = models.Stream.objects.filter(id__in=project.get(f'selected_streams', []))
-            lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
+            if len(result_sinks) > 0:
+                sinks = models.Sink.objects.filter(id__in=project.get(f'selected_sinks', []))
+                sink_fc = create_fc_for_sink_download(project, sinks, epsg, 'sink', result_sinks, language=language)
+                create_download_files(sink_fc, sinks, tmpdir, epsg, result_sinks, language=language)
+            if len(result_enlarged_sinks) > 0:
+                sinks = models.EnlargedSink.objects.filter(id__in=project.get(f'selected_enlarged_sinks', []))
+                enlarged_sink_fc = create_fc_for_sink_download(project, sinks, epsg, 'enlarged_sink', result_enlarged_sinks, language=language)
+                create_download_files(enlarged_sink_fc, sinks, tmpdir, epsg, result_enlarged_sinks, language=language)
+                sink_embankments = models.SinkEmbankment.objects.filter(enlarged_sink__in=sinks)
+                if sink_embankments.count() > 0:
+                    embankment_fc = create_fc_for_download(sink_embankments, epsg, result_enlarged_sinks, language=language)
+                    create_download_files(embankment_fc, sink_embankments, tmpdir, epsg, result_enlarged_sinks, language=language)
             
-            create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
-            streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
+            if len(result_waterbodies) > 0:
+                lakes = models.Lake.objects.filter(id__in=project.get(f'selected_lakes', []))
+                streams = models.Stream.objects.filter(id__in=project.get(f'selected_streams', []))
+                lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
+                
+                create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
+                streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
+                
+                create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
+                if len(result_timeseries) > 0:
+                    fgw_ids = list(lakes.values_list('fgw_id', flat=True)) + \
+                        list(streams.values_list('fgw_id', flat=True))
+                    fgw_ids = set(fgw_ids)
+                    fgw_ids = [x for x in fgw_ids if x is not None]
+                    
+                    for fgw_id in fgw_ids:
+
+                        timeseries = (
+                            models.DischargeTimeseries.objects
+                                .filter(fgw__id=fgw_id)
+                                .order_by('date')
+                                .values('date', 'discharge_m3s')
+                            )
+                        filename = f'discharge_timeseries_fgw_id_{fgw_id}.csv'
+
+                        file_path = os.path.join(tmpdir, filename)
+                        with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+                            writer = csv.writer(csvfile)
+                            
+                            # Write header
+                            writer.writerow(["date", "discharge_m3s"])
+                            
+                            # Write rows
+                            for row in timeseries:
+                                writer.writerow([row["date"], row["discharge_m3s"]])
+                    
+        case 'injection':
+            filename= f'/app/raster_data/{request.user.id}_mar_result.tif'
+            target_path = os.path.join(tmpdir, "mar_result.tif")
+            # copy file into tmpdir
+            shutil.copy(filename, target_path)
             
-            create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
+        case 'sieker_surface_water':
+            result_lakes = project.get('result_lakes', [])
+            result_stations = project.get('result_stations', [])
+            result_timeseries = project.get('result_timeseries', [])
+            if len(result_lakes) > 0:
+                lake_ids = project.get('selected_sieker_surface_waters', [])
+                lakes = models.SiekerLargeLake.objects.filter(id__in=lake_ids)
+                lakes_fc = create_fc_for_download(lakes, epsg, result_lakes, language=language)
+                create_download_files(lakes_fc, lakes, tmpdir, epsg, result_lakes, language=language)
+                
+            if len(result_stations) > 0:
+                wl_ids = project.get('selected_sieker_water_levels', [])
+                stations = models.SiekerWaterLevel.objects.filter(id__in=wl_ids)
+                stations_fc = create_fc_for_download(stations, epsg, result_stations, language=language)
+                create_download_files(stations_fc, stations, tmpdir, epsg, result_stations, language=language)
+
+            if len(result_timeseries) > 0:
+                wl_ids = project.get('selected_sieker_water_levels', [])
+                stations = models.SiekerWaterLevel.objects.filter(id__in=wl_ids)
+                for station in stations:
+
+                    timeseries = (
+                        models.TimeseriesDailyWaterlevel.objects
+                        .filter(station__id=station.station.id)
+                        .order_by('date')
+                        .values('date', 'level')
+                    )
+                    filename = f'{(station.name.replace(" ", "_")).replace(",", "")}_timeseries.csv'
+                    file_path = os.path.join(tmpdir, filename)
+                    with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+                        writer = csv.writer(csvfile)
+                        
+                        # Write header
+                        writer.writerow(["date", "level"])
+                        
+                        # Write rows
+                        for row in timeseries:
+                            writer.writerow([row["date"], row["level"]])
+            
+        case 'sieker_sink':
+            result_result = project.get('result_result', [])
+            result_sinks = project.get('result_sinks', [])
+            result_waterbodies = project.get('result_waterbodies', [])
+            result_timeseries = project.get('result_timeseries', [])
+            
+            if len(result_result) > 0:
+            
+                sinks = models.SiekerSink.objects.filter(id__in=project.get(f'selected_sieker_sinks', []))
+                lakes = models.Lake.objects.filter(id__in=project.get(f'selected_sieker_lakes', []))
+                streams = models.Stream.objects.filter(id__in=project.get(f'selected_sieker_streams', []))
+
+                result = get_sieker_sink_result_list(sinks, lakes, streams, epsg=epsg)
+                inlet_fc = result.get('inlet_feature_collection')
+                sink_fc = result.get('sink_feature_collection')
+                for filetype in result_result:
+                    if filetype.split('_')[-1] == 'shp':
+                        # writer_fields = data.model.shp_writer_fields()
+                        writer_fields = {
+                            'distance_m':{'field_type': "N", 'decimal': 0},
+                            'index_length':{'field_type': "N", 'decimal': 0},
+                            'index_volumes':{'field_type': "N", 'decimal': 0},
+                        }
+                        filename = f'Zuleitungen_EPSG_{epsg}'
+                        create_shp_from_feature_collection(tmpdir, inlet_fc, epsg, filename, writer_fields)
+                        
+                        if 'shp' not in result_sinks:
+                            result_sinks.append('shp')
+
+                    elif filetype.split('_')[-1] == 'gjson':
+                        create_geojson_from_feature_collection(inlet_fc, tmpdir, filename)
+                        if 'gjson' not in result_sinks:
+                            result_sinks.append('gjson')
+
+            if len(result_sinks) > 0:
+                sinks = models.Sink.objects.filter(id__in=project.get(f'selected_sinks', []))
+
+                sink_fc = create_fc_for_download(sinks, epsg, result_sinks, language=language)
+                create_download_files(sink_fc, sinks, tmpdir, epsg, result_sinks, language=language)
+
+            if len(result_waterbodies) > 0:
+                lakes = models.Lake.objects.filter(id__in=project.get(f'selected_lakes', []))
+                streams = models.Stream.objects.filter(id__in=project.get(f'selected_streams', []))
+                lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
+                create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
+                streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
+                create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
             if len(result_timeseries) > 0:
                 fgw_ids = list(lakes.values_list('fgw_id', flat=True)) + \
                     list(streams.values_list('fgw_id', flat=True))
@@ -2397,213 +2516,94 @@ def download_toolbox_results(request):
                         # Write rows
                         for row in timeseries:
                             writer.writerow([row["date"], row["discharge_m3s"]])
-                   
-    elif project_type == 'injection':
-        filename= f'/app/raster_data/{request.user.id}_mar_result.tif'
-        target_path = os.path.join(tmpdir, "mar_result.tif")
-        # copy file into tmpdir
-        shutil.copy(filename, target_path)
-         
-    elif project_type == 'sieker_surface_water':
-        result_lakes = project.get('result_lakes', [])
-        result_stations = project.get('result_stations', [])
-        result_timeseries = project.get('result_timeseries', [])
-        if len(result_lakes) > 0:
-            lake_ids = project.get('selected_sieker_surface_waters', [])
-            lakes = models.SiekerLargeLake.objects.filter(id__in=lake_ids)
-            lakes_fc = create_fc_for_download(lakes, epsg, result_lakes, language=language)
-            create_download_files(lakes_fc, lakes, tmpdir, epsg, result_lakes, language=language)
+
+        case 'wetland':
+            result_wetlands = project.get('result_wetlands', [])
+            result_waterbodies = project.get('result_waterbodies', [])
+
+            if len(result_wetlands) > 0:
+                wetland_ids = project.get('selected_wetlands', [])
+                wetlands = models.HistoricalWetlands.objects.filter(id__in=wetland_ids)
+                wetland_fc = create_fc_for_download(wetlands, epsg, result_wetlands, language=language)
+                create_download_files(wetland_fc, wetlands, tmpdir, epsg, result_wetlands, language=language)
+
+            if len(result_waterbodies) > 0:
+                stream_ids = project.get('selected_wetland_streams', [])
+                streams = models.Stream.objects.filter(id__in=stream_ids)
+                streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
+                create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
+
+                lake_ids = project.get('selected_wetland_lakes', [])
+                lakes = models.Lake.objects.filter(id__in=lake_ids)
+                lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
+                create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
+
+        case 'drainage':
+            user_field_id = project.get('userField')
+            user_field = models.UserField.objects.get(pk=user_field_id)
+            result_drainage_network = project.get('result_drainage_network', [])
+            result_drained_areas = project.get('result_drained_areas', []) 
+            result_probability_raster = project.get('result_probability_raster', [])
             
-        if len(result_stations) > 0:
-            wl_ids = project.get('selected_sieker_water_levels', [])
-            stations = models.SiekerWaterLevel.objects.filter(id__in=wl_ids)
-            stations_fc = create_fc_for_download(stations, epsg, result_stations, language=language)
-            create_download_files(stations_fc, stations, tmpdir, epsg, result_stations, language=language)
-
-        if len(result_timeseries) > 0:
-            wl_ids = project.get('selected_sieker_water_levels', [])
-            stations = models.SiekerWaterLevel.objects.filter(id__in=wl_ids)
-            for station in stations:
-
-                timeseries = (
-                    models.TimeseriesDailyWaterlevel.objects
-                    .filter(station__id=station.station.id)
-                    .order_by('date')
-                    .values('date', 'level')
+            if len(result_drainage_network) > 0:
+                drainage_network = models.DrainageNetwork.objects.filter(
+                    Q(geom4326__within=user_field.geom) |
+                    Q(geom4326__intersects=user_field.geom)
                 )
-                filename = f'{(station.name.replace(" ", "_")).replace(",", "")}_timeseries.csv'
-                file_path = os.path.join(tmpdir, filename)
-                with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
-                    writer = csv.writer(csvfile)
-                    
-                    # Write header
-                    writer.writerow(["date", "level"])
-                    
-                    # Write rows
-                    for row in timeseries:
-                        writer.writerow([row["date"], row["level"]])
-        
-    elif project_type == 'sieker_sink':
-        result_result = project.get('result_result', [])
-        result_sinks = project.get('result_sinks', [])
-        result_waterbodies = project.get('result_waterbodies', [])
-        result_timeseries = project.get('result_timeseries', [])
-        
-        if len(result_result) > 0:
-           
-            sinks = models.SiekerSink.objects.filter(id__in=project.get(f'selected_sieker_sinks', []))
-            lakes = models.Lake.objects.filter(id__in=project.get(f'selected_sieker_lakes', []))
-            streams = models.Stream.objects.filter(id__in=project.get(f'selected_sieker_streams', []))
+                drainage_network_fc = create_fc_for_download(drainage_network, epsg, result_drainage_network, language=language)
+                create_download_files(drainage_network_fc, drainage_network, tmpdir, epsg, result_drainage_network, language=language)
 
-            result = get_sieker_sink_result_list(sinks, lakes, streams, epsg=epsg)
-            inlet_fc = result.get('inlet_feature_collection')
-            sink_fc = result.get('sink_feature_collection')
-            for filetype in result_result:
-                if filetype.split('_')[-1] == 'shp':
-                    # writer_fields = data.model.shp_writer_fields()
-                    writer_fields = {
-                        'distance_m':{'field_type': "N", 'decimal': 0},
-                        'index_length':{'field_type': "N", 'decimal': 0},
-                        'index_volumes':{'field_type': "N", 'decimal': 0},
-                    }
-                    filename = f'Zuleitungen_EPSG_{epsg}'
-                    create_shp_from_feature_collection(tmpdir, inlet_fc, epsg, filename, writer_fields)
-                    
-                    if 'shp' not in result_sinks:
-                        result_sinks.append('shp')
+            if len(result_drained_areas) > 0:
+                drained_area = models.DrainedArea.objects.filter(
+                    Q(geom4326__within=user_field.geom) |
+                    Q(geom4326__intersects=user_field.geom)
+                )
+                drained_area_fc = create_fc_for_download(drained_area, epsg, result_drained_areas, language=language)
+                create_download_files(drained_area_fc, drained_area, tmpdir, epsg, result_drained_areas, language=language)
+            if len(result_probability_raster)> 0:
+                filename= f'/app/raster_data/Entwaesserungswahrscheinlichkeit_9Parameter_v2.tif'
+                target_path = os.path.join(tmpdir, "Entwaesserungswahrscheinlichkeit.tif")
+                # copy file into tmpdir
+                shutil.copy(filename, target_path)
 
-                elif filetype.split('_')[-1] == 'gjson':
-                    create_geojson_from_feature_collection(inlet_fc, tmpdir, filename)
-                    if 'gjson' not in result_sinks:
-                        result_sinks.append('gjson')
+        case 'sieker_gek':
+            result_geks = project.get('result_geks', [])
+            result_measures = project.get('result_measures', [])
 
-        if len(result_sinks) > 0:
-            sinks = models.Sink.objects.filter(id__in=project.get(f'selected_sinks', []))
+            geks, measures = get_geks_and_measures(project)
+            gek_measures_features=[]
 
-            sink_fc = create_fc_for_download(sinks, epsg, result_sinks, language=language)
-            create_download_files(sink_fc, sinks, tmpdir, epsg, result_sinks, language=language)
+            for m in measures:
+                ft = m.gek_retention.to_feature( epsg=epsg, language=language)
+                m_dict = m.to_json(language=language)
+                m_dict['measure_id'] = m_dict.pop('id')
+                ft['properties'].update(m_dict)
+                gek_measures_features.append(ft)
 
-        if len(result_waterbodies) > 0:
-            lakes = models.Lake.objects.filter(id__in=project.get(f'selected_lakes', []))
-            streams = models.Stream.objects.filter(id__in=project.get(f'selected_streams', []))
-            lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
-            create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
-            streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
-            create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
-        if len(result_timeseries) > 0:
-            fgw_ids = list(lakes.values_list('fgw_id', flat=True)) + \
-                list(streams.values_list('fgw_id', flat=True))
-            fgw_ids = set(fgw_ids)
-            fgw_ids = [x for x in fgw_ids if x is not None]
-            
-            for fgw_id in fgw_ids:
-
-                timeseries = (
-                    models.DischargeTimeseries.objects
-                        .filter(fgw__id=fgw_id)
-                        .order_by('date')
-                        .values('date', 'discharge_m3s')
-                    )
-                filename = f'discharge_timeseries_fgw_id_{fgw_id}.csv'
-
-                file_path = os.path.join(tmpdir, filename)
-                with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
-                    writer = csv.writer(csvfile)
-                    
-                    # Write header
-                    writer.writerow(["date", "discharge_m3s"])
-                    
-                    # Write rows
-                    for row in timeseries:
-                        writer.writerow([row["date"], row["discharge_m3s"]])
-
-    elif project_type == 'wetland':
-        result_wetlands = project.get('result_wetlands', [])
-        result_waterbodies = project.get('result_waterbodies', [])
-
-        if len(result_wetlands) > 0:
-            wetland_ids = project.get('selected_wetlands', [])
-            wetlands = models.HistoricalWetlands.objects.filter(id__in=wetland_ids)
-            wetland_fc = create_fc_for_download(wetlands, epsg, result_wetlands, language=language)
-            create_download_files(wetland_fc, wetlands, tmpdir, epsg, result_wetlands, language=language)
-
-        if len(result_waterbodies) > 0:
-            stream_ids = project.get('selected_wetland_streams', [])
-            streams = models.Stream.objects.filter(id__in=stream_ids)
-            streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
-            create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
-
-            lake_ids = project.get('selected_wetland_lakes', [])
-            lakes = models.Lake.objects.filter(id__in=lake_ids)
-            lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
-            create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
-
-    elif project_type == 'drainage':
-        user_field_id = project.get('userField')
-        user_field = models.UserField.objects.get(pk=user_field_id)
-        result_drainage_network = project.get('result_drainage_network', [])
-        result_drained_areas = project.get('result_drained_areas', []) 
-        result_probability_raster = project.get('result_probability_raster', [])
-        
-        if len(result_drainage_network) > 0:
-            drainage_network = models.DrainageNetwork.objects.filter(
-                Q(geom4326__within=user_field.geom) |
-                Q(geom4326__intersects=user_field.geom)
-            )
-            drainage_network_fc = create_fc_for_download(drainage_network, epsg, result_drainage_network, language=language)
-            create_download_files(drainage_network_fc, drainage_network, tmpdir, epsg, result_drainage_network, language=language)
-
-        if len(result_drained_areas) > 0:
-            drained_area = models.DrainedArea.objects.filter(
-                Q(geom4326__within=user_field.geom) |
-                Q(geom4326__intersects=user_field.geom)
-            )
-            drained_area_fc = create_fc_for_download(drained_area, epsg, result_drained_areas, language=language)
-            create_download_files(drained_area_fc, drained_area, tmpdir, epsg, result_drained_areas, language=language)
-        if len(result_probability_raster)> 0:
-            filename= f'/app/raster_data/Entwaesserungswahrscheinlichkeit_9Parameter_v2.tif'
-            target_path = os.path.join(tmpdir, "Entwaesserungswahrscheinlichkeit.tif")
-            # copy file into tmpdir
-            shutil.copy(filename, target_path)
-
-    elif project_type == 'sieker_gek':
-        result_geks = project.get('result_geks', [])
-        result_measures = project.get('result_measures', [])
-
-        geks, measures = get_geks_and_measures(project)
-        gek_measures_features=[]
-
-        for m in measures:
-            ft = m.gek_retention.to_feature( epsg=epsg, language=language)
-            m_dict = m.to_json(language=language)
-            m_dict['measure_id'] = m_dict.pop('id')
-            ft['properties'].update(m_dict)
-            gek_measures_features.append(ft)
-
-        measures_fc = {
-            "type": "FeatureCollection",
-            "features": gek_measures_features,
-            "crs": {
-                "type": "name",
-                "properties": {"name": f"EPSG:{epsg}"}
+            measures_fc = {
+                "type": "FeatureCollection",
+                "features": gek_measures_features,
+                "crs": {
+                    "type": "name",
+                    "properties": {"name": f"EPSG:{epsg}"}
+                }
             }
-        }
 
+            
+            filename = f'Sieker_GEKs_EPSG_{epsg}'
+            geks_fc = create_fc_for_download(geks, epsg, result_geks, language=language)
+            create_download_files(geks_fc, geks, tmpdir, epsg, result_geks, language=language) 
+            if 'csv' in result_measures:
+                result_measures.remove('csv')
+                create_download_csv_from_feature_collection(measures_fc, tmpdir, 'Gewaesserentwicklungsmassnahmen', language=language)
+
+
+            create_download_files({
+                'feature_collection': measures_fc,
+                'filename': 'Gewaesserentwicklungsmassnahmen',
+                }, measures, tmpdir, epsg, result_measures, language=language)
         
-        filename = f'Sieker_GEKs_EPSG_{epsg}'
-        geks_fc = create_fc_for_download(geks, epsg, result_geks, language=language)
-        create_download_files(geks_fc, geks, tmpdir, epsg, result_geks, language=language) 
-        if 'csv' in result_measures:
-            result_measures.remove('csv')
-            create_download_csv_from_feature_collection(measures_fc, tmpdir, 'Gewaesserentwicklungsmassnahmen', language=language)
-
-
-        create_download_files({
-            'feature_collection': measures_fc,
-            'filename': 'Gewaesserentwicklungsmassnahmen',
-            }, measures, tmpdir, epsg, result_measures, language=language)
-     
-       
+        
 
 
 

@@ -211,6 +211,7 @@ klim4cast/data/
 temp/
 monica-parameters/
 app/monica/monica-parameters/
+help_text_import/
 
 # data files
 *.nc

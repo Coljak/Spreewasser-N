@@ -36,45 +36,50 @@ import {
   dismissPolygon,
 } from '/static/shared/map_sidebar_utils.js';
 
-// fir info elements with help text
+// for info elements with help text
 function getInfoText(el) {
-    // Destroy any existing popover on other elements
-    $('.bi-info-circle').each(function () {
-        if (this !== el) {
-            const existing = bootstrap.Popover.getInstance(this);
-            if (existing) existing.dispose();
-        }
-    });
-
-    // Get instance if it already exists
-    let popover = bootstrap.Popover.getInstance(el);
-
-    if (popover) {
-        // Toggle off if already open
-        popover.dispose();
-        return;
-    }
-
-    // Create a new popover
-    popover = new bootstrap.Popover(el, {
-        content: el.getAttribute("data-help"),
-        trigger: "manual",       // popover will open manually
-        placement: "right",
-        html: true,
-    });
-
-    popover.show();
-
-    // Close all popovers when clicking outside
-    document.addEventListener('click', function handler(e) {
-        if (!el.contains(e.target)) {
-          if (popover  && popover._element) {
-            popover.dispose();
+  setTimeout(() => {
+    console.log('el', el)
+    el.getBoundingClientRect()
+      // Destroy any existing popover on other elements
+      $('.bi-info-circle').each(function () {
+          if (this !== el) {
+              const existing = bootstrap.Popover.getInstance(this);
+              if (existing) existing.dispose();
           }
+      });
 
-            document.removeEventListener('click', handler);
-        }
-    });
+      // Get instance if it already exists
+      let popover = bootstrap.Popover.getInstance(el);
+      console.log('popover 1', popover)
+      if (popover) {
+          // Toggle off if already open
+          popover.dispose();
+          return;
+      }
+      console.log('el.getAttribute("data-help")', el.getAttribute("data-help"))
+      // Create a new popover
+      popover = new bootstrap.Popover(el, {
+          content: el.getAttribute("data-help"),
+          trigger: "manual",       // popover will open manually
+          placement: "right",
+          html: true,
+      });
+      console.log('popover 2', popover)
+
+      popover.show();
+
+      // Close all popovers when clicking outside
+      document.addEventListener('click', function handler(e) {
+          if (!el.contains(e.target)) {
+            if (popover  && popover._element) {
+              popover.dispose();
+            }
+
+              document.removeEventListener('click', handler);
+          }
+      });
+    }, 10);
 }
 
 

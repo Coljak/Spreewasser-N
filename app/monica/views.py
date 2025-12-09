@@ -1161,9 +1161,7 @@ def monica_model(request):
         'project_modal_title': project_modal_title,
         'coordinate_form': coordinate_form,
         'user_crop_parameters_select_form': user_crop_parameters_select_form,
-        # 'user_crop_parameters_form': user_crop_parameters_form,
         'user_simulation_settings_select_form': user_simulation_settings_select_form,
-        # 'simulation_settings_form': user_simulation_settings_form,
         'user_environment_parameters_select_form': user_environment_parameters_select_form,
 
         'user_soil_moisture_select_form': user_soil_moisture_select_form,

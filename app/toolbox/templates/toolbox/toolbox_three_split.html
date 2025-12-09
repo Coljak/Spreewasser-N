@@ -7,7 +7,7 @@
 {% block css %} 
 {{ block.super }}
     
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="{% static 'vendor/leaflet/dist/leaflet.css' %}"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css" />
     <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.contextmenu.css' %}"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/css/bootstrap-slider.css" integrity="sha512-SZgE3m1he0aEF3tIxxnz/3mXu/u/wlMNxQSnE0Cni9j/O8Gs+TjM9tm1NX34nRQ7GiLwUEzwuE3Wv2FLz2667w==" crossorigin="anonymous" />
@@ -150,7 +150,7 @@
     </script>
 
     
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+   <script type="text/javascript" src="{% static 'vendor/leaflet/dist/leaflet.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     {% comment %} <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.draw/leaflet.draw.js' %}"></script> {% endcomment %}
     {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js"></script> {% endcomment %}

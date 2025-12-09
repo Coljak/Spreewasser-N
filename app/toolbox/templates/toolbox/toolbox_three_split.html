@@ -8,20 +8,18 @@
 {{ block.super }}
     
     <link rel="stylesheet" href="{% static 'vendor/leaflet/dist/leaflet.css' %}"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css" />
     <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.contextmenu.css' %}"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/css/bootstrap-slider.css" integrity="sha512-SZgE3m1he0aEF3tIxxnz/3mXu/u/wlMNxQSnE0Cni9j/O8Gs+TjM9tm1NX34nRQ7GiLwUEzwuE3Wv2FLz2667w==" crossorigin="anonymous" />
-    {% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap-datepicker.standalone.css' %}"/>
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap.plugins/bootstrap-slider/bootstrap-slider.min.css' %}"/> 
+    
     <!-- virtual-select is for the multiple select boxes -->
     <link rel="stylesheet" href="{% static 'vendor/virtual-select/virtual-select.min.css' %}" />
-    {% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css"> {% endcomment %}
-    <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.draw.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/leaflet.plugins/leaflet-draw/leaflet.draw.min.css' %}" />
     <link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.css' %}" />
 	<link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.Default.css' %}" />
-    {% comment %} <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css"> {% endcomment %}
-    <link rel="stylesheet" href="{% static 'vendor/dataTables/css/jquery.dataTables.min.css' %}" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-resizable-columns@0.2.3/dist/jquery.resizableColumns.css">
-
+    {% comment %} <link rel="stylesheet" href="{% static 'vendor/dataTables/css/jquery.dataTables.min.css' %}" /> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'vendor/dataTable/dataTables.bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/dataTable.plugins/resizable-columns/jquery.resizableColumns.min.css' %}" />
     <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.legend.css' %}" />
     <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
 
@@ -150,38 +148,24 @@
     </script>
 
     
-   <script type="text/javascript" src="{% static 'vendor/leaflet/dist/leaflet.js' %}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-    {% comment %} <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.draw/leaflet.draw.js' %}"></script> {% endcomment %}
-    {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js"></script> {% endcomment %}
-    {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js"></script>{% endcomment %}
+    <script type="text/javascript" src="{% static 'vendor/leaflet/dist/leaflet.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/leaflet.plugins/leaflet-draw/leaflet.draw.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.de.min.js' %}"></script> 
-    <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.contextmenu.js' %}"></script> 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
-  
-
-    {% comment %} <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script> {% endcomment %}
-
-    {% comment %} <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script> {% endcomment %}
-
-    
+    <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.contextmenu.js' %}"></script>     
     <script type="text/javascript" src="{% static 'vendor/virtual-select/virtual-select.min.js' %}"></script> 
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.markercluster-src.js' %}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/bootstrap-slider.min.js" integrity="sha512-f0VlzJbcEB6KiW8ZVtL+5HWPDyW1+nJEjguZ5IVnSQkvZbwBt2RfCBY0CBO1PsMAqxxrG4Di6TfsCPP3ZRwKpA==" crossorigin="anonymous"></script>
-    {% comment %} <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script> {% endcomment %}
+    <script type="text/javascript" src="{% static 'vendor/bootstrap.plugins/bootstrap-slider/bootstrap-slider.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/dataTables/js/jquery.dataTables.min.js' %}" ></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery-resizable-columns@0.2.3/dist/jquery.resizableColumns.min.js"></script>
+    <script type="text/javascript" src="{% static 'vendor/dataTable.plugins/resizable-columns/jquery.resizableColumns.min.js' %}"></script>
 
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
-    {% comment %} <script src="https://cdn.jsdelivr.net/npm/date-fns"></script> {% endcomment %}
+    <script type="text/javascript" src="{% static 'vendor/chartjs/dist/chart.umd.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/date-fns/date-fns.js' %}"></script>
-    {% comment %} <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script> {% endcomment %}
     <script type="text/javascript" src="{% static 'vendor/chartjs/chartjs-adapter-date-fns.bundle.min.js' %}"></script>
 
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.legend.js' %}"></script>
-    <script src="{% static 'vendor/leaflet/L.Geoserver.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/leaflet.plugins/leaflet-geoserver/L.Geoserver.js' %}"></script>
     <script type="module" src="{% static 'toolbox/toolbox_three_split.js' %}" ></script>
 {% endblock %}
 

@@ -1190,6 +1190,7 @@ export function addFeatureCollectionToTable(data) {
         project[`all_${dataInfo.dataType}_ids`].push(id);
 
         const row = document.createElement("tr");
+        row.id = `${dataInfo.dataType}-row-${id}`;
         row.className = rowClasses;
         row.dataset.id = id;
         row.dataset.type = dataInfo.dataType;

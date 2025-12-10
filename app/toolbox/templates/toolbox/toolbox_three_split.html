@@ -17,19 +17,13 @@
     <link rel="stylesheet" href="{% static 'vendor/leaflet.plugins/leaflet-draw/leaflet.draw.min.css' %}" />
     <link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.css' %}" />
 	<link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.Default.css' %}" />
-    {% comment %} <link rel="stylesheet" href="{% static 'vendor/dataTable/datatables.min.css' %}" /> {% endcomment %}
-    {% comment %} <link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.3.5/datatables.min.css" rel="stylesheet" integrity="sha384-X4ObCG8fB8SK+9d3GgWfrrKjO7nk3Q2PrwyEKa4Nx78Su/v2xEBtCnJ9kRP+gHhi" crossorigin="anonymous"> {% endcomment %}
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-{% comment %} <link href="https://cdn.datatables.net/v/bs5/dt-2.3.5/fc-5.0.5/fh-4.0.5/datatables.min.css" rel="stylesheet" integrity="sha384-osjNfeU0v47nUI78aM+jKnQ4ubaQa04/HizlAeI3KxWtAFOGMTMlZ2eBqOSqesQK" crossorigin="anonymous"> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'vendor/dataTable/dataTables.bootstrap5.min.css' %}" />
+    {% comment %} <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css"> {% endcomment %}
     <link rel="stylesheet" href="{% static 'vendor/dataTable.plugins/resizable-columns/jquery.resizableColumns.min.css' %}" />
     <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.legend.css' %}" />
     <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
 
     <link rel="stylesheet" href="{% static 'toolbox/toolbox.css' %}" />
-
-    
-
-    
 
 
 {% endblock css %} 
@@ -164,7 +158,10 @@
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.de.min.js' %}"></script> 
 
     <script type="text/javascript" src="{% static 'vendor/dataTable/jquery.dataTables.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'vendor/dataTable/dataTables.bootstrap5.min.js' %}" ></script>
+    {% comment %} <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script> {% endcomment %}
     <script type="text/javascript" src="{% static 'vendor/virtual-select/virtual-select.min.js' %}"></script> 
+
     
     <script type="text/javascript" src="{% static 'vendor/bootstrap.plugins/bootstrap-slider/bootstrap-slider.js' %}"></script>
     

@@ -195,8 +195,8 @@ class LeafletLegendAdmin(admin.ModelAdmin):
 
 @admin.register(models.LegendGrade)
 class LegendGradeAdmin(admin.ModelAdmin):
-    list_display= ('id', 'leaflet_legend', 'value', 'label_de', 'label_en', 'order_position')
-    search_fields = ('leaflet_legend', 'value', 'label_de', 'label_en',)
+    list_display= ('id', 'leaflet_legend', 'value_to_color', 'color', 'label_de', 'label_en', 'order_position')
+    search_fields = ('leaflet_legend', 'value_to_color', 'label_de', 'label_en',)
     ordering = ('leaflet_legend', 'order_position',)
     list_display_links = ('id', 'leaflet_legend',)
 

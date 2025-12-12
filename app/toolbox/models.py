@@ -1826,6 +1826,7 @@ def default_legend_labels():
     return {'header': '', 'label_by_value': ''}
 
 class LeafletLegend(models.Model):
+    ramp = models.BooleanField(default=False)
     header_de = models.CharField(max_length=64)
     header_en = models.CharField(max_length=64, null=True, blank=True)
 
@@ -1833,18 +1834,23 @@ class LeafletLegend(models.Model):
         return self.header_de
 
     def to_json(self, language='de'):
-        
-        return {
+        grades = self.grades.all().order_by('order_position')
+        legend = {
             'header': getattr(self, f'header_{language}'),
-            'grades': [g.value for g in self.grades.all().order_by('order_position')],
-            'gradientLabels': [getattr(g, f'label_{language}') for g in self.grades.all().order_by('order_position')],
+            'isRamp': self.ramp,
+            'valsToColor': [g.value_to_color for g in self.grades.all().order_by('order_position')],
+            'colors': [g.color for g in self.grades.all().order_by('order_position')],
+            'gradientLabels': [getattr(g, f'label_{language}') for g in grades],
         }
+        
+        return legend
+    
 
 class LegendGrade(models.Model):
     leaflet_legend = models.ForeignKey(LeafletLegend, on_delete=models.CASCADE, related_name="grades")
-    ramp = models.BooleanField(default=False)
-    color_value = models.CharField(max_length=10, null=True, blank=True)
-    value = models.FloatField()
+    # ramp = models.BooleanField(default=False)
+    color = models.CharField(max_length=10, null=True, blank=True)
+    value_to_color = models.FloatField(null=True, blank=True)
     label_de = models.CharField(max_length=64)
     label_en = models.CharField(max_length=64, null=True, blank=True)
     order_position = models.PositiveIntegerField(default=0)

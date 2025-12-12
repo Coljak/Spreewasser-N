@@ -253,38 +253,167 @@ export function tableCheckSelectedItems(project, dataType) {
 };
 
 
+// export function addLegend(legendSettings) {
+//     console.log('addLegend', legendSettings)
+//     removeLegendFromMap(map)
+//     let colors = legendSettings.colors;
+//     if (colors[0] === null) {
+//         colors = []
+//         legendSettings.valsToColor.forEach((value) => {
+//             const color = colorFunction(value);
+//             colors.push(color);
+//         });
+//     }
+//     let labels = [];
+//     if (legendSettings.isRamp) {
+//         const stops = colors.map((color, i) => {
+//             return `${color} ${legendSettings.valsToColor[i]}%`;
+//         });
+
+//         const gradientCSS = `linear-gradient(to bottom, ${stops.join(", ")})`;
+
+//         // One rectangle item with gradient
+//         labels = [{
+//             label: "",               // No label needed on the icon
+//             type: "rectangle",
+//             width: 20,
+//             height: 150,
+//             style: {
+//                 background: gradientCSS,
+//                 border: "1px solid black"
+//             }
+//         }];
+
+//         // Add tick labels (optional)
+//         legendSettings.gradientLabels.forEach((l) => {
+//             labels.push({ label: l, type: "text" });
+//         });
+//     } else {
+        
+//         for (let i = 0; i < legendSettings.valsToColor.length; i++) {
+            
+//             const color = colors[i];
+//             const label = legendSettings.gradientLabels[i];
+
+//             labels.push({
+//                 label: label,
+//                 radius: 6,
+//                 type: 'circle',
+//                 // sides: 4,
+//                 weight: 2,
+//                 fillOpacity: 1,
+//                 color: 'black',
+//                 fillColor: color,
+//                 // margin:5
+//             })
+//         }
+//     }
+    
+//     console.log('labels', labels)
+//     const legend = L.control.Legend(
+//         { 
+//         position: 'bottomright',
+//         collapsed: false,
+//         title: legendSettings.header,
+//         legends: labels
+//         }).addTo(map);
+// };
+
+export function generateGradientImage(colors, stops, width = 20, height = 160) {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+
+    colors.forEach((color, i) => {
+        gradient.addColorStop(stops[i] / 100, color);
+    });
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    return canvas.toDataURL("image/png");
+}
+
+
 export function addLegend(legendSettings) {
-    console.log('addLegend', legendSettings)
-    removeLegendFromMap(map)
+    console.log("addLegend", legendSettings);
+    removeLegendFromMap(map);
 
     let labels = [];
-    for (let i = 0; i < legendSettings.grades.length; i++) {
-            const value = legendSettings.grades[i];
-            const color = colorFunction(value);
-            const label = legendSettings.gradientLabels[i];
 
+    // ---------------------------------------------------------------------
+    // TODO this is not working--------------------------------------------------
+    if (legendSettings.isRamp) {
+        console.log("Creating gradient legend");
+
+        // Create gradient image (20×160)
+        const dataUrl = generateGradientImage(
+            legendSettings.colors,
+            legendSettings.valsToColor,
+            20,
+            160
+        );
+
+        // 1) Gradient image
+        labels.push({
+            label: "",
+            type: "image",
+            url: dataUrl,
+            width: 20,
+            height: 160
+        });
+
+        // 2) Tick labels under it
+        legendSettings.gradientLabels.forEach(text => {
             labels.push({
-                label: label,
-                radius: 6,
-                type: 'circle',
-                // sides: 4,
-                weight: 2,
-                fillOpacity: 1,
-                color: 'black',
-                fillColor: color,
-                // margin:5
-            })
-        }
+                label: text,
+                type: "text"
+            });
+        });
 
-    const legend = L.control.Legend(
-        { 
-        position: 'bottomright',
+        L.control.Legend({
+            position: "bottomright",
+            collapsed: false,
+            title: legendSettings.header,
+            legends: labels
+        }).addTo(map);
+
+        return; 
+    }
+
+
+
+    let colors = legendSettings.colors;
+
+    if (colors[0] === null) {
+        colors = legendSettings.valsToColor.map(v => colorFunction(v));
+    }
+
+    for (let i = 0; i < legendSettings.valsToColor.length; i++) {
+        labels.push({
+            label: legendSettings.gradientLabels[i],
+            radius: 6,
+            type: "circle",
+            weight: 2,
+            fillOpacity: 1,
+            color: "black",
+            fillColor: colors[i]
+        });
+    }
+
+    L.control.Legend({
+        position: "bottomright",
         collapsed: false,
         title: legendSettings.header,
         legends: labels
+    }).addTo(map);
+}
 
-        }).addTo(map);
-};
+
+
 
 export async function toolboxSinksOutline() {
     // gets the sink outline

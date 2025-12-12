@@ -97,6 +97,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
             ],
         },
     },
@@ -158,12 +159,20 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
 LANGUAGE_CODE = 'de' 
-USE_L10N = True  # Enables localized formatting of data
+LANGUAGES = [
+    ('de', 'Deutsch'),
+    ('en', 'English'),
+    ]
 
+LOCALE_PATHS = [
+    BASE_DIR / "locale",
+]
+USE_L10N = True  # Enables localized formatting of data
+USE_I18N = True  # Enables Django's translation system
 TIME_ZONE = 'Europe/Berlin'
 USE_TZ = True
 
-USE_I18N = True
+
 
 
 # Static files (CSS, JavaScript, Images)

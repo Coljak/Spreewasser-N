@@ -57,12 +57,13 @@ urlpatterns = [
     # Injection
     path('toolbox/load_injection_gui/', views.load_injection_gui, name='load_injection_gui' ),
     # Drainage
+    path('toolbox/get_drainage_raster_legend/', views.get_drainage_raster_legend, name='get_drainage_raster_legend'),
     path('toolbox/load_sieker_drainage_gui/<int:user_field_id>/', views.load_sieker_drainage_gui, name='load_sieker_drainage_gui' ),
     path('toolbox/load_sieker_drainage_features/<int:user_field_id>/', views.load_sieker_drainage_features, name='load_sieker_drainage_features' ),
 
     path('toolbox/download_toolbox_results/', views.download_toolbox_results, name='download_toolbox_results'),
    
-
+    path('toolbox/debug-lang/', views.debug_lang, name='debug_lang'),
 
     path('toolbox/test/', views.test_html, name='test_html'),
     path('toolbox/test_2/', views.test_html_2, name='test_html_2'),

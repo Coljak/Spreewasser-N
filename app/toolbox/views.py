@@ -14,7 +14,7 @@ from django.contrib.gis.db.models.functions import Distance,AsGeoJSON
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from django.forms.models import model_to_dict
-
+from django.utils import translation
 from django.template.loader import render_to_string
 from django.db import connection
 from django.db.models import Max, Min, F, Q
@@ -52,6 +52,11 @@ def test_html_2(request):
 
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 FLOAT32_NODATA = np.float32(-3.4028235e+38)
+
+
+def debug_lang(request):
+    print("Active language:", translation.get_language())
+    return HttpResponse("Check console")
 
 def boolean_translation(bool, language='de'):
     translation = {
@@ -98,7 +103,7 @@ def toolbox_dashboard(request):
     counties_form = forms.PolygonSelectionForm(request.POST or None)
 
     project_form = forms.ToolboxProjectForm(user=user)
-    project_modal_title = 'Create new project'
+    project_modal_title = 'Neues Projekt erstellen'
 
     # default_project = create_default_project(user)
 
@@ -2077,8 +2082,17 @@ def load_sieker_drainage_gui(request, user_field_id):
             'html': html, 
             'colors': colors,
             'default_project': default_project,
+            
+            
             })
        
+
+def get_drainage_raster_legend(request):
+    data_info = models.DataInfo.objects.get(data_type='drainage_probability').to_json()
+    
+    return JsonResponse({'legendSettings': data_info['legendSettings']})
+
+
 def load_sieker_drainage_features(request, user_field_id):
     print('load_sieker_drainage_features')
     user = request.user

@@ -9,7 +9,8 @@ import {
    addFeatureCollectionToLayer, 
    addPointFeatureCollectionToLayer, 
    loadProjectToGui,
-  addLegendForWms, } from '/static/toolbox/toolbox.js';
+  addLegendForWms, 
+  addLegend } from '/static/toolbox/toolbox.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { Drainage } from '/static/toolbox/sieker_drainage_model.js';
 import {Layers} from '/static/toolbox/layers.js';
@@ -82,7 +83,11 @@ export function initializeDrainage() {
   // getTileOverlay(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage');
   const threshold = $('#id_drainage_threshold_slider').val();
   // getTileOverlayWithThreshold(geoserverLayers['drainage_probability'], 'drainage_probability', 'drainage', threshold)
-  addLegendForWms(geoserverLayers['drainage_probability']);
+  // addLegendForWms(geoserverLayers['drainage_probability']);
+  fetch('get_drainage_raster_legend/')
+  .then(response => response.json())
+  .then(data => addLegend(data['legendSettings']))
+  
   
 
   // map.addLayer(siekerSinkFeatureGroup);
@@ -93,14 +98,6 @@ export function initializeDrainage() {
   addClickEventListenerToToolboxPanel(Drainage);
       
 
-  // $('#id_drainage_threshold_slider').on('change', () => {   
-  //         const inputName = $target.attr('name'); 
-  //         const inputVal = $target.val();
-  //         project[inputName] = inputVal;
-  //         project.saveToLocalStorage();
-  //         // TODO implement live change of the raster map
-  //         return;
-  //     });
 
   $('#toolboxPanel').on('click', function (event) {
       const $target = $(event.target);

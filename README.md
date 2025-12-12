@@ -86,8 +86,8 @@ python manage.py runserver 0.0.0.0:8000
 This app provides an API for soil data of Germany. The data is based on the [Buek200 by the BGR](https://www.bgr.bund.de/DE/Themen/Boden/Produkte/produkte_node.html). 
 The data is modified, so that the most common soil profile for the actual landuse from the [CLC 2018 map](https://land.copernicus.eu/en/products/corine-land-cover/clc2018) can easily be retrieved.
 
-### utils
-Utils is a helper django-app. It hosts management commands relevant for all applications.
+### utilities
+Utilities is a helper django-app. It hosts management commands relevant for all applications.
 
 ### klim4cast
 Application for publishing drought data from Chechglobe.
@@ -139,7 +139,7 @@ This aggregates the yearly values only for the stations with the id 1, 2, and 3
 python manage.py your_command_name --type yearly --station 1 3 5
 ```
 
-### utils
+### utilities
 #### Import/export database: db_to_disk
 To export all models (including those of auth, celery etc.) as one json-file per model 
 

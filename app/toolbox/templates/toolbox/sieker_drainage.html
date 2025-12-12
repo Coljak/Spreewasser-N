@@ -1,39 +1,98 @@
 {% load crispy_forms_tags %}
+{% load custom_templatetags %}
 {% load static %}
 
-<div id="divSiekerSink">
+<div id="divSiekerDrainage">
     
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Drän- Speicher-Tool</h2>
-        <div>
-            <button class="btn btn-primary me-2 save-toolbox-project" data-type="drainage">Speichern</button>
+    <div class="d-flex justify-content-between align-items-center mb-3 row">
+        <div class="row">
+            <h2 class="mb-0">Drän-Speicher-Tool</h2>
+        </div>
+        <div class="row mt-4">
+            <div class="col-6">
+                <strong>Projekt: </strong><span class="title-project-name">Kein Projekt ausgewählt</span></br>
+                <strong>Suchgebiet: </strong><span class="title-user-field-name">Kein Suchgebiet ausgewählt</span></br>
+            </div>
+            <div class="col-6 text-end">
+                <button class="toolbox-back-to-initial btn btn-secondary mx-2">Schließen</button>
+                <button class="btn btn-primary mx-2 save-toolbox-project" data-type="drainage">Speichern</button>
+            </div>
         </div>
     </div>
+
+    </div>
     <!-- Navigation -->
-    <ul class="nav nav-tabs">
+    <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
+            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxIntro" aria-selected="true">Drän-Speicher-Tool</a>
         </li>
-        
-        <li class="nav-item drainage">
-            <a id="navSiekerSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabDrainageNetwork" aria-selected="false">Entwässerungsnetz</a>
+        <li class="nav-item">
+            <a class="toolbox nav-link" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
         </li>
-        
         <li class="nav-item drainage">
-            <a id="navSiekerSinkResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabDrainageResult">Ergebnis</a>
+            <a id="navDrainageProbability" class="toolbox nav-link" aria-disabled="true" data-bs-toggle="tab" data-type="drainage_probability" href="#tabDrainageProbability">Entwässerungswahrscheinlichkeit</a>
+        </li>       
+        <li class="nav-item drainage">
+            <a id="navDrainageNetwork" class="toolbox nav-link" aria-disabled="true" data-bs-toggle="tab" data-type="drainage_network" href="#tabDrainageNetwork" aria-selected="false">Entwässerungsnetz</a>
+        </li>
+
+        <li class="nav-item drainage">
+            <a id="navDrainedArea" class="toolbox nav-link" aria-disabled="true" data-bs-toggle="tab" data-type="drained_area" href="#tabDrainedArea">Entwässerte Flächen</a> <!--Bekannte Drainageflächen? -->
+        </li>
+
+        <li class="nav-item infiltration">
+            <a id="navDrainageResultDownload" class="toolbox nav-link" data-bs-toggle="tab" href="#tabDrainageResultDownload">Download</a>
         </li>
     </ul>
 
     <!-- Tab Content Wrapper -->
     <div class="tab-content" id="toolboxTabContent">
 
-        <div id="tabToolboxProject" class="tab-pane active show">
+        <div id="tabToolboxIntro" class="tab-pane active show">
             <div class="card mb-3">
                 <div class="card-body">
-                    {{ project_select_form | crispy }}
-                
-                    <button class="toolbox-back-to-initial btn btn-secondary">Zurück zur Auswahl</button>
-                    <button class="toolbox-load-project btn btn-secondary" data-type="drainage">Laden</button>
+                    <p class="mb-4">
+                        Herzlich willkommen im Drän-Speicher-Tool!</br></br>
+                        Das Tool hilft Ihnen dabei, dränierte Flächen zu finden. 
+                        Diese können durch ein Wehr oder andere Regelungsorgane eingestaut werden, um Wasser in der Fläche zurückzuhalten.</br>
+                        Es hier wird zwischen zwei Entwässerungstypen unterschieden: 
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="card h-100 text-center">
+                                <div class="card-header fw-bold">
+                                    Dränagen
+                                </div>
+                                <div class="card-body">
+                                    <img src="{% static 'images/drainages.png' %}" 
+                                        class="img-fluid border rounded" 
+                                        alt="Dränagen">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="card h-100 text-center">
+                                <div class="card-header fw-bold">
+                                    Gräben
+                                </div>
+                                <div class="card-body">
+                                    <img src="{% static 'images/ditches.png' %}" 
+                                        class="img-fluid border rounded" 
+                                        alt="Gräben">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                </div>
+            </div>
+        </div>
+
+        <div id="tabToolboxProject" class="tab-pane show">
+            <div class="card mb-3">
+                <div class="card-body">
+                    {% crispy project_select_form %}
             
                 </div>
             </div>
@@ -46,54 +105,115 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title">Filter Natürliche Senken als Versickerungsstandorte</h5>
-                        <button  class="btn btn-secondary toggle-feature-group" data-type="drainage">ausblenden</button>                                                                                             
+                        <h5 class="card-title">Entwässerungsnetz</h5>
+                        <button class="btn btn-secondary toggle-grouped-feature-group shown" data-type="drainage_network">Layer ausblenden</button>                                                                                             
                     </div>
-                    
                     <form method="POST" action="">
                         {% csrf_token %}
-                        {{ drainage_filter_form | crispy }}
-                        <button id="btnFilterSiekerSinks"type="submit" class="btn btn-primary">Senken filtern</button>
-                    </form>
-                </div>
-            </div>
-            <div id="card-drainage-table" class="card mb-3 d-none">
-                <div class="card-body">
-                    <div id="drainage-table-container"></div>
+                        
+                        {% comment %} {% with len=cb_length drainage_network_filter_form.form|length %} {% endcomment %}
+                        {% for checkbox_set in drainage_network_filter_form.form %}
+                            {% if checkbox_set.field.choices %}
+                                {% with key=checkbox_set.name %}
+                                    <div class="mb-3 card">
+                                        <div class="card-body">
+                                            <div class="mb-3 form-check form-switch"> 
+                                                <input type="checkbox"
+                                                    name="{{ checkbox_set.name }}"
+                                                    prefix="parent"
+                                                    class="checkboxinput form-check-input"
+                                                    id="id_{{ checkbox_set.name }}"
+                                                    value="{{ checkbox_set.field.widget.attrs.parent }}"
+                                                    data-type="{{ checkbox_set.field.widget.attrs.data_type }}"
+                                                    checked>
+
+                                                <label for="id_{{ checkbox_set.name }}" class="form-check-label">
+                                                    <h5>{{ labels|get_item:key }}</h5>
+                                                    {{ checkbox_set|as_crispy_field }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                                
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if not details_exist %}
+                            <h5>Es ist keine Entwässerung im Suchgebiet vorhanden</h5>
+                        {% endif %}
                     
+                    </form>   
                 </div>
-            </div>
+            </div>       
         </div>
 
         
 
-        
+        <div id="tabDrainageProbability" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Entwässerungswahrscheinlichkeit</h5>
+                        <button class="btn btn-secondary toggle-tile-layer shown" data-type="drainage_probability">Layer ausblenden</button>                                                                                             
+                    </div>
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            {% crispy  drainage_probabiliy_filter_form %}
+                        
+                        </form>
+                    
+                    
+                </div>
+            </div>       
+        </div>
+
+        <div id="tabDrainedArea" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    {% if drained_area_filter_form.form.fields.types.choices %}
+                        <div class="d-flex align-items-center justify-content-between mb-2">                      
+                            <h5 class="card-title">Bekannte Entwässerungsflächen</h5>
+                            <button class="btn btn-secondary toggle-grouped-feature-group shown" data-type="drained_area">Layer ausblenden</button>                                                                                             
+                        </div>
+                        <div class="mb-3 card">
+                            <div class="card-body">
+                                <form method="POST" action="">
+                                    {% csrf_token %}
+                                    
+                                    {% for checkbox in drained_area_filter_form.form %}
+                                        {% if checkbox.field.choices %}
+                                            <div class="form-check form-switch">
+                                                {{ checkbox|as_crispy_field }}
+
+                                            </div>
+                    
+                                        {% endif %}
+                                    {% endfor %}
+                                                         
+                                </form>
+                            </div>
+                        </div>
+                    {% else %}
+                        <h6>Es sind keine entwässerten Flächen im Suchgebiet bekannt.</h6>
+                
+                    {% endif %}
+                      
+                    
+                </div>
+            </div>       
+        </div
+
         
 
         <!-- Result Tab -->
 
-        <div id="tabDrainageResult" class="tab-pane ">
+        <div id="tabDrainageResultDownload" class="tab-pane ">
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>
-                    <table  class="table table-hover" id="inlet-table">
-                        <thead>
-                            <tr>
-                            <th>ID</th>
-                            <th>Vergrößerte Senke</th>
-                            <th>Senkeneignung</th>
-                            <th>Wasserkörper</th>
-                            <th>Länge Zuleitung(m)</th>
-                            <th>Eignung Zuleitung</th>
-                            <th>Gesamtbewertung</th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                    <div id="inlet-info-card" class="card mt-3" style="display: none;"></div>
+                    <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
+                    {% crispy result_form %}
                 </div>
             </div>
         </div>

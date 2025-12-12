@@ -15,85 +15,85 @@
 
   {% include 'monica/hidden_rotation_forms.html' %}
   {% include 'monica/modal_manual_soil_selection.html' %}
-  {% comment %} {% include 'monica/modal_new_monica_project.html' %} {% endcomment %}
   {% include 'monica/output_settings_modal.html' %}
 
 
 <div class="container py-5">  
-    <h1>Monica - <span id="monica-project-name">Kein Projekt geladen</span> </h1>
-    
-  <ul class="nav nav-tabs">
-    <li class="nav-item">
-        <a class="monica nav-link" aria-current="page" href="#tabProject">Project</a>
-    </li>
-    <li class="nav-item">
-        <a class="monica nav-link active" aria-current="page" href="#tabGeneralParameters">General Parameters</a>
-    </li>
-    <li class="nav-item dropdown">
-        <a class="monica nav-link" aria-current="page" href="#tabRotation" >Crop Rotation</a>
-    </li>
-    <li class="nav-item">
-        <a class="monica nav-link" aria-current="page" href="#tabSoil">Soil</a>
-    </li>
-    <li class="nav-item">
-        <a id="resultTab" class="monica nav-link disabled" aria-disabled="true" href="#tabResult">Result</a>
-    </li>
-    <li>
-      <button id="toggle-advanced-mode" class="btn btn-primary simple" type="button">
-        Switch to Advanced Mode
-      </button>
-    </li>
-  </ul>
-
-  <!-- Tab panes -->
-   <div class="tab-content">
-  
-  <!-- Project-->
-  {% load component_tags %}
-  
-  {% render_tab_project user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
-  
-  <div id="tabGeneralParameters" class="tab-pane card mb-3 active">
+  <div class="card">
     <div class="card-body">
+      <h1>Monica - <span id="monica-project-name" class="fw-normal fs-4">Kein Projekt geladen</span> </h1>
+      <div class="d-flex justify-content-between align-items-center mb-3 overflow-auto">
+        <ul class="nav nav-tabs mb-3">
+          <li class="nav-item">
+              <a class="monica nav-link" aria-current="page" href="#tabProject">Projekt</a>
+          </li>
+          <li class="nav-item">
+              <a class="monica nav-link active" aria-current="page" href="#tabGeneralParameters">General Parameters</a>
+          </li>
+          <li class="nav-item dropdown">
+              <a class="monica nav-link" aria-current="page" href="#tabRotation" >Crop Rotation</a>
+          </li>
+          <li class="nav-item">
+              <a class="monica nav-link" aria-current="page" href="#tabSoil">Soil</a>
+          </li>
+          <li class="nav-item">
+              <a id="resultTab" class="monica nav-link disabled" aria-disabled="true" href="#tabResult">Result</a>
+          </li>
+
+        </ul>
+
+        <button id="toggle-advanced-mode" class="btn btn-primary simple" type="button">
+              Switch to Advanced Mode
+        </button>
+    </div>
+
+      <!-- Tab panes -->
+      <div class="tab-content">
       
-      {% render_tab_general_parameters coordinate_form %}    
-        
-    </div> 
-  </div>
+      <!-- Project-->
+      {% load component_tags %}
+      
+      {% render_tab_project user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
+      
+      <div id="tabGeneralParameters" class="tab-pane card mb-3 active">
+        <div class="card-body">
+      
+          {% render_tab_general_parameters coordinate_form %}   
+             
+        </div> 
+      </div>
 
 
 
-  {% render_tab_crop_rotation %}
-  {% render_tab_soil user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
-  {% render_tab_result %}
+      {% render_tab_crop_rotation %}
+      {% render_tab_soil user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
+      {% render_tab_result %}
 
  
 
-  <button id="previousButton" class="btn btn-primary mt-3">Previous</button>
-  <button id="nextButton" class="btn btn-primary mt-3">Next</button>
-  <button id="runSimulationButton" class="btn btn-primary mt-3">Run Simutation</button>
+      <button id="previousButton" class="btn btn-primary mt-3">Previous</button>
+      <button id="nextButton" class="btn btn-primary mt-3">Next</button>
+      <button id="runSimulationButton" class="btn btn-primary mt-3">Run Simulation</button>
 
-  <button id="monica-project-save" class="btn btn-primary mt-3 ">Save Project</button>
-        
-  
-</div>
+      <button id="monica-project-save" class="btn btn-primary mt-3 ">Save Project</button>
+            
+      </div>
+    </div>
+  </div>
+
+
 </div>
 {% endblock %}
 
 {% block javascript %}
   <script>
-    {% comment %} const saveSimulationSettingsUrl = "{% url 'monica:save_simulation_settings' %}"; {% endcomment %}
     const runSimulationUrl = "{% url 'monica:run_simulation' %}";
     const defaultProject = {{ default_project|safe }};
     console.log(defaultProject);
   </script>
 
-  {% comment %} <script type="text/javascript" src="{% static 'monica/monica_crop.js' %}"></script> {% endcomment %}
-    {% comment %} <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script> {% endcomment %}
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.de.min.js' %}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
-    <script  src="{% static 'monica/monica_model.js' %}" type="module"></script>
-    {% comment %} <script type="text/javascript" src="{% static 'monica/modify_forms_modal.js' %}" type="module"></script> {% endcomment %}
-    {% comment %} <script type="text/javascript" src="{% static 'monica/species_modal.js' %}" type="module"></script> {% endcomment %}
-{% endblock %}
+    <script type="text/javascript" src="{% static 'vendor/chartjs/chartjs-adapter-date-fns.bundle.min.js' %}"></script>
+    <script type="module" src="{% static 'monica/monica_model.js' %}"></script>
+  {% endblock %}

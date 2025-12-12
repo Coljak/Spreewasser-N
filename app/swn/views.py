@@ -260,47 +260,53 @@ def user_logout(request):
 def swn_dashboard(request):
     print("Request.user", request.user)
     user = request.user
-    
+    start = datetime.now()
     context = monica_views.get_monica_forms(user)
-
+    first = datetime.now()
+    print("first - start", first - start)
     default_project = monica_views.create_default_project(user)
-
+    second = datetime.now()
+    print("second - first", second - first)
 
     state_county_district_form = forms.PolygonSelectionForm(request.POST or None)
-    
-    projectregion = models.ProjectRegion.objects.first()
-    geojson = json.loads(projectregion.geom.geojson) 
-    feature = {
-            "type": "Feature",
-            "geometry": geojson,
-            "properties": {
-                "name": 'Spreewasser:N Projektregion',
-            }
-        }
-
+    third = datetime.now()
+    print("third - second", third - second)
+    project_region = models.ProjectRegion.objects.first().to_feature()
+    fourth = datetime.now()
+    print("fourth - third", fourth - third)
     project_select_form = forms.SwnProjectSelectionForm(user=user)
+    fifth = datetime.now()
+    print("fifth - fourth", fifth - fourth)
     new_swn_project_form = forms.SwnNewProjectForm(user=user)
+    sixth = datetime.now()
+    print("sixth - fifth", sixth - fifth)
     project_modal_title = 'Create new project'
 
     coordinate_form = monica_forms.CoordinateForm()
-   
+    seventh = datetime.now()
+    print("seventh - sixth", seventh - sixth)
     user_simulation_settings_select_form = monica_forms.UserSimulationSettingsInstanceSelectionForm(user=user)
-
+    eigth = datetime.now()
+    print("eigth - seventh", eigth - seventh)
     user_crop_parameters_select_form = monica_forms.UserCropParametersSelectionForm(user=user)
     # user_crop_parameters_form = monica_forms.UserCropParametersForm()
-
+    ninth = datetime.now()
+    print("ninth - eigth", ninth - eigth)
     user_environment_parameters_select_form = monica_forms.UserEnvironmentParametersSelectionForm(user=user)
     # user_environment_parameters_form = monica_forms.UserEnvironmentParametersForm(user=user)
-
+    tenth = datetime.now()
+    print("tenth - ninth", tenth - ninth)
     user_soil_moisture_select_form = monica_forms.UserSoilMoistureInstanceSelectionForm(user=user)
     user_soil_organic_select_form = monica_forms.UserSoilOrganicInstanceSelectionForm(user=user)
     soil_temperature_module_select_form = monica_forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
     user_soil_transport_parameters_select_form = monica_forms.UserSoilTransportParametersInstanceSelectionForm(user=user)
+    eleventh = datetime.now()
+    print("eleventh - tenth", eleventh - tenth)
 
     data = {
             'default_project': default_project,
             'state_county_district_form': state_county_district_form,
-            'project_region': feature,
+            'project_region': project_region,
             #MONICA FORMS
             'project_select_form': project_select_form,
             'new_project_form': new_swn_project_form,
@@ -320,15 +326,18 @@ def swn_dashboard(request):
 
 
 
+@login_required
 def get_user_fields(request):
     if request.method == "GET":
         user_fields = models.UserField.objects.filter(user=request.user)
         user_projects = models.SwnProject.objects.filter(user=request.user)
-        ufs = []
-        for user_field in user_fields:
-            uf = model_to_dict(user_field, fields=['id', 'user', 'name', 'centroid_lat', 'centroid_lon', 'geom_json'])
-            uf['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
-            ufs.append(uf)
+        # ufs = []
+        # for user_field in user_fields:
+        #     uf = user_field.to_feature()
+        #     uf['properties']['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
+        #     ufs.append(uf)
+
+        ufs = [uf.to_feature() for uf in user_fields]
         # print('user_fields:', ufs)
     return JsonResponse({'user_fields': ufs})
 
@@ -363,8 +372,7 @@ def save_user_field(request):
         else:
             body = json.loads(request.body)
             name = body['name']
-            geom = json.loads(body['geom'])
-            geos = GEOSGeometry(body['geom'], srid=4326)
+            geom = GEOSGeometry(body['geom'], srid=4326)
             user = request.user
             user_field = None
 
@@ -372,21 +380,15 @@ def save_user_field(request):
                 # Update existing UserField
                 user_field = models.UserField.objects.get(id=body['id'])
                 user_field.name = name
-                user_field.geom_json = geom
-                user_field.geom = geos
-                
+                user_field.geom = geom  
                 user_field.save()
             else:
-                user_field = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
-                
+                user_field = models.UserField(name=name, geom=geom, user=user)
+
                 user_field.save()
-            # TODO this should rather be a save method of UserField
-            # user_field.get_centroid()
-            # user_field.get_intersecting_soil_data()
-            # user_field.get_weather_grid_points()
-            
-            return JsonResponse({'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
-        
+
+            geo_json = user_field.to_feature()
+            return JsonResponse(geo_json)
     else:
         return HttpResponseRedirect('swn:swn_dashboard')
     
@@ -463,11 +465,8 @@ def manual_soil_selection(request, user_field_id):
     user_field = models.UserField.objects.get(id=user_field_id)
     soil_profile_polygon_ids = user_field.soil_profile_polygon_ids['buek_polygon_ids']
 
-    # name = user_field.name
-    data_menu = monica_views.soil_profiles_from_polygon_ids(user_field.soil_profile_polygon_ids['buek_polygon_ids'])
-    # data_menu['text'] = name
-    # data_menu['id'] = user_field.id
-
+    data_menu = monica_views.soil_profiles_from_polygon_ids(soil_profile_polygon_ids)
+    
     print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
     return JsonResponse(data_menu)
 
@@ -545,7 +544,7 @@ def create_automatic_irrigation_envs(envs, data):
     print("CREATING EXTRA ENV", today)
 
     simulation_settings = [
-        # UserSimulationSettings.objects.get(id=30).to_json(),
+        # monica_models.UserSimulationSettings.objects.get(id=28).to_json(),
         monica_models.UserSimulationSettings.objects.get(id=31).to_json(),
         # monica_models.UserSimulationSettings.objects.get(id=32).to_json()
     ]
@@ -557,6 +556,18 @@ def create_automatic_irrigation_envs(envs, data):
         envs.append(env2)
 
     return envs
+
+def generate_irrigation_csv(json_msgs):
+    """
+    This function generates a CSV string from the irrigation events in the simulation messages.
+    """
+    csv_output = "Date,Amount (mm)\n"
+    for msg in json_msgs:
+        for event in msg.get('irrigationEvents', []):
+            date = event.get('date')
+            amount = event.get('amount')
+            csv_output += f"{date},{amount}\n"
+    return csv_output
 
     
 def run_simulation(request):
@@ -583,8 +594,9 @@ def run_simulation(request):
         
         envs = create_automatic_irrigation_envs(envs, data)
         json_msgs = monica_views.run_monica_simulation(envs)
-        
-        return JsonResponse({'message': {'success': True, 'message': json_msgs}})
+        csv_irrigation = generate_irrigation_csv(json_msgs)
+
+        return JsonResponse({'message': {'success': True, 'message': json_msgs, 'csv': csv_irrigation}})
     else:
         return JsonResponse({'message': {'success': False, 'message': 'Simulation not started.'}})
 

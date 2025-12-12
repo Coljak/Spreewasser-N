@@ -59,19 +59,19 @@ class SwnProjectSelectionForm(forms.Form):
 class PolygonSelectionForm(forms.Form):
     states = forms.MultipleChoiceField(
         choices=[],
-        widget=forms.SelectMultiple(attrs={'id': 'stateSelect', 'class': 'state-dropdown administrative-area'}),
+        widget=forms.SelectMultiple(attrs={'id': 'statesSelect', 'class': 'state-dropdown administrative-area'}),
         label=False,
         required=False,
     )
     districts = forms.MultipleChoiceField(
         choices=[],
-        widget=forms.SelectMultiple(attrs={'id': 'districtSelect', 'class': 'district-dropdown administrative-area'}),
+        widget=forms.SelectMultiple(attrs={'id': 'districtsSelect', 'class': 'district-dropdown administrative-area'}),
         label=False,
         required=False,
     )
     counties = forms.MultipleChoiceField(
         choices=[],
-        widget=forms.SelectMultiple(attrs={'id': 'countySelect', 'class': 'county-dropdown administrative-area'}),
+        widget=forms.SelectMultiple(attrs={'id': 'countiesSelect', 'class': 'county-dropdown administrative-area'}),
         label=False,
         required=False,
     )
@@ -101,26 +101,6 @@ class PolygonSelectionForm(forms.Form):
 
 
 
-
-# class SwnNewProjectForm(monica_forms.MonicaNewProjectForm):
-#     user_field = forms.ModelChoiceField(
-#         queryset=models.UserField.objects.all(),
-#         label='Field',
-#         widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'user-field-dropdown'}),
-#     )
-#     def __init__(self, *args, user=None, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         if user is not None:
-#             self.fields['user_field'].choices = [
-#                 (instance.id, instance.name) for instance in models.UserField.objects.filter(Q(user=user)).order_by('name')
-#             ]
-#             monica_projects = MonicaProject.objects.filter(Q(user=user))
-#             mp = [( monica_project.monica_model_setup.id, monica_project.name) for monica_project in monica_projects]
-#             default_setup = ModelSetup.objects.filter(is_default=True)[0]
-#             setup_choices = [(default_setup.id, default_setup.name)] + mp
-#             print(setup_choices, mp)
-
-#             self.fields['monica_model_setup'].choices = setup_choices
 
 class SwnNewProjectForm(monica_forms.MonicaNewProjectForm):
     user_field = forms.ModelChoiceField(

@@ -1,24 +1,25 @@
 from django.shortcuts import render
 from swn import models as swn_models
-from swn import forms as swn_forms
+# from swn import forms as swn_forms
 from swn.views import load_nuts_polygon
-from . import forms, models
+from . import forms, models, filters
 
-from .filters import SiekerLargeLakeFilter,  SinkFilter, EnlargedSinkFilter, StreamFilter, LakeFilter, SiekerSinkFilter, GekRetentionFilter, HistoricalWetlandsFilter
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry, LineString
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models import PointField
-from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.db.models import OuterRef, Subquery
+from django.contrib.gis.db.models.functions import Distance,AsGeoJSON
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from django.forms.models import model_to_dict
-
+from django.utils import translation
 from django.template.loader import render_to_string
 from django.db import connection
 from django.db.models import Max, Min, F, Q
 import json, requests
+from geo.Geoserver import Geoserver
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
 
@@ -30,149 +31,92 @@ import pandas as pd
 
 import numpy as np
 import rasterio
+import shapefile  # pyshp
+import tempfile
+import zipfile
+import os
+import io
+import csv
+import shutil
+from copy import copy
+
 from rasterio.warp import reproject, Resampling, calculate_default_transform, transform_geom
 from rasterio.mask import mask
 from rasterio.enums import ColorInterp
 
-
+# TODO DELETE
+def test_html(request):
+    return render(request, 'toolbox/test.html')
+def test_html_2(request):
+    return render(request, 'toolbox/test_2.html')
 
 transformer_25833_to_4326 = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
+FLOAT32_NODATA = np.float32(-3.4028235e+38)
 
 
+def debug_lang(request):
+    print("Active language:", translation.get_language())
+    return HttpResponse("Check console")
 
+def boolean_translation(bool, language='de'):
+    translation = {
+        True: {'de': 'Ja', 'en': 'Yes'},
+        False: {'de': 'Nein', 'en': 'No'}
+    }
+    return translation[bool][language]
 
-
-
-
-def publish_raster_geoserver(tif_path, layer_name, workspace, style_name="style_raster_percent"):
-    """
-    Publishes a GeoTIFF to GeoServer as a coverage store and layer.
-    """
-    x_path = 'raster_data/' + layer_name + '.tif'
-    workspace = "spreewassern_raster"
-    store_name = layer_name  # one store per raster
-    headers = {"Content-type": "image/tiff"}
-
-    # 1. Upload GeoTIFF to a new coverage store
-    url = f"{settings.GEOSERVER_USER}/workspaces/{workspace}/coveragestores/{store_name}/file.geotiff"
-
-    with open(tif_path, "rb") as f:
-        r = requests.put(
-            url,
-            data=f,
-            headers=headers,
-            auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS)
-        )
-    r.raise_for_status()
-
-    layer_url = f"{settings.GEOSERVER_URL}/layers/{workspace}:{layer_name}"
-    r = requests.put(
-        layer_url,
-        headers={"Content-type": "application/xml"},
-        data=f"<layer><defaultStyle><name>{style_name}</name></defaultStyle></layer>",
-        auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS)
-    )
-    r.raise_for_status()
-
-
-def create_feature_collection(queryset):
+def create_feature_collection(queryset, epsg=4326):
     return {
         "type": "FeatureCollection",
-        "features": [obj.to_feature() for obj in queryset],
+        "features": [obj.to_feature(epsg=epsg) for obj in queryset],
+        "crs": {
+            "type": "name",
+            "properties": {"name": f"EPSG:{epsg}"}
+        }
     }
 
 
-def create_point_feature_collection(queryset):
+
+def create_point_feature_collection(queryset, epsg=4326):
     return  {
         "type": "FeatureCollection",
-        "features": [obj.to_point_feature() for obj in queryset],
+        "features": [obj.to_point_feature(epsg=epsg) for obj in queryset],
+        "crs": {
+            "type": "name",
+            "properties": {"name": f"EPSG:{epsg}"}
+        }
         }
 
-
-
-# # TOOLBOX GENERAL
-# def create_default_project(user):
-#     """
-#     Create a default project for the user.
-#     """
-#     default_project = models.ToolboxProject(
-#         name= '',
-#         user=user,
-#     ).to_json()
-
-#     return json.dumps(default_project, default=str)
 
 
 def toolbox_dashboard(request):
     user = request.user
-    projectregion = swn_models.ProjectRegion.objects.first()
-    geojson = json.loads(projectregion.geom.geojson) 
-    project_region = {
-            "type": "Feature",
-            "geometry": geojson,
-            "properties": {
-                "name": 'Spreewasser:N Projektregion',
-            }
-        }
+    project_region = swn_models.ProjectRegion.objects.first().to_feature()
 
-    outline_injection = models.OutlineInjection.objects.first().geom.geojson
-    outline_injection = json.loads(outline_injection)
-    outline_injection = {
-        "type": "Feature",
-        "geometry": outline_injection,
-        "properties": {
-            "name": 'Spreewasser:N Injektionsbereich',
-        }
-    }
+    outline_injection = models.OutlineInjection.objects.first().to_feature()
 
-    outline_surface_water = models.OutlineSurfaceWater.objects.first().geom.geojson
-    outline_surface_water = json.loads(outline_surface_water)
-    outline_surface_water = {
-        "type": "Feature",
-        "geometry": outline_surface_water,
-        "properties": {
-            "name": 'Spreewasser:N Oberflächenwasser',
-        }
-    }
+    outline_surface_water = models.OutlineSurfaceWater.objects.first().to_feature()
 
-    outline_infiltration = models.OutlineInfiltration.objects.first().geom.geojson
-    outline_infiltration = json.loads(outline_infiltration)
-    outline_infiltration = {
-        "type": "Feature",
-        "geometry": outline_infiltration,
-        "properties": {
-            "name": 'Spreewasser:N Infiltrationsbereich',
-        }
-    }
+    outline_infiltration = models.OutlineInfiltration.objects.first().to_feature()
 
-    # all_lakes = models.Lake25.objects.all()
-    # all_lakes_feature_collection = create_feature_collection(all_lakes)
 
-    # all_rivers = models.River.objects.all()
-    # all_rivers_feature_collection = create_feature_collection(all_rivers)
-    
+    counties_form = forms.PolygonSelectionForm(request.POST or None)
 
-    
-    state_county_district_form = swn_forms.PolygonSelectionForm(request.POST or None)
-    # project_select_form = forms.ToolboxProjectSelectionForm(user=user)
-    # project_select_form = forms.ToolboxProjectSelectionForm()
     project_form = forms.ToolboxProjectForm(user=user)
-    project_modal_title = 'Create new project'
+    project_modal_title = 'Neues Projekt erstellen'
 
     # default_project = create_default_project(user)
 
     context = {
         'project_region': project_region,
         # 'default_project': default_project,
-        'state_county_district_form': state_county_district_form,
+        'counties_form': counties_form,
         # 'project_select_form': project_select_form,
         'project_form': project_form,
         'project_modal_title': project_modal_title,
         'outline_injection': outline_injection,
         'outline_surface_water': outline_surface_water,
         'outline_infiltration': outline_infiltration,
-        # 'all_lakes_feature_collection': all_lakes_feature_collection,
-        # 'all_rivers_feature_collection': all_rivers_feature_collection,
     }
 
     return render(request, 'toolbox/toolbox_three_split.html', context)
@@ -180,7 +124,7 @@ def toolbox_dashboard(request):
 
 def save_toolbox_project(request):
     if request.method != 'POST':
-        return JsonResponse({'message': {'success': False, 'message': 'Invalid request method'}}, status=405)
+        return JsonResponse({'message': {'success': False, 'message': 'Ungültiger Request.'}}, status=405)
 
     try:
         user = request.user
@@ -188,7 +132,6 @@ def save_toolbox_project(request):
 
         toolbox_type = models.ToolboxType.objects.get(name_tag=request_data['toolboxType'])
         user_field = models.UserField.objects.get(pk=request_data['userField'])
-        print('iserField None?', user_field)
 
         # Known model fields
         known_fields = {'id', 'name', 'description', 'userField', 'toolboxType'}
@@ -206,11 +149,11 @@ def save_toolbox_project(request):
                 project.project_data = project_data
                 project.save()
 
-                message = f'Project {project.name} updated'
+                message = f'Projekt {project.name} wurde aktualisiert.'
                 status = 200
 
             except models.ToolboxProject.DoesNotExist:
-                return JsonResponse({'message': {'success': False, 'message': 'Project not found'}}, status=404)
+                return JsonResponse({'message': {'success': False, 'message': 'Projekt existiert nicht.'}}, status=404)
 
         # --- CREATE CASE ---
         else:
@@ -223,7 +166,7 @@ def save_toolbox_project(request):
                 project_data=project_data
             )
             project.save()
-            message = f'Project {project.name} created'
+            message = f'Projekt {project.name} wurde gespeichert.'
             status = 201
 
         return JsonResponse({
@@ -242,71 +185,41 @@ def load_toolbox_project(request, id):
     project = models.ToolboxProject.objects.get(pk=id)
     print("Toolbox Project: ", project)
     if not project:
-        return JsonResponse({'success': False, 'message': 'Project not found'})
+        return JsonResponse({'success': False, 'message': 'Projekt existiert nicht.'})
     else:
         project_json = project.to_json()
-        return JsonResponse({'success': True, 'message': f'Project {project.name} loaded', 'project': project_json})
+        return JsonResponse({'success': True, 'message': f'Projekt {project.name} wurde geladen.', 'project': project_json})
 
     
 
 @login_required
 @csrf_protect
 def save_user_field(request):
-    print('Request:', request, request.user, request.method, request.body)
     if request.method == 'POST':
 
         if not request.headers.get('X-Csrftoken') == request.COOKIES.get('csrftoken'):
             
             return HttpResponseBadRequest('Invalid CSRF token')
         else:
+            
             body = json.loads(request.body)
             name = body['name']
-            geom = json.loads(body['geom'])
-            geos = GEOSGeometry(body['geom'], srid=4326)
+            geom = GEOSGeometry(body['geom'], srid=4326)
             user = request.user
             user_field = None
             if body['id']:
                 # Update existing UserField
                 user_field = models.UserField.objects.get(id=body['id'])
                 user_field.name = name
-                user_field.geom_json = geom
-                user_field.geom = geos
-                
+                user_field.geom = geom      
+                user_field.filter_bounds = {}
                 user_field.save()
             else:
-                user_field = models.UserField(name=name, geom_json=geom, geom=geos, user=user)
-                
+                user_field = models.UserField(name=name,  geom=geom, user=user)
                 user_field.save()
 
-            # TODO move this to the model save() method
-            has_zalf_sinks = models.Sink.objects.filter(geom4326__within=user_field.geom).exists() or \
-                             models.Sink.objects.filter(geom4326__intersects=user_field.geom).exists()
-            has_zalf_enlarged_sinks = models.EnlargedSink.objects.filter(geom4326__within=user_field.geom).exists() or \
-                                        models.EnlargedSink.objects.filter(geom4326__intersects=user_field.geom).exists()
-            has_sieker_sink = models.SiekerSink.objects.filter(geom4326__within=user_field.geom).exists() or \
-                              models.SiekerSink.objects.filter(geom4326__intersects=user_field.geom).exists()
-            has_sieker_gek = models.GekRetention.objects.filter(geom4326__within=user_field.geom).exists() or \
-                                models.GekRetention.objects.filter(geom4326__intersects=user_field.geom).exists()
-            has_sieker_surface_water = models.SiekerLargeLake.objects.filter(geom4326__within=user_field.geom).exists() or \
-                                        models.SiekerLargeLake.objects.filter(geom4326__intersects=user_field.geom).exists()
-            user_field.has_zalf_sinks = has_zalf_sinks
-            user_field.has_zalf_enlarged_sinks = has_zalf_enlarged_sinks
-            user_field.has_sieker_sink = has_sieker_sink
-            user_field.has_sieker_gek = has_sieker_gek
-            user_field.has_sieker_surface_water = has_sieker_surface_water
-            user_field.save()
-
-            geo_json = json.loads(user_field.geom.geojson)
-            geo_json['properties'] = {
-                'name': user_field.name,
-                'has_zalf_sinks': user_field.has_zalf_sinks,
-                'has_zalf_enlarged_sinks': user_field.has_zalf_enlarged_sinks,
-                'has_sieker_sink': user_field.has_sieker_sink,
-                'has_sieker_gek': user_field.has_sieker_gek,
-                'has_sieker_surface_water': user_field.has_sieker_surface_water,
-            }   
-            return JsonResponse({'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id, 'new_user_field': geo_json})
-        
+            geo_json = user_field.to_feature()
+            return JsonResponse(geo_json)      
     else:
         return HttpResponseRedirect('toolbox:toolbox_dashboard')
 
@@ -315,31 +228,9 @@ def get_user_fields(request):
     if request.method == "GET":
         user_fields = models.UserField.objects.filter(user=request.user)
         user_projects = models.ToolboxProject.objects.filter(user=request.user)
-        ufs = []
-        for user_field in user_fields:
-            uf = model_to_dict(user_field, fields=['id', 'user', 'name', 'geom_json'])
-            uf['user_projects'] = list(user_projects.filter(user_field=user_field).values('id', 'name', 'creation_date', 'last_modified'))
-            ufs.append(uf)
-        # print('user_fields:', ufs)
+        ufs = [uf.to_feature() for uf in user_fields]
     return JsonResponse({'user_fields': ufs})
 
-@login_required
-def update_user_field(request, id):
-    if request.method == 'POST':
-        body = json.loads(request.body)
-        name = body['name']
-        geom = json.loads(body['geom'])
-        geos = GEOSGeometry(body['geom'])
-        # geos.transform(25833)
-        user_field = models.UserField.objects.get(id=id)
-        user_field.name = name
-        user_field.geom_json = geom
-        user_field.geom = geos
-        user_field.save()
-        
-        return JsonResponse({'message': {'success': True, 'message': 'User field updated.'},'name': user_field.name, 'geom_json': user_field.geom_json, 'id': user_field.id})
-    else:
-        return JsonResponse({'message': {'success': False, 'message': 'An error occurred updating the user field.'}})
 
 @login_required
 # @csrf_protect
@@ -350,18 +241,17 @@ def delete_user_field(request, id):
 
             if user_field.user == request.user:
                 user_field.delete()
-                return JsonResponse({'message': {'success': True, 'message': 'Field deleted'}})
+                return JsonResponse({'message': {'success': True, 'message': 'Suchegebiet wurde gelöscht.'}})
             else:
-                return JsonResponse({'message': {'success': False, 'message': 'You do not have permission to delete this field'}}, status=403)
+                return JsonResponse({'message': {'success': False, 'message': 'Sie können dieses Suchgebiet nicht löschen.'}}, status=403)
 
         except models.UserField.DoesNotExist:
-            return JsonResponse({'message': {'success': False, 'message': 'Field not found'}}, status=404)
+            return JsonResponse({'message': {'success': False, 'message': 'Das Suchgebiet konnte nicht gefunden werden.'}}, status=404)
     else:
-        return JsonResponse({'message': {'success': False, 'message': 'Invalid request'}}, status=400)
+        return JsonResponse({'message': {'success': False, 'message': 'Ungültiger Request.'}}, status=400)
     
 @login_required
 def get_field_project_modal(request, id):
-    user_projects = models.ToolboxProject.objects.filter(Q(user_field__id=id) & Q(user_field__user=request.user)).order_by('name')
 
     user_field_projects = models.ToolboxProject.objects.filter(
         Q(user_field__id=id) & Q(user_field__user=request.user)
@@ -413,41 +303,58 @@ def add_range_filter(filters, obj, field,  model_field=None):
 
 def load_infiltration_gui(request, user_field_id):
     if user_field_id == "null":
-        user_field_id = None
+         return JsonResponse({'message':{'success': False, 'message': 'Es ist kein Suchgebiet ausgewählt oder es existiert nicht..'}})
     else:
         user_field_id = int(user_field_id)
+
+    start_load_projects = datetime.now()
     toolbox_type = models.ToolboxType.objects.get(name_tag='infiltration')
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
     qs = models.ToolboxProject.objects.filter(
         Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
     ).order_by('-creation_date').reverse()
+    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='infiltration')
 
-    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+    # TODO these querysets are not necessary if the has_x attributes are implemented
+    sinks = models.Sink.objects.filter(centroid__within=user_field.geom)    
     
-    if user_field is None:
-        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
-    
-    sinks = models.Sink.objects.filter(
-        centroid__within=user_field.geom
-    )
-    enlarged_sinks = models.EnlargedSink.objects.filter(
-        centroid__within=user_field.geom
-    )
-    if sinks.count() > 0 or enlarged_sinks.count() > 0:
+    if user_field.has_infiltration:
+        sinks = models.Sink.objects.filter(centroid__within=user_field.geom)
+        enlarged_sinks = models.EnlargedSink.objects.filter(centroid__within=user_field.geom)
         streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
-
         lakes = models.Lake.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
 
-        lake_form = LakeFilter(request.GET, queryset=lakes)
-        stream_form = StreamFilter(request.GET, queryset=streams)
-        sink_form = SinkFilter(request.GET, queryset=sinks)
+        if user_field.filter_bounds.get('sinks') is None:
+            user_field.compute_filter_bounds_infiltration()
+
+        lake_form = filters.LakeFilter(
+            request.GET,
+            queryset=lakes,
+            bounds=user_field.filter_bounds.get('lakes') if user_field.filter_bounds else None
+        )
+        stream_form = filters.StreamFilter(
+            request.GET,
+            queryset=streams,
+            bounds=user_field.filter_bounds.get('streams') if user_field.filter_bounds else None
+        )
+        sink_form = filters.SinkFilter(
+            request.GET,
+            queryset=sinks,
+            bounds=user_field.filter_bounds.get('sinks') if user_field.filter_bounds else None
+        )
         print("Queryset Sinks", sinks.count())
-        enlarged_sink_form = EnlargedSinkFilter(request.GET, queryset=enlarged_sinks)
+        enlarged_sink_form = filters.EnlargedSinkFilter(
+            request.GET,
+            queryset=enlarged_sinks,
+            bounds=user_field.filter_bounds.get('enlarged_sinks') if user_field.filter_bounds else None
+        )
 
         overall_weighting = forms.OverallWeightingsForm()
         forest_weighting = forms.WeightingsForestForm()
         agriculture_weighting = forms.WeightingsAgricultureForm()
         grassland_weighting = forms.WeightingsGrasslandForm()
+        result_form = forms.InfiltrationResultDownloadForm()
+        inlet_weighting = forms.InletWeightingsForm()
 
 
         html = render_to_string('toolbox/infiltration.html', {
@@ -462,9 +369,27 @@ def load_infiltration_gui(request, user_field_id):
             'forest_weighting': forest_weighting,
             'agriculture_weighting': agriculture_weighting,
             'grassland_weighting': grassland_weighting, 
+            'inlet_weighting': inlet_weighting,
+            'result_form': result_form,
         }, request=request) 
-
-        return JsonResponse({'success': True, 'html': html})
+        default_project = filters.create_default_project(
+            user_field, 
+            [
+                overall_weighting, 
+                forest_weighting, 
+                agriculture_weighting, 
+                grassland_weighting, 
+                sink_form, 
+                enlarged_sink_form, 
+                stream_form, 
+                lake_form,
+                result_form,
+                inlet_weighting,
+                ], 
+            'infiltration'
+            )
+        
+        return JsonResponse({'success': True, 'html': html, 'default_project': default_project})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine Senken bekannt.'})
 
@@ -546,110 +471,52 @@ def calculate_indices_df(sinks, project, sink_type='sink'):
     df['index_be'] = w_usability * df['index_1'] + w_soil * df['index_2']
     df['weighted_index'] = df['index_be'] * df['percent_of_total_area']
     sink_indices = df.groupby(sink_id)['weighted_index'].sum().round(3).to_dict()
-    return sink_indices
+
+    all_indices = {}
+    for sink in sinks:
+        if sink.index_hydrogeology:
+            index_sink_total = (sink_indices[sink.id] + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / 4  
+        else:       
+            index_sink_total = (sink_indices[sink.id] + sink.index_proportions + sink.index_feasibility ) / 3
+        all_indices[sink.id] = {
+            'index_soil': sink_indices[sink.id],
+            'index_sink_total': index_sink_total
+        }
+    print('Indices:', all_indices)
+    return all_indices
 
 
-def filter_sinks(request):
+def filter_sinks(request, sink_type):
 
-    start = datetime.now()
     try:
         project = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     user_field = models.UserField.objects.get(pk=project['userField'])
-    
+    if sink_type == 'sink':
+        ProjectClass = models.Sink
+    else:
+        ProjectClass = models.EnlargedSink
+
     geom = GEOSGeometry(user_field.geom)
-    
-    sinks = models.Sink.objects.filter(geom4326__within=geom)
+    sinks = ProjectClass.objects.filter(geom4326__within=geom)
     print("Sinks:", sinks.count())
     filters = Q()
-    filters = add_range_filter(filters, project, 'sink_area', 'area')
-    filters = add_range_filter(filters, project, 'sink_volume', 'volume')
-    filters = add_range_filter(filters, project, 'sink_depth', 'depth')
-    # filters = add_range_filter(filters, project, 'sink_index_soil', 'index_soil')
+    filters = add_range_filter(filters, project, f'{sink_type}_area', 'area')
+    filters = add_range_filter(filters, project, f'{sink_type}_volume', 'volume')
+    filters = add_range_filter(filters, project, f'{sink_type}_depth', 'depth')
+    if sink_type == 'enlarged_sink':
+        filters = add_range_filter(filters, project, 'enlarged_sink_volume_construction_barrier', 'volume_construction_barrier')
+        filters = add_range_filter(filters, project, 'enlarged_sink_volume_gained', 'volume_gained')
+
+
     sinks = sinks.filter(filters)
-    print("Sinks FILTERED:", sinks.count())
 
-    land_use_values = project.get('sink_land_use', [])
+    land_use_values = project.get(f'{sink_type}_land_use', [])
     land_use_values = [int(value) for value in land_use_values if value.isdigit()]
-    land_use_filter = (
-        Q(landuse_1__in=land_use_values) &
-        (Q(landuse_2__in=land_use_values) |
-        Q(landuse_2__isnull=True)) &
-        (Q(landuse_3__in=land_use_values) |
-        Q(landuse_3__isnull=True))
-        )
-    # sinks = sinks.filter(land_use_filter)
-    print("Sinks LAND USE FILTERED:", sinks.count())
-    if sinks.count() == 0:
-        message = {
-            'success': False, 
-            'message': f'No sinks found in the search area.'
-        }
-        return JsonResponse({'message': message})
-    else:
-        print("Sinks", sinks.count())
-        
-        sink_indices_soil = calculate_indices_df(sinks, project, sink_type='sink')
-
-        features = []
-        for sink in sinks:
-            # centroid = sink.centroid
-            geojson = sink.to_point_feature(language='de')
-
-            sink_id = sink.id
-            index_soil = sink_indices_soil.get(sink_id, 0)
-
-            if sink.index_hydrogeology:
-                index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / .04)  
-            else:       
-                index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
-            print('geojson:', geojson)
-            geojson['properties']["index_sink_total"] = index_sink_total/100
-            geojson['properties']["index_sink_total_str"] = index_sink_total
-
-            features.append(geojson)
-        feature_collection = {
-            "type": "FeatureCollection",
-            "features": features,
-            }
-        message = {
-            'success': True, 
-            'message': f'Found {sinks.count()} sinks'
-        }
-
-        data_info = models.DataInfo.objects.get(data_type='sink').to_dict()
-
-        print('Time for filter_sinks:', datetime.now() - start)
-        return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
-    
-
-def filter_enlarged_sinks(request):
-    try:
-        project = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-    user_field = models.UserField.objects.get(pk=project['userField'])
-    geom = GEOSGeometry(user_field.geom)
-    sinks = models.EnlargedSink.objects.filter(geom4326__within=geom)
-
-    filters = Q()
-    filters = add_range_filter(filters, project, 'enlarged_sink_area', 'area')
-    filters = add_range_filter(filters, project, 'enlarged_sink_volume', 'volume')
-    filters = add_range_filter(filters, project, 'enlarged_sink_depth', 'depth')
-    filters = add_range_filter(filters, project, 'enlarged_sink_volume_construction_barrier', 'volume_construction_barrier')
-    filters = add_range_filter(filters, project, 'enlarged_sink_volume_gained', 'volume_gained')
-    # filters = add_range_filter(filters, project, 'enlarged_sink_index_soil', 'index_soil')
-    sinks = sinks.filter(filters)
-    print('Enlarged_sinks 1', sinks)
-
-    land_use_values = project.get('enlarged_sink_land_use', [])
-    land_use_values = [int(value) for value in land_use_values if value.isdigit()]
-    land_use_filter = (
+    if sink_type == 'enlarged_sink':
+        land_use_filter = (
         Q(landuse_1__in=land_use_values) &
         (Q(landuse_2__in=land_use_values) |
         Q(landuse_2__isnull=True)) &
@@ -658,45 +525,47 @@ def filter_enlarged_sinks(request):
         (Q(landuse_4__in=land_use_values) |
         Q(landuse_4__isnull=True))
         )
+    else:
+        land_use_filter = (
+            Q(landuse_1__in=land_use_values) &
+            (Q(landuse_2__in=land_use_values) |
+            Q(landuse_2__isnull=True)) &
+            (Q(landuse_3__in=land_use_values) |
+            Q(landuse_3__isnull=True))
+            )
     sinks = sinks.filter(land_use_filter)
-
-    features = []
     if sinks.count() == 0:
+
         message = {
             'success': False, 
-            'message': f'No sinks found in the search area.'
+            'message': 'Im Suchgebiet entsprechen keine Senken den Filterkriterien.'
         }
+        if sink_type == 'enlarged_sink':
+            message['message'] = 'Im Suchgebiet entsprechen keine vergrößerten Senken den Filterkriterien.'
         return JsonResponse({'message': message})
     else:
-        sink_indices_soil = calculate_indices_df(sinks, project, sink_type='enlarged_sink')
-        for sink in sinks:
-            
-            geojson = sink.to_point_feature(language='de')
-            sink_id = sink.id
-            index_soil = sink_indices_soil.get(sink_id, 0)
+        print("Sinks", sinks.count())
+        
+        all_indices = calculate_indices_df(sinks, project, sink_type=sink_type)
 
-            if sink.index_hydrogeology:
-                index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility  + sink.index_hydrogeology) / .04)  
-            else:       
-                index_sink_total = round(
-                    (index_soil + sink.index_proportions + sink.index_feasibility ) / .03) 
-            print('geojson:', geojson)
-            geojson['properties']["index_sink_total"] = index_sink_total/100
-            geojson['properties']["index_sink_total_str"] = f'{index_sink_total}'
-            features.append(geojson)
+        features = [sink.to_point_feature(all_indices, language='de') for sink in sinks]
         feature_collection = {
             "type": "FeatureCollection",
             "features": features,
+            "crs": {
+                "type": "name",
+                "properties": {"name": "EPSG:4326"}
             }
+        }
         message = {
             'success': True, 
-            'message': f'Found {sinks.count()} Enlarged sinks'
+            'message': f'Es wurden {sinks.count()} Senken gefunden.'
         }
 
-        data_info = models.DataInfo.objects.get(data_type='enlarged_sink').to_dict()
+        data_info = models.DataInfo.objects.get(data_type=sink_type).to_json()
 
         return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
+    
 
 def filter_waterbodies(request):
 
@@ -707,209 +576,316 @@ def filter_waterbodies(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     
-    if data_type == 'lake':
+    if data_type in ('lake', 'sieker_lake', 'wetland_lake'):
         waterbody_class = models.Lake
-    elif data_type == 'stream':
+        waterbody = 'Seen'
+    elif data_type in ('stream', 'sieker_stream', 'wetland_stream'):
+        waterbody = 'Flüsse'
         waterbody_class = models.Stream
 
-    data_info = models.DataInfo.objects.get(data_type=data_type).to_dict()
+    data_info = models.DataInfo.objects.get(data_type=data_type).to_json()
 
     user_field = models.UserField.objects.get(pk=project['userField'])
     geom = GEOSGeometry(user_field.geom)
 
     distance = int(project.get('lake_distance_to_userfield', 0))
-    lakes = None
+    waterbodies = None
     if distance > 0:
         # Transform to EPSG:25833 (meters) and add the buffer
         user_geom_25833 = user_field.geom.transform(25833, clone=True)
         buffer_25833 = user_geom_25833.buffer(distance)
         buffer_4326 = buffer_25833.transform(4326, clone=True)
-        lakes = waterbody_class.objects.filter(Q(geom__intersects=buffer_4326) | Q(geom__within=buffer_4326))
+        waterbodies = waterbody_class.objects.filter(Q(geom__intersects=buffer_4326) | Q(geom__within=buffer_4326))
     else:
-        lakes = waterbody_class.objects.filter(Q(geom__intersects=geom) | Q(geom__within=geom))
+        waterbodies = waterbody_class.objects.filter(Q(geom__intersects=geom) | Q(geom__within=geom))
 
     filter = Q()
-    filter = add_range_filter(filter, project, f'{data_type}_min_surplus', 'min_surplus_volume')
-    filter = add_range_filter(filter, project, f'{data_type}_mean_surplus', 'mean_surplus_volume')
-    filter = add_range_filter(filter, project, f'{data_type}_max_surplus', 'max_surplus_volume')
+    filter = add_range_filter(filter, project, f'{data_type}_min_surplus_volume', 'min_surplus_volume')
+    filter = add_range_filter(filter, project, f'{data_type}_mean_surplus_volume', 'mean_surplus_volume')
+    filter = add_range_filter(filter, project, f'{data_type}_max_surplus_volume', 'max_surplus_volume')
     filter = add_range_filter(filter, project, f'{data_type}_plus_days', 'plus_days')
-    lakes = lakes.filter(filter)
+    waterbodies = waterbodies.filter(filter)
 
-    if lakes.count() == 0:
-        message = {
-            'success': False, 
-            'message': f'No lakes found in the search area.'
-        }
-        return JsonResponse({'message': {'success': False, 'message': 'No lakes found.'}})
+    if waterbodies.count() == 0:
+        
+        return JsonResponse({'message': {'success': False, 'message': f'Es befinden sich keine {waterbody} im Suchgebiet die den Filterkriterien entsprechen.'}})
     else:
         
-        feature_collection = create_feature_collection(lakes)
-        message = {
-            'success': True, 
-            'message': f'Found {lakes.count()} lakes'
-        }
-        print('feature_collection:', feature_collection)
-        return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
+        feature_collection = create_feature_collection(waterbodies)
+        
+        return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': {'success': True}})
         
 
-def get_weighting_forms(request):
-    if request.method == 'POST':
-        project = json.loads(request.body)
-        print('Project:', project)
-        sinks = project.get('selected_sinks', [])
-        enlarged_sinks = project.get('selected_enlarged_sinks', [])
-        
-        land_use_values = {}
-        if len(sinks) > 0:
-            sinks = [int(sink) for sink in sinks]
-            queryset = models.Sink.objects.filter(id__in=sinks)
-            land_use_values = set(
-                queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
-            ).union(
-                queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
-            ).union(
-                queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
-            )
-        if len(enlarged_sinks) > 0:
-            enlarged_sinks = [int(sink) for sink in enlarged_sinks]
-            queryset = models.EnlargedSink.objects.filter(id__in=sinks)
-            land_use_values.union(set(
-                    queryset.exclude(land_use_1__isnull=True).values_list('land_use_1', flat=True)
-                ).union(
-                    queryset.exclude(land_use_2__isnull=True).values_list('land_use_2', flat=True)
-                ).union(
-                    queryset.exclude(land_use_3__isnull=True).values_list('land_use_3', flat=True)
-                ).union(
-                    queryset.exclude(land_use_4__isnull=True).values_list('land_use_4', flat=True)
-                )
-            )
-        
-        land_use_values = list(land_use_values)
-
-        context = {
-            # 'forest_weighting': ForestWeightingFilter(),
-            'forest_weighting': forms.WeightingsForestForm(),
-            'agriculture_weighting': forms.WeightingsAgricultureForm(),
-            'grassland_weighting': forms.WeightingsGrasslandForm(),
-            'forms': {
-                'grassland': False,
-                'forest': False,
-                'agriculture': False,
-            }
-        }
-        # TODO weighting forms
-
-        if 'forest_conifers' in land_use_values or 'forest_deciduous_trees' in land_use_values \
-            or 'forest_conifers_and_deciduous_trees' in land_use_values:
-            context['forms']['forest'] = True
-        if 'agricultural_area_without_information' in land_use_values or 'farmland' in land_use_values:
-            context['forms']['agriculture'] = True
-        if 'grassland' in land_use_values:
-            context['forms']['grassland'] = True
-        
-
-        return render(request, 'toolbox/weighting_tab.html', context)
 
 
-def get_shortest_connection_lines_utm(sinks, lakes, streams):
+def get_shortest_connection(sink, lakes, streams, epsg=4326, connection_id=0):
     """
-    Get the shortest connection line between the sinks and the nearest selected lake or stream.
-    Returns a list of dictionaries with sink_id, waterbody_type, waterbody_id, line (WKT), and length_m.
+    This function works for sinks, enlarged sinks and sieker sinks.
+    It returns a dictionary with the sink.id as key and a linefeature with properties as values.
     """
-    results = []
-    if sinks != [] and (lakes != [] or streams != []):
-        for sink in sinks:
-            sink_geom = shapely_shape(json.loads(sink.geom25833.geojson))
+    lake_with_distance = lakes.annotate(
+        distance_to_sink=Distance('geom25833', sink.geom25833)
+        ).order_by('distance_to_sink').first()
+    print('lake_with_distance', lake_with_distance)
+    
+    stream_with_distance = streams.annotate(
+        distance_to_sink=Distance('geom25833', sink.geom25833)
+        ).order_by('distance_to_sink').first()
+    
+    print('stream_with_distance', stream_with_distance)
+    
+    closest = lake_with_distance if lake_with_distance is not None else stream_with_distance
+    print('closest 1', closest)
+    if (
+        (lake_with_distance and stream_with_distance) and
+        (lake_with_distance.distance_to_sink.m > stream_with_distance.distance_to_sink.m)
+        ):
 
-            min_dist = float('inf')
-            closest_geom = None
-            waterbody_type = None
-            waterbody_id = None
+        closest = stream_with_distance
+    print('closest 2', closest)
 
-            # Check lakes
-            for lake in lakes:
-                lake_geom = shapely_shape(json.loads(lake.geom25833.geojson))
-                dist = sink_geom.distance(lake_geom)
-                if dist < min_dist:
-                    min_dist = dist
-                    closest_geom = lake_geom
-                    waterbody_type = 'lake'
-                    waterbody_name = lake.name
-                    waterbody_id = lake.id
+    distance_m = int(closest.distance_to_sink.m)
+    
 
-            # Check streams
-            for stream in streams:
-                stream_geom = shapely_shape(json.loads(stream.geom25833.geojson))
-                dist = sink_geom.distance(stream_geom)
-                if dist < min_dist:
-                    min_dist = dist
-                    closest_geom = stream_geom
-                    waterbody_type = 'stream'
-                    waterbody_name = stream.name
-                    waterbody_id = stream.id
+    # create a line feature
+    pt1, pt2 = nearest_points(
+        shapely_shape(json.loads(sink.geom25833.geojson)),
+        shapely_shape(json.loads(closest.geom25833.geojson))
+    )
+    line = LineString([pt1.coords[0], pt2.coords[0]])
+    line_geom = GEOSGeometry(line.wkt, srid=25833)
 
-            # Find nearest points and build LineString in EPSG:25833
-            nearest = nearest_points(sink_geom, closest_geom)
-            line = LineString([nearest[0].coords[0], nearest[1].coords[0]])
-            line_geom = GEOSGeometry(line.wkt, srid=25833)
-            line_geom.transform(4326)
-            length_m = line.length  # Already in meters (EPSG:25833 is a projected CRS)
+    if epsg==4326:
+        line_geom.transform(4326)
 
-            if length_m >= 2000:
-                rating_length = 0
-            elif length_m >= 1000:
-                rating_length = 5
-            else:
-                rating_length = int((1000 - length_m)/10)
-
-            is_enlarged_sink = isinstance(sink, models.EnlargedSink)
-            result = {
+    connection_data = {
+        'id': connection_id,
+        'sink_id': sink.id,  
+        'sink_type': sink.__data_type__(),
+        'waterbody_type': closest.__data_type__(),
+        'waterbody_id': closest.id,
+        'fgw_id': closest.fgw_id,
+        'waterbody': closest.to_json(),   
+        'waterbody_name': closest.name,       
+        'distance_m': distance_m,
+        'connection_feature': {
+            "type": "Feature",
+            "geometry": json.loads(line_geom.geojson),
+            "properties": {
+                'id': connection_id,
+                'name': 'Zuleitung',
                 'sink_id': sink.id,
-                'sink_geom': json.loads(sink.geom4326.geojson),
-                'is_enlarged_sink': is_enlarged_sink,
-                'waterbody_type': waterbody_type,
-                'waterbody_id': waterbody_id,
-                'waterbody_name': waterbody_name,
-                'line': json.loads(line_geom.geojson),
-                'length_m': round(length_m, 2),
-                'rating_connection': rating_length,
-                'index_total': rating_length
-            }
-            if is_enlarged_sink:
-                if sink.sink_embankment.first():
-                    sink_embankment = sink.sink_embankment.first()
-                    result['sink_embankment'] = sink_embankment.to_feature()
-                
+                'waterbody_type': closest.__data_type__(),
+                'waterbody_id': closest.id,
+                'distance_m': distance_m,
+            },
+        },
+    }
 
-            results.append(result)
+
+    return connection_data
+
+
+def rate_water_sink_distance(distance):
+        if distance >= 2000:
+            rating_length = 0
+        elif distance >= 1000:
+            rating_length = 5
+        else:
+            rating_length = int((1000 - distance)/10)
+        return rating_length
             
+def get_infiltration_result_list(project, epsg=4326):
+    '''
+    this gets the results from an infiltration project. 
+    The function is used for display and data download.
+    '''
 
-    return results
+    language='de'
+    # the items are ordered by id to ensure that the result ids will be identical if the project is reloaded
+    sinks = models.Sink.objects.filter(id__in=project.get('selected_sinks', [])).order_by('id')
+    enlarged_sinks = models.EnlargedSink.objects.filter(id__in=project.get('selected_enlarged_sinks', [])).order_by('id')
+    lakes = models.Lake.objects.filter(id__in=project.get('selected_lakes', [])).order_by('id')
+    streams = models.Stream.objects.filter(id__in=project.get('selected_streams', [])).order_by('id')
 
-
-def get_inlets(request):
-    # POST request
-    project = json.loads(request.body)
-    print('Project:', project)
-
-    sinks = models.Sink.objects.filter(id__in=project.get('selected_sinks', []))
-    enlarged_sinks = models.EnlargedSink.objects.filter(id__in=project.get('selected_enlarged_sinks', []))
-    lakes = models.Lake.objects.filter(id__in=project.get('selected_lakes', []))
-    streams = models.Stream.objects.filter(id__in=project.get('selected_streams', []))
-
-    inlets_sinks = get_shortest_connection_lines_utm(sinks, lakes, streams)
-    inlets_enlarged_sinks = get_shortest_connection_lines_utm(enlarged_sinks, lakes, streams)
 
     
+    
+    
+    def rate_connection(connection_data, sink, indices):
+
+        index_length = rate_water_sink_distance(connection_data['distance_m'])
+        index_volumes = min(connection_data['waterbody']['mean_surplus_volume'] / sink.volume, 1) *100
+        print('index_volume', index_volumes)
+        if index_length > 0:
+            index_inlet = (index_length * int(project.get('weighting_inlet_length', 70)) + index_volumes * int(project.get('weighting_inlet_volume', 30))) / 100
+        else:
+            index_inlet = 0
+        print('index_connection', index_inlet)
+        connection_data['connection_feature']['properties']['index_length'] = int(index_length)
+        connection_data['index_length'] = round(index_length)
+        connection_data['connection_feature']['properties']['index_volumes'] = round(index_volumes)
+        connection_data['index_volumes'] = round(index_volumes)
+        connection_data['connection_feature']['properties']['index_inlet'] = round(index_inlet)
+        connection_data['index_inlet'] = round(index_inlet)
+        index_sink = min(int(indices[sink.id]['index_sink_total'] *100), 100)
+        connection_data['index_sink'] = index_sink
+        if index_inlet > 0:
+            index_total = int((index_inlet + index_sink) / 2)
+        else:
+            index_total = 0
+        connection_data['index_total'] = round(index_total)
+
+        return connection_data
+    
+    result_dict = {}
+    results = []
+    line_features = []
+    sink_count = sinks.count()
+    if sink_count > 0:
+        indices_sinks = calculate_indices_df(sinks, project, sink_type='sink')
+        sink_features = [sink.to_feature(indices_sinks, language='de') for sink in sinks]
+        result_dict['sink_feature_collection'] = {
+            "type": "FeatureCollection",
+            "features": sink_features,
+            "crs": {
+                "type": "name",
+                "properties": {"name": "EPSG:4326"}
+            }
+            }
+        for i, sink in enumerate(sinks):
+            connection_data = get_shortest_connection(sink, lakes, streams, epsg=epsg, connection_id=i)
+            connection_data.update({    
+                'sink': sink.to_json(indices_sinks),
+                'is_enlarged_sink': boolean_translation(False, language),
+                })
+            connection_data = rate_connection(connection_data, sink, indices_sinks)
+            line_feature = connection_data['connection_feature']
+            connection_data.pop('connection_feature')
+            results.append(connection_data)
+            line_features.append(line_feature)
+            
+
+    if enlarged_sinks.count() > 0:
+        
+        indices_enlarged_sinks = calculate_indices_df(enlarged_sinks, project, sink_type='enlarged_sink')
+        sink_features = [sink.to_feature(indices_enlarged_sinks, language='de') for sink in enlarged_sinks]
+        result_dict['enlarged_sink_feature_collection'] = {
+            "type": "FeatureCollection",
+            "features": sink_features,
+            "crs": {
+                "type": "name",
+                "properties": {"name": "EPSG:4326"}
+            }
+            }
+        sink_embankments = models.EnlargedSinkEmbankment.objects.filter(enlarged_sink__in=enlarged_sinks)
+        sink_embankment_feature_collection = create_feature_collection(sink_embankments)
+        result_dict['sink_embankment_feature_collection'] = sink_embankment_feature_collection
+        for i, sink in enumerate(enlarged_sinks):
+            connection_data = get_shortest_connection(sink, lakes, streams, epsg=epsg, connection_id=(sink_count + i))
+
+            connection_data.update({
+                'sink': sink.to_json(indices_enlarged_sinks),
+                'is_enlarged_sink': boolean_translation(True, language),
+                })
+            connection_data = rate_connection(connection_data, sink, indices_enlarged_sinks)
+            line_feature = connection_data['connection_feature']
+            connection_data.pop('connection_feature')
+            if sink.sink_embankment.exists():
+                connection_data['sink_embankment_id'] = sink.sink_embankment.first().id
+            # connection_data['sink_feature'] = sink.to_feature(indices_enlarged_sinks, epsg=epsg)
+            
+            results.append(connection_data)
+            line_features.append(line_feature)
+        
+    result_dict['inlet_feature_collection'] = {
+        "type": "FeatureCollection",
+        "features": line_features,
+        "crs": {
+                "type": "name",
+                "properties": {"name": "EPSG:4326"}
+            }
+    }
+    
+    result_dict['results'] = results
+    with open('zalf_sink_result_dict.json', 'w') as f:
+        json.dump(result_dict, f)
+
+    return result_dict
+
+### NEW 2025-11-15
+def get_infiltration_results(request):
+    # POST request
+    if request.method != "POST":
+        return HttpResponseBadRequest("POST required")
+    try:
+        project = request.body
+        project = json.loads(project)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid project JSON'}, status=400)
+
+
+    results_dict = get_infiltration_result_list(project, epsg=4326)
+    result_data_info = models.DataInfo.objects.get(data_type='infiltration_result').to_json()
+    inlet_data_info = models.DataInfo.objects.get(data_type='infiltration_result_inlet').to_json()
+    sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_sink').to_json()
+    enlarged_sink_data_info = models.DataInfo.objects.get(data_type='infiltration_result_enlarged_sink').to_json()
+    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_json()
+    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_json()
+    sink_embankment_data_info = models.DataInfo.objects.get(data_type='sink_embankment').to_json()
+
     response = {
-        'inlets_sinks': inlets_sinks + inlets_enlarged_sinks,
+        'inlet_data_info': inlet_data_info,
+        'sink_data_info': sink_data_info,
+        'enlarged_sink_data_info': enlarged_sink_data_info,
+        'result_data_info': result_data_info,
+        'lake_data_info': lake_data_info,
+        'stream_data_info': stream_data_info,
+        'sink_embankment_data_info': sink_embankment_data_info,
+
+        'results': results_dict['results'],
+
+        'inlet_feature_collection': results_dict.get('inlet_feature_collection', None),
+        'sink_feature_collection' : results_dict.get('sink_feature_collection', None),
+        'enlarged_sink_feature_collection': results_dict.get('enlarged_sink_feature_collection', None),
+        'sink_embankment_feature_collection': results_dict.get('sink_embankment_feature_collection', None),
+
         'message': {
             'success': True,
-            'message': f'Found {len(inlets_sinks)} pipes for sinks and {len(inlets_enlarged_sinks)} pipes for enlarged sinks.'
         }
     }
-    print(response)
+
     return JsonResponse(response)
+    # except:
+
+    #     return JsonResponse({'message': {'success': False, 'message': 'Get results failed.'}})
+
+
+def get_injection_volume_chart(request, waterbody_type, id):
+    """
+    Gets injection volume chart data for a given waterbody type and ID.
+    """
+    if waterbody_type == 'stream':
+        wb = models.Stream.objects.get(pk=id)
+    elif waterbody_type == 'lake':
+        wb = models.Lake.objects.get(pk=id)
+
+    chart_data_qs = (
+        models.DischargeTimeseries.objects
+        .filter(fgw=wb.fgw)
+        .order_by('date')
+        .values('date', 'discharge_m3s')
+    )
+
+    chart_data = [
+        {
+            "x": record["date"].isoformat(),     # ISO 8601 — ideal for JS Date parsing
+            "y": float(record["discharge_m3s"] or 0)
+        }
+        for record in chart_data_qs
+    ]
+
+    return JsonResponse({"chart_data": chart_data})
 
 # TODO DEM fehlt noch
 def get_elevation_profile(line_geojson):
@@ -954,15 +930,14 @@ def get_elevations_for_line(line_geom):
 ####### SIEKER TOOLBOX ########################
 
 ##### Surface Waters ######
-def sieker_surface_waters_gui(request, user_field_id):
+def load_sieker_surface_waters_gui(request, user_field_id):
     if user_field_id == "null":
-        user_field_id = None
+
+        return JsonResponse({'message':{'success': False, 'message': 'Das Suchgebiet konnte nicht gefunden werden.'}})
     else:
         user_field_id = int(user_field_id)
 
-    user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
-    if user_field is None:
-        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
+    user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))        
     
     lakes = models.SiekerLargeLake.objects.filter(Q(geom4326__within=user_field.geom) | Q(geom4326__intersects=user_field.geom))
 
@@ -971,42 +946,60 @@ def sieker_surface_waters_gui(request, user_field_id):
         qs = models.ToolboxProject.objects.filter(
             Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
             ).order_by('-creation_date').reverse()
-        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
-        sieker_lake_filter = SiekerLargeLakeFilter(request.GET, queryset=lakes)
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='sieker_surface_water')
+        sieker_lake_filter = filters.SiekerLargeLakeFilter(
+            request.GET,
+            queryset=lakes,
+            bounds=user_field.filter_bounds.get('lakes') if user_field.filter_bounds else None
+            )
 
-        water_levels = models.SiekerWaterLevel.objects.filter(
-            geom4326__within=user_field.geom
-        )
-        lakes_feature_collection = create_feature_collection(lakes)
-        water_levels_feature_collection = create_feature_collection(water_levels)
-
-        lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_dict()
-        water_levels_data_info = models.DataInfo.objects.get(data_type='sieker_water_level').to_dict()
+        
+        result_form = forms.SiekerSurfaceWaterResultDownloadForm()
 
 
-        layers = {
-            'lakes': {
-                'featureCollection':lakes_feature_collection,
-                'dataInfo': lakes_data_info
-            },
-            'water_levels': {
-                'featureCollection': water_levels_feature_collection,
-                'dataInfo': water_levels_data_info
-                }
-            }
+        
+
+
+        default_project = filters.create_default_project(
+            user_field, 
+            [
+                sieker_lake_filter, 
+                result_form
+            ], 
+            'sieker_surface_water'
+            )
         
 
         html = render_to_string('toolbox/sieker_surface_waters.html', {
             'project_select_form': project_select_form,
-            'sieker_lake_filter': sieker_lake_filter,      
+            'sieker_lake_filter': sieker_lake_filter,   
+            'result_form': result_form,   
         }, request=request) 
 
-        return JsonResponse({'success': True, 'layers': layers , 'html': html})
+        return JsonResponse({'success': True,  'html': html, 'default_project': default_project})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet befinden sich keine geeigneten Seen.'})
 
     
-## Sieker Oberflächengewässer / Large Lakes / Surface Waters
+def get_water_levels(request, user_field_id):
+    user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))        
+
+    water_levels = models.SiekerWaterLevel.objects.filter(
+            geom4326__within=user_field.geom
+        )
+    if water_levels.count() == 0:
+        return JsonResponse({'message': {'success': False, 'message': 'Im Suchgebiet existieren keine Pegel.'}})
+    
+    water_levels_feature_collection = create_feature_collection(water_levels)
+    water_levels_data_info = models.DataInfo.objects.get(data_type='sieker_water_level').to_json()
+
+    water_levels = {
+                'featureCollection': water_levels_feature_collection,
+                'dataInfo': water_levels_data_info
+                }
+    return JsonResponse({'water_levels':water_levels, 'message': {'success': True}})
+
+
 def filter_sieker_surface_waters(request):
     try:
         project = json.loads(request.body)
@@ -1014,63 +1007,131 @@ def filter_sieker_surface_waters(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     user_field = models.UserField.objects.get(pk=project['userField'])
-    geom = GEOSGeometry(user_field.geom)
 
-    distance = int(project.get('lake_distance_to_userfield', 0))
-    lakes = None
-    if distance > 0:
-        # Transform to EPSG:25833 (meters) and add the buffer
-        user_geom_25833 = user_field.geom.transform(25833, clone=True)
-        buffer_25833 = user_geom_25833.buffer(distance)
-        buffer_4326 = buffer_25833.transform(4326, clone=True)
-        lakes = models.SiekerLargeLake.objects.filter(Q(geom__intersects=buffer_4326) | Q(geom__within=buffer_4326))
-    else:
-        lakes = models.SiekerLargeLake.objects.filter(Q(geom__intersects=geom) | Q(geom__within=geom))
+    lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_json()
+    lakes = models.SiekerLargeLake.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
 
     filter = Q()
-    filter = add_range_filter(filter, project, 'lake_volume', 'area_ha')
-    filter = add_range_filter(filter, project, 'lake_volume', 'vol_mio_m3')
-    filter = add_range_filter(filter, project, 'lake_max_depth', 'd_max_m')
+    filter = add_range_filter(filter, project, 'sieker_surface_water_area_ha', 'area_ha')
+    filter = add_range_filter(filter, project, 'sieker_surface_water_vol_mio_m3', 'vol_mio_m3')
+    filter = add_range_filter(filter, project, 'sieker_surface_water_d_max_m', 'd_max_m')
     lakes = lakes.filter(filter)
 
 
     print("COUNT(Lakes)", lakes.count())
 
     if lakes.count() == 0:
-        message = {
-            'success': False, 
-            'message': f'No lakes found in the search area.'
-        }
-        return JsonResponse({'message': {'success': False, 'message': 'No lakes found.'}})
+        
+        return JsonResponse({'message': {'success': False, 'message': 'Keine Seen im Suchgebiet entsprechen den Filterkriterien.'}})
     else:
         
-        feature_collection = create_feature_collection(lakes)
+        lakes_feature_collection = create_feature_collection(lakes)
         message = {
             'success': True, 
-            'message': 'Keine Seen im Suchgebiet entsprechen den Filterkriterien.'
         }
-        print('feature_collection:', feature_collection)
-        return JsonResponse({'feature_collection': feature_collection, 'message': message})
+        lakes = {
+                'featureCollection':lakes_feature_collection,
+                'dataInfo': lakes_data_info
+            }
+        return JsonResponse({'lakes': lakes, 'message': message})
+    
+
+def get_all_sieker_surface_waters(request):
+    """
+    Filter excludes lakes with missing data, therefore this
+    """
+    try:
+        project = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    user_field = models.UserField.objects.get(pk=project['userField'])
+
+    lakes_data_info = models.DataInfo.objects.get(data_type='sieker_surface_water').to_json()
+    lakes = models.SiekerLargeLake.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+
+    if lakes.count() == 0:
         
+        return JsonResponse({'message': {'success': False, 'message': 'Keine Seen im Suchgebiet entsprechen den Filterkriterien.'}})
+    else:
+        
+        lakes_feature_collection = create_feature_collection(lakes)
+        message = {
+            'success': True, 
+        }
+        lakes = {
+                'featureCollection':lakes_feature_collection,
+                'dataInfo': lakes_data_info
+            }
+        # print("{'lakes': lakes, 'message': message}", {'lakes': lakes, 'message': message})
+        return JsonResponse({'lakes': lakes, 'message': message})
+
+
+def get_sieker_surface_water_levels(request, id):  
+    sieker_station = models.SiekerWaterLevel.objects.get(id=id)
+    station = sieker_station.station
+
+    chart_data_qs = (
+        models.TimeseriesDailyWaterlevel.objects
+        .filter(station=station)
+        .order_by('date')
+        .values('date', 'level')
+    )
+
+    chart_data = [
+        {
+            "x": record["date"].isoformat(),    
+            "y": float(record["level"] or 0)
+        }
+        for record in chart_data_qs
+    ]
+    return JsonResponse({"chart_data": chart_data, "station_name": sieker_station.name})
+
+def get_all_above_ground_catchment_areas(request):
+    """
+    Get all above ground catchments in the area
+    """
+    try:
+        project = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    user_field = models.UserField.objects.get(pk=project['userField'])
+
+    catchment_info = models.DataInfo.objects.get(data_type='above_ground_catchment_area').to_json()
+    catchments = models.AboveGroundCatchmentArea.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+
+    if catchments.count() == 0:
+        
+        return JsonResponse({'message': {'success': False, 'message': 'Es sind keine Einzugsgebiete in Ihrem Suchgebiet in der Datenbank hinterlegt.'}})
+    else:
+        
+        catchment_feature_collection = create_feature_collection(catchments)
+        message = {
+            'success': True, 
+        }
+        catchments = {
+                'featureCollection':catchment_feature_collection,
+                'dataInfo': catchment_info
+            }
+        return JsonResponse({'catchments': catchments, 'message': message})
 
 ##### Sieker Sinks ######
    
 def load_sieker_sink_gui(request, user_field_id):
     if user_field_id == "null":
-        user_field_id = None
+        return JsonResponse({'message':{'success': False, 'message': 'Es ist kein Suchgebiet ausgewählt oder es existiert nicht.'}})
     else:
         user_field_id = int(user_field_id)
     toolbox_type = models.ToolboxType.objects.get(name_tag='sieker_sink')
     
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
-    
-    if user_field is None:
-        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
+
 
     qs = models.ToolboxProject.objects.filter(
         Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
         ).order_by('-creation_date').reverse()
-    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='sieker_sink')
     
     sinks = models.SiekerSink.objects.filter(
         centroid__within=user_field.geom
@@ -1079,14 +1140,52 @@ def load_sieker_sink_gui(request, user_field_id):
     if sinks.count() > 0:
         # streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
 
-        sieker_sink_filter = SiekerSinkFilter(request.GET, queryset=sinks)
+        sieker_sink_filter = filters.SiekerSinkFilter(
+            request.GET, 
+            queryset=sinks,
+            bounds=user_field.filter_bounds.get('sieker_sinks') if user_field.filter_bounds else None
+            )
+        
+        streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
+        lakes = models.Lake.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
+
+        lake_form = filters.LakeFilter(
+            request.GET,
+            queryset=lakes,
+            prefix='sieker_lake',
+            bounds=user_field.filter_bounds.get('lakes') if user_field.filter_bounds else None
+        )
+        stream_form = filters.StreamFilter(
+            request.GET,
+            queryset=streams,
+            prefix='sieker_stream',
+            bounds=user_field.filter_bounds.get('streams') if user_field.filter_bounds else None
+        )
+
+        result_form = forms.SiekerSinkDownloadForm()
+
+        default_project = filters.create_default_project(
+            user_field,
+            [
+                sieker_sink_filter, 
+                lake_form, 
+                stream_form,
+                result_form,
+                ],
+            'sieker_sink'
+        )
+        print(default_project)
 
         html = render_to_string('toolbox/sieker_sink.html', {
             'project_select_form': project_select_form,
             'sieker_sink_filter': sieker_sink_filter,
+            'lakes_form': lake_form,
+            'streams_form': stream_form,
+            'result_form': result_form,
+
         }, request=request) 
 
-        return JsonResponse({'success': True, 'html': html})
+        return JsonResponse({'success': True, 'html': html, 'default_project': default_project})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine Senken bekannt.'})
 
@@ -1104,7 +1203,7 @@ def filter_sieker_sinks(request):
     geom = GEOSGeometry(user_field.geom)
     
     sinks = models.SiekerSink.objects.filter(geom4326__within=geom)
-    print("Sinks before filtering:", sinks.count())
+
     filters = Q()
     filters = add_range_filter(filters, project, 'sieker_sink_area', 'area')
     filters = add_range_filter(filters, project, 'sieker_sink_volume', 'volume')
@@ -1114,42 +1213,128 @@ def filter_sieker_sinks(request):
     filters = add_range_filter(filters, project, 'sieker_sink_wetlands_percent', 'wetlands_percent')
     
     sinks = sinks.filter(filters)
-    print("Sinks FILTERED:", sinks.count())
 
     feasibility = project.get('sieker_sink_feasibility', [])
-    print('feasibility', feasibility)
 
     sinks = sinks.filter(Q(umsetzbark__in=feasibility))
-    print("Sieker Sinks feasibility FILTERED:", sinks.count())
+
     if sinks.count() == 0:
         message = {
             'success': False, 
-            'message': f'No sinks found in the search area.'
+            'message': 'Im Suchgebiet entsprechen keine Senken den Filterkriterien.'
         }
         return JsonResponse({'message': message})
     else:
-        print("Sinks", sinks.count())
         
-        data_info = models.DataInfo.objects.get(data_type='sieker_sink').to_dict()
+        data_info = models.DataInfo.objects.get(data_type='sieker_sink').to_json()
         feature_collection = create_point_feature_collection(sinks)
         message = {
             'success': True, 
-            'message': f'Found {sinks.count()} sinks'
+            'message': f'Es wurden {sinks.count()} Senken gefunden.'
         }
-        print('Time for filter_sinks:', datetime.now() - start)
         return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': message})
     
+
+def get_sieker_sink_result_list(sinks, lakes, streams, epsg=4326):
+    '''
+    this gets the results from a sieker sink project. 
+    '''
+
+    language='de'
+    # the items are ordered by id to ensure that the result ids will be identical if the project is reloaded
+
+    def rate_connection(connection_data, sink):
+        index_length = rate_water_sink_distance(connection_data['distance_m'])
+        index_volumes = min(connection_data['waterbody']['mean_surplus_volume'] / sink.volume, 1) *100
+        print('index_volume', index_volumes)
+
+        connection_data['connection_feature']['properties']['index_length'] = int(index_length)
+        connection_data['index_length'] = round(index_length)
+        connection_data['connection_feature']['properties']['index_volumes'] = round(index_volumes)
+        connection_data['index_volumes'] = round(index_volumes)
+        connection_data['umsetzbark'] = sink.umsetzbark
+
+        return connection_data
+
+    results = []
+    line_features = []
+
+    for i, sink in enumerate(sinks):
+        connection_data = get_shortest_connection(sink, lakes, streams, epsg=epsg, connection_id=i)
+        connection_data.update({'sink': sink.to_json()})
+        connection_data = rate_connection(connection_data, sink)
+        line_feature = connection_data['connection_feature']
+        connection_data.pop('connection_feature')
+        results.append(connection_data)
+        line_features.append(line_feature)
    
+
+    sink_feature_collection = create_feature_collection(sinks)
+    result_dict= {
+        'sink_feature_collection': sink_feature_collection,
+        'inlet_feature_collection': {
+            "type": "FeatureCollection",
+            "features": line_features,
+            "crs": {
+                "type": "name",
+                "properties": {"name": "EPSG:4326"}
+            }
+        },
+        'results': results,
+    }
+    with open('sieker_sink_result_dict.json', 'w') as f:
+        json.dump(result_dict, f)
+
+    return result_dict
+
+def get_sieker_sink_results(request):
+    # POST request
+    if request.method != "POST":
+        return HttpResponseBadRequest("POST required")
+    try:
+        project = request.body
+        print('Project:', type(project))
+        project = json.loads(project)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid project JSON'}, status=400)
+    sinks = models.SiekerSink.objects.filter(id__in=project.get(f'selected_sieker_sinks', []))
+    lakes = models.Lake.objects.filter(id__in=project.get(f'selected_sieker_lakes', []))
+    streams = models.Stream.objects.filter(id__in=project.get(f'selected_sieker_streams', []))
+
+    results_dict = get_sieker_sink_result_list(sinks, lakes, streams, epsg=4326)
+    result_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result').to_json()
+    inlet_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_inlet').to_json()
+    sink_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_sink').to_json()
+    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_json()
+    lake_data_info['dataType'] = 'sieker_lake'
+
+    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_json()
+    stream_data_info['dataType'] = 'sieker_stream'
+
+    response = {
+        'inlet_data_info': inlet_data_info,
+        'sink_data_info': sink_data_info,
+        'result_data_info': result_data_info,
+        'lake_data_info': lake_data_info,
+        'stream_data_info': stream_data_info,
+        'results': results_dict['results'],
+        'inlet_feature_collection': results_dict.get('inlet_feature_collection', None),
+        'sink_feature_collection' : results_dict.get('sink_feature_collection', None),
+    
+        'message': {
+            'success': True,
+        }
+    }
+    return JsonResponse(response)
+
+##### Sieker Gewässerentwicklungskonzepte ######
 def load_sieker_gek_gui(request, user_field_id):
     if user_field_id == "null":
-        user_field_id = None
+         return JsonResponse({'message':{'success': False, 'message': 'Es ist kein Suchgebiet ausgewählt oder es existiert nicht.'}})
     else:
         user_field_id = int(user_field_id)
     
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
-    if user_field is None:
-        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
-
 
     geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
     # all_sieker_gek_ids = [g.id for g in geks]
@@ -1160,28 +1345,79 @@ def load_sieker_gek_gui(request, user_field_id):
         qs = models.ToolboxProject.objects.filter(
             Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
             ).order_by('-creation_date').reverse()
-        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='sieker_gek')
 
         feature_collection = create_feature_collection(geks)
 
-        gek_filter_form = GekRetentionFilter(request.GET, queryset=geks)
+        gek_filter_form = filters.GekRetentionFilter(
+            request.GET, 
+            queryset=geks,
+            bounds=user_field.filter_bounds.get('sieker_geks') if user_field.filter_bounds else None
+            )
         slider_labels = dict(models.GekPriority.objects.values_list("priority_level", "description_de").distinct().order_by("priority_level"))
 
         # streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
 
         # sieker_geks_filter = SiekerGekFilter(request.GET, queryset=geks)
 
+        result_form = forms.SiekerGekDownloadForm()
+        default_project = filters.create_default_project(
+            user_field,
+            [
+                gek_filter_form,
+                result_form,
+                ],
+            'sieker_gek'
+        )
+        default_project['all_sieker_gek_ids'] = list(geks.values_list('id', flat=True))
+        default_project['selected_sieker_geks'] = default_project['all_sieker_gek_ids']
+
         html = render_to_string('toolbox/sieker_gek.html', {
             'project_select_form': project_select_form,
-            'gek_filter_form': gek_filter_form  ,
+            'gek_filter_form': gek_filter_form ,
+            'result_form': result_form,
         }, request=request) 
-        data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
+        data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_json()
 
-        return JsonResponse({'success': True, 'html': html, 'featureCollection': feature_collection, 'slider_labels': slider_labels, 'dataInfo': data_info})
+        return JsonResponse({'success': True, 'html': html, 'featureCollection': feature_collection, 'slider_labels': slider_labels, 'dataInfo': data_info, 'default_project': default_project})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine Gewässerentwicklungskonzepte verfügbar.'})
 
 
+
+def get_all_sieker_geks(request):
+    try:
+        project = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    
+    user_field = models.UserField.objects.get(pk=project['userField'])
+    geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
+    if geks.count() == 0:
+        return JsonResponse({'message': {'success': False, 'message': 'Im Suchgebiet sind keine Gewässerentwicklungskonzepte bekannt.'}})
+    
+    feature_collection = create_feature_collection(geks)
+    data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_json()
+
+    return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': {'success': True}})
+
+def get_geks_and_measures(project):
+    ids = project.get('selected_sieker_geks')
+    geks = models.GekRetention.objects.filter(pk__in=ids)
+    landuses = models.GekLanduse.objects.filter(Q(gek_retention__in=geks) & Q(clc_landuse__id__in=project['gek_landuse']))
+    geks = models.GekRetention.objects.filter(landuses__in=landuses).distinct()
+    print("Geks:", geks.count())
+
+    # filter measures
+    filters = Q(priority_value__gte=project['gek_priority'])
+    filters = add_range_filter(filters, project, 'gek_costs', 'costs') 
+
+    measures = models.GekRetentionMeasure.objects.filter(
+            gek_retention__in=geks
+        ).filter(filters)
+    
+    geks = models.GekRetention.objects.filter(measures__in=measures).distinct()
+    return geks, measures
 
 # TODO: turn into filter gek
 def filter_sieker_geks(request):
@@ -1191,31 +1427,10 @@ def filter_sieker_geks(request):
         project = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-    user_field = models.UserField.objects.get(pk=project['userField'])
-    print('FROM filter_sieker_geks project', project)
-    
-    # geks = models.GekRetention.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
     # filter landuses
-    ids = project.get('selected_sieker_geks')
-    geks = models.GekRetention.objects.filter(pk__in=ids)
-    landuses = models.GekLanduse.objects.filter(Q(gek_retention__in=geks) & Q(clc_landuse__id__in=project['gek_landuse']))
-    geks = models.GekRetention.objects.filter(landuses__in=landuses).distinct()
-    print("Geks:", geks.count())
-
-    # filter measures
-    filters = Q(priority__priority_level__gte=project['gek_priority'])
-    filters = add_range_filter(filters, project, 'gek_costs', 'costs') 
-
-    measures = models.GekRetentionMeasure.objects.filter(
-            gek_retention__in=geks
-        ).filter(filters)
+    print('Project', project)
     
-    geks = models.GekRetention.objects.filter(measures__in=measures).distinct()
-
-
-    print("Geks FILTERED:", geks.count())
-
+    geks, measures = get_geks_and_measures(project)
 
     if geks.count() == 0:
         message = {
@@ -1227,19 +1442,25 @@ def filter_sieker_geks(request):
         print("Geks", geks.count())
         
         feature_collection = create_feature_collection(geks)
-        data_info = models.DataInfo.objects.get(data_type='sieker_gek').to_dict()
-        data_info['featureColor'] = 'var(--bs-success)'
 
         dict_list = []
         for gek in geks:
-            d = gek.to_dict()
-            d['measures'] = [m.to_dict() for m in measures if m.gek_retention == gek]
+            d = gek.to_json()
+            d['measures'] = [m.to_json() for m in measures if m.gek_retention == gek]
             dict_list.append(d)
-            
-        print('measures: ', dict_list)
 
-        data_info = models.DataInfo.objects.get(data_type='filtered_sieker_gek').to_dict()
+        features = []
+        for gek in geks:
+            feature = gek.to_feature()
+            feature['properties']['measures'] = [m.to_json() for m in measures if m.gek_retention == gek]
+            features.append(feature)
+
+        print('measures: ', dict_list)
+        feature_collection['features'] = features
+
+        data_info = models.DataInfo.objects.get(data_type='filtered_sieker_gek').to_json()
         print('Time for filter_sinks:', datetime.now() - start)
+        
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info, 'measures': dict_list})
 
 
@@ -1248,18 +1469,16 @@ def filter_sieker_geks(request):
    
 def load_sieker_wetland_gui(request, user_field_id):
     if user_field_id == "null":
-        user_field_id = None
+         return JsonResponse({'message':{'success': False, 'message': 'Es ist kein Suchgebiet ausgewählt oder es existiert nicht..'}})
     else:
         user_field_id = int(user_field_id)
 
     user = request.user
-    toolbox_type = models.ToolboxType.objects.get(name_tag='sieker_wetland')
+    toolbox_type = models.ToolboxType.objects.get(name_tag='wetland')
     user_field = models.UserField.objects.get(Q(id=int(user_field_id))&Q(user=user))
     
     
     user_field = models.UserField.objects.get(Q(id=user_field_id)&Q(user=request.user))
-    if user_field is None:
-        return JsonResponse({'message':{'success': False, 'message': 'User field not found or selected.'}})
     
     wetlands = models.HistoricalWetlands.objects.filter(Q(geom4326__intersects=user_field.geom) | Q(geom4326__within=user_field.geom))
 
@@ -1267,20 +1486,52 @@ def load_sieker_wetland_gui(request, user_field_id):
         qs = models.ToolboxProject.objects.filter(
                 Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
             ).order_by('-creation_date').reverse()
-        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='wetland')
         
         feature_collection = create_feature_collection(wetlands)
-        filter_form = HistoricalWetlandsFilter()
+        filter_form = filters.HistoricalWetlandsFilter()
         slider_labels =  dict(models.WetlandFeasibility.objects.values_list('id', 'name_de').order_by('id'))
+        streams = models.Stream.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
+        lakes = models.Lake.objects.filter(Q(geom__intersects=user_field.geom) | Q(geom__within=user_field.geom))
+
+        lake_form = filters.LakeFilter(
+            request.GET,
+            queryset=lakes,
+            prefix='wetland_lake',
+            bounds=user_field.filter_bounds.get('lakes') if user_field.filter_bounds else None
+        )
+        stream_form = filters.StreamFilter(
+            request.GET,
+            queryset=streams,
+            prefix='wetland_stream',
+            bounds=user_field.filter_bounds.get('streams') if user_field.filter_bounds else None
+        )
+        # TODO This does not really make sense - more filters?
+        result_form = forms.SiekerWetlandDownloadForm()
+
+        default_project = filters.create_default_project(
+            user_field,
+            [
+                filter_form,
+                lake_form,
+                stream_form,
+                result_form,
+                ],
+            'wetland'
+        )
+        default_project['selected_wetlands'] = list(wetlands.values_list('id', flat=True))
 
         html = render_to_string('toolbox/sieker_wetlands.html', {
             'project_select_form': project_select_form,
             'wetlands_filter': filter_form,
+            'lakes_form': lake_form,
+            'streams_form': stream_form,
+            'result_form': result_form,
             
         }, request=request) 
-        data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
+        data_info = models.DataInfo.objects.get(data_type='wetland').to_json()
 
-        return JsonResponse({'success': True, 'html': html, 'featureCollection': feature_collection,  'dataInfo': data_info, 'slider_labels': slider_labels})
+        return JsonResponse({'success': True, 'html': html, 'featureCollection': feature_collection,  'dataInfo': data_info, 'slider_labels': slider_labels, 'default_project': default_project})
     else:
         return JsonResponse({'success': False, 'message': 'Im Suchgebiet sind keine historischen Feuchtgebiete bekannt.'})
 
@@ -1296,14 +1547,14 @@ def filter_sieker_wetlands(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     user_field = models.UserField.objects.get(pk=project['userField'])
-    print('FROM filter_sieker_wetlands project', project)
+    print('FROM filter_wetlands project', project)
     
     # filter landuses
-    ids = project.get('selected_sieker_wetlands')
+    ids = project.get('selected_wetlands')
     wetlands = models.HistoricalWetlands.objects.filter(pk__in=ids)
 
     # filter measures
-    filters = Q(priority__priority_level__gte=project['wetland_priority'])
+    filters = Q(priority__priority_level__gte=project['feasibility'])
     filters = add_range_filter(filters, project, 'wetland_costs', 'costs') 
     print("Weltlands FILTERED:", wetlands.count())
 
@@ -1318,16 +1569,108 @@ def filter_sieker_wetlands(request):
         print("wetlands", wetlands.count())
         
         feature_collection = create_feature_collection(wetlands)
-        data_info = models.DataInfo.objects.get(data_type='sieker_wetland').to_dict()
-        data_info['featureColor'] = 'var(--bs-success)'
-        data_info['dataType'] = 'filtered_sieker_wetland'
-
-   
-
-        data_info = models.DataInfo.objects.get(data_type='filtered_sieker_wetland').to_dict()
-        print('Time for filter_sinks:', datetime.now() - start)
+        data_info = models.DataInfo.objects.get(data_type='wetland').to_json()
+ 
         return JsonResponse({'featureCollection': feature_collection, 'message' : {'success': True}, 'dataInfo': data_info})
 
+
+
+def get_sieker_wetland_result_list(wetlands, lakes, streams, epsg=4326):
+    '''
+    this gets the results from a sieker wetland project. 
+    '''
+
+    language='de'
+    # the items are ordered by id to ensure that the result ids will be identical if the project is reloaded
+
+    def rate_connection(connection_data, wetland):
+        index_length = rate_water_sink_distance(connection_data['distance_m'])
+        # index_volumes = min(connection_data['waterbody']['mean_surplus_volume'] / wetland.volume, 1) *100
+        # print('index_volume', index_volumes)
+
+        connection_data['connection_feature']['properties']['index_length'] = int(index_length)
+        connection_data['index_length'] = round(index_length)
+        # connection_data['connection_feature']['properties']['index_volumes'] = round(index_volumes)
+        # connection_data['index_volumes'] = round(index_volumes)
+        connection_data['feasibility'] = wetland.feasibility.name_de if language == 'de' else wetland.feasibility.name_en
+
+        return connection_data
+
+    results = []
+    line_features = []
+
+    for i, wetland in enumerate(wetlands):
+        connection_data = get_shortest_connection(wetland, lakes, streams, epsg=epsg, connection_id=i)
+        connection_data.update({'sink': wetland.to_json()})
+        connection_data = rate_connection(connection_data, wetland)
+        line_feature = connection_data['connection_feature']
+        connection_data.pop('connection_feature')
+        results.append(connection_data)
+        line_features.append(line_feature)
+   
+
+    wetland_feature_collection = create_feature_collection(wetlands)
+    result_dict= {
+        'sink_feature_collection': wetland_feature_collection,
+        'inlet_feature_collection': {
+            "type": "FeatureCollection",
+            "features": line_features,
+            "crs": {
+                "type": "name",
+                "properties": {"name": "EPSG:4326"}
+            }
+        },
+        'results': results,
+    }
+    with open('sieker_wetland_result_dict.json', 'w') as f:
+        json.dump(result_dict, f)
+
+    return result_dict
+
+
+def get_sieker_wetland_results(request):
+    # POST request
+    if request.method != "POST":
+        return HttpResponseBadRequest("POST required")
+    try:
+        project = request.body
+        print('Project:', type(project))
+        project = json.loads(project)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid project JSON'}, status=400)
+
+    wetlands = models.HistoricalWetlands.objects.filter(id__in=project.get(f'selected_wetlands', []))
+    lakes = models.Lake.objects.filter(id__in=project.get(f'selected_wetland_lakes', []))
+    streams = models.Stream.objects.filter(id__in=project.get(f'selected_wetland_streams', []))
+
+    results_dict = get_sieker_wetland_result_list(wetlands, lakes, streams, epsg=4326)
+    result_data_info = models.DataInfo.objects.get(data_type='wetland_result').to_json()
+    inlet_data_info = models.DataInfo.objects.get(data_type='sieker_sink_result_inlet').to_json()
+    inlet_data_info['dataType'] = 'wetland_result_inlet'
+    wetland_data_info = models.DataInfo.objects.get(data_type='wetland').to_json()
+    wetland_data_info['dataType'] = 'wetland_result_wetland'
+    lake_data_info = models.DataInfo.objects.get(data_type='lake').to_json()
+    lake_data_info['dataType'] = 'wetland_lake'
+
+    stream_data_info = models.DataInfo.objects.get(data_type='stream').to_json()
+    stream_data_info['dataType'] = 'wetland_stream'
+
+    response = {
+        'inlet_data_info': inlet_data_info, #inletDataInfo
+        'wetland_data_info': wetland_data_info, # sinkDataInfo.sink
+        'result_data_info': result_data_info, # in js dataInfo
+        'lake_data_info': lake_data_info, # waterbodyDataInfo.lake
+        'stream_data_info': stream_data_info, # waterbodyDataInfo.stream
+        'results': results_dict['results'], # inlets
+        'inlet_feature_collection': results_dict.get('inlet_feature_collection', None),
+        'sink_feature_collection' : results_dict.get('sink_feature_collection', None),
+    
+        'message': {
+            'success': True,
+        }
+    }
+    return JsonResponse(response)
+    
 
 def load_injection_gui(request):
     user = request.user
@@ -1337,7 +1680,7 @@ def load_injection_gui(request):
             Q(user=user)&Q(toolbox_type=toolbox_type)
         ).order_by('-creation_date').reverse()
     
-    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
+    project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='injection')
     injection_weightings_form = forms.MarWeightingForm()
     suitability_aquifer_thickness = forms.SuitabilityForm('aquifer_thickness')
     suitability_depth_groundwater_form = forms.SuitabilityForm('depth_groundwater')
@@ -1349,6 +1692,7 @@ def load_injection_gui(request):
     slider_labels = dict(models.MarSliderDescription.objects.values_list('id', 'name_de').order_by('id'))
     slider_labels_suitability = dict(models.MarSuitabilitySliderDescription.objects.values_list('id', 'name_de').order_by('id'))
 
+    result_form = forms.InjectionDownloadForm()
 
     html = render_to_string('toolbox/injection.html', {
         # 'sink_form': sink_form, 
@@ -1362,10 +1706,25 @@ def load_injection_gui(request):
         'suitability_distance_to_source_form': suitability_distance_to_source_form,
         'suitability_distance_to_well_form': suitability_distance_to_well_form,
         'suitability_hydraulic_conductivity': suitability_hydraulic_conductivity,
+        'result_form': result_form,
 
     }, request=request) 
+    default_project = filters.create_default_project(
+        None, 
+        [
+            injection_weightings_form, 
+            suitability_aquifer_thickness, 
+            suitability_depth_groundwater_form, 
+            suitability_land_use_form, 
+            suitability_distance_to_source_form, 
+            suitability_distance_to_well_form, 
+            suitability_hydraulic_conductivity,
+            result_form,
+        ],
+        'injection'
+        )
 
-    return JsonResponse({'success': True, 'html': html, 'slider_labels': slider_labels, 'slider_labels_suitability': slider_labels_suitability})
+    return JsonResponse({'success': True, 'html': html, 'slider_labels': slider_labels, 'slider_labels_suitability': slider_labels_suitability, 'default_project': default_project})
 
 def delete_geoserver_layer(workspace, layer_name):
     """
@@ -1380,104 +1739,65 @@ def delete_geoserver_layer(workspace, layer_name):
         )
 
         if r.status_code in (200, 202, 204):
-            print(f"✅ Cache for {workspace}:{layer_name} cleared successfully")
+            print(f"Cache for {workspace}:{layer_name} cleared successfully")
         elif r.status_code == 404:
-            print(f"⚠️ Failed to clear cache: {r.status_code} - {r.text}")
+            print(f"Failed to clear cache: {r.status_code} - {r.text}")
             r.raise_for_status()
         else:
-            print(f"⚠️ Failed to clear cache: {r.status_code} - {r.text}")
+            print(f"Failed to clear cache: {r.status_code} - {r.text}")
             r.raise_for_status()
     except:
         pass
 
-def publish_raster_on_geoserver(layer_name, workspace='spreewassern_raster', style_name="style_raster_percent"):
+
+def publish_raster_on_geoserver(layer_name, workspace='spreewassern_raster', style_name="style_raster_percent_sieker_2"):
     """
     Publishes a GeoTIFF to GeoServer as a coverage store and attaches an existing style.
     """
 
-    delete_geoserver_layer(workspace, layer_name)
-
-    
-    url = f"{settings.GEOSERVER_URL}/rest/workspaces/{workspace}/coveragestores/{layer_name}/file.geotiff"
-    with open(f"/app/raster_data/{layer_name}.tif", "rb") as f:
-        r = requests.put(
-            url,
-            auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS),
-            headers={"Content-type": "image/tiff"},
-            params={"configure": "all", "coverageName": layer_name},
-            data=f
-        )
-    r.raise_for_status()
-    print(f"Raster {layer_name} uploaded successfully")
-
-    # Apply style
-    layer_url = f"{settings.GEOSERVER_URL}/rest/layers/{workspace}:{layer_name}"
-    style_xml = f"""
-    <layer>
-        <defaultStyle>
-            <name>{style_name}</name>
-        </defaultStyle>
-    </layer>
-    """
-    r = requests.put(
-        layer_url,
-        auth=HTTPBasicAuth(settings.GEOSERVER_USER, settings.GEOSERVER_PASS),
-        headers={"Content-type": "application/xml"},
-        data=style_xml
+    geo = Geoserver(
+        settings.GEOSERVER_URL,
+        username=settings.GEOSERVER_USER,
+        password=settings.GEOSERVER_PASS
     )
-    r.raise_for_status()
-    print(f"Style '{style_name}' applied to layer '{layer_name}'")
+
+    geo.create_coveragestore(layer_name=layer_name, path=f'/app/raster_data/{layer_name}.tif', workspace=workspace)
+    geo.publish_style(layer_name=layer_name, style_name=style_name, workspace=workspace)
 
 
-# requirements: rasterio, numpy, shapely (optional), pyproj
-# pip install rasterio numpy shapely
 
 def compute_suitability_from_tifs(suitability_dict, user):
-    import os
-    
-        # We'll prepare a destination array for each raster, stacked into 3D array
-    
-        # out_masked, out_transform = mask(ref, [user_field.geom25833.geojson], crop=False, invert=False, indexes=1, nodata=np.nan, filled=False)
+    FLOAT32_NODATA = np.float32(-3.4028235e+38)
 
-    with rasterio.open('raster_data/no_injection_area_mask.tif') as mask:
+    with rasterio.open('raster_data/no_injection_area_mask_v2.tif') as mask:
         nogo_mask = mask.read(1)
-        dst_crs = mask.crs
-        dst_transform = mask.transform
-        dst_width = mask.width
-        dst_height = mask.height
-        dst_profile = mask.profile.copy()
+        mask_nodata = mask.nodata
+        mask_width = mask.width
+        mask_height = mask.height
+        mask_profile = mask.profile.copy()
 
-    dst_profile['nodata'] = np.nan
+    nogo_mask = np.where(nogo_mask == mask_nodata, np.nan, nogo_mask)
 
-    length_stack = len(suitability_dict) + 1
-    stack = np.zeros((length_stack, dst_height, dst_width), dtype=np.float32)
-    weighted_stack = np.zeros((2, dst_height, dst_width), dtype=np.float32)
-
-    stack[0] = nogo_mask
-    weighted_stack[0] = nogo_mask
+    length_stack = len(suitability_dict)
+    stack = np.zeros((length_stack, mask_height, mask_width), dtype=np.float32)
+    weighted_stack = np.zeros((mask_height, mask_width), dtype=np.float32)
 
 
-    mask_arr = None  # to store mask for polygon later
     layer_weight_sum = 0
     for key in suitability_dict:
         layer_weight_sum += suitability_dict[key]['weight']
         
-    i = 1
+    i = 0
     for key in suitability_dict:
         
         path = suitability_dict[key]['map_path']
         
         # try:
         with rasterio.open(path) as src:
-            dst_arr = src.read(1)
-        
+            dst_arr = src.read(1)  
             dst_nodata = src.nodata
-        new_arr = dst_arr.copy()
-        new_arr = np.where(
-            new_arr==dst_nodata,
-            np.nan,
-            new_arr
-            )
+        new_arr = np.where(dst_arr == dst_nodata, np.nan, dst_arr).astype(np.float32)
+
         for k in suitability_dict[key]['mapping']:
             new_arr = np.where(
                 new_arr==float(suitability_dict[key]['mapping'][k]['map_value']),
@@ -1485,29 +1805,30 @@ def compute_suitability_from_tifs(suitability_dict, user):
                 new_arr
                 )
         stack[i] = new_arr
-        weighted_stack[1] = weighted_stack[1] + (new_arr * suitability_dict[key]['weight'] / layer_weight_sum)
+        weighted_stack = weighted_stack + (new_arr * suitability_dict[key]['weight'] / layer_weight_sum)
         
         i +=1
-        # except:
-        #     print(path)
-    result_2d = np.prod(weighted_stack, axis=0) * 100
 
-    with rasterio.open(f'raster_data/{user.id}_mar_result.tif', 'w', **dst_profile) as f:
+    result_2d = weighted_stack * 100
+    result_2d = np.where(nogo_mask == 0, 0, result_2d)
+    result_2d = np.where(np.isnan(result_2d), np.nan, np.clip(result_2d, 0, 100))
+    result_2d_to_write = np.where(np.isnan(result_2d), FLOAT32_NODATA, result_2d).astype(np.float32)
 
-        f.write(result_2d.astype(np.float32),1)
+    with rasterio.open(f'raster_data/{user.id}_mar_result.tif', 'w', **mask_profile) as f:
+
+        f.write(result_2d_to_write.astype(np.float32),1)
 
     i = 0
     for key in suitability_dict:
-        i += 1
+        stack_to_write = np.where(np.isnan(stack[i]), FLOAT32_NODATA, stack[i]).astype(np.float32)
         print(i)
-        with rasterio.open(f'raster_data/{user.id}_weighted_stack_{key}.tif', 'w', **dst_profile) as f:
+        with rasterio.open(f'raster_data/{user.id}_weighted_stack_{key}.tif', 'w', **mask_profile) as f:
 
-            f.write(stack[i].astype(np.float32),1)
+            f.write(stack_to_write.astype(np.float32),1)
+        i += 1
     
     publish_raster_on_geoserver(f"{user.id}_mar_result")
 
-
-    return stack, weighted_stack, result_2d
 
 
         
@@ -1516,8 +1837,6 @@ def mar_calculate_area(request):
     if request.method == 'POST':
         project = json.loads(request.body)
         print('Project:', project)
-        # user_field = models.UserField.objects.get(pk=project['userField'])
-        
 
         map_labels = models.MapLabels.objects.all()
         suitability_dict = {}
@@ -1535,8 +1854,8 @@ def mar_calculate_area(request):
                 'default_score': default_score/5,
                 'score': int(project.get(f'{suitability}_{name}', default_score))/5,
                 }
-        print('suitability dict:', suitability_dict)
-        tif = compute_suitability_from_tifs(suitability_dict, user)
+
+        compute_suitability_from_tifs(suitability_dict, user)
 
 
         return JsonResponse({'success': True})
@@ -1550,7 +1869,7 @@ ALLOWED_WMS_PARAMS = {
     "version",
     "layers",
     "layer",
-    "styles",
+    # "styles",
     "bbox",
     "width",
     "height",
@@ -1566,12 +1885,9 @@ def geoserver_wms(request):
     geoserver_url = f"{settings.GEOSERVER_URL}/spreewassern_raster/wms"
 
     params = request.GET.dict()
-    print("Received WMS request with params:", params)
-    # Keep only allowed WMS params
-    
 
+    # Keep only allowed WMS params
     wms_params = {k: v for k, v in params.items() if k.lower() in ALLOWED_WMS_PARAMS}
-    print("Forwarding params to GeoServer:", wms_params)
 
     response = requests.get(
         geoserver_url,
@@ -1584,21 +1900,744 @@ def geoserver_wms(request):
     )
 
 
+COLORMAP_RED_GREEN = [
+    (0, "#d7191c"),
+    (25, "#fdae61"),
+    (50, "#ffffc0"),
+    (75, "#a6d96a"),
+    (100, "#1a9641")
+]
+
+COLORMAP_BLUE_BROWN = [
+    (0, "#2b83ba"),    # watery blue
+    (25, "#abd9e9"),   # light blue / wet
+    (50, "#ffffbf"),   # beige / neutral
+    (75, "#fdae61"),   # light brown / drier
+    (100, "#8c510a")   # dark brown / very dry
+]
+
+def hex_to_rgb(hex_color):
+    hex_color = hex_color.lstrip("#")
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def rgb_to_hex(rgb):
+    return "#{:02x}{:02x}{:02x}".format(*rgb)
+
+def interpolate_color(val, colormap):
+    # Find the two surrounding entries
+    for i in range(len(colormap) - 1):
+        q1, c1 = colormap[i]
+        q2, c2 = colormap[i + 1]
+        if q1 <= val <= q2:
+            ratio = (val - q1) / (q2 - q1)
+            r1, g1, b1 = hex_to_rgb(c1)
+            r2, g2, b2 = hex_to_rgb(c2)
+            r = int(r1 + (r2 - r1) * ratio)
+            g = int(g1 + (g2 - g1) * ratio)
+            b = int(b1 + (b2 - b1) * ratio)
+            return rgb_to_hex((r, g, b))
+    # If outside range, clamp
+    if val < colormap[0][0]:
+        return colormap[0][1]
+    return colormap[-1][1]
+
+def geoserver_wms_sld(request):
+    geoserver_url = f"{settings.GEOSERVER_URL}/spreewassern_raster/wms"
+    params = request.GET.dict()
+    threshold = float(params.get("threshold", 0))
+
+
+    entries = []
+
+    # Interpolated color at threshold
+    threshold_color = interpolate_color(threshold, COLORMAP_BLUE_BROWN)
+
+    for q, color in COLORMAP_BLUE_BROWN:
+        if q < threshold:
+            entries.append(f'<ColorMapEntry color="{color}" quantity="{q}" opacity="0.0"/>')
+    
+    entries.append(f'<ColorMapEntry color="{threshold_color}" quantity="{threshold - 0.01}" opacity="0.0"/>')
+    entries.append(f'<ColorMapEntry color="{threshold_color}" quantity="{threshold}" opacity="1.0"/>')
+
+    for q, color in COLORMAP_BLUE_BROWN:
+        if q > threshold:
+            entries.append(f'<ColorMapEntry color="{color}" quantity="{q}" opacity="1.0"/>')
+
+
+    colormap_xml = "\n".join(entries)
+
+    sld = f"""
+    <?xml version="1.0" encoding="UTF-8"?>
+    <StyledLayerDescriptor 
+        version="1.0.0"
+        xmlns="http://www.opengis.net/sld"
+        xmlns:sld="http://www.opengis.net/sld"
+        xmlns:ogc="http://www.opengis.net/ogc"
+        xmlns:gml="http://www.opengis.net/gml">
+
+    <NamedLayer>
+        <Name>spreewassern_raster:Entwaesserungswahrscheinlichkeit_9Parameter_v2</Name>
+        <UserStyle>
+        <Name>threshold_style</Name>
+
+        <FeatureTypeStyle>
+            <Rule>
+            <RasterSymbolizer>
+                <sld:ChannelSelection>
+                    <sld:GrayChannel>
+                        <sld:SourceChannelName>1</sld:SourceChannelName>
+                    </sld:GrayChannel>
+                </sld:ChannelSelection>
+                <!-- ORIGINAL COLORMAP -->
+                <ColorMap type="ramp">
+                {colormap_xml}
+                </ColorMap>
+
+            </RasterSymbolizer>
+            </Rule>
+        </FeatureTypeStyle>
+
+        </UserStyle>
+    </NamedLayer>
+    </StyledLayerDescriptor>
+
+    """
+    # keep only allowed params
+    wms_params = {k: v for k, v in params.items() if k.lower() in ALLOWED_WMS_PARAMS}
+    wms_params['SLD_BODY'] = sld
+    response = requests.get(
+        geoserver_url,
+        params=wms_params,
+    )
+
+    return HttpResponse(
+        response.content,
+        content_type=response.headers.get("Content-Type")
+    )
+
+
 def load_sieker_drainage_gui(request, user_field_id):
+    print('arrived in views')
     user = request.user
     if request.method == 'GET':
-        toolbox_type = models.ToolboxType.objects.get(name_tag='sieker_drainage')
+        toolbox_type = models.ToolboxType.objects.get(name_tag='drainage')
         user_field = models.UserField.objects.get(Q(id=int(user_field_id))&Q(user=user))
         qs = models.ToolboxProject.objects.filter(
             Q(user_field=user_field)&Q(toolbox_type=toolbox_type)
         ).order_by('-creation_date').reverse()
-        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs)
-        drainage_filter_form = forms.SiekerDrainageFilterForm()
+        project_select_form = forms.ToolboxProjectSelectionForm(qs=qs, data_type='drainage')
+        drainage_probabiliy_filter_form = forms.DrainageProbabilityFilterForm()
 
+        # TODO check all objects.all()
+        drained_areas = models.DrainedArea.objects.filter(geom4326__within=user_field.geom)
+        drained_area_filter_form = filters.DrainedAreaFilter(queryset=drained_areas)
+
+        
+        drainage_network = models.DrainageNetwork.objects.filter(geom4326__within=user_field.geom)
+        print('drainageNetwork COUNT', drainage_network.count())
+
+        details = models.DrainageNetworkTypeDetail.objects.filter(drainagenetwork__in=drainage_network).distinct()
+        drainage_network_filter_form = filters.DrainageNetworkFilter(queryset=details)
+
+        detail_types = models.DrainageNetworkType.objects.filter(details__in=details).distinct()
+        print('details COUNT', details.count(), detail_types)
+
+           
+        drainage_network_labels = { d.name_tag: d.name_de for d in detail_types }
+        details_exist = detail_types.count() > 0
+
+        
+        labels_colors_details = models.DataInfo.objects.filter(data_type__in=details.values('name_tag'))
+        labels_colors_areas = models.DataInfo.objects.filter(data_type__in=models.DrainedAreaType.objects.all().values('name_tag'))
+        colors = {di.data_type: di.feature_color for di in labels_colors_details}
+        colors.update({di.data_type: di.feature_color for di in labels_colors_areas})
+
+        result_form = forms.SiekerDrainageDownloadForm()
+        default_project = filters.create_default_project(
+        user_field, 
+        [
+            drainage_probabiliy_filter_form, 
+            drained_area_filter_form, 
+            drainage_network_filter_form, 
+            result_form,
+
+        ],
+        'drainage'
+        )
+        print(default_project)
+        
         html = render_to_string('toolbox/sieker_drainage.html', {
             'project_select_form': project_select_form,
-            'drainage_filter_form': drainage_filter_form,
+            'drainage_probabiliy_filter_form': drainage_probabiliy_filter_form,
+            'drained_area_filter_form': drained_area_filter_form,
+            'drainage_network_filter_form': drainage_network_filter_form,
+            'labels': drainage_network_labels,
+            'details_exist': details_exist,
+            'result_form': result_form,
+            
         }, request=request)
-
-        return JsonResponse({'success': True, 'html': html})
+        
+        return JsonResponse({
+            'success': True, 
+            'html': html, 
+            'colors': colors,
+            'default_project': default_project,
+            
+            
+            })
        
+
+def get_drainage_raster_legend(request):
+    data_info = models.DataInfo.objects.get(data_type='drainage_probability').to_json()
+    
+    return JsonResponse({'legendSettings': data_info['legendSettings']})
+
+
+def load_sieker_drainage_features(request, user_field_id):
+    print('load_sieker_drainage_features')
+    user = request.user
+    if request.method == 'GET':
+        user_field = models.UserField.objects.get(Q(id=int(user_field_id))&Q(user=user))
+
+        drained_areas = models.DrainedArea.objects.filter(geom4326__within=user_field.geom)
+    
+        drained_area_type_ids = list(drained_areas.values_list('drained_area_type__id', flat=True).distinct())
+        drained_area_types = models.DrainedAreaType.objects.filter(pk__in=drained_area_type_ids)
+        drainage_type_feature_collections = []
+        for dt in drained_area_types:          
+            drainage_type_feature_collections.append({
+                'drainedAreaTypeId': dt.id,
+                'dataInfo': models.DataInfo.objects.get(data_type=dt.name_tag).to_json(),
+                'featureCollection': create_feature_collection(drained_areas.filter(drained_area_type__id=dt.id)),
+                })
+
+
+        drainage_network = models.DrainageNetwork.objects.filter(geom4326__within=user_field.geom)
+        detail_ids = drainage_network.values_list('network_type_detail__id', flat=True).distinct()
+        details = models.DrainageNetworkTypeDetail.objects.filter(pk__in=detail_ids)
+
+        network_type_detail_feature_collections = []
+        for detail in details:     
+            network_type_detail_feature_collections.append({
+                'drainageNetworkTypeId': detail.network_type.id,
+                'drainageNetworkTye': detail.network_type.name_tag,
+                'drainageNetworkTypeDetailId': detail.id,
+                'dataInfo': models.DataInfo.objects.get(data_type=detail.name_tag).to_json(),
+                'featureCollection': create_feature_collection(drainage_network.filter(network_type_detail=detail))
+                })
+
+        if details.count() > 0 or drained_area_types.count() > 0:
+            return JsonResponse({
+                'success': True, 
+                'drainage_type_feature_collections': drainage_type_feature_collections,
+                'network_type_detail_feature_collections': network_type_detail_feature_collections,
+                })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Es gibt weder drainierte Flächen noch Enbtwässerungen im Suchgebiet.'
+            })
+def create_geojson_from_feature_collection(fc, tmpdir, filename):   
+    file_path = os.path.join(tmpdir, filename)
+    with open(f"{file_path}.geojson", "w", encoding="utf-8") as f:
+        json.dump(fc, f, ensure_ascii=False, indent=2)
+
+def create_shp_from_feature_collection(tmpdir, feature_collection, epsg, filename, writer_fields):
+    
+    shp_path = os.path.join(tmpdir, filename)
+
+    writer = shapefile.Writer(shp_path)
+    for key, val in writer_fields.items():
+        writer.field(key[:10], val['field_type'], decimal=val['decimal'])
+    for feature in feature_collection["features"]:
+        geom = shapely_shape(feature["geometry"])
+        props = feature["properties"]
+
+        writer.shape(geom.__geo_interface__)
+
+
+        record_values = [props.get(field) or 0 if writer_fields[field]['field_type'] in ('N', 'F') else props.get(field, '') 
+                        for field in writer_fields]
+        
+        writer.record(*record_values) 
+
+    writer.close()  
+ 
+
+def check_for_point_results(download_list):
+    point = False
+    full = False
+    for filetype in download_list:               
+        if filetype.split('_')[0] == 'pt':
+            point = True
+        else:
+            full = True
+    return point, full
+
+def create_fc_for_sink_download(project, sinks, epsg, sink_type, result_list, language='de'):
+
+    
+    
+    
+    indices = calculate_indices_df(sinks, project, sink_type=sink_type)
+    pt_feature_collection = {}
+    feature_collection = {}
+    point, full = check_for_point_results(result_list)
+    if point:
+
+        pt_feature_collection = {
+            "type": "FeatureCollection",
+            "features": [obj.to_point_feature(indices, epsg=epsg, language=language) for obj in sinks],
+            "crs": {
+                "type": "name",
+                "properties": {"name": f"EPSG:{epsg}"}
+            }
+        } 
+    if full:
+        feature_collection = {
+                "type": "FeatureCollection",
+                "features": [obj.to_feature(indices, epsg=epsg, language=language) for obj in sinks],
+                "crs": {
+                    "type": "name",
+                    "properties": {"name": f"EPSG:{epsg}"}
+                }
+            }
+        
+    return {'feature_collection': feature_collection, 'pt_feature_collection': pt_feature_collection, 'filename': sinks.model.get_filename(language=language)}
+
+    # for filetype in result_list: 
+    #     filename = sinks.model.get_filename(language=language)
+    #     if filetype.split('_')[0] == 'pt':
+    #         fc = pt_feature_collection
+    #         filename = filename + '_points'
+    #     else:
+    #         fc = feature_collection
+
+    #     filename = f'{filename}_EPSG_{epsg}'
+
+    #     if filetype.split('_')[-1] == 'shp':
+    #         writer_fields = sinks.model.shp_writer_fields()
+    #         create_shp_from_feature_collection(tmpdir, fc, epsg, filename, writer_fields)
+    #     elif filetype.split('_')[-1] == 'gjson':
+    #         create_geojson_from_feature_collection(fc, tmpdir, filename)
+
+
+def create_fc_for_download(data, epsg, result_list, language='de'):
+    """
+    Docstring for create_download
+    
+    :param data: queryset of model instances
+    :param epsg: EPSG code for coordinate reference system
+    :param result_list: list of result download-file types
+    :param language: language code for localization
+    """
+
+
+    
+    pt_feature_collection = {}
+    feature_collection = {}
+    point, full = check_for_point_results(result_list)
+    if point:
+
+        pt_feature_collection = {
+            "type": "FeatureCollection",
+            "features": [obj.to_point_feature( epsg=epsg, language=language) for obj in data],
+            "crs": {
+                "type": "name",
+                "properties": {"name": f"EPSG:{epsg}"}
+            }
+        } 
+    if full:
+        feature_collection = {
+                "type": "FeatureCollection",
+                "features": [obj.to_feature( epsg=epsg, language=language) for obj in data],
+                "crs": {
+                    "type": "name",
+                    "properties": {"name": f"EPSG:{epsg}"}
+                }
+            }
+        
+    return {'feature_collection': feature_collection, 'pt_feature_collection': pt_feature_collection, 'filename': data.model.get_filename(language=language)}
+
+def create_download_files(feature_collections, data, tmpdir, epsg, result_list, language='de'):
+    """
+    data : dictionary with pt_feature_collection and feature_collection
+    tmpdir : temporary directory path
+    """
+    base_filename = feature_collections['filename']
+    for filetype in result_list: 
+        filename = copy(base_filename)
+        if filetype.split('_')[0] == 'pt':
+            fc = feature_collections['pt_feature_collection']
+            filename = filename + '_points'
+        else:
+            fc = feature_collections['feature_collection']
+            
+
+        if filetype.split('_')[-1] == 'shp':
+            writer_fields = data.model.shp_writer_fields()
+            create_shp_from_feature_collection(tmpdir, fc, epsg, filename, writer_fields)
+        elif filetype.split('_')[-1] == 'gjson':
+            create_geojson_from_feature_collection(fc, tmpdir, filename)
+        elif filetype == 'csv':
+            file_path = os.path.join(tmpdir, f'{filename}.csv')
+            dataset = [obj.to_json(language=language) for obj in data]
+            rows = [row for row in dataset[0].keys()]
+            with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(rows)
+                
+                for obj in dataset:
+                    writer.writerow([obj[key] for key in rows])
+
+def create_download_csv_from_feature_collection(feature_collection, tmpdir, filename, language='de'):   
+    file_path = os.path.join(tmpdir, f'{filename}.csv')
+    features = feature_collection.get('features', [])
+
+    if len(features) == 0:
+        return
+    rows = [row for row in features[0]['properties'].keys()]
+    with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(rows)
+        
+        for feature in features:
+            props = feature['properties']
+            writer.writerow([props.get(key, '') for key in rows])
+                    
+
+
+
+def download_toolbox_results(request):
+    if request.method != "POST":
+        return HttpResponseBadRequest("POST required")
+    try:
+        project = request.body
+        print('Project:', type(project))
+        project = json.loads(project)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid project JSON'}, status=400)
+    
+
+
+    language = 'de'
+    
+    project_type = project.get('toolboxType')
+    epsg = int(project.get('result_crs', ['25833'])[0])
+    tmpdir = tempfile.mkdtemp()
+
+    
+    match project_type:
+        case 'infiltration':
+            print('is Infiltration')
+            
+            result_result = project.get('result_result', [])
+            result_sinks = project.get('result_sinks', [])
+            result_enlarged_sinks = project.get('result_enlarged_sinks', [])
+            result_waterbodies = project.get('result_waterbodies', [])
+            result_timeseries = project.get('result_timeseries', [])
+            
+            if len(result_result) > 0:
+                result = get_infiltration_result_list(project, epsg=epsg)
+                fc = result.get('inlet_feature_collection')
+                for filetype in result_result:
+                    if filetype.split('_')[-1] == 'shp':
+                        # writer_fields = data.model.shp_writer_fields()
+                        writer_fields = {
+                            'distance_m':{'field_type': "N", 'decimal': 0},
+                            'index_length':{'field_type': "N", 'decimal': 0},
+                            'index_volumes':{'field_type': "N", 'decimal': 0},
+                            'index_inlet': {'field_type': "N", 'decimal': 0},
+                        }
+                        filename = f'Zuleitungen_EPSG_{epsg}'
+                        create_shp_from_feature_collection(tmpdir, fc, epsg, filename, writer_fields)
+                        if 'shp' not in result_sinks:
+                            result_sinks.append('shp')
+                        if 'shp' not in result_sinks:
+                            result_sinks.append('shp')
+                    elif filetype.split('_')[-1] == 'gjson':
+                        create_geojson_from_feature_collection(fc, tmpdir, filename)
+                        if 'gjson' not in result_sinks:
+                            result_sinks.append('gjson')
+                        if 'gjson' not in result_sinks:
+                            result_sinks.append('gjson')
+
+
+            if len(result_sinks) > 0:
+                sinks = models.Sink.objects.filter(id__in=project.get(f'selected_sinks', []))
+                sink_fc = create_fc_for_sink_download(project, sinks, epsg, 'sink', result_sinks, language=language)
+                create_download_files(sink_fc, sinks, tmpdir, epsg, result_sinks, language=language)
+            if len(result_enlarged_sinks) > 0:
+                sinks = models.EnlargedSink.objects.filter(id__in=project.get(f'selected_enlarged_sinks', []))
+                enlarged_sink_fc = create_fc_for_sink_download(project, sinks, epsg, 'enlarged_sink', result_enlarged_sinks, language=language)
+                create_download_files(enlarged_sink_fc, sinks, tmpdir, epsg, result_enlarged_sinks, language=language)
+                sink_embankments = models.SinkEmbankment.objects.filter(enlarged_sink__in=sinks)
+                if sink_embankments.count() > 0:
+                    embankment_fc = create_fc_for_download(sink_embankments, epsg, result_enlarged_sinks, language=language)
+                    create_download_files(embankment_fc, sink_embankments, tmpdir, epsg, result_enlarged_sinks, language=language)
+            
+            if len(result_waterbodies) > 0:
+                lakes = models.Lake.objects.filter(id__in=project.get(f'selected_lakes', []))
+                streams = models.Stream.objects.filter(id__in=project.get(f'selected_streams', []))
+                lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
+                
+                create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
+                streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
+                
+                create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
+                if len(result_timeseries) > 0:
+                    fgw_ids = list(lakes.values_list('fgw_id', flat=True)) + \
+                        list(streams.values_list('fgw_id', flat=True))
+                    fgw_ids = set(fgw_ids)
+                    fgw_ids = [x for x in fgw_ids if x is not None]
+                    
+                    for fgw_id in fgw_ids:
+
+                        timeseries = (
+                            models.DischargeTimeseries.objects
+                                .filter(fgw__id=fgw_id)
+                                .order_by('date')
+                                .values('date', 'discharge_m3s')
+                            )
+                        filename = f'discharge_timeseries_fgw_id_{fgw_id}.csv'
+
+                        file_path = os.path.join(tmpdir, filename)
+                        with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+                            writer = csv.writer(csvfile)
+                            
+                            # Write header
+                            writer.writerow(["date", "discharge_m3s"])
+                            
+                            # Write rows
+                            for row in timeseries:
+                                writer.writerow([row["date"], row["discharge_m3s"]])
+                    
+        case 'injection':
+            filename= f'/app/raster_data/{request.user.id}_mar_result.tif'
+            target_path = os.path.join(tmpdir, "mar_result.tif")
+            # copy file into tmpdir
+            shutil.copy(filename, target_path)
+            
+        case 'sieker_surface_water':
+            result_lakes = project.get('result_lakes', [])
+            result_stations = project.get('result_stations', [])
+            result_timeseries = project.get('result_timeseries', [])
+            if len(result_lakes) > 0:
+                lake_ids = project.get('selected_sieker_surface_waters', [])
+                lakes = models.SiekerLargeLake.objects.filter(id__in=lake_ids)
+                lakes_fc = create_fc_for_download(lakes, epsg, result_lakes, language=language)
+                create_download_files(lakes_fc, lakes, tmpdir, epsg, result_lakes, language=language)
+                
+            if len(result_stations) > 0:
+                wl_ids = project.get('selected_sieker_water_levels', [])
+                stations = models.SiekerWaterLevel.objects.filter(id__in=wl_ids)
+                stations_fc = create_fc_for_download(stations, epsg, result_stations, language=language)
+                create_download_files(stations_fc, stations, tmpdir, epsg, result_stations, language=language)
+
+            if len(result_timeseries) > 0:
+                wl_ids = project.get('selected_sieker_water_levels', [])
+                stations = models.SiekerWaterLevel.objects.filter(id__in=wl_ids)
+                for station in stations:
+
+                    timeseries = (
+                        models.TimeseriesDailyWaterlevel.objects
+                        .filter(station__id=station.station.id)
+                        .order_by('date')
+                        .values('date', 'level')
+                    )
+                    filename = f'{(station.name.replace(" ", "_")).replace(",", "")}_timeseries.csv'
+                    file_path = os.path.join(tmpdir, filename)
+                    with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+                        writer = csv.writer(csvfile)
+                        
+                        # Write header
+                        writer.writerow(["date", "level"])
+                        
+                        # Write rows
+                        for row in timeseries:
+                            writer.writerow([row["date"], row["level"]])
+            
+        case 'sieker_sink':
+            result_result = project.get('result_result', [])
+            result_sinks = project.get('result_sinks', [])
+            result_waterbodies = project.get('result_waterbodies', [])
+            result_timeseries = project.get('result_timeseries', [])
+            
+            if len(result_result) > 0:
+            
+                sinks = models.SiekerSink.objects.filter(id__in=project.get(f'selected_sieker_sinks', []))
+                lakes = models.Lake.objects.filter(id__in=project.get(f'selected_sieker_lakes', []))
+                streams = models.Stream.objects.filter(id__in=project.get(f'selected_sieker_streams', []))
+
+                result = get_sieker_sink_result_list(sinks, lakes, streams, epsg=epsg)
+                inlet_fc = result.get('inlet_feature_collection')
+                sink_fc = result.get('sink_feature_collection')
+                for filetype in result_result:
+                    if filetype.split('_')[-1] == 'shp':
+                        # writer_fields = data.model.shp_writer_fields()
+                        writer_fields = {
+                            'distance_m':{'field_type': "N", 'decimal': 0},
+                            'index_length':{'field_type': "N", 'decimal': 0},
+                            'index_volumes':{'field_type': "N", 'decimal': 0},
+                        }
+                        filename = f'Zuleitungen_EPSG_{epsg}'
+                        create_shp_from_feature_collection(tmpdir, inlet_fc, epsg, filename, writer_fields)
+                        
+                        if 'shp' not in result_sinks:
+                            result_sinks.append('shp')
+
+                    elif filetype.split('_')[-1] == 'gjson':
+                        create_geojson_from_feature_collection(inlet_fc, tmpdir, filename)
+                        if 'gjson' not in result_sinks:
+                            result_sinks.append('gjson')
+
+            if len(result_sinks) > 0:
+                sinks = models.Sink.objects.filter(id__in=project.get(f'selected_sinks', []))
+
+                sink_fc = create_fc_for_download(sinks, epsg, result_sinks, language=language)
+                create_download_files(sink_fc, sinks, tmpdir, epsg, result_sinks, language=language)
+
+            if len(result_waterbodies) > 0:
+                lakes = models.Lake.objects.filter(id__in=project.get(f'selected_lakes', []))
+                streams = models.Stream.objects.filter(id__in=project.get(f'selected_streams', []))
+                lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
+                create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
+                streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
+                create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
+            if len(result_timeseries) > 0:
+                fgw_ids = list(lakes.values_list('fgw_id', flat=True)) + \
+                    list(streams.values_list('fgw_id', flat=True))
+                fgw_ids = set(fgw_ids)
+                fgw_ids = [x for x in fgw_ids if x is not None]
+                
+                for fgw_id in fgw_ids:
+
+                    timeseries = (
+                        models.DischargeTimeseries.objects
+                            .filter(fgw__id=fgw_id)
+                            .order_by('date')
+                            .values('date', 'discharge_m3s')
+                        )
+                    filename = f'discharge_timeseries_fgw_id_{fgw_id}.csv'
+
+                    file_path = os.path.join(tmpdir, filename)
+                    with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+                        writer = csv.writer(csvfile)
+                        
+                        # Write header
+                        writer.writerow(["date", "discharge_m3s"])
+                        
+                        # Write rows
+                        for row in timeseries:
+                            writer.writerow([row["date"], row["discharge_m3s"]])
+
+        case 'wetland':
+            result_wetlands = project.get('result_wetlands', [])
+            result_waterbodies = project.get('result_waterbodies', [])
+
+            if len(result_wetlands) > 0:
+                wetland_ids = project.get('selected_wetlands', [])
+                wetlands = models.HistoricalWetlands.objects.filter(id__in=wetland_ids)
+                wetland_fc = create_fc_for_download(wetlands, epsg, result_wetlands, language=language)
+                create_download_files(wetland_fc, wetlands, tmpdir, epsg, result_wetlands, language=language)
+
+            if len(result_waterbodies) > 0:
+                stream_ids = project.get('selected_wetland_streams', [])
+                streams = models.Stream.objects.filter(id__in=stream_ids)
+                streams_fc = create_fc_for_download(streams, epsg, result_waterbodies, language=language)
+                create_download_files(streams_fc, streams, tmpdir, epsg, result_waterbodies, language=language)
+
+                lake_ids = project.get('selected_wetland_lakes', [])
+                lakes = models.Lake.objects.filter(id__in=lake_ids)
+                lakes_fc = create_fc_for_download(lakes, epsg, result_waterbodies, language=language)
+                create_download_files(lakes_fc, lakes, tmpdir, epsg, result_waterbodies, language=language)
+
+        case 'drainage':
+            user_field_id = project.get('userField')
+            user_field = models.UserField.objects.get(pk=user_field_id)
+            result_drainage_network = project.get('result_drainage_network', [])
+            result_drained_areas = project.get('result_drained_areas', []) 
+            result_probability_raster = project.get('result_probability_raster', [])
+            
+            if len(result_drainage_network) > 0:
+                drainage_network = models.DrainageNetwork.objects.filter(
+                    Q(geom4326__within=user_field.geom) |
+                    Q(geom4326__intersects=user_field.geom)
+                )
+                drainage_network_fc = create_fc_for_download(drainage_network, epsg, result_drainage_network, language=language)
+                create_download_files(drainage_network_fc, drainage_network, tmpdir, epsg, result_drainage_network, language=language)
+
+            if len(result_drained_areas) > 0:
+                drained_area = models.DrainedArea.objects.filter(
+                    Q(geom4326__within=user_field.geom) |
+                    Q(geom4326__intersects=user_field.geom)
+                )
+                drained_area_fc = create_fc_for_download(drained_area, epsg, result_drained_areas, language=language)
+                create_download_files(drained_area_fc, drained_area, tmpdir, epsg, result_drained_areas, language=language)
+            if len(result_probability_raster)> 0:
+                filename= f'/app/raster_data/Entwaesserungswahrscheinlichkeit_9Parameter_v2.tif'
+                target_path = os.path.join(tmpdir, "Entwaesserungswahrscheinlichkeit.tif")
+                # copy file into tmpdir
+                shutil.copy(filename, target_path)
+
+        case 'sieker_gek':
+            result_geks = project.get('result_geks', [])
+            result_measures = project.get('result_measures', [])
+
+            geks, measures = get_geks_and_measures(project)
+            gek_measures_features=[]
+
+            for m in measures:
+                ft = m.gek_retention.to_feature( epsg=epsg, language=language)
+                m_dict = m.to_json(language=language)
+                m_dict['measure_id'] = m_dict.pop('id')
+                ft['properties'].update(m_dict)
+                gek_measures_features.append(ft)
+
+            measures_fc = {
+                "type": "FeatureCollection",
+                "features": gek_measures_features,
+                "crs": {
+                    "type": "name",
+                    "properties": {"name": f"EPSG:{epsg}"}
+                }
+            }
+
+            
+            filename = f'Sieker_GEKs_EPSG_{epsg}'
+            geks_fc = create_fc_for_download(geks, epsg, result_geks, language=language)
+            create_download_files(geks_fc, geks, tmpdir, epsg, result_geks, language=language) 
+            if 'csv' in result_measures:
+                result_measures.remove('csv')
+                create_download_csv_from_feature_collection(measures_fc, tmpdir, 'Gewaesserentwicklungsmassnahmen', language=language)
+
+
+            create_download_files({
+                'feature_collection': measures_fc,
+                'filename': 'Gewaesserentwicklungsmassnahmen',
+                }, measures, tmpdir, epsg, result_measures, language=language)
+        
+        
+
+
+
+
+    #### zip and return
+    
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for root, _, files in os.walk(tmpdir):
+            for f in files:
+                file_path = os.path.join(root, f)
+                arcname = os.path.relpath(file_path, tmpdir)  # keep relative paths
+                zf.write(file_path, arcname)
+                
+
+    zip_buffer.seek(0)
+    response = HttpResponse(zip_buffer, content_type="application/zip")
+    response["Content-Disposition"] = 'attachment; filename="results.zip"'
+    return response
+
+
+
+

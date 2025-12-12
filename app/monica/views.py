@@ -111,10 +111,8 @@ def get_lat_lon_as_index(lat, lon):
         lat_idx = lat_idx - 1
 
     if (lons[lon_idx] + lons[lon_idx-1]) / 2 > lon:
-        print("lon is in if")
         lon_idx = lon_idx - 1
 
-    print('lat', lats[lat_idx], 'lon_idx', lons[lon_idx])
     return (lat_idx, lon_idx)
 
 
@@ -243,8 +241,8 @@ def get_climate_data_as_json_from_hindcast(start_date, end_date, lat_idx, lon_id
                 print(f"⚠️ Error reading {file_path}: {e}")
 
     print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
-    climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
-
+    # climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
+    climate_json['8'] = [x * .01 if x is not None and x != -9999 else 0 for x in climate_json['8']]
 
     return climate_json
 
@@ -283,7 +281,8 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
             #     print(f"⚠️ Error reading {file_path}: {e}")
 
     print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
-    climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
+    # climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
+    climate_json['8'] = [x * .01 if x is not None and x != -9999 else 0 for x in climate_json['8']]
 
     return climate_json
 
@@ -1162,9 +1161,7 @@ def monica_model(request):
         'project_modal_title': project_modal_title,
         'coordinate_form': coordinate_form,
         'user_crop_parameters_select_form': user_crop_parameters_select_form,
-        # 'user_crop_parameters_form': user_crop_parameters_form,
         'user_simulation_settings_select_form': user_simulation_settings_select_form,
-        # 'simulation_settings_form': user_simulation_settings_form,
         'user_environment_parameters_select_form': user_environment_parameters_select_form,
 
         'user_soil_moisture_select_form': user_soil_moisture_select_form,
@@ -1448,9 +1445,40 @@ def run_monica_simulation(envs):
             json.dump(msg, _)
         with open(f'{file_path}/monica_io/json_message_out_{str(i)}.json', 'w') as _: 
             json.dump(json_msg, _)
-        print("check 10b: ")
+
+        if i ==2:
+            csv_dates = json_msg['daily']['Date']
+            csv_irrigation = json_msg['daily']['Irrig']
+
+            # Filter rows where irrigation > 0
+            rows = [
+                (date, irrig)
+                for date, irrig in zip(csv_dates, csv_irrigation)
+                if irrig != 0
+            ]
+
+            # Write to CSV
+            with open(f"{file_path}/monica_io/irrigation_events.csv", "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["Date", "Irrigation"])
+                writer.writerows(rows)
+
+
     print('json_msgs is a  ', type(json_msgs))
     return json_msgs
+
+def download_irrigation_csv(request):
+    file_path = Path(__file__).resolve().parent
+    csv_file_path = f"{file_path}/monica_io/irrigation_events.csv"
+
+    try:
+        with open(csv_file_path, 'r') as f:
+            response = HttpResponse(f.read(), content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="irrigation_events.csv"'
+            return response
+    except FileNotFoundError:
+        return HttpResponse("Irrigation events file not found.", status=404)
+    
 
 def run_simulation(request):
     user = request.user

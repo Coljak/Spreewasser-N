@@ -14,7 +14,7 @@
   <div class="modal-dialog  modal-lg">
     <div class="modal-content" id="selectSoilProfileContent">
       <!-- The content of the modal is injected from views+modify_parameters_modal.html-->
-       <h1>Soil Profile</h1>
+       <h1>Bodenprofil</h1>
     </div>
   </div>
 </div>
@@ -24,7 +24,7 @@
     <div class="modal-content" id="saveProjectDialogContent">
       
       <div class="modal-header">
-        <h5 class="modal-title" id="saveProjectDialogLabel">Do you want to save the project?</h5>
+        <h5 class="modal-title" id="saveProjectDialogLabel">Wollen Sie das Projekt speichern?</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
@@ -48,7 +48,7 @@
   <div class="card mb-3" id="sowingWorkstep-template">
     <div class="card-body">   
       <form class="sowing-form">
-        <h5 class="card-title">Sowing Workstep</h5>
+        <h5 class="card-title">Aussaat</h5>
         {% crispy workstep_sowing_form %}
       </form>
     </div>
@@ -59,9 +59,9 @@
   <div class="card mb-3" id="harvestWorkstep-template">
     <div class="card-body">
       <form class="harvest-form">
-        <h5 class="card-title">Harvest Workstep</h5>
+        <h5 class="card-title">Ernte</h5>
         {% crispy workstep_harvest_form %}
-        <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
+        <button type="button" class="btn btn-warning delete-workstep-button">Arbeitsschritt löschen</button>
       </form>
     </div>
   </div>
@@ -69,9 +69,9 @@
   <div class="card mb-3" id="tillageWorkstep-template">
     <div class="card-body">
       <form class="tillage-form">
-        <h5 class="card-title">Tillage Workstep</h5>
+        <h5 class="card-title">Bodenbearbeitung</h5>
         {% crispy workstep_tillage_form %}
-        <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
+        <button type="button" class="btn btn-warning delete-workstep-button">Arbeitsschritt löschen</button>
       </form>
     </div>
   </div>
@@ -79,9 +79,9 @@
   <div class="card mb-3" id="mineralFertilisationWorkstep-template">
     <div class="card-body">
       <form class="mineral-fertilisation-form">
-        <h5 class="card-title">Mineral Fertilisation Workstep</h5>
+        <h5 class="card-title">Mineralische Düngung</h5>
         {% crispy workstep_mineral_fertilisation_form %}
-        <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
+        <button type="button" class="btn btn-warning delete-workstep-button">Arbeitsschritt löschen</button>
       </form>
     </div>
   </div>
@@ -89,9 +89,9 @@
   <div class="card mb-3" id="organicFertilisationWorkstep-template">
     <div class="card-body">
       <form class="organic-fertilisation-form">
-        <h5 class="card-title">Organic Fertilisation Workstep</h5>
+        <h5 class="card-title">Organische Düngung</h5>
         {% crispy workstep_organic_fertilisation_form %}
-        <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
+        <button type="button" class="btn btn-warning delete-workstep-button">Arbeitsschritt löschen</button>
       </form>
     </div>
   </div>
@@ -99,9 +99,9 @@
   <div class="card mb-3" id="irrigationWorkstep-template">
     <div class="card-body">
       <form class="irrigation-form">
-        <h5 class="card-title">Irrigation Workstep</h5>
+        <h5 class="card-title">Bewässerung</h5>
         {% crispy workstep_irrigation_form %}
-        <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
+        <button type="button" class="btn btn-warning delete-workstep-button">Arbeitsschritt löschen</button>
       </form>
     </div>
   </div>
@@ -109,9 +109,9 @@
   <div class="card mb-3" id="automaticHarvestWorkstep-template">
     <div class="card-body">
       <form class="automatic-harvest-form">
-        <h5 class="card-title">Automatic Harvest Workstep</h5>
+        <h5 class="card-title">Automatische Ernte</h5>
         {% crispy workstep_automatic_harvest_form %}
-        <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
+        <button type="button" class="btn btn-warning delete-workstep-button">Arbeitsschritt löschen</button>
       </form>
     </div>
   </div>
@@ -119,9 +119,9 @@
   <div class="card mb-3" id="nDemandFertilizationWorkstep-template">
     <div class="card-body">
       <form class="irrigation-form">
-        <h5 class="card-title">N-Demand Fertilization Workstep</h5>
+        <h5 class="card-title">N-Bedarf Düngung</h5>
         {% crispy workstep_n_demand_fertilization_form %}
-        <button type="button" class="btn btn-warning delete-workstep-button">Delete Workstep</button>
+        <button type="button" class="btn btn-warning delete-workstep-button">Arbeitsschritt löschen</button>
       </form>
     </div>
   </div>
@@ -130,12 +130,12 @@
 
   <div id="rotationTemplate">
     <!-- add workstep selector -->
-    <div class="card mb-3 add-workstep advanced">
+    <div class="card mb-3 add-workstep">
       <div class="card-body">
-        <h5 class="card-title">Add Workstep</h5>
+        <h5 class="card-title">Arbeitsschritt hinzufügen</h5>
         
         {% crispy workstep_selector_form %}
-        <button class="btn btn-primary add-workstep-button">Add Workstep</button>
+        <button class="btn btn-primary add-workstep-button">Arbeitsschritt hinzufügen</button>
       </div>
     </div>
 

@@ -99,22 +99,44 @@ export class MonicaProject {
         this.saveToLocalStorage();
     }
 
+    getRotation(rotationIndex) {
+        return this.rotation[rotationIndex]
+    }
+
+
     addWorkstep(workstepType, date=null, rotationIndex, options = {}) {
         console.log('MonicaProject addWorkstep', workstepType, date, rotationIndex, options);
-        this.rotation[rotationIndex].workstepIndex += 1;
-        const workstepIndex = this.rotation[rotationIndex].workstepIndex;
-        const workstep = new Workstep(workstepType, date, workstepIndex, options);
-
+        let rotation = this.rotation[rotationIndex];
+        
+        if (date === null) {
+            console.log('this.rotation[rotationIndex]', this.rotation[rotationIndex])
+            // let dateObj = new Date(this.rotation[rotationIndex].find(ws => ws.workstepIndex === this.rotation[rotationIndex].workstepIndex)?.date);
+            let previousWorkstep = this.rotation[rotationIndex].getWorkstep(rotation.workstepIndex)
+            console.log('previousWorkstep', previousWorkstep);
+            let previousDate = previousWorkstep.date;
+            console.log('previousDate', previousDate)
+            let dateObj = new Date(previousDate)
+            console.log('1',dateObj)
+            dateObj.setDate(dateObj.getDate() + 1);
+            console.log('2', dateObj)
+            date = dateObj.toISOString().slice(0, 10);
+            console.log('Calculated date for new workstep:', date);
+        }
+        
+        this.rotation[rotationIndex].workstepIndex +=1;
+        
+        const workstep = new Workstep(workstepType, date, this.rotation[rotationIndex].workstepIndex, options);
+        rotation.workstepIndex += 1;
         this.rotation[rotationIndex][workstepType].push(workstep);
         this.saveToLocalStorage();
-
+        return workstep;
     }
 };
 
 export class Rotation {
     constructor(rotationIndex, existingRotation = {}) {
         this.rotationIndex = rotationIndex;
-        this.workstepIndex = existingRotation.workstepIndex ?? 1; // 2 because of the sowing and harvestWorksteps
+        // this.workstepIndex = existingRotation.workstepIndex ?? 0; // 2 because of the sowing and harvestWorksteps
 
         // Initialize worksteps, ensuring defaults if none exist
         this.sowingWorkstep = existingRotation.sowingWorkstep ?? [new Workstep('sowingWorkstep', null, 0, {
@@ -129,7 +151,79 @@ export class Rotation {
         this.irrigationWorkstep = existingRotation.irrigationWorkstep ?? [];
         this.automaticHarvestWorkstep = existingRotation.automaticHarvestWorkstep ?? [];
         this.nDemandFertilizationWorkstep = existingRotation.nDemandFertilizationWorkstep ?? [];
+    
+        const allWorksteps = [
+            ...this.sowingWorkstep,
+            ...this.harvestWorkstep,
+            ...this.tillageWorkstep,
+            ...this.mineralFertilisationWorkstep,
+            ...this.organicFertilisationWorkstep,
+            ...this.irrigationWorkstep,
+            ...this.automaticHarvestWorkstep,
+            ...this.nDemandFertilizationWorkstep
+        ];
+
+        if (allWorksteps.length === 0) {
+            this.workstepIndex = 0; // no worksteps yet
+        } else {
+            this.workstepIndex = Math.max(...allWorksteps.map(ws => ws.workstepIndex));
+        }
+    
+    
     }
+
+    getWorkstep(targetIndex) {
+    // Normalize targetIndex to a number if provided
+    if (typeof targetIndex !== 'number' || Number.isNaN(targetIndex)) {
+      targetIndex = undefined;
+    }
+
+    let found = null;
+    // collect all worksteps
+    const all = [];
+
+    for (const key of Object.keys(this)) {
+      if (key === 'workstepIndex') continue;
+      const arr = this[key];
+      if (!Array.isArray(arr)) continue;
+      for (const ws of arr) {
+        // normalize the stored index to number if possible
+        const idx = Number(ws?.workstepIndex);
+        if (Number.isFinite(idx)) {
+          // push normalized object so comparisons are numeric
+          all.push({ ws, idx });
+          if (idx === targetIndex) {
+            return ws; // exact match immediately
+          }
+        }
+      }
+    }
+
+    // if no exact match and no targetIndex provided, return the latest (max idx)
+    if (all.length === 0) return null;
+
+    // find max index entry
+    let max = all[0];
+    for (const entry of all) {
+      if (entry.idx > max.idx) max = entry;
+    }
+
+    // if targetIndex was provided but not found, try closest lower index:
+    if (typeof targetIndex === 'number') {
+      // find largest idx <= targetIndex
+      let best = null;
+      for (const entry of all) {
+        if (entry.idx <= targetIndex) {
+          if (!best || entry.idx > best.idx) best = entry;
+        }
+      }
+      return best ? best.ws : max.ws;
+    }
+
+    // targetIndex not provided → return latest
+    return max.ws;
+  }
+
 }
 
 export class Workstep {
@@ -399,6 +493,10 @@ export const addWorkstepToGui = (workstepType, rotationIndex, workstepIndex, wor
         weekStart: 1,
         autoclose: true
     });
+
+    // $(newForm).find('input').each(function() {
+    //     $(this).trigger('change');
+    // });
 
     // TODO test which one is better
     // 

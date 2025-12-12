@@ -3,6 +3,64 @@ from leaflet.admin import LeafletGeoAdmin, ModelAdmin
 from . import models
 
 
+@admin.register(models.ToolboxType)
+class ToolboxTypeAdmin(ModelAdmin):
+    list_display = ('id', 'name_de', 'name_en', 'name_tag', 'description')
+    search_fields = ('name_de', 'name_en', 'name_tag', 'description')
+    list_display_links = ('id', 'name_de', 'name_en', 'name_tag', 'description')
+
+@admin.register(models.BelowGroundCatchmentArea)
+class BelowGroundCatchmentAreaAdmin(LeafletGeoAdmin):
+    list_display = ('id', 'uezg_id', 'haupt_ezg', 'teil_ezg', 'qru_m3_s', 'flaeche_m2', 'bg_id')
+    search_fields = ('uezg_id',)
+    ordering = ('id', 'uezg_id', 'haupt_ezg', 'teil_ezg', 'qru_m3_s', 'flaeche_m2', 'bg_id')
+    list_display_links = ('id', 'uezg_id', 'haupt_ezg', 'teil_ezg', 'qru_m3_s', 'flaeche_m2', 'bg_id')
+
+@admin.register(models.AboveGroundCatchmentArea)
+class AboveGroundCatchmentAreaAdmin(LeafletGeoAdmin):
+    list_display = ('id', 'kennzahl', 'gewaesser', 'gew_alias',)
+    search_fields = ('gewaesser',)
+    ordering = ('id',)
+    list_display_links = ('id', 'kennzahl', 'gewaesser', 'gew_alias',)
+
+
+@admin.register(models.UserField)
+class UserFieldAdmin(LeafletGeoAdmin):
+    list_display = ('id', 'user', 'name', 'creation_date', 'has_infiltration', 'has_injection', 'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water', 'has_sieker_wetland', 'has_sieker_drainage')
+    ordering = ['user', 'name']
+    search_fields = ['user__username', 'name', 'creation_date', 'has_infiltration', 'has_injection', 'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water', 'has_sieker_wetland', 'has_sieker_drainage']
+    list_display_links = ('id', 'name',)
+
+
+@admin.register(models.ToolboxProject)
+class ToolboxProjectAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'name', 'description', 'creation_date', 'user_field', 'toolbox_type',  'last_modified', 'project_data')
+    list_filter = ['creation_date', 'last_modified']
+    ordering = ['user', 'name', 'creation_date',  'toolbox_type', 'last_modified']
+    search_fields = ['user__username', 'name', 'creation_date', 'last_modified', 'user_field', 'toolbox_type']
+    list_display_links = ('id', 'name',)
+
+@admin.register(models.River)
+class RiverAdmin(LeafletGeoAdmin):
+    list_display = ('id', 'name', 'w_gn2', 'w_gn3', 'w_gn_lgb', 'w_wdm', 'w_ofl', 'w_ezg_kl', 'w_achse', 'w_gwk', 'w_gbk', 'w_sfk_lg', 'w_id')
+    ordering = ['id', 'name', 'w_gn2', 'w_gn3', 'w_gn_lgb', 'w_wdm', 'w_ofl', 'w_ezg_kl', 'w_achse', 'w_gwk', 'w_gbk', 'w_sfk_lg', 'w_id']
+    list_display_links = ('id', 'name',)
+
+@admin.register(models.WaterCoordinationEntity)
+class WaterCoordinationEntityAdmin(admin.ModelAdmin):
+    list_display = ('id', 'short', 'name')
+    search_fields = ('short', 'name')
+    ordering = ('short',)
+
+
+@admin.register(models.Lake25)
+class Lake25Admin(LeafletGeoAdmin):
+    list_display = ('id', 'name', 'wa_cd', 'genese', 'area_gis', 'wrrl_pg')
+    search_fields = ('name', 'wa_cd', 'genese')
+    list_filter = ('wa_cd', 'genese')
+    ordering = ('id',)
+    list_display_links = ('id', 'name',)
+
 
 
 @admin.register(models.Lake)
@@ -10,6 +68,7 @@ class LakeAdmin(LeafletGeoAdmin):
     list_display = ('id', 'shape_length', 'shape_area', 'min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days' )
     list_filter = ['shape_area', 'shape_length', 'min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days']
     ordering = ['min_surplus_volume']
+    list_display_links = ('id',)
     list_per_page = 100
     map_width = 800
     map_height = 600
@@ -22,6 +81,7 @@ class StreamAdmin(LeafletGeoAdmin):
     list_display = ('id', 'shape_length', 'min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days' )
     list_filter = ['shape_length', 'min_surplus_volume', 'mean_surplus_volume', 'max_surplus_volume', 'plus_days']
     ordering = ['min_surplus_volume']
+    list_display_links = ('id',)
     list_per_page = 100
     map_width = 800
     map_height = 600
@@ -75,19 +135,8 @@ class EnlargedSinkSoilPropertiesAdmin(admin.ModelAdmin):
     ordering = ['enlarged_sink']
     search_fields = ['enlarged_sink__id', 'soil_properties__id', 'percent_of_total_area']
 
-@admin.register(models.UserField)
-class UserFieldAdmin(LeafletGeoAdmin):
-    list_display = ('id', 'user', 'name', 'creation_date', 'geom', 'has_zalf_sinks', 'has_zalf_enlarged_sinks',   'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water')
-    list_filter = ['name']
-    ordering = ['user', 'name']
-    search_fields = ['user__username', 'name', 'creation_date', 'has_zalf_sinks', 'has_zalf_enlarged_sinks',  'has_sieker_sink', 'has_sieker_gek', 'has_sieker_surface_water']
 
-@admin.register(models.ToolboxProject)
-class ToolboxProjectAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'name', 'description', 'creation_date', 'user_field', 'toolbox_type',  'last_modified', 'project_data')
-    list_filter = ['creation_date', 'last_modified']
-    ordering = ['user', 'name', 'creation_date',  'toolbox_type', 'last_modified']
-    search_fields = ['user__username', 'name', 'creation_date', 'last_modified', 'user_field', 'toolbox_type']
+
 
 
 @admin.register(models.TimeseriesDailyQ)
@@ -138,6 +187,29 @@ class AquiferAdmin(admin.ModelAdmin):
     list_filter = ['name', 'name_de', 'name_en']
     ordering = ['name']
     search_fields = ['name', 'name_de', 'name_en']
+
+@admin.register(models.LeafletLegend)
+class LeafletLegendAdmin(admin.ModelAdmin):
+    list_display = ('id', 'header_de', 'header_en')
+    search_fields = ('header_de', 'header_en')
+
+@admin.register(models.LegendGrade)
+class LegendGradeAdmin(admin.ModelAdmin):
+    list_display= ('id', 'leaflet_legend', 'value_to_color', 'color', 'label_de', 'label_en', 'order_position')
+    search_fields = ('leaflet_legend', 'value_to_color', 'label_de', 'label_en',)
+    ordering = ('leaflet_legend', 'order_position',)
+    list_display_links = ('id', 'leaflet_legend',)
+
+@admin.register(models.DataInfo)
+class DataInfoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'data_type', 'feature_color', 'class_name', 'feature_type', 'popup_header', 'marker_cluster', 'color_by_index', 'legend',  'icon_path')
+    search_fields = ('data_type', 'class_name', 'feature_type', 'popup_header', )
+    list_display_links = ('id', 'data_type',)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'legend':
+            kwargs["queryset"] = models.LeafletLegend.objects.order_by("header_de")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 @admin.register(models.DataInfoProperty)
 class DataInfoPropertyAdmin(admin.ModelAdmin):
@@ -196,12 +268,7 @@ class HydrogeologyAdmin(LeafletGeoAdmin):
     ordering = ('id',)
 
 
-@admin.register(models.Lake25)
-class Lake25Admin(LeafletGeoAdmin):
-    list_display = ('id', 'name', 'wa_cd', 'genese', 'area_gis', 'wrrl_pg')
-    search_fields = ('name', 'wa_cd', 'genese')
-    list_filter = ('wa_cd', 'genese')
-    ordering = ('id',)
+
 
 
 @admin.register(models.LanduseCLC2018)
@@ -223,7 +290,7 @@ class LanduseMapAdmin(LeafletGeoAdmin):
 class SiekerLargeLakeAdmin(LeafletGeoAdmin):
     list_display = ('id', 'name', 'area_m2', 'area_ha', 'd_max_m', 'vol_mio_m3')
     search_fields = ('name',)
-    ordering = ('id',)
+    ordering = ('id', 'name', 'area_m2', 'area_ha', 'd_max_m', 'vol_mio_m3')
 
 
 @admin.register(models.SiekerSink)
@@ -236,10 +303,11 @@ class SiekerSinkAdmin(LeafletGeoAdmin):
 
 @admin.register(models.SiekerWaterLevel)
 class SiekerWaterLevelAdmin(LeafletGeoAdmin):
-    list_display = ('id', 'messstelle', 'gewaesser', 'start_date', 'end_date', 'twenty_yr_trend')
-    search_fields = ('messstelle', 'gewaesser')
+    list_display = ('id', 'name', 'gewaesser', 'start_date', 'end_date', 'twenty_yr_trend')
+    search_fields = ('name', 'gewaesser')
     list_filter = ('region',)
     ordering = ('id',)
+
 
 
 # ---------------------------
@@ -260,17 +328,6 @@ class HydromorphyAdmin(admin.ModelAdmin):
     ordering = ('name',)
 
 
-@admin.register(models.LeafletLegend)
-class LeafletLegendAdmin(admin.ModelAdmin):
-    list_display = ('id', 'header_de', 'header_en')
-    search_fields = ('header_de', 'header_en')
-
-
-@admin.register(models.LegendGrade)
-class LegendGradeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'leaflet_legend', 'value', 'label_de', 'order_position')
-    list_filter = ('leaflet_legend',)
-    ordering = ('leaflet_legend', 'order_position')
 
 
 @admin.register(models.MapLabels)
@@ -316,16 +373,6 @@ class StationAdmin(LeafletGeoAdmin):
     ordering = ('name',)
 
 
-# ---------------------------
-# ORGANIZATIONAL / ENTITIES
-# ---------------------------
-
-@admin.register(models.WaterCoordinationEntity)
-class WaterCoordinationEntityAdmin(admin.ModelAdmin):
-    list_display = ('id', 'short', 'name')
-    search_fields = ('short', 'name')
-    ordering = ('short',)
-
 
 # ---------------------------
 # GEK / LANDUSE RELATIONS
@@ -368,11 +415,11 @@ class GEKMeasuresAdmin(admin.ModelAdmin):
 # FEASIBILITY / ECOLOGY
 # ---------------------------
 
-@admin.register(models.WetlandFeasibility)
-class WetlandFeasibilityAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name_de', 'name_en', 'index')
-    search_fields = ('name_de', 'name_en')
-    ordering = ('index',)
+# @admin.register(models.WetlandFeasibility)
+# class WetlandFeasibilityAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'name_de', 'name_en', 'index')
+#     search_fields = ('name_de', 'name_en')
+#     ordering = ('index',)
 
 
 @admin.register(models.WetGrassland)

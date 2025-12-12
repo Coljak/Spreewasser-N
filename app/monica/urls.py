@@ -9,8 +9,6 @@ from . import models
 app_name = 'monica'
 
 urlpatterns = [
-    # path('monica_calc_w_params_from_db/', views.monica_calc_w_params_from_db, name='monica_calc_w_params_from_db'),
-    # path('get_cultivar_parameters/<int:id>/', views.get_cultivar_parameters, name='get_cultivar_parameters'),
     path('', views.monica_model, name='monica_model'),
     # path('modify-parameter/', views.modify_model_parameters, name='modify_model_parameters'),
     path('load-project/<int:id>/', views.load_monica_project, name='load_monica_project'),
@@ -28,4 +26,5 @@ urlpatterns = [
     # path('model/save_simulation_settings/', views.save_simulation_settings, name='save_simulation_settings'),
     
     path('run-simulation/', views.run_simulation, name='run_simulation'),
+    path('download_irrigation_csv/', views.download_irrigation_csv, name='download_irrigation_csv'),
 ]

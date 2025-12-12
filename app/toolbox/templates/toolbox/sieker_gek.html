@@ -2,16 +2,25 @@
 {% load static %}
 
 <div id="divSiekerGek">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Gewässerentwicklungskonzepte</h2>
-        <div>
-            <button class="btn btn-primary me-2 save-toolbox-project" data-type="sieker_gek">Speichern</button>
+    <div class="d-flex justify-content-between align-items-center mb-3 row">
+        <div class="row">
+            <h2 class="mb-0">Gewässerentwicklungskonzepte</h2>
+        </div>
+        <div class="row mt-4">
+            <div class="col-6">
+                <strong>Projekt: </strong><span class="title-project-name">Kein Projekt ausgewählt</span></br>
+                <strong>Suchgebiet: </strong><span class="title-user-field-name">Kein Suchgebiet ausgewählt</span></br>
+            </div>
+            <div class="col-6 text-end">
+                <button class="toolbox-back-to-initial btn btn-secondary mx-2">Schließen</button>
+                <button class="btn btn-primary mx-2 save-toolbox-project" data-type="sieker_gek">Speichern</button>
+            </div>
         </div>
     </div>
         <!-- Navigation -->
-    <ul class="nav nav-tabs">
+    <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Project</a>
+            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
         </li>
         
         <li class="nav-item sieker-gek">
@@ -21,8 +30,8 @@
             <a id="navSiekerGekMeasures" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerGekMeasures" aria-selected="false">Maßnahmen</a>
         </li>
         
-        <li class="nav-item sieker-gek">
-            <a id="navSiekerGekResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerGekResult">Ergebnis</a>
+        <li class="nav-item infiltration">
+            <a id="navSiekerGekResultDownload" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerGekResultDownload">Download</a>
         </li>
     </ul>
 
@@ -32,11 +41,7 @@
         <div id="tabToolboxProject" class="tab-pane active show">
             <div class="card mb-3">
                 <div class="card-body">
-                    {{ project_select_form | crispy }}
-                
-                    <button class="toolbox-back-to-initial btn btn-secondary">Zurück zur Auswahl</button>
-                    <button class="toolbox-load-project btn btn-secondary" data-type="sieker_gek">Laden</button>
-            
+                    {% crispy project_select_form %}
                 </div>
             </div>
         </div>
@@ -49,13 +54,17 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Filter Maßnahmen zur Gewässerentwicklung</h5>
-                        <button id="toggleSiekerGeks" class="btn btn-secondary">ausblenden</button>                                                                                             
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sieker_gek">Layer ausblenden</button>                                                                                             
                     </div>
                     
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy gek_filter_form.form %}
-                        <button id="btnFilterSiekerGeks"type="submit" class="btn btn-primary">Maßnahmen filtern</button>
+                        <button id="btnFilterSiekerGeks"  class="btn btn-primary filter-features filter-geks" data-type="sieker_gek">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Maßnahmen filtern
+                        </button>
+                        <button id="btnFilterSiekerGeks"  class="btn btn-primary filter-reset-geks" data-type="sieker_gek">Zurücksetzen</button>
                     </form>
                 </div>
             </div>
@@ -63,27 +72,35 @@
             <div id="card-sieker_gek-table" class="card mb-3 d-none">
                 <div class="card-body">
                     <div class="card-title">Gewässer</div>
-                    <div id="sieker_gek-table-container"></div>
+                    <div id="sieker_gek-table-container" class="table-responsive"></div>
                     
                 </div>
             </div>
         </div>
 
         <div id="tabSiekerGekMeasures" class="tab-pane">
-
-            <div id="card-sieker_gek_measure-table" class="card mb-3">
-
-                
+            <div id="card-sieker_gek_measure-table" class="card mb-3">    
                 <div class="card-body">
-                    <h5 class="card-title">Maßnahmen</h5>
-                    <div id="filtered_sieker_gek-table-container"></div>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Maßnahmen</h5>
+                        <button class="btn btn-secondary toggle-feature-group" data-type="filtered_sieker_gek">Layer ausblenden</button>                                                                                             
+                    </div>
+                    
+                    <div id="filtered_sieker_gek-table-container" class="table-responsive"></div>
                     <div id="sieker_gek-info-card" class="card mt-3" style="display: none;">
                         <div id="sieker_gek-info-card-body" class="card-body"></div>
                     </div>
                 </div>
-            
-                    
+            </div>
+        </div>
 
+        <div id="tabSiekerGekResultDownload" class="tab-pane ">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ergebnis</h5>
+                    <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
+                    {% crispy result_form %}
+                </div>
             </div>
         </div>
 

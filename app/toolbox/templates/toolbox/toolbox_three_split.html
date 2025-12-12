@@ -6,31 +6,31 @@
 {% load geojson_tags %} 
 {% block css %} 
 {{ block.super }}
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css" />
+    
+    <link rel="stylesheet" href="{% static 'vendor/leaflet/dist/leaflet.css' %}"/>
     <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.contextmenu.css' %}"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/css/bootstrap-slider.css" integrity="sha512-SZgE3m1he0aEF3tIxxnz/3mXu/u/wlMNxQSnE0Cni9j/O8Gs+TjM9tm1NX34nRQ7GiLwUEzwuE3Wv2FLz2667w==" crossorigin="anonymous" />
-    {% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap-datepicker.standalone.css' %}"/>
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap.plugins/bootstrap-slider/bootstrap-slider.min.css' %}"/> 
+    
     <!-- virtual-select is for the multiple select boxes -->
     <link rel="stylesheet" href="{% static 'vendor/virtual-select/virtual-select.min.css' %}" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+    <link rel="stylesheet" href="{% static 'vendor/leaflet.plugins/leaflet-draw/leaflet.draw.min.css' %}" />
     <link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.css' %}" />
 	<link rel="stylesheet" href="{% static 'vendor/leaflet/MarkerCluster.Default.css' %}" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="{% static 'vendor/dataTable/dataTables.bootstrap5.min.css' %}" />
+    {% comment %} <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css"> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'vendor/dataTable.plugins/resizable-columns/jquery.resizableColumns.min.css' %}" />
     <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.legend.css' %}" />
     <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
+
     <link rel="stylesheet" href="{% static 'toolbox/toolbox.css' %}" />
-    
 
 
 {% endblock css %} 
 
 
 {% block right_panel %}
-        <div id="map" style="height: 100%; width: 100%">
-            
-        </div>
+        <div id="map"></div>
 {% endblock right_panel %}
 
 
@@ -44,60 +44,79 @@
 {% endblock left_panel %}
 
 {% block bottom_panel %}
+    <div id="toolboxButtons" class="card mb-3">
+        <div class="card-body">
 
-<div id="toolboxButtons" class="overflow-auto row">
-    <card class="card mb-3 col-3">
-        <div class="card-header">
-            <button id="startInfiltration" class="btn btn-outline-secondary mt-3"><b>Grundwasseranreicherung durch Versickerung</b></button>
-        </div>
-        <div class="card-body">
-            <p>Das Tool bietet eine Auswahl von vorbewerteten Standorten zur Anreicherung des Grundwassers durch naturnahe und baulich angelegte Versickerungsmaßnahmen.</p>
-        </div>
-    </card>
-    <card class="card mb-3 col-3">
-        <div class="card-header">
-            <button id="startInjection" class="btn btn-outline-secondary mt-3"><b>Grundwasseranreicherung durch  Injektion</b></button>
-        </div>
-        <div class="card-body">
-            <p>Das Tool ermöglicht die Auswahl von Standorten zur Anreicherung des Grundwassers mittels Injektion in die tiefer gelegenen gespannten Grundwasserleiter.</p>
-        </div>
-    </card>
-    <card class="card mb-3 col-3">
-      
-        <div class="dropdown">
-            <div class="card-header">
-                <button class="btn btn-outline-secondary mt-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <b>Gewässertool</b>
-                </button>
-            
-                <ul class="dropdown-menu">
-                    <li><a id="startSurfaceWaters" class="dropdown-item" href="#">Oberflächengewässer</a></li>
-                    <li><a id="startSiekerSinks" class="dropdown-item" href="#">Gewässernahe Senken</a></li>
-                    <li><a id="startWaterDevelopment" class="dropdown-item" href="#">Gewässerentwicklungskonzepte</a></li>
-                    <li><a id="startFormerWetlands" class="dropdown-item" href="#">Ehemalige Feuchtgebiete</a></li>
-                </ul>
+            <div class="row g-3 overflow-auto">
+                <div class="col-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <button id="startInfiltration" class="btn mt-3">
+                                <b>Grundwasseranreicherung durch Versickerung</b>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <p>Das Tool bietet eine Auswahl von vorbewerteten Standorten zur Anreicherung des Grundwassers durch naturnahe und baulich angelegte Versickerungsmaßnahmen.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <button id="startInjection" class="btn mt-3">
+                                <b>Grundwasseranreicherung durch Injektion</b>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <p>Das Tool ermöglicht die Auswahl von Standorten zur Anreicherung des Grundwassers mittels Injektion in die tiefer gelegenen gespannten Grundwasserleiter.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <button class="btn mt-3 dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown">
+                                <b>Gewässertool</b>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a id="startSurfaceWaters" class="dropdown-item">Oberflächengewässer</a></li>
+                                <li><a id="startSiekerSinks" class="dropdown-item">Gewässernahe Senken</a></li>
+                                <li><a id="startWaterDevelopment" class="dropdown-item">Gewässerentwicklungskonzepte</a></li>
+                                <li><a id="startFormerWetlands" class="dropdown-item">Ehemalige Feuchtgebiete</a></li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <p>Das Tool bietet Möglichkeiten zur Auswahl von Standorten, die sich für Renaturierungs- und Versickerungsmaßnahmen in Ufernähe eignen.
+                            Hierbei können Sie zwischen vier verschiedenen Speichermethoden wählen.           
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <button id="startDrainage" class="btn mt-3">
+                                <b>Drän-Speicher Tool</b>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <p>Dieses Tool zeigt potenzielle Standorte von Entwässerungsgräben und Drainagesystemen, in denen Wasser durch Einstau zurückgehalten werden kann. Sind in der Datenbank keine bestehenden Entwässerungssysteme verzeichnet, weist das Tool Bereiche aus, in denen mit hoher Wahrscheinlichkeit in der Vergangenheit Drainagen oder Gräben angelegt wurden.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="card-body">
-            <p>Das Tool bietet Möglichkeiten zur Auswahl von Standorten, die sich für Renaturierungs- und Versickerungsmaßnahmen in Ufernähe eignen.
-            Hierbei können Sie zwischen vier verschiedenen Speichermethoden wählen.           
-            </p>
-        
-        </div>
 
-    </card>
-    <card class="card mb-3 col-3">
-        <div class="card-header">
-            <button id="startDrainage" class="btn btn-outline-secondary mt-3"><b>Gesteuerte Drainagen</b></button>
         </div>
-        <div class="card-body">
-            <p>Das Tool ermöglicht die Planung von Maßnahmen zum Wasserrückhalt durch den Einsatz von gesteuerten Drainagen.</p>
-        </div>
-    </card>
-</div>
+    </div>
 
-<div id="toolboxPanel" class="overflow-auto">
-</div>
+
+    <div id="toolboxPanel">
+    </div>
 
 
 
@@ -113,11 +132,6 @@
 
 
         const getUserFieldsUrl = "{% url 'toolbox:get-user-fields' %}";  
-
-        const demUrl= "{% static 'data/dem_3857.png' %}"
-        const toolboxUrl= "{% static 'data/soil_4326_rendered_image_2.png' %}"
-        const toolboxSinksUrl = "{% static 'data/sinks_3857_pink.png' %}"
-    
         const project_region = {{ project_region|safe }}   
 
         const outline_injection = {{ outline_injection|safe }}   
@@ -133,27 +147,30 @@
     </script>
 
     
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-    {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js"></script> {% endcomment %}
-    {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js"></script>{% endcomment %}
+    <script type="text/javascript" src="{% static 'vendor/leaflet/dist/leaflet.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/leaflet.plugins/leaflet-draw/leaflet.draw.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.legend.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.contextmenu.js' %}"></script> 
+    <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.markercluster-src.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/leaflet.plugins/leaflet-geoserver/L.Geoserver.js' %}"></script>
+
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.de.min.js' %}"></script> 
-    <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.contextmenu.js' %}"></script> 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
-  
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
-
-    {% comment %} <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script> {% endcomment %}
+    <script type="text/javascript" src="{% static 'vendor/dataTable/jquery.dataTables.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'vendor/dataTable/dataTables.bootstrap5.min.js' %}" ></script>
+    {% comment %} <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script> {% endcomment %}
+    <script type="text/javascript" src="{% static 'vendor/virtual-select/virtual-select.min.js' %}"></script> 
 
     
-    <script type="text/javascript" src="{% static 'vendor/virtual-select/virtual-select.min.js' %}"></script> 
-    <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.markercluster-src.js' %}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/bootstrap-slider.min.js" integrity="sha512-f0VlzJbcEB6KiW8ZVtL+5HWPDyW1+nJEjguZ5IVnSQkvZbwBt2RfCBY0CBO1PsMAqxxrG4Di6TfsCPP3ZRwKpA==" crossorigin="anonymous"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.legend.js' %}"></script>
-    <script src="{% static 'vendor/leaflet/L.Geoserver.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/bootstrap.plugins/bootstrap-slider/bootstrap-slider.js' %}"></script>
+    
+    <script type="text/javascript" src="{% static 'vendor/chartjs/dist/chart.umd.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/date-fns/date-fns.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/chartjs/chartjs-adapter-date-fns.bundle.min.js' %}"></script>
+    
+
+
     <script type="module" src="{% static 'toolbox/toolbox_three_split.js' %}" ></script>
 {% endblock %}
 

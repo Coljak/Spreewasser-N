@@ -7,14 +7,16 @@
 {% block css %} 
 {{ block.super }}
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css" />
+    <link rel="stylesheet" href="{% static 'vendor/leaflet/dist/leaflet.css' %}"/>
     <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.contextmenu.css' %}"/>
     <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap-datepicker.standalone.css' %}"/>
     {% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/> {% endcomment %}
     <!-- virtual-select is for the multiple select boxes -->
     <link rel="stylesheet" href="{% static 'vendor/virtual-select/virtual-select.min.css' %}" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+    <link rel="stylesheet" href="{% static 'vendor/leaflet.plugins/leaflet-draw/leaflet.draw.min.css' %}" />
+    
+
+    <link rel="stylesheet" href="{% static 'monica/monica_model.css' %}"/>
     <link rel="stylesheet" href="{% static 'swn/css/user_dashboard.css' %}" />
 
 {% endblock css %} 
@@ -40,33 +42,34 @@
     {% include 'monica/modal_manual_soil_selection.html' %}
     {% include 'monica/output_settings_modal.html' %}
     <div id="swn_title" class="card-header">
-        <h3 id="monica-project-header">Spreewasser:N Monica - <span id="monica-project-name">Kein Projekt geladen</span></h3>
+        <h3 id="monica-project-header">Spreewasser:N Monica - <span id="monica-project-name" class="fw-normal fs-4">Kein Projekt geladen</span></h3>
     </div>
     <div class="overflow-auto" >
         {% include 'monica/hidden_rotation_forms.html' %}
-    <!-- navigation in monica -->
-        <ul class="nav nav-tabs">
-            <li class="nav-item">
-                <a class="monica nav-link" aria-current="page" href="#tabProject">Project</a>
-            </li>
-            <li class="nav-item">
-                <a class="monica nav-link active" aria-current="page" href="#tabGeneralParameters">General Parameters</a>
-            </li>
-            <li class="nav-item dropdown">
-                <a class="monica nav-link" aria-current="page" href="#tabRotation" >Crop Rotation</a>
-            </li>
-            <li class="nav-item">
-                <a class="monica nav-link" aria-current="page" href="#tabSoil">Soil</a>
-            </li>
-            <li class="nav-item">
-                <a id="resultTab" class="monica nav-link disabled" aria-disabled="true" href="#tabResult">Result</a>
-            </li>
-            <li>
-                <button id="toggle-advanced-mode" class="btn btn-primary simple" type="button">
-                    Switch to Advanced Mode
-                </button>
-            </li>
-        </ul>
+        <div class="d-flex justify-content-between align-items-center mb-3 overflow-auto">
+        <!-- navigation in monica -->
+            <ul class="nav nav-tabs mb-3">
+                <li class="nav-item">
+                    <a class="monica nav-link" aria-current="page" href="#tabProject">Projekt</a>
+                </li>
+                <li class="nav-item">
+                    <a class="monica nav-link active" aria-current="page" href="#tabGeneralParameters">Zeitraum</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="monica nav-link" aria-current="page" href="#tabRotation" >Fruchtfolge</a>
+                </li>
+                <li class="nav-item">
+                    <a class="monica nav-link" aria-current="page" href="#tabSoil">Boden</a>
+                </li>
+                <li class="nav-item">
+                    <a id="resultTab" class="monica nav-link disabled" aria-disabled="true" href="#tabResult">Ergebnis</a>
+                </li>
+            </ul>
+
+            <button id="toggle-advanced-mode-de" class="btn btn-primary simple" type="button">
+                Erweiterte Ansicht
+            </button>
+        </div>
         <div class="tab-content">
         <!-- ende navigation -->
         {% render_tab_project   user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
@@ -83,7 +86,7 @@
             
                 <div class="card mb-3">
                     <div class="card-body">
-                        <h5 class="card-title">"Today's" date</h5>
+                        <h5 class="card-title">Start der Bewässerung</h5>
                         <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
                     </div>
                 </div>
@@ -96,13 +99,14 @@
         {% render_tab_crop_rotation %}
         {% render_tab_soil user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
         {% render_tab_result %}
-        <button id="previousButton" class="btn btn-primary mt-3">Previous</button>
-        <button id="nextButton" class="btn btn-primary mt-3">Next</button>
-        <button id="runSimulationButton" class="btn btn-primary mt-3">Run Simulation</button>
-
-
-        <button id="monica-project-save" class="btn btn-primary mt-3 ">Save Project</button>
         
+
+        <button id="previousButton" class="btn btn-primary mt-3">Zurück</button>
+        <button id="nextButton" class="btn btn-primary mt-3">Weiter</button>
+        <button id="runSimulationButton" class="btn btn-primary mt-3">Simulation starten</button>
+
+        <button id="monica-project-save" class="btn btn-primary mt-3 ">Projekt speichern</button>
+
 
     </div>
     </div>
@@ -114,7 +118,7 @@
 {% block javascript %}
     {{ block.super }}
     <script>
-        const demUrl = "{% static 'data/dem_3857.png' %}";
+
         const droughtUrl = "{% static 'data/4326_reprojected_3857.png' %}" ;   
         const project_region = {{ project_region|safe }} ;
         const runSimulationUrl = "{% url 'swn:run_simulation' %}";
@@ -126,18 +130,17 @@
           
     </script>
     
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-    {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js"></script> {% endcomment %}
-    {% comment %} <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js"></script>{% endcomment %}
+    <script type="text/javascript" src="{% static 'vendor/leaflet/dist/leaflet.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/leaflet.plugins/leaflet-draw/leaflet.draw.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.de.min.js' %}"></script> 
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.contextmenu.js' %}"></script> 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+    <script type="text/javascript" src="{% static 'vendor/leaflet.plugins/leaflet-ajax/leaflet.ajax.min.js' %}"></script>
     {% comment %} <script src="{% static 'swn/js/leaflet-sidebar.min.js' %}"></script> {% endcomment %}
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script>
-    
+    {% comment %} <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script> {% endcomment %}
+    <script type="text/javascript" src="{% static 'vendor/chartjs/dist/chart.umd.min.js' %}"></script>
+
     <script type="text/javascript" src="{% static 'vendor/virtual-select/virtual-select.min.js' %}"></script> 
     <script type="module" src="{% static 'monica/monica_model.js' %}" defer></script>
     <script type="module" src="{% static 'swn/js/swn_three_split.js' %}" defer></script>

@@ -17,40 +17,44 @@
   <div class="panel-container">
     <!-- Top panel (contains left and right panels) -->
     <div class="panel-top panel-inner-container">
-        <div class="panel-left">
-          {% block left_panel %}
-          {% endblock left_panel %}
-          
-        </div>
+      <div class="panel-left">
+        {% block left_panel %}
+        {% endblock left_panel %}      
+      </div>
 
-        <div class="vertical-splitter"></div>
+      <div class="vertical-splitter"></div>
 
-        <div class="panel-right">
-          
-          {% block right_panel %}
-          {% endblock right_panel %}
-          <div id="cornerSplitter" class="corner-splitter"></div>
-        </div>
+      <div class="panel-right">
+        
+        {% block right_panel %}
+        {% endblock right_panel %}
+        <div id="cornerSplitter" class="corner-splitter"></div>
+      </div>
     </div>
     
-    <div id="horizontalSplitter" class="horizontal-splitter"></div>
+    <div id="horizontalSplitter" class=" horizontal-splitter"></div>
 
     <!-- Bottom panel -->
     <div class="panel-bottom py-2" id="bottomPanel">
       <div class="d-flex ms-auto">
         <button class="btn btn-outline-secondary btn-sm " id="toggleBottomFullscreen"><i class="bi bi-arrows-fullscreen justify-left"></i></button>
       </div>
-          {% block bottom_panel %}
-          {% endblock bottom_panel %}
-
+      {% block bottom_panel %}
+      {% endblock bottom_panel %}
+    </div>
   </div>
 </div>
 {% endblock body_block %}
 
 {% block javascript %}
 {{ block.super }}
-{% comment %} <script src="{% static 'vendor/resizable/jquery-resizable.js' %}"></script> {% endcomment %}
-  <script src="https://rawgit.com/RickStrahl/jquery-resizable/master/src/jquery-resizable.js"></script>
+<script type="text/javascript" src="{% static 'vendor/resizable/jquery-resizable.js' %}"></script>
+{% comment %} <script src="https://rawgit.com/RickStrahl/jquery-resizable/master/src/jquery-resizable.js"></script> {% endcomment %}
+{% comment %} <script src="https://cdn.jsdelivr.net/gh/RickStrahl/jquery-resizable/dist/jquery-resizable.min.js"></script> {% endcomment %}
+
+
+
+
   <script type="text/javascript" src="{% static 'shared/three_split.js' %}"></script>
 {% endblock %}
 

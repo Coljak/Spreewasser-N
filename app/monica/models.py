@@ -1842,7 +1842,6 @@ class DWDGridToPointIndices(models.Model):
         points_within_geom = cls.objects.filter(point__within=geom)
 
         if points_within_geom.exists():
-            print("Time elapsed: ", datetime.now() - start, 'multiple', len(points_within_geom))
             
             return list(points_within_geom)
         else:

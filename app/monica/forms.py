@@ -12,7 +12,7 @@ from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 from django_select2.forms import Select2Widget
 from .widgets import SingleRowTextarea
 from django.utils.translation import gettext_lazy as _
-from utils.widgets import UnitInputWrapper
+from utilities.widgets import UnitInputWrapper
 
 from crispy_forms.layout import Field, Layout, Row, Column
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -26,7 +26,6 @@ def use_single_row_textarea(field):
     """
     if isinstance(field.widget, forms.Textarea):
         field.widget = SingleRowTextarea()
-        print("is textarea fieldform")
     return field
 
 
@@ -55,7 +54,7 @@ class MonicaNewProjectForm(forms.Form):
         required=False
     )
     name = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_project_name', 'required': 'required',}),
+        widget=forms.TextInput(attrs={'class': 'form-control monica-project-name', 'id': 'id_project_name', 'required': 'required',}),
         label='Project Name',
         required=True,
     )
@@ -85,12 +84,10 @@ class MonicaNewProjectForm(forms.Form):
         # user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user is not None:
-            print("user is not none")
             monica_projects = models.MonicaProject.objects.filter(Q(user=user))
             mp = [( monica_project.monica_model_setup.id, monica_project.name) for monica_project in monica_projects]
             default_setup = models.ModelSetup.objects.filter(is_default=True)[0]
             setup_choices = [(default_setup.id, default_setup.name)] + mp
-            print(setup_choices, mp)
 
             self.fields['monica_model_setup'].choices = setup_choices
 
@@ -635,30 +632,6 @@ class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
 
 class UserSimulationSettingsForm(ParametersModelForm):
     
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-
-    #     self.helper = FormHelper()
-    #     self.helper.form_tag = False
-
-    #     layout_fields = []
-
-    #     for field_name, field in self.fields.items():
-    #         if isinstance(field, forms.BooleanField):
-    #             # Keep BooleanFields as regular stacked checkboxes
-    #             layout_fields.append(
-    #                 Field(field_name, css_class='form-check-input mb-3')
-    #             )
-    #         else:
-    #             # Set label/field alignment only for non-Boolean fields
-    #             layout_fields.append(Field(field_name))
-
-    #     # Set horizontal layout classes globally (affects only non-Boolean fields above)
-    #     self.helper.label_class = 'col-5 col-form-label'
-    #     self.helper.field_class = 'col-7'
-
-    #     self.helper.layout = Layout(*layout_fields)
-
     
     class Meta:
         model = models.UserSimulationSettings
@@ -678,28 +651,7 @@ class UserSimulationSettingsForm(ParametersModelForm):
                 original_widget = self.fields[field_name].widget
                 self.fields[field_name].widget = UnitInputWrapper(widget=original_widget, unit=unit)
 
-        # self.helper = get_parameters_form_helper()
-        # self.helper.layout = Layout(
-        #     *[
-        #         Field(field_name, wrapper_class='row')
-        #         for field_name in self.fields
-        #     ]
-        # )
-        # self.helper.layout.append(
-        #     Row(
-        #         Div(
-        #             Field('name', wrapper_class='row'),
-        #             css_class='col-11'
-        #         ), 
-        #         HTML(
-        #             """
-        #                 <button type="button" data-parameters="user-simulation-settings" class="btn btn-outline-secondary btn-sm col-1 mb-3 modify-parameters" data-bs-target="#formModal">
-        #                 <span><i class="bi bi-pencil-square"></i></span>
-        #                 </button>
-        #             """
-        #         )
-        #     )
-        #     )
+       
     
 
 class UserSimulationSettingsInstanceSelectionForm(forms.Form):

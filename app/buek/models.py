@@ -101,9 +101,12 @@ class CorineLandCover2018(models.Model):
     '''
     CLC 5 classes. For simplicity not completely normalized.
     '''
-    label_level_1 = models.CharField(max_length=255, null=True, blank=True)
-    label_level_2 = models.CharField(max_length=255, null=True, blank=True)
-    label_level_3 = models.CharField(max_length=255, null=True, blank=True)
+    label_level_1_en = models.CharField(max_length=255, null=True, blank=True)
+    label_level_2_en = models.CharField(max_length=255, null=True, blank=True)
+    label_level_3_en = models.CharField(max_length=255, null=True, blank=True)
+    label_level_1_de = models.CharField(max_length=255, null=True, blank=True)
+    label_level_2_de = models.CharField(max_length=255, null=True, blank=True)
+    label_level_3_de = models.CharField(max_length=255, null=True, blank=True)
     label_de = models.CharField(max_length=255, null=True, blank=True)
     corine_landcover_code = models.IntegerField(null=True, blank=True)
 

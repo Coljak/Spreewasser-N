@@ -13,8 +13,7 @@ def render_tab_project(
     request = context.get('request')
     project_select_form = context.get('project_select_form')
     new_project_form = context.get('new_project_form')
-    for key in context:
-        print('context', key)
+
     context = {
         'request': request,
         'project_select_form': project_select_form,

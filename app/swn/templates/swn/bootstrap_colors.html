@@ -13,7 +13,7 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-        
+        <link rel="stylesheet" href="{% static 'swn/css/test_breadcrumbs.css' %}">
         <link rel="stylesheet" href="{% static 'swn/css/styles.css' %}">
     </head>
     <body>
@@ -42,14 +42,78 @@
 
             <h2>Disabled</h2>
             <button type="button" class="btn btn-primary" disabled>Primary button</button>
-<button type="button" class="btn btn-secondary" disabled>Button</button>
-<button type="button" class="btn btn-outline-primary" disabled>Primary button</button>
-<button type="button" class="btn btn-outline-secondary" disabled>Button</button>
+            <button type="button" class="btn btn-secondary" disabled>Button</button>
+            <button type="button" class="btn btn-outline-primary" disabled>Primary button</button>
+            <button type="button" class="btn btn-outline-secondary" disabled>Button</button>
 
             <h2>Link</h2>
             <a class="btn btn-primary disabled" role="button" aria-disabled="true">Primary link</a>
-<a class="btn btn-secondary disabled" role="button" aria-disabled="true">Link</a>
+            <a class="btn btn-secondary disabled" role="button" aria-disabled="true">Link</a>
+
+
+
+            <a id="navSiekerWetland" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerWetlands" aria-selected="false">Ehemalige Feuchtgebiete</a>
+
+
+        <div class="row justify-content-center">
+            <div class="col-11 col-sm-9 col-md-7 col-lg-6 col-xl-5 text-center p-0 mt-3 mb-2">
+                <div class="px-0 pt-4 pb-0 mt-3 mb-3">
+                    <div id="progressbar-container" class="progress-indicator">
+                        <ul id="progressbar">
+                            <li class="step-list-item active" id="step1"><a id="nav1" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tab1"><strong>Step 1</strong></a></li>
+                            <li class="step-list-item" id="step2"><a id="nav2" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tab2"><strong>Step 2</strong></a></li>
+                            <li class="step-list-item" id="step3"><a id="nav3" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tab3"><strong>Step 3</strong></a></li>
+                            <li class="step-list-item" id="step4"><a id="nav4" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tab4"><strong>Step 4</strong></a></li>
+                        </ul>
+
+                        <div class="progress">
+                            <div class="progress-bar"></div>
+                        </div> <br>
+
+
+                        <div class="step-tab tab-content" id="tab1">
+                            <h2>Welcome To GFG Step 1</h2>
+                            <input type="button" name="next-step" 
+                                class="next-step" value="Next Step" />
+                        </div>
+                        <div class="step-tab tab-content" id="tab2">
+                            <h2>Welcome To GFG Step 2</h2>
+                            <input type="button" name="next-step" 
+                                class="next-step" value="Next Step" />
+                            <input type="button" name="previous-step" 
+                                class="previous-step" 
+                                value="Previous Step" />
+                        </div>
+                        <div class="step-tab tab-content" id="tab3">
+                            <h2>Welcome To GFG Step 3</h2>
+                            <input type="button" name="next-step" 
+                                class="next-step" value="Final Step" />
+                            <input type="button" name="previous-step" 
+                                class="previous-step" 
+                                value="Previous Step" />
+                        </div>
+
+                        <div class="step-tab tab-content" id="tab4">
+                            <div class="finish">
+                                <h2 class="text text-center">
+                                    <strong>FINISHED</strong>
+                                </h2>
+                            </div>
+                            <input type="button" name="previous-step" class="previous-step" value="Previous Step" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
         
+
+
+
+
+
             <h1>Accordion</h1>
             <div class="accordion accordion-flush" id="accordionFlushExample">
                 <div class="accordion-item">
@@ -123,23 +187,12 @@
                   <!-- Baselayer accordion items -->
                   <div class="accordion-item">
                     <h2 class="accordion-header">
-                      <button
-                        class="accordion-button"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#baseLayerCollapse"
-                        aria-expanded="true"
-                        aria-controls="baseLayerCollapse"
-                      >
+                      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#baseLayerCollapse" aria-expanded="true" aria-controls="baseLayerCollapse">
                         Baselayers
                       </button>
                     </h2>
                     <!-- Baselayer collapse -->
-                    <div
-                      id="baseLayerCollapse"
-                      class="accordion-collapse collapse show"
-                      
-                    >
+                    <div id="baseLayerCollapse" class="accordion-collapse collapse show">
                       <ul class="list-group sidebar-list base-layer-control-list" id="baseLayerList">
                         <!-- leaflet layer control items are inserted here-->
                       </ul>
@@ -150,13 +203,7 @@
                   <div class="accordion-item">
                     <h2 class="accordion-header">
                       <button
-                        class="accordion-button collapsed"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#overlayAccordion"
-                        aria-expanded="false"
-                        aria-controls="overlayAccordion"
-                      >
+                        class="accordion-button collapsed" aria-controls="overlayAccordion">
                         Overlays
                       </button>
                     </h2>
@@ -209,16 +256,7 @@
                               <label class="form-check-label" for="DEMSwitch">Höhenmodell</label>
                             </div>
                             <div class="range col-5">
-                              <input
-                                type="range"
-                                class="form-range layer-opacity"
-                                data-layer="demOverlay"
-                                min="0.0"
-                                max="1.0"
-                                step="0.1"
-                                id="demOverlayOpacity"
-                                disabled
-                              />
+                              <input type="range" class="form-range layer-opacity" data-layer="demOverlay" min="0.0" max="1.0" step="0.1" id="demOverlayOpacity" disabled/>
                             </div>
                           </div>
                         </li>
@@ -234,12 +272,7 @@
                               <input type="range" class="form-range layer-opacity" data-layer="droughtOverlay" min="0.0" max="1.0" step="0.1" id="droughtOverlayOpacity" disabled />
                             </div>
                           </div>
-                        </li>
-          
-                        
-          
-                        
-                        
+                        </li> 
                       </ul>
                     </div>
                   </div>
@@ -254,53 +287,51 @@
                     <div id="userFieldsAccordion" class="accordion-collapse collapse" >
                         <!-- userFields -->
 
-<div class="accordion-item" id="accordion-1" leaflet-id="1">
-<!-- inner HTML-->
-<div 
-  class="accordion-header nested user-field-header d-flex align-items-center justify-content-between" 
-  id="accordionHeader-1" leaflet-id="1">
-  <span class="form-check form-switch h6">  
-    <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="1" id="fieldSwitch-1" checked>
-  </span>
-  <button class="accordion-button nested btn collapsed user-field-btn" type="button" leaflet-id="1" id="accordionButton-1" data-bs-toggle="collapse" data-bs-target="#accordionField-1" aria-expanded="false" aria-controls="accordionField-1"> 
-  UserField Name
-  </button>
+                      <div class="accordion-item" id="accordion-1" leaflet-id="1">
+                      <!-- inner HTML-->
+                        <div 
+                          class="accordion-header nested user-field-header d-flex align-items-center justify-content-between" 
+                          id="accordionHeader-1" leaflet-id="1">
+                          <span class="form-check form-switch h6">  
+                            <input type="checkbox" class="form-check-input user-field-switch" leaflet-id="1" id="fieldSwitch-1" checked>
+                          </span>
+                          <button class="accordion-button nested btn collapsed user-field-btn" type="button" leaflet-id="1" id="accordionButton-1" data-bs-toggle="collapse" data-bs-target="#accordionField-1" aria-expanded="false" aria-controls="accordionField-1"> 
+                          UserField Name
+                          </button>
 
-  <span class="column col-4 field-btns-col">
-    <form id="deleteAndCalcForm-1">
-      <a type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="1">
-        <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="1"></i></span>
-      </a>
+                          <span class="column col-4 field-btns-col">
+                            <form id="deleteAndCalcForm-1">
+                              <a type="button" class="btn btn-outline-secondary btn-sm field-name user-field-action field-edit" leaflet-id="1">
+                                <span><i class="bi bi-pencil-square user-field-action field-edit" leaflet-id="1"></i></span>
+                              </a>
 
-      <a type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="1">
-        <span><i class="bi bi-list user-field-action field-menu" leaflet-id="1"></i></span>
-      </a>
-      <a type="button" class="btn btn-outline-secondary btn-sm user-field-action delete " leaflet-id="1">
-        <span><i class="bi bi-trash user-field-action delete" leaflet-id="1"></i></span>
-      </a>
-    </form>
-  </span>  
-</div>
-
-
-<div id="accordionField-1" class="accordion-collapse collapse">
-  <div class="accordion-body">
-    <ul class="list-group" id="projectList-1">
-      <li>some item 1</li>
-      <li>some item 2</li>
-    <ul>
-  </div>
-</div>
+                              <a type="button" class="btn btn-outline-secondary btn-sm user-field-action field-menu" leaflet-id="1">
+                                <span><i class="bi bi-list user-field-action field-menu" leaflet-id="1"></i></span>
+                              </a>
+                              <a type="button" class="btn btn-outline-secondary btn-sm user-field-action delete " leaflet-id="1">
+                                <span><i class="bi bi-trash user-field-action delete" leaflet-id="1"></i></span>
+                              </a>
+                            </form>
+                          </span>  
+                        </div>
 
 
+                        <div id="accordionField-1" class="accordion-collapse collapse">
+                          <div class="accordion-body">
+                            <ul class="list-group" id="projectList-1">
+                              <li>some item 1</li>
+                              <li>some item 2</li>
+                            <ul>
+                          </div>
+                        </div>
 
 
-</div>
 
-<!-- inner HTML-->
 
-                       
-          
+                      </div>
+
+                      <!-- inner HTML-->
+
                     </div>
                   </div>
           
@@ -320,6 +351,12 @@
 
 
         </container>
+        <script src=
+'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'>
+    </script>
+
+        <script src="{% static 'swn/js/test_breadcrumbs.js' %}"></script>
+
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
       </div>
       </body>

@@ -3,16 +3,25 @@
 
 <div id="divSiekerSurfaceWaters" class="tab-pane">
   
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Oberflächengewässer</h2>
-        <div>
-            <button class="btn btn-primary me-2 save-toolbox-project" data-type="sieker_surface_water">Speichern</button>
+    <div class="d-flex justify-content-between align-items-center mb-3 row">
+        <div class="row">
+            <h2 class="mb-0">Oberflächengewässer</h2>
+        </div>
+        <div class="row mt-4">
+            <div class="col-6">
+                <strong>Projekt: </strong><span class="title-project-name">Kein Projekt ausgewählt</span></br>
+                <strong>Suchgebiet: </strong><span class="title-user-field-name">Kein Suchgebiet ausgewählt</span></br>
+            </div>
+            <div class="col-6 text-end">
+                <button class="toolbox-back-to-initial btn btn-secondary mx-2">Schließen</button>
+                <button class="btn btn-primary mx-2 save-toolbox-project" data-type="sieker_surface_water">Speichern</button>
+            </div>
         </div>
     </div>
     <!-- Navigation -->
-    <ul class="nav nav-tabs">
+    <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersProject" aria-selected="true">Project</a>
+            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersProject" aria-selected="true">Projekt</a>
         </li>
     
         <li class="nav-item sieker_surface_water">
@@ -23,8 +32,14 @@
         </li>
 
         <li class="nav-item sieker_surface_water">
-            <a id="navSiekerSurfaceWatersResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersResult">Ergebnis</a>
+            <a id="navSiekerAbovegroundCatchmentArea" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerAbovegroundCatchmentArea" aria-selected="false">Oberirdische Einzugsgebiete</a>
         </li>
+
+        <li class="nav-item sieker_surface_water">
+            <a id="navSiekerSurfaceWatersResultDownload" class="toolbox nav-link"  data-bs-toggle="tab" href="#tabSiekerSurfaceWatersResultDownload">Ergebnisdownload</a>
+        </li>
+
+
     </ul>
 
     <!-- Tab Content Wrapper -->
@@ -33,10 +48,7 @@
         <div id="tabSiekerSurfaceWatersProject" class="tab-pane active show">
             <div class="card mb-3">
                 <div class="card-body">
-                    {{ project_select_form | crispy }}
-                
-                    <button class="toolbox-back-to-initial btn btn-secondary">Zurück zur Auswahl</button>
-                    <button class="toolbox-load-project btn btn-secondary" data-type="sieker_surface_water">Laden</button>
+                    {% crispy project_select_form %}
             
                 </div>
             </div>
@@ -50,20 +62,28 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Filter seen</h5>
-                        <button id="toggleSiekerLakes" class="btn btn-secondary">ausblenden</button>                                                                                             
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sieker_surface_water">Layer ausblenden</button>                                                                                             
                     </div>
                     
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy sieker_lake_filter.form %}
-                        <button id="btnFilterSiekerLakes"type="submit" class="btn btn-primary">Seen filtern</button>
+        
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterSiekerLakesModal">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Seen filtern
+                        </button>
+                        <button id="btnUnfilterSiekerLakes" type="submit" class="btn btn-primary">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Alle Seen anzeigen
+                        </button>
                     </form>
                 </div>
             </div>
-            <div id="card-sieker_surface_water-table" class="card mb-3">
+            <div id="card-sieker_surface_water-table" class="card mb-3 overflow-auto">
                 <div class="card-body">
-                    {% comment %} <div id="sieker-lake-table-container"></div> {% endcomment %}
-                    <div id="sieker_surface_water-table-container"></div>
+                    {% comment %} <div id="sieker-lake-table-container" class="table-responsive"></div> {% endcomment %}
+                    <div id="sieker_surface_water-table-container" class="table-responsive"></div>
                     {% comment %} <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button> {% endcomment %}
                     {% comment %} <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button> {% endcomment %}
 
@@ -74,20 +94,32 @@
         <div id="tabSiekerSurfaceWatersLevels" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title">Pegel</h5>
-                        <button id="toggleSiekerLevels" class="btn btn-secondary">ausblenden</button>                                                                                             
-                    </div>
-                    
 
+                    <!-- Header row -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="card-title mb-0">Pegel</h5>
+                        <button class="btn btn-secondary toggle-feature-group" data-type="sieker_water_level">Pegel ausblenden</button>
+                    </div>
+                
+
+                    <div id="card-sieker_water_level-table" class="card mb-3 d-none">
+                        <div class="card-body">
+                            <div id="sieker_water_level-table-container" class="table-responsive"></div>           
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div id="card-sieker_water_level-table" class="card mb-3 d-none">
-                <div class="card-body">
-                    <div id="sink-table-container"></div>
-                    {% comment %} <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button> {% endcomment %}
-                    {% comment %} <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button> {% endcomment %}
+        </div>
 
+        <div id="tabSiekerAbovegroundCatchmentArea" class="tab-pane">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="card-title">Oberirdische Einzugsgebiete</h5>
+                        <button class="btn btn-secondary toggle-feature-group" data-type="above_ground_catchment_area">Layer ausblenden</button>                                                                                             
+                    </div>
+                    {% comment %} <div id="sieker-lake-table-container" class="table-responsive"></div> {% endcomment %}
+                    <div id="above_ground_catchment_area-table-container" class="table-responsive"></div>
                 </div>
             </div>
         </div>
@@ -97,27 +129,43 @@
         
 
 
-        <div id="tabSiekerSurfaceWatersResult" class="tab-pane ">
+        <div id="tabSiekerSurfaceWatersResultDownload" class="tab-pane ">
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>
-                    <table  class="table table-hover" id="inlet-table">
-                        <thead>
-                            <tr>
-                            <th>ID</th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                    <div id="water-level-info-card" class="card mt-3" style="display: none;"></div>
+                    <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
+                    {% crispy result_form %}
                 </div>
             </div>
         </div>
-        
+
 
     </div>
 
+</div>
+
+
+
+
+
+<!-- Alert modal -->
+ <div class="modal" id="filterSiekerLakesModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Achtung</h5>
+       
+      </div>
+      <div class="modal-body">
+        <p>Einige Seen haben keine Angaben zu Volumen und Tiefe. Diese Seen werden herausgefiltert.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnFilterSiekerLakes" class="btn btn-primary filter-features" data-bs-dismiss="modal" data-type="sieker_surface_water">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+            Seen Filtern
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+      </div>
+    </div>
+  </div>
 </div>

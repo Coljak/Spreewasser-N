@@ -64,7 +64,7 @@
                 </div>
               </li>
 
-              {% for field in state_county_district_form.visible_fields %}
+              {% for field in counties_form.visible_fields %}
 
                 <li  class="list-group-item">
                   {{ field }}
@@ -105,7 +105,7 @@
               </li>
 
               <!-- Toolbox overlays -->
-              <li class="list-group-item toolbox-overlay-sidebar-item">
+              {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item">
                 <div class="row">
                   <div class="form-check form-switch col">
                     <input type="checkbox" data-layer="allRivers" class="form-check-input overlay-switch" id="toolboxOverlayRiverswitch"/>
@@ -125,7 +125,7 @@
                     </label>
                   </div>
                 </div>
-              </li>
+              </li> {% endcomment %}
 
               {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item">
                 <div class="row">
@@ -149,7 +149,7 @@
                 </div>
               </li> {% endcomment %}
 
-              <li class="list-group-item toolbox-overlay-sidebar-item ">
+              {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item ">
                 <div class="row">
                   <div class="form-check form-switch col">
                     <input type="checkbox" data-layer="toolboxOutlineInjection" class="form-check-input overlay-switch" id="toolboxOverlayInjectionSwitch"/>
@@ -190,25 +190,39 @@
                     </label>
                   </div>
                 </div>
-              </li>
+              </li> {% endcomment %}
               
             </ul>
           </div>
         </div>
 
         <!-- toolbox userfields -->
-        <div class="accordion-item" >
-          <h2 class="accordion-header">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#userFieldsAccordion" aria-expanded="true" aria-controls="userFieldsAccordion">
-            Suchgebiete
-            </button>
-          </h2>
-          <div  id="userFieldsAccordion" class="accordion-collapse collapse show" >
-            <ul  id="userFieldList" class="list-group sidebar-list">
-              <!-- userFields -->
-            </ul>
-          </div>
+        <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button d-flex justify-content-between align-items-center" 
+                  type="button" 
+                  data-bs-toggle="collapse" 
+                  data-bs-target="#userFieldsAccordion" 
+                  aria-expanded="true" 
+                  aria-controls="userFieldsAccordion">
+
+            
+
+            <div class="form-check form-switch m-0" onclick="event.stopPropagation();">
+              <input type="checkbox" class="form-check-input all-userfields-switch" id="allUserFieldsSwitch" checked=""/>
+              <label class="form-check-label" for="allUserFieldsSwitch">Suchgebiete</label>
+            </div>
+
+          </button>
+        </h2>
+
+        <div id="userFieldsAccordion" class="accordion-collapse collapse show">
+          <ul id="userFieldList" class="list-group sidebar-list">
+            <!-- userFields -->
+          </ul>
         </div>
+      </div>
+
 
       </div>
     </div>

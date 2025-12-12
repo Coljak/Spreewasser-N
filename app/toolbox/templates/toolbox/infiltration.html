@@ -2,23 +2,41 @@
 {% load static %}
 
 <div id="divInfiltration">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Grundwasseranreicherung durch Versickerung</h2>
-        <div>
-            <button class="btn btn-primary me-2 save-toolbox-project" data-type="infiltration">Speichern</button>
+    <div class="d-flex justify-content-between align-items-center mb-3 row">
+        <div class="row">
+            <h2 class="mb-0">Grundwasseranreicherung durch Versickerung</h2>
+        </div>
+        <div class="row mt-4">
+            <div class="col-6">
+                <strong>Projekt: </strong><span class="title-project-name">Kein Projekt ausgewählt</span></br>
+                <strong>Suchgebiet: </strong><span class="title-user-field-name">Kein Suchgebiet ausgewählt</span></br>
+            </div>
+            <div class="col-6 text-end">
+                <span id="spanBtnGetInfiltrationResults">
+                <button id="btnGetInfiltrationResults" class="btn btn-primary mx-2" data-type="infiltration">Ergebnis berechnen</button>
+                </span>
+                <button class="toolbox-back-to-initial btn btn-secondary mx-2">Schließen</button>
+                <button class="btn btn-primary mx-2 save-toolbox-project" data-type="infiltration">Speichern</button>
+            </div>
         </div>
     </div>
     
     <!-- Navigation -->
-    <ul class="nav nav-tabs">
+    <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Project</a>
+            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
         </li>
         <li class="nav-item infiltration">
             <a id="navInfiltrationWeightingForms" class="toolbox nav-link" data-bs-toggle="tab" href="#tabWeightingForms" aria-selected="false"
-            data-toggle="tooltip" data-placement="top" title="Erklärung zur Gewichtung Erklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur GewichtungErklärung zur Gewichtung"
-            >Gewichtung der Senkeneigenschaften</a>
+            data-toggle="tooltip" data-placement="top" title="Erklärung zur Gewichtung"
+            >Gewichtung Bodenbewertung</a>
         </li>
+        <li class="nav-item infiltration">
+            <a id="navOverallWeighting" class="toolbox nav-link" data-bs-toggle="tab" href="#tabOverallWeighting" aria-selected="false"
+            data-toggle="tooltip" data-placement="top" title="Erklärung zur Gewichtung"
+            >Gewichtung Untergrundbewertung</a>
+        </li>
+        
         <li class="nav-item infiltration">
             <a id="navInfiltrationSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSinks" aria-selected="false">Senken</a>
         </li>
@@ -33,7 +51,14 @@
             <a id="navInfiltrationStreams" class="toolbox nav-link" data-bs-toggle="tab" href="#tabStreams" aria-selected="false">Flüsse</a>
         </li>
         <li class="nav-item infiltration">
-            <a id="navInfiltrationResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabToolboxResult">Ergebnis</a>
+            <a id="navWeightingInlet" class="toolbox nav-link" data-bs-toggle="tab" href="#tabWeightingInlet" aria-selected="false">Gewichtung Zuleitung</a>
+        </li>
+        
+        <li class="nav-item infiltration">
+            <a id="navInfiltrationResult" class="toolbox nav-link disabled" data-bs-toggle="tab" href="#tabToolboxResult">Ergebnis</a>
+        </li>
+        <li class="nav-item infiltration">
+            <a id="navInfiltrationResultDownload" class="toolbox nav-link" data-bs-toggle="tab" href="#tabInfiltrationResultDownload">Download</a>
         </li>
     </ul>
 
@@ -43,40 +68,38 @@
         <div id="tabToolboxProject" class="tab-pane active show">
             <div class="card mb-3">
                 <div class="card-body">
-                    {{ project_select_form | crispy }}
-                
-                    <button class="toolbox-back-to-initial btn btn-secondary">Zurück zur Auswahl</button>
-                    <button class="toolbox-load-project btn btn-secondary" data-type="infiltration">Laden</button>
+                    {% crispy project_select_form %}
 
                 </div>
             </div>
         </div>
-
-
-
 
         <div id="tabSinks" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Filter Natürliche Senken als Versickerungsstandorte</h5>
-                        {% comment %} <button id="toggleSinksMarkerCluster" class="btn btn-secondary toggle-marker-cluster" data-type="sink">toggle cluster</button> {% endcomment %}
-                        <button class="btn btn-secondary toggle-feature-group" data-type="sink">ausblenden</button>                                                                                             
+                
+                        <button class="btn btn-secondary toggle-feature-group d-none" data-type="sink">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Layer ausblenden
+                        </button>                                                                                             
                     </div>
                     
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy sink_filter.form %}
-                        <button id="btnFilterSinks" type="submit" class="btn btn-primary filter-features" data-type="sink">Senken filtern und bewerten</button>
+                        <button type="submit" class="btn btn-primary filter-features filter-sinks" data-type="sink">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Senken filtern und bewerten
+                        </button>
                     </form>
                 </div>
             </div>
-            <div id="card-sink-table" class="card mb-3 d-none">
+            <div id="card-sink-table" class="card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="sink-table-container"></div>
-                    {% comment %} <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button> {% endcomment %}
-                    {% comment %} <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button> {% endcomment %}
-
+                    <div id="sink-table-container" class="table-responsive"></div>
+                    
                 </div>
             </div>
         </div>
@@ -86,89 +109,103 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title">Filter Baulich modifizierte Senken als Versickerungsstandorte</h5>
-                        <button class="btn btn-secondary toggle-feature-group" data-type="enlarged_sink">ausblenden</button>                                                                                             
+                        <button class="btn btn-secondary toggle-feature-group d-none" data-type="enlarged_sink">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Layer ausblenden
+                        </button>                                                                                             
                     </div>
                     
                     <form method="POST" action="">
                         {% csrf_token %}
                         {% crispy enlarged_sink_filter.form %}
-                        <button id="btnFilterEnlargedSinks" type="submit" class="btn btn-primary filter-features" data-type="enlarged_sink">Senken filtern und bewerten</button>
+                        <button type="submit" class="btn btn-primary filter-features filter-sinks" data-type="enlarged_sink">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Senken filtern und bewerten
+                        </button>
                     </form>
                 </div>
             </div>
             
-            <div id="card-enlarged_sink-table"  class="card mb-3 d-none">
+            <div id="card-enlarged_sink-table"  class="card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="enlarged_sink-table-container"></div>
-                    {% comment %} <button id="btnCntinueWithEnlargedSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks ">Auswahl bewerten</button> {% endcomment %}
-                    {% comment %} <button id="btnShowEnlargedSinkOutlines" type="button" class="btn btn-primary mt-3 show-enlarged-sink-outlines">Vergrößerte Senken anzeigen</button> {% endcomment %}
-                    {% comment %} <button id="btnShowEmbankments" type="button" class="btn btn-primary mt-3 show-embankment-outlines">Verwallungsstrukturen anzeigen</button> {% endcomment %}
+                    <div id="enlarged_sink-table-container" class="table-responsive"></div>
+                   
                 </div>
             </div>
         </div>
 
-        
-        
-
         <div id="tabLakes" class="tab-pane">
-            {% comment %} <h2 class="title">Oberflächengewässer</h2> {% endcomment %}
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="card-title mb-0">Stillgewässer</h5>
-                        <button  class="btn btn-secondary toggle-feature-group" data-type="lake">ausblenden</button>                                                                                             
+                        <h5 class="card-title mb-0">Stehende Gewässer</h5>
+                        <button  class="btn btn-secondary toggle-feature-group d-none" data-type="lake">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Layer ausblenden
+                        </button>                                                                                             
                     </div>
 
                     
                     <div class="card-body">
                         {% crispy lakes_form.form  %}
-                        <button id="btnFilterLakes" class="btn btn-primary mt-3 filter-features" data-type="lake">Seen filtern</button>
+                        <button  class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="lake">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Seen filtern
+                        </button>
                     </div>
                 </div>
             </div>
-            <div id="card-lake-table"  class="card mb-3 d-none">
+            <div id="card-lake-table"  class="card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="lake-table-container"></div>
+                    <div id="lake-table-container" class="table-responsive"></div>
                 </div>
             </div>
             
         </div>
 
         <div id="tabStreams" class="tab-pane">
-            {% comment %} <h2 class="title">Seen</h2> {% endcomment %}
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="card-title mb-0">Fließgewässer</h5>
-                        <button  class="btn btn-secondary toggle-feature-group" data-type="stream">ausblenden</button>                                                                                             
+                        <button  class="btn btn-secondary toggle-feature-group d-none" data-type="stream">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Layer ausblenden
+                        </button>                                                                                             
                     </div>
-
-                    
+        
                     <div class="card-body">
                         {% crispy streams_form.form  %}
-                        <button id="btnFilterStreams" class="btn btn-primary mt-3 filter-features" data-type="stream">Flüsse filtern</button>
+                        <button class="btn btn-primary mt-3 filter-features filter-waterbodies" data-type="stream">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none"></span>
+                            Flüsse filtern
+                        </button>
                     </div>
                 </div>
             </div>
-            <div id="card-stream-table"  class="card mb-3 d-none">
+            <div id="card-stream-table"  class="card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="stream-table-container"></div>
+                    <div id="stream-table-container" class="table-responsive"></div>
                   
                 </div>
             </div>
             
         </div>
-
-        <div id="tabWeightingForms" class="tab-pane">
-            {% comment %} <h2 class="title">Gewichtung der Senkeneigenschaften</h2> {% endcomment %}
+        <div id="tabOverallWeighting" class="tab-pane">
+            
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Gesamtgewichtung</h5>
+                    <h5 class="card-title">Gewichtung Untergrundbewertung</h5>
                     <div class="card-body">
                         {% crispy overall_weighting %}            
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div id="tabWeightingForms" class="tab-pane">
+            
+            
             
             <div class="card mb-3">
                 <div class="card-body">
@@ -194,46 +231,40 @@
                     </div>
                 </div>
             </div>
-            {% comment %} <h2 class="title">Gewichtung der Einlasspunkte</h2>
+            
+        </div>
+
+        <div id="tabWeightingInlet" class="tab-pane ">
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Distanz und Volumen</h5>
+                    <h5 class="card-title">Gewichtung der Zuleitung</h5>
                     <div class="card-body">
-                        {% crispy inlet_point_weighting %}            
+                        {% crispy inlet_weighting %}    
                     </div>
+                    
                 </div>
-            </div> {% endcomment %}
-            
+            </div>
         </div>
 
         <div id="tabToolboxResult" class="tab-pane ">
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>
-                    <table  class="table table-hover" id="inlet-table">
-                        <thead>
-                            <tr>
-                            <th>ID</th>
-                            <th>Vergrößerte Senke</th>
-                            
-                            <th>Wasserkörper</th>
-                            <th>Länge Zuleitung(m)</th>
-                            <th>Eignung Zuleitung</th>
-                            <th>Senkeneignung</th>
-                            <th>Gesamtbewertung</th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                    <div id="inlet-info-card" class="card mt-3" style="display: none;"></div>
+                    <div id="infiltration_result-table-container" class="table-responsive"></div>  
+                                
                 </div>
             </div>
         </div>
-        <button id="btnGetInlets" class="btn btn-primary mt-3">Ergebnis berechnen</button>
 
+        <div id="tabInfiltrationResultDownload" class="tab-pane ">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ergebnisdownload</h5>
+                    <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
+                    {% crispy result_form %}
+                </div>
+            </div>
+        </div>
+        
     </div>
-
 </div>

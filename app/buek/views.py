@@ -44,8 +44,7 @@ def get_buek_polygon_id_from_point_buek200(lat, lon):
     else:
         # the case where the coordinates are on the borders of more than one polygon returns only the first polygon's id 
         polygon_id = polygon_id[0].polygon_id
-    
-    print('Time elapsed getting soil profile: ', datetime.now() - start)
+
     return polygon_id
 
 
@@ -70,19 +69,19 @@ def get_buek_data_from_point(request, lat, lon):
     else:
         # the case where the coordinates are on the borders of more than one polygon returns only the first polygon's id 
         polygon = polygon[0]
-    print('Polygon:', polygon)
     serializer = MapSoilCLCSerializer(polygon, many=False)
-    print('Time elapsed getting soil profile: ', datetime.now() - start)
+
     return Response(serializer.data)
 
 
 
 def get_soil_profile(profile_type, lat, lon):
     """
-    This function returns all references to soilprofiles in one point.
-    tkle_nr is the id of the polygon in the BUEK200 database,
-    polygon_id id the id of the polygon used to provide the soil data in cases where either no data or no appropriate data is available in the Buek200,
-    ....
+    This produces soil profiles at the given longitude and latitude. 
+    The profile_type general provides a soilprofile according to the CLC landuse.
+    The profile_types agriculture and forest produce profiles agricultural and forest 
+    profiles where such a profile exists in the buek and where the landuse is agricultural or forests.
+    In all other cases, the profile is according to the landuse.  
     """ 
     lat = float(lat)
     lon = float(lon)
@@ -150,8 +149,7 @@ def get_profiles_from_point_buek200(request, lat, lon):
     soil_data = models.SoilProfile.objects.filter(polygon_id=polygon_id)
     # soil_serializer = SoilProfileSerializer(soil_data, many=True)
     response_dict = [soil.get_horizons_json() for soil in soil_data ]
-    
-    print('Time elapsed getting soil profile: ', datetime.now() - start)
+
     return Response(response_dict)
 
 

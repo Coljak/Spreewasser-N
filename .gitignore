@@ -175,6 +175,7 @@ cython_debug/
 # The PostgreSQL database
 data_temp/
 database/
+database_old/
 notes/
 
 model_exports/
@@ -214,6 +215,7 @@ klim4cast/data/
 temp/
 monica-parameters/
 app/monica/monica-parameters/
+help_text_import/
 
 # data files
 *.nc
@@ -224,4 +226,5 @@ app/monica/monica-parameters/
 *.dbf
 *.dods
 
-_hohenfinow/
+_hohenfinow/app/toolbox/Abflusswerte.txt
+app/toolbox/Abflusswerte_nachtrag.txt

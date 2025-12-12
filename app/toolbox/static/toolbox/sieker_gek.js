@@ -1,5 +1,15 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown, getBsColor } from '/static/shared/utils.js';
-import { updateDropdown, addChangeEventListener, addClickEventListenerToToolboxPanel,  tableCheckSelectedItems, addFeatureCollectionToTable, addFeatureCollectionToLayer, loadProjectToGui } from '/static/toolbox/toolbox.js';
+import { 
+  updateDropdown, 
+  addChangeEventListener, 
+  addClickEventListenerToToolboxPanel,  
+  tableCheckSelectedItems, 
+  addFeatureCollectionToTable, 
+  addFeatureCollectionToLayer, 
+  loadProjectToGui,
+  createDetailRows, 
+  clearAndRemoveTable,
+} from '/static/toolbox/toolbox.js';
 import { ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { SiekerGek } from '/static/toolbox/sieker_gek_model.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
@@ -8,29 +18,49 @@ import {
   projectRegion, 
   baseMaps, 
   map, 
-  initializeMapEventlisteners, 
-  openUserFieldNameModal,
 
-  getUserFieldIdByLeafletId, 
-  getLeafletIdByUserFieldId, 
-  getUserFieldsFromDb, 
-  highlightLayer, 
-  selectUserField,
-  handleSaveUserField,
-  dismissPolygon,
-  getCircleMarkerSettings, 
-  getLegendItem,
-  getLegendSettings,
-  removeLegendFromMap,
-  
 } from '/static/shared/map_sidebar_utils.js';
 
 
+function getAllSiekerGeks(project) {
+  console.log('Check 1')
+  fetch('get_all_sieker_geks/', {
+    method: 'POST',
+    body: JSON.stringify(project),
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCSRFToken(),
+    }
+  }).then(
+    response => response.json()
+  ).then(data => {
+    
+    console.log(data)
+    if(data.message.success) {
+      Layers['sieker_gek'].clearLayers();
+      // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
+      
+      console.log('GEK', data)
+      addFeatureCollectionToLayer(data, true);
+      const table = addFeatureCollectionToTable({
+        featureCollection: data.featureCollection,
+        dataInfo: data.dataInfo,
+        tableClasses: 'table table-hover',
+      });
+      tableCheckSelectedItems(project, data.dataInfo.dataType)
 
+
+    } else {
+      clearAndRemoveTable(SiekerGek, 'sieker_gek', data.message.message)
+    }
+    return data.dataInfo
+  })
+
+};
 
 
 function filterSiekerGeks(project) {
-  
+  console.log('Check 2')
   fetch('filter_sieker_geks/', {
     method: 'POST',
     body: JSON.stringify(project),
@@ -44,44 +74,52 @@ function filterSiekerGeks(project) {
     
     console.log(data)
     if(data.message.success) {
-      Layers['filtered_sieker_gek'].clearLayers();
+      // Layers['sieker_gek'].clearLayers();
       // TODO in dataInfo: number of all measures vs. number of filtered measures. ADD THE LADDER!
       
+      console.log('GEK', data)
+      addFeatureCollectionToLayer(data, true);
+      const table = addFeatureCollectionToTable({
+        featureCollection: data.featureCollection,
+        dataInfo: data.dataInfo,
+        tableClasses: 'table',
+        rowClasses: 'table-parent-row',
+      })
+      createDetailRows(table, data.featureCollection, data.dataInfo, addResultCards)
+      
+      // addFeatureCollectionResultCards(data.dataInfo, data.measures)
 
-    addFeatureCollectionToLayer(data);
-    addFeatureCollectionToTable(data)
-    addFeatureCollectionResultCards(data.dataInfo, data.measures)
+      const measuresTab = $('#navSiekerGekMeasures')
+      const tab = new bootstrap.Tab(measuresTab);
+      tab.show();
 
-    const measuresTab = $('#navSiekerGekMeasures')
-    const tab = new bootstrap.Tab(measuresTab);
-    tab.show();
-
+    } else {
+      clearAndRemoveTable(SiekerGek, 'sieker_gek', data.message.message)
     }
-  })
 
+  })
+  .then(tableCheckSelectedItems(project, 'sieker_gek')
+  )
 };
 
-function addFeatureCollectionResultCards( dataInfo, gekMeasures) {
-    console.log(gekMeasures)
+function addResultCards( dataInfo, featureProperties) {
     console.log("Creating card")
-    const infoCard = document.getElementById('sieker_gek-info-card');
-    const infoCardBody = document.getElementById('sieker_gek-info-card-body');
-    infoCardBody.innerHTML = '';
-    gekMeasures.forEach(gek => {
+
         const cardBody = document.createElement('div');
         cardBody.classList.add('card-body')
         // card
-        cardBody.innerHTML = `<h4 class="card-title m-3">${gek.name} Abschnitt ${gek.planning_segment}</h4>`;
+        cardBody.innerHTML = `<h4 class="card-title m-3">${featureProperties.name} Abschnitt ${featureProperties.planning_segment}</h4>`;
         
         const card = document.createElement('div');
         card.classList.add("card")
         card.classList.add("mb-3")
-        card.classList.add("gek-result-card")
+        // card.classList.add("gek-result-card")
         card.setAttribute('data-type', dataInfo.dataType)
-        card.setAttribute('data-id', gek.id)
+        card.setAttribute('data-id', featureProperties.id)
 
 
-        gek.measures.forEach(measure => {
+        featureProperties.measures.forEach(measure => {
+          console.log('Measure', measure)
             const innerCard = document.createElement('div');
             innerCard.classList.add("card")
             innerCard.classList.add("mb-3")
@@ -90,36 +128,38 @@ function addFeatureCollectionResultCards( dataInfo, gekMeasures) {
 
             const innerCardBody = document.createElement('div');
             innerCardBody.classList.add("card-body")
+            const items = measure.description.split(',').map(s => s.trim()).filter(Boolean);
+            const bulletPoints = `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
             innerCardBody.innerHTML = `
                 <h5 class="card-title">${measure.gek_measure}</h5>
                 <b>Anzahl:</b><span> ${measure.quantity}</span></br>
                 <b>Kosten:</b><span> ${measure.costs} €</span></br>
-                <div class="result-text-box">${measure.description}</div>
+                <div class="result-text-box">${bulletPoints}</div>
             `;
         
             innerCard.appendChild(innerCardBody)
             cardBody.append(innerCard)
         })
-        card.appendChild(cardBody)
-        infoCardBody.appendChild(card)
-    })
-    infoCard.style.display = '';
-    $('.gek-result-card').hide();
+        // card.appendChild(cardBody)
+
+  return cardBody.outerHTML;
+}
+
+function getLowerSliderVal(sliderLabels, sliderValue) {
+  const keys = Object.keys(sliderLabels).map(Number).filter(k => k <= sliderValue); 
+  return Math.max(...keys);
+}
+
+function getUpperSliderVal(sliderLabels, sliderValue) {
+  const keys = Object.keys(sliderLabels).map(Number).filter(k => k <= sliderValue); 
+  return Math.min(...keys);
 }
 
 
+
 export function initializeSiekerGek(data) {
-
-  
-
-
-  removeLegendFromMap(map);
-  map.eachLayer(function(layer) {
-        console.log(layer.toolTag);
-        if (layer.toolTag && layer.toolTag !== 'sieker-gek') {
-            map.removeLayer(layer);
-        }
-        });
+  const project = SiekerGek.loadFromLocalStorage();
+  console.log('picked up', project);
   // console.log('Initialize Sieker Gek');
   // map.addLayer(Layers['sieker_gek']);
   
@@ -135,59 +175,39 @@ export function initializeSiekerGek(data) {
 
   if (slider && sliderLabels) {
     slider.addEventListener('change', function() {
-      console.log('sliderChanged', slider.value);
-      if (slider.value in sliderLabels) {
-        sliderLabelLeft.innerText = sliderLabels[slider.value];
-      }
+      console.log(sliderLabels)
+      let sliderVal = getLowerSliderVal(sliderLabels, slider.value)
+      sliderLabelLeft.innerText = sliderLabels[sliderVal];
     });
   }
   // end of string labelled slider
    
 
-    addFeatureCollectionToLayer(data)
-    addFeatureCollectionToTable(data)
-    
-    
-    
-
-
-
+  getAllSiekerGeks(project);
   
   $('#toolboxPanel').off('change');
   $('#toolboxPanel').off('click');
-
+  
   addChangeEventListener(SiekerGek);
   addClickEventListenerToToolboxPanel(SiekerGek)
 
-  $('.table-select-all').prop('checked', true);
-  $('.table-select-all').trigger('change')
 
   $('#toolboxPanel').on('click', function (event) {
     const $target = $(event.target);
-    if ($target.attr('id') === 'btnFilterSiekerGeks') {
+    if ($target.hasClass('filter-geks')) {
       const project = SiekerGek.loadFromLocalStorage();
       if (project.selected_sieker_geks.length === 0) {
         handleAlerts({'success': false, 'message': 'Bitte wählen Sie Gewässer aus!'})
       } else {
-        map.removeLayer(Layers['sieker_gek']);
-        map.addLayer(Layers['filtered_sieker_gek']);
-        // TODO: unsauber- filtered_sieker_gek macht keien Sinn, oder? Toggle nicht eindeutig.
+        console.log('Check 3')
         filterSiekerGeks(project);
       }
-      
-    
-    } else if ($target.attr('id') === 'toggleSiekerGeks') {
-      if (map.hasLayer(Layers['sieker_gek'])) {
-        map.removeLayer(Layers['sieker_gek']);
-        $target.text('Senken einblenden');
-      } else {
-          map.addLayer(Layers['sieker_gek']);
-          $target.text('Senken ausblenden');
-      }
+
     }
     }); 
 
   $('#navSiekerGek').on('shown.bs.tab', function (event) {
+    console.log('Check 4')
     const targetPane = $($(event.target).attr('href')); 
     if (targetPane.hasClass('active')) {
       map.addLayer(Layers['sieker_gek']);
@@ -196,6 +216,7 @@ export function initializeSiekerGek(data) {
   });
 
   $('#navSiekerGekMeasures').on('click', function (event) {
+    console.log('Check 5')
     const targetPane = $($(event.target).attr('href'));
     if (targetPane.hasClass('active')) {
       map.removeLayer(Layers['sieker_gek']);
@@ -204,12 +225,8 @@ export function initializeSiekerGek(data) {
   });
 
 
-
-  $('input[type="checkbox"][name="landuse"][prefix="gek"]').prop('checked', true);
-  $('input[type="checkbox"][name="landuse"][prefix="gek"]').trigger('change');
-
-  $('input[type="range"]').trigger('change');
-  const siekerGek = SiekerGek.loadFromLocalStorage();
+  const siekerGek = new SiekerGek(project);
+  siekerGek.saveToLocalStorage();
   loadProjectToGui(siekerGek);
 
 };

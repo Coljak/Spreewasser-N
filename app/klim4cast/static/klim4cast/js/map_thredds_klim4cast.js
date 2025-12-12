@@ -267,13 +267,8 @@ function showData (e) {
     fetch(`/klim4cast/get_data/${nc}/${variable}/${e.latlng.lat}/${e.latlng.lng}`)
     .then(response => response.json())
     .then(data => {
-        console.log('data', data);
-
         // Create the chart
         createChart(data);
-
-        // Hide the loading message and show the modal
-        
     })
     .catch(error => {
         console.error("Error fetching data: ", error);

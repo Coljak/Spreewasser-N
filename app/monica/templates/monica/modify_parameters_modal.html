@@ -16,7 +16,9 @@
             {{ form.name|as_crispy_field }}
             {{ form.use_secondary_yields |as_crispy_field }}
             {{ form.water_deficit_response_on |as_crispy_field }}
-            {{ form.emergence_moisture_control_on |as_crispy_field }}
+            {% comment %} TODO the following two are commentend out, because MONICA has a bug there - so they need to be false {% endcomment %}
+            {% comment %} {{ form.emergence_moisture_control_on |as_crispy_field }} {% endcomment %}
+            {% comment %} {{ form.emergence_flooding_control_on |as_crispy_field }} {% endcomment %}
             {{ form.nitrogen_response_on | as_crispy_field }}
             {{ form.use_n_min_mineral_fertilising_method |as_crispy_field }}
           </div>

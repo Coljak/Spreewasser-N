@@ -41,6 +41,43 @@ top: calc(var(--avatar-size) / 4); /* 25% of parent */
 }
 
 
+/* Make the control look like a Bootstrap input */
+.bootstrap-vs .vscomp-option {
+  border: 1px solid #ced4da !important;
+  border-radius: 0.375rem !important;
+  padding: 0.375rem 0.75rem !important;
+  font-size: 1rem !important;
+  height: calc(2.25rem + 2px) !important;
+}
+
+/* Hover / focus like Bootstrap */
+.bootstrap-vs .vscomp-option:focus,
+.bootstrap-vs .vscomp-option.vscomp-focused {
+  border-color: var(--bs-primary-bg-subtle) !important;
+  box-shadow: 0 0 0 0.25rem var(--bs-primary-bg-subtle) !important;
+}
+
+/* Dropdown menu like Bootstrap */
+.bootstrap-vs .vscomp-options-container {
+  border: 1px solid rgba(0,0,0,.15) !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15) !important;
+  padding: 0.25rem !important;
+}
+
+/* Options styling → looks like Bootstrap dropdown */
+.bootstrap-vs .vscomp-option {
+  border-radius: 0.375rem !important;
+  padding: 0.375rem 0.75rem !important;
+}
+
+.bootstrap-vs .vscomp-option:hover {
+  background-color: #f8f9fa !important;
+}
+
+
+
+
 
 
 

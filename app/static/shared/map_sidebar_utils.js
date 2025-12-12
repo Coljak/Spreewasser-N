@@ -1,10 +1,62 @@
 import { getGeolocation } from '/static/shared/utils.js';
-import { MonicaProject, loadProjectFromDB as loadMonicaProjectFromDb, loadProjectToGui as loadMonicaProjectToGui  } from '/static/monica/monica.js';
+import { MonicaProject } from '/static/monica/monica.js';
 
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
-import { loadProjectFromDb as loadToolboxProjectFromDb, loadProjectToGui as loadToolboxProjectToGui } from '/static/toolbox/toolbox.js';
 import { getCSRFToken, handleAlerts, getBsColor } from '/static/shared/utils.js';
-import { startToolbox } from '/static/toolbox/toolbox_three_split.js';
+
+
+
+
+
+
+const wmtsBase = 'https://sgx.geodatenzentrum.de/wmts_basemapde_schummerung/tile/1.0.0/de_basemapde_web_raster_combshade/default/DE_EPSG_3857_ADV/{TileMatrix}/{TileRow}/{TileCol}.png';
+
+// TileMatrix offset for DE_EPSG_3857_ADV (TileMatrix N -> leafetz = N + offset)
+const TILEMATRIX_OFFSET = 5; // <-- the important number we discovered
+
+    // Custom tile layer that maps Leaflet z,x,y -> WMTS TileMatrix, TileRow, TileCol
+const wmtsLayer = L.TileLayer.extend({
+getTileUrl: function(coords) {
+  const zLeaf = coords.z;     // Leaflet zoom
+  const x = coords.x;
+  const y = coords.y;
+
+  // Convert Leaflet zoom to WMTS TileMatrix
+  const tm = zLeaf - TILEMATRIX_OFFSET;
+
+  // If the tilematrix is outside WMTS range, return a transparent PNG (or a blank)
+  if (tm < 0 || tm > 13) {
+    // 1x1 transparent PNG data URI
+    return 'data:image/gif;base64,R0lGODlhAQABAIABAP///wAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+  }
+
+  // format TileMatrix as two digits (capabilities show 00, 01, 02, ...)
+  const tmStr = String(tm).padStart(2, '0');
+
+  // For DE_EPSG_3857_ADV the TileMatrix width = 2^(tm + 5) which equals 2^zLeaf,
+  // so TileCol = x and TileRow = y (Leaflet and WMTS align when using the correct TileMatrix).
+  const tileCol = x;
+  const tileRow = y;
+
+  // Replace placeholders in template
+  return wmtsBase
+    .replace('{TileMatrix}', tmStr)
+    .replace('{TileRow}', tileRow)
+    .replace('{TileCol}', tileCol);
+}
+});
+
+// Instantiate and add the layer
+export const demOverlay = new wmtsLayer('', {
+  attribution: 'Kartengrundlage: basemap.de / BKG — dl-de/by-2-0',
+  minZoom: 0,
+  maxZoom: 18, // Leaflet zoom; WMTS available TileMatrix 00..13 => LeafletZoom 5..18
+  tileSize: 256,
+  pane: 'overlayPolygonPane'
+})
+
+
+
 
 export class UserField {
   constructor(name, id=null, lat=null, lon=null, userProjects=[], properties={} ) {
@@ -19,7 +71,7 @@ export class UserField {
 };
 
 
-const wmsGwcUrl = "http://localhost:8080/geoserver/base_data/wms"
+const wmsUrl = "/toolbox/proxy/wms/"
 
 const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
@@ -39,18 +91,26 @@ const satellite = L.tileLayer(satelliteUrl, {
   pane: "baselayerPane"
 });
 
-const topoUrl = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
-const topoAttrib =
-  'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
-const topo = L.tileLayer(topoUrl, { 
-  maxZoom: 18, 
-  attribution: topoAttrib,
-pane: "baselayerPane"
- });
+
+
+ const greyMapUrl = 'https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web_grau/default/WEBMERCATOR/{z}/{y}/{x}.png'
+ const greyMap = L.tileLayer(greyMapUrl, {
+    attribution: '© BKG 2025 — Daten: TopPlusOpen <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a> ',
+    maxZoom: 18,
+    pane: "baselayerPane",
+})
+// https://sgx.geodatenzentrum.de/wmts_topplus_open/legend/web_scale.png  legende
 
 export const projectRegion = new L.geoJSON(project_region, {
-    attribution: 'Project Region',
+    attribution: 'Spreewasser:N Projektregion',
     pane: "overlayPolygonPane",
+    style: {
+      color: 'var(--bs-primary)', 
+      weight: 3,                   
+      fill: false,                  
+      fillOpacity: 0,               
+      interactive: true             
+    },
     onEachFeature: function (feature, layer) {
       layer.bindTooltip(feature.properties.name, {
       direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
@@ -61,24 +121,13 @@ export const projectRegion = new L.geoJSON(project_region, {
   }
 });
 
-export const demOverlay = L.tileLayer.wms(wmsGwcUrl, {
-      layers: 'base_data:dgm200_utm32s',
-      format: 'image/png',
-      transparent: true,
-      opacity: 0.5,
-      version: '1.1.1',
-      attribution: `© GeoBasis-DE / <a href="https://www.bkg.bund.de/DE/Home/home.html" target="_blank">BKG</a> (Jahr des letzten Datenbezugs) 
-                    <a href="https://www.govdata.de/dl-de/by-2-0" target="_blank">dl-de/by-2-0</a>`,
-      pane: 'overlayRasterPane'
-                    
-  });
-
 
 // basemaps
 export const baseMaps = {
     "Open Street Maps": osm,
-    Satellit: satellite,
-    Topomap: topo,
+    "Satelit": satellite,
+    // Topomap: basemap,
+    "Topografische Karte": greyMap,
   };
 
 export function enhanceMap (map) {
@@ -86,16 +135,22 @@ export function enhanceMap (map) {
   map.getPane("baselayerPane").style.zIndex = 200;
 
   map.createPane("overlayRasterPane");
-  map.getPane("overlayRasterPane").style.zIndex = 400;
+  map.getPane("overlayRasterPane").style.zIndex = 300;
+  
+  map.createPane("backgroundPane");
+  map.getPane("backgroundPane").style.zIndex = 350;
 
   map.createPane("overlayPolygonPane");
   map.getPane("overlayPolygonPane").style.zIndex = 500;
 
   map.createPane("polygonPane");
-  map.getPane("polygonPane").style.zIndex = 600;
+  map.getPane("polygonPane").style.zIndex = 580;
+
+  map.createPane("pinPane");
+  map.getPane("pinPane").style.zIndex = 590;
 
   map.createPane("resultPane");
-  map.getPane("resultPane").style.zIndex = 700;
+  map.getPane("resultPane").style.zIndex = 630;
   
   $(".leaflet-control-zoom").append(
     '<a class="leaflet-control-home" href="#" role="button" title="Project area" aria-label="Project area"><i class="bi bi-bullseye"></i></a>',
@@ -130,6 +185,8 @@ export var map = enhanceMap(
   }).addLayer(osm)
 );
 
+document.dispatchEvent(new CustomEvent('leaflet-map-ready', { detail: map }));
+window.DEBUG_MAP = map;
 export function getCircleMarkerSettings (fillColor) {
   return {
     radius: 5,
@@ -179,78 +236,23 @@ export function openUserFieldNameModal(layer, featureGroup) {
 
 
 export function initializeDrawControl(map, featureGroup) {
-  
 
-    // L.drawLocal.draw.toolbar = {
-    //       // #TODO: this should be reorganized where actions are nested in actions
-    //       // ex: actions.undo  or actions.cancel
-    //       actions: {
-    //         title: 'Zeichnen beenden',
-    //         text: 'Beenden'
-    //       },
-    //       finish: {
-    //         title: 'Zeichnen beenden',
-    //         text: 'Beenden'
-    //       },
-    //       undo: {
-    //         title: 'Delete last point drawn',
-    //         text: 'Delete last point'
-    //       },
-    //       buttons: {
-    //         polyline: 'Zeichne eine Polyline',
-    //         polygon: 'Zeichne ein Polygon',
-    //         rectangle: 'Zeichne ein Rechteck',
-    //         circle: 'Zeichne einen Kreis',
-    //         marker: 'Zeichne einen Marker',
-    //         circlemarker: 'Zeichne einen Kreis-Marker'
-    //       }
-    //     }
-    // L.drawLocal.draw.handlers.polygon.tooltip = {
-    //           start: 'Klicken, um mit dem Zeichnen zu beginnen.',
-    //           cont: 'Klicken, um das Zeichnen der Form fortzusetzen.',
-    //           end: 'Klicken Sie auf den ersten Punkt, um diese Form zu schließen.'
-    //         }
-          
-    // L.drawLocal.draw.handlers.rectangle.tooltip = {
-    //     start: 'Klicken und ziehen.'
-    //   }
-          
-        
-      
-    //   edit: {
-    //     toolbar: {
-    //       actions: {
-    //         save: {
-    //           title: 'Save changes',
-    //           text: 'Save'
-    //         },
-    //         cancel: {
-    //           title: 'Cancel editing, discards all changes',
-    //           text: 'Cancel'
-    //         },
-    //         clearAll: {
-    //           title: 'Clear all layers',
-    //           text: 'Clear All'
-    //         }
-    //       },
-    //       buttons: {
-    //         edit: 'Edit layers',
-    //         editDisabled: 'No layers to edit',
-    //         remove: 'Delete layers',
-    //         removeDisabled: 'No layers to delete'
-    //       }
-    //     },
-    //     handlers: {
-    //       edit: {
-    //         tooltip: {
-    //           text: 'Drag handles or markers to edit features.',
-    //           subtext: 'Click cancel to undo changes.'
-    //         }
-    //       },
-    //     }
-    //   }
-    // };
 
+  map.on('click', function () {
+    // TODO click point conversion for data retrieval
+      const z = map.getZoom();
+      const center = map.getCenter();
+      // compute center tile coords (approx)
+      const worldSize = 256 * Math.pow(2, z);
+      const projection = map.options.crs.project(center); // Point in meters for EPSG3857
+      // convert projection point to tile coords:
+      const resolution = (2 * 20037508.342789244) / worldSize; // meter per pixel
+      const tx = Math.floor((projection.x + 20037508.342789244) / (256 * resolution));
+      const ty = Math.floor((20037508.342789244 - projection.y) / (256 * resolution));
+      console.log('Leaflet zoom', z, 'tile x/y', tx, ty, 'WMTS TileMatrix', (z - TILEMATRIX_OFFSET));
+      // const url = basemap.getTileUrl({x: tx, y: ty, z: z});
+      // console.log('Example tile URL for center:', url);
+    });
 
 
   const drawControl = new L.Control.Draw({
@@ -359,7 +361,7 @@ export function createNUTSSelectors({getFeatureGroup}) {
     let clickedLayer = event.layer;
     
     // Confirm action with the user
-    if (confirm("Save this region as a user field?")) {
+    if (confirm("Als Suchgebiet nutzen?")) {
       openUserFieldNameModal(clickedLayer, getFeatureGroup()) 
     }
   });
@@ -372,22 +374,34 @@ export function createNUTSSelectors({getFeatureGroup}) {
   // Handle dropdown menu change event
   // Multiple Select from https://www.cssscript.com/select-box-virtual-scroll/
   VirtualSelect.init({ 
-    ele: '#stateSelect',
+    ele: '#statesSelect',
     placeholder: 'Bundesland',
     required: false,
     disableSelectAll: true,
+    additionalClasses: 'bootstrap-vs', 
+    additionalDropboxContainerClasses: 'bootstrap-vs',
+    additionalDropboxClasses: 'bootstrap-vs',
+    additionalToggleButtonClasses: 'bootstrap-vs',
   });
   VirtualSelect.init({ 
-    ele: '#districtSelect',
+    ele: '#districtsSelect',
     placeholder: 'Regierungsbezirk',
     required: false,
     disableSelectAll: true,
+    additionalClasses: 'bootstrap-vs', 
+    additionalDropboxContainerClasses: 'bootstrap-vs',
+    additionalDropboxClasses: 'bootstrap-vs',
+    additionalToggleButtonClasses: 'bootstrap-vs',
   });
   VirtualSelect.init({ 
-    ele: '#countySelect',
+    ele: '#countiesSelect',
     placeholder: 'Landkreis',
     required: false,
     disableSelectAll: true,
+    additionalClasses: 'bootstrap-vs', 
+    additionalDropboxContainerClasses: 'bootstrap-vs',
+    additionalDropboxClasses: 'bootstrap-vs',
+    additionalToggleButtonClasses: 'bootstrap-vs',
   });
   
   var administrativeAreaDiv = document.querySelectorAll('div.administrative-area');
@@ -420,7 +434,11 @@ export function createNUTSSelectors({getFeatureGroup}) {
           }
           var geojsonLayer = new L.GeoJSON.AJAX(url, {
               style: {
-                  color: color 
+                  color: color,
+                  fill: false,
+                  weight: 3,
+                  fillOpacity: 0,
+                  interactive: true,
               },
               onEachFeature: function (feature, layer) {
                   layer.bindTooltip(`${feature.properties.nuts_name}`, {
@@ -516,8 +534,8 @@ export function selectUserField(userFieldId, project, featureGroup) {
         (
             (project.userField && project.userField !== userFieldId) ||
             (!project.userField || project.userField === '')
-        )
-    );
+        ) 
+    ) || (project.toolboxType && project.toolboxType !== 'generic' && project.userField && project.userField !== userFieldId);
     console.log('needsConfirmation', needsConfirmation, userFieldId, userField);
 
     if (needsConfirmation) {
@@ -528,9 +546,9 @@ export function selectUserField(userFieldId, project, featureGroup) {
             title: "Auswahl des Suchbereichs",
             text: isChangingExisting
                 ? "Wollen Sie den Suchbereich wechseln?"
-                : "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.",
+                : "Falls ein Projekt geöffnet ist, wird es ohne zu speichern geschlossen.",
             onConfirm: () => {
-                applyUserFieldChange(project, userFieldId, userField, featureGroup);
+                commitSwitchUserField(project, userFieldId, userField, featureGroup);
             }
         });
         } else {
@@ -540,12 +558,12 @@ export function selectUserField(userFieldId, project, featureGroup) {
                 ? "You are changing a Monica Project's user field."
                 : "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.",
             onConfirm: () => {
-                applyUserFieldChange(project, userFieldId, userField, featureGroup);
+                commitSwitchUserField(project, userFieldId, userField, featureGroup);
             }
         });
       }
     } else  {
-        applyUserFieldChange(project, userFieldId, userField, featureGroup);
+        commitSwitchUserField(project, userFieldId, userField, featureGroup);
     }
 };
 
@@ -573,11 +591,14 @@ function showUserFieldModal({ title, text, onConfirm }) {
     modalInstance.show();
 }
 
-function applyUserFieldChange(project, userFieldId, userField, featureGroup) {
-    console.log('applyUserFieldChange', userFieldId, userField);
+function commitSwitchUserField(project, userFieldId, userField, featureGroup) {
+    console.log('commitSwitchUserField', userFieldId, userField);
     project['userField'] = userFieldId;
-    project['latitude'] = userField.lat;
-    project['longitude'] = userField.lon;
+    try {
+      project['latitude'] = userField.lat;
+      project['longitude'] = userField.lon;
+    } catch {;};
+    
     project.saveToLocalStorage();
     highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
 }
@@ -623,21 +644,27 @@ $('#toggleBottomFullscreen').on('click', function () {
 
     if (isFullscreen) {
       // Exit fullscreen - restore layout
-      $('.panel-top').css('height', '60%');
-      $('.panel-left').css('visibility', 'visible');
+      // $('.panel-top').css('height', '20%');
+      // $('.panel-left').css('visibility', 'visible');
       $('#main-navbar').show();
-      $('.leaflet-control-container').show(); 
+      // $('.leaflet-control-container').show(); 
       $('#toggleBottomFullscreen').html('<i class="bi bi-arrows-fullscreen"></i>');
-      map.invalidateSize();
+
+      setTimeout(() => map.invalidateSize(), 0);
+      setTimeout(() => map.invalidateSize(), 120);
+   
 
     } else {
       // Enter fullscreen mode - shrink top, hide left
-      $('.panel-top').css('height', '20%'); // or even '5%' if you want it smaller
-      $('.panel-left').css('visibility', 'hidden');
+      // $('.panel-top').css('height', '50%'); // or even '5%' if you want it smaller
+      // $('.panel-left').css('visibility', 'hidden');
             // hide the sidebar
       $('#main-navbar').hide(); // hide the navbar
-      $('.leaflet-control-container').hide(); // hide Leaflet controls
-      map.invalidateSize()
+      // $('.leaflet-control-container').hide(); // hide Leaflet controls
+
+
+      setTimeout(() => map.invalidateSize(), 0);
+      setTimeout(() => map.invalidateSize(), 120);
       const highlightedElement = $('#userFieldsAccordion').find('li.highlight')
       if (highlightedElement.length > 0) {
         console.log(highlightedElement)
@@ -649,8 +676,20 @@ $('#toggleBottomFullscreen').on('click', function () {
     });
 
 
+
+
 // TODO rename to MapEventhandler
-export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, getUserFields, getFeatureGroup, getProject }) {
+export function initializeSidebarEventHandler({ 
+  sidebar, 
+  map, 
+  overlayLayers, 
+  getUserFields, 
+  getFeatureGroup, 
+  getProject,
+  loadProjectFromDb,
+  // TODO get rid of the project argument- it is already saved to localStorage
+  startApplication,
+}) {
     sidebar.addEventListener("change", (event) => {
         const switchInput = event.target;
 
@@ -666,6 +705,14 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
         } else if (switchInput.classList.contains("user-field-switch")) {
           console.log('switchInput: ', switchInput);
             toggleUserField(switchInput, getFeatureGroup());
+        } else if (switchInput.classList.contains('all-userfields-switch')) {
+
+          console.log('all-userfields-switch')
+          $('.form-check-input.user-field-switch')
+          .prop('checked', switchInput.checked)
+          $('.form-check-input.user-field-switch').each((_, s) => {
+            toggleUserField(s, getFeatureGroup());
+          })
         }
     });
 
@@ -689,8 +736,10 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
       if (clickedElement.classList.contains("user-field-action")) {
         const leafletId = clickedElement.getAttribute("leaflet-id");
         const userFieldId = clickedElement.getAttribute("user-field-id");
+
         console.log("user-field-action clicked", leafletId);
         let userFields = getUserFields();
+        let userField = userFields[leafletId];
         
 
         if (clickedElement.classList.contains("delete")) {
@@ -725,7 +774,6 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
           fetch(`field-projects-menu/${userFieldId}/`)
           .then(response => response.json())
           .then(data => {
-            console.log("data", data);
           // TODO the hardcoded # fieldMenuModal is triggered from button
           const modalElement = document.getElementById('fieldMenuModal');
           const modalContent = modalElement.querySelector('.modal-content')
@@ -737,21 +785,8 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
             modalElement.addEventListener('click', (event) => {
               if(event.target.classList.contains('open-project')) {
                 const projectId = event.target.getAttribute('data-project-id');
-                if (data.type === 'monica') {
-                  console.log(' then load monica', projectId)
-                  loadMonicaProjectFromDb(projectId)
-                  .then(project => {
-                    loadMonicaProjectToGui(project);
-                  });
-                } else if (data.type === 'toolbox') {
-                  loadToolboxProjectFromDb(projectId)
-                  .then(project => {
-                    
-                    return startToolbox(project)
-                  })
-                  
-                  .catch(err => console.error(err))  
-                }
+                loadProjectFromDb(projectId)
+                .then(project => startApplication(project))
                 fieldMenuModal.hide();
               }
             });
@@ -785,9 +820,7 @@ export function initializeSidebarEventHandler({ sidebar, map, overlayLayers, get
             layer._originalLatLngs = L.LatLngUtil.cloneLatLngs(layer.getLatLngs());
             layer.editing.enable();
         
-            // Use plain HTML string for popup content
             const popupHtml = `
-              <strong>Editing field</strong><br>
               <button class="btn btn-sm btn-success" id="btnUpdateUserField">Speichern</button>
               <button class="btn btn-sm btn-danger" id="btnCancelEditUserField">Abbrechen</button>
             `;
@@ -892,6 +925,7 @@ function saveUserField(name, id, layer) {
     })
     .then(response => response.json())
     .then(data => {
+      console.log('SaveUserField data', data)
       handleAlerts({'success': true, 'message': 'UserField saved successfully'});
       resolve(data); 
     })
@@ -902,34 +936,7 @@ function saveUserField(name, id, layer) {
   });
 };
 
-export function updateUserField(userField, layer) {
-  let geomJson = layer.toGeoJSON();
-  return new Promise((resolve, reject) => {
-    const requestData = {
-      geom: JSON.stringify(geomJson.geometry),
-      userField: userField,
-    };
-    fetch(`update-user-field/${userField.id}/`, {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCSRFToken(),
-      },
-      body: JSON.stringify(requestData)
-    })
-    .then(response => response.json())
-    .then(data => {
-      handleAlerts({'success': true, 'message': 'UserField saved successfully'});
-      resolve(data); 
-    })
-    .catch(error => {
-      handleAlerts({'success': false, 'message': 'Error saving UserField: ', error});
-      reject(error); 
-    });
-  });
 
-};
 
 function updateFieldSelectorOption(userField, fieldSelector) {  
   const option = document.createElement("option");
@@ -944,10 +951,13 @@ function updateFieldSelectorOption(userField, fieldSelector) {
 export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
 
   let userFieldsName;
+  let project;
   if (window.location.pathname.endsWith('/drought/')) {
     userFieldsName = 'droughtUserFields';
+    project = MonicaProject.loadFromLocalStorage();
   } else if (window.location.pathname.endsWith('toolbox/')) {
-    userFieldsName = 'toolboxUserFields'
+    userFieldsName = 'toolboxUserFields';
+    project = ToolboxProject.loadFromLocalStorage();
   } else {
     userFieldsName = '';
   }
@@ -955,6 +965,7 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
   const fieldNameInput = document.getElementById("fieldNameInput");
   const fieldName = fieldNameInput.value;
   let userFields = {};
+  // TODO move this task to db (check if exists)
           try {
             userFields = JSON.parse(localStorage.getItem('userFields'));
           } catch { ; }
@@ -973,26 +984,25 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
       saveUserField(fieldName, null, layer)
       .then((data) => {
         console.log("Data: ", data);
-        var layerGeoJson = L.geoJSON(data.geom_json,
-          {
-            className: 'user-field',
-            pane: 'polygonPane',
-            onEachFeature: function (f, l) {
-              l.bindTooltip(fieldName, {
-                  direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
-                  offset: [0, 0],         // x, y offset in pixels
-                  permanent: false,       // only show on hover
-                  sticky: true  
-              });
-              featureGroup.addLayer(l);
-            },
-          }
-        );
+        var layerGeoJson = addUserFieldToMap(data, featureGroup)
+        // var layerGeoJson = L.geoJSON(data.geometry,
+        //   {
+        //     className: 'user-field',
+        //     pane: 'polygonPane',
+        //     onEachFeature: function (f, l) {
+        //       l.bindTooltip(fieldName, {
+        //           direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
+        //           offset: [0, 0],         // x, y offset in pixels
+        //           permanent: false,       // only show on hover
+        //           sticky: true  
+        //       });
+        //       featureGroup.addLayer(l);
+        //     },
+        //   }
+        // );
         const userField = new UserField(
-          data.name,
-          data.id,  
-          data.lat,
-          data.lon,
+          data.properties.name,
+          data.properties.id,  
           data.properties ? data.properties : {},
         );
         layer.remove(); // removes the drawn shape from map
@@ -1004,6 +1014,11 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
         localStorage.setItem('userFields', JSON.stringify(userFields));
 
         addLayerToSidebar(userField, newLayer);
+        // add UserField to dropdown
+        $('#userFieldSelect').append(new Option( userField.name, userField.id));
+
+        selectUserField(userField.id, project, featureGroup)
+
       })
 
       fieldNameInput.value = '';
@@ -1067,7 +1082,7 @@ export const addLayerToSidebar = (userField, layer) => {
               <span><i class="bi bi-list user-field-action field-menu" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
             </button>
             <button type="button" class="btn btn-outline-secondary btn-sm user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" data-bs-toggle="tooltip" data-bs-placement="right" title="${tooltip.de.delete}">
-              <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}"></i></span>
+              <span><i class="bi bi-trash user-field-action delete" leaflet-id="${userField.leafletId}" user-field-id="${userField.id}" user-field-name="${userField.name}"></i></span>
             </button>
           </form>
         </div>  
@@ -1076,9 +1091,32 @@ export const addLayerToSidebar = (userField, layer) => {
 
     accordion.layer = layer;
     const userFieldsAccordion = document.getElementById("userFieldList");
-    // console.log("userFieldsAccordion", userFieldsAccordion);
     userFieldsAccordion.appendChild(accordion);
   };
+
+function addUserFieldToMap(feature, featureGroup) {
+  return L.geoJson(feature, {
+    className: 'user-field',
+    pane: 'polygonPane',
+    style: {
+      color: 'var(--bs-gray-600)', 
+      weight: 3,                   
+      fill: false,                  
+      fillOpacity: 0,               
+      interactive: true             
+    },
+    onEachFeature: function (feature, layer) {
+      layer.bindTooltip(feature.properties.name, {
+                  direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
+                  offset: [0, 0],         // x, y offset in pixels
+                  permanent: false,       // only show on hover
+                  sticky: true  
+              });
+      layer.userFieldId = feature.properties.id
+      featureGroup.addLayer(layer)
+    },
+  });
+}
 
   // Load all user fields from DB
 export async function getUserFieldsFromDb (featureGroup) {
@@ -1098,29 +1136,15 @@ export async function getUserFieldsFromDb (featureGroup) {
     const userFieldsDb = data.user_fields;
     
     userFieldsDb.forEach((el) => {
-      // var layer = L.geoJSON(el.geom_json);
-      let layerGeoJson = L.geoJson(el.geom_json, {
-        className: 'user-field',
-        pane: 'polygonPane',
-        onEachFeature: function (feature, layer) {
-          layer.bindTooltip(el.name, {
-                  direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
-                  offset: [0, 0],         // x, y offset in pixels
-                  permanent: false,       // only show on hover
-                  sticky: true  
-              });
-          featureGroup.addLayer(layer);
-        },
-      });
-
-      // console.log("getData, element: ", el);
+      let layerGeoJson = addUserFieldToMap(el, featureGroup);
+      
       const userField = new UserField(
-        el.name,
-        el.id,  
-        el.centroid_lat || null,
-        el.centroid_lon || null,
-        el.user_projects || [], // Ensure user_projects is an array
-        el.properties || {}
+        el.properties.name,
+        el.properties.id,  
+        el.properties.centroid_lat || null,
+        el.properties.centroid_lon || null,
+        el.properties.user_projects || [], // Ensure user_projects is an array
+        el.properties.properties || {}
       );
 
       // Add the layer to the droughtFeatureGroup layer group

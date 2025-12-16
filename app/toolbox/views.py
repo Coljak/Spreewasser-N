@@ -93,11 +93,11 @@ def toolbox_dashboard(request):
     user = request.user
     project_region = swn_models.ProjectRegion.objects.first().to_feature()
 
-    outline_injection = models.OutlineInjection.objects.first().to_feature()
+    # outline_injection = models.OutlineInjection.objects.first().to_feature()
 
-    outline_surface_water = models.OutlineSurfaceWater.objects.first().to_feature()
+    # outline_surface_water = models.OutlineSurfaceWater.objects.first().to_feature()
 
-    outline_infiltration = models.OutlineInfiltration.objects.first().to_feature()
+    # outline_infiltration = models.OutlineInfiltration.objects.first().to_feature()
 
 
     counties_form = forms.PolygonSelectionForm(request.POST or None)
@@ -114,9 +114,9 @@ def toolbox_dashboard(request):
         # 'project_select_form': project_select_form,
         'project_form': project_form,
         'project_modal_title': project_modal_title,
-        'outline_injection': outline_injection,
-        'outline_surface_water': outline_surface_water,
-        'outline_infiltration': outline_infiltration,
+        # 'outline_injection': outline_injection,
+        # 'outline_surface_water': outline_surface_water,
+        # 'outline_infiltration': outline_infiltration,
     }
 
     return render(request, 'toolbox/toolbox_three_split.html', context)
@@ -269,13 +269,37 @@ def get_field_project_modal(request, id):
 
 
 #TODO needed here?
-def get_options(request, parameter):
-    dropdown_list = []
-    if parameter == 'toolbox-project':
-        toolbox_projects = models.ToolboxProject.objects.filter(user=request.user)
-        dropdown_list = [(project.id, project.name) for project in toolbox_projects]
-    return JsonResponse({'options': dropdown_list})
+# def get_options(request, parameter):
+#     dropdown_list = []
+#     if parameter == 'toolbox-project':
+#         toolbox_projects = models.ToolboxProject.objects.filter(user=request.user)
+#         dropdown_list = [(project.id, project.name) for project in toolbox_projects]
+#     return JsonResponse({'options': dropdown_list})
         
+def load_toolbox_project_modal(request):
+    # user_field = models.UserField.objects.get(pk=id)
+    if request.method == 'POST':
+        body = json.loads(request.body)
+        user_field_id = body.get("userFieldId")
+        page_reload = body.get("page_reload")
+        user_field = models.UserField(pk=user_field_id)
+
+        project_form = forms.ToolboxNewProjectForm(
+            user=request.user,
+            user_field=user_field
+        )
+
+        return render(
+            request,
+            "toolbox/toolbox_modals.html",
+            {   
+                "project_modal_title": user_field.name,
+                "page_reload": page_reload,
+                "project_form": project_form,
+                "user_field": user_field,
+            }
+        )
+
 
 
 def add_range_filter(filters, obj, field,  model_field=None):

@@ -1,8 +1,8 @@
 import { getGeolocation } from '/static/shared/utils.js';
 import { MonicaProject } from '/static/monica/monica.js';
-
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
 import { getCSRFToken, handleAlerts, getBsColor } from '/static/shared/utils.js';
+import { saveNewProjectModalEvents } from '/static/toolbox/toolbox_modals.js';
 
 
 
@@ -93,8 +93,8 @@ const satellite = L.tileLayer(satelliteUrl, {
 
 
 
- const greyMapUrl = 'https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web_grau/default/WEBMERCATOR/{z}/{y}/{x}.png'
- const greyMap = L.tileLayer(greyMapUrl, {
+const greyMapUrl = 'https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web_grau/default/WEBMERCATOR/{z}/{y}/{x}.png'
+const greyMap = L.tileLayer(greyMapUrl, {
     attribution: '© BKG 2025 — Daten: TopPlusOpen <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a> ',
     maxZoom: 18,
     pane: "baselayerPane",
@@ -102,22 +102,22 @@ const satellite = L.tileLayer(satelliteUrl, {
 // https://sgx.geodatenzentrum.de/wmts_topplus_open/legend/web_scale.png  legende
 
 export const projectRegion = new L.geoJSON(project_region, {
-    attribution: 'Spreewasser:N Projektregion',
-    pane: "overlayPolygonPane",
-    style: {
-      color: 'var(--bs-primary)', 
-      weight: 3,                   
-      fill: false,                  
-      fillOpacity: 0,               
-      interactive: true             
-    },
-    onEachFeature: function (feature, layer) {
-      layer.bindTooltip(feature.properties.name, {
-      direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
-      offset: [0, 0],         // x, y offset in pixels
-      permanent: false,       // only show on hover
-      sticky: true  
-      });
+  attribution: 'Spreewasser:N Projektregion',
+  pane: "overlayPolygonPane",
+  style: {
+    color: 'var(--bs-primary)', 
+    weight: 3,                   
+    fill: false,                  
+    fillOpacity: 0,               
+    interactive: true             
+  },
+  onEachFeature: function (feature, layer) {
+    layer.bindTooltip(feature.properties.name, {
+    direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
+    offset: [0, 0],         // x, y offset in pixels
+    permanent: false,       // only show on hover
+    sticky: true  
+    });
   }
 });
 
@@ -236,8 +236,6 @@ export function openUserFieldNameModal(layer, featureGroup) {
 
 
 export function initializeDrawControl(map, featureGroup) {
-
-
   map.on('click', function () {
     // TODO click point conversion for data retrieval
       const z = map.getZoom();
@@ -275,8 +273,6 @@ export function initializeDrawControl(map, featureGroup) {
     },
   });
   map.addControl(drawControl);
-
-
 };
 
 
@@ -328,31 +324,28 @@ export function initializeMapEventlisteners (map, featureGroup, projectClass) {
 };
 
 
-
-
 // Overlays
 function handleOverlaySwitch(switchInput, overlayLayers, map) {
-    const overlayId = switchInput.getAttribute("data-layer");
-    const overlay = overlayLayers[overlayId];
-    const opacitySlider = document.getElementById(`${overlayId}Opacity`);
+  const overlayId = switchInput.getAttribute("data-layer");
+  const overlay = overlayLayers[overlayId];
+  const opacitySlider = document.getElementById(`${overlayId}Opacity`);
 
-    if (switchInput.checked) {
-    overlay.addTo(map);
-    if (opacitySlider) {
-        opacitySlider.disabled = false;
-    };
-    overlay.bringToBack(); 
-    } else {
-    overlay.remove();
-    if (opacitySlider) {
-        opacitySlider.disabled = true;
+  if (switchInput.checked) {
+  overlay.addTo(map);
+  if (opacitySlider) {
+      opacitySlider.disabled = false;
+  };
+  overlay.bringToBack(); 
+  } else {
+  overlay.remove();
+  if (opacitySlider) {
+      opacitySlider.disabled = true;
     };
   };
 };
 
 export function createNUTSSelectors({getFeatureGroup}) {
   // Create a LayerGroup to hold the displayed polygons
-  // const stateCountyDistrictLayer = L.layerGroup().addTo(map);
   const stateCountyDistrictLayer = new L.FeatureGroup({pane: "polygonPane",}).addTo(map);
   stateCountyDistrictLayer.on("click", function (event) {
     console.log("stateCountyDistrictLayer click event: ", event);
@@ -433,24 +426,24 @@ export function createNUTSSelectors({getFeatureGroup}) {
               color = 'green';
           }
           var geojsonLayer = new L.GeoJSON.AJAX(url, {
-              style: {
-                  color: color,
-                  fill: false,
-                  weight: 3,
-                  fillOpacity: 0,
-                  interactive: true,
-              },
-              onEachFeature: function (feature, layer) {
-                  layer.bindTooltip(`${feature.properties.nuts_name}`, {
-                  direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
-                  offset: [0, 0],         // x, y offset in pixels
-                  permanent: false,       // only show on hover
-                  sticky: true  
-                  });
-                  layer.setStyle({
-                    fill: false, 
-                  });
-              }
+            style: {
+                color: color,
+                fill: false,
+                weight: 3,
+                fillOpacity: 0,
+                interactive: true,
+            },
+            onEachFeature: function (feature, layer) {
+                layer.bindTooltip(`${feature.properties.nuts_name}`, {
+                direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
+                offset: [0, 0],         // x, y offset in pixels
+                permanent: false,       // only show on hover
+                sticky: true  
+                });
+                layer.setStyle({
+                  fill: false, 
+                });
+            }
           });
           console.log("geojsonLayer", geojsonLayer)
           geojsonLayer.addTo(stateCountyDistrictLayer);
@@ -592,15 +585,15 @@ function showUserFieldModal({ title, text, onConfirm }) {
 }
 
 function commitSwitchUserField(project, userFieldId, userField, featureGroup) {
-    console.log('commitSwitchUserField', userFieldId, userField);
-    project['userField'] = userFieldId;
-    try {
-      project['latitude'] = userField.lat;
-      project['longitude'] = userField.lon;
-    } catch {;};
-    
-    project.saveToLocalStorage();
-    highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
+  console.log('commitSwitchUserField', userFieldId, userField);
+  project['userField'] = userFieldId;
+  try {
+    project['latitude'] = userField.lat;
+    project['longitude'] = userField.lon;
+  } catch {;};
+  
+  project.saveToLocalStorage();
+  highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
 }
 
 
@@ -689,31 +682,31 @@ export function initializeSidebarEventHandler({
   loadProjectFromDb,
   // TODO get rid of the project argument- it is already saved to localStorage
   startApplication,
-}) {
+  }) {
     sidebar.addEventListener("change", (event) => {
-        const switchInput = event.target;
+      const switchInput = event.target;
 
-        if (switchInput.classList.contains("layer-switch")) {
-            const layerId = switchInput.getAttribute("data-layer");
-            switchInput.checked ? map.addLayer(overlayLayers[layerId]) : map.removeLayer(overlayLayers[layerId]);
-        } else if (switchInput.classList.contains("layer-opacity")) {
-            const overlayId = switchInput.getAttribute("data-layer");
-            overlayLayers[overlayId].setOpacity(switchInput.value);
-        } else if (switchInput.classList.contains("overlay-switch")) {
-          const overlay = switchInput.getAttribute("data-layer");
-            handleOverlaySwitch(switchInput, overlayLayers, map);
-        } else if (switchInput.classList.contains("user-field-switch")) {
-          console.log('switchInput: ', switchInput);
-            toggleUserField(switchInput, getFeatureGroup());
-        } else if (switchInput.classList.contains('all-userfields-switch')) {
+      if (switchInput.classList.contains("layer-switch")) {
+          const layerId = switchInput.getAttribute("data-layer");
+          switchInput.checked ? map.addLayer(overlayLayers[layerId]) : map.removeLayer(overlayLayers[layerId]);
+      } else if (switchInput.classList.contains("layer-opacity")) {
+          const overlayId = switchInput.getAttribute("data-layer");
+          overlayLayers[overlayId].setOpacity(switchInput.value);
+      } else if (switchInput.classList.contains("overlay-switch")) {
+        const overlay = switchInput.getAttribute("data-layer");
+          handleOverlaySwitch(switchInput, overlayLayers, map);
+      } else if (switchInput.classList.contains("user-field-switch")) {
+        console.log('switchInput: ', switchInput);
+          toggleUserField(switchInput, getFeatureGroup());
+      } else if (switchInput.classList.contains('all-userfields-switch')) {
 
-          console.log('all-userfields-switch')
-          $('.form-check-input.user-field-switch')
-          .prop('checked', switchInput.checked)
-          $('.form-check-input.user-field-switch').each((_, s) => {
-            toggleUserField(s, getFeatureGroup());
-          })
-        }
+        console.log('all-userfields-switch')
+        $('.form-check-input.user-field-switch')
+        .prop('checked', switchInput.checked)
+        $('.form-check-input.user-field-switch').each((_, s) => {
+          toggleUserField(s, getFeatureGroup());
+        })
+      }
     });
 
     let clickTimeout;
@@ -759,14 +752,16 @@ export function initializeSidebarEventHandler({
               headers: {
                 "Content-Type": "application/json",
                 "X-CSRFToken": getCSRFToken(),
-              }}).then(response => response.json())
-              .then(data => {
-                handleAlerts(data.message);
-                console.log("Delete Success");
-              })
-              .catch(error => {
-                console.log(error);
-              });
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              handleAlerts(data.message);
+              console.log("Delete Success");
+            })
+            .catch(error => {
+              console.log(error);
+            });
           }
         } else if (clickedElement.classList.contains("field-menu")) {
           selectUserField(userFieldId, getProject(), featureGroup);
@@ -794,9 +789,7 @@ export function initializeSidebarEventHandler({
         } else if (clickedElement.classList.contains("field-project-add")) {
           selectUserField(userFieldId, getProject(), featureGroup);
           //set the right user field in the modal
-          $('#userFieldSelect').val(userFieldId);
-          
-          
+          $('#userFieldSelect').val(userFieldId); 
            if (window.location.pathname.endsWith('/drought/')) {
             localStorage.setItem('userFieldId', clickedElement.getAttribute('user-field-id'));
             
@@ -807,7 +800,27 @@ export function initializeSidebarEventHandler({
             
             // $('#swnProjectModal').modal('show');
           } else if (window.location.pathname.endsWith('/toolbox/')){
-            $('#toolboxProjectModal').modal('show');
+            fetch('/toolbox/load-toolbox-project-modal/', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+              },
+              body: JSON.stringify({ userFieldId: userFieldId, page_reload: 'true', })
+
+            })
+            .then(r => r.text())
+            .then(html => {
+              const container = document.getElementById("modal-container");
+              container.innerHTML = html;
+
+              const modalEl = document.getElementById("toolboxProjectModal");
+              saveNewProjectModalEvents();
+              const modal = new bootstrap.Modal(modalEl);
+              modal.show();
+            });
+            // $('#toolboxProjectModal').modal('show');
           }
         } else if (clickedElement.classList.contains('field-edit')) {
           selectUserField(userFieldId, getProject(), featureGroup);

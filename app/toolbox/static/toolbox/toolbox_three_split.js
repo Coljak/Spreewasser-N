@@ -501,69 +501,70 @@ document.addEventListener("DOMContentLoaded", () => {
     selectUserField(userFieldId,  project, featureGroup);  
   });
 
-  // $('.bi.bi-info-circle').on('click', function() {
-  //   console.log('getInfoText clicked');
-  //   getInfoText(this);
+
+
+  // $('#toolboxSidebar').on('click', async function(event){
+  //   if ($(event.target).hasClass('save-new-project')) {
+  //     const projectNameInput = $('#id_project_name');
+  //   const projectName = projectNameInput.val().trim();
+
+  //   // Validate project name
+  //   if (!projectName) {
+  //     projectNameInput.addClass('is-invalid');
+  //     projectNameInput.focus();
+  //     return;
+  //   } else {
+  //     projectNameInput.removeClass('is-invalid');
+  //   }
+
+  //   const project = ToolboxProject.loadFromLocalStorage();
+  //   // const isNewProject = (project.toolboxType === 'generic');
+  //   const pageReload = $(this).data('page-reload')
+  //   project.name = projectName;
+  //   project.userField = $('#userFieldSelect').val();
+  //   project.toolboxType = $('#projectTypeSelect').val();
+  //   project.description = $('#id_project_description').val().trim();
+  //   project.saveToLocalStorage();
+  //   try {
+  //     setProjectInfoHeader(project);
+  //   } catch {;}
+    
+
+  //   $('#toolboxProjectModal').modal('hide');
+  //   try {
+  //     const data = await project.saveToDB(); 
+  //     console.log('data', data);
+
+  //     if (data.success) {
+
+  //       handleAlerts({ success: data.success, message: data.message });
+  //       if (pageReload) {
+  //          startToolbox(project); 
+  //       } else {
+  //         $('#id_toolbox_project').prepend(
+  //           $('<option>', { value: project.id, text: project.name })
+  //         );
+  //         $('#id_toolbox_project').val(project.id);
+  //       }
+
+  //       // }
+  //     } else {
+        
+  //       handleAlerts(data.message);
+  //     }
+
+  //   } catch (err) {
+  //     console.error('Failed to save project:', err);
+  //     handleAlerts({ success: false, message: 'Error saving project.' });
+  //   }
+  //   }
   // });
 
-
-
-  $('#saveToolboxProjectButton').on('click', async function () {
-    console.log('saveToolboxProjectButton clicked');
+  // $('.save-new-project').on('click', async function () {
+  //   console.log('saveToolboxProjectButton clicked');
     
-    const projectNameInput = $('#id_project_name');
-    const projectName = projectNameInput.val().trim();
-
-    // Validate project name
-    if (!projectName) {
-      projectNameInput.addClass('is-invalid');
-      projectNameInput.focus();
-      return;
-    } else {
-      projectNameInput.removeClass('is-invalid');
-    }
-
-    const project = ToolboxProject.loadFromLocalStorage();
-    // const isNewProject = (project.toolboxType === 'generic');
-    const pageReload = $(this).data('page-reload')
-    project.name = projectName;
-    project.userField = $('#userFieldSelect').val();
-    project.toolboxType = $('#projectTypeSelect').val();
-    project.description = $('#id_project_description').val().trim();
-    project.saveToLocalStorage();
-    try {
-      setProjectInfoHeader(project);
-    } catch {;}
     
-
-    $('#toolboxProjectModal').modal('hide');
-    try {
-      const data = await project.saveToDB(); 
-      console.log('data', data);
-
-      if (data.success) {
-
-        handleAlerts({ success: data.success, message: data.message });
-        if (pageReload) {
-           startToolbox(project); 
-        } else {
-          $('#id_toolbox_project').prepend(
-            $('<option>', { value: project.id, text: project.name })
-          );
-          $('#id_toolbox_project').val(project.id);
-        }
-
-        // }
-      } else {
-        
-        handleAlerts(data.message);
-      }
-
-    } catch (err) {
-      console.error('Failed to save project:', err);
-      handleAlerts({ success: false, message: 'Error saving project.' });
-    }
-  });
+  // });
 
 
 
@@ -580,45 +581,6 @@ const sinksBounds = [
   [52.742055454,13.500732582]
 ];
 
-
-const toolboxOutlineInjection = new L.geoJSON(outline_injection, {
-  attribution: 'Outline Injection',
-  pane: 'overlayPolygonPane',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.name, {
-        direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
-        offset: [0, 0],         // x, y offset in pixels
-        permanent: false,       // only show on hover
-        sticky: true  
-    });
-  }
-});
-
-const toolboxOutlineSurfaceWater = new L.geoJSON(outline_surface_water, {
-  attribution: 'Outline Surface Water',
-  pane: 'overlayPolygonPane',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.name, {
-        direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
-        offset: [0, 0],         // x, y offset in pixels
-        permanent: false,       // only show on hover
-        sticky: true  
-    });
-  }
-});
-
-const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
-  attribution: 'Outline Infiltration',
-  pane: 'overlayPolygonPane',
-  onEachFeature: function (feature, layer) {
-    layer.bindTooltip(feature.properties.name, {
-      direction: 'left',       // 'top', 'bottom', 'left', 'right', or 'auto'
-      offset: [0, 0],         // x, y offset in pixels
-      permanent: false,       // only show on hover
-      sticky: true  
-    });
-  }
-});
 
 
   const markers = L.markerClusterGroup({
@@ -699,14 +661,6 @@ const toolboxOutlineInfiltration = new L.geoJSON(outline_infiltration, {
   const overlayLayers = {
     "demOverlay": demOverlay,
     "projectRegion": projectRegion,
-    // "toolboxOverlaySoil": toolboxOverlaySoil,
-    // "toolboxOverlaySinks": toolboxOverlaySinks,
-    "toolboxOutlineInjection": toolboxOutlineInjection,
-    "toolboxOutlineSurfaceWater": toolboxOutlineSurfaceWater,
-    "toolboxOutlineInfiltration": toolboxOutlineInfiltration,
-    // "allLakes": allLakes,
-    // "allRivers": allRivers,
-    // "sinks": toolboxSinksOutline,
     "waterLevels": markers,
   };
 

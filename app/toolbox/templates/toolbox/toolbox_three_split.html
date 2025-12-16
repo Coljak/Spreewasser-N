@@ -37,6 +37,7 @@
 
 
 {% block left_panel %}
+<div id="modal-container"></div>
     {% include 'toolbox/sidebar.html' %}
     {% include 'toolbox/toolbox_modals.html' %}
     {% include 'swn/modal_field_name.html' %}
@@ -134,9 +135,9 @@
         const getUserFieldsUrl = "{% url 'toolbox:get-user-fields' %}";  
         const project_region = {{ project_region|safe }}   
 
-        const outline_injection = {{ outline_injection|safe }}   
-        const outline_surface_water = {{ outline_surface_water|safe }}   
-        const outline_infiltration = {{ outline_infiltration|safe }}   
+        {% comment %} const outline_injection = {{ outline_injection|safe }}    {% endcomment %}
+        {% comment %} const outline_surface_water = {{ outline_surface_water|safe }}    {% endcomment %}
+        {% comment %} const outline_infiltration = {{ outline_infiltration|safe }}    {% endcomment %}
         
         const userId  = "{{ request.user.id }}"
         {% comment %} const all_rivers_feature_collection = {{ all_rivers_feature_collection|safe }}

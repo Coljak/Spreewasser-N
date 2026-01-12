@@ -18,6 +18,14 @@ import {
 
 
 var userFieldStore = null;
+function addSwnProject(userFieldId){
+  
+            
+            
+  // $('#newProjectForm')[0].reset();
+  $('#monicaNewProjectModal').find('.modal-title').text('Neues Projekt erstellen');
+  $('#monicaNewProjectModal').modal('show');
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   // Hide the coordinate form card from plain Monica
@@ -116,7 +124,8 @@ initializeSidebarEventHandler({
   getFeatureGroup: () => { return featureGroup; },
   getProject: () => MonicaProject.loadFromLocalStorage(),
   loadProjectFromDb: (projectId) => loadProjectFromDB(projectId),
-  startApplication: (project) => loadProjectToGui(project)
+  startApplication: (project) => loadProjectToGui(project),
+  addProject: (userFieldId) => addSwnProject(userFieldId),
 });
 
 createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});

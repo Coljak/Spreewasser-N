@@ -21,7 +21,6 @@ export function saveNewProjectModalEvents() {
         // const isNewProject = (project.toolboxType === 'generic');
         const pageReload = $('#saveToolboxProjectButton').data('page-reload')
         project.name = projectName;
-        // project.userField = $('#userFieldSelect').val();
         project.toolboxType = $('#projectTypeSelect').val();
         project.description = $('#id_project_description').val().trim();
         project.saveToLocalStorage();

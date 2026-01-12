@@ -2,7 +2,7 @@ import { getGeolocation } from '/static/shared/utils.js';
 import { MonicaProject } from '/static/monica/monica.js';
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
 import { getCSRFToken, handleAlerts, getBsColor } from '/static/shared/utils.js';
-import { saveNewProjectModalEvents } from '/static/toolbox/toolbox_modals.js';
+
 
 
 
@@ -682,6 +682,7 @@ export function initializeSidebarEventHandler({
   loadProjectFromDb,
   // TODO get rid of the project argument- it is already saved to localStorage
   startApplication,
+  addProject,
   }) {
     sidebar.addEventListener("change", (event) => {
       const switchInput = event.target;
@@ -699,7 +700,6 @@ export function initializeSidebarEventHandler({
         console.log('switchInput: ', switchInput);
           toggleUserField(switchInput, getFeatureGroup());
       } else if (switchInput.classList.contains('all-userfields-switch')) {
-
         console.log('all-userfields-switch')
         $('.form-check-input.user-field-switch')
         .prop('checked', switchInput.checked)
@@ -724,6 +724,12 @@ export function initializeSidebarEventHandler({
       console.log("sidebar click event", event.target.classList);
       const clickedElement = event.target;
       let featureGroup = getFeatureGroup()
+
+      if (event.target.closest('.accordion-button.user-field-accordion-header')) {
+        console.log('closest userfield-switch')
+        $('#userFieldsAccordion').toggleClass('show') 
+
+      }
   
       
       if (clickedElement.classList.contains("user-field-action")) {
@@ -790,38 +796,9 @@ export function initializeSidebarEventHandler({
           selectUserField(userFieldId, getProject(), featureGroup);
           //set the right user field in the modal
           $('#userFieldSelect').val(userFieldId); 
-           if (window.location.pathname.endsWith('/drought/')) {
-            localStorage.setItem('userFieldId', clickedElement.getAttribute('user-field-id'));
-            
-            
-            // $('#newProjectForm')[0].reset();
-            $('#monicaNewProjectModal').find('.modal-title').text('Neues Projekt erstellen');
-            $('#monicaNewProjectModal').modal('show');
-            
-            // $('#swnProjectModal').modal('show');
-          } else if (window.location.pathname.endsWith('/toolbox/')){
-            fetch('/toolbox/load-toolbox-project-modal/', {
-              method: 'POST',
-              credentials: 'same-origin',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(),
-              },
-              body: JSON.stringify({ userFieldId: userFieldId, page_reload: 'true', })
 
-            })
-            .then(r => r.text())
-            .then(html => {
-              const container = document.getElementById("modal-container");
-              container.innerHTML = html;
-
-              const modalEl = document.getElementById("toolboxProjectModal");
-              saveNewProjectModalEvents();
-              const modal = new bootstrap.Modal(modalEl);
-              modal.show();
-            });
-            // $('#toolboxProjectModal').modal('show');
-          }
+          addProject(userFieldId);
+          
         } else if (clickedElement.classList.contains('field-edit')) {
           selectUserField(userFieldId, getProject(), featureGroup);
           console.log('field-edit clicked');

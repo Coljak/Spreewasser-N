@@ -35,6 +35,7 @@ import {
   selectUserField,
   dismissPolygon,
 } from '/static/shared/map_sidebar_utils.js';
+import { saveNewProjectModalEvents } from '/static/toolbox/toolbox_modals.js';
 
 // for info elements with help text
 function getInfoText(el) {
@@ -95,6 +96,28 @@ const TOOLBOX_TYPES = {
 }; 
 
 
+function addToolboxProject(userFieldId){
+  fetch('/toolbox/load-toolbox-project-modal/', {
+  method: 'POST',
+  credentials: 'same-origin',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCSRFToken(),
+  },
+  body: JSON.stringify({ userFieldId: userFieldId, page_reload: 'true', })
+
+})
+.then(r => r.text())
+.then(html => {
+  const container = document.getElementById("modal-container");
+  container.innerHTML = html;
+
+  const modalEl = document.getElementById("toolboxProjectModal");
+  saveNewProjectModalEvents();
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
+});
+};
 
 async function startInfiltration() {
   
@@ -682,7 +705,8 @@ const sinksBounds = [
     getFeatureGroup: () => { return featureGroup; },
     getProject: () => ToolboxProject.loadFromLocalStorage(),
     loadProjectFromDb: (projectId) => loadProjectFromDb(projectId),
-    startApplication: (project) => startToolbox(project)
+    startApplication: (project) => startToolbox(project),
+    addProject: (userFieldId) => addToolboxProject(userFieldId),
   });
 
   createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});

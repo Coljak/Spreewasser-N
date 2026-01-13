@@ -133,12 +133,17 @@
       <!-- drought warning userfields -->
       <div class="accordion-item" >
         <h2 class="accordion-header">
-          <button 
-            class="accordion-button user-field-accordion-header" 
-            type="button" data-bs-toggle="collapse" 
-            aria-expanded="true" aria-controls="userFieldsAccordion"
-            >
-            Benutzerfelder
+          <button class="accordion-button d-flex justify-content-between align-items-center user-field-accordion-header" 
+                  type="button" 
+                  data-bs-toggle="collapse" 
+                  {% comment %} data-bs-target="#userFieldsAccordion"  {% endcomment %}
+                  aria-expanded="true" 
+                  aria-controls="userFieldsAccordion">
+            <div class="form-check form-switch m-0">
+              <input type="checkbox" class="form-check-input all-userfields-switch" id="allUserFieldsSwitch" checked=""/>
+              <label class="form-check-label all-userfields-switch" for="allUserFieldsSwitch">Felder</label>
+            </div>
+
           </button>
         </h2>
         <div  id="userFieldsAccordion" class="accordion-collapse collapse show" >

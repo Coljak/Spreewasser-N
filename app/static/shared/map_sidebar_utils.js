@@ -700,6 +700,7 @@ export function initializeSidebarEventHandler({
         console.log('switchInput: ', switchInput);
           toggleUserField(switchInput, getFeatureGroup());
       } else if (switchInput.classList.contains('all-userfields-switch')) {
+        event.stopPropagation();
         console.log('all-userfields-switch')
         $('.form-check-input.user-field-switch')
         .prop('checked', switchInput.checked)
@@ -724,8 +725,10 @@ export function initializeSidebarEventHandler({
       console.log("sidebar click event", event.target.classList);
       const clickedElement = event.target;
       let featureGroup = getFeatureGroup()
-
-      if (event.target.closest('.accordion-button.user-field-accordion-header')) {
+      // if (event.target.closest(.))
+      if (event.target.closest('.all-userfields-switch')) {
+        return
+      } else if (event.target.closest('.accordion-button.user-field-accordion-header')) {
         console.log('closest userfield-switch')
         $('#userFieldsAccordion').toggleClass('show') 
 

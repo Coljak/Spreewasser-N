@@ -1,214 +1,188 @@
 
 <!-- Sidebar -->
 <div class="sidebar-content">
-    <div class="sidebar-pane active" id="toolboxSidebar">
-      <h2 class="sidebar-header" > Toolbox</h2>
-      <!-- accordion items of layer pane -->
-      <div class="accordion accordion-flush" id="toolboxAccordion">
-        <!-- Baselayer accordion items -->
-        {% comment %} <div class="accordion-item">
-          <h2 class="accordion-header">
-            <button
-              class="accordion-button"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#baseLayerCollapse"
-              aria-expanded="true"
-              aria-controls="baseLayerCollapse"
-            >
-              Baselayers
-            </button>
-          </h2>
-          <!-- Baselayer collapse -->
-          <div
-            id="baseLayerCollapse"
-            class="accordion-collapse collapse show"
-            
+  <div class="sidebar-pane active" id="toolboxSidebar">
+    <h2 class="sidebar-header" > Toolbox</h2>
+    <!-- accordion items of layer pane -->
+    <div class="accordion accordion-flush" id="toolboxAccordion">
+      <!-- overlay accordion items -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button
+            class="accordion-button collapsed"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#overlayAccordion"
+            aria-expanded="false"
+            aria-controls="overlayAccordion"
           >
-            <ul class="list-group sidebar-list base-layer-control-list" id="baseLayerList">
-              <!-- leaflet layer control items are inserted here-->
-            </ul>
-              
-          </div>
-        </div>  {% endcomment %}
-        <!-- overlay accordion items -->
-        <div class="accordion-item">
-          <h2 class="accordion-header">
-            <button
-              class="accordion-button collapsed"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#overlayAccordion"
-              aria-expanded="false"
-              aria-controls="overlayAccordion"
-            >
-              Overlays
-            </button>
-          </h2>
-          <div
-            id="overlayAccordion"
-            class="accordion-collapse collapse"
+            Overlays
+          </button>
+        </h2>
+        <div
+          id="overlayAccordion"
+          class="accordion-collapse collapse"
+          
+          >
+          <ul class="list-group sidebar-list" id="overlayList">
+            <!-- project region -->
+            <li class="list-group-item">
+              <div class="row">
+                <div class="form-check form-switch col">
+                  <input type="checkbox" data-layer="projectRegion" class="form-check-input overlay-switch" id="projectRegionSwitch"/>
+                  <label class="form-check-label" for="projectRegionSwitch">
+                    Spreewasser:N Projektgebiet
+                  </label>
+                </div>
+                
+              </div>
+            </li>
+
+            {% for field in counties_form.visible_fields %}
+
+              <li  class="list-group-item">
+                {{ field }}
+              </li>
+            {% endfor %} 
+            <!-- API Pegelonline.de -->
+              <li class="list-group-item toolbox-overlay-sidebar-item" id="liElementWaterLevels">
+              <div class="row">
+                <div class="form-check form-switch col">
+                  <input type="checkbox" data-layer="waterLevels" class="form-check-input overlay-switch" id="waterLevelsSwitch" />
+                  <label class="form-check-label" for="waterLevelsSwitch">
+                    Aktuelle Pegelstände
+                  </label>
+                </div>
+              </div>
+            </li> 
+
+            <!-- digital elevation model -->
+            <li class="list-group-item toolbox-overlay-sidebar-item" id='liElementDem'>
+              <div class="row">
+                <div class="form-check form-switch col">
+                  <input type="checkbox" data-layer="demOverlay" class="form-check-input overlay-switch" id="DEMSwitch"  />
+                  <label class="form-check-label" for="DEMSwitch">Höhenmodell</label>
+                </div>
+                <div class="range col-5">
+                  <input
+                    type="range"
+                    class="form-range layer-opacity"
+                    data-layer="demOverlay"
+                    min="0.0"
+                    max="1.0"
+                    step="0.1"
+                    id="demOverlayOpacity"
+                    title="Transparenz"
+                    disabled
+                  />
+                </div>
+              </div>
+            </li>
+
+            <!-- Toolbox overlays -->
+            {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item">
+              <div class="row">
+                <div class="form-check form-switch col">
+                  <input type="checkbox" data-layer="allRivers" class="form-check-input overlay-switch" id="toolboxOverlayRiverswitch"/>
+                  <label class="form-check-label" for="toolboxOverlayRiversSwitch">
+                    Flüsse
+                  </label>
+                </div>
+              </div>
+            </li>
+
+            <li class="list-group-item toolbox-overlay-sidebar-item">
+              <div class="row">
+                <div class="form-check form-switch col">
+                  <input type="checkbox" data-layer="allLakes" class="form-check-input overlay-switch" id="toolboxOverlayLakesSwitch"/>
+                  <label class="form-check-label" for="toolboxOverlayLakesSwitch">
+                    Seen
+                  </label>
+                </div>
+              </div>
+            </li> {% endcomment %}
+
+            {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item">
+              <div class="row">
+                <div class="form-check form-switch col">
+                  <input type="checkbox" data-layer="toolboxOutlineRetention" class="form-check-input overlay-switch" id="toolboxOverlayRetentionSwitch"/>
+                  <label class="form-check-label" for="toolboxOverlayRetentionSwitch">
+                    Wasserrückhaltepotentiale
+                  </label>
+                </div>
+              </div>
+            </li> {% endcomment %}
+
+            {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item d-none">
+              <div class="row">
+                <div class="form-check form-switch col">
+                  <input type="checkbox" data-layer="toolboxSinks" class="form-check-input overlay-switch" id="toolboxSinksSwitch"/>
+                  <label class="form-check-label" for="toolboxSinksSwitch">
+                    Senken
+                  </label>
+                </div>
+              </div>
+            </li> {% endcomment %}
+
+            {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item ">
+              <div class="row">
+                <div class="form-check form-switch col">
+                  <input type="checkbox" data-layer="toolboxOutlineInjection" class="form-check-input overlay-switch" id="toolboxOverlayInjectionSwitch"/>
+                  <label class="form-check-label" for="toolboxOverlayInjectionSwitch">
+                    Grundwasseranreicherung durch Injektion <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Grundwasseranreicherung durch Injektionsgebiet" style="text-align: left;"></i>
+                  </label>
+                </div>
+              </div>
+            </li>
+
+            <li class="list-group-item toolbox-overlay-sidebar-item">
+              <div class="row">
+                <div class="form-check form-switch col">
+                  <input type="checkbox" data-layer="toolboxOutlineInfiltration" class="form-check-input overlay-switch" id="toolboxOverlayInfiltrationSwitch"/>
+                  <label class="form-check-label" for="toolboxOverlayInfiltrationSwitch">
+                    Grundwasseranreicherung durch Versickerung <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Grundwasseranreicherung durch Versickerung" style="text-align: left;"></i>
+                  </label>
+                </div>  
+              </div>
+            </li>
+            <li class="list-group-item toolbox-overlay-sidebar-item">
+              <div class="row">
+                <div class="form-check form-switch col">
+                  <input type="checkbox" data-layer="toolboxOutlineGeste" class="form-check-input overlay-switch" id="toolboxOverlayGesteSwitch"/>
+                  <label class="form-check-label" for="toolboxOverlayGesteSwitch">
+                    Gesteuerte Drainagen <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Gesteuerte Drainagen" style="text-align: left;"></i>
+                  </label>
+                </div>
+              </div>
+            </li>
+
+            <li class="list-group-item toolbox-overlay-sidebar-item">
+              <div class="row">
+                <div class="form-check form-switch col">
+                  <input type="checkbox" data-layer="toolboxOutlineSurfaceWater" class="form-check-input overlay-switch" id="toolboxOverlaySurfaceWaterSwitch"/>
+                  <label class="form-check-label" for="toolboxOverlaySurfaceWaterSwitch">
+                    Senken in Ufernähe <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Senken in Ufernähe" style="text-align: left;"></i>
+                  </label>
+                </div>
+              </div>
+            </li> {% endcomment %}
             
-            >
-            <ul class="list-group sidebar-list" id="overlayList">
-              <!-- project region -->
-              <li class="list-group-item">
-                <div class="row">
-                  <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="projectRegion" class="form-check-input overlay-switch" id="projectRegionSwitch"/>
-                    <label class="form-check-label" for="projectRegionSwitch">
-                      Spreewasser:N Projektgebiet
-                    </label>
-                  </div>
-                  
-                </div>
-              </li>
-
-              {% for field in counties_form.visible_fields %}
-
-                <li  class="list-group-item">
-                  {{ field }}
-                </li>
-              {% endfor %} 
-              <!-- API Pegelonline.de -->
-               <li class="list-group-item toolbox-overlay-sidebar-item" id="liElementWaterLevels">
-                <div class="row">
-                  <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="waterLevels" class="form-check-input overlay-switch" id="waterLevelsSwitch" />
-                    <label class="form-check-label" for="waterLevelsSwitch">
-                      Aktuelle Pegelstände
-                    </label>
-                  </div>
-                </div>
-              </li> 
-
-              <!-- digital elevation model -->
-              <li class="list-group-item toolbox-overlay-sidebar-item" id='liElementDem'>
-                <div class="row">
-                  <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="demOverlay" class="form-check-input overlay-switch" id="DEMSwitch"  />
-                    <label class="form-check-label" for="DEMSwitch">Höhenmodell</label>
-                  </div>
-                  <div class="range col-5">
-                    <input
-                      type="range"
-                      class="form-range layer-opacity"
-                      data-layer="demOverlay"
-                      min="0.0"
-                      max="1.0"
-                      step="0.1"
-                      id="demOverlayOpacity"
-                      title="Transparenz"
-                      disabled
-                    />
-                  </div>
-                </div>
-              </li>
-
-              <!-- Toolbox overlays -->
-              {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item">
-                <div class="row">
-                  <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="allRivers" class="form-check-input overlay-switch" id="toolboxOverlayRiverswitch"/>
-                    <label class="form-check-label" for="toolboxOverlayRiversSwitch">
-                      Flüsse
-                    </label>
-                  </div>
-                </div>
-              </li>
-
-              <li class="list-group-item toolbox-overlay-sidebar-item">
-                <div class="row">
-                  <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="allLakes" class="form-check-input overlay-switch" id="toolboxOverlayLakesSwitch"/>
-                    <label class="form-check-label" for="toolboxOverlayLakesSwitch">
-                      Seen
-                    </label>
-                  </div>
-                </div>
-              </li> {% endcomment %}
-
-              {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item">
-                <div class="row">
-                  <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="toolboxOutlineRetention" class="form-check-input overlay-switch" id="toolboxOverlayRetentionSwitch"/>
-                    <label class="form-check-label" for="toolboxOverlayRetentionSwitch">
-                      Wasserrückhaltepotentiale
-                    </label>
-                  </div>
-                </div>
-              </li> {% endcomment %}
-
-              {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item d-none">
-                <div class="row">
-                  <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="toolboxSinks" class="form-check-input overlay-switch" id="toolboxSinksSwitch"/>
-                    <label class="form-check-label" for="toolboxSinksSwitch">
-                      Senken
-                    </label>
-                  </div>
-                </div>
-              </li> {% endcomment %}
-
-              {% comment %} <li class="list-group-item toolbox-overlay-sidebar-item ">
-                <div class="row">
-                  <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="toolboxOutlineInjection" class="form-check-input overlay-switch" id="toolboxOverlayInjectionSwitch"/>
-                    <label class="form-check-label" for="toolboxOverlayInjectionSwitch">
-                      Grundwasseranreicherung durch Injektion <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Grundwasseranreicherung durch Injektionsgebiet" style="text-align: left;"></i>
-                    </label>
-                  </div>
-                </div>
-              </li>
-
-              <li class="list-group-item toolbox-overlay-sidebar-item">
-                <div class="row">
-                  <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="toolboxOutlineInfiltration" class="form-check-input overlay-switch" id="toolboxOverlayInfiltrationSwitch"/>
-                    <label class="form-check-label" for="toolboxOverlayInfiltrationSwitch">
-                      Grundwasseranreicherung durch Versickerung <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Grundwasseranreicherung durch Versickerung" style="text-align: left;"></i>
-                    </label>
-                  </div>  
-                </div>
-              </li>
-              <li class="list-group-item toolbox-overlay-sidebar-item">
-                <div class="row">
-                  <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="toolboxOutlineGeste" class="form-check-input overlay-switch" id="toolboxOverlayGesteSwitch"/>
-                    <label class="form-check-label" for="toolboxOverlayGesteSwitch">
-                      Gesteuerte Drainagen <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Gesteuerte Drainagen" style="text-align: left;"></i>
-                    </label>
-                  </div>
-                </div>
-              </li>
-
-              <li class="list-group-item toolbox-overlay-sidebar-item">
-                <div class="row">
-                  <div class="form-check form-switch col">
-                    <input type="checkbox" data-layer="toolboxOutlineSurfaceWater" class="form-check-input overlay-switch" id="toolboxOverlaySurfaceWaterSwitch"/>
-                    <label class="form-check-label" for="toolboxOverlaySurfaceWaterSwitch">
-                      Senken in Ufernähe <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Beschreibung Senken in Ufernähe" style="text-align: left;"></i>
-                    </label>
-                  </div>
-                </div>
-              </li> {% endcomment %}
-              
-            </ul>
-          </div>
+          </ul>
         </div>
+      </div>
 
-        <!-- toolbox userfields -->
-        <div class="accordion-item">
+      <!-- toolbox userfields -->
+      <div class="accordion-item">
         <h2 class="accordion-header">
           <button class="accordion-button d-flex justify-content-between align-items-center user-field-accordion-header" 
                   type="button" 
-                  data-bs-toggle="collapse" 
+                  {% comment %} data-bs-toggle="collapse"  {% endcomment %}
                   {% comment %} data-bs-target="#userFieldsAccordion"  {% endcomment %}
                   aria-expanded="true" 
                   aria-controls="userFieldsAccordion">
             <div class="form-check form-switch m-0">
               <input type="checkbox" class="form-check-input all-userfields-switch" id="allUserFieldsSwitch" checked=""/>
-              <label class="form-check-label" for="allUserFieldsSwitch">Suchgebiete</label>
+              <label class="form-check-label all-userfields-switch" for="allUserFieldsSwitch">Suchgebiete</label>
             </div>
 
           </button>
@@ -222,7 +196,7 @@
       </div>
 
 
-      </div>
     </div>
   </div>
+</div>
 

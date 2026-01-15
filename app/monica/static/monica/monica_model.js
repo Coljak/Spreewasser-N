@@ -362,16 +362,6 @@ const runSimulation = (monicaProject) => {
 
 window.isLoading = false;
 
-
-
-
-// creates the rotation divs and adds the worksteps from the project
-
-
-
-
-
-
 // Parameters Modal
 const bindModalEventListeners = (parameters) => {
     console.log('bindModalEventListeners', parameters);
@@ -518,139 +508,6 @@ const submitModalForm = (modalForm, modalAction) => {
 
 let modalInitialized = false;
 
-
-// TODO refactor initiaizeSoilModal
-// TODO implement getSoilProfiles for swn - all poygon ids
-// const initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
-//     console.log('initializeSoilModal',   systemUnitJson, landusageChoices);
-//     if (modalInitialized) return;
-//     modalInitialized = true;
-//     const landUsageField = document.getElementById('id_land_usage');
-//     const soilProfileField = document.getElementById('id_soil_profile');
-//     const horizonsField = document.getElementById('div_id_horizons');
-//     const areaPercenteageField = document.getElementById('id_area_percentage');
-//     const systemUnitField = document.getElementById('id_system_unit');
-//     const table = document.getElementById('tableHorizons');
-
-//     let selectedSoilProfile = 0;
-
-//     soilProfileField.addEventListener('change', function() {
-        
-//         const selectedLandUsage = landUsageField.value;
-//         const selectedSystemUnit = systemUnitField.value;
-//         const selectedAreaPercenteage = areaPercenteageField.value;
-//         selectedSoilProfile = soilProfileField.value;
-        
-        
-//         const horizons = systemUnitJson[selectedLandUsage][selectedSystemUnit]['soil_profiles'][selectedAreaPercenteage][selectedSoilProfile]['horizons'];
-//         horizonsField.innerHTML = '<p class="text-start">Landuse: ' + selectedLandUsage + '</br>System unit: ' + selectedSystemUnit + '</br>Area percentage: ' + selectedAreaPercenteage + '</br>Soil profile: ' + selectedSoilProfile + '</p>';
-//         table.innerHTML = '';
-//         const headerRow = table.insertRow();
-//         headerRow.classList.add("table-dark")
-//         const headerCell = headerRow.insertCell();
-        
-//         headerCell.textContent = 'Horizonte';
-//         for (let horizon in horizons) {
-//             const headerCellHorizon = headerRow.insertCell();
-//             headerCellHorizon.textContent = horizon;
-//         }
-//         for (let key in horizons[1]) {
-//             const dataRow = table.insertRow();
-//             const dataRowHeaderCell  = dataRow.insertCell();
-//             dataRowHeaderCell.classList.add("table-dark")
-//             for (let horizon in horizons) {
-//                 dataRowHeaderCell.textContent = key;
-//                 const dataRowDataCell  = dataRow.insertCell();
-//                 let value = horizons[horizon][key];
-//                 if (typeof(value) === 'number') {
-//                     value = value.toFixed(2);
-//                 }
-//                 dataRowDataCell.textContent = value;   
-//             } 
-//         }
-//     });
-
-//     // Populate soil profile and area percenteage when land usage changes
-//     areaPercenteageField.addEventListener('change', function() {
-//         console.log('areaPercenteageField change event')
-//         const selectedLandUsage = landUsageField.value;
-//         const selectedSystemUnit = systemUnitField.value;
-//         const selectedAreaPercenteage = areaPercenteageField.value;
-
-//         const selectableSoilProfiles =  systemUnitJson[selectedLandUsage][selectedSystemUnit]['soil_profiles'][selectedAreaPercenteage];
-//         console.log('selectableSoilProfiles', selectableSoilProfiles);
-
-//         const profileOptions = new Object();
-//         let profileNo = 1;
-//         for (let soilprofile_id in selectableSoilProfiles) {
-            
-//             profileOptions[soilprofile_id] = 'Profil ' + profileNo;
-//             profileNo++;
-//         };
-//         // console.log('profileOptions', profileOptions);
-//         soilProfileField.innerHTML = '';
-//         for (const key in profileOptions) {
-//             const option = document.createElement('option');
-//             option.value = key;
-//             option.text = profileOptions[key];
-//             soilProfileField.appendChild(option);
-//         };
-//         soilProfileField.dispatchEvent(new Event('change'));
-    
-//     });
-
-//     systemUnitField.addEventListener('change', function() {
-//         console.log('systemUnitField change event');
-//         const selectedLandUsage = landUsageField.value;
-//         const selectedSystemUnit = systemUnitField.value;
-//         const selectableAreaPercentages =  systemUnitJson[selectedLandUsage][selectedSystemUnit]['area_percentages'].reverse();
-//         areaPercenteageField.innerHTML = '';
-//         selectableAreaPercentages.forEach(item => {
-//             areaPercenteageField.appendChild(new Option(item));
-//         });
-//         areaPercenteageField.dispatchEvent(new Event('change'));
-//     });
-
-//     landUsageField.addEventListener('change', function(){
-//         console.log('landUsageField change event')
-//         const selectedLandUsage = landUsageField.value;
-        
-//         const selectableSystemUnits =  new Array()
-//         for (let [key, value] of Object.entries(systemUnitJson[selectedLandUsage])){
-//             if (!selectableSystemUnits.includes(key)){
-//                 selectableSystemUnits.push(key);
-//             }}
-//             selectableSystemUnits.sort();
-//         systemUnitField.innerHTML = '';
-//         selectableSystemUnits.forEach(item => {
-//             systemUnitField.appendChild(new Option(item));
-//         });
-//         // trigger change event to update system unit
-//         systemUnitField.dispatchEvent(new Event('change'));
-//         // console.log('selectableSystemUnits', selectableSystemUnits.sort());
-//     });
-
-//     landUsageField.innerHTML = ''; // Clear existing options
-
-//     for (const key in landusageChoices) {
-//         const option = document.createElement('option');
-//         option.value = key;
-//         option.text = landusageChoices[key];
-//         landUsageField.appendChild(option);
-//     }
-    
-//     landUsageField.dispatchEvent(new Event('change'));
-
-//     const btnSelectSoilProfile = document.getElementById("btnSelectSoilProfile");
-//     btnSelectSoilProfile.addEventListener("click", function () {      
-//         const project = MonicaProject.loadFromLocalStorage();
-//         project.soilProfileType = "buekSoilProfile";
-//         project.soilProfileId = soilProfileField.value;
-//         // console.log('project.soilProfileId', project.soilProfileId);
-//         project.saveToLocalStorage();
-//     });
-
-// };
 
 const initializeSoilModal = function (polygonIds, userFieldId, systemUnitJson, landusageChoices) {
     console.log('initializeSoilModal',   systemUnitJson, landusageChoices);
@@ -855,8 +712,6 @@ const createModal = (params) => {
         console.error('Error:', error);
     }
 };
-
-
 
 
 const validateProject = (project) => {
@@ -1071,12 +926,8 @@ const resultTranslation = {
     'SOC_2': 'organischer Kohlenstoff 10-20cm',
     'SOC_3': 'organischer Kohlenstoff 20-30cm',
 };
-// var project = new MonicaProject();
-// Event listeners
-var language = 'de-DE'
-document.addEventListener('DOMContentLoaded', () => {
-    setLanguage(language);
-    
+
+const setOutputSettings = () => {
     localStorage.setItem(
         'outputSettings',
         JSON.stringify({
@@ -1107,10 +958,10 @@ document.addEventListener('DOMContentLoaded', () => {
             'LAI': false,
         }
     }));
-   
-    document.getElementById('btnOpenOutputSettings').addEventListener('click', function () {
-        
-    
+};
+
+function addMonicaEvents() {
+     document.getElementById('btnOpenOutputSettings').addEventListener('click', function () {    
         const modalHtml = document.getElementById('outputSettingsModal');
         if (!modalHtml) {
             console.error("Modal element not found!");
@@ -1169,87 +1020,39 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.show();
     });
 
-    document.getElementById('btnOutputSettingsApply').addEventListener('click', function () {
-        // the selection of output parameters got changed so the graph needs to be reloaded
-        createChartDataset();
-    });
-    
-
-    $('#todaysDatePicker').datepicker('update', new Date());
-    $('#todaysDatePicker').trigger('focusout'); // saving the todays date to the project
-    document.getElementById('monica-project-save').addEventListener('click', function () {
-        console.log('monica-project-save clicked');
-        const project = MonicaProject.loadFromLocalStorage();
-        if (validateProject(project)) {
-            saveProject(project);
-        } 
-      });
-
-    const calculateDaysInRotation = function() {
-        var startDate = project.startDate;
-        var endDate = project.endDate;  
-
-        var daysInRotation = (endDate - startDate) / (1000 * 60 * 60 * 24);
-        var yearsInRotation = Math.ceil(daysInRotation / 365);
-        return [daysInRotation, yearsInRotation];
-    };
-
-
-
-    // NAVBAR MONICA EVENT LISTENERS
-    $('.nav-link.monica').on('click', function (e) {
-        e.preventDefault();
-        $('.nav-link.monica').removeClass('active');
-        $(this).addClass('active');
-        const target = $(this).attr('href');
-        $('.tab-pane').hide();
-        $(target).show();
-    });
-
-
-    
-    
-    // Attach both events to both elements
-    $('#monicaStartDatePicker, #monicaEndDatePicker').on('changeDate focusout', handleDateChange);
-  
-
-
-    var advancedMode = false;
-    $('.advanced').hide();
     $('#toggle-advanced-mode').on('click', function () {
-        // Toggle the advancedMode variable
-        advancedMode = !advancedMode;
+        console.log('toggle advanced')
+        const isAdvanced = $('.advanced').is(':visible');
+        console.log('isAdvanced', isAdvanced)
+        // advancedMode = !advancedMode;
     
         // Show or hide elements based on advancedMode
-        if (advancedMode) {
+        if (!isAdvanced) {
             $('.advanced').show(); 
             $(this).text('Switch to Simple Mode'); 
         } else {
             $('.advanced').hide(); 
             $(this).text('Switch to Advanced Mode'); 
         } 
-        console.log('Advanced mode:', advancedMode); // Log the current mode
+
     });
 
     $('#toggle-advanced-mode-de').on('click', function () {
         // Toggle the advancedMode variable
-        advancedMode = !advancedMode;
+        const isAdvanced = $('.advanced').is(':visible');
     
         // Show or hide elements based on advancedMode
-        if (advancedMode) {
+        if (!isAdvanced) {
             $('.advanced').show(); 
             $(this).text('Einfache Ansicht'); 
         } else {
             $('.advanced').hide(); 
             $(this).text('Erweiterte Ansicht'); 
         } 
-        console.log('Advanced mode:', advancedMode); // Log the current mode
+        console.log('Advanced mode:', isAdvanced); // Log the current mode
     });
 
-
-
-
-    // TAB CROP ROTATION EVENT LISTENERS
+        // TAB CROP ROTATION EVENT LISTENERS
     $('#addRotationButton').on('click', () => {
         const project = MonicaProject.loadFromLocalStorage();
         const rotationIndex = project.rotation.length;
@@ -1382,8 +1185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
     } 
     });
-
-    
+  
     //TAB SOIL EVENT LISTENERS
     $('#id_soil_moisture').on('change', function () {
         if (!window.isLoading) {
@@ -1392,6 +1194,7 @@ document.addEventListener('DOMContentLoaded', () => {
             project.saveToLocalStorage();
         }
     });
+
     $('#id_soil_organic').on('change', function () {
         if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
@@ -1399,6 +1202,7 @@ document.addEventListener('DOMContentLoaded', () => {
             project.saveToLocalStorage();
         }
     });
+
     $('#id_soil_temperature').on('change', function () {
         if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
@@ -1406,6 +1210,7 @@ document.addEventListener('DOMContentLoaded', () => {
             project.saveToLocalStorage();
         }
     });
+
     $('#id_soil_transport').on('change', function () {
         if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
@@ -1481,12 +1286,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // TAB PROJECT EVENT LISTENERS
-
     $('#monicaNewProjectModal').on('hidden.bs.modal', function () {
         // Reset the form inside the modal
         $('#newProjectForm')[0].reset();
     });
-
 
     $('#tabProject').on('click', (event) => {
         const btnModifyParameters = event.target.closest('.modify-parameters');
@@ -1529,7 +1332,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
     $('#btnConfirmDeleteProject').on('click', () => {
         const projectId = $('#delete_project_id').val();
         console.log('Delete confirmed')
@@ -1556,9 +1358,6 @@ document.addEventListener('DOMContentLoaded', () => {
             $('#deleteProjectModal').modal('hide');
     });
     
-
-  
-
     $('.save-new-project').on('click', (e) => {
         const $button = $(e.target);
        
@@ -1634,7 +1433,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-
     $('#projectName').on('change', function () {
         // TODO obsolete!!??
         if (!window.isLoading) {
@@ -1643,6 +1441,7 @@ document.addEventListener('DOMContentLoaded', () => {
             project.saveToLocalStorage();
         }
     });
+
     $('#projectDescription').on('change', function () {
         if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
@@ -1650,6 +1449,7 @@ document.addEventListener('DOMContentLoaded', () => {
             project.saveToLocalStorage();
         }
     });
+
     $('#id_user_environment').on('change', function () {
         if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
@@ -1657,6 +1457,7 @@ document.addEventListener('DOMContentLoaded', () => {
             project.saveToLocalStorage();
         }
     });
+
     $('#id_user_crop_parameters').on('change', function () {
         if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
@@ -1664,6 +1465,7 @@ document.addEventListener('DOMContentLoaded', () => {
             project.saveToLocalStorage();
         }
     });
+
     $('#id_user_simulation_settings').on('change', function () {
         if (!window.isLoading) {
             const project = MonicaProject.loadFromLocalStorage();
@@ -1672,6 +1474,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    $('#btnOutputSettingsApply').on('click', function () {
+        // the selection of output parameters got changed so the graph needs to be reloaded
+        createChartDataset();
+    });
+
+    $('#todaysDatePicker').datepicker('update', new Date());
+    $('#todaysDatePicker').trigger('focusout'); // saving the todays date to the project
+};
+
+
+// var project = new MonicaProject();
+// Event listeners
+var language = 'de-DE'
+document.addEventListener('DOMContentLoaded', () => {
+    // var advancedMode = false;
+    setLanguage(language);
+    setOutputSettings();
+    addMonicaEvents();
+
+
+    document.getElementById('monica-project-save').addEventListener('click', function () {
+        console.log('monica-project-save clicked');
+        const project = MonicaProject.loadFromLocalStorage();
+        if (validateProject(project)) {
+            saveProject(project);
+        } 
+      });
+
+    const calculateDaysInRotation = function() {
+        var startDate = project.startDate;
+        var endDate = project.endDate;  
+
+        var daysInRotation = (endDate - startDate) / (1000 * 60 * 60 * 24);
+        var yearsInRotation = Math.ceil(daysInRotation / 365);
+        return [daysInRotation, yearsInRotation];
+    };
+
+
+
+    // NAVBAR MONICA EVENT LISTENERS
+    // TODO isn't taht bootstrap??
+    $('.nav-link.monica').on('click', function (e) {
+        e.preventDefault();
+        $('.nav-link.monica').removeClass('active');
+        $(this).addClass('active');
+        const target = $(this).attr('href');
+        $('.tab-pane').hide();
+        $(target).show();
+    });
+
+    
+    // Attach both events to both elements
+    $('#monicaStartDatePicker, #monicaEndDatePicker').on('changeDate focusout', handleDateChange);
+  
+    
+    $('.advanced').hide();
     $('.tab-pane').hide();
 
     const tabs = document.querySelectorAll('.monica.nav-link');
@@ -1709,9 +1567,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tabs[1].click();
     
-    // const getDefaultProject = () => {
 
-    // };
 
     let project = new MonicaProject(defaultProject);
     project.saveToLocalStorage();

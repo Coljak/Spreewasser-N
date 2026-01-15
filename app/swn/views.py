@@ -305,7 +305,7 @@ def swn_dashboard(request):
 
     data = {
             'default_project': default_project,
-            'state_county_district_form': state_county_district_form,
+            # 'state_county_district_form': state_county_district_form,
             'project_region': project_region,
             #MONICA FORMS
             'project_select_form': project_select_form,
@@ -323,6 +323,16 @@ def swn_dashboard(request):
     
     context.update(data)
     return render(request, 'swn/swn_three_split.html', context)
+
+def get_hidden_rotation_forms(request):
+    user = request.user
+    context = monica_views.get_monica_forms(user)
+    return render(request, 'monica/hidden_rotation_forms.html', context)
+
+
+def get_tab_rotation(request):
+    return render(request, 'swn/tab_rotation.html')
+
 
 
 

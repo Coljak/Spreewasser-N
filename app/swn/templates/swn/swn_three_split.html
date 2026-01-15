@@ -44,8 +44,8 @@
     <div id="swn_title" class="card-header">
         <h3 id="monica-project-header">Spreewasser:N Monica - <span id="monica-project-name" class="fw-normal fs-4">Kein Projekt geladen</span></h3>
     </div>
-    <div class="overflow-auto" >
-        {% include 'monica/hidden_rotation_forms.html' %}
+    <div id="swnMonica" class="overflow-auto" >
+        {% comment %} {% include 'monica/hidden_rotation_forms.html' %} {% endcomment %}
         <div class="d-flex justify-content-between align-items-center mb-3 overflow-auto">
         <!-- navigation in monica -->
             <ul class="nav nav-tabs mb-3">
@@ -72,43 +72,43 @@
         </div>
         <div class="tab-content">
         <!-- ende navigation -->
-        {% render_tab_project   user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
-
-
-        <!-- General Parameters -->
-        <div id="tabGeneralParameters" class="tab-pane card mb-3 active">
-            <div class="card-body">
-                {% comment %} <div class="card mb-3">
-                    <div class="card-body">
-                        {{ user_field_selector_form |crispy }}
-                    </div>
-                </div> {% endcomment %}
-            
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Start der Bewässerung</h5>
-                        <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
-                    </div>
-                </div>
-                
-                {% render_tab_general_parameters coordinate_form %}  
-            </div>  
-        </div>
-
-
-        {% render_tab_crop_rotation %}
-        {% render_tab_soil user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
-        {% render_tab_result %}
         
 
-        <button id="previousButton" class="btn btn-primary mt-3">Zurück</button>
-        <button id="nextButton" class="btn btn-primary mt-3">Weiter</button>
-        <button id="runSimulationButton" class="btn btn-primary mt-3">Simulation starten</button>
+            <!-- General Parameters -->
+            <div id="tabGeneralParameters" class="tab-pane card mb-3 active">
+                <div class="card-body">
+                    {% comment %} <div class="card mb-3">
+                        <div class="card-body">
+                            {{ user_field_selector_form |crispy }}
+                        </div>
+                    </div> {% endcomment %}
 
-        <button id="monica-project-save" class="btn btn-primary mt-3 ">Projekt speichern</button>
+                    
+                
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Start der Bewässerung</h5>
+                            <input type="text" id="todaysDatePicker" class="input-sm form-control datepicker" name="todaysDate" />
+                        </div>
+                    </div>
+                    
+                    {% render_tab_general_parameters coordinate_form %}  
+                </div>  
+            </div>
+
+            {% render_tab_project   user_environment_parameters_select_form user_crop_parameters_select_form user_simulation_settings_select_form %}
+            {% comment %} {% render_tab_crop_rotation %} {% endcomment %}
+            {% render_tab_soil user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
+            {% render_tab_result %}
+            
+
+            <button id="previousButton" class="btn btn-primary mt-3">Zurück</button>
+            <button id="nextButton" class="btn btn-primary mt-3">Weiter</button>
+            <button id="runSimulationButton" class="btn btn-primary mt-3">Simulation starten</button>
+            <button id="monica-project-save" class="btn btn-primary mt-3 ">Projekt speichern</button>
 
 
-    </div>
+        </div>
     </div>
 {% endblock bottom_panel %}
 
@@ -126,6 +126,8 @@
         const defaultProject = {{ default_project|safe }};
         const getUserFieldsUrl = "{% url 'swn:get-user-fields' %}";
         const saveUrl = "{% url 'swn:save-user-field' %}";
+        const getMonicaRotationUrl = "{% url 'swn:get-rotation-forms' %}"
+        const getTabRotationUrl = "{% url 'swn:get-tab-rotation' %}"
 
           
     </script>

@@ -57,7 +57,7 @@
       
       <div id="tabGeneralParameters" class="tab-pane card mb-3 active">
         <div class="card-body">
-      
+          
           {% render_tab_general_parameters coordinate_form %}   
              
         </div> 
@@ -94,6 +94,7 @@
 
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.de.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/chartjs/dist/chart.umd.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/chartjs/chartjs-adapter-date-fns.bundle.min.js' %}"></script>
     <script type="module" src="{% static 'monica/monica_model.js' %}"></script>
   {% endblock %}

@@ -29,7 +29,7 @@ function addSwnProject(userFieldId){
 
 document.addEventListener("DOMContentLoaded", () => {
   // Hide the coordinate form card from plain Monica
-  
+  console.log('Content loaded')
   $('#coordinateFormCard').hide();
 
   // center map at geolocation
@@ -115,18 +115,21 @@ featureGroup.bringToFront();
 
 initializeMapEventlisteners(map, featureGroup, MonicaProject);
 initializeDrawControl(map, featureGroup);
- 
-initializeSidebarEventHandler({
-  sidebar: document.querySelector(".sidebar-content"),
-  map,
-  overlayLayers,
-  getUserFields: () => localStorage.getItem("userFields") ? JSON.parse(localStorage.getItem("userFields")) : {},
-  getFeatureGroup: () => { return featureGroup; },
-  getProject: () => MonicaProject.loadFromLocalStorage(),
-  loadProjectFromDb: (projectId) => loadProjectFromDB(projectId),
-  startApplication: (project) => loadProjectToGui(project),
-  addProject: (userFieldId) => addSwnProject(userFieldId),
+document.addEventListener('drought:dom-ready', () => {
+  initializeSidebarEventHandler({
+    sidebar: document.querySelector(".sidebar-content"),
+    map,
+    overlayLayers,
+    getUserFields: () => localStorage.getItem("userFields") ? JSON.parse(localStorage.getItem("userFields")) : {},
+    getFeatureGroup: () => { return featureGroup; },
+    getProject: () => MonicaProject.loadFromLocalStorage(),
+    loadProjectFromDb: (projectId) => loadProjectFromDB(projectId),
+    startApplication: (project) => loadProjectToGui(project),
+    addProject: (userFieldId) => addSwnProject(userFieldId),
 });
+});
+ 
+
 
 createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});
 
@@ -143,5 +146,20 @@ if (projectRegionSwitch) {
     const event = new Event('change', { bubbles: true });
     projectRegionSwitch.dispatchEvent(event);
   }
+
+// inject the rest of Monica html
+
+async function loadDeferredMonicaHtml() {
+  const rotationHtml = await fetch(getMonicaRotationUrl).then(r => r.text());
+  $('#swnMonica').after(rotationHtml);
+
+  const tabHtml = await fetch(getTabRotationUrl).then(r => r.text());
+  $('#tabGeneralParameters').after(tabHtml);
+  document.dispatchEvent(new Event('drought:dom-ready'));
+}
+
+loadDeferredMonicaHtml().catch(console.error);
+
+
 
 });

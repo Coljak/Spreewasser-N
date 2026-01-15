@@ -17,6 +17,8 @@ urlpatterns = [
     #user related paths
     path('sign-up/', views.sign_up, name='sign_up'),
     path('drought/', views.swn_dashboard, name='swn_dashboard'),
+    path('drought/get-rotation-forms/', views.get_hidden_rotation_forms, name='get-rotation-forms'),
+    path('drought/get-tab-rotation/', views.get_tab_rotation, name='get-tab-rotation'),
     path('drought/get-csrf-token/', views.get_csrf_token, name='get-csrf-token'),
     path('drought/save-user-field/', views.save_user_field, name='save-user-field'),
     path('drought/get-user-fields/', views.get_user_fields, name='get-user-fields'),

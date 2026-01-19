@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import {  toolboxSinksOutline, updateDropdown, loadProjectFromDb, setProjectInfoHeader } from '/static/toolbox/toolbox.js';
+import { loadProjectFromDb} from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
 import { SiekerSink } from '/static/toolbox/sieker_sink_model.js';

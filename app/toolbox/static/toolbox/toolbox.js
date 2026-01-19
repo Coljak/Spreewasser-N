@@ -216,7 +216,7 @@ export function makeColoredPin(color, iconPath = null, label = "") {
     });
 }
 
-export const updateDropdown = (parameterType, newId) => {
+export function updateDropdown(parameterType, newId) {
     
     // the absolute path is needed because most options are exclusively from /monica
     let baseUrl = 'get_options/';

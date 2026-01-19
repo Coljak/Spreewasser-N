@@ -23,7 +23,9 @@
 
 
 {% block right_panel %}
-        <div id="map" style="height: 100%; width: 100%"></div>
+        <div id="map" style="height: 100%; width: 100%">
+            <div id="draw-hint" class="draw-hint d-none"></div>
+        </div>
 {% endblock right_panel %}
 
 
@@ -106,7 +108,7 @@
             <button id="nextButton" class="btn btn-primary mt-3">Weiter</button>
             <button id="runSimulationButton" class="btn btn-primary mt-3">Simulation starten</button>
             <button id="monica-project-save" class="btn btn-primary mt-3 ">Projekt speichern</button>
-
+            <button id="btnDownloadCsv" class="btn btn-primary mb-2">Beregnungsliste herunterladen</button>
 
         </div>
     </div>

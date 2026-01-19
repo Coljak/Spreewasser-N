@@ -1,6 +1,3 @@
-import { MonicaCalculation, MonicaProject, Rotation, Workstep, loadProjectFromDB, loadProjectToGui, handleDateChange } from '/static/monica/monica.js';
-import { getGeolocation, handleAlerts, getCSRFToken, saveProject } from '/static/shared/utils.js';
-// import { projectRegion, baseMaps, map, initializeMapEventlisteners, initializeDrawControl } from '/static/shared/map_utils.js';
 import { 
   projectRegion, 
   map, 
@@ -15,13 +12,26 @@ import {
   demOverlay,
 } from '/static/shared/map_sidebar_utils.js';
 
+import { 
+  getGeolocation, 
+  handleAlerts, 
+  getCSRFToken, 
+  saveProject 
+} from '/static/shared/utils.js';
+
+import { 
+  MonicaCalculation, 
+  MonicaProject, 
+  Rotation, 
+  Workstep, 
+  loadProjectFromDB, 
+  loadProjectToGui, 
+  handleDateChange 
+} from '/static/monica/monica.js';
 
 
-var userFieldStore = null;
-function addSwnProject(userFieldId){
-  
-            
-            
+
+function addSwnProject(userFieldId){        
   // $('#newProjectForm')[0].reset();
   $('#monicaNewProjectModal').find('.modal-title').text('Neues Projekt erstellen');
   $('#monicaNewProjectModal').modal('show');
@@ -34,22 +44,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // center map at geolocation
   getGeolocation()
-    .then((position) => {
-      map.setView([position.latitude, position.longitude], 12);
-    })
-    .catch((error) => {
-        console.error(error.message);
-        handleAlerts({ success: false, message: error.message });
-
-        // Fallback: center map on projectRegion if geolocation fails
-      if (typeof projectRegion !== 'undefined' && projectRegion.getBounds) {
-        map.fitBounds(projectRegion.getBounds());
-      } else {
-        // Optional hard fallback if projectRegion is not defined
-        map.setView([52.40, 14.174], 10);
-      }
-    });
-
+  .then((position) => {
+    map.setView([position.latitude, position.longitude], 12);
+  })
+  .catch((error) => {
+      console.error(error.message);
+      handleAlerts({ success: false, message: error.message });
+      // Fallback: center map on projectRegion if geolocation fails
+    if (typeof projectRegion !== 'undefined' && projectRegion.getBounds) {
+      map.fitBounds(projectRegion.getBounds());
+    } else {
+      // Optional hard fallback if projectRegion is not defined
+      map.setView([52.40, 14.174], 10);
+    }
+  });
 
   // dropDownMenu in the project modal
   $('#userFieldSelect').on('change', function () { 
@@ -61,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
   });
 
-  // all other datepickers are managed in monica_model.js
+  // all other datepickers are managed in monica.js
   $('#todaysDatePicker').on('changeDate focusout', handleDateChange);
 
   $('#btnDownloadCsv').on('click', function() {
@@ -93,20 +101,14 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Bounds for DEM image overlay
-
 const droughtBounds = [[46.89, 15.33], [55.31, 5.41],];
-
 const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5, pane: 'overlayRasterPane' });
-
-
 
 const overlayLayers = {
   "droughtOverlay": droughtOverlay,
   "demOverlay": demOverlay,
   "projectRegion": projectRegion,
 };
-
-
 
 // swn-drought specific overlays
 var featureGroup = new L.FeatureGroup({pane: "polygonPane",})
@@ -126,17 +128,10 @@ document.addEventListener('drought:dom-ready', () => {
     loadProjectFromDb: (projectId) => loadProjectFromDB(projectId),
     startApplication: (project) => loadProjectToGui(project),
     addProject: (userFieldId) => addSwnProject(userFieldId),
-});
+  });
 });
  
-
-
 createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});
-
-// sidebar Base Layers
-// createBaseLayerSwitchGroup(baseMaps, map);
-
-
 
 getUserFieldsFromDb(featureGroup);
 if (projectRegionSwitch) {
@@ -159,7 +154,5 @@ async function loadDeferredMonicaHtml() {
 }
 
 loadDeferredMonicaHtml().catch(console.error);
-
-
 
 });

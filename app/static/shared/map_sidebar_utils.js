@@ -1,4 +1,4 @@
-import { getGeolocation } from '/static/shared/utils.js';
+import { getGeolocation, bsPrimary, bsSecondary } from '/static/shared/utils.js';
 import { MonicaProject } from '/static/monica/monica.js';
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
 import { getCSRFToken, handleAlerts, getBsColor } from '/static/shared/utils.js';
@@ -8,42 +8,42 @@ import { getCSRFToken, handleAlerts, getBsColor } from '/static/shared/utils.js'
 
 
 
-
+// this base for some reason renders tiles with an offset
 const wmtsBase = 'https://sgx.geodatenzentrum.de/wmts_basemapde_schummerung/tile/1.0.0/de_basemapde_web_raster_combshade/default/DE_EPSG_3857_ADV/{TileMatrix}/{TileRow}/{TileCol}.png';
 
 // TileMatrix offset for DE_EPSG_3857_ADV (TileMatrix N -> leafetz = N + offset)
-const TILEMATRIX_OFFSET = 5; // <-- the important number we discovered
+const TILEMATRIX_OFFSET = 5; 
 
     // Custom tile layer that maps Leaflet z,x,y -> WMTS TileMatrix, TileRow, TileCol
 const wmtsLayer = L.TileLayer.extend({
-getTileUrl: function(coords) {
-  const zLeaf = coords.z;     // Leaflet zoom
-  const x = coords.x;
-  const y = coords.y;
+  getTileUrl: function(coords) {
+    const zLeaf = coords.z;     // Leaflet zoom
+    const x = coords.x;
+    const y = coords.y;
 
-  // Convert Leaflet zoom to WMTS TileMatrix
-  const tm = zLeaf - TILEMATRIX_OFFSET;
+    // Convert Leaflet zoom to WMTS TileMatrix
+    const tm = zLeaf - TILEMATRIX_OFFSET;
 
-  // If the tilematrix is outside WMTS range, return a transparent PNG (or a blank)
-  if (tm < 0 || tm > 13) {
-    // 1x1 transparent PNG data URI
-    return 'data:image/gif;base64,R0lGODlhAQABAIABAP///wAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+    // If the tilematrix is outside WMTS range, return a transparent PNG (or a blank)
+    if (tm < 0 || tm > 13) {
+      // 1x1 transparent PNG data URI
+      return 'data:image/gif;base64,R0lGODlhAQABAIABAP///wAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+    }
+
+    // format TileMatrix as two digits (capabilities show 00, 01, 02, ...)
+    const tmStr = String(tm).padStart(2, '0');
+
+    // For DE_EPSG_3857_ADV the TileMatrix width = 2^(tm + 5) which equals 2^zLeaf,
+    // so TileCol = x and TileRow = y (Leaflet and WMTS align when using the correct TileMatrix).
+    const tileCol = x;
+    const tileRow = y;
+
+    // Replace placeholders in template
+    return wmtsBase
+      .replace('{TileMatrix}', tmStr)
+      .replace('{TileRow}', tileRow)
+      .replace('{TileCol}', tileCol);
   }
-
-  // format TileMatrix as two digits (capabilities show 00, 01, 02, ...)
-  const tmStr = String(tm).padStart(2, '0');
-
-  // For DE_EPSG_3857_ADV the TileMatrix width = 2^(tm + 5) which equals 2^zLeaf,
-  // so TileCol = x and TileRow = y (Leaflet and WMTS align when using the correct TileMatrix).
-  const tileCol = x;
-  const tileRow = y;
-
-  // Replace placeholders in template
-  return wmtsBase
-    .replace('{TileMatrix}', tmStr)
-    .replace('{TileRow}', tileRow)
-    .replace('{TileCol}', tileCol);
-}
 });
 
 // Instantiate and add the layer
@@ -223,19 +223,35 @@ export function removeLegendFromMap(map) {
 
 export function openUserFieldNameModal(layer, featureGroup) {
   // Set the modal content (e.g., name input)
-  const modal = document.querySelector('#userFieldNameModal');
+  const modalEl = document.querySelector('#userFieldNameModal');
 
-  const bootstrapModal = new bootstrap.Modal(modal);
+  const bootstrapModal = new bootstrap.Modal(modalEl);
   bootstrapModal.show();
 
+  $(modalEl).on('shown.bs.modal', function () {
+      $('#fieldNameInput').focus();
+      
+  });
+
   // Add event listeners for the save and dismiss actions
-  modal.querySelector('#btnUserFieldSave').onclick = () => handleSaveUserField(layer, bootstrapModal, featureGroup);
-  modal.querySelector('#btnUserFieldDismiss').onclick = () => dismissPolygon(layer, bootstrapModal, featureGroup);
-  modal.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModa, featureGroup);
+  modalEl.querySelector('#btnUserFieldSave').onclick = () => handleSaveUserField(layer, bootstrapModal, featureGroup);
+  modalEl.querySelector('#btnUserFieldDismiss').onclick = () => dismissPolygon(layer, bootstrapModal, featureGroup);
+  modalEl.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModal, featureGroup);
+
+   // Reset alert box text when the modal is hidden
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    $('#alert-box-name').addClass('d-none');
+    $('#alert-box-name').text = '0;'
+    $('#fieldNameInput').val('') 
+  })
 };
 
 
+
+
 export function initializeDrawControl(map, featureGroup) {
+
+  
   map.on('click', function () {
     // TODO click point conversion for data retrieval
       const z = map.getZoom();
@@ -253,27 +269,45 @@ export function initializeDrawControl(map, featureGroup) {
     });
 
 
-  const drawControl = new L.Control.Draw({
-    position: "topright",
-    edit: {
-      featureGroup: featureGroup,
-      edit: false,
-      remove: false,
-    },
-    draw: {
-      circlemarker: false,
-      polyline: false,
-      circle: false,
-      marker: false,
-      polygon: {
-        allowIntersection: false,
-        showArea: true,
-        metric: true
-      },
-    },
-  });
-  map.addControl(drawControl);
+  // const drawControl = new L.Control.Draw({
+  //   position: "topright",
+  //   edit: {
+  //     featureGroup: featureGroup,
+  //     edit: false,
+  //     remove: false,
+  //   },
+  //   draw: {
+  //     circlemarker: false,
+  //     polyline: false,
+  //     circle: false,
+  //     marker: false,
+  //     polygon: {
+  //       allowIntersection: false,
+  //       showArea: true,
+  //       metric: true,
+  //       shapeOptions: {
+  //         color: bsPrimary,
+  //         fill: false,
+  //       }
+  //     },
+      
+  //   },
+  // });
+  // map.addControl(drawControl);
 };
+
+const polygonDrawer = new L.Draw.Polygon(map, {
+  allowIntersection: false,
+  showArea: true,
+  drawError: {
+    color: '#e1e100',
+    message: '<strong>Error:</strong> invalid shape'
+  },
+  shapeOptions: {
+    color: bsPrimary,
+    fill: false,
+  }
+});
 
 
 export function initializeMapEventlisteners (map, featureGroup, projectClass) {
@@ -299,14 +333,45 @@ export function initializeMapEventlisteners (map, featureGroup, projectClass) {
         });
     });
 
+    let vertexCount = 0;
 
     map.on("draw:created", function (event) {
+      console.log('draw  created')
+      $('#draw-hint').addClass('d-none');
       let layer = event.layer;
       // is added to the map only for display
       featureGroup.addLayer(layer);
     
       openUserFieldNameModal(layer, featureGroup);
     });
+
+    map.on("draw:drawstart", function(event) {
+      // hide the default actions list on toolbar
+      const container = document.querySelector('.leaflet-draw-actions');
+
+      $('#draw-hint').removeClass('d-none');
+      $('#draw-hint').text('Klicken Sie in die Karte, um ein Polygon zu zeichnen.')
+      if (container) container.style.display = 'none';
+      vertexCount = 0;
+      console.log('draw start',vertexCount)
+    });
+
+    map.on("draw:drawstop", function(event) {
+     console.log('draw:stop')
+      $('#endPolygonDraw').addClass('d-none');
+      $('#draw-hint').addClass('d-none');
+    });
+
+    map.on("draw:drawvertex", function(event) {
+      vertexCount +=1;
+      if (vertexCount < 3) {
+        $('#draw-hint').text('Klicken Sie in die Karte, um weitere Ecken des Polygons zu zeichnen.')
+      } else {
+        $('#draw-hint').text('Zeichnen Sie weitere Punkte oder klicken Sie auf den ersten Punkt, um das Polygon zu schließen.')
+      }
+      console.log('draw drawvertex', vertexCount)
+    });
+    
 
   
 
@@ -715,9 +780,9 @@ export function initializeSidebarEventHandler({
     sidebar.addEventListener("dblclick", (event) => {
       clearTimeout(clickTimeout); // prevent single click logic
       
-        const listElement = event.target.closest("li");
-        map.fitBounds(listElement.layer.getBounds());
-        console.log("DOUBLE CLICK");
+      const listElement = event.target.closest("li");
+      map.fitBounds(listElement.layer.getBounds());
+      console.log("DOUBLE CLICK");
       
     });
 
@@ -731,7 +796,12 @@ export function initializeSidebarEventHandler({
       } else if (event.target.closest('.accordion-button.user-field-accordion-header')) {
         console.log('closest userfield-switch')
         $('#userFieldsAccordion').toggleClass('show') 
-
+      } else if (event.target.id === 'addUserFieldPolygon'){
+        console.log('addUserFieldPolygon')
+        polygonDrawer.enable();
+        $('#endPolygonDraw').removeClass('d-none');
+      } else if (event.target.id === 'endPolygonDraw') {
+        polygonDrawer.disable();
       }
   
       
@@ -930,7 +1000,6 @@ function saveUserField(name, id, layer) {
 };
 
 
-
 function updateFieldSelectorOption(userField, fieldSelector) {  
   const option = document.createElement("option");
   option.value = userField.id;
@@ -942,6 +1011,7 @@ function updateFieldSelectorOption(userField, fieldSelector) {
 
 // Modal Userfield Name Input
 export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
+ 
 
   let userFieldsName;
   let project;
@@ -965,7 +1035,10 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
 
   if (fieldName.split(' ').join('') !== "") {
     if (Object.values(userFields).some((uf) => uf.name === fieldName)) {
-      handleAlerts({'success': false, 'message': `Please change the name since "${fieldName}" already exists.`});
+      // handleAlerts({'success': false, 'message': `Please change the name since "${fieldName}" already exists.`});
+      $('#alert-box-name').text(`${fieldName} existiert bereits.`)
+      $('#alert-box-name').removeClass('d-none');
+      $('#fieldNameInput').focus();
       setTimeout(() => {
         bootstrapModal.show();
       }
@@ -1014,13 +1087,13 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
 
       })
 
-      fieldNameInput.value = '';
+      // fieldNameInput.value = '';
       bootstrapModal.hide();
     }
   } else {
 
     alert("This field cannot be empty. Please enter a name!");
-    fieldNameInput.value = '';
+    // fieldNameInput.value = '';
   }
   
 };

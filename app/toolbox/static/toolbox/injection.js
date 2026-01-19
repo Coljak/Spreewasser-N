@@ -1,7 +1,5 @@
 import { getGeolocation, handleAlerts, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
 import { 
-  updateDropdown, 
-  addLegend, 
   addChangeEventListener, 
   addClickEventListenerToToolboxPanel, 
   loadProjectToGui,

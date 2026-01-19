@@ -92,6 +92,10 @@ export const getCSRFToken = () => {
 };
 
 
+export function formatDateToISO(date) {
+    return date.toISOString().split('T')[0];
+};
+
 /**
  * Sets the language for Bootstrap datepickers.
  *
@@ -167,4 +171,28 @@ export function getBsColor(varName) {
 };
 
 
+// all bootstrap Colors clculated:
+export const bsPrimary = getComputedStyle(document.documentElement)
+  .getPropertyValue('--bs-primary')
+  .trim();
 
+export const bsSecondary = getComputedStyle(document.documentElement)
+  .getPropertyValue('--bs-secondary')
+  .trim();
+
+
+export const bsSuccess = getComputedStyle(document.documentElement)
+  .getPropertyValue('--bs-success')
+  .trim();
+
+export const bsInfo = getComputedStyle(document.documentElement)
+  .getPropertyValue('--bs-info')
+  .trim();
+
+export const bsWarning = getComputedStyle(document.documentElement)
+  .getPropertyValue('--bs-warning')
+  .trim();
+
+export const bsDanger = getComputedStyle(document.documentElement)
+  .getPropertyValue('--bs-danger')
+  .trim();

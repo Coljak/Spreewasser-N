@@ -6,7 +6,24 @@
 
   }
 
-
+  /* hide the default tooltip for leaflet draw */
+.leaflet-draw-tooltip {
+  display: none !important;
+}
+/* draw-tooltip replacement */
+.draw-hint {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  z-index: 1000;
+  pointer-events: none;
+}
 
   /* avoid chromium default focus*/
   .leaflet-interactive:focus {

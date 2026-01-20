@@ -286,7 +286,7 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
 
     return climate_json
 
-from datetime import timedelta
+
 
 def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     start_date = ensure_datetime(start_date)
@@ -325,9 +325,6 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
 
 
 ### MONICA VIEWS ###
-
-
-
 def create_monica_env_from_json(json_data):
     print("create_monica_env_from_json",json_data)
     error = []
@@ -834,7 +831,6 @@ def get_parameter_options(request, parameter_type, id=None):
     return JsonResponse({'options': list(options)})
 
 def load_monica_project(request, id):
-
     context = {}
     project = models.MonicaProject.objects.get(pk=id)
     print("Monica Project: ", project)

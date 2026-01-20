@@ -1687,7 +1687,6 @@ export function addMonicaEvents() {
     $('#monicaStartDatePicker, #monicaEndDatePicker').on('changeDate focusout', handleDateChange);
 };
 
-
 function runSimulation(monicaProject) {   
     console.log('runSimulation', monicaProject);
     fetch(runSimulationUrl, {
@@ -1729,7 +1728,6 @@ function runSimulation(monicaProject) {
         $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
     });
 };
-
 
 export function initializeSoilModal(polygonIds, userFieldId, systemUnitJson, landusageChoices) {
     console.log('initializeSoilModal',   systemUnitJson, landusageChoices);

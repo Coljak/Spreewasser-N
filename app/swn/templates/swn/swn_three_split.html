@@ -128,8 +128,9 @@
         const defaultProject = {{ default_project|safe }};
         const getUserFieldsUrl = "{% url 'swn:get-user-fields' %}";
         const saveUrl = "{% url 'swn:save-user-field' %}";
-        const getMonicaRotationUrl = "{% url 'swn:get-rotation-forms' %}"
         const getTabRotationUrl = "{% url 'swn:get-tab-rotation' %}"
+        const getMonicaRotationUrl = "{% url 'swn:get-rotation-forms' %}"
+        
 
           
     </script>
@@ -147,7 +148,7 @@
     <script type="text/javascript" src="{% static 'vendor/chartjs/dist/chart.umd.min.js' %}"></script>
 
     <script type="text/javascript" src="{% static 'vendor/virtual-select/virtual-select.min.js' %}"></script> 
-    <script type="module" src="{% static 'monica/monica_model.js' %}" defer></script>
+    {% comment %} <script type="module" src="{% static 'monica/monica_model.js' %}" defer></script> {% endcomment %}
     <script type="module" src="{% static 'swn/js/swn_three_split.js' %}" defer></script>
 
     

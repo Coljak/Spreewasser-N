@@ -28,14 +28,7 @@ import {
 } from '/static/shared/utils.js';
 
 
-
-
-
 window.isLoading = false;
-
-
-
-
 
 // var project = new MonicaProject();
 // Event listeners
@@ -44,8 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // var advancedMode = false;
     setLanguage(language);
     setOutputSettings();
-    addMonicaEvents();
-    startMonica();
+    addMonicaEvents(); // adds all Eventlisteners
+    startMonica(); // arranges and triggers the right tab
 
 
     let project = new MonicaProject(defaultProject); // with defaultProject coming from the backend via .html

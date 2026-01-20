@@ -16,7 +16,8 @@ import {
   getGeolocation, 
   handleAlerts, 
   getCSRFToken, 
-  saveProject 
+  saveProject,
+  setLanguage, 
 } from '/static/shared/utils.js';
 
 import { 
@@ -26,10 +27,26 @@ import {
   Workstep, 
   loadProjectFromDB, 
   loadProjectToGui, 
-  handleDateChange 
+  handleDateChange,
+  addMonicaEvents,
+  initializeSoilModal,
+  bindModalEventListeners,
+  updateDropdown,
+  setOutputSettings,
+  startMonica
 } from '/static/monica/monica.js';
 
+async function loadDeferredMonicaHtml() {
+  console.log('loadDeferredMonicaHtml')
+  const rotationHtml = await fetch(getMonicaRotationUrl).then(r => r.text());
+  $('#swnMonica').after(rotationHtml);
 
+  const tabHtml = await fetch(getTabRotationUrl).then(r => r.text());
+  $('#tabGeneralParameters').after(tabHtml);
+  
+};
+
+var language = 'de-DE'
 
 function addSwnProject(userFieldId){        
   // $('#newProjectForm')[0].reset();
@@ -37,9 +54,14 @@ function addSwnProject(userFieldId){
   $('#monicaNewProjectModal').modal('show');
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async() => {
   // Hide the coordinate form card from plain Monica
   console.log('Content loaded')
+  await loadDeferredMonicaHtml().catch(console.error);
+
+  
+
+
   $('#coordinateFormCard').hide();
 
   // center map at geolocation
@@ -65,8 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
     var userFieldId = $(this).val();
     let project = MonicaProject.loadFromLocalStorage();
     // TODO: featureGroup as getFeatureGroup
-    selectUserField(userFieldId,  project, featureGroup);
-    
+    selectUserField(userFieldId,  project, featureGroup);   
   });
 
   // all other datepickers are managed in monica.js
@@ -98,17 +119,17 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error('Error downloading CSV:', error);
       handleAlerts({ success: false, message: error.message });
     });
-});
+  });
 
 // Bounds for DEM image overlay
-const droughtBounds = [[46.89, 15.33], [55.31, 5.41],];
-const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5, pane: 'overlayRasterPane' });
+  const droughtBounds = [[46.89, 15.33], [55.31, 5.41],];
+  const droughtOverlay = L.imageOverlay(droughtUrl, droughtBounds, { opacity: 0.5, pane: 'overlayRasterPane' });
 
-const overlayLayers = {
-  "droughtOverlay": droughtOverlay,
-  "demOverlay": demOverlay,
-  "projectRegion": projectRegion,
-};
+  const overlayLayers = {
+    "droughtOverlay": droughtOverlay,
+    "demOverlay": demOverlay,
+    "projectRegion": projectRegion,
+  };
 
 // swn-drought specific overlays
 var featureGroup = new L.FeatureGroup({pane: "polygonPane",})
@@ -117,19 +138,19 @@ featureGroup.bringToFront();
 
 initializeMapEventlisteners(map, featureGroup, MonicaProject);
 initializeDrawControl(map, featureGroup);
-document.addEventListener('drought:dom-ready', () => {
-  initializeSidebarEventHandler({
-    sidebar: document.querySelector(".sidebar-content"),
-    map,
-    overlayLayers,
-    getUserFields: () => localStorage.getItem("userFields") ? JSON.parse(localStorage.getItem("userFields")) : {},
-    getFeatureGroup: () => { return featureGroup; },
-    getProject: () => MonicaProject.loadFromLocalStorage(),
-    loadProjectFromDb: (projectId) => loadProjectFromDB(projectId),
-    startApplication: (project) => loadProjectToGui(project),
-    addProject: (userFieldId) => addSwnProject(userFieldId),
-  });
+
+initializeSidebarEventHandler({
+  sidebar: document.querySelector(".sidebar-content"),
+  map,
+  overlayLayers,
+  getUserFields: () => localStorage.getItem("userFields") ? JSON.parse(localStorage.getItem("userFields")) : {},
+  getFeatureGroup: () => { return featureGroup; },
+  getProject: () => MonicaProject.loadFromLocalStorage(),
+  loadProjectFromDb: (projectId) => loadProjectFromDB(projectId),
+  startApplication: (project) => loadProjectToGui(project),
+  addProject: (userFieldId) => addSwnProject(userFieldId),
 });
+
  
 createNUTSSelectors({getFeatureGroup: () => { return featureGroup; }});
 
@@ -143,16 +164,14 @@ if (projectRegionSwitch) {
   }
 
 // inject the rest of Monica html
+setLanguage(language);
+setOutputSettings();
+addMonicaEvents();
+startMonica();
+let project = new MonicaProject(defaultProject); // with defaultProject coming from the backend via .html
+project.saveToLocalStorage();
+loadProjectToGui(project);
 
-async function loadDeferredMonicaHtml() {
-  const rotationHtml = await fetch(getMonicaRotationUrl).then(r => r.text());
-  $('#swnMonica').after(rotationHtml);
 
-  const tabHtml = await fetch(getTabRotationUrl).then(r => r.text());
-  $('#tabGeneralParameters').after(tabHtml);
-  document.dispatchEvent(new Event('drought:dom-ready'));
-}
-
-loadDeferredMonicaHtml().catch(console.error);
 
 });

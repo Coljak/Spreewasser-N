@@ -1990,8 +1990,16 @@ class UserSoilProfile(models.Model):
     description = models.TextField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
+
     def __str__(self):
         return self.name
+    
+    def get_all_horizons(self):
+        return SoilLayer.objects.filter(user_soil_profile=self).order_by('horizon_no')
+    
+    def get_all_horizons_json(self):
+        hors = SoilLayer.objects.filter(user_soil_profile=self).order_by('horizon_no')
+        return [horizon.to_json() for horizon in hors]
     
     def to_json(self):
         return {
@@ -2004,27 +2012,26 @@ class UserSoilProfile(models.Model):
 # TODO implement the input option for soil
 class SoilLayer(models.Model):
     user_soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE)
-    horizon_no = models.IntegerField()
-    thickness = models.FloatField() # in meters
-    sand = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil sand content as fraction
-    clay = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil clay content as fraction
-    silt = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil silt content as fraction
-    ph = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(14)]) # pH value
-    sceleton = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil stone content as fraction
-    lambda_s = models.FloatField() # soil ater conductivity coefficient
-    field_capacity = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil field capacity
-    pore_volume = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil pore volume, saturation
-    permanent_wilting_point = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil permanent wilting point
+    horizon_no = models.IntegerField(default=1)
+    thickness = models.FloatField(default=0.3) # in meters
+    sand = models.FloatField(default=33, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil sand content as fraction
+    clay = models.FloatField(default=33, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil clay content as fraction
+    silt = models.FloatField(default=34, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil silt content as fraction
+    ph = models.FloatField(default=7, validators=[MinValueValidator(0), MaxValueValidator(14)]) # pH value
+    sceleton = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil stone content as fraction
+    lambda_s = models.FloatField(default=0.1) # soil ater conductivity coefficient
+    field_capacity = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil field capacity
+    pore_volume = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil pore volume, saturation
+    permanent_wilting_point = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil permanent wilting point
     ka5_texture_class = models.ForeignKey(buek_models.Ka5TextureClass, on_delete=models.CASCADE)
-    ammonium = models.FloatField() # kg NH4-N m-3 intitial soil ammonium content
-    nitrate = models.FloatField() # kg NO3-N m-3 intitial soil nitrate content
-    c_n = models.FloatField() # kg kg-1 soil carbon nitrogen ratio
-    raw_density = models.FloatField(null=True) # kg m-3 soil raw density
-    bulk_density = models.FloatField(null=True) # kg m-3 soil bulk density
-    organic_carbon = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)], null=True) # kg kg-1 soil organic carbon content
-    organic_matter = models.FloatField(null=True) # kg kg-1 soil organic matter content
-    soil_moisture = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil moisture content
-
+    ammonium = models.FloatField(null=True, blank=True) # kg NH4-N m-3 intitial soil ammonium content
+    nitrate = models.FloatField(null=True, blank=True) # kg NO3-N m-3 intitial soil nitrate content
+    c_n = models.FloatField(default=11) # kg kg-1 soil carbon nitrogen ratio
+    raw_density = models.FloatField(null=True, blank=True) # kg m-3 soil raw density
+    bulk_density = models.FloatField(null=True, blank=True) # kg m-3 soil bulk density
+    organic_carbon = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)], null=True) # kg kg-1 soil organic carbon content
+    organic_matter = models.FloatField(null=True, blank=True) # kg kg-1 soil organic matter content
+    soil_moisture = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil moisture content
     def to_json(self):
         if self.sand is None:
             self.sand = 100 - self.clay - self.silt

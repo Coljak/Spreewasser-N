@@ -1144,6 +1144,7 @@ def monica_model(request):
     user_environment_parameters_select_form = forms.UserEnvironmentParametersSelectionForm(user=user)
     # user_environment_parameters_form = UserEnvironmentParametersForm()
 
+    user_soil_profile_form = forms.SoilProfileHorizonFormSet()
     user_soil_moisture_select_form = forms.UserSoilMoistureInstanceSelectionForm(user=user)
     user_soil_organic_select_form = forms.UserSoilOrganicInstanceSelectionForm(user=user)
     soil_temperature_module_select_form = forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
@@ -1160,6 +1161,7 @@ def monica_model(request):
         'user_simulation_settings_select_form': user_simulation_settings_select_form,
         'user_environment_parameters_select_form': user_environment_parameters_select_form,
 
+        'user_soil_profile_form': user_soil_profile_form,
         'user_soil_moisture_select_form': user_soil_moisture_select_form,
         'user_soil_organic_select_form': user_soil_organic_select_form,
         'soil_temperature_module_selection_form': soil_temperature_module_select_form, 
@@ -1388,6 +1390,34 @@ def manual_soil_selection(request, lat, lon):
     print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
 
     return JsonResponse(data_menu)
+
+
+def soil_profile_editor(request, profile_id):
+    profile = get_object_or_404(SoilProfile, pk=profile_id)
+
+    if request.method == "POST":
+        profile_form = forms.UserSoilProfileForm(request.POST, instance=profile)
+        horizon_formset = forms.SoilProfileHorizonFormSet(
+            request.POST,
+            instance=profile
+        )
+
+        if profile_form.is_valid() and horizon_formset.is_valid():
+            profile.is_user_modified = True
+            profile_form.save()
+            horizon_formset.save()
+            return redirect("soil_profile_editor", profile.id)
+
+    else:
+        profile_form = SoilProfileForm(instance=profile)
+        horizon_formset = SoilProfileHorizonFormSet(instance=profile)
+
+    return render(request, "monica/soil_profile_editor.html", {
+        "profile_form": profile_form,
+        "horizon_formset": horizon_formset,
+        "original_profile": profile.source_profile,
+    })
+
 
 
     

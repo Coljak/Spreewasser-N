@@ -349,8 +349,6 @@ export function addRotationToGui(rotationIndex, rotation=null) {
     };
 };
 
-
-
 export function addWorkstepToGui(workstepType, rotationIndex, workstepIndex, workstep=null) {
     console.log("addWorkstepToGui", workstepType, rotationIndex, workstepIndex, workstep);
     // load and modify the according workstep template
@@ -1227,7 +1225,6 @@ export function addMonicaEvents() {
         }
     });
 
-
     // TAB CROP ROTATION EVENT LISTENERS
     $('#cropRotation').on('click', (event) => {
         const btnModifyParameters = event.target.closest('.modify-parameters');
@@ -1436,6 +1433,67 @@ export function addMonicaEvents() {
                 handleAlerts({'success': false, 'message': 'Please provide a valid location'});
             }
             
+        } else if (event.target.classList.contains('add-horizon-button')) {
+            const table = document.querySelector("#soil-layers-table tbody");
+            const totalForms = document.querySelector("#id_soillayer_set-TOTAL_FORMS");
+
+            const currentCount = parseInt(totalForms.value);
+            const newRow = table.children[0].cloneNode(true);
+
+            newRow.querySelectorAll("input, select").forEach(input => {
+                input.name = input.name.replace(/-\d+-/, `-${currentCount}-`);
+                input.id = input.id.replace(/-\d+-/, `-${currentCount}-`);
+                if (input.name.endsWith("horizon_no")) {
+                
+                    input.value = currentCount + 1;
+                }
+            });
+            newRow.dataset.horizonNo = currentCount + 1;
+            newRow.querySelector(".horizon-count").textContent = currentCount + 1;
+            table.appendChild(newRow);
+            totalForms.value = currentCount + 1;
+        } else if (event.target.classList.contains('delete-horizon-button')) {
+            const table = $("#soil-layers-table");    
+            const totalForms = $("#id_soillayer_set-TOTAL_FORMS");
+            const currentCount = parseInt(totalForms.val(), 111);
+            
+
+            if (currentCount < 1)  {
+                handleAlerts({'success': false, 'message': 'At least one soil horizon is required.'});
+                return;
+            }
+            $(event.target).closest("tr").remove();
+
+            const rows = table.find("tbody tr.soil-layer-row");
+            
+                rows.each(function (index) {
+                    const horizonNo = index + 1;
+                    const row = $(this);
+
+                    // data attribute
+                    row.attr("data-horizon-no", horizonNo);
+
+                    // visible number
+                    row.find(".horizon-count").text(horizonNo);
+
+                    // inputs & selects
+                    row.find("input, select").each(function () {
+                        if (this.name) {
+                            this.name = this.name.replace(/-\d+-/, `-${index}-`);
+                        }
+                        if (this.id) {
+                            this.id = this.id.replace(/-\d+-/, `-${index}-`);
+                        }
+                        if (this.name && this.name.endsWith("horizon_no")) {
+                            this.value = horizonNo;
+                        }
+                    });
+                });
+
+                // Update formset count
+                totalForms.val(rows.length);
+        } else if (event.target.classList.contains('advanced-soil-parameters-toggle')) {
+            $('.advanced-soil-parameters').toggleClass('d-none');
         }
     });
 

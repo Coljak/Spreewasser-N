@@ -6,7 +6,7 @@
 {% block css %}
 {{ block.super }}
 
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.26.0/dist/bootstrap-table.min.css">
     <link rel="stylesheet" href="{% static 'toolbox/test.css' %}">
 
   
@@ -75,10 +75,152 @@
     </div>
 
 
+    <div class="row justify-content-center mb-3 px-5">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2>Table Test</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle soil-table" id="soil-layers-table">
+                        <thead>
+                            <tr>
+                                <th>Horizon</th>
+                                <th>Thickness (m)</th>
+                                <th>Sand (%)</th>
+                                <th>Clay (%)</th>
+                                <th>Silt (%)</th>
+                                <th>pH</th>
+                                <th>Sceleton</th>
+                                <th>lambda S</th>
+                                <th>field capacity</th>
+                                <th>pore volume</th>
+                                <th>permanent wilting point</th>
+                                <th>ka5 Texture</th>
+                                <th>Ammonium</th>
+                                <th>Nitrate</th>
+                                <th>C:N</th>
+                                <th>Raw Density</th>
+                                <th>Corg</th>
+                                <th>Organic matter</th>
+                                <th>Soil Moisture</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+ 
+                            <tr class="soil-layer-row">
+                                <td class="horizon-no">
+                                    1
+                                    <input type="hidden" name="soillayer_set-0-horizon_no" value="1" id="id_soillayer_set-0-horizon_no">
+                                </td>
+                                <td><input type="number" name="soillayer_set-0-thickness" value="0.3" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-thickness"></td>
+                                <td><input type="number" name="soillayer_set-0-sand" value="33" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-sand"></td>
+                                <td><input type="number" name="soillayer_set-0-clay" value="33" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-clay"></td>
+                                <td><input type="number" name="soillayer_set-0-silt" value="34" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-silt"></td>
+                                <td><input type="number" name="soillayer_set-0-ph" value="7" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-ph"></td>
+                                <td><input type="number" name="soillayer_set-0-sceleton" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-sceleton"></td>
+                                <td><input type="number" name="soillayer_set-0-lambda_s" value="0.1" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-lambda_s"></td>
+                                <td><input type="number" name="soillayer_set-0-field_capacity" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-field_capacity"></td>
+                                <td><input type="number" name="soillayer_set-0-pore_volume" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-pore_volume"></td>
+                                <td><input type="number" name="soillayer_set-0-permanent_wilting_point" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-permanent_wilting_point"></td>
+                                <td>
+                                    <select name="soillayer_set-0-ka5_texture_class" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-ka5_texture_class">
+                                        <option value="" selected="">---------</option>
+                                        <option value="1">fS</option>
+                                        <option value="2">fSms</option>
+                                        <option value="3">fSgs</option>
+                                        <option value="4">gS</option>
+                                        <option value="5">mSgs</option>
+                                    </select>
+                                </td>
+                                <td><input type="number" name="soillayer_set-0-ammonium" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-ammonium"></td>
+                                <td><input type="number" name="soillayer_set-0-nitrate" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-nitrate"></td>
+                                <td><input type="number" name="soillayer_set-0-c_n" value="11" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-c_n"></td>
+                                <td><input type="number" name="soillayer_set-0-raw_density" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-raw_density"></td>
+                                <td><input type="number" name="soillayer_set-0-bulk_density" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-bulk_density"></td>
+                                <td><input type="number" name="soillayer_set-0-organic_carbon" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-organic_carbon"></td>
+                                <td><input type="number" name="soillayer_set-0-organic_matter" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-organic_matter"></td>
+                                <td><input type="number" name="soillayer_set-0-soil_moisture" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-0-soil_moisture"></td>  
+                                <td>
+                                    
+                                    <input type="checkbox" name="soillayer_set-0-DELETE" id="id_soillayer_set-0-DELETE">
+                                </td>
+                            </tr>
+                            
+                            <tr class="soil-layer-row">
+                                <td class="horizon-no">2</td>
+                                <td><input type="number" name="soillayer_set-1-thickness" value="0.3" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-thickness"></td>
+                                <td><input type="number" name="soillayer_set-1-sand" value="33" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-sand"></td>
+                                <td><input type="number" name="soillayer_set-1-clay" value="33" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-clay"></td>
+                                <td><input type="number" name="soillayer_set-1-silt" value="34" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-silt"></td>
+                                <td><input type="number" name="soillayer_set-1-ph" value="7" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-ph"></td>
+                                <td><input type="number" name="soillayer_set-1-sceleton" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-sceleton"></td>
+                                <td><input type="number" name="soillayer_set-1-lambda_s" value="0.1" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-lambda_s"></td>
+                                <td><input type="number" name="soillayer_set-1-field_capacity" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-field_capacity"></td>
+                                <td><input type="number" name="soillayer_set-1-pore_volume" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-pore_volume"></td>
+                                <td><input type="number" name="soillayer_set-1-permanent_wilting_point" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-permanent_wilting_point"></td>
+                                <td>
+                                    <select name="soillayer_set-1-ka5_texture_class" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-ka5_texture_class">
+                                        <option value="" selected="">---------</option>
+
+                                        <option value="1">fS</option>
+
+                                        <option value="2">fSms</option>
+
+                                        <option value="3">fSgs</option>
+
+                                        <option value="4">gS</option>
+
+                                        <option value="5">mSgs</option>
+
+                                        <option value="6">mSfs</option>
+
+                                        <option value="7">mS</option>
+
+                                        <option value="8">Ss</option>
+
+                                        <option value="9">Sl2</option>
+
+                                        <option value="10">Sl3</option>
+
+                                        <option value="11">Sl4</option>
+
+                                        <option value="12">Slu</option>
+
+
+
+                                    </select>
+                                </td>
+                                <td><input type="number" name="soillayer_set-1-ammonium" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-ammonium"></td>
+                                <td><input type="number" name="soillayer_set-1-nitrate" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-nitrate"></td>
+                                <td><input type="number" name="soillayer_set-1-c_n" value="11" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-c_n"></td>
+                                <td><input type="number" name="soillayer_set-1-raw_density" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-raw_density"></td>
+                                <td><input type="number" name="soillayer_set-1-bulk_density" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-bulk_density"></td>
+                                <td><input type="number" name="soillayer_set-1-organic_carbon" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-organic_carbon"></td>
+                                <td><input type="number" name="soillayer_set-1-organic_matter" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-organic_matter"></td>
+                                <td><input type="number" name="soillayer_set-1-soil_moisture" value="0" step="any" class="form-control form-control-sm soil-table-input" id="id_soillayer_set-1-soil_moisture"></td>  
+                                <td>
+                                    
+                                    <input type="checkbox" name="soillayer_set-1-DELETE" id="id_soillayer_set-1-DELETE">
+                                    
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+                
+            </div>
+        </div>
+    </div>
+
+
   {% endblock body_block %}
 
 {% block javascript %}
 {{ block.super }}
+        
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.26.0/dist/bootstrap-table.min.js"></script>
        <script type="module" src="{% static 'toolbox/test.js' %}"></script>
 
 {% endblock %}

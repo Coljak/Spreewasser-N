@@ -296,6 +296,7 @@ def swn_dashboard(request):
     # user_environment_parameters_form = monica_forms.UserEnvironmentParametersForm(user=user)
     tenth = datetime.now()
     print("tenth - ninth", tenth - ninth)
+    user_soil_profile_form = monica_forms.SoilProfileHorizonFormSet()
     user_soil_moisture_select_form = monica_forms.UserSoilMoistureInstanceSelectionForm(user=user)
     user_soil_organic_select_form = monica_forms.UserSoilOrganicInstanceSelectionForm(user=user)
     soil_temperature_module_select_form = monica_forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
@@ -315,6 +316,7 @@ def swn_dashboard(request):
             'user_crop_parameters_select_form': user_crop_parameters_select_form,
             'user_simulation_settings_select_form': user_simulation_settings_select_form,
             'user_environment_parameters_select_form': user_environment_parameters_select_form,
+            'user_soil_profile_form': user_soil_profile_form,
             'user_soil_moisture_select_form': user_soil_moisture_select_form,
             'user_soil_organic_select_form': user_soil_organic_select_form,
             'soil_temperature_module_selection_form': soil_temperature_module_select_form, 

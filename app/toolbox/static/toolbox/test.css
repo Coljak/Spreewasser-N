@@ -141,3 +141,18 @@ h2{
 .progress-bar {
     background-color: #2F8D46
 }
+
+
+
+
+
+
+.soil-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.soil-table th,
+.soil-table td {
+  min-width: 120px;  
+}

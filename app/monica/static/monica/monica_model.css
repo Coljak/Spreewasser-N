@@ -2,14 +2,25 @@
     display: none;
   }
 
-  .card.rotation > .card-body {
+.card.rotation > .card-body {
     border: 2px solid var(--bs-primary);
     border-radius: 5px;
   }
 
-  #chartDiv {
+#chartDiv {
     width: 100%;
     height: 450px;
   }
+
+/* .soil-table {
+  table-layout: fixed;
+  width: 100%;
+} */
+
+.soil-table th {
+  resize: horizontal;
+  overflow: hidden;
+  min-width: 3rem;
+}
 
  

@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import inlineformset_factory 
 from . import models
 from swn.models import SwnProject
 
@@ -210,7 +211,6 @@ class CropResidueParametersForm(ParametersModelForm):
             "part_aom_slow_to_smb_slow": "kg/kg",
             "part_aom_to_aom_fast": "kg/kg",
             "part_aom_to_aom_slow": "kg/kg",
-
         }
 
         for field_name, unit in units.items():
@@ -237,7 +237,6 @@ class OrganicFertiliserForm(ParametersModelForm):
             "part_aom_slow_to_smb_slow": "kg/kg",
             "part_aom_to_aom_fast": "kg/kg",
             "part_aom_to_aom_slow": "kg/kg",
-
         }
 
         for field_name, unit in units.items():
@@ -261,7 +260,6 @@ class MineralFertiliserForm(ParametersModelForm):
             "carbamid": "kg/kg",
             "nh4": "kg/kg",
             "no3": "kg/kg",
-           
         }
 
         for field_name, unit in units.items():
@@ -276,9 +274,6 @@ class UserCropParametersForm(ParametersModelForm):
         exclude = ['id', 'user', 'is_default']
 
     
-    
-
-
 class UserCropParametersSelectionForm(forms.Form):
     user_crop_parameters = forms.ChoiceField(
         choices=[],
@@ -315,8 +310,6 @@ class UserCropParametersSelectionForm(forms.Form):
             )
 
 
-
-
 class UserEnvironmentParametersForm(ParametersModelForm):
     class Meta:
         model = models.UserEnvironmentParameters
@@ -340,8 +333,6 @@ class MonicaProjectSelectionForm(forms.Form):
             Field('monica_project', wrapper_class='row')
             
         )
-
-
 
 
 #TODO implement User Environment
@@ -594,7 +585,6 @@ class UserSoilTransportParametersForm(ParametersModelForm):
         exclude = ['id', 'user', 'is_default']
 
     
-
 class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
     soil_transport = forms.ChoiceField(
         choices=[],
@@ -821,7 +811,6 @@ class WorkstepSowingForm(forms.ModelForm):
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """),
-               
             ),
             Row(
                 Div(
@@ -834,19 +823,12 @@ class WorkstepSowingForm(forms.ModelForm):
                     <span><i class="bi bi-pencil-square"></i></span>
                     </button>
                 """
-                ),
-                
+                ),   
             ),
         )
     
 
-
-
-
 class WorkstepMineralFertilisationForm(forms.ModelForm):
-
-
-
     date = forms.DateField(
         widget=forms.DateInput(attrs={
             'class': 'form-control datepicker workstep-datepicker',
@@ -958,9 +940,6 @@ class WorkstepOrganicFertilisationForm(forms.ModelForm):
 
 
 
-
-
-
 class WorkstepTillageForm(forms.ModelForm):
     date = forms.DateField(
         widget=forms.DateInput(attrs={
@@ -1029,7 +1008,6 @@ class WorkstepHarvestForm(forms.ModelForm):
         self.helper = get_parameters_form_helper()
         for field_name in self.fields:
             row_content = [
-
                     Div(
                         Field(field_name, wrapper_class='row'),
                         css_class='col-11'
@@ -1110,7 +1088,6 @@ class WorkstepAutomaticHarvestForm(forms.ModelForm):
 
 
 class WorkstepNDemandFertilizationForm(forms.ModelForm):
-
     days = forms.IntegerField(
         initial=7,  
         validators=[
@@ -1187,4 +1164,31 @@ class WorkstepNDemandFertilizationForm(forms.ModelForm):
         self.fields['depth'].widget = UnitInputWrapper(widget=self.fields['depth'].widget, unit='m')
 
 
+class UserSoilProfileForm(forms.ModelForm):
+    class Meta:
+        exclude = ('user',)
+        model = models.UserSoilProfile
+
+class UserSoilHorizonForm(forms.ModelForm):
+    class Meta:
+        model = models.SoilLayer
+        exclude = ('user_soil_profile',)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["horizon_no"].widget.attrs["readonly"] = True
+
+        for field in self.fields.values():
+            field.widget.attrs.update({
+                "class": "form-control form-control-sm soil-table-input"
+            })
+
+
+SoilProfileHorizonFormSet = inlineformset_factory(
+    models.UserSoilProfile,
+    models.SoilLayer,
+    form=UserSoilHorizonForm,
+    extra=1,          # allows adding horizons
+    can_delete=True,  # allows removing horizons
+)
 

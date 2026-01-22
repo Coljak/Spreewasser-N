@@ -48,6 +48,7 @@ def render_tab_crop_rotation(context):
 @register.inclusion_tag('monica/monica_model_tab_soil.html', takes_context=True)
 def render_tab_soil(
     context,
+    user_soil_profile_form,
     user_soil_moisture_select_form,
     user_soil_organic_select_form,
     soil_temperature_module_selection_form,
@@ -56,6 +57,7 @@ def render_tab_soil(
     request = context.get('request')
     context = {
         'request': request,
+        'user_soil_profile_form': user_soil_profile_form,
         'user_soil_moisture_select_form': user_soil_moisture_select_form,
         'user_soil_organic_select_form': user_soil_organic_select_form,
         'soil_temperature_module_selection_form': soil_temperature_module_selection_form,

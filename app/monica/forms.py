@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import inlineformset_factory 
+from django.forms import inlineformset_factory, modelformset_factory
 from . import models
 from swn.models import SwnProject
 
@@ -1171,8 +1171,9 @@ class UserSoilProfileForm(forms.ModelForm):
 
 class UserSoilHorizonForm(forms.ModelForm):
     class Meta:
-        model = models.SoilLayer
-        exclude = ('user_soil_profile',)
+        model = models.SoilHorizon
+        #TODO exclude 'permanent_wilting_point', 'field_capacity', 'bulk_density'??? wilting pt and field cap depend on texture
+        exclude = ('user_soil_profile', ) 
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1186,9 +1187,32 @@ class UserSoilHorizonForm(forms.ModelForm):
 
 SoilProfileHorizonFormSet = inlineformset_factory(
     models.UserSoilProfile,
-    models.SoilLayer,
+    models.SoilHorizon,
     form=UserSoilHorizonForm,
-    extra=1,          # allows adding horizons
+    extra=0,          # allows adding horizons
     can_delete=True,  # allows removing horizons
 )
 
+UserSoilHorizonFormSet = modelformset_factory(
+    models.SoilHorizon,
+    form=UserSoilHorizonForm,
+    extra=0,  # Number of extra forms to display
+    can_delete=True,
+)
+
+
+
+class MonicaSiteForm(forms.ModelForm):
+    class Meta:
+        model = models.MonicaSite
+        exclude = ('user',)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = get_parameters_form_helper()
+        self.helper.layout.append(
+            Field('name', wrapper_class='row'),
+            Field('latitude', wrapper_class='row'),
+            Field('longitude', wrapper_class='row'),
+            Field('altitude', wrapper_class='row'),            
+        )

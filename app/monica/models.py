@@ -1995,10 +1995,10 @@ class UserSoilProfile(models.Model):
         return self.name
     
     def get_all_horizons(self):
-        return SoilLayer.objects.filter(user_soil_profile=self).order_by('horizon_no')
+        return SoilHorizon.objects.filter(user_soil_profile=self).order_by('horizon_no')
     
     def get_all_horizons_json(self):
-        hors = SoilLayer.objects.filter(user_soil_profile=self).order_by('horizon_no')
+        hors = SoilHorizon.objects.filter(user_soil_profile=self).order_by('horizon_no')
         return [horizon.to_json() for horizon in hors]
     
     def to_json(self):
@@ -2010,7 +2010,7 @@ class UserSoilProfile(models.Model):
 
         
 # TODO implement the input option for soil
-class SoilLayer(models.Model):
+class SoilHorizon(models.Model):
     user_soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE)
     horizon_no = models.IntegerField(default=1)
     thickness = models.FloatField(default=0.3) # in meters
@@ -2023,7 +2023,7 @@ class SoilLayer(models.Model):
     field_capacity = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil field capacity
     pore_volume = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil pore volume, saturation
     permanent_wilting_point = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil permanent wilting point
-    ka5_texture_class = models.ForeignKey(buek_models.Ka5TextureClass, on_delete=models.CASCADE)
+    # ka5_texture_class = models.ForeignKey(buek_models.Ka5TextureClass, on_delete=models.CASCADE)
     ammonium = models.FloatField(null=True, blank=True) # kg NH4-N m-3 intitial soil ammonium content
     nitrate = models.FloatField(null=True, blank=True) # kg NO3-N m-3 intitial soil nitrate content
     c_n = models.FloatField(default=11) # kg kg-1 soil carbon nitrogen ratio
@@ -2032,6 +2032,7 @@ class SoilLayer(models.Model):
     organic_carbon = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)], null=True) # kg kg-1 soil organic carbon content
     organic_matter = models.FloatField(null=True, blank=True) # kg kg-1 soil organic matter content
     soil_moisture = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil moisture content
+    
     def to_json(self):
         if self.sand is None:
             self.sand = 100 - self.clay - self.silt
@@ -2040,6 +2041,7 @@ class SoilLayer(models.Model):
         # if percentages are defined as 0-100 or 0-1 is not consistet in Monica
         return {
             "Thickness": self.thickness,
+            # "KA5TextureClass": self.ka5_texture_class.name,
             "Sand": self.sand / 100,
             "Clay": self.clay / 100,
             "pH": self.ph,
@@ -2048,7 +2050,6 @@ class SoilLayer(models.Model):
             "FieldCapacity": self.field_capacity / 100,
             "PoreVolume": self.pore_volume / 100,
             "PermanentWiltingPoint": self.permanent_wilting_point / 100,
-            "KA5TextureClass": self.ka5_texture_class.name,
             "SoilAmmonium": self.ammonium,
             "SoilNitrate": self.nitrate,
             "CN": self.c_n,
@@ -2058,6 +2059,34 @@ class SoilLayer(models.Model):
             "SoilOrganicMatter": self.organic_matter,
             "SoilMoisturePercentFC": self.soil_moisture
         }
+
+    def get_ptf1_fc(self):
+        """
+        Returns the field capacity based on the PTF1 equation.
+        """
+        if self.ka5_texture_class and self.humus_class:
+            fc = (0.24490 - 0.1887 * (1 / (self.corg/ 100 + 1)) + 
+                  0.0045270 * self.clay/100 + 
+                  0.001535 * self.silt/ 100 +
+                  0.001442 * self.silt/ 100 * (1 / (self.corg/ 100 + 1)) - 
+                  0.0000511 * self.silt/ 100 * self.clay/ 100 +
+                  0.0008676 * self.clay/ 100 * (1 / (self.corg/ 100 + 1))) 
+            return round(fc, 4)
+        return None
+
+    def get_ptf1_wp(self):
+        """
+        Returns the permanent wilting point based on the PTF1 equation.
+        """
+        if self.ka5_texture_class and self.humus_class:
+            wp = (0.09878 + 0.002127 * self.clay/ 100 - 
+                  0.0008366 * self.silt/ 100 - 
+                  0.0767 * (1 / (self.corg/ 100 + 1)) + 
+                  0.00003853 * self.silt/ 100 * self.clay/ 100 + 
+                  0.00233 * self.clay/ 100 * (1 / (self.corg/ 100 + 1)) +
+                  0.0009498 * self.silt/ 100 * (1 / (self.corg/ 100 + 1))) 
+            return round(wp, 4)
+        return None
 
 
 
@@ -2139,6 +2168,16 @@ class MonicaSite(models.Model):
             # "soilProfileType": self.soil_profile_content_type.model if self.soil_profile_content_type else None,
             "soilProfileType": soil_profile_type,
             "soilProfileId": self.soil_profile_object_id or None
+        }
+    
+    def to_monica_json(self):
+        return {
+            "Latitude": self.latitude,
+            "Slope": self.slope,
+            "HeightNN": [self.altitude, 'm'],
+            "NDeposition": [self.n_deposition,"kg N ha-1 y-1"],
+            # "SoilProfileType": self.soil_profile_content_type.model if self.soil_profile_content_type else None,
+            # "SoilProfileParameters": soil_profile_parameters,
         }
 
 

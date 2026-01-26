@@ -1435,7 +1435,7 @@ export function addMonicaEvents() {
             
         } else if (event.target.classList.contains('add-horizon-button')) {
             const table = document.querySelector("#soil-layers-table tbody");
-            const totalForms = document.querySelector("#id_soillayer_set-TOTAL_FORMS");
+            const totalForms = document.querySelector("#id_soilhorizon_set-TOTAL_FORMS");
 
             const currentCount = parseInt(totalForms.value);
             const newRow = table.children[0].cloneNode(true);
@@ -1454,7 +1454,7 @@ export function addMonicaEvents() {
             totalForms.value = currentCount + 1;
         } else if (event.target.classList.contains('delete-horizon-button')) {
             const table = $("#soil-layers-table");    
-            const totalForms = $("#id_soillayer_set-TOTAL_FORMS");
+            const totalForms = $("#id_soilhorizon_set-TOTAL_FORMS");
             const currentCount = parseInt(totalForms.val(), 111);
             
 
@@ -1787,6 +1787,25 @@ function runSimulation(monicaProject) {
     });
 };
 
+export function getSoilProfileFormsetHtml(project) {
+    // TODO
+     fetch('get-soil-profile/', {
+                method: 'POST',
+                body: JSON.stringify(project),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.message.success)
+                 $('#soil-profile-formset-container').html(data.message.html);
+                else handleAlerts(data.message);
+            })
+            .catch(error => console.error('Error:', error));
+}
+
 export function initializeSoilModal(polygonIds, userFieldId, systemUnitJson, landusageChoices) {
     console.log('initializeSoilModal',   systemUnitJson, landusageChoices);
     // if (modalInitialized) return;
@@ -1916,6 +1935,7 @@ export function initializeSoilModal(polygonIds, userFieldId, systemUnitJson, lan
         project.soilProfileId = soilProfileField.value;
         // console.log('project.soilProfileId', project.soilProfileId);
         project.saveToLocalStorage();
+        getSoilProfileFormsetHtml(project)
     });
 
 };
@@ -1992,6 +2012,9 @@ export function bindModalEventListeners(parameters) {
             project.soilProfileId = e.target.getAttribute('data-soil-profile-id');
             project.soilProfileType = "buekSoilProfile";
             project.saveToLocalStorage();
+            console.log('get-soil-profile', JSON.stringify(project));
+            getSoilProfileFormsetHtml(project);
+           
         });
     }
 };

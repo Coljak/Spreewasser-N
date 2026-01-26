@@ -11,6 +11,8 @@ from django.db.models import Q
 from django.core.cache import cache
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
+from django.template.loader import render_to_string
+from django.forms import inlineformset_factory, modelformset_factory
 
 # from ...xx_obsolete.run_consumer_swn import run_consumer
 from . import models
@@ -286,8 +288,6 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
 
     return climate_json
 
-
-
 def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     start_date = ensure_datetime(start_date)
     end_date = ensure_datetime(end_date)
@@ -330,11 +330,9 @@ def create_monica_env_from_json(json_data):
     error = []
    
     cropRotation = []
-    
+    cropRotations = None
     for r in json_data['rotation']:
         rotation = {}
-
-        
         worksteps = []
         for k, v in r.items():
             # print("K: ", k)
@@ -441,8 +439,6 @@ def create_monica_env_from_json(json_data):
 
         cropRotation.append(rotation)
 
-    # print('cropRotation: ', cropRotation)
-    cropRotations = None
 
       # end of replacement -------------------------------------------
     
@@ -1096,9 +1092,6 @@ def create_default_project(user):
     """
     Create a default project for the user.
     """
-
-    
-
     start_date = (datetime.now().date() - relativedelta(months=6)).replace(day=1)
     end_date = get_weather_forecast.get_last_valid_forecast_date_cached()
     # end_date = (datetime.now().date() + relativedelta(months=7)).replace(day=1) - relativedelta(days=1)
@@ -1117,6 +1110,68 @@ def create_default_project(user):
     default_project['rotation'][0]['harvestWorkstep'][0]['date'] = harvest_date
 
     return json.dumps(default_project, default=str)
+
+
+def create_soil_profile_form_from_profile(request, profile):
+    
+
+    if isinstance(profile, models.UserSoilProfile):
+        formset = forms.SoilProfileHorizonFormSet(
+            instance=profile,
+            queryset=models.SoilHorizon.objects.all(),
+        )
+    elif isinstance(profile, buek_models.SoilProfile):
+        profile_json, msg = profile.get_monica_horizons_json(extended=True)
+
+        formset = forms.SoilProfileHorizonFormSet(
+            instance=None,
+            queryset=models.SoilHorizon.objects.none(),
+            initial=profile_json,
+        )
+    return render(request, 'monica/monica_model_soil_profile_card.html', context={'user_soil_profile_formset': formset})
+
+def get_soil_profile_form(request):
+    """
+    Get soil profile form for the given profile id and type.
+    """
+    try:
+        project = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'message': {'success': False, 'errors': 'Invalid request method'}})
+    
+    profile_type = project.get('soilProfileType', None)
+    profile_id = project.get('soilProfileId', None)
+    print("GET SOIL PROFILE FORM", profile_type, profile_id)
+
+    if profile_type == 'userSoilProfile':
+        profile = get_object_or_404(models.UserSoilProfile, pk=profile_id)
+    elif profile_type == 'buekSoilProfile':
+        
+        profile = get_object_or_404(buek_models.SoilProfile, pk=profile_id)
+        initial, msg = profile.get_monica_horizons_json(extended=True)
+        print('profile_json', initial)
+
+        FormSetClass = inlineformset_factory(
+            models.UserSoilProfile,
+            models.SoilHorizon,
+            form=forms.UserSoilHorizonForm,
+            extra=len(initial),
+            can_delete=True,
+        )
+        formset = FormSetClass(
+            queryset=models.SoilHorizon.objects.none(),
+            initial=initial,
+        )
+    else:
+        return JsonResponse({'message': {'success': False, 'errors': 'Invalid profile type'}})
+    
+    html = render_to_string(
+        'monica/monica_model_soil_profile_card.html', 
+        context={
+            'user_soil_profile_formset': formset}
+            )
+
+    return JsonResponse({'message': {'success': True, 'html': html}})
     
 @login_required
 def monica_model(request):
@@ -1169,6 +1224,7 @@ def monica_model(request):
     }
     context.update(data)
     return render(request, 'monica/monica_model.html', context)
+
 
 def get_soil_parameters(request, profile_landusage, lat, lon):
     """

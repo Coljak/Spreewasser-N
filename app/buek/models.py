@@ -143,16 +143,9 @@ class SoilProfile(models.Model):
 
     def __str__(self):
         return 'soil_profile ' + str(self.id) 
-    
-    def get_all_horizons(self):
-        return SoilProfileHorizon.objects.filter(soilprofile=self).order_by('horizont_nr')
-    
-    def get_all_horizons_json(self):
-        hors = SoilProfileHorizon.objects.filter(soilprofile=self).order_by('horizont_nr')
-        return [horizon.to_json() for horizon in hors]
-    
 
-    def get_monica_horizons_json(self, extended=False):
+
+    def get_monica_horizons_json(self, extended=False, corrected_profile=True):
         # TODO this is working but could use refactoring: the msg is not used
         """
         Invalid horizons are filled with the information of the next valid horizon.
@@ -162,20 +155,37 @@ class SoilProfile(models.Model):
         msg = None
         hors = []
         # valid_horizon = False
-        for i in range(len(horizons)):
+        if corrected_profile:
+            print('corrected: True ')
+            for i in range(len(horizons)):
 
-            if not horizons[i].ka5_texture_class:
-                if i < len(horizons) - 1:
-                    horizons[i+1].obergrenze_m = horizons[i].obergrenze_m
-                    msg = "Warning: Profile modified due to lacking ka5 texture class"
-                    
-                else:
-                    horizons[i-1].untergrenze_m = horizons[i].untergrenze_m
-                    msg = "Warning: Last horizon modified due to lacking ka5 texture class"
+                if not horizons[i].ka5_texture_class:
+                    if i < len(horizons) - 1:
+                        horizons[i+1].obergrenze_m = horizons[i].obergrenze_m
+                        msg = "Warning: Profile modified due to lacking ka5 texture class"
+                        
+                    else:
+                        horizons[i-1].untergrenze_m = horizons[i].untergrenze_m
+                        msg = "Warning: Last horizon modified due to lacking ka5 texture class"
+
+        # else:
+        #     print('No corrected profile')
 
         
-        for i in range(len(horizons)):
-            if horizons[i].ka5_texture_class:
+            for i in range(len(horizons)):
+                if horizons[i].ka5_texture_class:
+                    if not extended:
+                        hors.append(horizons[i].to_json())
+                    else:
+                        horizon = horizons[i].to_user_soil_profile_json()
+                        
+                        horizon.update({'horizon_no': i})
+                        hors.append(horizon)
+
+        else:
+            print('corrected: False ')
+            for i in range(len(horizons)):
+
                 if not extended:
                     hors.append(horizons[i].to_json())
                 else:
@@ -186,8 +196,6 @@ class SoilProfile(models.Model):
 
         return hors, msg
     
-   
-
 
     def get_horizons_json(self):
         horizons =  SoilProfileHorizon.objects.filter(soilprofile=self).order_by('horizont_nr')

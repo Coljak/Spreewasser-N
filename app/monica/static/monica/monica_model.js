@@ -10,7 +10,6 @@ import {
     addRotationToGui,
     createChartDataset,
     addMonicaEvents,
-    initializeSoilModal,
     bindModalEventListeners,
     updateDropdown,
     setOutputSettings,

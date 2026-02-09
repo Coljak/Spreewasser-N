@@ -31,7 +31,7 @@ from monica import views as monica_views
 from monica.utils import get_weather_forecast
 
 from buek import models as buek_models
-from buek import views as buek_views
+from buek.views import get_recommended_soil_profile
 
 import xmltodict
 from datetime import datetime, timedelta, date
@@ -43,7 +43,18 @@ import random
 import time
 import urllib
 
-
+def get_soil_profile(request):
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        user_field_id = project.get('user_field')
+        user_field = models.UserField.objects.get(id=user_field_id)
+        lat, lon = user_field.geom.centroid.y, user_field.geom.centroid.x
+    
+        try:
+            soil_profile = get_recommended_soil_profile('general', lat, lon)
+            return JsonResponse({'success': True, 'soil_profile': soil_profile})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
 
 # dev feature displays all bootstrap colors etc.
 def bootstrap(request):
@@ -282,7 +293,7 @@ def swn_dashboard(request):
     print("sixth - fifth", sixth - fifth)
     project_modal_title = 'Create new project'
 
-    coordinate_form = monica_forms.CoordinateForm()
+    site_form = monica_forms.MonicaSiteForm()
     seventh = datetime.now()
     print("seventh - sixth", seventh - sixth)
     user_simulation_settings_select_form = monica_forms.UserSimulationSettingsInstanceSelectionForm(user=user)
@@ -296,6 +307,7 @@ def swn_dashboard(request):
     # user_environment_parameters_form = monica_forms.UserEnvironmentParametersForm(user=user)
     tenth = datetime.now()
     print("tenth - ninth", tenth - ninth)
+    user_soil_profile_select_form = monica_forms.SoilProfileSelectionForm(user=user)
     user_soil_profile_form = monica_forms.SoilProfileHorizonFormSet()
     user_soil_moisture_select_form = monica_forms.UserSoilMoistureInstanceSelectionForm(user=user)
     user_soil_organic_select_form = monica_forms.UserSoilOrganicInstanceSelectionForm(user=user)
@@ -312,10 +324,12 @@ def swn_dashboard(request):
             'project_select_form': project_select_form,
             'new_project_form': new_swn_project_form,
             'project_modal_title': project_modal_title,
-            'coordinate_form': coordinate_form,
+            'site_form': site_form,
             'user_crop_parameters_select_form': user_crop_parameters_select_form,
             'user_simulation_settings_select_form': user_simulation_settings_select_form,
             'user_environment_parameters_select_form': user_environment_parameters_select_form,
+            
+            'user_soil_profile_select_form': user_soil_profile_select_form,
             'user_soil_profile_form': user_soil_profile_form,
             'user_soil_moisture_select_form': user_soil_moisture_select_form,
             'user_soil_organic_select_form': user_soil_organic_select_form,

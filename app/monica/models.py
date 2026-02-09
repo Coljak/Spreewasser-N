@@ -1993,13 +1993,7 @@ class UserSoilProfile(models.Model):
 
     def __str__(self):
         return self.name
-    
-    def get_all_horizons(self):
-        return SoilHorizon.objects.filter(user_soil_profile=self).order_by('horizon_no')
-    
-    def get_all_horizons_json(self):
-        hors = SoilHorizon.objects.filter(user_soil_profile=self).order_by('horizon_no')
-        return [horizon.to_json() for horizon in hors]
+
     
     def to_json(self):
         return {
@@ -2007,16 +2001,21 @@ class UserSoilProfile(models.Model):
             "description": self.description,
             # "horizons": [horizon.to_json() for horizon in self.soillayer_set.all()]
         }
+    
+    def get_monica_horizons_json(self):
+        # TODO for now is the same as above, but should be extended by queries if x exists include ....
+        hors = SoilHorizon.objects.filter(user_soil_profile=self).order_by('horizon_no')
+        return [horizon.to_json() for horizon in hors], 'no message'
 
         
 # TODO implement the input option for soil
 class SoilHorizon(models.Model):
-    user_soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE)
+    user_soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE, related_name='soil_horizons')
     horizon_no = models.IntegerField(default=1)
     thickness = models.FloatField(default=0.3) # in meters
     sand = models.FloatField(default=33, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil sand content as fraction
     clay = models.FloatField(default=33, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil clay content as fraction
-    silt = models.FloatField(default=34, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil silt content as fraction
+    # silt = models.FloatField(default=34, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil silt content as fraction
     ph = models.FloatField(default=7, validators=[MinValueValidator(0), MaxValueValidator(14)]) # pH value
     sceleton = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil stone content as fraction
     lambda_s = models.FloatField(default=0.1) # soil ater conductivity coefficient
@@ -2034,10 +2033,10 @@ class SoilHorizon(models.Model):
     soil_moisture = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil moisture content
     
     def to_json(self):
-        if self.sand is None:
-            self.sand = 100 - self.clay - self.silt
-        if self.clay is None:
-            self.clay = 100 - self.sand - self.silt
+        # if self.sand is None:
+        #     self.sand = 100 - self.clay - self.silt
+        # if self.clay is None:
+        #     self.clay = 100 - self.sand - self.silt
         # if percentages are defined as 0-100 or 0-1 is not consistet in Monica
         return {
             "Thickness": self.thickness,
@@ -2130,12 +2129,11 @@ class ModelSetup(models.Model):
 class MonicaSite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=255, null=True, blank=True)
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True, default=52.0)
+    longitude = models.FloatField(null=True, blank=True, default=10.0)
     altitude = models.FloatField(null=True, blank=True)
     slope = models.FloatField(null=True, blank=True)
     n_deposition = models.FloatField(null=True, blank=True)
-    # soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     soil_profile_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True) # identifies the class (buek.models.SoilProfile or UserSoilProfile)
@@ -2177,7 +2175,7 @@ class MonicaSite(models.Model):
             "HeightNN": [self.altitude, 'm'],
             "NDeposition": [self.n_deposition,"kg N ha-1 y-1"],
             # "SoilProfileType": self.soil_profile_content_type.model if self.soil_profile_content_type else None,
-            # "SoilProfileParameters": soil_profile_parameters,
+            "SoilProfileParameters": self.soil_profile.get_monica_horizons_json()[0] if self.soil_profile else None,
         }
 
 
@@ -2222,7 +2220,6 @@ class MonicaCalculation(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(null=True, blank=True)
    
-    # monica_site = models.ForeignKey(MonicaSite, on_delete=models.CASCADE)
     monica_project = models.ForeignKey(MonicaProject, on_delete=models.CASCADE)
     start_date = models.DateField()
     end_date = models.DateField()

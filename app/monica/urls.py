@@ -15,7 +15,10 @@ urlpatterns = [
     path('save-project/', views.save_project, name='save-monica-project'),
     path('delete-project/<int:id>/', views.delete_monica_project, name='delete_monica_project'),
     path('recommended-soil-profile/<str:profile_landusage>/<str:lat>/<str:lon>/', views.get_soil_parameters, name='get_soil_parameters'),
-    path('get-soil-profile/', views.get_soil_profile_form, name='get_soil_profile_form'),
+    # path('soil-profile-recommended/', views.get_recommended_soil_profile, name='get_recommended_soil_profile'),
+    path('get-soil-profile-form/', views.get_soil_profile_form, name='get_soil_profile_form'),
+    path('get-soil-profile/', views.get_soil_profile, name='get_soil_profile'),
+    path('save-soil-profile/', views.save_soil_profile, name='save_soil_profile'),
     # path('soil-profile/<str:lat>/<str:lon>/<int:id>/', views.get_soil_parameters, name='get_soil_parameters'),
     path('select-soil-profile/<str:lat>/<str:lon>/', views.manual_soil_selection, name='manual-soil-selection'),
     
@@ -29,3 +32,5 @@ urlpatterns = [
     path('run-simulation/', views.run_simulation, name='run_simulation'),
     path('download_irrigation_csv/', views.download_irrigation_csv, name='download_irrigation_csv'),
 ]
+
+

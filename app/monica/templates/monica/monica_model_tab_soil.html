@@ -1,17 +1,52 @@
 {% load crispy_forms_tags %}
 
 <!-- Soil -->
-<div id="tabSoil" class="tab-pane card mb-3">
+<div id="tabSite" class="tab-pane card mb-3">
     <div class="card-body">
-      <h5 class="card-title">Boden</h5>
+      <h5 class="card-title">Site</h5>
+      <div class="card mb-3">
+        <div class="card-body">
+          {% crispy site_form %}
+        </div>
+      </div>
 
       <div class="card mb-3">
         <div class="card-body">
-          <h5 class="card-title">Bodenprofil</h5>
+          <h5 class="card-title">Bodenprofil</h5> 
+          <div id="soil-profile-selection" class="mb-3">
+            <div class="card-body">
+              <h5 class="card-title">Auswahl</h5> 
+              <div class="mb-3">
+                {% crispy user_soil_profile_select_form %}
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn btn-outline-secondary mb-3 select-soil-profile" type="button">
+                Show
+              </button>
+            </div
+            <div class="row">
+              <button class="btn btn-outline-secondary mb-3 recommended-soil-profile" type="button">
+                Empfohlenes Bodenprofil anzeigen
+              </button>
+            </div>
+            <div class="row">
+              <button class="btn btn-outline-secondary mb-3 manually-select-soil-profile" type="button">
+                Bodenprofil aus Bük200 auswählen
+              </button>
+            </div>
+            <div class="row">
+              <button class="btn btn-outline-secondary mb-3 clean-soil-profile" type="button">
+                Clean Profile
+              </button>
+            </div>
+          </div>
           <button type="button" class="btn btn-info mb-3 advanced-soil-parameters-toggle">
             Erweiterte Bodenmerkmale
           </button>
+          <h5 id="soilProfileName">{{ profile_name }}</h5>
           <div id="soil-profile-formset-container">
+            
             <form method="post">
               {% csrf_token %}
               {{ user_soil_profile_form.management_form }}
@@ -86,12 +121,7 @@
               </button>
             </form>
           </div>
-          <button class="btn btn-primary recommended-soil-profile" type="button">
-            Empfohlenes Bodenprofil anzeigen
-          </button>
-          <button class="btn btn-primary manually-select-soil-parameters" type="button">
-            Bodenprofil aus Bük200 auswählen
-          </button>
+          
         </div>
       </div>
 

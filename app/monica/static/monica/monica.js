@@ -37,11 +37,18 @@ export class MonicaProject {
         this.startDate = project.startDate ?? '2024-01-01';
         this.endDate = project.endDate ?? '2024-08-31';
         this.description = project.description ?? '';
+        // Site
         this.longitude = project.longitude ?? 10.0;
         this.latitude = project.latitude ?? 52.0;
         this.userField = project.userField ?? null;
+        this.altitude = project.altitude ?? 400;
+        this.slope = project.slope ?? 0;
+        this.n_deposition = project.n_deposition ?? 0;
+        this.soilProfileType = project.soilProfileType ?? 'buekSoilProfile';
+        this.soilProfileId = project.soilProfileId ?? null;
+        this.profile_source = project.profile_source ?? 'recommended';
         // this.swnForecast = project.swnForecast ?? false;
-
+        // Crop Raotation
         if (Array.isArray(project.rotation) && project.rotation.length > 0) {
             console.log('MonicaProject constructor project.rotation', project.rotation);
             this.rotation = project.rotation.map(rotation => new Rotation(rotation.rotationIndex, rotation));
@@ -59,8 +66,7 @@ export class MonicaProject {
         this.userCropParametersId = project.userCropParametersId ?? 1;
         this.userSoilOrganicParametersId = project.userSoilOrganicParametersId ?? 1;
         this.userSimulationSettingsId = project.userSimulationSettingsId ?? 1;
-        this.soilProfileType = project.soilProfileType ?? 'buekSoilProfile';
-        this.soilProfileId = project.soilProfileId ?? null;
+        
     }
 
     // Convert instance to JSON for storage
@@ -71,7 +77,6 @@ export class MonicaProject {
 
     // Save project to localStorage
     saveToLocalStorage() {
-        console.log('MonicaProject saveToLocalStorage', this);
         localStorage.setItem('monica_project', this.toJson());
     }
 
@@ -132,7 +137,6 @@ export class MonicaProject {
         return workstep;
     }
 };
-
 
 export class Rotation {
     constructor(rotationIndex, existingRotation = {}) {
@@ -839,6 +843,26 @@ function validateProject(project) {
         document.querySelector('#cropRotationInput')?.focus();
 
         handleAlerts({'success': false, 'message': 'Please provide a crop rotation'});
+    } else if (project.soilProfileId === null) {
+        valid = false;
+        document.querySelector('a[href="#tabSite"]').click();        
+        // Focus on the crop rotation input field (if it has an ID or class)
+        const $emptySandInputs = $('td.sand input, td.clay input, td.ph input, td.raw-density input').filter(function () {
+            return $(this).val() === '';
+        });
+
+        if ($emptySandInputs.length) {
+            $emptySandInputs
+                .addClass('is-invalid');      // Bootstrap red border
+
+            $emptySandInputs
+                .first()
+                .focus();                     // focus first invalid field
+        }
+
+        
+
+        handleAlerts({'success': false, 'message': 'Please provide a crop rotation'});
     } else {
         let found = false; // To stop after first invalid field
     
@@ -1010,7 +1034,6 @@ function validateProject(project) {
     return valid;
 };
 
-
 function createModal(params) {
     console.log('create modal', params)
     try {
@@ -1050,11 +1073,10 @@ function createModal(params) {
             .then(response => response.json())
             .then(data => {
                 console.log('createModal select-soil-profile', data);
-                
-                const polygonIds = data.polygon_ids;
+  
                 const systemUnitJson = JSON.parse(data.system_unit_json);
                 const landUsageChoices = JSON.parse(data.landusage_choices);
-                initializeSoilModal(polygonIds, null, systemUnitJson, landUsageChoices);
+                initializeSoilModal(systemUnitJson, landUsageChoices);
                 $('#modalManualSoilSelection').modal('show');
                 $('#modalManualSoilSelection').on('hidden.bs.modal', function () {
                     // modalInitialized = false;
@@ -1116,6 +1138,16 @@ export function setOutputSettings() {
         }
     }));
 };
+
+function clearSoilModal() {
+    $('#id_land_usage').empty();
+    $('#id_area_percentage').empty();
+    $('#id_system_unit').empty();
+    $('#id_soil_profile').empty();
+    $('#correctedSoilProfileTableBody').empty();
+    $('#correctedSoilProfile').addClass('d-none');
+    $('#originalSoilProfileTableBody').empty();
+}
 
 export function addMonicaEvents() {
      document.getElementById('btnOpenOutputSettings').addEventListener('click', function () {    
@@ -1370,7 +1402,7 @@ export function addMonicaEvents() {
         }
     });
 
-    $('#tabSoil').on('click', (event) => {
+    $('#tabSite').on('click', (event) => {
         let params = {};
         const btnModifyParameters = event.target.closest('.modify-parameters');
         if (btnModifyParameters) {
@@ -1418,7 +1450,17 @@ export function addMonicaEvents() {
 
         
 
-        } else if (event.target.classList.contains('manually-select-soil-parameters')) {
+        } else if (event.target.classList.contains('user-soil-profile')) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project.soilProfileType = "userSoilProfile";
+            project.soilProfileId = $('#id_soil_profile_selector').val();
+            project.saveToLocalStorage();
+             getSoilProfileFormsetHtml({
+                profileType: "userSoilProfile",
+                profileId: project.soilProfileId,
+                correctedProfile: false
+            });
+        } else if (event.target.classList.contains('manually-select-soil-profile')) {
             const project = MonicaProject.loadFromLocalStorage();
             try {
                 params = {
@@ -1433,9 +1475,116 @@ export function addMonicaEvents() {
                 handleAlerts({'success': false, 'message': 'Please provide a valid location'});
             }
             
+        }  else if (event.target.classList.contains('select-soil-profile')) {
+            console.log('Soil Button')
+            const project = MonicaProject.loadFromLocalStorage();
+
+            function createSoilProfileTableRow(horizon, horizon_no) {
+                
+                const $tr = $('<tr>');
+                $tr.append($('<td>').text(horizon_no));
+                Object.values(horizon).forEach((value, index) => {
+                    const $td = $('<td>').text(value);
+                    $tr.append($td);
+                });
+                
+                return $tr;
+            };
+
+
+            switch (project.profile_source) {
+                case 'recommended':
+                    fetch('get-soil-profile/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken(),
+                        },
+                        body: JSON.stringify(project)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Recommended soil profile response:', data);
+                        if (data.success) {
+                            console.log('success')
+                            const soilProfile = data.soil_profile
+                            clearSoilModal();
+                            $('#id_land_usage').append(new Option(soilProfile.landusage, soilProfile.landusage, true, true));
+                            $('#id_area_percentage').append(new Option(soilProfile.area_percentage, soilProfile.area_percentage, true, true));
+                            $('#id_system_unit').append(new Option(soilProfile.system_unit, soilProfile.system_unit, true, true));
+                            $('#id_soil_profile').append(new Option(soilProfile.soil_profile_no, soilProfile.soil_profile_no, true, true));
+                            let horizon_no = 1;
+                            if (soilProfile.SoilProfileParameters.length > 0) {
+                                soilProfile.SoilProfileParameters.forEach(horizon => {
+                                $('#correctedSoilProfileTableBody').append(createSoilProfileTableRow(horizon, horizon_no));
+                                horizon_no++;
+                            });
+                            $('#correctedSoilProfile').removeClass('d-none');
+                            }
+                            horizon_no = 1;
+                            soilProfile.OriginalSoilProfileParameters.forEach(horizon => {    
+                                $('#originalSoilProfileTableBody').append(createSoilProfileTableRow(horizon, horizon_no));
+                                horizon_no++;
+                            });
+
+                            $('#modalSoilSelection').modal('show');
+                            
+                        } else handleAlerts(data);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching recommended soil profile:', error);
+                        handleAlerts({'success': false, 'message': 'An error occurred while fetching the recommended soil profile. Please try again later.'});
+                    });
+                    
+                    console.log('recommended')
+                    
+
+                    break;
+
+                case 'buek':
+                    console.log('buek')
+                    try {
+                        params = {
+                        'parameters': 'select-soil-profile',
+                        'user_field': project.userField,
+                        'lon': project.longitude,
+                        'lat': project.latitude
+                    }
+                    
+                    createModal(params);
+                    } catch {
+                        handleAlerts({'success': false, 'message': 'Please provide a valid location'});
+                    }
+                    break;
+
+                case 'user':
+                    console.log('user')
+                    project.soilProfileType = "userSoilProfile";
+                    project.soilProfileId = $('#id_soil_profile_selector').val();
+                    project.saveToLocalStorage();
+                    getSoilProfileFormsetHtml({
+                        profileType: "userSoilProfile",
+                        profileId: project.soilProfileId,
+                        correctedProfile: false
+                    });
+                    break;
+
+                default:
+                    // code if none match
+                }
+
+        } else if (event.target.classList.contains('clean-soil-profile')) {
+            
+            getSoilProfileFormsetHtml({
+                profileType: "userSoilProfile",
+                profileId: '',
+                correctedProfile: false
+            });
+            
         } else if (event.target.classList.contains('add-horizon-button')) {
+            markSaveNecessary(true);
             const table = document.querySelector("#soil-layers-table tbody");
-            const totalForms = document.querySelector("#id_soilhorizon_set-TOTAL_FORMS");
+            const totalForms = document.querySelector("#id_soil_horizons-TOTAL_FORMS");
 
             const currentCount = parseInt(totalForms.value);
             const newRow = table.children[0].cloneNode(true);
@@ -1446,6 +1595,8 @@ export function addMonicaEvents() {
                 if (input.name.endsWith("horizon_no")) {
                 
                     input.value = currentCount + 1;
+                } else {
+                    input.value = "";
                 }
             });
             newRow.dataset.horizonNo = currentCount + 1;
@@ -1453,6 +1604,7 @@ export function addMonicaEvents() {
             table.appendChild(newRow);
             totalForms.value = currentCount + 1;
         } else if (event.target.classList.contains('delete-horizon-button')) {
+            markSaveNecessary(true);
             const table = $("#soil-layers-table");    
             const totalForms = $("#id_soilhorizon_set-TOTAL_FORMS");
             const currentCount = parseInt(totalForms.val(), 111);
@@ -1494,6 +1646,73 @@ export function addMonicaEvents() {
                 totalForms.val(rows.length);
         } else if (event.target.classList.contains('advanced-soil-parameters-toggle')) {
             $('.advanced-soil-parameters').toggleClass('d-none');
+        } else if (event.target.classList.contains('reset-soil-form-button')) {
+            const project = MonicaProject.loadFromLocalStorage();
+            const soilProfile = {
+                'soilProfileId': project.soilProfileId,
+                'soilProfileType': project.soilProfileType,
+            }
+            getSoilProfileFormsetHtml(project);
+        } else if (event.target.classList.contains('save-soil-profile-button')) {
+  
+            saveSoilProfileFormset();
+        }
+    });   
+
+    $('#tabSite').on('change', (event) => {
+        // if (event.target.classList.contains('form-control')) {
+            const project = MonicaProject.loadFromLocalStorage();
+            project[event.target.getAttribute('name')] = event.target.value;
+            project.saveToLocalStorage();
+        // }
+    });
+
+
+    $('#soil-profile-formset-container').on('change', (event) => {
+        // for changes in of the actual soil profile
+        if (window.isLoading) return;
+        event.target.classList.remove('is-invalid');
+        markSaveNecessary(true);
+    });
+
+
+    function saveSoilProfileFormset() {
+        const project = MonicaProject.loadFromLocalStorage();
+        const form = document.getElementById('soil-profile-formset');
+        const formData = new FormData(form);
+        const data = {
+            formData: formData,
+            project: project,
+        }
+        fetch('/monica/save-soil-profile/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('saveSoilProfileFormset', data);
+            if (data.message.success) {
+                handleAlerts(data.message);
+                project.soilProfileId = data.soil_profile_id;
+                $('#soilProfileName').text(data.profile_name);
+                project.saveToLocalStorage();
+                markSaveNecessary(false);
+            } else {
+                handleAlerts(data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+
+    }
+
+    // The soil profile table is loaded after the 
+    $('#soil-profile-formset-container').on('change', (event) => {
+        if (!window.isLoading) {
+            const project = MonicaProject.loadFromLocalStorage();
+            console.log('soil-profile-formset-container: Table is changing')
         }
     });
 
@@ -1787,30 +2006,37 @@ function runSimulation(monicaProject) {
     });
 };
 
-export function getSoilProfileFormsetHtml(project) {
-    // TODO
-     fetch('get-soil-profile/', {
-                method: 'POST',
-                body: JSON.stringify(project),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCSRFToken()
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.message.success)
-                 $('#soil-profile-formset-container').html(data.message.html);
-                else handleAlerts(data.message);
-            })
-            .catch(error => console.error('Error:', error));
+
+
+export function getSoilProfileFormsetHtml(soilProfile) {
+
+    fetch('/monica/get-soil-profile/', {
+            method: 'POST',
+            body: JSON.stringify(soilProfile),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.message.success) {
+                $('#soil-profile-formset-container').html(data.message.html);
+                markSaveNecessary(false);
+            }
+            else handleAlerts(data.message);
+        })
+        .catch(error => console.error('Error:', error));
 }
 
-export function initializeSoilModal(polygonIds, userFieldId, systemUnitJson, landusageChoices) {
-    console.log('initializeSoilModal',   systemUnitJson, landusageChoices);
-    // if (modalInitialized) return;
+function markSaveNecessary(needsToBeSaved) {
+  $("#saveProfileIndicator").toggleClass("d-none", !needsToBeSaved);
+}
+
+export function initializeSoilModal(systemUnitJson, landusageChoices) {
+    // This is the modal with all soil profiles present in the Buek at the location (monica)/ userfield (swn)
     if ($('#modalManualSoilSelection').hasClass('initialized')) return;
-    // modalInitialized = true;
+
     $('#modalManualSoilSelection').addClass('initialized')
     const landUsageField = document.getElementById('id_land_usage');
     const soilProfileField = document.getElementById('id_soil_profile');
@@ -1928,15 +2154,38 @@ export function initializeSoilModal(polygonIds, userFieldId, systemUnitJson, lan
     
     landUsageField.dispatchEvent(new Event('change'));
 
-    const btnSelectSoilProfile = document.getElementById("btnSelectSoilProfile");
-    btnSelectSoilProfile.addEventListener("click", function () {      
+
+    $('#modalManualSoilSelectionButtons').on('click', function (e) {
         const project = MonicaProject.loadFromLocalStorage();
-        project.soilProfileType = "buekSoilProfile";
-        project.soilProfileId = soilProfileField.value;
-        // console.log('project.soilProfileId', project.soilProfileId);
-        project.saveToLocalStorage();
-        getSoilProfileFormsetHtml(project)
+        const soilProfile = {
+                profileType: "buekSoilProfile",
+                profileId: soilProfileField.value,
+                correctedProfile: true
+            }
+        
+        if (e.target.id === 'btnSelectSoilProfile') {Q
+            project.soilProfileType = "buekSoilProfile";
+            project.soilProfileId = soilProfileField.value;
+            project.saveToLocalStorage();
+            
+        } else if (e.target.id === 'btnSelectSoilProfileOriginal') {
+            project.soilProfileType = "userSoilProfile";
+            project.soilProfileId = null;
+            project.saveToLocalStorage();
+            soilProfile.correctedProfile = false;
+            
+        }
+        getSoilProfileFormsetHtml(soilProfile)
     });
+
+    // btnSelectSoilProfile.addEventListener("click", function () {      
+    //     const project = MonicaProject.loadFromLocalStorage();
+    //     project.soilProfileType = "buekSoilProfile";
+    //     project.soilProfileId = soilProfileField.value;
+    //     // console.log('project.soilProfileId', project.soilProfileId);
+    //     project.saveToLocalStorage();
+    //     getSoilProfileFormsetHtml(project)
+    // });
 
 };
 
@@ -2007,22 +2256,34 @@ export function bindModalEventListeners(parameters) {
         };
     } else if (parameters === 'recommended-soil-profile') {
         console.log("bindModalEventListeners recommended-soil-profile");
-        $('#btnSelectPreselectedSoilProfile').on('click', function (e) {
+        $('#preselectedSoilProfileButtons').on('click', function (e) {
+            const soilProfile = {
+                profileType: "buekSoilProfile",
+                profileId: e.target.getAttribute('data-soil-profile-id'),
+                correctedProfile: e.target.classList.contains('corrected-profile')
+            }
             const project = MonicaProject.loadFromLocalStorage();
             project.soilProfileId = e.target.getAttribute('data-soil-profile-id');
-            project.soilProfileType = "buekSoilProfile";
+            if (e.target.classList.contains('corrected-profile')) {
+                project.soilProfileType = "buekSoilProfile";
+                project.soilProfileId = e.target.getAttribute('data-soil-profile-id');
+            } else {
+                project.soilProfileType = "userSoilProfile";
+                project.soilProfileId = null;
+            }
             project.saveToLocalStorage();
             console.log('get-soil-profile', JSON.stringify(project));
-            getSoilProfileFormsetHtml(project);
+            getSoilProfileFormsetHtml(soilProfile);
            
         });
+
     }
 };
 
 // TODO addToDropdown instead of updateDropdown
 export function updateDropdown(parameterType, rotationIndex, newId) {
     console.log('updateDropdown', parameterType, rotationIndex, newId);
-    // the absolute path is needed because most options are exclusively from /monica
+    // the absolute path is needed for swn, because most options are exclusively from /monica
     let baseUrl = '/monica/get_options/';
     // save project differs in monica and swn, therefore:
     if (parameterType === 'monica-project') {

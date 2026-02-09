@@ -1,0 +1,111 @@
+{% load static %}
+<div id="modalSoilSelection" class="modal fade" tabindex="-1" aria-modal="true" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog  modal-lg" role="document">
+    <div class="modal-content">
+      
+      <div class="modal-header">
+        <h1 class="modal-title fs-5">Bük200 Bodendaten</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row">
+          <div class="card mb-3">
+            <div id="soilDiv" class="card-body">
+              
+              <div class="input-group-text mb-2 d-flex align-items-start">
+                <div id="div_id_land_usage" class="m-3">
+                  <label for="id_land_usage" class="form-label">
+                    Flächennutzungsart
+                  <label>
+                  <select name="land_usage" class="form-select" id="id_land_usage"></select>
+                </div>
+                <div id="div_id_area_percentage" class="m-3">
+                  <label for="id_area_percentage" class="form-label">
+                    Prävalenz des Bodenprofils in %
+                  <label>
+                  <select name="area_percentage" class="form-select" id="id_area_percentage"></select> 
+                </div>
+                <div id="div_id_system_unit" class="m-3">
+                  <label for="id_system_unit" class="form-label">
+                    Systemeinheit
+                  <label>
+                  <select name="system_unit" class="form-select" id="id_system_unit"></select> 
+                </div>
+                <div id="div_id_soil_profile" class="m-3">
+                  <label for="id_soil_profile" class="form-label">
+                    Bodenprofil
+                  <label>
+                  <select name="soil_profile" class="form-select" id="id_soil_profile"></select> 
+                </div>
+
+              </div>
+
+
+              <div class="card mb-3">
+                <div class="card-body">
+                  <h3 class="card-title">Bodenprofil</h3>
+                  <div id="correctedSoilProfile" class="d-none">
+                    <h5>Korrigiertes Bodenprofil</h5>
+                    <button type="button" class="btn btn-primary corrected-profile" data-bs-dismiss="modal" data-soil-profile-id="{{ soil_profile.id }}">Select</button>
+
+                    <table class="table table-striped table-bordered table-hover">
+                      <thead>
+                        
+                        <tr>
+                          <th>Horizont Nr.</th>
+                          <th>Schichtdicke</th>
+                          <th>Sand</th>
+                          <th>Ton</th>
+                          <th>pH</th>
+                          <th>Textur</th>
+                          <th>Trockenrohdichte</th>
+                          <th>Organischer Kohlenstoff</th>
+                        </tr>
+                      </thead>
+                      <tbody id="correctedSoilProfileTableBody">
+                        <!-- Hier werden die Bodenschichten dynamisch eingefügt -->
+                        
+                      </tbody>
+                    </table>
+                  </div>
+                  <div id="originalSoilProfile">
+                    <h5>Originaldaten</h5>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-soil-profile-id="">Select Original Data</button>
+                    <table class="table table-striped table-bordered table-hover">
+                      <thead>
+                        
+                        <tr>
+                          <th>Horizont Nr.</th>
+                          <th>Schichtdicke</th>
+                          <th>Sand</th>
+                          <th>Ton</th>
+                          <th>pH</th>
+                          <th>Textur</th>
+                          <th>Trockenrohdichte</th>
+                          <th>Organischer Kohlenstoff</th>
+                        </tr>
+                      </thead>
+                      <tbody id="originalSoilProfileTableBody">
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-footer" id="preselectedSoilProfileButtons">
+                                
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div> 
+            </div>
+          </div>
+        </div>
+        
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>  
+</div> 
+
+
+

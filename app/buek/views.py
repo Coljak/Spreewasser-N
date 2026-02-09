@@ -9,6 +9,7 @@ from rest_framework import status
 from .serializers import SoilProfileSerializer, MapSoilCLCSerializer
 from datetime import datetime
 from . import models
+import json
 
 
 
@@ -74,8 +75,38 @@ def get_buek_data_from_point(request, lat, lon):
     return Response(serializer.data)
 
 
+def get_soil_data_for_modal(soil_profile):
+    """
+    This return the soil data as a dictionary with information on the profile, as well as its horizons.
+    Since there are many profiles in the buek that need to be adjusted, both datasets - the corrected as well as the original -
+    are returned in the dictionary.
+    
+    :param soil_profile: buek_models.SoilProfile object
+    """
+    serializer = SoilProfileSerializer(soil_profile, many=False)
+    soil_data = serializer.data
+    corrected_horizons = soil_profile.get_monica_horizons_json()
+    original = soil_profile.get_horizons_json()
+    if corrected_horizons == original:
+        soil_data["SoilProfileParameters"] = original
+    else:
+        soil_data["SoilProfileParameters"], _ = corrected_horizons
+        soil_data["OriginalSoilProfileParameters"] = original
+        for hor in soil_data['OriginalSoilProfileParameters']:
+            for key, value in hor.items():
+                if isinstance(value, list):
+                    hor[key] = ''.join(map(str, value))
 
-def get_soil_profile(profile_type, lat, lon):
+    for hor in soil_data['SoilProfileParameters']:
+        i = 0
+        for key, value in hor.items():
+            if isinstance(value, list):
+                hor[key] = ''.join(map(str, value))
+
+    return soil_data
+
+
+def get_recommended_soil_profile(profile_type, lat, lon):
     """
     This produces soil profiles at the given longitude and latitude. 
     The profile_type general provides a soilprofile according to the CLC landuse.
@@ -90,43 +121,27 @@ def get_soil_profile(profile_type, lat, lon):
     soil_data = {}
     # TODO: Deal with error messages (_)
     if profile_type == 'general':
-        serializer = SoilProfileSerializer(polygon.soilprofile, many=False)
-        soil_data = serializer.data
-        soil_data["SoilProfileParameters"], _ = polygon.soilprofile.get_monica_horizons_json()
-        soil_data["OriginalSoilProfileParameters"] = polygon.soilprofile.get_horizons_json()
-        
+        soil_data = get_soil_data_for_modal(polygon.soilprofile)
+
     elif profile_type == 'agriculture':
-        serializer = SoilProfileSerializer(polygon.bias_21_soilprofile, many=False)
-        soil_data = serializer.data
-        soil_data["SoilProfileParameters"], _ = polygon.bias_21_soilprofile.get_monica_horizons_json()
-        soil_data["OriginalSoilProfileParameters"] = polygon.bias_21_soilprofile.get_horizons_json()
+        soil_data = get_soil_data_for_modal(polygon.bias_21_soilprofile)
     elif profile_type == 'grassland':
-        serializer = SoilProfileSerializer(polygon.bias_23_soilprofile, many=False)
-        soil_data = serializer.data
-        soil_data["SoilProfileParameters"], _ = polygon.bias_23_soilprofile.get_monica_horizons_json()
-        soil_data["OriginalSoilProfileParameters"] = polygon.bias_23_soilprofile.get_horizons_json()
+        soil_data = get_soil_data_for_modal(polygon.bias_23_soilprofile)
     elif profile_type == 'forest':
-        serializer = SoilProfileSerializer(polygon.bias_31_soilprofile, many=False)
-        soil_data = serializer.data
-        soil_data["SoilProfileParameters"], _ = polygon.bias_31_soilprofile.get_monica_horizons_json()
-        soil_data["OriginalSoilProfileParameters"] = polygon.bias_31_soilprofile.get_horizons_json()
+        soil_data = get_soil_data_for_modal(polygon.bias_31_soilprofile)
     else:
         return {'error': profile_type + ' is not a valid profile type. Please use one of the following: general, agriculture, grassland, forest'}
-
+    print('get_recommended_soil_profile', soil_data)
     return soil_data
 
 @api_view(['GET'])
-def get_soil_profile_from_point(request, profile_type, lat, lon):
+def get_recommended_soil_profile_from_point(request, profile_type, lat, lon):
     """
-    This function returns all references to soilprofiles in one point.
-    tkle_nr is the id of the polygon in the BUEK200 database,
-    polygon_id id the id of the polygon used to provide the soil data in cases where either no data or no appropriate data is available in the Buek200,
-    ....
+    
     """ 
-    soil_data = get_soil_profile(profile_type, lat, lon)
+    soil_data = get_recommended_soil_profile(profile_type, lat, lon)
 
     return Response(soil_data)
-
 
 
 @api_view(['GET'])

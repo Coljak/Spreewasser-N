@@ -57,11 +57,13 @@ def save_project(project_data, user, project_class=models.MonicaProject):
             print("data.get('soilProfileType')", data.get('soilProfileType'))
 
 
-            project.monica_site.latitude = data.get('latitude')
+            project.latitude = data.get('latitude')
             
             project.monica_site.longitude = data.get('longitude')
             project.monica_site.altitude = data.get('altitude', 0)
             project.monica_site.n_deposition = data.get('n_deposition', 11)
+            project.monica_site.altitude = data.get('altitude', 0)
+            project.monica_site.slope = data.get('slope', 0)
             soil_profile_type = data.get('soilProfileType')
             if soil_profile_type == 'buekSoilProfile':
                 soil_profile = models.SoilProfile.objects.get(pk=data.get('soilProfileId'))

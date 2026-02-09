@@ -1,10 +1,13 @@
 from django import forms
 from django.forms import inlineformset_factory, modelformset_factory
 from . import models
-from swn.models import SwnProject
+from buek import models as buek_models
+
 
 from django.db.models import Q
 from django.contrib.postgres.fields import JSONField
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
 from django.core import validators
 from crispy_forms.helper import FormHelper
@@ -12,7 +15,7 @@ from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, C
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 from django_select2.forms import Select2Widget
 from .widgets import SingleRowTextarea
-from django.utils.translation import gettext_lazy as _
+
 from utilities.widgets import UnitInputWrapper
 
 from crispy_forms.layout import Field, Layout, Row, Column
@@ -1164,10 +1167,103 @@ class WorkstepNDemandFertilizationForm(forms.ModelForm):
         self.fields['depth'].widget = UnitInputWrapper(widget=self.fields['depth'].widget, unit='m')
 
 
+class SoilProfileSelectionForm(forms.Form):
+
+    PROFILE_SOURCE_CHOICES = (
+        ('recommended', 'Recommended soil profile'),
+        ('buek', 'BÜK choices'),
+        ('user', 'My soil profile'),
+    )
+
+    profile_source = forms.ChoiceField(
+        choices=PROFILE_SOURCE_CHOICES,
+        widget=forms.RadioSelect,
+        initial='recommended',
+        label='Soil profile source'
+    )
+
+    user_soil_profile = forms.ChoiceField(
+        choices=[],
+        required=False,
+        label='',
+        widget=forms.Select(
+            attrs={
+                'id': 'id_user_soil_profile_selector',
+                'class': 'form-select form-select-sm'
+            }
+        )
+    )
+
+    def _radio_with_inline_select(self):
+        return format_html(
+        """
+        <div class="form-check d-flex align-items-center gap-2 mb-2">
+            <input class="form-check-input"
+                   type="radio"
+                   name="profile_source"
+                   id="id_profile_source_user"
+                   value="user"
+                   >
+
+            <label class="form-check-label mb-0"
+                   for="id_profile_source_user">
+                My soil profile
+            </label>
+
+            {}
+        </div>
+        """,
+        self['user_soil_profile']
+    )
+
+    def _simple_radio(self, value, checked):
+        label = dict(self.PROFILE_SOURCE_CHOICES).get(value, value)
+        return f"""
+        <div class="form-check mb-2">
+            <input class="form-check-input"
+                type="radio"
+                name="profile_source"
+                id="id_profile_source_{value}"
+                value="{value}"
+                {checked}>
+
+            <label class="form-check-label mb-0"
+                for="id_profile_source_{value}">
+                {label}
+            </label>
+        </div>
+        """
+
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if user:
+            qs = models.UserSoilProfile.objects.filter(
+                Q(user=user) | Q(user=None)
+            )
+        else:
+            qs = models.UserSoilProfile.objects.none()
+
+        self.fields['user_soil_profile'].choices = [
+            (obj.id, obj.name) for obj in qs
+        ]
+
+        self.helper = get_parameters_form_helper()
+        self.helper.layout = Layout(
+            HTML(self._simple_radio('recommended', 'checked')),
+            HTML(self._simple_radio('buek', '')),
+            HTML(self._radio_with_inline_select()),
+        )
+
+
+
 class UserSoilProfileForm(forms.ModelForm):
     class Meta:
         exclude = ('user',)
         model = models.UserSoilProfile
+
+
 
 class UserSoilHorizonForm(forms.ModelForm):
     class Meta:
@@ -1184,7 +1280,8 @@ class UserSoilHorizonForm(forms.ModelForm):
                 "class": "form-control form-control-sm soil-table-input"
             })
 
-
+# Formset for Soil Horizons within an existing Soil Profile. 
+# This is used to display or edit existing buek profiles and UserSoilProfiles.
 SoilProfileHorizonFormSet = inlineformset_factory(
     models.UserSoilProfile,
     models.SoilHorizon,
@@ -1193,26 +1290,36 @@ SoilProfileHorizonFormSet = inlineformset_factory(
     can_delete=True,  # allows removing horizons
 )
 
-UserSoilHorizonFormSet = modelformset_factory(
+
+
+UserSoilHorizonImportFormSet = modelformset_factory(
     models.SoilHorizon,
     form=UserSoilHorizonForm,
-    extra=0,  # Number of extra forms to display
+    extra=1,
     can_delete=True,
 )
-
 
 
 class MonicaSiteForm(forms.ModelForm):
     class Meta:
         model = models.MonicaSite
-        exclude = ('user',)
+        exclude = ('user', 'soil_profile_content_type', 'soil_profile_object_id', 'soil_profile')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = get_parameters_form_helper()
-        self.helper.layout.append(
-            Field('name', wrapper_class='row'),
-            Field('latitude', wrapper_class='row'),
-            Field('longitude', wrapper_class='row'),
-            Field('altitude', wrapper_class='row'),            
-        )
+        for field in self.fields:
+            row_content = [
+
+                    Div(
+                        Field(field, wrapper_class='row'),
+                        css_class='col-11'
+                    ),     
+            ]
+            self.helper.layout.append(
+                Row(
+                    *row_content
+                )
+            )
+
+

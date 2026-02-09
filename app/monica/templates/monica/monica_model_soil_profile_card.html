@@ -3,7 +3,7 @@
 <!-- Soil profile-->
 
 
-          <form method="post">
+          <form method="post" id="soil-profile-formset">
             {% csrf_token %}
             {{ user_soil_profile_formset.management_form }}
             <div class="table-responsive">
@@ -42,25 +42,25 @@
                         <div class="horizon-count">{{ forloop.counter }}</div>
                         {{ form.horizon_no.as_hidden }}
                       </td>
-                      <td class="">{{ form.thickness }}</td>
+                      <td class="thickness">{{ form.thickness }}</td>
                       <td class="sand">{{ form.sand }}</td>
                       <td class="clay">{{ form.clay }}</td>
                       <td class="silt advanced-soil-parameters d-none">{{ form.silt }}</td>
-                      <td class="">{{ form.ph }}</td>
-                      <td class="advanced-soil-parameters d-none">{{ form.sceleton }}</td>
-                      <td class="advanced-soil-parameters d-none">{{ form.lambda_s }}</td>
-                      <td class="advanced-soil-parameters d-none">{{ form.field_capacity }}</td>
-                      <td class="advanced-soil-parameters d-none">{{ form.pore_volume }}</td>
-                      <td class="advanced-soil-parameters d-none">{{ form.permanent_wilting_point }}</td>
+                      <td class="ph">{{ form.ph }}</td>
+                      <td class="advanced-soil-parameters sceleton d-none">{{ form.sceleton }}</td>
+                      <td class="advanced-soil-parameters lambda-s d-none">{{ form.lambda_s }}</td>
+                      <td class="advanced-soil-parameters field-capacity d-none">{{ form.field_capacity }}</td>
+                      <td class="advanced-soil-parameters pore-volume d-none">{{ form.pore_volume }}</td>
+                      <td class="advanced-soil-parameters d-none permanent-wilting-point">{{ form.permanent_wilting_point }}</td>
                       {% comment %} <td class="">{{ form.ka5_texture_class }}</td> {% endcomment %}
-                      <td class="advanced-soil-parameters d-none">{{ form.ammonium }}</td>
-                      <td class="advanced-soil-parameters d-none">{{ form.nitrate }}</td>
-                      <td class="">{{ form.c_n }}</td>
-                      <td class="">{{ form.raw_density }}</td>
-                      <td class="advanced-soil-parameters d-none">{{ form.bulk_density }}</td>
-                      <td class="">{{ form.organic_carbon }}</td>
-                      <td class="advanced-soil-parameters d-none">{{ form.organic_matter }}</td>
-                      <td class="advanced-soil-parameters d-none">{{ form.soil_moisture }}</td>  
+                      <td class="advanced-soil-parameters ammonium d-none">{{ form.ammonium }}</td>
+                      <td class="advanced-soil-parameters nitrate d-none">{{ form.nitrate }}</td>
+                      <td class="c-n">{{ form.c_n }}</td>
+                      <td class="raw-density">{{ form.raw_density }}</td>
+                      <td class="advanced-soil-parameters bulk-density d-none">{{ form.bulk_density }}</td>
+                      <td class="organic-carbon">{{ form.organic_carbon }}</td>
+                      <td class="advanced-soil-parameters organic-matter d-none">{{ form.organic_matter }}</td>
+                      <td class="advanced-soil-parameters soil-moisture d-none">{{ form.soil_moisture }}</td>  
                       <td class="">
                         <button type="button" class="btn btn-danger btn-sm delete-horizon-button">
                           Delete
@@ -72,8 +72,18 @@
               </table>
             </div>
 
-            <button type="button" class="btn btn-outline-primary add-horizon-button" id="userSoilProfileAddHorizon">
+            <button type="button" class="btn btn-outline-primary add-horizon-button">
               + Add horizon
+            </button>
+            <button type="button" class="btn btn-outline-primary reset-soil-form-button" data-profile-type="{{ profile_type }}" data-profile-id="{{ profile_id }}">
+              Reset horizons
+            </button>
+            <button type="button" class="btn btn-outline-primary save-soil-profile-button" data-id="{{ user_profile_id }}">
+              <span id="saveProfileIndicator"
+                    class="badge rounded-pill bg-danger">
+                !
+              </span>
+              Save Profile
             </button>
           </form>
 

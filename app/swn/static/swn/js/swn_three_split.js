@@ -29,7 +29,6 @@ import {
   loadProjectToGui, 
   handleDateChange,
   addMonicaEvents,
-  initializeSoilModal,
   bindModalEventListeners,
   updateDropdown,
   setOutputSettings,

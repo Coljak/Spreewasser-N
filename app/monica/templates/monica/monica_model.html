@@ -14,7 +14,8 @@
 
 
   {% include 'monica/hidden_rotation_forms.html' %}
-  {% include 'monica/modal_manual_soil_selection.html' %}
+  {% comment %} {% include 'monica/modal_manual_soil_selection.html' %} {% endcomment %}
+  {% include 'monica/modal_soil_selection.html' %}
   {% include 'monica/output_settings_modal.html' %}
 
 
@@ -34,7 +35,7 @@
               <a class="monica nav-link" aria-current="page" href="#tabRotation" >Crop Rotation</a>
           </li>
           <li class="nav-item">
-              <a class="monica nav-link" aria-current="page" href="#tabSoil">Soil</a>
+              <a class="monica nav-link" aria-current="page" href="#tabSite">Soil</a>
           </li>
           <li class="nav-item">
               <a id="resultTab" class="monica nav-link disabled" aria-disabled="true" href="#tabResult">Result</a>
@@ -57,16 +58,24 @@
       
       <div id="tabGeneralParameters" class="tab-pane card mb-3 active">
         <div class="card-body">
-          
-          {% render_tab_general_parameters coordinate_form %}   
-             
+          <div class="card mb-3">
+            <div class="card-body">
+              <h5 class="card-title">Zeitraum</h5>
+                <div class="input-daterange input-group" id="monicaDatepicker" style="">
+                    <span class="input-group-addon px-3"> Von </span>
+                    <input type="text" id="monicaStartDatePicker" class="input-sm form-control datepicker" name="startDate" />
+                    <span class="input-group-addon px-3"> bis </span>
+                    <input type="text" id="monicaEndDatePicker" class="input-sm form-control datepicker" name="endDate" />
+                </div>
+            </div>
+          </div>  
         </div> 
       </div>
 
 
 
       {% render_tab_crop_rotation %}
-      {% render_tab_soil user_soil_profile_form user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
+      {% render_tab_soil site_form user_soil_profile_select_form user_soil_profile_form user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
       {% render_tab_result %}
 
  

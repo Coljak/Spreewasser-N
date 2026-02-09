@@ -1,17 +1,6 @@
 {% load crispy_forms_tags %}
   <div class="advanced"><!-- keep empty, is for .advanced --></div>
   <!-- General Parameters -->
-      <div class="card mb-3" id="coordinateFormCard">
-        <div class="card-body">
-          <h5 class="card-title">Select Coordinates</h5>
-          <p>Enter a valid coordinate for Germany, roughly between 54.92 and 47.27 latitude and 5.87 and 15.04 longitude</p>
-
-          <form class="coordinateForm">
-            {% crispy coordinate_form %}
-          </form>
-        </div>
-      </div>
-
 
       <div class="card mb-3">
         <div class="card-body">
@@ -24,4 +13,5 @@
           </div>
         </div>
       </div>
+    </div>
 

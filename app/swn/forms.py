@@ -157,17 +157,17 @@ class SwnNewProjectForm(monica_forms.MonicaNewProjectForm):
 
 
 
-# TODO this is probably obsolete
-class SoilProfileSelectionForm(forms.Form):
-    land_usage = forms.ChoiceField(label='Land Usage', choices=[])
-    area_percentage = forms.ChoiceField(label='Area Percentage', choices=[])
-    system_unit = forms.ChoiceField(label='System Unit', choices=[])
-    soil_profile = forms.ChoiceField(label='Soil Profile', choices=[])
-    horizons = forms.CharField(label='Horizons', widget=forms.Textarea, required=False)
+# # TODO this is probably obsolete
+# class SoilProfileSelectionForm(forms.Form):
+#     land_usage = forms.ChoiceField(label='Land Usage', choices=[])
+#     area_percentage = forms.ChoiceField(label='Area Percentage', choices=[])
+#     system_unit = forms.ChoiceField(label='System Unit', choices=[])
+#     soil_profile = forms.ChoiceField(label='Soil Profile', choices=[])
+#     horizons = forms.CharField(label='Horizons', widget=forms.Textarea, required=False)
        
-    # choices for land usage are set here, all other choices are set in the front end
-    def set_choices(self, choices_data):
-       self.fields['land_usage'].choices = choices_data
+#     # choices for land usage are set here, all other choices are set in the front end
+#     def set_choices(self, choices_data):
+#        self.fields['land_usage'].choices = choices_data
 
 
        

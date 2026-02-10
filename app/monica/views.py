@@ -13,13 +13,13 @@ from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from django.template.loader import render_to_string
 from django.forms import inlineformset_factory, modelformset_factory
-
+#get_recommended_soil_profile, get_buek_polygon_id_from_point_buek200
 # from ...xx_obsolete.run_consumer_swn import run_consumer
 from . import models
 from . import monica_io3_swn
 from swn import models as swn_models
 from . import forms
-from buek.views import get_recommended_soil_profile
+from buek import views as buek_views
 from buek import models as buek_models
 from .climate_data.lat_lon_mask import lat_lon_mask
 from .monica_events import swn_events
@@ -454,7 +454,7 @@ def create_monica_env_from_json(json_data):
     if json_data.get('soilProfileId', None) is None:
         lat = json_data.get('latitude')
         lon = json_data.get('longitude')
-        soil_profile_parameters = get_recommended_soil_profile(landusage, lat, lon)['SoilProfileParameters']
+        soil_profile_parameters = buek_views.get_recommended_soil_profile(landusage, lat, lon)['SoilProfileParameters']
     else:
         # TODO specify SoilProfile content Type!
         soil_profile_id = json_data.get('soilProfileId')
@@ -1114,77 +1114,171 @@ def create_default_project(user):
 
     return json.dumps(default_project, default=str)
 
-def get_soil_profile(request):
+def get_recommended_soil_profile(request):
+    print('monica.views.get_recommended_soil_profile')
     if request.method == 'POST':
         project = json.loads(request.body)
         lat = project.get('latitude', None)
         lon = project.get('longitude', None)
-    
+
         try:
-            soil_profile = get_recommended_soil_profile('general', lat, lon)
+            soil_profile = buek_views.get_recommended_soil_profile('general', lat, lon)
             return JsonResponse({'success': True, 'soil_profile': soil_profile})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
         
+        
+def get_soil_profile_info(request, profile_id):
+    print('monica.views.get_soil_profile_info')
+    if request.method == 'GET':
+        try:
+            soil_profile = buek_models.SoilProfile.objects.get(pk=profile_id)
+            soil_profile = buek_views.get_soil_data_for_modal(soil_profile)
+            return JsonResponse({'success': True, 'soil_profile': soil_profile})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+def get_soil_profile_landusages(buek_polygon_ids):
+
+    unique_land_usages = buek_models.SoilProfile.objects.filter(
+        polygon_id__in=buek_polygon_ids
+        ).values_list('landusage_corine_code', 'landusage').distinct()
+        # Filter out water (code 51)
+    land_usage_choices = {code: usage for code, usage in unique_land_usages if code != 51}
+
+    return land_usage_choices
+
+
+def get_soil_profile_landusage_choices(request):
+    print('monica.views.get_soil_profile_landusage_choices')
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        lat = project.get('latitude', None)
+        lon = project.get('longitude', None)
+        profile_source = project.get('profile_source', None)
+        print(lat, lon)
+        buek_polygon = buek_views.get_buek_polygon_id_from_point_buek200(lat, lon)
+        land_usage_choices = get_soil_profile_landusages([buek_polygon])
+        print('land_usage_choices', land_usage_choices)
+        return JsonResponse({'success': True, 'land_usage_choices': land_usage_choices, 'buek_polygons': [buek_polygon]})
+
+
+def get_soil_profile_area_percentage_choices(request):
+    print('monica.views.get_soil_profile_area_percentage_choices')
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        print('project', project)
+        polygon_ids = project.get('soilProfileBuekPolygons', [])
+        print('polygon_ids', polygon_ids   )
+        print('type', type(polygon_ids))
+        landusage_corine_code = project.get('soilProfileLandusage', None)
+
+        unique_area_percentages = buek_models.SoilProfile.objects.filter(
+            Q(polygon_id__in=polygon_ids) & Q(landusage_corine_code=landusage_corine_code)
+            ).values_list('area_percentage', flat=True).distinct()
+        area_percentage_choices = {percentage: str(percentage)+ '%' for percentage in unique_area_percentages if percentage is not None}
+
+        return JsonResponse({'success': True, 'area_percentage_choices': area_percentage_choices})
+
+def get_soil_profile_system_unit_choices(request):
+    print('monica.views.get_soil_profile_system_unit_choices')
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        polygon_ids = project.get('soilProfileBuekPolygons', [])
+        landusage_corine_code = project.get('soilProfileLandusage', None)
+        area_percentage = project.get('soilProfileAreaPercentage', None)
+
+        unique_system_units = buek_models.SoilProfile.objects.filter(
+            Q(polygon_id__in=polygon_ids) & Q(landusage_corine_code=landusage_corine_code) & Q(area_percentage=area_percentage)
+            ).values_list('system_unit', flat=True).distinct()
+        system_unit_choices = {unit: unit for unit in unique_system_units if unit is not None}
+
+        return JsonResponse({'success': True, 'system_unit_choices': system_unit_choices})
+    
+def get_soil_profile_choices(request):
+    print('monica.views.get_soil_profile_choices')
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        polygon_ids = project.get('soilProfileBuekPolygons', [])
+        print('polygon_ids', polygon_ids)
+        landusage_corine_code = project.get('soilProfileLandusage', None)
+        print('landusage_corine_code', landusage_corine_code)
+        area_percentage = project.get('soilProfileAreaPercentage', None)
+        print('area_percentage', area_percentage)
+        system_unit = project.get('soilProfileSystemUnit', None)
+        print('system_unit', system_unit)
+        soil_profiles = buek_models.SoilProfile.objects.filter(
+            Q(polygon_id__in=polygon_ids) & Q(landusage_corine_code=landusage_corine_code) & Q(area_percentage=area_percentage) & Q(system_unit=system_unit)
+            )
+        soil_profile_choices = {
+            profile.id: f"Profil {i+1}" for i, profile in enumerate(soil_profiles)
+        }
+        
+        return JsonResponse({'success': True, 'soil_profile_choices': soil_profile_choices})
+
+
+def get_soil_profile(request, profile_id):
+    """
+    Soil  profile for the selection modal
+    
+    :param request: Description
+    """
+    soil_profile = buek_models.SoilProfile.objects.get(pk=profile_id)
+
+        
 
 def get_soil_profile_form(request):
+    print('monica.views.get_soil_profile_form')
     """
-    Get an empty soil profile form .
-    """
-    formset = forms.UserSoilHorizonImportFormSet(
-        queryset=models.SoilHorizon.objects.none())
-
-    html = render_to_string(
-        'monica/monica_model_soil_profile_card.html', 
-        context={
-            'user_soil_profile_formset': formset,
-            'profile_type': 'userSoilProfile',
-            'profile_id': '',
-            'user_profile_id': '',
-            }
-            )
-
-    return JsonResponse({'message': {'success': True, 'html': html}})
-
-
-def get_soil_profile_in_form(request):
-    """
-    Get soil profile form for the given profile id and type.
-    """
-    try:
-        soil_profile = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'message': {'success': False, 'errors': 'Invalid request method'}})
+    The soil profile form is the display of a soil profile in a table on the tabSite in the form id="soil-profile-formset"
+    Profiles in the buek db are not always complete, the user has tw0 options for an incomplete profile: an automatically corrected,
+    or alternatively the original dataset that needs to be completed for Monica to not fail silently.
+    the profile is defined by the 
+    soilProfileType: buek_models.SoilProfile or models.UserSoilProfile for profiles cerated by the user
+    profile_source: can be recommended, buek, scratch
     
-    print('Request soil profile:', soil_profile)
-    profile_type = soil_profile.get('profileType', None)
-    profile_id = soil_profile.get('profileId', None)
-    user_profile_id = ''
-    corrected_profile = soil_profile.get('correctedProfile', True) # compensate for missing information in the buekSP
-    print("GET SOIL PROFILE FORM", profile_type, profile_id, corrected_profile)
+    :param request: Post request with the project as request.body.
 
-    if profile_type == 'userSoilProfile':
-        if profile_id is None or profile_id == '':
-            formset = forms.UserSoilHorizonImportFormSet(
-                queryset=models.SoilHorizon.objects.none(),
-                prefix="soil_horizons",
-                )
-            profile_id = ''
-            user_profile_id = ''
-        else: 
-            profile = get_object_or_404(models.UserSoilProfile, pk=profile_id)
-            user_profile_id = profile.id
-            formset = forms.SoilProfileHorizonFormSet(
-                instance=profile,
-                queryset=models.SoilHorizon.objects.filter(user_soil_profile=profile).order_by('horizon_no'),
+
+    """
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        print('Request soil profile:', project)
+        profile_type = project.get('profileType', None)
+        profile_id = project.get('profileId', '')
+        original_profile = project.get('originalProfile', True)
+        user_profile_id = ''
+    else:
+        return JsonResponse({'message': {'success': False, 'errors': 'Invalid request method'}})
+
+    print('Get Profile Form', profile_type, profile_id, original_profile)
+
+    if profile_type == 'scratch':
+        """
+        Get an empty soil profile form.
+        """
+        formset = forms.UserSoilHorizonImportFormSet(
+            queryset=models.SoilHorizon.objects.none(),
+            prefix="soil_horizons",
             )
-    elif profile_type == 'buekSoilProfile':
+   
+    
+    elif profile_type == 'user':
+        profile = get_object_or_404(models.UserSoilProfile, pk=profile_id)
+        formset = forms.SoilProfileHorizonFormSet(
+            instance=profile,
+            queryset=models.SoilHorizon.objects.filter(user_soil_profile=profile).order_by('horizon_no'),
+        )
+
+
+
+    elif profile_type == 'buek':
         """
         This returns a form with prefilled with a buekSoilProfile. It can then be edited and saved as a userSoilProfile.
         """
         print('buekSoilProfile')
-        profile = get_object_or_404(buek_models.SoilProfile, pk=profile_id)
-        initial, msg = profile.get_monica_horizons_json(extended=True, corrected_profile=corrected_profile)
+        profile = buek_models.SoilProfile.objects.get(pk=profile_id)
+        initial, msg = profile.get_monica_horizons_json(extended=True, original_profile=original_profile)
         print(type(initial))
         print('profile_json', initial)
 
@@ -1203,7 +1297,7 @@ def get_soil_profile_in_form(request):
 
     else:
         return JsonResponse({'message': {'success': False, 'errors': 'Invalid profile type'}})
-    
+        
     html = render_to_string(
         'monica/monica_model_soil_profile_card.html', 
         context={
@@ -1215,6 +1309,8 @@ def get_soil_profile_in_form(request):
             )
 
     return JsonResponse({'message': {'success': True, 'html': html}})
+
+    
 
 def save_soil_profile(request):
     """
@@ -1297,7 +1393,7 @@ def get_soil_parameters(request, profile_landusage, lat, lon):
     The view returns two profiles in cases where the profile has to be completed.
     It is used in the soil tab of MONICA/swn-Monica.
     """
-    soil_profile = get_recommended_soil_profile(profile_landusage, lat, lon)
+    soil_profile = buek_views.get_recommended_soil_profile(profile_landusage, lat, lon)
     
     show_original_table = (soil_profile['SoilProfileParameters'] != soil_profile['OriginalSoilProfileParameters'])
 
@@ -1326,22 +1422,6 @@ def get_soil_parameters(request, profile_landusage, lat, lon):
     return render(request, 'monica/soil_profile_modal.html', context)
     # return JsonResponse(request, context)
 
-# def get_soil_profile(request):
-
-def get_recommended_soil_profile_from_point(request):
-    """
-    This view returns the recommended soil profile for a given point and profile type. 
-    The profile type is hardcoded, while the latitude and longitude are provided in the project data.
-    """ 
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        lat = data.get('latitude')
-        lon = data.get('longitude')
-    
-    soil_data = get_recommended_soil_profile('general', lat, lon)
-
-    return JsonResponse(soil_data)
-
 
 def get_recommended_soil_parameters(lat, lon):
     """
@@ -1350,7 +1430,7 @@ def get_recommended_soil_parameters(lat, lon):
     """
     
 
-    soil_profile = get_recommended_soil_profile_('general', lat, lon)
+    soil_profile = buek_views.get_recommended_soil_profile_('general', lat, lon)
     
     show_original_table = (soil_profile['SoilProfileParameters'] != soil_profile['OriginalSoilProfileParameters'])
 

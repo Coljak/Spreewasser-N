@@ -1173,6 +1173,7 @@ class SoilProfileSelectionForm(forms.Form):
         ('recommended', 'Recommended soil profile'),
         ('buek', 'BÜK choices'),
         ('user', 'My soil profile'),
+        ('scratch', 'Define soil profile from scratch'),
     )
 
     profile_source = forms.ChoiceField(
@@ -1254,6 +1255,7 @@ class SoilProfileSelectionForm(forms.Form):
             HTML(self._simple_radio('recommended', 'checked')),
             HTML(self._simple_radio('buek', '')),
             HTML(self._radio_with_inline_select()),
+            HTML(self._simple_radio('scratch', '')),
         )
 
 

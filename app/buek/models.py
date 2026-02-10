@@ -145,7 +145,7 @@ class SoilProfile(models.Model):
         return 'soil_profile ' + str(self.id) 
 
 
-    def get_monica_horizons_json(self, extended=False, corrected_profile=True):
+    def get_monica_horizons_json(self, extended=False, original_profile=True):
         # TODO this is working but could use refactoring: the msg is not used
         """
         Invalid horizons are filled with the information of the next valid horizon.
@@ -155,7 +155,7 @@ class SoilProfile(models.Model):
         msg = None
         hors = []
         # valid_horizon = False
-        if corrected_profile:
+        if not original_profile:
             print('corrected: True ')
             for i in range(len(horizons)):
 

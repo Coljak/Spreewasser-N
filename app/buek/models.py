@@ -145,10 +145,17 @@ class SoilProfile(models.Model):
         return 'soil_profile ' + str(self.id) 
 
 
-    def get_monica_horizons_json(self, extended=False, original_profile=True):
+    def get_monica_horizons_json(self, extended=False, original_profile=False):
         # TODO this is working but could use refactoring: the msg is not used
         """
         Invalid horizons are filled with the information of the next valid horizon.
+        params: original_profile: if True, the original profile is returned, even if it is faulty.
+                                     otherwise the corrected profile is returned. This is relevant for the soil 
+                                     profiles that have horizons with missing ka5 texture class, which are corrected by 
+                                     filling the missing information with the next valid horizon/ extending horizons.
+        
+                extended: if True, the json is extended with additional information that is not necessary for the monica model 
+                            but might be relevant.
         """
         horizons = list(SoilProfileHorizon.objects.filter(soilprofile=self, obergrenze_m__gte=0).order_by('horizont_nr'))
        

@@ -14,14 +14,12 @@
                     <th style="min-width: 80px;">Thickness (m)</th>
                     <th style="min-width: 80px;">Sand (%)</th>
                     <th style="min-width: 80px;">Clay (%)</th>
-                    <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Silt (%)</th>
                     <th style="min-width: 80px;">pH</th>
                     <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Sceleton</th>
                     <th class="advanced-soil-parameters d-none" style="min-width: 80px;">lambda S (m³/m³)</th>
                     <th class="advanced-soil-parameters d-none" style="min-width: 80px;">field capacity (%)</th>
                     <th class="advanced-soil-parameters d-none" style="min-width: 80px;">pore volume</th>
                     <th class="advanced-soil-parameters d-none" style="min-width: 80px;">permanent wilting point</th>
-                    {% comment %} <th>ka5 Texture</th> {% endcomment %}
                     <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Ammonium (mg/kg)</th>
                     <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Nitrate (NO₃–N/m³)</th>
                     <th style="min-width: 80px;">C:N</th>
@@ -45,14 +43,12 @@
                       <td class="thickness">{{ form.thickness }}</td>
                       <td class="sand">{{ form.sand }}</td>
                       <td class="clay">{{ form.clay }}</td>
-                      <td class="silt advanced-soil-parameters d-none">{{ form.silt }}</td>
                       <td class="ph">{{ form.ph }}</td>
                       <td class="advanced-soil-parameters sceleton d-none">{{ form.sceleton }}</td>
                       <td class="advanced-soil-parameters lambda-s d-none">{{ form.lambda_s }}</td>
                       <td class="advanced-soil-parameters field-capacity d-none">{{ form.field_capacity }}</td>
                       <td class="advanced-soil-parameters pore-volume d-none">{{ form.pore_volume }}</td>
                       <td class="advanced-soil-parameters d-none permanent-wilting-point">{{ form.permanent_wilting_point }}</td>
-                      {% comment %} <td class="">{{ form.ka5_texture_class }}</td> {% endcomment %}
                       <td class="advanced-soil-parameters ammonium d-none">{{ form.ammonium }}</td>
                       <td class="advanced-soil-parameters nitrate d-none">{{ form.nitrate }}</td>
                       <td class="c-n">{{ form.c_n }}</td>

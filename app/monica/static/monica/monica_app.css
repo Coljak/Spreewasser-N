@@ -12,15 +12,17 @@
     height: 450px;
   }
 
-/* .soil-table {
-  table-layout: fixed;
-  width: 100%;
-} */
-
+/* 
 .soil-layers-table th {
   resize: horizontal;
   overflow: hidden;
   min-width: 3rem;
-}
+} */
 
+.soil-table th,
+.soil-table td {
+    resize: horizontal;
+  overflow: hidden;
+  min-width: 80px;  
+}
  

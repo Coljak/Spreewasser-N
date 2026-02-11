@@ -29,6 +29,7 @@ import {
   loadProjectToGui, 
   handleDateChange,
   addMonicaEvents,
+  bindSoilModalEventListeners,
   bindModalEventListeners,
   updateDropdown,
   setOutputSettings,
@@ -166,6 +167,7 @@ if (projectRegionSwitch) {
 setLanguage(language);
 setOutputSettings();
 addMonicaEvents();
+bindSoilModalEventListeners();
 startMonica();
 let project = new MonicaProject(defaultProject); // with defaultProject coming from the backend via .html
 project.saveToLocalStorage();

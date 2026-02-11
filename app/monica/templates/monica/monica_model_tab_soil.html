@@ -14,24 +14,29 @@
         <div class="card-body">
           <h5 class="card-title">Bodenprofil</h5> 
           <div id="soil-profile-selection" class="mb-3">
-            <div class="card-body">
-              <h5 class="card-title">Auswahl</h5> 
-              <div class="mb-3">
-                {% crispy user_soil_profile_select_form %}
-              </div>
+            <div class="mb-3">
+              {% crispy user_soil_profile_select_form %}
             </div>
-            <div class="row">
-              <button class="btn btn-outline-secondary mb-3 show-soil-profile-modal" type="button">
+            <button class="btn btn-outline-secondary mb-3 show-soil-profile-modal" type="button">
                 Show
-              </button>
-            </div>
+            </button>
           </div>
-          <button type="button" class="btn btn-info mb-3 advanced-soil-parameters-toggle">
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Verwendetes Bodenprofil</h5>
+          <p id="SoilProfileExplanation" class="card-text">Hier können Sie das Bodenprofil bearbeiten, das in der Simulation verwendet wird. Sie können entweder ein vorhandenes Profil aus der Bük200 oder Ihren eigenen Daten auswählen oder die Bodeneigenschaften manuell eingeben. Sie Daten müssen gespeichert werden, sons fällt das Modell auf die empfohlenen Bodendaten zurück.</p>
+          <ul>
+            <li id="instruction-layer-thickness">Der Boden muss bis in eine Tiefe von 2m definiert sein.</li>
+            <li id=""></li>
+            <li></li>
+          </ul>
+          <button type="button" class="btn btn-info mb-3 advanced-soil-parameters-toggle justify-right">
             Erweiterte Bodenmerkmale
           </button>
           <h5 id="soilProfileName">{{ profile_name }}</h5>
           <div id="soil-profile-formset-container">
-            
             <form method="post">
               {% csrf_token %}
               {{ user_soil_profile_form.management_form }}
@@ -43,14 +48,12 @@
                       <th>Thickness (m)</th>
                       <th>Sand (%)</th>
                       <th>Clay (%)</th>
-                      <th class="advanced-soil-parameters d-none">Silt (%)</th>
                       <th>pH</th>
                       <th class="advanced-soil-parameters d-none">Sceleton</th>
                       <th class="advanced-soil-parameters d-none">lambda S</th>
                       <th class="advanced-soil-parameters d-none">field capacity</th>
                       <th class="advanced-soil-parameters d-none">pore volume</th>
                       <th class="advanced-soil-parameters d-none">permanent wilting point</th>
-                      <th>ka5 Texture</th>
                       <th class="advanced-soil-parameters d-none">Ammonium</th>
                       <th class="advanced-soil-parameters d-none">Nitrate</th>
                       <th>C:N</th>
@@ -74,14 +77,12 @@
                         <td class="">{{ form.thickness }}</td>
                         <td class="sand">{{ form.sand }}</td>
                         <td class="clay">{{ form.clay }}</td>
-                        <td class="silt advanced-soil-parameters d-none">{{ form.silt }}</td>
                         <td class="">{{ form.ph }}</td>
                         <td class="advanced-soil-parameters d-none">{{ form.sceleton }}</td>
                         <td class="advanced-soil-parameters d-none">{{ form.lambda_s }}</td>
                         <td class="advanced-soil-parameters d-none">{{ form.field_capacity }}</td>
                         <td class="advanced-soil-parameters d-none">{{ form.pore_volume }}</td>
                         <td class="advanced-soil-parameters d-none">{{ form.permanent_wilting_point }}</td>
-                        <td class="">{{ form.ka5_texture_class }}</td>
                         <td class="advanced-soil-parameters d-none">{{ form.ammonium }}</td>
                         <td class="advanced-soil-parameters d-none">{{ form.nitrate }}</td>
                         <td class="">{{ form.c_n }}</td>
@@ -101,14 +102,24 @@
                 </table>
               </div>
 
-              <button type="button" class="btn btn-outline-primary add-horizon-button" id="userSoilProfileAddHorizon">
-                + Add horizon
+              <button type="button" class="btn btn-outline-primary add-horizon-button">
+              + Add horizon
+              </button>
+              <button type="button" class="btn btn-outline-primary reset-soil-form-button" data-profile-type="{{ profile_type }}" data-profile-id="{{ profile_id }}">
+                Reset horizons
+              </button>
+              <button type="button" class="btn btn-outline-primary save-soil-profile-button" data-id="{{ user_profile_id }}">
+                <span id="saveProfileIndicator"
+                      class="badge rounded-pill bg-danger">
+                  !
+                </span>
+                Save Profile
               </button>
             </form>
           </div>
-          
         </div>
       </div>
+
 
       <div class="card mb-3 advanced">
         <div class="card-body">

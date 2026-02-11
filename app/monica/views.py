@@ -1302,6 +1302,7 @@ def get_soil_profile_form(request):
             'user_soil_profile_formset': formset,
             'profile_type': profile_type,
             'profile_id': profile_id,
+            'original_profile': original_profile,
             'user_profile_id': user_profile_id,
             }
             )

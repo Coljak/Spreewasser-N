@@ -1289,12 +1289,10 @@ export function addMonicaEvents() {
         } else if (event.target.classList.contains('advanced-soil-parameters-toggle')) {
             $('.advanced-soil-parameters').toggleClass('d-none');
         } else if (event.target.classList.contains('reset-soil-form-button')) {
-            const project = MonicaProject.loadFromLocalStorage();
-            const soilProfile = {
-                'soilProfileId': project.soilProfileId,
-                'soilProfileType': project.soilProfileType,
-            }
-            getSoilProfileFormsetHtml(project);
+            const profileType = event.target.dataset.profileType;
+            const profileId = event.target.dataset.profileId;
+            const originalProfile = event.target.dataset.originalProfile === 'true';
+            getSoilProfileFormsetHtml({profileType: profileType, profileId: profileId, originalProfile: originalProfile});
         } else if (event.target.classList.contains('save-soil-profile-button')) {
   
             saveSoilProfileFormset();

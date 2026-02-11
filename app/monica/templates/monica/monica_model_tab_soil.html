@@ -105,7 +105,7 @@
               <button type="button" class="btn btn-outline-primary add-horizon-button">
               + Add horizon
               </button>
-              <button type="button" class="btn btn-outline-primary reset-soil-form-button" data-profile-type="{{ profile_type }}" data-profile-id="{{ profile_id }}">
+              <button type="button" class="btn btn-outline-primary reset-soil-form-button" data-profile-type="{{ profile_type }}" data-profile-id="{{ profile_id }}" data-original-profile="{{ original_profile|yesno:'true,false' }}">
                 Reset horizons
               </button>
               <button type="button" class="btn btn-outline-primary save-soil-profile-button" data-id="{{ user_profile_id }}">

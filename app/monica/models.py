@@ -2017,7 +2017,7 @@ class SoilHorizon(models.Model):
     clay = models.FloatField(default=33, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil clay content as fraction
     # silt = models.FloatField(default=34, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil silt content as fraction
     ph = models.FloatField(default=7, validators=[MinValueValidator(0), MaxValueValidator(14)]) # pH value
-    sceleton = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil stone content as fraction
+    sceleton = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil stone content as fraction
     lambda_s = models.FloatField(default=0.1) # soil ater conductivity coefficient
     field_capacity = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil field capacity
     pore_volume = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil pore volume, saturation
@@ -2128,7 +2128,8 @@ class ModelSetup(models.Model):
     
 class MonicaSite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    name = models.CharField(max_length=255, null=True, blank=True)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
+    site_name = models.CharField(max_length=255, null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True, default=52.0)
     longitude = models.FloatField(null=True, blank=True, default=10.0)
     altitude = models.FloatField(null=True, blank=True)
@@ -2142,8 +2143,8 @@ class MonicaSite(models.Model):
 
 
     def __str__(self):
-        if self.name is not None:
-            return self.name
+        if self.site_name is not None:
+            return self.site_name
         else:
             return f"Site without a name id {self.id}"
     
@@ -2157,7 +2158,7 @@ class MonicaSite(models.Model):
                 soil_profile_type = 'userSoilProfile'
 
         return {
-            "site_name": self.name or None,
+            "site_name": self.site_name or None,
             "latitude": self.latitude or None,
             "longitude": self.longitude or None,
             "altitude": self.altitude or None,

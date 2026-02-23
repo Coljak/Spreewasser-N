@@ -780,7 +780,7 @@ class WorkstepSowingForm(forms.ModelForm):
         self.helper.label_class = 'col-4 col-form-label'
         self.helper.field_class = 'col-8'
         # self.helper.button_class = 'col-5'
-        self.helper.form_tag = False  # Avoid rendering <form> wrapper if you're already in one
+        self.helper.form_tag = False  # Avoids rendering <form> wrapper if you're already in one
         self.helper.layout = Layout(
             Row(Div(
                 Field('date', wrapper_class='row'),
@@ -1268,10 +1268,13 @@ class UserSoilProfileForm(forms.ModelForm):
 
 
 class UserSoilHorizonForm(forms.ModelForm):
+    thickness = forms.FloatField(widget=forms.NumberInput(attrs={'step': 0.1}))
     class Meta:
         model = models.SoilHorizon
         #TODO exclude 'permanent_wilting_point', 'field_capacity', 'bulk_density'??? wilting pt and field cap depend on texture
         exclude = ('user_soil_profile', ) 
+
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1282,6 +1285,7 @@ class UserSoilHorizonForm(forms.ModelForm):
                 "class": "form-control form-control-sm soil-table-input"
             })
 
+        
 # Formset for Soil Horizons within an existing Soil Profile. 
 # This is used to display or edit existing buek profiles and UserSoilProfiles.
 SoilProfileHorizonFormSet = inlineformset_factory(
@@ -1302,26 +1306,78 @@ UserSoilHorizonImportFormSet = modelformset_factory(
 )
 
 
+
 class MonicaSiteForm(forms.ModelForm):
     class Meta:
         model = models.MonicaSite
-        exclude = ('user', 'soil_profile_content_type', 'soil_profile_object_id', 'soil_profile')
+        exclude = ('user', 'is_default', 'soil_profile_content_type', 'soil_profile_object_id', 'soil_profile')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.helper = get_parameters_form_helper()
-        for field in self.fields:
-            row_content = [
+        self.helper = FormHelper()
+        self.helper.label_class = 'col-4 col-form-label'
+        self.helper.field_class = 'col-8'
+        # self.helper.button_class = 'col-5'
+        self.helper.form_tag = False  # Avoids rendering <form> wrapper if you're already in one
+        self.helper.layout = Layout(
+            Row(Div(
+                Field('site_name', wrapper_class='row'),
+                css_class='col-11 advanced'
 
-                    Div(
-                        Field(field, wrapper_class='row'),
-                        css_class='col-11'
-                    ),     
-            ]
-            self.helper.layout.append(
-                Row(
-                    *row_content
-                )
-            )
-
-
+                ),
+                
+            ),
+            # Field('date', wrapper_class='row'),
+            Row(
+                Div(
+                    Field('latitude', wrapper_class='row'),
+                    css_class='col-11'
+                ),
+                
+            ),
+            Row(
+                Div(
+                    Field('longitude', wrapper_class='row'),
+                    css_class='col-11'
+                ),
+            ),
+            Row(
+                Div(
+                    Field('altitude', wrapper_class='row'),
+                    css_class='col-11 advanced'
+                ),
+                HTML(
+                """
+                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 get-auto-altitude advanced">
+                    <span><i class="bi bi-pencil-square"></i></span>
+                    </button>
+                """
+                ),   
+            ),
+            Row(
+                Div(
+                    Field('slope', wrapper_class='row'),
+                    css_class='col-11 advanced'
+                ),
+                HTML(
+                """
+                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 get-auto-slope advanced">
+                    <span><i class="bi bi-pencil-square"></i></span>
+                    </button>
+                """
+                ),   
+            ),
+            Row(
+                Div(
+                    Field('n_deposition', wrapper_class='row'),
+                    css_class='col-11 advanced'
+                ),
+                HTML(
+                """
+                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 get-auto-n_deposition advanced">
+                    <span><i class="bi bi-pencil-square"></i></span>
+                    </button>
+                """
+                ),   
+            ),
+        )

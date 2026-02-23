@@ -161,24 +161,25 @@ class SoilProfile(models.Model):
        
         msg = None
         hors = []
+
+
+
+                    
         # valid_horizon = False
         if not original_profile:
-            print('corrected: True ')
-            for i in range(len(horizons)):
 
-                if not horizons[i].ka5_texture_class:
-                    if i < len(horizons) - 1:
-                        horizons[i+1].obergrenze_m = horizons[i].obergrenze_m
-                        msg = "Warning: Profile modified due to lacking ka5 texture class"
-                        
-                    else:
-                        horizons[i-1].untergrenze_m = horizons[i].untergrenze_m
-                        msg = "Warning: Last horizon modified due to lacking ka5 texture class"
+            cleaned = []
 
-        # else:
-        #     print('No corrected profile')
+            for hor in horizons:
+                if hor.ka5_texture_class:
+                    cleaned.append(hor)
+                else:
+                    if cleaned:
+                        cleaned[-1].untergrenze_m = hor.untergrenze_m
+                    # else: first horizon invalid → ignore or handle separately
 
-        
+            horizons = cleaned
+
             for i in range(len(horizons)):
                 if horizons[i].ka5_texture_class:
                     if not extended:

@@ -45,7 +45,7 @@ class OrganFromDBAdmin(BaseUserAdmin):
 
 
 class MonicaSiteAdmin(BaseUserAdmin):
-    list_display = ('id', 'name', 'user', 'latitude', 'longitude')
+    list_display = ('id', 'site_name', 'user', 'latitude', 'longitude')
 
 class SiteParametersAdmin(BaseUserAdmin):
     list_display = ('id', 'name', 'user', 'latitude', 'longitude')

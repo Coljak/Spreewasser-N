@@ -46,6 +46,11 @@ export function loadProjectToGui(project) {
     $('#projectDescription').val(project.description);
     $('#id_longitude').val(project.longitude);
     $('#id_latitude').val(project.latitude);
+    if (project.siteId) {$('#id_site').val(project.siteId)};
+    if (project.site_name) {$('#id_site_name').text(project.site_name)};
+    if (project.altitude) {$('#id_altitude').val(project.altitude)};
+    if (project.slope) {$('#id_slope').val(project.slope)};
+    if (project.n_deposition) {$('#id_n_deposition').val(project.n_deposition)};
     $('#userFieldSelect').val(project.userField);
     
     $('#monicaStartDatePicker').datepicker('update', new Date(project.startDate));
@@ -605,25 +610,26 @@ function validateProject(project) {
 
         handleAlerts({'success': false, 'message': 'Please provide a crop rotation'});
     } else if (project.soilProfileId === null) {
-        valid = false;
-        document.querySelector('a[href="#tabSite"]').click();        
-        // Focus on the crop rotation input field (if it has an ID or class)
-        const $emptySandInputs = $('td.sand input, td.clay input, td.ph input, td.raw-density input').filter(function () {
-            return $(this).val() === '';
-        });
+        // valid = false;
+        // document.querySelector('a[href="#tabSite"]').click();        
+        // // Focus on the crop rotation input field (if it has an ID or class)
+        // const $emptySandInputs = $('td.sand input, td.clay input, td.ph input, td.raw-density input').filter(function () {
+        //     return $(this).val() === '';
+        // });
 
-        if ($emptySandInputs.length) {
-            $emptySandInputs
-                .addClass('is-invalid');      // Bootstrap red border
+        // if ($emptySandInputs.length) {
+        //     $emptySandInputs
+        //         .addClass('is-invalid');      // Bootstrap red border
 
-            $emptySandInputs
-                .first()
-                .focus();                     // focus first invalid field
-        }
+        //     $emptySandInputs
+        //         .first()
+        //         .focus();                     // focus first invalid field
+        // }
+        validateSoilProfileFormset();
 
         
 
-        handleAlerts({'success': false, 'message': 'Please provide a crop rotation'});
+        handleAlerts({'success': false, 'message': 'Please complete the soil profile!'});
     } else {
         let found = false; // To stop after first invalid field
     
@@ -864,6 +870,66 @@ export function setOutputSettings() {
 };
 
 
+
+function validateSoilProfileFormset() {
+    console.log('validateSoilProfileFormset')
+    const rows = document.querySelectorAll("#soil-layers-table tbody tr.soil-layer-row");
+    let valid = true;
+    let counter = 0;
+    let totalThickness = 0;
+    rows.forEach(row => {
+        
+        const thickness = row.querySelector(`input[name="soil_horizons-${counter}-thickness"]`).value;
+        totalThickness += Number(thickness);
+        const sand = row.querySelector(`input[name="soil_horizons-${counter}-sand"]`).value;
+        const clay = row.querySelector(`input[name="soil_horizons-${counter}-clay"]`).value;
+        const ph = row.querySelector(`input[name="soil_horizons-${counter}-ph"]`).value;
+        const c_n = row.querySelector(`input[name="soil_horizons-${counter}-c_n"]`).value;
+        const raw_density = row.querySelector(`input[name="soil_horizons-${counter}-raw_density"]`).value;
+        const corg = row.querySelector(`input[name="soil_horizons-${counter}-organic_carbon"]`).value;
+        
+        if ((Number(sand) + Number(clay)) > 100) {
+            valid = false;
+            row.querySelector(`input[name="soil_horizons-${counter}-sand"]`).classList.add('is-invalid');
+            row.querySelector(`input[name="soil_horizons-${counter}-clay"]`).classList.add('is-invalid');
+        } else {
+            row.querySelector(`input[name="soil_horizons-${counter}-sand"]`).classList.remove('is-invalid');
+            row.querySelector(`input[name="soil_horizons-${counter}-clay"]`).classList.remove('is-invalid');
+        }
+        if (sand < 0 || sand > 100 || isNaN(sand) || sand === '') {
+            valid = false;
+            row.querySelector(`input[name="soil_horizons-${counter}-sand"]`).classList.add('is-invalid');
+        }
+        if (clay < 0 || clay > 100 || isNaN(clay) || clay === '') {
+            valid = false;
+            row.querySelector(`input[name="soil_horizons-${counter}-clay"]`).classList.add('is-invalid');
+        }
+        
+        if (ph <0 || ph > 14 || isNaN(ph) || ph === '') {
+            valid = false;
+            row.querySelector(`input[name="soil_horizons-${counter}-ph"]`).classList.add('is-invalid');
+        }
+        if (c_n <= 0 || c_n > 15 || isNaN(c_n) || c_n === '') {
+            valid = false;
+            row.querySelector(`input[name="soil_horizons-${counter}-c_n"]`).classList.add('is-invalid');
+        }
+        if (!thickness || isNaN(thickness) || Number(thickness) <= 0 || thickness === '') {
+            valid = false;
+            row.querySelector(`input[name="soil_horizons-${counter}-thickness"]`).classList.add('is-invalid');
+        }
+        if (raw_density <= 0 || isNaN(raw_density) || raw_density === '') {
+            valid = false;
+            row.querySelector(`input[name="soil_horizons-${counter}-raw_density"]`).classList.add('is-invalid');
+        }
+        if (corg < 0 || corg > 100 || isNaN(corg) || corg === '') {
+            valid = false;
+            row.querySelector(`input[name="soil_horizons-${counter}-organic_carbon"]`).classList.add('is-invalid');
+        }
+        counter += 1;
+    });
+    if (totalThickness < 2.0) { valid = false; }
+    return valid;
+};
 
 
 export function addMonicaEvents() {
@@ -1248,10 +1314,12 @@ export function addMonicaEvents() {
         } else if (event.target.classList.contains('delete-horizon-button')) {
             markSaveNecessary(true);
             const table = $("#soil-layers-table");    
-            const totalForms = $("#id_soilhorizon_set-TOTAL_FORMS");
-            const currentCount = parseInt(totalForms.val(), 111);
+            let totalForms;
+            if ($("#id_soilhorizon_set-TOTAL_FORMS").length > 0) {
+                totalForms = $("#id_soilhorizon_set-TOTAL_FORMS")
+            } else {totalForms = $("#id_soil_horizons-TOTAL_FORMS")};
+            const currentCount = parseInt(totalForms.val(), 0);
             
-
             if (currentCount < 1)  {
                 handleAlerts({'success': false, 'message': 'At least one soil horizon is required.'});
                 return;
@@ -1297,67 +1365,17 @@ export function addMonicaEvents() {
   
             saveSoilProfileFormset();
         }
-    });   
+    }); 
+    
+    $('#siteForm').on('change', (event) => {
+        const project = MonicaProject.loadFromLocalStorage();
+        const param = event.target.getAttribute('name');
+        console.log('param', param)
+        project[param] = event.target.value;
+        project.saveToLocalStorage();
 
+    });
 
-    function validateSoilProfileFormset() {
-        const rows = document.querySelectorAll("#soil-layers-table tbody tr.soil-layer-row");
-        let valid = true;
-        let counter = 0;
-        let totalThickness = 0;
-        rows.forEach(row => {
-            
-            const thickness = row.querySelector(`input[name="soil_horizons-${counter}-thickness"]`).value;
-            totalThickness += Number(thickness);
-            const sand = row.querySelector(`input[name="soil_horizons-${counter}-sand"]`).value;
-            const clay = row.querySelector(`input[name="soil_horizons-${counter}-clay"]`).value;
-            const ph = row.querySelector(`input[name="soil_horizons-${counter}-ph"]`).value;
-            const c_n = row.querySelector(`input[name="soil_horizons-${counter}-c_n"]`).value;
-            const raw_density = row.querySelector(`input[name="soil_horizons-${counter}-raw_density"]`).value;
-            const corg = row.querySelector(`input[name="soil_horizons-${counter}-organic_carbon"]`).value;
-            
-            if ((Number(sand) + Number(clay)) > 100) {
-                valid = false;
-                row.querySelector(`input[name="soil_horizons-${counter}-sand"]`).classList.add('is-invalid');
-                row.querySelector(`input[name="soil_horizons-${counter}-clay"]`).classList.add('is-invalid');
-            } else {
-                row.querySelector(`input[name="soil_horizons-${counter}-sand"]`).classList.remove('is-invalid');
-                row.querySelector(`input[name="soil_horizons-${counter}-clay"]`).classList.remove('is-invalid');
-            }
-            if (sand < 0 || sand > 100 || isNaN(sand)) {
-                valid = false;
-                row.querySelector(`input[name="soil_horizons-${counter}-sand"]`).classList.add('is-invalid');
-            }
-            if (clay < 0 || clay > 100 || isNaN(clay)) {
-                valid = false;
-                row.querySelector(`input[name="soil_horizons-${counter}-clay"]`).classList.add('is-invalid');
-            }
-            
-            if (ph <0 || ph > 14 || isNaN(ph)) {
-                valid = false;
-                row.querySelector(`input[name="soil_horizons-${counter}-ph"]`).classList.add('is-invalid');
-            }
-            if (c_n <= 0 || c_n > 15 || isNaN(c_n)) {
-                valid = false;
-                row.querySelector(`input[name="soil_horizons-${counter}-c_n"]`).classList.add('is-invalid');
-            }
-            if (!thickness || isNaN(thickness) || Number(thickness) <= 0) {
-                valid = false;
-                row.querySelector(`input[name="soil_horizons-${counter}-thickness"]`).classList.add('is-invalid');
-            }
-            if (raw_density <= 0 || isNaN(raw_density)) {
-                valid = false;
-                row.querySelector(`input[name="soil_horizons-${counter}-raw_density"]`).classList.add('is-invalid');
-            }
-            if (corg < 0 || corg > 100 || isNaN(corg)) {
-                valid = false;
-                row.querySelector(`input[name="soil_horizons-${counter}-organic_carbon"]`).classList.add('is-invalid');
-            }
-            counter += 1;
-        });
-        if (totalThickness < 2.0) { valid = false; }
-        return valid;
-    };
 
     $('#soil-profile-formset-container').on('change', (event) => {
         // for changes in of the actual soil profile form
@@ -1372,10 +1390,9 @@ export function addMonicaEvents() {
         const project = MonicaProject.loadFromLocalStorage();
         const form = document.getElementById('soil-profile-formset');
         const formData = new FormData(form);
-        const data = {
-            formData: formData,
-            project: project,
-        }
+        formData.append('project', JSON.stringify(project));
+        console.log('Formdata ', formData)
+        
         fetch('/monica/save-soil-profile/', {
             method: 'POST',
             body: formData,
@@ -1496,12 +1513,12 @@ export function addMonicaEvents() {
     
         const project = new MonicaProject();
         
-        try {
-            project.longitude = $('#id_longitude').val();
-            project.latitude = $('#id_latitude').val();
-        } catch (e) {
-            console.log('Longitude/Latitude not found');
-        }
+        // try {
+        //     project.longitude = $('#id_longitude').val();
+        //     project.latitude = $('#id_latitude').val();
+        // } catch (e) {
+        //     console.log('Longitude/Latitude not found');
+        // }
     
         try {
             // project.userField = $('#userFieldSelect').val();
@@ -1633,6 +1650,7 @@ export function addMonicaEvents() {
     $('#runSimulationButton').on('click', () => {
         const project = MonicaProject.loadFromLocalStorage();
         console.log('runSimulationButton clicked');
+        // TODO should be obsolete
         try {
             project.longitude = $('#id_longitude').val();
             project.latitude = $('#id_latitude').val();
@@ -1810,6 +1828,7 @@ export function getSoilProfileFormsetHtml(profile) {
             }
             else handleAlerts(data.message);
         })
+        .then(() => {validateSoilProfileFormset();})
         .catch(error => console.error('Error:', error));
 };
 

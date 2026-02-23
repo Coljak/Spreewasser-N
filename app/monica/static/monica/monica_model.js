@@ -38,6 +38,7 @@ export class MonicaProject {
         this.endDate = project.endDate ?? '2024-08-31';
         this.description = project.description ?? '';
         // Site
+        this.siteId = project.siteId ?? null;
         this.longitude = project.longitude ?? 10.0;
         this.latitude = project.latitude ?? 52.0;
         this.userField = project.userField ?? null;

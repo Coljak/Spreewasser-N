@@ -14,8 +14,6 @@ urlpatterns = [
     path('load-project/<int:id>/', views.load_monica_project, name='load_monica_project'),
     path('save-project/', views.save_project, name='save-monica-project'),
     path('delete-project/<int:id>/', views.delete_monica_project, name='delete_monica_project'),
-    path('recommended-soil-profile/<str:profile_landusage>/<str:lat>/<str:lon>/', views.get_soil_parameters, name='get_soil_parameters'),
-    # path('soil-profile-recommended/', views.get_recommended_soil_profile, name='get_recommended_soil_profile'),
     path('get-soil-profile-form/', views.get_soil_profile_form, name='get_soil_profile_form'),
     path('get-recommended-soil-profile/', views.get_recommended_soil_profile, name='get_soil_profile'),
     path('get-soil-profile-landusage-choices/', views.get_soil_profile_landusage_choices, name='get_soil_profile_landusage_choices'),
@@ -24,7 +22,7 @@ urlpatterns = [
     path('get-soil-profile-choices/', views.get_soil_profile_choices, name='get_soil_profile_choices'),
     path('get-soil-profile-info/<int:profile_id>/', views.get_soil_profile_info, name='get_soil_profile_info'),
     path('save-soil-profile/', views.save_soil_profile, name='save_soil_profile'),
-    # path('soil-profile/<str:lat>/<str:lon>/<int:id>/', views.get_soil_parameters, name='get_soil_parameters'),
+
     path('select-soil-profile/<str:lat>/<str:lon>/', views.manual_soil_selection, name='manual-soil-selection'),
     
     path('<str:parameter>/<int:id>/<int:rotation>/', views.modify_model_parameters, name='modify_model_parameters'),

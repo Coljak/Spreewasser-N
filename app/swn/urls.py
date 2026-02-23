@@ -33,7 +33,7 @@ urlpatterns = [
     # path('drought/get_lat_lon/<int:user_field_id>/', views.get_centroid, name='get_centroid'),
     path('drought/select-soil-profile/<int:user_field_id>/', views.manual_soil_selection, name='manual_soil_selection'),
     path('drought/get-recommended-soil-profile/', views.get_soil_profile, name='get_soil_profile'),
-    path('drought/recommended-soil-profile/<str:profile_landusage>/<int:user_field_id>/', views.recommended_soil_profile, name='recommended_soil_profile'),
+    
     path('drought/run-simulation/', views.run_simulation, name='run_simulation'),
     
     # Impressum and Acknoledgements

@@ -1407,40 +1407,6 @@ def monica_model(request):
     return render(request, 'monica/monica_model.html', context)
 
 
-def get_soil_parameters(request, profile_landusage, lat, lon):
-    """
-    The view returns two profiles in cases where the profile has to be completed.
-    It is used in the soil tab of MONICA/swn-Monica.
-    """
-    soil_profile = buek_views.get_recommended_soil_profile(profile_landusage, lat, lon)
-    
-    show_original_table = (soil_profile['SoilProfileParameters'] != soil_profile['OriginalSoilProfileParameters'])
-
-    for hor in soil_profile['SoilProfileParameters']:
-        i = 0
-        for key, value in hor.items():
-            if isinstance(value, list):
-                # print(type(value), ''.join(str(value)))
-                hor[key] = ''.join(map(str, value))
-                
-        i += 1
-    for hor in soil_profile['OriginalSoilProfileParameters']:
-        for key, value in hor.items():
-            if isinstance(value, list):
-                hor[key] = ''.join(map(str, value))
-
-    
-    context = {
-        'modal_title': 'Soil Profile',
-        'soil_profile': soil_profile,
-        'show_original_table': show_original_table,
-        # 'soil_profile_id': soil_profile['SoilProfileParameters']['id'],
-        }
-    
-    print("Soil Profile: ", soil_profile)
-    return render(request, 'monica/soil_profile_modal.html', context)
-    # return JsonResponse(request, context)
-
 
 def soil_profiles_from_polygon_ids(soil_profile_polygon_ids):
     """

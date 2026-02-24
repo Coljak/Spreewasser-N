@@ -2,33 +2,32 @@
 
 <!-- Soil -->
 <div id="tabSite" class="tab-pane card mb-3">
-    <div class="card-body">
-      <h5 class="card-title">Site</h5>
-      <div class="card mb-3">
-        <div id="siteForm" class="card-body">
-          {% crispy site_form %}
-        </div>
+  <div class="card-body">
+    <h5 class="card-title">Site</h5>
+    <div class="card mb-3">
+      <div id="siteForm" class="card-body">
+        {% crispy site_form %}
       </div>
+    </div>
 
-      <div class="card mb-3 advanced">
-        <div class="card-body">
-          <h5 class="card-title">Bodenprofil</h5> 
-          <div id="soil-profile-selection" class="mb-3">
-            <div class="mb-3">
-              {% crispy user_soil_profile_select_form %}
-            </div>
-            <button class="btn btn-outline-secondary mb-3 show-soil-profile-modal" type="button">
-                Show
-            </button>
+    <div class="card mb-3 advanced">
+      <div class="card-body">
+        <h5 class="card-title">Bodenprofil</h5> 
+        <div id="soil-profile-selection" class="mb-3">
+          <div class="mb-3">
+            {% crispy user_soil_profile_select_form %}
           </div>
+          <button class="btn btn-outline-secondary mb-3 show-soil-profile-modal" type="button">
+              Show
+          </button>
         </div>
-      </div>
-      <div class="card mb-3 advanced">
-        <div class="card-body">
+      
+        <div id="soil-profile-info-card" class="mb-3 advanced d-none">
+
           <h5 class="card-title">Verwendetes Bodenprofil</h5>
           <p id="SoilProfileExplanation" class="card-text">Hier können Sie das Bodenprofil bearbeiten, das in der Simulation verwendet wird. Sie können entweder ein vorhandenes Profil aus der Bük200 oder Ihren eigenen Daten auswählen oder die Bodeneigenschaften manuell eingeben. Sie Daten müssen gespeichert werden, sons fällt das Modell auf die empfohlenen Bodendaten zurück.</p>
           <ul>
-            <li id="instruction-layer-thickness">Der Boden muss bis in eine Tiefe von 2m definiert sein.</li>
+            <li id="instruction-layer-thickness">Der Boden sollte bis in eine Tiefe von 2m definiert sein.</li>
             <li id=""></li>
             <li></li>
           </ul>
@@ -48,7 +47,7 @@
                   <input type="text" name="soil_profile_name" class="form-control" id="id_soil_profile_name" value="{{ profile_name }}"> 
                 </div>
               </div>
- 
+
 
               <button type="button" class="btn btn-outline-primary add-horizon-button">
               + Add horizon
@@ -68,15 +67,17 @@
         </div>
       </div>
 
-
-      <div class="card mb-3 advanced">
-        <div class="card-body">
-          {% crispy user_soil_moisture_select_form %}
-          {% crispy user_soil_organic_select_form %}
-          {% crispy soil_temperature_module_selection_form %}
-          {% crispy user_soil_transport_parameters_selection_form %}
-        </div>
-      </div>
-
     </div>
+
+
+    <div class="card mb-3 advanced">
+      <div class="card-body">
+        {% crispy user_soil_moisture_select_form %}
+        {% crispy user_soil_organic_select_form %}
+        {% crispy soil_temperature_module_selection_form %}
+        {% crispy user_soil_transport_parameters_selection_form %}
+      </div>
+    </div>
+
   </div>
+</div>

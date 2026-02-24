@@ -610,22 +610,13 @@ function validateProject(project) {
 
         handleAlerts({'success': false, 'message': 'Please provide a crop rotation'});
     } else if (project.soilProfileId === null) {
-        // valid = false;
-        // document.querySelector('a[href="#tabSite"]').click();        
-        // // Focus on the crop rotation input field (if it has an ID or class)
-        // const $emptySandInputs = $('td.sand input, td.clay input, td.ph input, td.raw-density input').filter(function () {
-        //     return $(this).val() === '';
-        // });
 
-        // if ($emptySandInputs.length) {
-        //     $emptySandInputs
-        //         .addClass('is-invalid');      // Bootstrap red border
-
-        //     $emptySandInputs
-        //         .first()
-        //         .focus();                     // focus first invalid field
-        // }
-        validateSoilProfileFormset();
+        if (!validateSoilProfileFormset()) {
+            valid = false;
+            handleAlerts({'success': false, 'message': 'Please complete the soil profile!'});
+            document.querySelector('a[href="#tabSite"]').click();  
+            document.querySelector('#soilProfileFormset')?.focus();
+        }
 
         
 
@@ -927,7 +918,8 @@ function validateSoilProfileFormset() {
         }
         counter += 1;
     });
-    if (totalThickness < 2.0) { valid = false; }
+    if (totalThickness <= 0) { valid = false; }
+    
     return valid;
 };
 
@@ -1290,7 +1282,7 @@ export function addMonicaEvents() {
                 }
             
         } else if (event.target.classList.contains('add-horizon-button')) {
-            markSaveNecessary(true);
+            
             const table = document.querySelector("#soil-layers-table tbody");
             const totalForms = document.querySelector("#id_soil_horizons-TOTAL_FORMS");
 
@@ -1311,6 +1303,9 @@ export function addMonicaEvents() {
             newRow.querySelector(".horizon-count").textContent = currentCount + 1;
             table.appendChild(newRow);
             totalForms.value = currentCount + 1;
+
+            validateSoilProfileFormset();
+            markSaveNecessary(true);
         } else if (event.target.classList.contains('delete-horizon-button')) {
             markSaveNecessary(true);
             const table = $("#soil-layers-table");    
@@ -1405,8 +1400,10 @@ export function addMonicaEvents() {
             console.log('saveSoilProfileFormset', data);
             if (data.message.success) {
                 handleAlerts(data.message);
+                project.soilProfileType = 'userSoilProfile';
                 project.soilProfileId = data.soil_profile_id;
                 $('#soilProfileName').text(data.profile_name);
+
                 project.saveToLocalStorage();
                 markSaveNecessary(false);
             } else {
@@ -1782,6 +1779,14 @@ export function bindModalEventListeners(parameters) {
 
 
 // Soil matters
+
+function clearSoilInfoTables() {
+    $('#correctedSoilProfileTableBody').empty();
+    $('#originalSoilProfileTableBody').empty();
+    $('#correctedSoilProfile').addClass('d-none');
+}
+
+
 function clearSoilModal() {
     console.log('Clear Soil Modal')
     $('#id_land_usage').empty().prop('disabled', false);
@@ -1790,10 +1795,10 @@ function clearSoilModal() {
     $('#id_soil_profile').empty();
     
     $('#div_id_soil_profile').prop('hidden', false);
-    $('#correctedSoilProfileTableBody').empty();
-    $('#correctedSoilProfile').addClass('d-none');
-    $('#originalSoilProfileTableBody').empty();
-}
+    clearSoilInfoTables();
+};
+
+
 
 function createSoilProfileTableRow(horizon, horizon_no) {
     // creates a row in the soil form table
@@ -1821,6 +1826,7 @@ export function getSoilProfileFormsetHtml(profile) {
         .then(data => {
             if(data.message.success) {
                 $('#soil-profile-formset-container').html(data.message.html);
+                $('#soil-profile-info-card').removeClass('d-none');
                 markSaveNecessary(false);
                 document
                 .getElementById('soil-profile-formset-container')
@@ -1828,7 +1834,11 @@ export function getSoilProfileFormsetHtml(profile) {
             }
             else handleAlerts(data.message);
         })
-        .then(() => {validateSoilProfileFormset();})
+        .then(() => {
+            const validProfile = validateSoilProfileFormset();
+            markSaveNecessary(!validProfile);
+        
+        })
         .catch(error => console.error('Error:', error));
 };
 
@@ -1955,7 +1965,7 @@ export function bindSoilModalEventListeners() {
     $('#btnOriginalSoilProfile').on('click', function (e) {        
         const project = MonicaProject.loadFromLocalStorage();
         project.soilProfileType = "buekSoilProfile";
-        project.soilProfileId =  $('#id_soil_profile').val();
+        project.soilProfileId = $('#id_soil_profile').val();
         project.saveToLocalStorage();
         getSoilProfileFormsetHtml({profileType: 'buek', profileId: $('#id_soil_profile').val(), originalProfile: true});
     });
@@ -1977,17 +1987,16 @@ export function bindSoilModalEventListeners() {
 
 
 function addSoilProfileToModal(soilProfile) {
-    $('#correctedSoilProfileTableBody').empty();
-    $('#originalSoilProfileTableBody').empty();
+    clearSoilInfoTables();
     let horizon_no = 1;
-    if (soilProfile.SoilProfileParameters.length > 0) {
+    if (soilProfile.SoilProfileParameters.length !== soilProfile.OriginalSoilProfileParameters.length) {
         $('#btnOriginalSoilProfile').attr('data-complete-profile', 'false');
         soilProfile.SoilProfileParameters.forEach(horizon => {
-        $('#correctedSoilProfileTableBody').append(createSoilProfileTableRow(horizon, horizon_no));
-        horizon_no++;
-    });
+            $('#correctedSoilProfileTableBody').append(createSoilProfileTableRow(horizon, horizon_no));
+            horizon_no++;
+        });
 
-    $('#correctedSoilProfile').removeClass('d-none');
+        $('#correctedSoilProfile').removeClass('d-none');
     } else {
         $('#btnOriginalSoilProfile').attr('data-complete-profile', 'true');
     };

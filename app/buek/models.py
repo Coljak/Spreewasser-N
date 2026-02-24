@@ -179,6 +179,7 @@ class SoilProfile(models.Model):
                     # else: first horizon invalid → ignore or handle separately
 
             horizons = cleaned
+            print('horizons after', horizons)
 
             for i in range(len(horizons)):
                 if horizons[i].ka5_texture_class:

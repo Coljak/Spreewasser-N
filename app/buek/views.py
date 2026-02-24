@@ -87,21 +87,28 @@ def get_soil_data_for_modal(soil_profile):
     soil_data = serializer.data
     corrected_horizons = soil_profile.get_monica_horizons_json()
     original = soil_profile.get_horizons_json()
-    if corrected_horizons == original:
-        soil_data["SoilProfileParameters"] = original
-    else:
-        soil_data["SoilProfileParameters"], _ = corrected_horizons
-        soil_data["OriginalSoilProfileParameters"] = original
-        for hor in soil_data['OriginalSoilProfileParameters']:
-            for key, value in hor.items():
-                if isinstance(value, list):
-                    hor[key] = ''.join(map(str, value))
+    # if corrected_horizons == original:
+    #     soil_data["SoilProfileParameters"] = original
+    # else:
+    soil_data["SoilProfileParameters"], _ = corrected_horizons
+    soil_data["OriginalSoilProfileParameters"] = original
+
+    def join_list_values(horizon):
+        for key, value in horizon.items():
+            if isinstance(value, list):
+                value = [str(v).replace('kg m-3', ' kg/m³') for v in value]
+                horizon[key] = ''.join(map(str, value))
+        return horizon
+    
+    for hor in soil_data['OriginalSoilProfileParameters']:
+        hor = join_list_values(hor)
+        # for key, value in hor.items():
+        #     if isinstance(value, list):
+        #         value = [str(v).replace('kg m-3', ' kg/m³') for v in value]
+        #         hor[key] = ''.join(map(str, value))
 
     for hor in soil_data['SoilProfileParameters']:
-        i = 0
-        for key, value in hor.items():
-            if isinstance(value, list):
-                hor[key] = ''.join(map(str, value))
+        hor = join_list_values(hor)
 
     return soil_data
 

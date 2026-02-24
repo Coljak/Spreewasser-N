@@ -7,6 +7,7 @@ from django.contrib.gis.db.models.functions import Transform
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.apps import apps
+from django.db import transaction
 from django.db.models import Q
 from django.core.cache import cache
 from django.utils import translation
@@ -25,6 +26,7 @@ from .climate_data.lat_lon_mask import lat_lon_mask
 from .monica_events import swn_events
 from .utils import save_monica_project, get_weather_hindcasts, get_weather_forecast
 from dateutil.relativedelta import relativedelta
+
 import glob
 
 
@@ -1326,7 +1328,10 @@ def save_soil_profile(request):
             'soil_profile_name',
             f'Soil Profile {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
         )
+        # TODO check if name & user exists
+
         if project.get('soilProfileType') == 'userSoilProfile' and project.get('soilProfileId'):
+            print('soil profile exists, update it')
             soil_profile = models.UserSoilProfile.objects.get(pk=project.get('soilProfileId'), user=user)
             soil_profile.name = profile_name
             soil_profile.save()
@@ -1342,11 +1347,12 @@ def save_soil_profile(request):
         )
         print('formset is valid', formset.is_valid())
         if formset.is_valid():
-            # formset.save()
-            for form in formset:
-                horizon = form.save(commit=False)
-                horizon.user_soil_profile = soil_profile
-                horizon.save()
+            with transaction.atomic():
+                soil_profile.soil_horizons.all().delete()
+                for form in formset:
+                    horizon = form.save(commit=False)
+                    horizon.user_soil_profile = soil_profile
+                    horizon.save()
             return JsonResponse({'message': {'success': True, 'message': 'Soil profile saved successfully.'}, 'soil_profile_id': soil_profile.id, 'soil_profile_name': profile_name})
         else:
             print('formset errors', formset.errors)

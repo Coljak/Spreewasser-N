@@ -161,10 +161,7 @@ class SoilProfile(models.Model):
        
         msg = None
         hors = []
-
-
-
-                    
+              
         # valid_horizon = False
         if not original_profile:
 

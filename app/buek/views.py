@@ -150,6 +150,20 @@ def get_recommended_soil_profile_from_point(request, profile_type, lat, lon):
 
     return Response(soil_data)
 
+def get_recommended_soil_profile_id(request, lat, lon):
+    """
+    This function retrieves the original Buek Polygon by polygon_id (TKLE_NR).
+    The Vectorfile used is the original Buek200 with no extra information
+    """
+    lat = float(lat)
+    lon = float(lon)
+
+    polygon = models.MapSoilCLC.objects.filter(geom__contains=Point(lon, lat))[0]
+    if polygon.soilprofile:
+        return JsonResponse( {'success': True, 'soil_profile_id': polygon.soilprofile.id})
+    else:
+        return JsonResponse( {'success': False, 'message': 'Soil profiles are only available within Germany.'})
+
 
 @api_view(['GET'])
 def get_profiles_from_point_buek200(request, lat, lon):

@@ -20,11 +20,10 @@ import {
   setLanguage, 
 } from '/static/shared/utils.js';
 
+import { MonicaProject } from '/static/monica/monica_model.js';
+
 import { 
-  MonicaCalculation, 
-  MonicaProject, 
-  Rotation, 
-  Workstep, 
+  
   loadProjectFromDB, 
   loadProjectToGui, 
   handleDateChange,
@@ -62,7 +61,9 @@ document.addEventListener("DOMContentLoaded", async() => {
   
 
 
-  $('#coordinateFormCard').hide();
+  // $('#coordinateFormCard').hide();
+  $('#id_latitude').prop('disabled', true)
+  $('#id_longitude').prop('disabled', true)
 
   // center map at geolocation
   getGeolocation()

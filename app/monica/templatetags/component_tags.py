@@ -35,7 +35,7 @@ def render_tab_crop_rotation(context):
     
     return context
 
-@register.inclusion_tag('monica/monica_model_tab_soil.html', takes_context=True)
+@register.inclusion_tag('monica/monica_model_tab_site.html', takes_context=True)
 def render_tab_soil(
     context,
     site_form,

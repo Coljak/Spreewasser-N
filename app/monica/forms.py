@@ -128,31 +128,6 @@ class ParametersModelForm(forms.ModelForm):
                 self.helper.field_class = 'col-7'
         self.helper.layout = Layout(*layout_fields)
 
-class CoordinateForm(forms.Form):
-    latitude = forms.FloatField(
-        max_value=54.92,
-        min_value=47.27,
-        initial=50.00,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': 0.1})
-    )
-    longitude = forms.FloatField(
-        min_value=5.87,
-        max_value=15.04,
-        initial=10.00,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': 0.1})
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-
-        self.helper.label_class = 'col-6 col-form-label'
-        self.helper.field_class = 'col-6'
-
-        self.helper.layout = Layout(
-            Field('latitude', wrapper_class='row'),
-            Field('longitude', wrapper_class='row')
-        )
 
             
 class CultivarParametersForm(ParametersModelForm):
@@ -1172,7 +1147,7 @@ class SoilProfileSelectionForm(forms.Form):
     PROFILE_SOURCE_CHOICES = (
         ('recommended', 'Recommended soil profile'),
         ('buek', 'BÜK choices'),
-        ('user', 'My soil profile'),
+        ('user', 'User soil profile'),
         ('scratch', 'Define soil profile from scratch'),
     )
 
@@ -1310,7 +1285,7 @@ UserSoilHorizonImportFormSet = modelformset_factory(
 class MonicaSiteForm(forms.ModelForm):
     class Meta:
         model = models.MonicaSite
-        exclude = ('user', 'is_default', 'soil_profile_content_type', 'soil_profile_object_id', 'soil_profile')
+        exclude = ('user', 'is_default', 'site_name', 'soil_profile_content_type', 'soil_profile_object_id', 'soil_profile')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1320,26 +1295,27 @@ class MonicaSiteForm(forms.ModelForm):
         # self.helper.button_class = 'col-5'
         self.helper.form_tag = False  # Avoids rendering <form> wrapper if you're already in one
         self.helper.layout = Layout(
-            Row(Div(
-                Field('site_name', wrapper_class='row'),
-                css_class='col-11 advanced'
+            # Row(Div(
+            #     Field('site_name', wrapper_class='row'),
+            #     css_class='col-11 advanced'
 
-                ),
+            #     ),
                 
-            ),
+            # ),
             # Field('date', wrapper_class='row'),
             Row(
                 Div(
                     Field('latitude', wrapper_class='row'),
                     css_class='col-11'
                 ),
-                
+                css_id='latitude-row',
             ),
             Row(
                 Div(
                     Field('longitude', wrapper_class='row'),
                     css_class='col-11'
                 ),
+                css_id='longitude-row',
             ),
             Row(
                 Div(
@@ -1348,8 +1324,8 @@ class MonicaSiteForm(forms.ModelForm):
                 ),
                 HTML(
                 """
-                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 get-auto-altitude advanced">
-                    <span><i class="bi bi-pencil-square"></i></span>
+                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 reset get-auto-altitude advanced">
+                    <span><i class="bi bi-arrow-clockwise"></i></span>
                     </button>
                 """
                 ),   
@@ -1361,8 +1337,8 @@ class MonicaSiteForm(forms.ModelForm):
                 ),
                 HTML(
                 """
-                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 get-auto-slope advanced">
-                    <span><i class="bi bi-pencil-square"></i></span>
+                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 reset get-auto-slope advanced">
+                    <span><i class="bi bi-arrow-clockwise"></i></span>
                     </button>
                 """
                 ),   
@@ -1374,8 +1350,8 @@ class MonicaSiteForm(forms.ModelForm):
                 ),
                 HTML(
                 """
-                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 get-auto-n_deposition advanced">
-                    <span><i class="bi bi-pencil-square"></i></span>
+                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 reset get-auto-n_deposition advanced">
+                    <span><i class="bi bi-arrow-clockwise"></i></span>
                     </button>
                 """
                 ),   

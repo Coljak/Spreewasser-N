@@ -2164,9 +2164,9 @@ class MonicaSite(models.Model):
     site_name = models.CharField(max_length=255, null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True, default=52.0)
     longitude = models.FloatField(null=True, blank=True, default=10.0)
-    altitude = models.FloatField(null=True, blank=True)
-    slope = models.FloatField(null=True, blank=True)
-    n_deposition = models.FloatField(null=True, blank=True)
+    altitude = models.FloatField(null=True, blank=True, default=196)
+    slope = models.FloatField(null=True, blank=True, default=7.6)
+    n_deposition = models.FloatField(null=True, blank=True, default=10.5)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     soil_profile_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True) # identifies the class (buek.models.SoilProfile or UserSoilProfile)
@@ -2195,7 +2195,7 @@ class MonicaSite(models.Model):
             "longitude": self.longitude or None,
             "altitude": self.altitude or None,
             "slope": self.slope or None,
-            "nDeposition": self.n_deposition or None,
+            "n_deposition": self.n_deposition or None,
             # "soilProfileType": self.soil_profile_content_type.model if self.soil_profile_content_type else None,
             "soilProfileType": soil_profile_type,
             "soilProfileId": self.soil_profile_object_id or None

@@ -42,7 +42,7 @@ export class MonicaProject {
         this.longitude = project.longitude ?? 10.0;
         this.latitude = project.latitude ?? 52.0;
         this.userField = project.userField ?? null;
-        this.altitude = project.altitude ?? 400;
+        this.altitude = project.altitude ?? 0;
         this.slope = project.slope ?? 0;
         this.n_deposition = project.n_deposition ?? 0;
         this.soilProfileType = project.soilProfileType ?? 'buekSoilProfile';

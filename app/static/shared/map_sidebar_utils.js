@@ -1,5 +1,5 @@
 import { getGeolocation, bsPrimary, bsSecondary } from '/static/shared/utils.js';
-import { MonicaProject } from '/static/monica/monica.js';
+import { MonicaProject } from '/static/monica/monica_model.js';
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
 import { getCSRFToken, handleAlerts, getBsColor } from '/static/shared/utils.js';
 

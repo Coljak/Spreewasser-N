@@ -47,11 +47,17 @@ export function loadProjectToGui(project) {
     $('#id_longitude').val(project.longitude);
     $('#id_latitude').val(project.latitude);
     if (project.siteId) {$('#id_site').val(project.siteId)};
-    if (project.site_name) {$('#id_site_name').text(project.site_name)};
+    // if (project.site_name) {$('#id_site_name').text(project.site_name)};
     if (project.altitude) {$('#id_altitude').val(project.altitude)};
     if (project.slope) {$('#id_slope').val(project.slope)};
     if (project.n_deposition) {$('#id_n_deposition').val(project.n_deposition)};
     $('#userFieldSelect').val(project.userField);
+    if (project.soilProfileType === 'buekSoilProfile') {
+        getSoilProfileFormsetHtml({profileType: 'buek', profileId: project.soilProfileId, originalProfile: false});
+    } else if (project.soilProfileType === 'userSoilProfile') {
+        getSoilProfileFormsetHtml({profileType: 'buek', profileId: project.soilProfileId, originalProfile: true});
+    };
+
     
     $('#monicaStartDatePicker').datepicker('update', new Date(project.startDate));
     // TODO check if this is necessary/ what to do with it
@@ -924,6 +930,28 @@ function validateSoilProfileFormset() {
 };
 
 
+
+
+function loadRecommendedSoilProfile(project, lat, lon) {
+    fetch(`/monica/get-recommended-soil-profile-id/${lat}/${lon}/`, {
+                })
+                .then(response => response.json())
+                .then(data => {
+                    
+                    if (data.success) {
+                        console.log('success', data)
+                        project.soilProfileId = data.soil_profile_id;
+                        console.log('Recommended soil profile id response:', data);
+                        project.saveToLocalStorage();
+                        getSoilProfileFormsetHtml({profileType: 'buek', profileId: project.soilProfileId, originalProfile: false});
+                    } else handleAlerts(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    handleAlerts({'success': false, 'message': 'An error occurred while fetching the soil profile. Please try again.'});
+                });
+}
+
 export function addMonicaEvents() {
      document.getElementById('btnOpenOutputSettings').addEventListener('click', function () {    
         const modalHtml = document.getElementById('outputSettingsModal');
@@ -1177,11 +1205,91 @@ export function addMonicaEvents() {
         }
     });
 
+    // function getAltitude(lat, lon) {
+    //     fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`)
+    //             .then(response => response.json())
+    //             .then(data => {
+    //                 if (data && data.elevation) {
+    //                     const project = MonicaProject.loadFromLocalStorage();
+    //                     project.altitude = data.elevation[0];
+    //                     project.saveToLocalStorage();
+    //                     $('#id_altitude').val(data.elevation[0]);
+    //                 } else {
+    //                     handleAlerts({'success': false, 'message': 'Could not fetch altitude for the given location.'});
+    //                 }
+    //             })
+    //             .catch(error => {
+    //                 console.error('Error fetching altitude:', error);
+    //                 handleAlerts({'success': false, 'message': 'An error occurred while fetching altitude. Please try again.'});
+    //             });
+        
+    // };
+
+    function getAltitude(lat, lon) {
+        fetch(`/monica/get-altitude/${lat}/${lon}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.altitude) {
+                        const project = MonicaProject.loadFromLocalStorage();
+                        project.altitude = data.altitude;
+                        project.saveToLocalStorage();
+                        $('#id_altitude').val(data.altitude);
+                    } else {
+                        handleAlerts({'success': false, 'message': 'Could not fetch altitude for the given location.'});
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching altitude:', error);
+                    handleAlerts({'success': false, 'message': 'An error occurred while fetching altitude. Please try again.'});
+                });
+        
+    };
+
+    function getSlope(lat, lon) {
+        fetch(`/monica/get-slope/${lat}/${lon}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const project = MonicaProject.loadFromLocalStorage();
+                    project.slope = data.slope;
+                    project.saveToLocalStorage();
+                    $('#id_slope').val(data.slope);
+                } else {
+                    handleAlerts({'success': false, 'message': 'Could not fetch slope for the given location.'});
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching slope:', error);
+                handleAlerts({'success': false, 'message': 'An error occurred while fetching slope. Please try again.'});
+            });
+    };
+
+    function getNDeposition(lat, lon) {
+        fetch(`/monica/get-n-deposition/${lat}/${lon}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const project = MonicaProject.loadFromLocalStorage();
+                    project.n_deposition = data.n_deposition;
+                    project.saveToLocalStorage();
+                    $('#id_n_deposition').val(data.n_deposition);
+                } else {
+                    handleAlerts({'success': false, 'message': 'Could not fetch nitrogen deposition for the given location.'});
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching nitrogen deposition:', error);
+                handleAlerts({'success': false, 'message': 'An error occurred while fetching nitrogen deposition. Please try again.'});
+            });
+    };
+
+
     $('#tabSite').on('click', (event) => {
+        console.log('tabSite Click')
         let params = {};
         const btnModifyParameters = event.target.closest('.modify-parameters');
         if (btnModifyParameters) {
-            
+            console.log('tabSite modify-parameters clicked');
             const parameters = btnModifyParameters.dataset.parameters;
             const value = $('.form-select.' + parameters).val();
             
@@ -1218,7 +1326,7 @@ export function addMonicaEvents() {
                             const soilProfile = data.soil_profile
                             clearSoilModal();
                                 // all selectors are locked
-                                $('#id_land_usage').append(new Option(soilProfile.landusage, soilProfile.landusage, true, true)).prop('disabled', true);;
+                                $('#id_land_usage').append(new Option(soilProfile.landusage, soilProfile.landusage, true, true)).prop('disabled', true);
                                 $('#id_area_percentage').append(new Option(soilProfile.area_percentage, soilProfile.area_percentage, true, true)).prop('disabled', true);;
                                 $('#id_system_unit').append(new Option(soilProfile.system_unit, soilProfile.system_unit, true, true)).prop('disabled', true);;
                                 $('#id_soil_profile').append(new Option(soilProfile.id, soilProfile.id))
@@ -1282,7 +1390,7 @@ export function addMonicaEvents() {
                 }
             
         } else if (event.target.classList.contains('add-horizon-button')) {
-            
+            conole.log('add horizon')
             const table = document.querySelector("#soil-layers-table tbody");
             const totalForms = document.querySelector("#id_soil_horizons-TOTAL_FORMS");
 
@@ -1307,6 +1415,7 @@ export function addMonicaEvents() {
             validateSoilProfileFormset();
             markSaveNecessary(true);
         } else if (event.target.classList.contains('delete-horizon-button')) {
+            console.log('delete horizon')
             markSaveNecessary(true);
             const table = $("#soil-layers-table");    
             let totalForms;
@@ -1350,15 +1459,40 @@ export function addMonicaEvents() {
                 // Update formset count
                 totalForms.val(rows.length);
         } else if (event.target.classList.contains('advanced-soil-parameters-toggle')) {
+            console.log('advanced soil parameters toggle')
             $('.advanced-soil-parameters').toggleClass('d-none');
         } else if (event.target.classList.contains('reset-soil-form-button')) {
+            console.log('reset soil form button')
             const profileType = event.target.dataset.profileType;
             const profileId = event.target.dataset.profileId;
             const originalProfile = event.target.dataset.originalProfile === 'true';
             getSoilProfileFormsetHtml({profileType: profileType, profileId: profileId, originalProfile: originalProfile});
         } else if (event.target.classList.contains('save-soil-profile-button')) {
-  
+            console.log('save soil profile button')
             saveSoilProfileFormset();
+        } else if (event.target.closest('button') && event.target.closest('button').classList.contains('get-auto-altitude')) {
+            console.log('get auto altitude')
+            const project = MonicaProject.loadFromLocalStorage();
+            getAltitude(project.latitude, project.longitude);
+        } else if (event.target.closest('button') && event.target.closest('button').classList.contains('get-auto-slope')) {
+            console.log('get auto slope')
+            const project = MonicaProject.loadFromLocalStorage();
+            getSlope(project.latitude, project.longitude);
+        } else if (event.target.closest('button') && event.target.closest('button').classList.contains('get-auto-n_deposition')) {
+            console.log('get auto n deposition')
+            const project = MonicaProject.loadFromLocalStorage();
+            getNDeposition(project.latitude, project.longitude);
+        } else if (event.target.closest('input') && event.target.closest('input').name === 'profile_source') {
+            console.log('profile source changed')
+            const project = MonicaProject.loadFromLocalStorage();
+            project.profile_source = event.target.value;
+            project.saveToLocalStorage();
+            if (project.profile_source === 'recommended') {
+                loadRecommendedSoilProfile(project, project.latitude, project.longitude);
+            }
+        }
+        else {
+            console.log('tabSite clicked but no button', event.target)
         }
     }); 
     
@@ -1368,6 +1502,18 @@ export function addMonicaEvents() {
         console.log('param', param)
         project[param] = event.target.value;
         project.saveToLocalStorage();
+
+        if (event.target.id === 'id_latitude' || event.target.id === 'id_longitude') {
+            const lat = $('#id_latitude').val();
+            const lon = $('#id_longitude').val();
+            if (lat && lon && project.profile_source === 'recommended') {
+                loadRecommendedSoilProfile(project, lat, lon);
+            }
+
+            getAltitude(lat, lon);
+            getSlope(lat, lon);
+            getNDeposition(lat, lon);
+        }
 
     });
 
@@ -1402,8 +1548,13 @@ export function addMonicaEvents() {
                 handleAlerts(data.message);
                 project.soilProfileType = 'userSoilProfile';
                 project.soilProfileId = data.soil_profile_id;
-                $('#soilProfileName').text(data.profile_name);
-
+                $('#id_soil_profile_name').val(data.soil_profile_name);
+                $('#id_user_soil_profile_selector').empty();
+                data.options.forEach(option => {
+                    $('#id_user_soil_profile_selector').append(new Option(option[1], option[0], option[0] === data.soil_profile_id, option[0] === data.soil_profile_id));
+                });
+                $('#id_profile_source_user').prop('checked', true);
+                project.profile_source = 'user';
                 project.saveToLocalStorage();
                 markSaveNecessary(false);
             } else {
@@ -1830,7 +1981,15 @@ export function getSoilProfileFormsetHtml(profile) {
                 markSaveNecessary(false);
                 document
                 .getElementById('soil-profile-formset-container')
-                .scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // .scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                const isAdvanced = $('.advanced').is(':visible');
+    
+                if (isAdvanced) {
+                    $('.advanced').show(); 
+                } else {
+                    $('.advanced').hide(); 
+                } 
             }
             else handleAlerts(data.message);
         })

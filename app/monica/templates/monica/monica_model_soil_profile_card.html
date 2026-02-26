@@ -8,12 +8,14 @@
   <div id="div_id_soil_profile_name" class="mb-3 row">
     <label for="id_soil_profile_name" class="form-label col-4 col-form-label">
     Soil Profile Name
-    </label>
+    </label>   
     <div class="col-8"> 
       <input type="text" name="soil_profile_name" class="form-control" id="id_soil_profile_name" value="{{ profile_name }}"> 
     </div>
   </div>
+
   {{ user_soil_profile_formset.management_form }}
+
   <div class="table-responsive">
     <table class="table table-sm table-bordered align-middle soil-table"id="soil-layers-table">
       <thead>
@@ -36,7 +38,7 @@
           <th style="min-width: 80px;">Corg (%)</th>
           <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Organic matter</th>
           <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Soil Moisture</th>
-          <th></th>
+          <th class="advanced"></th>
         </tr>
       </thead>
       <tbody id="soil-layers-table-body">
@@ -66,8 +68,8 @@
             <td class="organic-carbon">{{ form.organic_carbon }}</td>
             <td class="advanced-soil-parameters organic-matter d-none">{{ form.organic_matter }}</td>
             <td class="advanced-soil-parameters soil-moisture d-none">{{ form.soil_moisture }}</td>  
-            <td class="">
-              <button type="button" class="btn btn-danger btn-sm delete-horizon-button">
+            <td class="advanced">
+              <button type="button" class="btn btn-danger btn-sm delete-horizon-button ">
                 Delete
               </button>
             </td>
@@ -76,20 +78,31 @@
       </tbody>
     </table>
   </div>
+  <div class="advanced">
+    <div class="d-flex align-items-center mt-3 ">
+    
+      <button type="button" class="btn btn-outline-primary add-horizon-button ">
+        + Add horizon
+      </button>
+      <button type="button" class="btn btn-outline-primary reset-soil-form-button  mx-3" data-profile-type="{{ profile_type }}" data-profile-id="{{ profile_id }}" data-original-profile="{{ original_profile|yesno:'true,false' }}">
+        Reset horizons
+      </button>
+      <button type="button" class="btn btn-outline-primary save-soil-profile-button " data-id="{{ user_profile_id }}">
+        <span id="saveProfileIndicator"
+              class="badge rounded-pill bg-danger">
+          !
+        </span>
+        Save Profile
+      </button>
+    
 
-  <button type="button" class="btn btn-outline-primary add-horizon-button">
-    + Add horizon
-  </button>
-  <button type="button" class="btn btn-outline-primary reset-soil-form-button" data-profile-type="{{ profile_type }}" data-profile-id="{{ profile_id }}" data-original-profile="{{ original_profile|yesno:'true,false' }}">
-    Reset horizons
-  </button>
-  <button type="button" class="btn btn-outline-primary save-soil-profile-button" data-id="{{ user_profile_id }}">
-    <span id="saveProfileIndicator"
-          class="badge rounded-pill bg-danger">
-      !
-    </span>
-    Save Profile
-  </button>
+      <div class="ms-auto ">
+        <button type="button" class="btn btn-info  advanced-soil-parameters-toggle">
+          Erweiterte Bodenmerkmale
+        </button>
+      </div>
+    </div>
+  </div>
 </form>
 
               

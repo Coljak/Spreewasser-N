@@ -26,11 +26,13 @@ from .climate_data.lat_lon_mask import lat_lon_mask
 from .monica_events import swn_events
 from .utils import save_monica_project, get_weather_hindcasts, get_weather_forecast
 from dateutil.relativedelta import relativedelta
+import requests
 
 import glob
 
 
 from netCDF4 import Dataset, date2index, MFDataset
+from app import settings
 from pathlib import Path
 import xarray as xr
 import dask.array as da
@@ -44,6 +46,9 @@ import zmq
 import csv
 import uuid
 import copy
+
+import rasterio
+from rasterio.errors import RasterioIOError
 
 from datetime import datetime, timedelta, date, timezone
 from dask.diagnostics import ProgressBar
@@ -470,9 +475,8 @@ def create_monica_env_from_json(json_data):
 
     # TODO site parameters
     slope = json_data.get('slope', 0)
-    height_nn = json_data.get('heightNN', 0)
-    n_deposition = json_data.get('nDeposition', 30)
-    altitude = json_data.get('altitude', 0)
+    height_nn = json_data.get('altitude', 0)
+    n_deposition = json_data.get('n_deposition', 30)
 
     siteParameters = {
         "Latitude": float(json_data['latitude']),
@@ -1130,6 +1134,15 @@ def get_recommended_soil_profile(request):
             return JsonResponse({'success': True, 'soil_profile': soil_profile})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
+
+def get_recommended_soil_profile_id(request, lat, lon):
+    print('monica.views.get_recommended_soil_profile_id')
+    if request.method == 'GET':
+        try:
+            soil_profile = buek_views.get_recommended_soil_profile_from_point('general', lat, lon)
+            return JsonResponse({'success': True, 'soil_profile': soil_profile})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
         
         
 def get_soil_profile_info(request, profile_id):
@@ -1240,11 +1253,11 @@ def get_soil_profile_form(request):
 
     """
     if request.method == 'POST':
-        project = json.loads(request.body)
-        print('Request soil profile:', project)
-        profile_type = project.get('profileType', None)
-        profile_id = project.get('profileId', '')
-        original_profile = project.get('originalProfile', False)
+        profile = json.loads(request.body)
+        print('Request soil profile:', profile)
+        profile_type = profile.get('profileType', None)
+        profile_id = profile.get('profileId', '')
+        original_profile = profile.get('originalProfile', False)
         user_profile_id = ''
     else:
         return JsonResponse({'message': {'success': False, 'errors': 'Invalid request method'}})
@@ -1328,14 +1341,25 @@ def save_soil_profile(request):
             'soil_profile_name',
             f'Soil Profile {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
         )
+        def check_profile_name(name):
+            if name in models.UserSoilProfile.objects.filter(user=user).values_list('name', flat=True):
+                return check_profile_name(f"{name} (copy)")
+            else:
+                return name
+        
+        
+
         # TODO check if name & user exists
 
         if project.get('soilProfileType') == 'userSoilProfile' and project.get('soilProfileId'):
             print('soil profile exists, update it')
             soil_profile = models.UserSoilProfile.objects.get(pk=project.get('soilProfileId'), user=user)
-            soil_profile.name = profile_name
+            if (soil_profile.name.strip() != profile_name.strip()):
+                profile_name = check_profile_name(profile_name.strip())
+                soil_profile.name = profile_name
             soil_profile.save()
         else:
+            profile_name = check_profile_name(profile_name.strip())
             soil_profile = models.UserSoilProfile.objects.create(
                 user=user,
                 name=profile_name,
@@ -1353,7 +1377,11 @@ def save_soil_profile(request):
                     horizon = form.save(commit=False)
                     horizon.user_soil_profile = soil_profile
                     horizon.save()
-            return JsonResponse({'message': {'success': True, 'message': 'Soil profile saved successfully.'}, 'soil_profile_id': soil_profile.id, 'soil_profile_name': profile_name})
+
+                
+
+            options = models.UserSoilProfile.objects.filter(user=user).values_list('id', 'name')
+            return JsonResponse({'message': {'success': True, 'message': 'Soil profile saved successfully.'}, 'soil_profile_id': soil_profile.id, 'soil_profile_name': profile_name, 'options': list(options)})
         else:
             print('formset errors', formset.errors)
             return JsonResponse({'message': {'success': False, 'message': 'Bitte füllen Sie alle nötigen Felder des Bodenprofils aus!'}})
@@ -1511,6 +1539,51 @@ def manual_soil_selection(request, lat, lon):
 
     return JsonResponse(data_menu)
 
+def get_altitude(request, lat, lon):
+    print("get altitude for ", lat, lon)
+    lat = float(lat)
+    lon = float(lon)
+
+    raster_path = os.path.join(settings.BASE_DIR, 'monica', 'dem_slope_data', 'dgm200_4326.tif')
+    try:
+        with rasterio.open(raster_path) as src:
+            for val in src.sample([(lon, lat)]):
+                altitude = int(val[0])
+        
+        return JsonResponse({'success': True, 'altitude': altitude})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+def get_slope(request, lat, lon):
+    print("get slope for ", lat, lon)
+    lat = float(lat)
+    lon = float(lon)
+    
+    raster_path = os.path.join(settings.BASE_DIR, 'monica', 'dem_slope_data', 'dgm200_slope_4326.tif')
+    try:
+        with rasterio.open(raster_path) as src:
+            for val in src.sample([(lon, lat)]):
+                slope = round(float(val[0]),2)
+        
+        return JsonResponse({'success': True, 'slope': slope})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+    
+
+
+
+def get_n_deposition(request, lat, lon):
+    print("get n deposition for ", lat, lon)
+
+    lat = float(lat)
+    lon = float(lon)
+    n_deposition = 11
+    if n_deposition:
+        return JsonResponse({"success": True, "n_deposition": n_deposition})
+
+    else:
+        return JsonResponse({"success": False, "message": "Failed to retrieve data from WMS service."})
 
     
 def run_monica_simulation(envs):

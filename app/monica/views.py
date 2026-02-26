@@ -463,17 +463,14 @@ def create_monica_env_from_json(json_data):
         lon = json_data.get('longitude')
         soil_profile_parameters = buek_views.get_recommended_soil_profile(landusage, lat, lon)['SoilProfileParameters']
     else:
-        # TODO specify SoilProfile content Type!
         soil_profile_id = json_data.get('soilProfileId')
         soil_profile_type = json_data.get('soilProfileType')
-        # TODO SoilProfile content Type--> UserSoilProfile
-        # soil_profile_parameters = []
         if soil_profile_type == 'buekSoilProfile':
             soil_profile_parameters, _ = buek_models.SoilProfile.objects.get(id=soil_profile_id).get_monica_horizons_json()
         elif soil_profile_type == 'userSoilProfile':
             soil_profile_parameters, _ = models.UserSoilProfile.objects.get(id=soil_profile_id).get_monica_horizons_json()
 
-    # TODO site parameters
+    # TODO site parameters: n_deposition map from UBA
     slope = json_data.get('slope', 0)
     height_nn = json_data.get('altitude', 0)
     n_deposition = json_data.get('n_deposition', 30)
@@ -537,7 +534,7 @@ def create_monica_env_from_json(json_data):
     "userSoilTemperatureParameters": user_soil_temperature_parameters,
     "userSoilTransportParameters": user_soil_transport_parameters,
     "userSoilOrganicParameters":user_soil_organic_parameters,
-    "simulationParameters": simj, #UserSimulationSettings.objects.get(id=simulation_settings).to_json()
+    "simulationParameters": simj, 
     "siteParameters": siteParameters
     }
 
@@ -549,13 +546,9 @@ def create_monica_env_from_json(json_data):
     # TODO use get_climate_data_as_json_new and activate CLIMATE_DATES; BUT get_climate_data_as_json now also includes the forecast!!!
     climate_data = get_climate_data_as_json(parser.parse(json_data['startDate'].split('T')[0]), parser.parse(json_data['endDate'].split('T')[0]), lat_idx, lon_idx)
 
-    # print('available_climate_data', available_climate_data)
-    # print("check 1")
-    # print("Date type: ", type(json_data['startDate']), json_data['startDate'])
     start_date = json_data['startDate'].split('T')[0]
     end_date = json_data['endDate'].split('T')[0]
-    # print("CLIMATE DATA START DATE ", start_date)
-    # print("check 2")
+
     climate_json = {
         "type": "DataAccessor",
         "data": climate_data,
@@ -666,7 +659,6 @@ def create_monica_env_from_json(json_data):
         "cropRotation": cropRotation,
         "cropRotations": cropRotations,
         "events": swn_events,
-        # "climateData": json.dumps(climate_json)
         "climateData": climate_json
     }
 
@@ -748,10 +740,7 @@ def msg_to_json(msg):
                 except:
                     output_id["result_dict"]["error"] = "Error in processing results"
                     
-        # processed_msg[orig_spec] = {
-        #     "output_ids": output_ids,     
-        # }
-           
+
     return for_chart
 
 def export_monica_result_to_csv(msg):
@@ -798,10 +787,8 @@ def get_parameter_options(request, parameter_type, id=None):
         options = models.SoilTemperatureModuleParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     elif parameter_type == 'soil-transport-parameters':
         options = models.UserSoilTransportParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
-        # options = models.UserSoilTransportParameters.objects.values('id', 'name')
     elif parameter_type == 'species-parameters':
         options = models.SpeciesParameters.objects.filter(Q(user=None) | Q(user=user)).values('id','name')
-        # options = models.SpeciesParameters.objects.values('id', 'name')
     elif parameter_type == 'cultivar-parameters':
         if id is not None:
             # options = models.CultivarParameters.objects.filter(Q(user=None) | Q(user=user_id)).values('id','name')
@@ -857,27 +844,6 @@ def delete_monica_project(request, id):
         except:
             return JsonResponse({'message': {'success': False, 'message': 'Project not found'}})
     
-def save_monica_site(request):
-    """
-    Save a site to the database.
-    """
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        lat = data.get('latitude', None)
-        lon = data.get('longitude', None)
-        name = data.get('name', None)
-        altitude = data.get('altitude', 50) # TODO get altitude from dem
-        slope = data.get('slope', 0)
-        n_deposition = data.get('n_deposition', 11)
-        # if data.get('buek_soil_profile', True) == True:
-
-        soil_profile = data.get('soil_profile')
-
-        if soil_profile is not None:
-            return JsonResponse({'success': True, 'message': 'Site saved', 'site_id': site.id})
-        else:
-            return JsonResponse({'success': False, 'message': form.errors})
-        
 
 
 def save_project(request):
@@ -992,8 +958,6 @@ def modify_model_parameters(request, parameter, id, rotation=None):
 
     user = request.user
 
-    
-
     if parameter not in MODEL_FORM_MAPPING:
         return JsonResponse({'message': {'success': False, 'errors': 'Invalid model name'}})
     
@@ -1052,8 +1016,6 @@ def modify_model_parameters(request, parameter, id, rotation=None):
         else:
             return JsonResponse({'message': {'success': False, 'errors': form.errors}})
     else:
-
-
         form = form_class(instance=obj)
         data_action_url = f'{parameter}/{id}/'
         if rotation is not None:
@@ -1522,20 +1484,11 @@ def soil_profiles_from_polygon_ids(soil_profile_polygon_ids):
     print('Time elapsed: ', datetime.now() - start)
     return data_menu
 
-# TODO: make this function work for all polygons_ids, not just one
+
 def manual_soil_selection(request, lat, lon):
     print("manual soil selection ", lat, lon)
-    
-
-    start_time = time.time()
-
     polygon_ids = [buek_models.Buek200.get_polygon_id_by_lat_lon(float(lat), float(lon))]
-
     data_menu = soil_profiles_from_polygon_ids(polygon_ids)
-    # data_menu['id'] = 1
-    # data_menu['text'] = 'name'
-
-    print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
 
     return JsonResponse(data_menu)
 
@@ -1571,8 +1524,6 @@ def get_slope(request, lat, lon):
         return JsonResponse({'success': False, 'message': str(e)})
     
 
-
-
 def get_n_deposition(request, lat, lon):
     print("get n deposition for ", lat, lon)
 
@@ -1587,7 +1538,13 @@ def get_n_deposition(request, lat, lon):
 
     
 def run_monica_simulation(envs):
-    print("running simulation")
+    """
+    Connection to the MONICA container is established, the environment json 
+    is sent and the output is received. 
+    Returns a list of result messages.
+    
+    :param envs: envs is a list of monica environment jsons
+    """
     json_msgs = []
     i = 0
     for e in envs:
@@ -1595,17 +1552,13 @@ def run_monica_simulation(envs):
         context = zmq.Context()
         producer_socket = context.socket(zmq.PUSH)
         producer_socket.connect("tcp://swn_monica:6666")
-        print("check 6")
-        # print(env)
 
         shared_id = str(uuid.uuid4())
         e['sharedId'] = shared_id
-        print("shared_id: ", shared_id)
         producer_socket.send_json(e)
         file_path = Path(__file__).resolve().parent
         with open(f'{file_path}/monica_io/env_{str(i)}.json', 'w') as _: 
             json.dump(e, _)
-        print("check 7")
 
         consumer_socket = context.socket(zmq.DEALER)
         consumer_socket.setsockopt_string(zmq.ROUTING_ID, shared_id)
@@ -1616,9 +1569,6 @@ def run_monica_simulation(envs):
         producer_socket.close()
         consumer_socket.close()
 
-        print("check 9: consumer run")
-        print("msg: ", msg)
-        
         if msg.get('data', []) == []:
             message = {'message': {
                 'success': False, 
@@ -1630,8 +1580,8 @@ def run_monica_simulation(envs):
         
         json_msg = msg_to_json(msg)
         json_msgs.append(json_msg)
-        print("check 10: ")
-        # print(msg)
+
+        # to file for debugging
         with open(f'{file_path}/monica_io/message_out_{str(i)}.json', 'w') as _: 
             json.dump(msg, _)
         with open(f'{file_path}/monica_io/json_message_out_{str(i)}.json', 'w') as _: 
@@ -1648,7 +1598,7 @@ def run_monica_simulation(envs):
                 if irrig != 0
             ]
 
-            # Write to CSV
+            # Write to CSV for debugging
             with open(f"{file_path}/monica_io/irrigation_events.csv", "w", newline="") as f:
                 writer = csv.writer(f)
                 writer.writerow(["Date", "Irrigation"])
@@ -1659,6 +1609,13 @@ def run_monica_simulation(envs):
     return json_msgs
 
 def download_irrigation_csv(request):
+    """
+    Downloads the irrigation events CSV file.
+
+    :return: HttpResponse with the CSV file or an error message
+    """
+
+    # TODO save irrigation_events with project in db!
     file_path = Path(__file__).resolve().parent
     csv_file_path = f"{file_path}/monica_io/irrigation_events.csv"
 

@@ -100,8 +100,6 @@ class PolygonSelectionForm(forms.Form):
             print(f"PolygonSelectionForm init skipped: {e}")
 
 
-
-
 class SwnNewProjectForm(monica_forms.MonicaNewProjectForm):
     user_field = forms.ModelChoiceField(
         queryset=models.UserField.objects.none(),
@@ -124,50 +122,3 @@ class SwnNewProjectForm(monica_forms.MonicaNewProjectForm):
 
             self.helper.layout.fields.insert(0, Field('user_field', wrapper_class='row'))
 
-        # # ✅ Update the Crispy layout to include the new field
-        # # If the parent class already has a helper, extend it
-        # if hasattr(self, 'helper') and self.helper is not None:
-        #     # insert user_field at the top of the layout
-        #     self.helper.layout.fields.insert(0, Field('user_field', wrapper_class='row'))
-        # else:
-        #     # define a new helper if parent didn't create one
-        #     self.helper = get_row_form_helper()
-        #     self.helper.layout = Layout(
-        #         Field('user_field', wrapper_class='row'),
-        #         Field('name', wrapper_class='row'),
-        #         Field('description', wrapper_class='row'),
-        #         Field('start_date', wrapper_class='row'),
-        #         Field('monica_model_setup', wrapper_class='row'),
-            # )
-
-
-
-# class SwnNewProjectForm(forms.Form):
-#     text = forms.CharField(
-#         widget=forms.Textarea(attrs={'rows': 3, 'cols': 40}),
-#         label='User text',
-#         required=False
-#     )
-
-#     def __init__(self, *args, user=None, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         if user is not None:
-#             # Set initial value for the textarea
-#             self.fields['text'].initial = getattr(user, 'username', str(user))
-
-
-
-# # TODO this is probably obsolete
-# class SoilProfileSelectionForm(forms.Form):
-#     land_usage = forms.ChoiceField(label='Land Usage', choices=[])
-#     area_percentage = forms.ChoiceField(label='Area Percentage', choices=[])
-#     system_unit = forms.ChoiceField(label='System Unit', choices=[])
-#     soil_profile = forms.ChoiceField(label='Soil Profile', choices=[])
-#     horizons = forms.CharField(label='Horizons', widget=forms.Textarea, required=False)
-       
-#     # choices for land usage are set here, all other choices are set in the front end
-#     def set_choices(self, choices_data):
-#        self.fields['land_usage'].choices = choices_data
-
-
-       

@@ -154,8 +154,8 @@ class SoilProfile(models.Model):
                                      profiles that have horizons with missing ka5 texture class, which are corrected by 
                                      filling the missing information with the next valid horizon/ extending horizons.
         
-                extended: if True, the json is extended with additional information that is not necessary for the monica model 
-                            but might be relevant.
+        extended: if True, the json is extended with additional information that is not necessary for the monica model 
+                    but might be relevant.
         """
         horizons = list(SoilProfileHorizon.objects.filter(soilprofile=self, obergrenze_m__gte=0).order_by('horizont_nr'))
        
@@ -241,20 +241,11 @@ class SoilProfileHorizon(models.Model):
 
     def __str__(self):
         return super().__str__() + ' soilprofile_id: ' + str(self.soilprofile_id) + ' horizont_nr: ' + str(self.horizont_nr)
-    # TODO pH value is a range - how to use it
     # TODO Sceleton fraction 0-1, soil stone content
     # TODO: the ph class is set to 4. 5 for the profiles that do not have a ph class
-    # select bsph.soilprofile_id, bsp.landusage, bsph.id as horizont_id,  bsph.horizont_nr, bsph.symbol, bsph.herkunft, bsph.herkunft, bsph.geogenese , bsph.torfarten ,
-    # bhc.humus_class, bhc.corg, bktc.ka5_soiltype , bsph.ph_class_id, bpc.ph_class from buek_soil_profile_horizon bsph 
-    # join buek_soil_profile bsp on bsp.id = bsph.soilprofile_id 
-    # full join buek_ka5_texture_class bktc on bktc.id = bsph.ka5_texture_class_id 
-    # full join buek_humus_class bhc  on bsph.humus_class_id  = bhc.id
-    # full join buek_ph_class bpc on bsph.ph_class_id = bpc.id
-    # where bpc.id is null
-    # order by bsph.soilprofile_id, bsph.horizont_nr
+
   
     def to_json(self):
-        # TODO: can Monica actually handle the NULL values as '' or []?
         monica_json = {
             'Thickness': [round((self.untergrenze_m - self.obergrenze_m), 2), "m"],
             'Sand': [round(self.ka5_texture_class.sand * 100, 1), "%"] if self.ka5_texture_class else [],
@@ -263,7 +254,6 @@ class SoilProfileHorizon(models.Model):
             'KA5TextureClass': self.ka5_texture_class.ka5_soiltype if self.ka5_texture_class else '',
             'SoilRawDensity': [self.bulk_density_class.raw_density_g_per_cm3 * 1000, "kg m-3"] if self.bulk_density_class else [],
             'SoilOrganicCarbon': [round(self.humus_class.corg, 2), "%"] if self.humus_class else [],
-
         }
   
         return monica_json
@@ -303,7 +293,6 @@ class SoilProfileHorizon(models.Model):
         """
         This json is suited for the monica soil form
         """
-        # TODO: can Monica actually handle the NULL values as '' or []?
         monica_json = {
             'thickness': round((self.untergrenze_m - self.obergrenze_m), 2),
             'sand': round(self.ka5_texture_class.sand * 100, 1) if self.ka5_texture_class else None,

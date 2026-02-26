@@ -1443,7 +1443,7 @@ def get_geks_and_measures(project):
     geks = models.GekRetention.objects.filter(measures__in=measures).distinct()
     return geks, measures
 
-# TODO: turn into filter gek
+
 def filter_sieker_geks(request):
    # add_range_filter(filters, obj, field,  model_field=None)
     start = datetime.now()
@@ -1561,10 +1561,8 @@ def load_sieker_wetland_gui(request, user_field_id):
 
 
 
-#TODO
 def filter_sieker_wetlands(request):
-   # add_range_filter(filters, obj, field,  model_field=None)
-    start = datetime.now()
+
     try:
         project = json.loads(request.body)
     except json.JSONDecodeError:

@@ -1029,9 +1029,9 @@ export function handleSaveUserField(layer, bootstrapModal, featureGroup) {
   const fieldName = fieldNameInput.value;
   let userFields = {};
   // TODO move this task to db (check if exists)
-          try {
-            userFields = JSON.parse(localStorage.getItem('userFields'));
-          } catch { ; }
+  try {
+    userFields = JSON.parse(localStorage.getItem('userFields'));
+  } catch { ; }
 
   if (fieldName.split(' ').join('') !== "") {
     if (Object.values(userFields).some((uf) => uf.name === fieldName)) {

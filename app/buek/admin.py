@@ -58,7 +58,9 @@ class CLCMap2018Admin(admin.ModelAdmin):
     list_filter = ('code_18', 'fid', 'objectid')
 
 
-    
+class GermanyModelParametersAdmin(admin.ModelAdmin):
+    list_display = ('id', 'parameter_name', 'parameter_value')
+    list_filter = ('parameter_name', 'parameter_value')
 
 admin.site.register(models.BulkDensityClass, BulkDensityClassAdmin)
 admin.site.register(models.Ka5TextureClass, Ka5TextureClassAdmin)

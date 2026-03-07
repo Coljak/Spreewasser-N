@@ -8,7 +8,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.apps import apps
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Min, Max
+
 from django.core.cache import cache
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
@@ -149,23 +150,23 @@ def load_netcdf_to_memory():
     return climate, climate_first_date, climate_last_date
 
 # TODO REACTIVATE - only deactivated to prevet long loading times
-# CLIMATE_DATES = load_netcdf_to_memory()
-# CLIMATE = CLIMATE_DATES[0]
-# CLIMATE_FIRST_DATE = CLIMATE_DATES[1]
-# CLIMATE_LAST_DATE = CLIMATE_DATES[2]
+CLIMATE_DATES = load_netcdf_to_memory()
+CLIMATE = CLIMATE_DATES[0]
+CLIMATE_FIRST_DATE = CLIMATE_DATES[1]
+CLIMATE_LAST_DATE = CLIMATE_DATES[2]
 
-# def get_climate_data_as_json_new(start_date, end_date, lat_idx, lon_idx):
-#     start = datetime.now()
-#     climate_json = {}
-#     # with ProgressBar():
-#     climate_slice = CLIMATE.sel(time=slice(start_date, end_date)).isel(lat=lat_idx, lon=lon_idx)
-#     # Shows a progress bar for Dask computations
+def get_climate_data_as_json_new(start_date, end_date, lat_idx, lon_idx):
+    start = datetime.now()
+    climate_json = {}
+    # with ProgressBar():
+    climate_slice = CLIMATE.sel(time=slice(start_date, end_date)).isel(lat=lat_idx, lon=lon_idx)
+    # Shows a progress bar for Dask computations
 
 
-#     for key, value in CLIMATE_VARIABLES.items():
-#         climate_json[key] = climate_slice[value].values.tolist()
-#     print('Time elapsed in get_climate_data_as_json_new: ', datetime.now() - start)
-#     return climate_json
+    for key, value in CLIMATE_VARIABLES.items():
+        climate_json[key] = climate_slice[value].values.tolist()
+    print('Time elapsed in get_climate_data_as_json_new: ', datetime.now() - start)
+    return climate_json
 
 
 # # used
@@ -540,14 +541,12 @@ def create_monica_env_from_json(json_data):
 
      # get climate data from database
     lat_idx, lon_idx = models.DWDGridAsPolygon.get_idx(float(json_data['latitude']), float(json_data['longitude']))
-    forecast_lat_idx, forecast_lon_idx = models.DWDGridToPointIndices.get_forecast_indices(lat_idx, lon_idx)
-    print('lat_idx, lon_idx', lat_idx, lon_idx, forecast_lat_idx, forecast_lon_idx)
-    
-    # TODO use get_climate_data_as_json_new and activate CLIMATE_DATES; BUT get_climate_data_as_json now also includes the forecast!!!
-    climate_data = get_climate_data_as_json(parser.parse(json_data['startDate'].split('T')[0]), parser.parse(json_data['endDate'].split('T')[0]), lat_idx, lon_idx)
-
     start_date = json_data['startDate'].split('T')[0]
-    end_date = json_data['endDate'].split('T')[0]
+    end_date = json_data['endDate'].split('T')[0]          
+    # TODO use get_climate_data_as_json_new and activate CLIMATE_DATES; BUT get_climate_data_as_json now also includes the forecast!!!
+    climate_data = get_climate_data_as_json(parser.parse(start_date), parser.parse(end_date), lat_idx, lon_idx)
+
+
 
     climate_json = {
         "type": "DataAccessor",
@@ -1655,6 +1654,243 @@ def run_simulation(request):
 
     else:
         return JsonResponse({'message': {'success': False, 'message': 'Simulation not started.'}})
+
+
+def run_monica_and_write_to_netcdf(env, lat_idx, lon_idx):
+    """
+    Sends env to monica and receives the result.
+    that is then written into a netcdf
+    """
+
+    context = zmq.Context()
+    producer_socket = context.socket(zmq.PUSH)
+    producer_socket.connect("tcp://swn_monica:6666")
+
+    shared_id = str(uuid.uuid4())
+    e['sharedId'] = shared_id
+    producer_socket.send_json(e)
+    file_path = Path(__file__).resolve().parent
+    with open(f'{file_path}/monica_io/env_{str(i)}.json', 'w') as _: 
+        json.dump(e, _)
+
+    consumer_socket = context.socket(zmq.DEALER)
+    consumer_socket.setsockopt_string(zmq.ROUTING_ID, shared_id)
+    consumer_socket.RCVTIMEO = 20000
+    consumer_socket.connect("tcp://swn_monica:7777")
+    # msg = run_consumer()
+    msg = consumer_socket.recv_json()
+    producer_socket.close()
+    consumer_socket.close()
+
+    if msg.get('data', []) == []:
+        message = {'message': {
+            'success': False, 
+            'message': 'No data received from MONICA, error: ' + (', ').join(msg.get('errors', ''))
+            }
+            }
+        print("check 9b: ", message)
+        return message
         
+        json_msg = msg_to_json(msg)
+        json_msgs.append(json_msg)
+
+        # to file for debugging
+        with open(f'{file_path}/monica_io/message_out_{str(i)}.json', 'w') as _: 
+            json.dump(msg, _)
+        with open(f'{file_path}/monica_io/json_message_out_{str(i)}.json', 'w') as _: 
+            json.dump(json_msg, _)
+
+        if i ==2:
+            csv_dates = json_msg['daily']['Date']
+            csv_irrigation = json_msg['daily']['Irrig']
+
+            # Filter rows where irrigation > 0
+            rows = [
+                (date, irrig)
+                for date, irrig in zip(csv_dates, csv_irrigation)
+                if irrig != 0
+            ]
+
+            # Write to CSV for debugging
+            with open(f"{file_path}/monica_io/irrigation_events.csv", "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["Date", "Irrigation"])
+                writer.writerows(rows)
 
 
+    print('json_msgs is a  ', type(json_msgs))
+    return json_msgs
+
+
+
+
+
+
+def monica_run_over_germany():
+    """
+    This function creates a base_environment and modifies it according to each cell.
+    It then runs the simulation for each cell and saves the output in a netcdf file.
+    """
+    germany_model_settings = models.GermanyModelParameters.objects.get(is_default=True)
+    # TODO: check with Claas or Marlene what parameters to use!
+    simj = germany_model_settings.simj.to_json() 
+    user_crop_parameters = germany_model_settings.user_crop_parameters.to_json()
+    user_environment_parameters = germany_model_settings.user_environment_parameters.to_json()
+    user_soil_moisture_parameters = germany_model_settings.user_soil_moisture_parameters.to_json()
+    user_soil_temperature_parameters = germany_model_settings.soil_temperature_module_parameters.to_json()
+    user_soil_transport_parameters = germany_model_settings.user_soil_transport_parameters.to_json()
+    user_soil_organic_parameters = germany_model_settings.user_soil_organic_parameters.to_json()
+    cpp = {
+    "type": "CentralParameterProvider",
+    "userCropParameters": user_crop_parameters,
+    "userEnvironmentParameters": user_environment_parameters,
+    "userSoilMoistureParameters": user_soil_moisture_parameters,
+    "userSoilTemperatureParameters": user_soil_temperature_parameters,
+    "userSoilTransportParameters": user_soil_transport_parameters,
+    "userSoilOrganicParameters":user_soil_organic_parameters,
+    "simulationParameters": simj, 
+    
+    }
+    
+    # load all relevant soil data for Germany- otherwise the query on each pixel would take too long
+    agri_buek = rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'buek_id_agriculture_masked_4326.tif'))
+    altitude = rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'dgm200_4326_1000m.tif'))
+    altitude_arr = altitude.read(1)
+    slope = rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'dgm_1000_4326_slope.tif'))
+    slope_arr = slope.read(1)
+    
+    unique_buek_ids = np.unique(agri_buek.read(1))
+    unique_buek_ids = unique_buek_ids[unique_buek_ids != -9999]
+
+    soil_profiles = buek_models.SoilProfile.objects.filter(id__in=unique_buek_ids)
+    print(len(soil_profiles), "unique buek ids")
+
+    soil_profile_dict = {sp.id: sp.get_monica_horizons_json()[0] for sp in soil_profiles}
+    print("Soil profiles loaded")
+
+    def doy_to_iso(doy):
+        if doy is None:
+            return None
+        date = datetime(2001, 1, 1) + timedelta(days=doy - 1)  # non-leap year
+        # TODO: check if the first ratation is always 0000
+        return f"0000-{date.strftime('%m-%d')}"
+    # cultivar is winter wheat!
+    cultivar = germany_model_settings.cultivar
+    
+    min_sowing_date = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).aggregate(Min('avg_sowing_doy'))['avg_sowing_doy__min']
+    max_harvest_date = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).aggregate(Max('avg_harvest_doy'))['avg_harvest_doy__max']
+    sowing_dates_list = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).values('climate_station__id', 'avg_sowing_doy', 'avg_harvest_doy')
+    
+    sowing_dates_per_station = {data['climate_station__id']: {'sowing_date': doy_to_iso(data['avg_sowing_doy']), 'harvest_date': doy_to_iso(data['avg_harvest_doy'])} for data in sowing_dates_list}
+    print('sowing dates loaded', sowing_dates_per_station)
+    climate_stations_tif = rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'nearest_station_per_cultivar', f'nearest_station_cultivar_{germany_model_settings.cultivar_name_for_sowing_dates}.tif'))
+    climate_stations_arr = climate_stations_tif.read(1)
+
+
+    workstep = {"date":  '',               # "0000-10-13",
+                    "type": "Sowing",
+                    "crop": {
+                        # "is-winter-crop": True, # TODO is winter-crop is probably not required!!!
+                        "cropParams": {
+                            "species": {
+                            "=": cultivar.species_parameters.to_json()
+                            },
+                            "cultivar": {
+                            "=": cultivar.to_json()
+                            }
+                        },
+                        "residueParams": models.CropResidueParameters.objects.get(species_parameters=cultivar.species_parameters, is_default=True).to_json()
+                    }
+                }
+            
+
+    # TODO
+    agri_buek_as_array = agri_buek.read(1)
+    height, width = agri_buek_as_array.shape
+    
+    #TODO get dates right
+    start_date = '2025-08-01'
+    end_date = '2026-06-01'
+    lat_lon_idx_dictionary = models.DWDGridToPointIndices.get_lat_lon_dictionary()
+    climate_json = {
+        "type": "DataAccessor",
+        "data": None,
+        "startDate": start_date,
+        "endDate": end_date,
+      }
+    events = [
+        "daily",
+            [
+                "Date",
+                "Yield",
+                "LAI",
+                "Stage",
+                [
+                "Mois",
+                [
+                    1,
+                    20
+                ]
+                ],
+                [
+                "Mois",
+                [
+                    1,
+                    10,
+                    "AVG"
+                ]
+                ],
+                
+            ]
+    ]
+    
+    for lat_idx in range(0, height):
+        for lon_idx in range(0, width):
+            if int(agri_buek_as_array[lat_idx, lon_idx]) != -9999:
+
+                indices_dict = lat_lon_idx_dictionary[lat_idx][lon_idx]
+                print(f"Running cell {lat_idx}, {lon_idx}")
+                buek_id = int(agri_buek_as_array[lat_idx, lon_idx])
+                soil_profile = soil_profile_dict.get(buek_id, None)
+
+                print(int(climate_stations_arr[lat_idx, lon_idx]), 'climate_stations_arr[i, j]')
+            
+
+                site_parameters = {
+                    "Latitude": indices_dict['lat'],
+                    "Slope": slope_arr[lat_idx, lon_idx] if slope_arr[lat_idx, lon_idx] != -9999 else 0,
+                    "HeightNN": altitude_arr[lat_idx, lon_idx] if altitude_arr[lat_idx, lon_idx] != -9999 else 100,
+                    # TODO: get N-deposition!!!!!
+                    "NDeposition": 30,
+                    "SoilProfileParameters": soil_profile,
+                }
+                cpp["siteParameters"] = site_parameters
+                
+                # create env for MONICA
+                dates = sowing_dates_per_station[int(climate_stations_arr[i, lon_idx])]
+                workstep['date'] = dates['sowing_date']
+
+                cropRotation = [
+                    {'worksteps': [workstep],}
+                ]
+
+                # climate_data = get_climate_data_as_json_new(parser.parse(start_date), parser.parse(end_date), lat_idx, lon_idx)
+                # TODO check climate data functions!!!!
+                climate_json['data'] = 'climate_data'
+                
+                env = {
+                    "type": "Env",
+                    "debugMode": False,
+                    "params": cpp,
+                    "cropRotation": cropRotation,
+                    "cropRotations": None,
+                    "events": events,
+                    "climateData": climate_json
+                }
+
+                run_monica_and_write_to_netcdf(env, lat_idx, lon_idx)
+
+
+    print('done with env creation, now running simulation')
+
+    # return JsonResponse({'message': {'success': True, 'message': 'Started Germany-wide simulation.'}})

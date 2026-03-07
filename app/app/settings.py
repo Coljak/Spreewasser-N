@@ -185,7 +185,8 @@ STATICFILES_DIRS = [
     Path.joinpath(BASE_DIR, 'swn/static/'),
     Path.joinpath(BASE_DIR, 'monica/static/'),
     Path.joinpath(BASE_DIR, 'toolbox/static/'),
-    # Path.joinpath(BASE_DIR, 'buek/static/'),
+    Path.joinpath(BASE_DIR, 'buek/static/'),
+    Path.joinpath(BASE_DIR, 'klim4cast/static/'),
     ]
 
 # https://pypi.org/project/django-sass-processor/

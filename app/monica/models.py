@@ -374,7 +374,7 @@ class OrganFromDB(models.Model):
 class CropResidueParameters(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True)
     species_name = models.CharField(max_length=100,blank=True, null=True)
-    species_parameters = models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE, blank=True, null=True)
+    species_parameters = models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE, related_name='crop_residue_parameters', blank=True, null=True)
     aom_dry_matter_content = models.FloatField(blank=True, null=True)
     aom_fast_dec_coeff_standard = models.FloatField(blank=True, null=True)
     aom_nh4_content = models.FloatField(blank=True, null=True)
@@ -685,6 +685,9 @@ class UserCropParameters(models.Model):
     tortuosity = models.FloatField()
     is_default = models.BooleanField(blank=True, null=True, default=False) # system's default
 
+    def __str__(self):
+        return self.name
+
     def to_json(self):
         return {
             "CanopyReflectionCoefficient": self.canopy_reflection_coefficient,
@@ -754,6 +757,9 @@ class UserEnvironmentParameters(models.Model):
     time_step = models.IntegerField() 
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
+    def __str__(self):
+        return self.name
+    
     def to_json(self):
         return {
             "Albedo": self.albedo,
@@ -827,6 +833,10 @@ class UserSoilMoistureParameters(models.Model):
     xsa_critical_soil_moisture = models.FloatField()
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
+
+    def __str__(self):
+        return self.name
+    
     def to_json(self):
         return {
             "CorrectionRain": self.correction_rain,
@@ -984,6 +994,9 @@ class UserSoilOrganicParameters(models.Model):
     profdenit = models.FloatField()
     vpotdenit = models.FloatField()
     is_default = models.BooleanField(blank=True, null=True, default=False)
+
+    def __str__(self):
+        return self.name
 
     def to_json(self):
         return {
@@ -1353,6 +1366,9 @@ class SoilTemperatureModuleParameters(models.Model):
     soil_moisture = models.FloatField()
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
+    def __str__(self):
+        return self.name
+
     def to_json(self):
         return {
         "BaseTemperature": self.base_temperature,
@@ -1410,6 +1426,9 @@ class UserSoilTransportParameters(models.Model):
     n_deposition = models.FloatField()
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
+    def __str__(self):
+        return self.name
+    
     def to_json(self):
         return {
             "AD": self.ad,
@@ -1823,6 +1842,19 @@ class DWDGridToPointIndices(models.Model):
     def create_instance(self, lat, lat_idx, lon, lon_idx):
         return self.objects.create(point=Point(lat, lon), lat=lat, lat_idx=lat_idx, lon=lon, lon_idx=lon_idx)
     
+    @classmethod
+    def get_lat_lon_dictionary(cls):
+        objs = cls.objects.filter(is_valid=True)
+        dict = {obj.lat_idx: {
+            obj.lon_idx: {
+                'lat': obj.lat,
+                'forecast_lat_idx': obj.forecast_lat_idx, 
+                'focast_lon_idx': obj.forecast_lon_idx 
+                }
+                } for obj in objs
+                }
+        return dict
+
     @classmethod
     def get_forecast_indices(cls, lat_idx, lon_idx):
         instance = cls.objects.get(lat_idx=lat_idx, lon_idx=lon_idx)
@@ -2303,4 +2335,51 @@ class OutputSettings(models.Model):
             "outputEvent": self.output_event
         }
     
-
+CULTIVARS = [
+    (1, 'alfalfa'),
+    (2, 'alfalfa clover grass ley mix'),
+    (11, 'silage maize'),
+    (16, 'moderately early potato'),
+    (17, 'winter rape'),
+    (18, 'winter rye'),
+    (22, 'sugar beet'),
+    (26, 'winter wheat'),
+    (27, 'winter barley'),
+    (32, 'grain maize'),
+    (37, 'silage winter rye'),
+    (57, 'spring wheat'),
+    # (None, 'spring triticale'), 
+]
+class GermanyModelParameters(models.Model):
+    """
+    This model stores the parameters for the Germany-wide model runs.
+    There should only be one instance that is is_default=True. The first is_default that is found
+    will be used for modelling.
+    
+    """
+    is_default = models.BooleanField(blank=True, null=True, default=False)
+    description = models.TextField(null=True, blank=True)
+    
+    simj = models.ForeignKey(UserSimulationSettings, on_delete=models.CASCADE, null=True, blank=True)
+    cultivar_name_for_sowing_dates = models.IntegerField(max_length=255, choices=CULTIVARS, default=1)
+    cultivar = models.ForeignKey(CultivarParameters, on_delete=models.CASCADE, null=True, blank=True)
+    user_crop_parameters = models.ForeignKey(UserCropParameters, on_delete=models.CASCADE, null=True, blank=True)
+    
+    
+    user_environment_parameters = models.ForeignKey(UserEnvironmentParameters, on_delete=models.CASCADE, null=True, blank=True)
+    user_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE, null=True, blank=True)
+    soil_temperature_module_parameters = models.ForeignKey(SoilTemperatureModuleParameters, on_delete=models.CASCADE, null=True, blank=True)
+    user_soil_transport_parameters = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE, null=True, blank=True)
+    user_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE, null=True, blank=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["is_default"],
+                condition=Q(is_default=True),
+                name="only_one_default_germany_model_parameters"
+            )
+        ]
+    
+    def __str__(self):
+        return self.description or f"Germany-wide model parameters with cultivar {self.cultivar_name}"

@@ -176,7 +176,7 @@ class SoilProfile(models.Model):
                     # else: first horizon invalid → ignore or handle separately
 
             horizons = cleaned
-            print('horizons after', horizons)
+            # print('horizons after', horizons)
 
             for i in range(len(horizons)):
                 if horizons[i].ka5_texture_class:
@@ -189,7 +189,7 @@ class SoilProfile(models.Model):
                         hors.append(horizon)
 
         else:
-            print('corrected: False ')
+            # print('corrected: False ')
             for i in range(len(horizons)):
 
                 if not extended:

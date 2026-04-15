@@ -124,3 +124,17 @@ def download_all_hindcast_data():
             print(f"Error: {e}")
 
     print('Done downloading hindcast data.')
+    print('Rewrite chunking of netcdf files...')
+
+    nc_files = [nc for nc in os.listdir('monica/climate_netcdf/') if nc.endswith('.nc')]
+    for filename in nc_files:
+        vari = filename.split('_')[1]
+        if vari == 'sfcwind':
+            vari = 'sfcWind'
+        encoding = {vari: {
+        'chunksizes': (61, 145, 109), 'zlib': True, 'complevel': 4 }}
+        path = f'monica/climate_netcdf/{filename}'
+        ds = xr.open_dataset(path, chunks=None)
+        ds.to_netcdf(path, encoding=encoding)
+
+    print('Done rewriting chunking of netcdf files.')

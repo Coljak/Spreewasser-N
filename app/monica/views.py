@@ -144,7 +144,7 @@ def load_netcdf_to_memory():
             path_list.append(file_path)
 
 
-    climate = xr.open_mfdataset(path_list, combine='by_coords', chunks={'time':150, 'lat': 100, 'lon': 100}) 
+    climate = xr.open_mfdataset(path_list, combine='by_coords', parallel=True) 
     climate_first_date = climate['time'][0]
     climate_last_date = climate['time'][-1]
     return climate, climate_first_date, climate_last_date

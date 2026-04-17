@@ -183,7 +183,11 @@ document.addEventListener('DOMContentLoaded', function() {
 function createBaseMap() {
     const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
     const osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-    const osm = L.tileLayer(osmUrl, { maxZoom: 18, attribution: osmAttrib });
+    const osm = L.tileLayer(osmUrl, { 
+        referrerPolicy: "strict-origin-when-cross-origin", 
+        maxZoom: 18, 
+        attribution: osmAttrib 
+    });
 
     const map = L.map('map', {
         zoom: 5,

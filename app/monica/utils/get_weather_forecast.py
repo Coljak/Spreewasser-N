@@ -74,6 +74,7 @@ def get_local_path():
     local = Path(__file__).resolve().parent.parent
     return local / 'climate_netcdf_forecast'
 
+
 def fetch_available_variables(catalog_url):
     """Fetch available variables from the catalog XML, considering namespaces."""
     response = requests.get(catalog_url)
@@ -84,9 +85,9 @@ def fetch_available_variables(catalog_url):
     variables = [
         ref.attrib.get("name") for ref in tree.findall(".//thredds:catalogRef", THREDDS_NAMESPACE)
     ]
-    
+    # variables = ['hurs', 'pr', 'psl', 'rsds', 'sfcWind', 'tas', 'tasmax', 'tasmin']
     return variables
-# variables = ['hurs', 'pr', 'psl', 'rsds', 'sfcWind', 'tas', 'tasmax', 'tasmin']
+
 
 def get_last_valid_forecast_date():
     nc_folder_path = get_local_path()
@@ -139,7 +140,9 @@ def download_and_save_nc_file(nc_url, save_path):
 
 
 def automated_thredds_download():
-    """Main function to automate downloads of variables across scenarios."""
+    """
+    Main function to automate downloads of variables across climate-scenarios.
+    """
     
 
     local_path = get_local_path()

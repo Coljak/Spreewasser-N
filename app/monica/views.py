@@ -150,10 +150,10 @@ def load_netcdf_to_memory():
     return climate, climate_first_date, climate_last_date
 
 # TODO REACTIVATE - only deactivated to prevet long loading times
-CLIMATE_DATES = load_netcdf_to_memory()
-CLIMATE = CLIMATE_DATES[0]
-CLIMATE_FIRST_DATE = CLIMATE_DATES[1]
-CLIMATE_LAST_DATE = CLIMATE_DATES[2]
+# CLIMATE_DATES = load_netcdf_to_memory()
+# CLIMATE = CLIMATE_DATES[0]
+# CLIMATE_FIRST_DATE = CLIMATE_DATES[1]
+# CLIMATE_LAST_DATE = CLIMATE_DATES[2]
 
 def get_climate_data_as_json_new(start_date, end_date, lat_idx, lon_idx):
     start = datetime.now()
@@ -1608,13 +1608,15 @@ def run_monica_simulation(envs):
     return json_msgs
 
 def download_irrigation_csv(request):
+    # TODO the irrigation_events.csv is currently not linked to the user!
+    # TODO save irrigation_events with project in db!
     """
     Downloads the irrigation events CSV file.
 
     :return: HttpResponse with the CSV file or an error message
     """
 
-    # TODO save irrigation_events with project in db!
+    
     file_path = Path(__file__).resolve().parent
     csv_file_path = f"{file_path}/monica_io/irrigation_events.csv"
 
@@ -1724,8 +1726,6 @@ def run_monica_and_write_to_netcdf(env, lat_idx, lon_idx):
 
 
 
-
-
 def monica_run_over_germany():
     """
     This function creates a base_environment and modifies it according to each cell.
@@ -1741,15 +1741,14 @@ def monica_run_over_germany():
     user_soil_transport_parameters = germany_model_settings.user_soil_transport_parameters.to_json()
     user_soil_organic_parameters = germany_model_settings.user_soil_organic_parameters.to_json()
     cpp = {
-    "type": "CentralParameterProvider",
-    "userCropParameters": user_crop_parameters,
-    "userEnvironmentParameters": user_environment_parameters,
-    "userSoilMoistureParameters": user_soil_moisture_parameters,
-    "userSoilTemperatureParameters": user_soil_temperature_parameters,
-    "userSoilTransportParameters": user_soil_transport_parameters,
-    "userSoilOrganicParameters":user_soil_organic_parameters,
-    "simulationParameters": simj, 
-    
+        "type": "CentralParameterProvider",
+        "userCropParameters": user_crop_parameters,
+        "userEnvironmentParameters": user_environment_parameters,
+        "userSoilMoistureParameters": user_soil_moisture_parameters,
+        "userSoilTemperatureParameters": user_soil_temperature_parameters,
+        "userSoilTransportParameters": user_soil_transport_parameters,
+        "userSoilOrganicParameters":user_soil_organic_parameters,
+        "simulationParameters": simj,    
     }
     
     # load all relevant soil data for Germany- otherwise the query on each pixel would take too long

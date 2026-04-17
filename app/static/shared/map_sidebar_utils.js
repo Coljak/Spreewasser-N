@@ -76,6 +76,7 @@ const wmsUrl = "/toolbox/proxy/wms/"
 const osmUrl = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 const osm = L.tileLayer(osmUrl, { 
+  referrerPolicy: "strict-origin-when-cross-origin",
   maxZoom: 18, 
   attribution: osmAttrib, 
   pane: "baselayerPane" 

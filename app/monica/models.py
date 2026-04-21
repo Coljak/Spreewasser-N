@@ -1820,6 +1820,7 @@ class DWDGridToPointIndices(models.Model):
     lat_idx = models.IntegerField()
     lon_idx = models.IntegerField()
     is_valid = models.BooleanField(default=True)
+    # this is just the climate station. There is not necessarily daa for each station/crop pair. Therefore use
     nearest_climate_station_for_sowing_dates = models.IntegerField(null=True, blank=True)
     forecast_lat_idx = models.IntegerField(null=True, blank=True)
     forecast_lon_idx = models.IntegerField(null=True, blank=True)
@@ -1844,16 +1845,30 @@ class DWDGridToPointIndices(models.Model):
     
     @classmethod
     def get_lat_lon_dictionary(cls):
-        objs = cls.objects.filter(is_valid=True)
-        dict = {obj.lat_idx: {
-            obj.lon_idx: {
-                'lat': obj.lat,
-                'forecast_lat_idx': obj.forecast_lat_idx, 
-                'focast_lon_idx': obj.forecast_lon_idx 
-                }
-                } for obj in objs
-                }
-        return dict
+        objs = cls.objects.filter(is_valid=True).values(
+            'lat_idx',
+            'lon_idx',
+            'lat',
+            'forecast_lat_idx',
+            'forecast_lon_idx',
+        )
+
+        result = {}
+
+        for obj in objs:
+            lat_idx = obj['lat_idx']
+            lon_idx = obj['lon_idx']
+
+            if lat_idx not in result:
+                result[lat_idx] = {}
+
+            result[lat_idx][lon_idx] = {
+                'lat': obj['lat'],
+                'forecast_lat_idx': obj['forecast_lat_idx'],
+                'forecast_lon_idx': obj['forecast_lon_idx'],
+            }
+
+        return result
 
     @classmethod
     def get_forecast_indices(cls, lat_idx, lon_idx):
@@ -2361,10 +2376,9 @@ class GermanyModelParameters(models.Model):
     description = models.TextField(null=True, blank=True)
     
     simj = models.ForeignKey(UserSimulationSettings, on_delete=models.CASCADE, null=True, blank=True)
-    cultivar_name_for_sowing_dates = models.IntegerField(max_length=255, choices=CULTIVARS, default=1)
+    cultivar_name_for_sowing_dates = models.IntegerField(choices=CULTIVARS, default=1)
     cultivar = models.ForeignKey(CultivarParameters, on_delete=models.CASCADE, null=True, blank=True)
     user_crop_parameters = models.ForeignKey(UserCropParameters, on_delete=models.CASCADE, null=True, blank=True)
-    
     
     user_environment_parameters = models.ForeignKey(UserEnvironmentParameters, on_delete=models.CASCADE, null=True, blank=True)
     user_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE, null=True, blank=True)
@@ -2383,3 +2397,15 @@ class GermanyModelParameters(models.Model):
     
     def __str__(self):
         return self.description or f"Germany-wide model parameters with cultivar {self.cultivar_name}"
+
+    def to_json(self):
+        return {
+            "type": "CentralParameterProvider",
+            "userCropParameters": self.user_crop_parameters.to_json() if self.user_crop_parameters else None,
+            "userEnvironmentParameters": self.user_environment_parameters.to_json() if self.user_environment_parameters else None,
+            "userSoilMoistureParameters": self.user_soil_moisture_parameters.to_json() if self.user_soil_moisture_parameters else None,
+            "userSoilTemperatureParameters": self.soil_temperature_module_parameters.to_json() if self.soil_temperature_module_parameters else None,
+            "userSoilTransportParameters": self.user_soil_transport_parameters.to_json() if self.user_soil_transport_parameters else None,
+            "userSoilOrganicParameters":self.user_soil_organic_parameters.to_json() if self.user_soil_organic_parameters else None,
+            "simulationParameters": self.simj.to_json() if self.simj else None, 
+            }

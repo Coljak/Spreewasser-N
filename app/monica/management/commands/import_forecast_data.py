@@ -3,11 +3,12 @@ With this command, the forecast data can be downloaded and is conerted to combin
 
 from django.core.management.base import BaseCommand
 from monica.utils.get_weather_forecast import automated_thredds_download
+from monica.services.climate_store import reload_all
 
 class Command(BaseCommand):
     help = 'Download forecast data and convert to a combined NetCDF'
 
     def handle(self, *args, **kwargs):
         automated_thredds_download()
-
+        reload_all()
         self.stdout.write(self.style.SUCCESS('Successfully downloaded forecast data'))

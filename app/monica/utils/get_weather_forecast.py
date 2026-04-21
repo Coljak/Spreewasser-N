@@ -11,15 +11,9 @@ import numpy as np
 import os
 from django.core.cache import cache
 from dateutil.relativedelta import relativedelta
+from monica.utils import monica_constants
 
-# Constants
-BASE_CATALOG_URL = "https://esgf-data.dwd.de/thredds/catalog/esgf3/data/climatepredictionsde/seasonal/output/public/DE-0075x005/DWD/GCFS22/svh2023{month:02}01/sfc{year}{month:02}01/{scenario}/DWD-EPISODES2022/v1-r1/day/{variable}/"
 
-BASE_DOWNLOAD = "https://esgf-data.dwd.de/thredds/fileServer/esgf3/data/climatepredictionsde/seasonal/output/public/DE-0075x005/DWD/GCFS22/"
-SCENARIOS = ['r1i1p1', 'r2i1p1', 'r3i1p1']
-# SCENARIOS = ['r1i1p1']
-VARIABLES = ['hurs', 'pr', 'psl', 'rsds', 'sfcWind', 'tas', 'tasmax', 'tasmin']
-THREDDS_NAMESPACE = {"thredds": "http://www.unidata.ucar.edu/namespaces/thredds/InvCatalog/v1.0"}
 
 # TODO: Transport errormessage to management command: if no newer files are available and if download failed
 
@@ -36,32 +30,31 @@ def get_download_url(scenario, variable):
 
     # get the version folder's name
     try:
-        catalog_url = f"{BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}catalog.xml"
+        catalog_url = f"{monica_constants.BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}catalog.xml"
         
         catalog = requests.get(catalog_url)
         catalog_tree = ElementTree.fromstring(catalog.content)
         
-        catalog = catalog_tree.findall(".//thredds:catalogRef", THREDDS_NAMESPACE)
+        catalog = catalog_tree.findall(".//thredds:catalogRef", monica_constants.THREDDS_NAMESPACE)
         latest_versions = []
         for catalog_ref in catalog:
             latest_versions.append(catalog_ref.attrib['name'])
         latest_version = max(latest_versions)
 
         # compose catalog url for the latest version
-        latest_version_url = f"{BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}{latest_version}/catalog.xml"
+        latest_version_url = f"{monica_constants.BASE_CATALOG_URL.format(year=year, month=month, scenario=scenario,variable=variable)}{latest_version}/catalog.xml"
         
         # Get the dataset name/ urlPath
         dataset_name_reponse = requests.get(latest_version_url)
         dataset_name_catalog_tree = ElementTree.fromstring(dataset_name_reponse.content)
-        dataset_name_catalog = dataset_name_catalog_tree.findall(".//thredds:dataset", THREDDS_NAMESPACE)
+        dataset_name_catalog = dataset_name_catalog_tree.findall(".//thredds:dataset", monica_constants.THREDDS_NAMESPACE)
         dataset_path = ''
         for dataset in dataset_name_catalog:
             if dataset.attrib.get('urlPath'):
                 dataset_path = dataset.attrib['urlPath']
 
-        https_download_url = f"https://esgf-data.dwd.de/thredds/fileServer/{dataset_path}"
-        print('https_download_url: ', https_download_url)
-        return {'success': True, 'url':https_download_url}
+        print('https_download_url: ', monica_constants.DWD_THREDDS_DOWNLOAD_URL.format(dataset_path=dataset_path))
+        return {'success': True, 'url':monica_constants.DWD_THREDDS_DOWNLOAD_URL.format(dataset_path=dataset_path)}
     
     except Exception as e:
         print(f"Error fetching download URL: {e}")
@@ -83,7 +76,7 @@ def fetch_available_variables(catalog_url):
     tree = ElementTree.fromstring(response.content)
     # Find all catalogRef elements within the namespace
     variables = [
-        ref.attrib.get("name") for ref in tree.findall(".//thredds:catalogRef", THREDDS_NAMESPACE)
+        ref.attrib.get("name") for ref in tree.findall(".//thredds:catalogRef", monica_constants.THREDDS_NAMESPACE)
     ]
     # variables = ['hurs', 'pr', 'psl', 'rsds', 'sfcWind', 'tas', 'tasmax', 'tasmin']
     return variables
@@ -138,21 +131,33 @@ def download_and_save_nc_file(nc_url, save_path):
     print(f"Downloaded: {filename} to {save_path}")
     return filename
 
+def correct_dataset_units(ds):
+    """Correct the units of the dataset variables if necessary."""
+    for var in ds.data_vars:
+        if var in ('tas', 'tasmin', 'tasmax'):
+            ds[var] = ds[var] - 273.15
+            ds[var].attrs['units'] = '°C'
+        if var == 'pr':
+            ds[var] = ds[var] * 60 * 60 * 24
+            ds[var].attrs['units'] = 'mm/day'
+        if var == 'rsds':
+            ds[var] = ds[var] * 10
+            ds[var].attrs['units'] = 'W/m²'
+    return ds
+
 
 def automated_thredds_download():
     """
     Main function to automate downloads of variables across climate-scenarios.
     """
-    
-
     local_path = get_local_path()
 
     # Step 1: Iterate through scenarios and variables
     
-    for scenario in SCENARIOS:
+    for scenario in monica_constants.SCENARIOS:
         new_files = [] 
         folder_path = f"{local_path}/{scenario}/"
-        for variable in VARIABLES:
+        for variable in monica_constants.VARIABLES:
             print(f"Processing variable '{variable}' for scenario '{scenario}'...")
 
             nc_file_url_message = get_download_url(scenario, variable)
@@ -177,7 +182,7 @@ def automated_thredds_download():
 
     # Combine NetCDF files  into a single file for each scenario
     try:
-        for scenario in SCENARIOS:
+        for scenario in monica_constants.SCENARIOS:
             folder_path = f"{local_path}/{scenario}/"
             netcdf_paths = [f'{folder_path}/{nc}' for nc in os.listdir(folder_path) if nc.endswith('.nc')]
             
@@ -186,6 +191,7 @@ def automated_thredds_download():
             file_path = f"{local_path}/{filename}"
             if file_path not in old_combined_ncs:
                 ds = xr.open_mfdataset(netcdf_paths, combine='by_coords', compat='override')
+                ds = correct_dataset_units(ds)
                 ds.to_netcdf(file_path)
                 ds.close()
                 new_combined_ncs.append(file_path)

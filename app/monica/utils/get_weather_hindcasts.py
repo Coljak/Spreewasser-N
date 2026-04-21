@@ -4,16 +4,18 @@ This module automates the download of the hindcasts from ???
 
 from ftplib import FTP_TLS
 import os
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import xarray as xr
 import numpy as np
 from .dwd_server import settings
 from django.core.cache import cache
+from monica.utils import monica_constants
+from app import settings
 
 
 # TODO add a timeout if the download does not work/ continue7
 
-VARS = ['hurs', 'pr', 'rsds', 'sfcwind','tas', 'tasmax', 'tasmin']
+
 
 def download_from_ftps(host, username, password, remote_file_path, local_file_path):
     """
@@ -49,7 +51,7 @@ def download_from_ftps(host, username, password, remote_file_path, local_file_pa
         
 
 
-def get_last_valid_date(year):
+def get_last_valid_date():
     """
     Gets the last valid date from the NetCDF file for the given year.
     It is used to get the latest date, for wich hindcast data is available. 
@@ -83,7 +85,7 @@ def get_last_valid_date_cached():
     last_valid_date = cache.get('last_valid_date')
     yesterday = datetime.now() - timedelta(days=1)
     if last_valid_date is None or last_valid_date < yesterday:
-        last_valid_date = get_last_valid_date_cached(update=True)
+        last_valid_date = get_last_valid_date()
     year = datetime.now().year
     if last_valid_date is None:
         last_valid_date = get_last_valid_date(year)
@@ -102,17 +104,27 @@ def correct_hindcast_chunking(filename):
             'zlib': True, 
             'complevel': 4 
         }}
+    # TODO - replace
     path = f'monica/climate_netcdf/{filename}'
+    locale_fp = f'{settings.MONICA_NETCDF_HINDCAST_DIR}/{filename}'
     ds = xr.open_dataset(path, chunks=None)
     ds.to_netcdf(path, encoding=encoding)
 
+def correct_dataset_units(local_file_path):
+    ds = xr.open_dataset(local_file_path)
+    ds['rsds'] = ds['rsds'] * .01
+    ds.to_netcdf(local_file_path)
+    
+
 
 def process_year(year):
-    for var in VARS:
+    for var in monica_constants.VARIABLES_LOWER:
         try:
             filename = f'zalf_{var}_amber_{year}_v1-0.nc'
             remote_file_path = f'/DWD_SpreeWasser_N/{filename}'
+            # TODO replace
             local_file_path = f'monica/climate_netcdf/{filename}'
+            locale_fp = f'{settings.MONICA_NETCDF_HINDCAST_DIR}/{filename}'
 
             download_from_ftps(
                 settings['host'],
@@ -122,7 +134,10 @@ def process_year(year):
                 local_file_path
             )
 
+            if var == 'rsds':
+                correct_dataset_units(local_file_path)
             correct_hindcast_chunking(filename)
+
         except Exception as e:
             # This error should only occur if the last available date is dec 31st of the current year
             print(f"Error: {e}")
@@ -145,7 +160,7 @@ def download_all_hindcast_data():
 
     for year in range(start_year, (year_now + 1)):
                        
-        for var in VARS:
+        for var in monica_constants.VARIABLES_LOWER:
             remote_file_path = f'/DWD_SpreeWasser_N/zalf_{var}_amber_{year}_v1-0.nc'
             local_file_path = f'monica/climate_netcdf/zalf_{var}_amber_{year}_v1-0.nc'
             download_from_ftps(settings['host'], settings['username'], settings['password'], remote_file_path, local_file_path)

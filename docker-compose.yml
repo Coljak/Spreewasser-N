@@ -25,6 +25,7 @@ services:
       - ./app:/app
       - ./app/klim4cast/data/netcdf:/app/klim4cast/data/netcdf 
       - ./app/raster_data:/app/raster_data
+      - ./app_data:/app_data
       # - ./thredds_data/data:/app/thredds_data
     command: 
       sh -c "python3 manage.py wait_for_db &&

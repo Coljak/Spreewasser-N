@@ -30,7 +30,11 @@ SECRET_KEY = 'django-insecure-hl9ukq&o_m6c&^7co0-qlivgsq%f^ouhu5j(vc21sk8!xmf-h*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['10.10.88.183', 'srv-pb4-spreedev.zalf.de', '127.0.0.1', 'localhost' ]
+
+if DEBUG == True:
+    ALLOWED_HOSTS = ['10.10.88.183', 'srv-pb4-spreedev.zalf.de', '127.0.0.1', 'localhost' ]
+else:
+    ALLOWED_HOSTS = ['srv-pb4-spreedev.zalf.de', 'klima-hub.zalf.de']
 
 
 # Application definition
@@ -122,6 +126,21 @@ DATABASES = {
 THREDDS_URL = os.environ.get('THREDDS_URL')
 THREDDS_CATALOG_XML = Path(THREDDS_URL).joinpath('catalog', 'testAll', 'data', 'DWD_SpreeWasser_N_cf_v4', 'catalog.xml')
 
+# other data
+APP_DATA_DIR = '/app_data'
+# django app monica
+MONICA_DATA_DIR = os.path.join(APP_DATA_DIR, 'monica')
+MONICA_NETCDF_FORECAST_DIR = os.path.join(MONICA_DATA_DIR, 'netcdf_forecast')
+MONICA_NETCDF_HINDCAST_DIR = os.path.join(MONICA_DATA_DIR, 'netcdf_hindcast')
+MONICA_RASTER_DATA_DIR = os.path.join(MONICA_DATA_DIR, 'raster_data')
+# django app klim4cast
+KLIM4CAST_DATA_DIR = os.path.join(APP_DATA_DIR, 'klim4cast')
+KLIM4CAST_NETCDF_DIR = os.path.join(KLIM4CAST_DATA_DIR, 'netcdf')
+
+# django app toolbox
+TOOLBOX_DATA_DIR = os.path.join(APP_DATA_DIR, 'toolbox')
+TOOLBOX_RASTER_DATA_DIR = os.path.join(TOOLBOX_DATA_DIR, 'raster_data')
+
 
 
 # Password validation
@@ -185,7 +204,7 @@ STATICFILES_DIRS = [
     Path.joinpath(BASE_DIR, 'swn/static/'),
     Path.joinpath(BASE_DIR, 'monica/static/'),
     Path.joinpath(BASE_DIR, 'toolbox/static/'),
-    Path.joinpath(BASE_DIR, 'buek/static/'),
+    # Path.joinpath(BASE_DIR, 'buek/static/'),
     Path.joinpath(BASE_DIR, 'klim4cast/static/'),
     ]
 
@@ -211,10 +230,12 @@ LOGOUT_REDIRECT_URL = '/'
 
 # for Debug Toolbar, the internal IPS are necessary
 if DEBUG:
-    import socket  # only if you haven't already imported this
+    import socket  
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
     INTERNAL_IPS = [
         ip[: ip.rfind('.')] + '.1' for ip in ips] + ['127.0.0.1', '10.0.2.2']
+    
+
 # INTERNAL_IPS = [
 #     '127.0.0.1',
 #     '0.0.0.0',

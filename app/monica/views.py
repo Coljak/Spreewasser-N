@@ -28,6 +28,7 @@ from .monica_events import swn_events
 from .utils import save_monica_project, get_weather_hindcasts, get_weather_forecast
 from dateutil.relativedelta import relativedelta
 import requests
+from monica.utils import monica_constants
 
 import glob
 
@@ -53,166 +54,20 @@ from rasterio.errors import RasterioIOError
 
 from datetime import datetime, timedelta, date, timezone
 from dask.diagnostics import ProgressBar
+from monica.utils import monica_constants
 import dask
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning, module="xarray")
 
 
-# layerAggOp
-OP_AVG = 0
-OP_MEDIAN = 1
-OP_SUM = 2
-OP_MIN = 3
-OP_MAX = 4
-OP_FIRST = 5
-OP_LAST = 6
-OP_NONE = 7
-OP_UNDEFINED_OP_ = 8
 
-
-ORGAN_ROOT = 0
-ORGAN_LEAF = 1
-ORGAN_SHOOT = 2
-ORGAN_FRUIT = 3
-ORGAN_STRUCT = 4
-ORGAN_SUGAR = 5
-ORGAN_UNDEFINED_ORGAN_ = 6
 #-------------------------- Monica Interface --------------------------#
-
-
-# all relevant climate variables. The key is already the the correct key for  MONICA climate jsons
-CLIMATE_VARIABLES = { 
-    '3': 'tasmin',
-    '4': 'tas',
-    '5': 'tasmax',
-    '6': 'pr',
-    '8': 'rsds',
-    '9': 'sfcWind',
-    '12': 'hurs'
-    }
 
 
 def ensure_datetime(d):
     return d if isinstance(d, datetime) else datetime.combine(d, datetime.min.time())
 
-# not in use
-def get_lat_lon_as_index(lat, lon):
-    """
-    Returns the index of the closest lat, lon to the given lat, lon in the netCDF grid. Used for matching differntly scaled grids.
-    """
-    lats = lat_lon_mask['lat']
-    
-    lons = lat_lon_mask['lon']
-    lat_idx = 0
-    lon_idx = 0
-    for i, lat_ in enumerate(lats):
-        if lat_ < lat:
-            lat_idx = i
-            break
-    
-    for j, lon_ in enumerate(lons):
-        if lon_ > lon:
-            lon_idx = j
-            break
-   
-    if (lats[lat_idx] + lats[lat_idx-1]) / 2 < lat:
-        print("lat is in if")
-        lat_idx = lat_idx - 1
-
-    if (lons[lon_idx] + lons[lon_idx-1]) / 2 > lon:
-        lon_idx = lon_idx - 1
-
-    return (lat_idx, lon_idx)
-
-
-def load_netcdf_to_memory():
-    """
-    Loads all netcdf files of at least the past two years into memory. 
-    This is done to avoid opening and closing the files for each request.
-    """
-    climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf')
-
-    this_year = datetime.now().year
-    start_year = this_year - 3
-
-    path_list = []
-    for _, value in CLIMATE_VARIABLES.items():
-
-        for year in range(start_year, this_year + 1):
-            file_path = f"{climate_data_path}/zalf_{value.lower()}_amber_{year}_v1-0.nc"
-            path_list.append(file_path)
-
-
-    climate = xr.open_mfdataset(path_list, combine='by_coords', parallel=True) 
-    climate_first_date = climate['time'][0]
-    climate_last_date = climate['time'][-1]
-    return climate, climate_first_date, climate_last_date
-
-# TODO REACTIVATE - only deactivated to prevet long loading times
-# CLIMATE_DATES = load_netcdf_to_memory()
-# CLIMATE = CLIMATE_DATES[0]
-# CLIMATE_FIRST_DATE = CLIMATE_DATES[1]
-# CLIMATE_LAST_DATE = CLIMATE_DATES[2]
-
-def get_climate_data_as_json_new(start_date, end_date, lat_idx, lon_idx):
-    start = datetime.now()
-    climate_json = {}
-    # with ProgressBar():
-    climate_slice = CLIMATE.sel(time=slice(start_date, end_date)).isel(lat=lat_idx, lon=lon_idx)
-    # Shows a progress bar for Dask computations
-
-
-    for key, value in CLIMATE_VARIABLES.items():
-        climate_json[key] = climate_slice[value].values.tolist()
-    print('Time elapsed in get_climate_data_as_json_new: ', datetime.now() - start)
-    return climate_json
-
-
-# # used
-# def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
-#     """Returns the climate data as json using monica's keys for the given start and end date and the given lat and lon index"""
-#     print("get_climate_data_as_json", start_date, end_date, lat_idx, lon_idx)
-
-#     # opening with MFDataset does not work, because time is not an unlimited dimension in the NetCDF files
-#     start = datetime.now()
-#     climate_json = { 
-#         '3': [],
-#         '4': [],
-#         '5': [],
-#         '6': [],
-#         '8': [],
-#         '9': [],
-#         '12': [],
-#         }
-#     climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf')
-
-#     for year in range(start_date.year, end_date.year + 1):
-#         print('climate data for loop', year)
-#         for key, value in CLIMATE_VARIABLES.items():
-            
-#             file_path = f"{climate_data_path}/zalf_{value.lower()}_amber_{year}_v1-0.nc"
-#             print("filepath: ", file_path,  "getting key:", key)
-#             nc = Dataset(file_path, 'r')
-#             # print('climate data check 1')
-#             start_idx = 0
-#             end_idx = len(nc['time']) + 1
-#             if year == start_date.year:
-#                 start_idx = date2index(start_date, nc['time'])
-#             if year == end_date.year:
-#                 end_idx = date2index(end_date, nc['time']) +1
-
-#             values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx]
-#             values = values.tolist()
-
-#             climate_json[key].extend(values)
-
-#             nc.close()
-
-#             print(year, value, key)
-#     print('Time elapsed in get_climate_data_as_json: ', datetime.now() - start)
-#     climate_json['8'] = [x / 100 for x in climate_json['8']]
-#     return climate_json
 
 
 
@@ -227,7 +82,7 @@ def get_climate_data_as_json_from_hindcast(start_date, end_date, lat_idx, lon_id
 
     for year in range(start_date.year, end_date.year + 1):
         print('climate data for loop', year)
-        for key, value in CLIMATE_VARIABLES.items():
+        for key, value in monica_constants.CLIMATE_VARIABLES.items():
             file_path = f"{climate_data_path}/zalf_{value.lower()}_amber_{year}_v1-0.nc"
             print("filepath:", file_path, "getting key:", key)
 
@@ -256,6 +111,8 @@ def get_climate_data_as_json_from_hindcast(start_date, end_date, lat_idx, lon_id
 
     return climate_json
 
+
+# TODO THIS IS OUT!!
 def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_idx):
     """Returns climate data as JSON using Monica's keys for the given start and end date and lat/lon index."""
     print("get_climate_data_as_json_from_forecast", start_date, end_date, lat_idx, lon_idx)
@@ -266,7 +123,7 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
     climate_json = { '3': [], '4': [], '5': [], '6': [], '8': [], '9': [], '12': [] }
     climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf_forecast')
 
-    for scenario in [get_weather_forecast.SCENARIOS[0]]:
+    for scenario in [monica_constants.SCENARIOS[0]]:
 
         glob_path = f"{climate_data_path}/forecast_{scenario}_*.nc"
         file_path = glob.glob(glob_path)[0]
@@ -274,7 +131,7 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
         with Dataset(file_path, 'r') as nc:
             start_idx = date2index(start_date, nc['time'], select='nearest')
             end_idx = date2index(end_date, nc['time'], select='nearest') + 1
-            for key, value in CLIMATE_VARIABLES.items():        
+            for key, value in monica_constants.CLIMATE_VARIABLES.items():        
                 values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx]
                 if value in ('tas', 'tasmin', 'tasmax'):
                     values = values - 273.15
@@ -301,6 +158,8 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     end_date = ensure_datetime(end_date)
     last_hindcast_date = ensure_datetime(get_weather_hindcasts.get_last_valid_date_cached())
     last_forecast_date = ensure_datetime(get_weather_forecast.get_last_valid_forecast_date_cached())
+    
+
     forecast_lat_idx, forecast_lon_idx = models.DWDGridToPointIndices.get_forecast_indices(lat_idx, lon_idx)
 
     # Initialize empty dictionaries
@@ -313,6 +172,7 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
         hindcast_end_date = min(end_date, last_hindcast_date)  # Ensure it doesn't exceed last_hindcast_date
         hindcast_json = get_climate_data_as_json_from_hindcast(hindcast_start_date, hindcast_end_date, lat_idx, lon_idx)
     
+        
     # If end_date is after last_hindcast_date, we need forecast data
     if end_date > last_hindcast_date:
         forecast_start_date = max(start_date, last_hindcast_date + timedelta(days=1))  # Start from the day after hindcast ends
@@ -330,6 +190,10 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     
     return climate_json
 
+
+def new_approach_to_climate_data_for_germany(start_date, end_date):
+    subset_hindcast = CLIMATE.sel(time=slice(start_date, end_date))
+    subset_forecast = FORECAST.sel(time=slice(start_date, end_date))
 
 
 ### MONICA VIEWS ###
@@ -449,6 +313,7 @@ def create_monica_env_from_json(json_data):
 
 
       # end of replacement -------------------------------------------
+    print('cropRotation: ', cropRotation)
     
     debugMode = True
 
@@ -483,6 +348,8 @@ def create_monica_env_from_json(json_data):
         "NDeposition": [n_deposition,"kg N ha-1 y-1"],
         "SoilProfileParameters": soil_profile_parameters
     }
+
+    print('siteParameters: ', siteParameters)
     simulation_settings = json_data.get('userSimulationSettingsId')
     if simulation_settings is not None:
         simj = models.UserSimulationSettings.objects.get(id=simulation_settings).to_json()
@@ -501,6 +368,8 @@ def create_monica_env_from_json(json_data):
     else:
         user_environment_parameters = models.UserEnvironmentParameters.objects.get(is_default=True).to_json()
 
+    print('user_crop_parameters: ', user_crop_parameters)
+    print('user_environment_parameters: ', user_environment_parameters)
 
     user_soil_moisture_parameters_id = json_data.get('userSoilMoistureParametersId')
     if user_soil_moisture_parameters_id is not None:   
@@ -539,12 +408,19 @@ def create_monica_env_from_json(json_data):
     "siteParameters": siteParameters
     }
 
+    print('cpp done..')
+
      # get climate data from database
+    print('getting climate data from database for lat, lon: ', json_data['latitude'], json_data['longitude'])
     lat_idx, lon_idx = models.DWDGridAsPolygon.get_idx(float(json_data['latitude']), float(json_data['longitude']))
+    print('lat_idx, lon_idx: ', lat_idx, lon_idx)
     start_date = json_data['startDate'].split('T')[0]
+    print('start_date: ', start_date)
     end_date = json_data['endDate'].split('T')[0]          
-    # TODO use get_climate_data_as_json_new and activate CLIMATE_DATES; BUT get_climate_data_as_json now also includes the forecast!!!
+    print('end_date: ', end_date)
+    # TODO use new CLIMATE and activate CLIMATE_DATES; BUT get_climate_data_as_json now also includes the forecast!!!
     climate_data = get_climate_data_as_json(parser.parse(start_date), parser.parse(end_date), lat_idx, lon_idx)
+    print('climate_data: ', climate_data)
 
 
 
@@ -1731,81 +1607,72 @@ def monica_run_over_germany():
     This function creates a base_environment and modifies it according to each cell.
     It then runs the simulation for each cell and saves the output in a netcdf file.
     """
+
+    start = datetime.now()
+
     germany_model_settings = models.GermanyModelParameters.objects.get(is_default=True)
-    # TODO: check with Claas or Marlene what parameters to use!
-    simj = germany_model_settings.simj.to_json() 
-    user_crop_parameters = germany_model_settings.user_crop_parameters.to_json()
-    user_environment_parameters = germany_model_settings.user_environment_parameters.to_json()
-    user_soil_moisture_parameters = germany_model_settings.user_soil_moisture_parameters.to_json()
-    user_soil_temperature_parameters = germany_model_settings.soil_temperature_module_parameters.to_json()
-    user_soil_transport_parameters = germany_model_settings.user_soil_transport_parameters.to_json()
-    user_soil_organic_parameters = germany_model_settings.user_soil_organic_parameters.to_json()
-    cpp = {
-        "type": "CentralParameterProvider",
-        "userCropParameters": user_crop_parameters,
-        "userEnvironmentParameters": user_environment_parameters,
-        "userSoilMoistureParameters": user_soil_moisture_parameters,
-        "userSoilTemperatureParameters": user_soil_temperature_parameters,
-        "userSoilTransportParameters": user_soil_transport_parameters,
-        "userSoilOrganicParameters":user_soil_organic_parameters,
-        "simulationParameters": simj,    
-    }
+    # TODO: check with Claas or Marlene what parameters to use!  
+    cpp = germany_model_settings.to_json()
     
     # load all relevant soil data for Germany- otherwise the query on each pixel would take too long
-    agri_buek = rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'buek_id_agriculture_masked_4326.tif'))
-    altitude = rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'dgm200_4326_1000m.tif'))
-    altitude_arr = altitude.read(1)
-    slope = rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'dgm_1000_4326_slope.tif'))
-    slope_arr = slope.read(1)
+    with rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'buek_id_agriculture_masked_4326.tif')) as ab:
+        agri_buek_arr = ab.read(1)
+    unique_buek_ids = np.unique(agri_buek_arr)
     
-    unique_buek_ids = np.unique(agri_buek.read(1))
+    height, width = agri_buek_arr.shape
     unique_buek_ids = unique_buek_ids[unique_buek_ids != -9999]
-
     soil_profiles = buek_models.SoilProfile.objects.filter(id__in=unique_buek_ids)
-    print(len(soil_profiles), "unique buek ids")
-
     soil_profile_dict = {sp.id: sp.get_monica_horizons_json()[0] for sp in soil_profiles}
     print("Soil profiles loaded")
 
+    with rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'dgm200_4326_1000m.tif')) as alt:
+        altitude_arr = alt.read(1)
+
+    with rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'dgm_1000_4326_slope.tif')) as s:
+        slope_arr = s.read(1)
+    
+    # fetch all relevant soil profiles into memory
+    
+    
+    
+# get sowing dates
     def doy_to_iso(doy):
         if doy is None:
             return None
         date = datetime(2001, 1, 1) + timedelta(days=doy - 1)  # non-leap year
-        # TODO: check if the first ratation is always 0000
+        # TODO: check if the first rotation is always 0000
         return f"0000-{date.strftime('%m-%d')}"
     # cultivar is winter wheat!
     cultivar = germany_model_settings.cultivar
     
     min_sowing_date = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).aggregate(Min('avg_sowing_doy'))['avg_sowing_doy__min']
     max_harvest_date = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).aggregate(Max('avg_harvest_doy'))['avg_harvest_doy__max']
-    sowing_dates_list = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).values('climate_station__id', 'avg_sowing_doy', 'avg_harvest_doy')
-    
+    sowing_dates_list = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).values('climate_station__id', 'avg_sowing_doy', 'avg_harvest_doy')  
     sowing_dates_per_station = {data['climate_station__id']: {'sowing_date': doy_to_iso(data['avg_sowing_doy']), 'harvest_date': doy_to_iso(data['avg_harvest_doy'])} for data in sowing_dates_list}
     print('sowing dates loaded', sowing_dates_per_station)
-    climate_stations_tif = rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'nearest_station_per_cultivar', f'nearest_station_cultivar_{germany_model_settings.cultivar_name_for_sowing_dates}.tif'))
-    climate_stations_arr = climate_stations_tif.read(1)
+    
+    with rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'nearest_station_per_cultivar', f'nearest_station_cultivar_{germany_model_settings.cultivar_name_for_sowing_dates}.tif')) as climate_stations_tif:
+        climate_stations_arr = climate_stations_tif.read(1)
 
 
-    workstep = {"date":  '',               # "0000-10-13",
-                    "type": "Sowing",
-                    "crop": {
-                        # "is-winter-crop": True, # TODO is winter-crop is probably not required!!!
-                        "cropParams": {
-                            "species": {
-                            "=": cultivar.species_parameters.to_json()
-                            },
-                            "cultivar": {
-                            "=": cultivar.to_json()
-                            }
-                        },
-                        "residueParams": models.CropResidueParameters.objects.get(species_parameters=cultivar.species_parameters, is_default=True).to_json()
-                    }
+    workstep = {
+        "date":  '',               # "0000-10-13",
+        "type": "Sowing",
+        "crop": {
+            # "is-winter-crop": True, # TODO is winter-crop is probably not required!!!
+            "cropParams": {
+                "species": {
+                "=": cultivar.species_parameters.to_json()
+                },
+                "cultivar": {
+                "=": cultivar.to_json()
                 }
+            },
+            "residueParams": models.CropResidueParameters.objects.get(species_parameters=cultivar.species_parameters, is_default=True).to_json()
+        }
+    }
             
-
-    # TODO
-    agri_buek_as_array = agri_buek.read(1)
-    height, width = agri_buek_as_array.shape
+    
     
     #TODO get dates right
     start_date = '2025-08-01'
@@ -1845,14 +1712,15 @@ def monica_run_over_germany():
     
     for lat_idx in range(0, height):
         for lon_idx in range(0, width):
-            if int(agri_buek_as_array[lat_idx, lon_idx]) != -9999:
+            if agri_buek_arr[lat_idx][lon_idx] and agri_buek_arr[lat_idx][lon_idx] != -9999:
 
                 indices_dict = lat_lon_idx_dictionary[lat_idx][lon_idx]
                 print(f"Running cell {lat_idx}, {lon_idx}")
-                buek_id = int(agri_buek_as_array[lat_idx, lon_idx])
+
+                buek_id = int(agri_buek_arr[lat_idx, lon_idx])
                 soil_profile = soil_profile_dict.get(buek_id, None)
 
-                print(int(climate_stations_arr[lat_idx, lon_idx]), 'climate_stations_arr[i, j]')
+                #print(int(climate_stations_arr[lat_idx, lon_idx]), 'climate_stations_arr[i, j]')
             
 
                 site_parameters = {
@@ -1866,15 +1734,14 @@ def monica_run_over_germany():
                 cpp["siteParameters"] = site_parameters
                 
                 # create env for MONICA
-                dates = sowing_dates_per_station[int(climate_stations_arr[i, lon_idx])]
+                dates = sowing_dates_per_station[climate_stations_arr[lat_idx, lon_idx]]
                 workstep['date'] = dates['sowing_date']
 
                 cropRotation = [
                     {'worksteps': [workstep],}
                 ]
 
-                # climate_data = get_climate_data_as_json_new(parser.parse(start_date), parser.parse(end_date), lat_idx, lon_idx)
-                # TODO check climate data functions!!!!
+                
                 climate_json['data'] = 'climate_data'
                 
                 env = {
@@ -1886,10 +1753,12 @@ def monica_run_over_germany():
                     "events": events,
                     "climateData": climate_json
                 }
+                print(f'env {lat_idx} {lon_idx} created, now running monica')
 
-                run_monica_and_write_to_netcdf(env, lat_idx, lon_idx)
 
+                #run_monica_and_write_to_netcdf(env, lat_idx, lon_idx)
 
-    print('done with env creation, now running simulation')
+    end = datetime.now() - start
+    print(f'done with env creation, now running simulation in {end}')
 
     # return JsonResponse({'message': {'success': True, 'message': 'Started Germany-wide simulation.'}})

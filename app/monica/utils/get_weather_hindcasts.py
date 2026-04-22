@@ -7,10 +7,10 @@ import os
 from datetime import datetime, date, timedelta
 import xarray as xr
 import numpy as np
-from .dwd_server import settings
+from .dwd_server import settings as dwd_settings
 from django.core.cache import cache
 from monica.utils import monica_constants
-from app import settings
+from django.conf import settings
 
 
 # TODO add a timeout if the download does not work/ continue7
@@ -51,23 +51,26 @@ def download_from_ftps(host, username, password, remote_file_path, local_file_pa
         
 
 
-def get_last_valid_date():
+def get_last_valid_date(year):
     """
     Gets the last valid date from the NetCDF file for the given year.
     It is used to get the latest date, for wich hindcast data is available. 
     returns the last valid date as a datetime object.
     """
-    year = datetime.now().year
+    print('get_last_valid_date')
+
     try:
         nc_path = f'monica/climate_netcdf/zalf_hurs_amber_{year}_v1-0.nc'
+        ds = xr.open_dataset(nc_path)
     except Exception as e:
         try:
             nc_path = f'monica/climate_netcdf/zalf_hurs_amber_{year-1}_v1-0.nc'
+            ds = xr.open_dataset(nc_path)
         except Exception as e:
             print(f"Error: {e}")
             return None
 
-    ds = xr.open_dataset(nc_path)
+    
     hurs = ds.hurs[:, 200, 200].values
     valid_indices = np.where(~np.isnan(hurs))[0]
     if valid_indices.size > 0:
@@ -82,16 +85,20 @@ def get_last_valid_date_cached():
     """
     This sets the cached 'last_valid_date' to the last valid date from the NetCDF file.
     """
+    print('get_last_valid_date_cached')
+
+    year = datetime.now().year
     last_valid_date = cache.get('last_valid_date')
     yesterday = datetime.now() - timedelta(days=1)
     if last_valid_date is None or last_valid_date < yesterday:
-        last_valid_date = get_last_valid_date()
+        last_valid_date = get_last_valid_date(year)
     year = datetime.now().year
     if last_valid_date is None:
-        last_valid_date = get_last_valid_date(year)
+        print('Last valid date is None, trying previous year...')
+        last_valid_date = get_last_valid_date(year - 1)
         cache.set('last_valid_date', last_valid_date, timeout=129600)  # Cache for 36 hours
     
-
+    print('last_valid_date', last_valid_date)
     return last_valid_date
 
 def correct_hindcast_chunking(filename):
@@ -111,6 +118,7 @@ def correct_hindcast_chunking(filename):
     ds.to_netcdf(path, encoding=encoding)
 
 def correct_dataset_units(local_file_path):
+    print('correct_dataset_units: ', local_file_path)
     ds = xr.open_dataset(local_file_path)
     ds['rsds'] = ds['rsds'] * .01
     ds.to_netcdf(local_file_path)
@@ -118,6 +126,7 @@ def correct_dataset_units(local_file_path):
 
 
 def process_year(year):
+    print(f"Processing year: {year}")
     for var in monica_constants.VARIABLES_LOWER:
         try:
             filename = f'zalf_{var}_amber_{year}_v1-0.nc'
@@ -127,9 +136,9 @@ def process_year(year):
             locale_fp = f'{settings.MONICA_NETCDF_HINDCAST_DIR}/{filename}'
 
             download_from_ftps(
-                settings['host'],
-                settings['username'],
-                settings['password'],
+                dwd_settings['host'],
+                dwd_settings['username'],
+                dwd_settings['password'],
                 remote_file_path,
                 local_file_path
             )
@@ -146,11 +155,14 @@ def process_year(year):
 
 def update_hindcast_data():
     year = datetime.now().year
-    last_valid_date = cache.get('last_valid_date')
-    # if last valid date is the last day of the year, the hindcast can be in the previous year
-    if last_valid_date is not None and last_valid_date.month == 12 and last_valid_date.day == 31:
-        year -= 1
-    process_year(year)
+    last_valid_date = cache.get('last_valid_date', None)
+    current_year = datetime.now().year
+    last_valid_year = last_valid_date.year if last_valid_date else None
+    if last_valid_date is not None and current_year > last_valid_year:
+        if not (last_valid_date.month == 12 and last_valid_date.day == 31):
+            process_year(last_valid_year)
+    process_year(current_year)
+
 
 
 

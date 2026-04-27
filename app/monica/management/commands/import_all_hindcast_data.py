@@ -3,8 +3,8 @@ With this command, the forecast data can be downloaded and is conerted to combin
 """
 
 from django.core.management.base import BaseCommand
-from monica.utils.get_weather_hindcasts import download_all_hindcast_data
-from monica.services.climate_store import reload_all
+from monica.utils.download_weather_hindcasts import download_all_hindcast_data
+from monica.utils.climate_store import reload_all
 
 """
 !!!!!!!!!!!!!! DOES NOT WORK FROM ZALF GUEST NETWORK !!!!!!!!!!!!!!!

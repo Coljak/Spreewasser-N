@@ -28,7 +28,7 @@ from monica.utils import save_monica_project
 from monica import forms as monica_forms
 from monica import models as monica_models
 from monica import views as monica_views
-from monica.utils import get_weather_forecast
+from monica.utils import download_weather_forecast
 
 from buek import models as buek_models
 from buek.views import get_recommended_soil_profile
@@ -508,7 +508,7 @@ def load_swn_project(request, id):
         return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
     else:
         project_json = project.to_json()
-        project_json['endDate'] = get_weather_forecast.get_last_valid_forecast_date_cached()
+        project_json['endDate'] = download_weather_forecast.get_last_valid_forecast_date_cached()
         return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
 
     

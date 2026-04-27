@@ -23,8 +23,6 @@ services:
       - 8888:8888
     volumes:
       - ./app:/app
-      - ./app/klim4cast/data/netcdf:/app/klim4cast/data/netcdf 
-      - ./app/raster_data:/app/raster_data
       - ./app_data:/app_data
       # - ./thredds_data/data:/app/thredds_data
     command: 

@@ -17,6 +17,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+import numpy as np
 
 class CropParametersExist(models.Model):
     species_name = models.CharField(max_length=100, blank=True)
@@ -807,21 +808,21 @@ class UserSoilMoistureParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     # default = models.BooleanField(default=False)
-    correction_rain = models.FloatField() # TODO integer
+    correction_rain = models.IntegerField()
     correction_snow = models.FloatField()
     critical_moisture_depth = models.FloatField()
-    evaporation_zeta = models.FloatField() # TODO integer
-    groundwater_discharge = models.FloatField() # TODO integer
+    evaporation_zeta = models.IntegerField() 
+    groundwater_discharge = models.IntegerField()
     hydraulic_conductivity_redux = models.FloatField()
     kc_factor = models.FloatField()
-    max_percolation_rate = models.FloatField() # TODO integer
-    maximum_evaporation_impact_depth = models.FloatField() # TODO integer
-    moisture_init_value = models.FloatField() # TODO integer
+    max_percolation_rate = models.IntegerField() 
+    maximum_evaporation_impact_depth = models.IntegerField() 
+    moisture_init_value = models.IntegerField()
     new_snow_density_min = models.FloatField()
     refreeze_parameter1 = models.FloatField()
     refreeze_parameter2 = models.FloatField()
     refreeze_temperature = models.FloatField()
-    saturated_hydraulic_conductivity = models.FloatField() # TODO integer
+    saturated_hydraulic_conductivity = models.IntegerField() 
     snow_accumulation_threshold_temperature = models.FloatField()
     snow_max_additional_density = models.FloatField()
     snow_melt_temperature = models.FloatField()
@@ -829,7 +830,7 @@ class UserSoilMoistureParameters(models.Model):
     snow_retention_capacity_max = models.FloatField()
     snow_retention_capacity_min = models.FloatField()
     surface_roughness = models.FloatField()
-    temperature_limit_for_liquid_water = models.FloatField() # TODO integer
+    temperature_limit_for_liquid_water = models.IntegerField()
     xsa_critical_soil_moisture = models.FloatField()
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
@@ -1870,10 +1871,58 @@ class DWDGridToPointIndices(models.Model):
 
         return result
 
+    
+    @classmethod
+    def build_index_mappings_as_array(cls):
+        """
+        This creates a mapping as arrays to quickly access the indices of the forecast using the indices of the hindgcast:
+        forecast_lat_idx = lat_map[lat_idx, lon_idx]
+        forecast_lon_idx = lon_map[lat_idx, lon_idx]
+
+        returns numpy arrays lat_map and lon_map, where the value at [lat_idx, lon_idx] gives the corresponding forecast_lat_idx and forecast_lon_idx.
+         Additionally, it returns a reverse mapping as a dictionary where the key is a tuple of (forecast_lat_idx, forecast_lon_idx) and the value is a list of tuples of (lat_idx
+        """
+        qs = list(
+            cls.objects
+            .filter(is_valid=True)
+            .values_list(
+                'lat_idx',
+                'lon_idx',
+                'forecast_lat_idx',
+                'forecast_lon_idx'
+            )
+        )
+
+        max_lat = max(x[0] for x in qs) + 1
+        max_lon = max(x[1] for x in qs) + 1
+
+        hindcast_to_forecast_index = np.full((max_lat, max_lon), None, dtype=object)
+
+        forecast_to_hindcasts = {}
+
+        for lat_idx, lon_idx, f_lat, f_lon in qs:
+            if f_lat is None or f_lon is None:
+                continue
+
+            # forward (array lookup)
+            hindcast_to_forecast_index[lat_idx, lon_idx] = (f_lat, f_lon)
+
+            # reverse (grouping)
+            key = (f_lat, f_lon)
+            forecast_to_hindcasts.setdefault(key, []).append((lat_idx, lon_idx))
+
+
+        return hindcast_to_forecast_index, forecast_to_hindcasts
+
     @classmethod
     def get_forecast_indices(cls, lat_idx, lon_idx):
         instance = cls.objects.get(lat_idx=lat_idx, lon_idx=lon_idx)
         return instance.forecast_lat_idx, instance.forecast_lon_idx
+
+    @classmethod
+    def get_hindcast_indices(cls, forecast_lat_idx, forecast_lon_idx):
+        instance = cls.objects.get(forecast_lat_idx=forecast_lat_idx, forecast_lon_idx=forecast_lon_idx)
+        return instance.lat_idx, instance.lon_idx
     
     @classmethod
     def get_points_within_geom(cls, geom):
@@ -2055,7 +2104,7 @@ class UserSoilProfile(models.Model):
         return [horizon.to_monica_json() for horizon in hors], 'no message'
 
         
-# TODO implement the input option for soil
+
 class SoilHorizon(models.Model):
     user_soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE, related_name='soil_horizons')
     horizon_no = models.IntegerField(default=1)

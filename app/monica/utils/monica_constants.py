@@ -1,7 +1,8 @@
-"""all relevant climate variables. 
-The keys are the ones used in the  MONICA model code, the values are the corresponding variable names in the NetCDF files.
 """
-
+These are specific constants for MONICA that are used across the application.
+"""
+# all relevant climate variables. 
+# The keys are the ones used in the  MONICA model code, the values are the corresponding variable names in the NetCDF files.
 CLIMATE_VARIABLES = { 
     '3': 'tasmin',
     '4': 'tas',
@@ -15,10 +16,10 @@ VARIABLES = ['hurs', 'pr', 'rsds', 'sfcWind', 'tas', 'tasmax', 'tasmin']
 VARIABLES_LOWER = [var.lower() for var in VARIABLES] # 'psl'could also be downloaded
 
 
-"""
-Set the forecast scenarios that are supposed to be available for model calculations.
-"""
 
+# START_YEAR handles the year of first dataset and in the load dataset function
+START_YEAR = 2007 
+# Set the forecast scenarios that are supposed to be available for model calculations.
 SCENARIOS = ['r1i1p1', 'r2i1p1', 'r3i1p1']
 
 # paths to weather data

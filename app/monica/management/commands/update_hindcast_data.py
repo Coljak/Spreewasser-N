@@ -2,7 +2,7 @@
 With this command, the forecast data can be downloaded and is conerted to combined NetCDF files."""
 
 from django.core.management.base import BaseCommand
-from monica.utils.get_weather_hindcasts import update_hindcast_data
+from app.monica.utils.download_weather_hindcasts import update_hindcast_data
 
 """
 !!!!!!!!!!!!!! DOES NOT WORK FROM ZALF GUEST NETWORK !!!!!!!!!!!!!!!

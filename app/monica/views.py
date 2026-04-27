@@ -15,6 +15,8 @@ from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from django.template.loader import render_to_string
 from django.forms import inlineformset_factory, modelformset_factory
+
+from monica.utils import climate_store
 #get_recommended_soil_profile, get_buek_polygon_id_from_point_buek200
 # from ...xx_obsolete.run_consumer_swn import run_consumer
 from . import models
@@ -25,7 +27,7 @@ from buek import views as buek_views
 from buek import models as buek_models
 from .climate_data.lat_lon_mask import lat_lon_mask
 from .monica_events import swn_events
-from .utils import save_monica_project, get_weather_hindcasts, get_weather_forecast
+from .utils import save_monica_project, download_weather_hindcasts, download_weather_forecast
 from dateutil.relativedelta import relativedelta
 import requests
 from monica.utils import monica_constants
@@ -66,50 +68,52 @@ warnings.filterwarnings("ignore", category=UserWarning, module="xarray")
 
 
 def ensure_datetime(d):
+    print('type(d):', type(d))
+    print('d:', d)
     return d if isinstance(d, datetime) else datetime.combine(d, datetime.min.time())
 
 
 
 
-def get_climate_data_as_json_from_hindcast(start_date, end_date, lat_idx, lon_idx):
-    """Returns climate data as JSON using Monica's keys for the given start and end date and lat/lon index."""
-    print("get_climate_data_as_json", start_date, end_date, lat_idx, lon_idx)
+# def get_climate_data_as_json_from_hindcast(start_date, end_date, lat_idx, lon_idx):
+#     """Returns climate data as JSON using Monica's keys for the given start and end date and lat/lon index."""
+#     print("get_climate_data_as_json", start_date, end_date, lat_idx, lon_idx)
 
 
-    start = datetime.now()
-    climate_json = { '3': [], '4': [], '5': [], '6': [], '8': [], '9': [], '12': [] }
-    climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf')
+#     start = datetime.now()
+#     climate_json = { '3': [], '4': [], '5': [], '6': [], '8': [], '9': [], '12': [] }
+#     climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf')
 
-    for year in range(start_date.year, end_date.year + 1):
-        print('climate data for loop', year)
-        for key, value in monica_constants.CLIMATE_VARIABLES.items():
-            file_path = f"{climate_data_path}/zalf_{value.lower()}_amber_{year}_v1-0.nc"
-            print("filepath:", file_path, "getting key:", key)
+#     for year in range(start_date.year, end_date.year + 1):
+#         print('climate data for loop', year)
+#         for key, value in monica_constants.CLIMATE_VARIABLES.items():
+#             file_path = f"{climate_data_path}/zalf_{value.lower()}_amber_{year}_v1-0.nc"
+#             print("filepath:", file_path, "getting key:", key)
 
-            try:
-                # Use 'with' to ensure proper closure
-                with Dataset(file_path, 'r') as nc:
-                    start_idx = 0
-                    end_idx = len(nc['time']) + 1
+#             try:
+#                 # Use 'with' to ensure proper closure
+#                 with Dataset(file_path, 'r') as nc:
+#                     start_idx = 0
+#                     end_idx = len(nc['time']) + 1
                     
-                    if year == start_date.year:
-                        start_idx = date2index(start_date, nc['time'])
-                    if year == end_date.year:
-                        end_idx = date2index(end_date, nc['time']) + 1
+#                     if year == start_date.year:
+#                         start_idx = date2index(start_date, nc['time'])
+#                     if year == end_date.year:
+#                         end_idx = date2index(end_date, nc['time']) + 1
                     
-                    values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx].tolist()
-                    climate_json[key].extend(values)
+#                     values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx].tolist()
+#                     climate_json[key].extend(values)
                     
-                print(year, value, key)
+#                 print(year, value, key)
 
-            except Exception as e:
-                print(f"⚠️ Error reading {file_path}: {e}")
+#             except Exception as e:
+#                 print(f"⚠️ Error reading {file_path}: {e}")
 
-    print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
-    # climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
-    climate_json['8'] = [x * .01 if x is not None and x != -9999 else 0 for x in climate_json['8']]
+#     print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
+#     # climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
+#     climate_json['8'] = [x * .01 if x is not None and x != -9999 else 0 for x in climate_json['8']]
 
-    return climate_json
+#     return climate_json
 
 
 # TODO THIS IS OUT!!
@@ -156,11 +160,11 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
 def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     start_date = ensure_datetime(start_date)
     end_date = ensure_datetime(end_date)
-    last_hindcast_date = ensure_datetime(get_weather_hindcasts.get_last_valid_date_cached())
-    last_forecast_date = ensure_datetime(get_weather_forecast.get_last_valid_forecast_date_cached())
+    last_hindcast_date = ensure_datetime(climate_store.get_last_valid_hindcast_dates())
+    first_forecast_date, last_forecast_date = climate_store.get_last_valid_forecast_date()
+    first_forecast_date = ensure_datetime(first_forecast_date)
+    last_forecast_date = ensure_datetime(last_forecast_date)
     
-
-    forecast_lat_idx, forecast_lon_idx = models.DWDGridToPointIndices.get_forecast_indices(lat_idx, lon_idx)
 
     # Initialize empty dictionaries
     hindcast_json = {}
@@ -170,14 +174,20 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     if start_date <= last_hindcast_date:
         hindcast_start_date = start_date
         hindcast_end_date = min(end_date, last_hindcast_date)  # Ensure it doesn't exceed last_hindcast_date
-        hindcast_json = get_climate_data_as_json_from_hindcast(hindcast_start_date, hindcast_end_date, lat_idx, lon_idx)
+        hindcast_json = climate_store.get_monica_hindcast_json_per_point(hindcast_start_date, hindcast_end_date, lat_idx, lon_idx)
     
         
     # If end_date is after last_hindcast_date, we need forecast data
     if end_date > last_hindcast_date:
         forecast_start_date = max(start_date, last_hindcast_date + timedelta(days=1))  # Start from the day after hindcast ends
         forecast_end_date = end_date
-        forecast_json = get_climate_data_as_json_from_forecast(forecast_start_date, forecast_end_date, forecast_lat_idx, forecast_lon_idx)
+        forecast_json = climate_store.get_monica_forecast_json_per_point(
+            forecast_start_date, 
+            forecast_end_date, 
+            lat_idx, 
+            lon_idx, 
+            monica_constants.SCENARIOS[0]
+            )
 
     # If hindcast data is missing, return forecast data only, and vice versa
     if not hindcast_json:
@@ -337,7 +347,8 @@ def create_monica_env_from_json(json_data):
             soil_profile_parameters, _ = models.UserSoilProfile.objects.get(id=soil_profile_id).get_monica_horizons_json()
 
     # TODO site parameters: n_deposition map from UBA
-    slope = json_data.get('slope', 0)
+    # slope = json_data.get('slope', 0)
+    slope = 0
     height_nn = json_data.get('altitude', 0)
     n_deposition = json_data.get('n_deposition', 30)
 
@@ -415,6 +426,7 @@ def create_monica_env_from_json(json_data):
     lat_idx, lon_idx = models.DWDGridAsPolygon.get_idx(float(json_data['latitude']), float(json_data['longitude']))
     print('lat_idx, lon_idx: ', lat_idx, lon_idx)
     start_date = json_data['startDate'].split('T')[0]
+    print('428 start_date: ', start_date, type(start_date))
     print('start_date: ', start_date)
     end_date = json_data['endDate'].split('T')[0]          
     print('end_date: ', end_date)
@@ -705,7 +717,7 @@ def load_monica_project(request, id):
         return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
     else:
         project_json = project.to_json()
-        project_json['endDate'] = get_weather_forecast.get_last_valid_forecast_date_cached()
+        project_json['endDate'] = download_weather_forecast.get_last_valid_forecast_date_cached()
         return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
 
 
@@ -939,7 +951,7 @@ def create_default_project(user):
     Create a default project for the user.
     """
     start_date = (datetime.now().date() - relativedelta(months=6)).replace(day=1)
-    end_date = get_weather_forecast.get_last_valid_forecast_date_cached()
+    end_date = download_weather_forecast.get_last_valid_forecast_date_cached()
     # end_date = (datetime.now().date() + relativedelta(months=7)).replace(day=1) - relativedelta(days=1)
 
     default_project = models.MonicaProject(
@@ -1614,6 +1626,8 @@ def monica_run_over_germany():
     # TODO: check with Claas or Marlene what parameters to use!  
     cpp = germany_model_settings.to_json()
     
+
+    # TODO MOVE FOLDER monica_geodata ou of django
     # load all relevant soil data for Germany- otherwise the query on each pixel would take too long
     with rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'buek_id_agriculture_masked_4326.tif')) as ab:
         agri_buek_arr = ab.read(1)

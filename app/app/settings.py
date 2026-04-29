@@ -15,9 +15,9 @@ from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-TEMPLATES_DIR = Path.joinpath(BASE_DIR, 'templates')
-STATIC_DIR = Path.joinpath(BASE_DIR, 'static')
-MEDIA_DIR = Path.joinpath(BASE_DIR, 'media')
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+
 
 # AUTH_USER_MODEL = 'user.User'
 
@@ -25,16 +25,22 @@ MEDIA_DIR = Path.joinpath(BASE_DIR, 'media')
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-hl9ukq&o_m6c&^7co0-qlivgsq%f^ouhu5j(vc21sk8!xmf-h*'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-hl9ukq&o_m6c&^7co0-qlivgsq%f^ouhu5j(vc21sk8!xmf-h*')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(int(os.environ.get('DJANGO_DEBUG', 0)))
+
 
 
 if DEBUG == True:
     ALLOWED_HOSTS = ['10.10.88.183', 'srv-pb4-spreedev.zalf.de', '127.0.0.1', 'localhost' ]
 else:
     ALLOWED_HOSTS = ['srv-pb4-spreedev.zalf.de', 'klima-hub.zalf.de']
+
+ALLOWED_HOSTS_ENV = os.environ.get('DJANGO_ALLOWED_HOSTS')
+if ALLOWED_HOSTS_ENV:
+    ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
 
 
 # Application definition
@@ -124,22 +130,24 @@ DATABASES = {
 }
 
 THREDDS_URL = os.environ.get('THREDDS_URL')
-THREDDS_CATALOG_XML = Path(THREDDS_URL).joinpath('catalog', 'testAll', 'data', 'DWD_SpreeWasser_N_cf_v4', 'catalog.xml')
+THREDDS_CATALOG_XML = f"{THREDDS_URL}/catalog/data/Klim4Cast/catalog.xml"
 
 # other data
-APP_DATA_DIR = '/app_data'
+APP_DATA_DIR =  Path(__file__).resolve().parent.parent.parent.joinpath('app_data')
 # django app monica
-MONICA_DATA_DIR = os.path.join(APP_DATA_DIR, 'monica')
-MONICA_NETCDF_FORECAST_DIR = os.path.join(MONICA_DATA_DIR, 'netcdf_forecast')
-MONICA_NETCDF_HINDCAST_DIR = os.path.join(MONICA_DATA_DIR, 'netcdf_hindcast')
-MONICA_RASTER_DATA_DIR = os.path.join(MONICA_DATA_DIR, 'raster_data')
+MONICA_DATA_DIR = APP_DATA_DIR.joinpath('monica')
+MONICA_NETCDF_FORECAST_DIR = MONICA_DATA_DIR.joinpath('netcdf_forecast')
+MONICA_NETCDF_HINDCAST_DIR = MONICA_DATA_DIR.joinpath('netcdf_hindcast')
+MONICA_RASTER_DATA_DIR = MONICA_DATA_DIR.joinpath('raster_data')
 # django app klim4cast
 KLIM4CAST_DATA_DIR = os.path.join(APP_DATA_DIR, 'klim4cast')
+KLIM4CAST_DATA = os.path.join(KLIM4CAST_DATA_DIR, 'chech_globe_data')
 KLIM4CAST_NETCDF_DIR = os.path.join(KLIM4CAST_DATA_DIR, 'netcdf')
 
 # django app toolbox
 TOOLBOX_DATA_DIR = os.path.join(APP_DATA_DIR, 'toolbox')
 TOOLBOX_RASTER_DATA_DIR = os.path.join(TOOLBOX_DATA_DIR, 'raster_data')
+TOOLBOX_RASTER_OUTPUT_DIR = os.path.join(TOOLBOX_DATA_DIR, 'raster_output')
 
 
 
@@ -197,8 +205,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = 'staticfiles/'
+STATIC_URL = '/static/static/'
+MEDIA_URL = '/static/media/'
 STATICFILES_DIRS = [
     STATIC_DIR,
     Path.joinpath(BASE_DIR, 'swn/static/'),
@@ -221,8 +229,8 @@ SASS_PROCESSOR_OPTIONS = {
 }
 
 
-MEDIA_ROOT = MEDIA_DIR
-MEDIA_URL = 'media/'
+STATIC_ROOT = '/vol/web/static'
+MEDIA_ROOT = '/vol/web/static/media'
 
 LOGIN_URL = 'login/'
 LOGIN_REDIRECT_URL = '/'

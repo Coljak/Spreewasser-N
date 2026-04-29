@@ -8,15 +8,14 @@ import xarray as xr
 import numpy as np
 from datetime import datetime, timedelta, date
 import json
-
+from django.conf import settings
 def klim4cast(request):
     return 'Klim4Cast'
 
 def klim4cast_timelapse_items(request):
     # List of datasaet as in the thredds_catalog view
-    url = 'http://thredds:8080/thredds/catalog/data/Klim4Cast/catalog.xml'
 
-    response = requests.get(url)
+    response = requests.get(settings.THREDDS_CATALOG_XML)
     catalog_dict = xmltodict.parse(response.content)
     print("\nKlim4Cast catalog_dict['catalog']['dataset']['dataset']\n", catalog_dict['catalog']['dataset']['dataset'], type(catalog_dict['catalog']['dataset']['dataset']))
     print('TYPE is list:', type(catalog_dict['catalog']['dataset']['dataset']) == 'list')
@@ -53,7 +52,7 @@ def klim4cast_timelapse_items(request):
 
 
 def get_ncml_metadata(request, name):
-    url = "http://thredds:8080/thredds/ncml/data/Klim4Cast/" + name + '.nc'
+    url = f"{settings.THREDDS_URL}/ncml/data/Klim4Cast/{name}.nc"
     nc_dict = {}
     ncml = requests.get(url)
     ncml_data = xmltodict.parse(ncml.text)
@@ -111,7 +110,7 @@ def timelapse_django_passthrough_wms(request, netcdf):
     """
     netcdf += '.nc'
     print("klim4cast.views.timelapse_django_passthrough_wms", netcdf)
-    url = 'http://thredds:8080/thredds/wms/data/Klim4Cast/' + netcdf
+    url = f"{settings.THREDDS_URL}/wms/data/Klim4Cast/{netcdf}"
     
     params = request.GET.dict()
     # Timeseries legend image
@@ -133,7 +132,7 @@ def get_data(request, name, variable, lat, lon):
     """
     Get data from the Thredds server.
     """
-    path = 'klim4cast/data/netcdf/' + name + '.nc'
+    path = f"{settings.KLIM4CAST_NETCDF_DIR}/{name}.nc"
     nc = xr.open_dataset(path)
 
     lat = float(lat)

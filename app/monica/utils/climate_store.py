@@ -2,8 +2,6 @@
 This is all about loading the hindcast and forecast, cashing it and retrieving it.
 """
 
-
-
 import xarray as xr
 from datetime import datetime
 from monica.utils import monica_constants
@@ -12,6 +10,7 @@ from pathlib import Path
 from django.core.cache import cache
 import numpy as np
 import glob
+from django.conf import settings
 
 # Create a cached mapping of hindcast to forecast indices and vice versa. Forecasts map to a set of hindcasts.
 
@@ -33,7 +32,7 @@ HINDCAST = None
 HINDCAST_LAST_DATE = None
 
 def load_hindcast():
-    climate_data_path = Path(__file__).resolve().parent.parent.joinpath('climate_netcdf')
+    climate_data_path = settings.MONICA_NETCDF_HINDCAST_DIR
 
     this_year = datetime.now().year
 
@@ -61,11 +60,11 @@ def load_forecast(scenario):
     This function loads the NetCDF files for each forecast scenario.
     This is done to avoid opening and closing the files for each request.
     """
-    climate_data_path = Path(__file__).resolve().parent.parent.joinpath('climate_netcdf_forecast')
+    climate_data_path = settings.MONICA_NETCDF_FORECAST_DIR
     print(' climate_data_path: ', type(climate_data_path), climate_data_path)
     # TODO - deal with multiple scenarios!!
 
-    files = glob.glob(f"{str(climate_data_path)}/forecast_{scenario}_*.nc")
+    files = glob.glob(f"{climate_data_path}/forecast_{scenario}_*.nc")
     print(f"Found forecast files: {files}")
 
     file_path = files[0] # get the latest scenario if multiple exist
@@ -134,7 +133,7 @@ def set_forecast_valid_date(forecast):
 def get_last_valid_forecast_date():
     first_valid_date = cache.get('first_valid_forecast_date', None)
     last_valid_date = cache.get('last_valid_forecast_date', None)
-    if last_valid_date is None: 
+    if last_valid_date is None or first_valid_date is None: 
        forecast = get_forecast(monica_constants.SCENARIOS[0])      
        first_valid_date, last_valid_date = set_forecast_valid_date(forecast)
     return first_valid_date, last_valid_date

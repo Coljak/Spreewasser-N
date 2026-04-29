@@ -320,10 +320,6 @@ class UserField(models.Model):
         ])
 
 
-            
-class InjectionRaster(models.Model):
-    rast = gis_models.RasterField(srid=25833)
-
 
 class ToolboxProject(models.Model):    
     name = models.CharField(max_length=255)

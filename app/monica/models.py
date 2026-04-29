@@ -1762,6 +1762,15 @@ class Organ(models.Model):
     description = models.TextField(null=True, blank=True)
 
 # Organ Classifications / stages https://github.com/zalf-rpm/monica/wiki/config_stages
+
+
+class BBCHMacrostage(models.Model):
+    """
+    Makrostadien zur Beschreibung der phänologischen Entwicklung mono- und dikotyle Pflanzen
+    """
+    stage_no = models.IntegerField()  
+    name_de = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
 class BBCHStage(models.Model):
     stage = models.CharField(max_length=4)  # e.g., "00", "09", "31", etc.
     macro_stage = models.IntegerField()

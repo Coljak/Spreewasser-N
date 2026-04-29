@@ -64,3 +64,19 @@ docker compose rm -f   -----remove the whole thing
 docker compose rm -f app   ------remove app
 
 docker compose build --no-cache app
+
+
+#### PRODUCTION !!!!
+the command override the first docker-compose with the second
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+Docker commands 
+a) After changing docker-compose.(prod.)yml
+docker compose up
+b) After changing Dockerfile
+docker compose up --build
+c) Using production compose file
+
+If file is docker-compose.prod.yml:
+
+docker compose -f docker-compose.prod.yml up --build -d

@@ -20,13 +20,12 @@ from monica.utils import climate_store
 #get_recommended_soil_profile, get_buek_polygon_id_from_point_buek200
 # from ...xx_obsolete.run_consumer_swn import run_consumer
 from . import models
-from . import monica_io3_swn
+from .utils import monica_io3_swn
 from swn import models as swn_models
 from . import forms
 from buek import views as buek_views
 from buek import models as buek_models
-from .climate_data.lat_lon_mask import lat_lon_mask
-from .monica_events import swn_events
+from .utils.monica_events import swn_events
 from .utils import save_monica_project, download_weather_hindcasts, download_weather_forecast
 from dateutil.relativedelta import relativedelta
 import requests
@@ -68,8 +67,6 @@ warnings.filterwarnings("ignore", category=UserWarning, module="xarray")
 
 
 def ensure_datetime(d):
-    print('type(d):', type(d))
-    print('d:', d)
     return d if isinstance(d, datetime) else datetime.combine(d, datetime.min.time())
 
 
@@ -1384,7 +1381,7 @@ def get_altitude(request, lat, lon):
     lat = float(lat)
     lon = float(lon)
 
-    raster_path = os.path.join(settings.BASE_DIR, 'monica', 'dem_slope_data', 'dgm200_4326.tif')
+    raster_path = os.path.join(MONICA_RASTER_DATA_DIR, 'dgm200_4326.tif')
     try:
         with rasterio.open(raster_path) as src:
             for val in src.sample([(lon, lat)]):
@@ -1400,7 +1397,7 @@ def get_slope(request, lat, lon):
     lat = float(lat)
     lon = float(lon)
     
-    raster_path = os.path.join(settings.BASE_DIR, 'monica', 'dem_slope_data', 'dgm200_slope_4326.tif')
+    raster_path = os.path.join(settings.MONICA_RASTER_DATA_DIR, 'dgm_1000_4326_slope.tif')
     try:
         with rasterio.open(raster_path) as src:
             for val in src.sample([(lon, lat)]):
@@ -1503,7 +1500,7 @@ def download_irrigation_csv(request):
 
     :return: HttpResponse with the CSV file or an error message
     """
-
+    user = request.user
     
     file_path = Path(__file__).resolve().parent
     csv_file_path = f"{file_path}/monica_io/irrigation_events.csv"
@@ -1511,7 +1508,7 @@ def download_irrigation_csv(request):
     try:
         with open(csv_file_path, 'r') as f:
             response = HttpResponse(f.read(), content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="irrigation_events.csv"'
+            response['Content-Disposition'] = f'attachment; filename="{user.id}_irrigation_events.csv"'
             return response
     except FileNotFoundError:
         return HttpResponse("Irrigation events file not found.", status=404)
@@ -1627,9 +1624,8 @@ def monica_run_over_germany():
     cpp = germany_model_settings.to_json()
     
 
-    # TODO MOVE FOLDER monica_geodata ou of django
     # load all relevant soil data for Germany- otherwise the query on each pixel would take too long
-    with rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'buek_id_agriculture_masked_4326.tif')) as ab:
+    with rasterio.open(os.path.join(settings.MONICA_RASTER_DATA_DIR, 'buek_id_agriculture_masked_4326.tif')) as ab:
         agri_buek_arr = ab.read(1)
     unique_buek_ids = np.unique(agri_buek_arr)
     
@@ -1639,10 +1635,10 @@ def monica_run_over_germany():
     soil_profile_dict = {sp.id: sp.get_monica_horizons_json()[0] for sp in soil_profiles}
     print("Soil profiles loaded")
 
-    with rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'dgm200_4326_1000m.tif')) as alt:
+    with rasterio.open(os.path.join(settings.MONICA_RASTER_DATA_DIR, 'dgm200_4326_1000m.tif')) as alt:
         altitude_arr = alt.read(1)
 
-    with rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'dgm_1000_4326_slope.tif')) as s:
+    with rasterio.open(os.path.join(settings.MONICA_RASTER_DATA_DIR, 'slope_percentage_4326_1000m.tif')) as s:
         slope_arr = s.read(1)
     
     # fetch all relevant soil profiles into memory
@@ -1665,7 +1661,7 @@ def monica_run_over_germany():
     sowing_dates_per_station = {data['climate_station__id']: {'sowing_date': doy_to_iso(data['avg_sowing_doy']), 'harvest_date': doy_to_iso(data['avg_harvest_doy'])} for data in sowing_dates_list}
     print('sowing dates loaded', sowing_dates_per_station)
     
-    with rasterio.open(os.path.join(settings.BASE_DIR, 'monica', 'monica_geodata', '1000mx1000m', 'nearest_station_per_cultivar', f'nearest_station_cultivar_{germany_model_settings.cultivar_name_for_sowing_dates}.tif')) as climate_stations_tif:
+    with rasterio.open(os.path.join(settings.MONICA_RASTER_DATA_DIR, 'nearest_station_per_cultivar', f'nearest_station_cultivar_{germany_model_settings.cultivar_name_for_sowing_dates}.tif')) as climate_stations_tif:
         climate_stations_arr = climate_stations_tif.read(1)
 
 

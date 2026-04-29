@@ -4,10 +4,7 @@ This module automates the download of the hindcasts from ???
 
 from ftplib import FTP_TLS
 import os
-from datetime import datetime, date, timedelta
 import xarray as xr
-import numpy as np
-from .dwd_server import settings as dwd_settings
 from django.core.cache import cache
 from monica.utils import monica_constants
 from django.conf import settings
@@ -62,8 +59,8 @@ def correct_hindcast_chunking(filename):
             'complevel': 4 
         }}
     # TODO - replace
-    path = f'monica/climate_netcdf/{filename}'
-    locale_fp = f'{settings.MONICA_NETCDF_HINDCAST_DIR}/{filename}'
+    # path = f'monica/climate_netcdf/{filename}'
+    path = f'{settings.MONICA_NETCDF_HINDCAST_DIR}/{filename}'
     tmp_path = f'{path}.tmp'
 
     ds = xr.open_dataset(path, chunks=None)
@@ -89,6 +86,10 @@ def correct_dataset_units(local_file_path):
 
 def process_year(year):
     print(f"Processing year: {year}")
+    dwd_host = os.environ["DWD_HOST"]
+    dwd_username = os.environ["DWD_USERNAME"]
+    dwd_password = os.environ["DWD_PASSWORD"]
+    dwd_port = int(os.environ["DWD_PORT"])
     for var in monica_constants.VARIABLES_LOWER:
         try:
             filename = f'zalf_{var}_amber_{year}_v1-0.nc'
@@ -98,9 +99,9 @@ def process_year(year):
             locale_fp = f'{settings.MONICA_NETCDF_HINDCAST_DIR}/{filename}'
 
             download_from_ftps(
-                dwd_settings['host'],
-                dwd_settings['username'],
-                dwd_settings['password'],
+                dwd_host,
+                dwd_username,
+                dwd_password,
                 remote_file_path,
                 local_file_path
             )

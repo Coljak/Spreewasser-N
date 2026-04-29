@@ -6,6 +6,8 @@ import shutil
 
 import logging
 from django.core.management.base import BaseCommand
+
+from django.conf import settings
 from .klim4cast_server_settings import sftp_server, sftp_user, sft_port, sftp_password
 from klim4cast.utils.tif_processing import process_tifs
 from klim4cast.utils.tif_download import download_directory, list_dates
@@ -30,10 +32,17 @@ class Command(BaseCommand):
             dates, latest_date = list_dates(sftp)
             self.stdout.write(f"Latest date on CheckGlobe FTP: {latest_date}\nDates: {dates}")
 
-            file_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            local_dir = os.path.join(file_dir, 'data', 'chech_globe_data')
-            netcdf_dir = os.path.join(file_dir, 'data', 'netcdf')
-            local_dates = sorted(os.listdir(local_dir))
+            # file_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+            local_dir = settings.KLIM4CAST_DATA
+            netcdf_dir = settings.KLIM4CAST_NETCDF_DIR
+            downloaded_dates = os.listdir(local_dir)
+            if downloaded_dates == []:
+                self.stdout.write("No data downloaded yet ...")
+                local_dates = None
+            else:
+                self.stdout.write(f"Already downloaded dates: {downloaded_dates}")
+                local_dates = sorted(downloaded_dates)
             self.stdout.write(f"Local dates: {local_dates}")
 
             if not local_dates or local_dates[-1] < latest_date:

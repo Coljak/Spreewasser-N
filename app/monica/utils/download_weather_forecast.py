@@ -10,6 +10,7 @@ import xarray as xr
 import numpy as np
 import os
 from django.core.cache import cache
+from django.conf import settings
 from dateutil.relativedelta import relativedelta
 from monica.utils import monica_constants
 
@@ -62,11 +63,6 @@ def get_download_url(scenario, variable):
     
     
 
-def get_local_path():
-    """Get the base local path for storing NetCDF forecast files."""
-    local = Path(__file__).resolve().parent.parent
-    return local / 'climate_netcdf_forecast'
-
 
 def fetch_available_variables(catalog_url):
     """Fetch available variables from the catalog XML, considering namespaces."""
@@ -83,7 +79,7 @@ def fetch_available_variables(catalog_url):
 
 
 def get_last_valid_forecast_date():
-    nc_folder_path = get_local_path()
+    nc_folder_path = settings.MONICA_NETCDF_FORECAST_DIR
     nc_folder_path = os.path.join(nc_folder_path, 'r1i1p1/')
     netcdf_paths = [f'{nc_folder_path}/{nc}' for nc in os.listdir(nc_folder_path) if nc.endswith('.nc')]
     nc_path = netcdf_paths[0]
@@ -150,13 +146,13 @@ def automated_thredds_download():
     """
     Main function to automate downloads of variables across climate-scenarios.
     """
-    local_path = get_local_path()
+
 
     # Step 1: Iterate through scenarios and variables
     
     for scenario in monica_constants.SCENARIOS:
         new_files = [] 
-        folder_path = f"{local_path}/{scenario}/"
+        folder_path = f"{settings.MONICA_NETCDF_FORECAST_DIR}/{scenario}/"
         for variable in monica_constants.VARIABLES:
             print(f"Processing variable '{variable}' for scenario '{scenario}'...")
 
@@ -176,19 +172,19 @@ def automated_thredds_download():
             delete_old_files(folder_path, new_files)
 
 
-    old_combined_ncs = [f'{local_path}/{nc}' for nc in os.listdir(local_path) if nc.endswith('.nc')]
+    old_combined_ncs = [f'{settings.MONICA_NETCDF_FORECAST_DIR}/{nc}' for nc in os.listdir(settings.MONICA_NETCDF_FORECAST_DIR) if nc.endswith('.nc')]
     # print('old_ncs: ', old_ncs)
     new_combined_ncs = []
 
     # Combine NetCDF files  into a single file for each scenario
     try:
         for scenario in monica_constants.SCENARIOS:
-            folder_path = f"{local_path}/{scenario}/"
+            folder_path = f"{settings.MONICA_NETCDF_FORECAST_DIR}/{scenario}/"
             netcdf_paths = [f'{folder_path}/{nc}' for nc in os.listdir(folder_path) if nc.endswith('.nc')]
             
             dates = netcdf_paths[0].split('_')[-1].split('.')[0]
             filename = f'forecast_{scenario}_{dates}.nc'
-            file_path = f"{local_path}/{filename}"
+            file_path = f"{settings.MONICA_NETCDF_FORECAST_DIR}/{filename}"
             if file_path not in old_combined_ncs:
                 ds = xr.open_mfdataset(netcdf_paths, combine='by_coords', compat='override')
                 ds = correct_dataset_units(ds)

@@ -25,7 +25,7 @@ docker-compose build
 ```
 ### 3. Start containers
 ### 4. Database
-First you have to setup the django database. Open commandline in the django container:
+First you have to setup the django database. Open the terminal in the django container:
 ```shell
 docker exec -it swn_geo_django bash
 ```
@@ -41,7 +41,7 @@ python manage.py makemigrations klim4cast
 python manage.py migrate
 ```
 
-If you transfer Monica projects, it will cause problems due to GenericForeignKey in the class MonicaSite. 
+If you transfer Monica projects, it will cause problems due to a GenericForeignKey in the class MonicaSite. 
 Now the database is set up - you can connect to it from your localhost on port 5432.
 To import the database, point the management command to the folder holding the database as json files by:
 ```shell

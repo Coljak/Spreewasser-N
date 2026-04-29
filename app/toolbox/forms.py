@@ -170,6 +170,52 @@ class ToolboxProjectForm(InfoLabelFormMixin, forms.Form):
         exclude = ['id', 'user']
 
 
+
+
+class ToolboxNewProjectForm(InfoLabelFormMixin, forms.Form):
+    # user_field = forms.ModelChoiceField(
+    #     # TODO this line should be deleted
+    #     queryset=models.UserField.objects.all(),
+    #     label='Suchgebiet',
+    #     widget=forms.Select(attrs={'id': 'userFieldSelect', 'class': 'user-field-dropdown'}),
+    # )
+    project_type = forms.ModelChoiceField(
+        queryset = models.ToolboxType.objects.none(),
+        label='Tool',
+        empty_label=None,
+        to_field_name='name_tag',
+        widget=forms.Select(attrs={'id': 'projectTypeSelect', 'class': 'project-type-dropdown'}),
+    )
+    project_id = forms.IntegerField(
+        widget=forms.HiddenInput(),
+        required=False
+    )
+    name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_project_name', 'required': 'required',}),
+        label='Project Name',
+        required=True,
+    )
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'id': 'id_project_description'}),
+        label='Description',
+        required=False
+    )
+
+    def __init__(self, *args, user=None, user_field=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user_field is not None:
+            self.fields['project_type'].queryset = (
+                user_field.toolbox_types.all()
+            )
+        else:
+            self.fields['project_type'].queryset = models.ToolboxType.objects.none()
+
+
+    class Meta:
+        model = models.ToolboxProject
+        exclude = ['id', 'user']
+
+
 class InletWeightingsForm(InfoLabelFormMixin, forms.Form):
     weighting_inlet_length = forms.IntegerField(
         required=False,

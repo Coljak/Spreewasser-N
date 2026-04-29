@@ -39,24 +39,35 @@ def export_all_models(export_dir=None, use_today=True, app_labels=None, model_na
     print("✅ Done exporting models.")
 
 
-def import_all_models(import_dir):
-    print(f"📥 Importing models from: {import_dir}")
-    files = sorted(f for f in os.listdir(import_dir) if f.endswith(".json"))
 
-    for file in files:
-        path = os.path.join(import_dir, file)
-        model_label = file.replace(".json", "")
-        print(f"📄 Loading {model_label} from {file}")
+def load_data_from_json(filepaths):
+    not_loaded = []
+    for filepath in filepaths:
+        model_label = os.path.basename(filepath).replace(".json", "")
+        print(f"📄 Loading {model_label} from {filepath}")
 
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 objects = list(serializers.deserialize("json", f))
                 with transaction.atomic():
                     for obj in objects:
                         obj.save()
             print(f"✅ Imported {len(objects)} objects into {model_label}")
         except Exception as e:
+            not_loaded.append(filepath)
             print(f"❌ Failed to import {model_label}: {e}")
+
+    if len(not_loaded) > 0:
+        load_data_from_json(not_loaded)
+
+
+def import_all_models(import_dir):
+    print(f"📥 Importing models from: {import_dir}")
+    files = sorted(f for f in os.listdir(import_dir) if f.endswith(".json"))
+    filepaths = [os.path.join(import_dir, f) for f in files]
+    print(f"📂 Found {len(files)} files to import: {files}")
+
+    load_data_from_json(filepaths)
 
 
 class Command(BaseCommand):

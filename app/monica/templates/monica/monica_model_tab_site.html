@@ -1,0 +1,48 @@
+{% load crispy_forms_tags %}
+
+<!-- Soil -->
+<div id="tabSite" class="tab-pane card mb-3">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-12 col-lg-6">
+        <div class="card mb-3">
+          <div id="siteForm" class="card-body">
+            <h5 class="card-title">Standort</h5>
+            {% crispy site_form %}
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div id="soil-profile-selection" class="mb-3 advanced card">
+          <div class="card-body">
+            <h5 class="card-title">Auswahl Bodenprofil</h5>
+            <div class="mb-3 ">
+              {% crispy user_soil_profile_select_form %}
+            </div>
+            <button class="btn btn-outline-secondary mb-3 show-soil-profile-modal" type="button">
+                Load
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="soil-profile-info-card" class="mb-3 card">
+      <div class="card-body">
+        <h5 class="card-title">Bodenprofil</h5>
+        <div id="soil-profile-formset-container">
+        </div>
+      </div>
+    </div>
+
+
+    <div class="card mb-3 advanced">
+      <div class="card-body">
+        {% crispy user_soil_moisture_select_form %}
+        {% crispy user_soil_organic_select_form %}
+        {% crispy soil_temperature_module_selection_form %}
+        {% crispy user_soil_transport_parameters_selection_form %}
+      </div>
+    </div>
+
+  </div>
+</div>

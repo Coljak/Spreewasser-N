@@ -2,12 +2,7 @@
 With this command, the forecast data can be downloaded and is conerted to combined NetCDF files."""
 
 from django.core.management.base import BaseCommand
-import xarray as xr
-import numpy as np
-import dask.array as da
-import os
-from datetime import datetime
-from monica.utils.get_weather_hindcasts import update_hindcast_data
+from monica.utils.download_weather_hindcasts import update_hindcast_data
 
 """
 !!!!!!!!!!!!!! DOES NOT WORK FROM ZALF GUEST NETWORK !!!!!!!!!!!!!!!
@@ -18,4 +13,4 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         update_hindcast_data()
 
-        self.stdout.write(self.style.SUCCESS('Successfully downloaded forecast data'))
+        self.stdout.write(self.style.SUCCESS('Successfully updated hindcast data'))

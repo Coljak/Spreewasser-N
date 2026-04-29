@@ -143,47 +143,72 @@ class SoilProfile(models.Model):
 
     def __str__(self):
         return 'soil_profile ' + str(self.id) 
-    
-    def get_all_horizons(self):
-        return SoilProfileHorizon.objects.filter(soilprofile=self).order_by('horizont_nr')
-    
-    def get_all_horizons_json(self):
-        hors = SoilProfileHorizon.objects.filter(soilprofile=self).order_by('horizont_nr')
-        return [horizon.to_json() for horizon in hors]
-    
 
-    def get_monica_horizons_json(self):
+
+    def get_monica_horizons_json(self, extended=False, original_profile=False):
         # TODO this is working but could use refactoring: the msg is not used
         """
         Invalid horizons are filled with the information of the next valid horizon.
+        params: original_profile: if True, the original profile is returned, even if it is faulty.
+                                     otherwise the corrected profile is returned. This is relevant for the soil 
+                                     profiles that have horizons with missing ka5 texture class, which are corrected by 
+                                     filling the missing information with the next valid horizon/ extending horizons.
+        
+        extended: if True, the json is extended with additional information that is not necessary for the monica model 
+                    but might be relevant.
         """
         horizons = list(SoilProfileHorizon.objects.filter(soilprofile=self, obergrenze_m__gte=0).order_by('horizont_nr'))
        
         msg = None
         hors = []
+              
         # valid_horizon = False
-        for i in range(len(horizons)):
+        if not original_profile:
 
-            if not horizons[i].ka5_texture_class:
-                if i < len(horizons) - 1:
-                    horizons[i+1].obergrenze_m = horizons[i].obergrenze_m
-                    msg = "Warning: Profile modified due to lacking ka5 texture class"
-                    
+            cleaned = []
+
+            for hor in horizons:
+                if hor.ka5_texture_class:
+                    cleaned.append(hor)
                 else:
-                    horizons[i-1].untergrenze_m = horizons[i].untergrenze_m
-                    msg = "Warning: Last horizon modified due to lacking ka5 texture class"
-               
-        for i in range(len(horizons)):
-            if horizons[i].ka5_texture_class:
-                hors.append(horizons[i].to_json())
+                    if cleaned:
+                        cleaned[-1].untergrenze_m = hor.untergrenze_m
+                    # else: first horizon invalid → ignore or handle separately
+
+            horizons = cleaned
+            # print('horizons after', horizons)
+
+            for i in range(len(horizons)):
+                if horizons[i].ka5_texture_class:
+                    if not extended:
+                        hors.append(horizons[i].to_json())
+                    else:
+                        horizon = horizons[i].to_user_soil_profile_json()
+                        
+                        horizon.update({'horizon_no': i})
+                        hors.append(horizon)
+
+        else:
+            # print('corrected: False ')
+            for i in range(len(horizons)):
+
+                if not extended:
+                    hors.append(horizons[i].to_json())
+                else:
+                    horizon = horizons[i].to_user_soil_profile_json()
+                    
+                    horizon.update({'horizon_no': i})
+                    hors.append(horizon)
 
         return hors, msg
     
+
     def get_horizons_json(self):
         horizons =  SoilProfileHorizon.objects.filter(soilprofile=self).order_by('horizont_nr')
         # horizons = horizons.filter(obergrenze_m__gte=0).order_by('horizont_nr')
 
         return [horizon.to_json() for horizon in horizons]
+    
 
     class Meta:
         db_table = 'buek_soil_profile'
@@ -216,20 +241,11 @@ class SoilProfileHorizon(models.Model):
 
     def __str__(self):
         return super().__str__() + ' soilprofile_id: ' + str(self.soilprofile_id) + ' horizont_nr: ' + str(self.horizont_nr)
-    # TODO pH value is a range - how to use it
     # TODO Sceleton fraction 0-1, soil stone content
     # TODO: the ph class is set to 4. 5 for the profiles that do not have a ph class
-    # select bsph.soilprofile_id, bsp.landusage, bsph.id as horizont_id,  bsph.horizont_nr, bsph.symbol, bsph.herkunft, bsph.herkunft, bsph.geogenese , bsph.torfarten ,
-    # bhc.humus_class, bhc.corg, bktc.ka5_soiltype , bsph.ph_class_id, bpc.ph_class from buek_soil_profile_horizon bsph 
-    # join buek_soil_profile bsp on bsp.id = bsph.soilprofile_id 
-    # full join buek_ka5_texture_class bktc on bktc.id = bsph.ka5_texture_class_id 
-    # full join buek_humus_class bhc  on bsph.humus_class_id  = bhc.id
-    # full join buek_ph_class bpc on bsph.ph_class_id = bpc.id
-    # where bpc.id is null
-    # order by bsph.soilprofile_id, bsph.horizont_nr
+
   
     def to_json(self):
-        # TODO: can Monica actually handle the NULL values as '' or []?
         monica_json = {
             'Thickness': [round((self.untergrenze_m - self.obergrenze_m), 2), "m"],
             'Sand': [round(self.ka5_texture_class.sand * 100, 1), "%"] if self.ka5_texture_class else [],
@@ -238,12 +254,12 @@ class SoilProfileHorizon(models.Model):
             'KA5TextureClass': self.ka5_texture_class.ka5_soiltype if self.ka5_texture_class else '',
             'SoilRawDensity': [self.bulk_density_class.raw_density_g_per_cm3 * 1000, "kg m-3"] if self.bulk_density_class else [],
             'SoilOrganicCarbon': [round(self.humus_class.corg, 2), "%"] if self.humus_class else [],
-
         }
   
         return monica_json
     
-    def to_extended_json(self):
+    def to_extended_monica_json(self):
+        # TODO: not in use! Check if it makes sense to send this to monica 
         # TODO: can Monica actually handle the NULL values as '' or []?
         monica_json = {
             'Thickness': [round((self.untergrenze_m - self.obergrenze_m), 2), "m"],
@@ -269,6 +285,37 @@ class SoilProfileHorizon(models.Model):
             'FieldCapacity': [self.get_ptf1_fc() * 100, '%'] if self.get_ptf1_fc() else None,  # field capacity in percent
             # 'SoilMoisturePercentWP': % [0-100] 	initial soil moisture in percent of permanent wilting point
             'WiltingPoint': [self.get_ptf1_wp() * 100, '%'] if self.get_ptf1_wp() else None,  # permanent wilting point in percent
+        }
+  
+        return monica_json
+    
+    def to_user_soil_profile_json(self):
+        """
+        This json is suited for the monica soil form
+        """
+        monica_json = {
+            'thickness': round((self.untergrenze_m - self.obergrenze_m), 2),
+            'sand': round(self.ka5_texture_class.sand * 100, 1) if self.ka5_texture_class else None,
+            'clay': round(self.ka5_texture_class.clay * 100, 1) if self.ka5_texture_class else None,
+            'ph': round(((self.ph_class.ph_lower_value + self.ph_class.ph_upper_value) / 2), 2) if self.ph_class else 4.5,
+
+            # 'Sceleton': soil stone content, a fraction between 0 and 1
+            # 'Lambda': soil water conductivity coefficient
+            # 'PoreVolume': 	m3 m-3 (fraction [0-1]) 	saturation
+            # 'PermanentWiltingPoint': 	m3 m-3 (fraction [0-1]) 	permanent wilting point
+            # 'ka5_texture_class': self.ka5_texture_class.id if self.ka5_texture_class else None,
+            # 'SoilAmmonium': [self.soil_ammonium, "mg kg-1"],
+            # 'SoilNitrate': 	kg NO3-N m-3 	initial soil nitrate content
+            # 'CN': 		soil C/N ratio
+            'raw_density': self.bulk_density_class.raw_density_g_per_cm3 * 1000 if self.bulk_density_class else None,
+            #  OR SoilBulkDensity 	kg m-3 	soil bulk density
+            'organic_carbon': round(self.humus_class.corg, 2) if self.humus_class else None,
+            # TODO wiki: SoilOrganicCarbon 	% [0-100] ([kg C kg-1] * 100)  a percentage between 0 and 100 BUT it seems to be a percenteage
+            # OR 'SoilOrganicMatter': 	kg OM kg-1 (fraction [0-1]) 	soil organic matter
+            # 'SoilMoisturePercentFC': % [0-100] 	initial soil moisture in percent of field capacity
+            'field_capacity': self.get_ptf1_fc() * 100 if self.get_ptf1_fc() else None,  # field capacity in percent
+            # 'SoilMoisturePercentWP': % [0-100] 	initial soil moisture in percent of permanent wilting point
+            'permanent_wilting_point': self.get_ptf1_wp() * 100 if self.get_ptf1_wp() else None,  # permanent wilting point in percent
         }
   
         return monica_json

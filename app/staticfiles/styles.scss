@@ -1,0 +1,110 @@
+@import 'node_modules/bootstrap/scss/bootstrap.scss';
+
+
+$dark-blue:    #0D5C8D !default;
+$blue:  #136ebf !default;
+$purple:  #701355 !default;
+$pink:    #d63384 !default;
+$red:     #c22f3e !default;
+$orange:  #f87a12 !default;
+$yellow:  #ffc107 !default;
+$green:   #198754 !default;
+$teal:    #17948d !default;
+$cyan:    #0cc2cf !default;
+$gray:    #858588 !default;
+$black:   #000000 !default;
+$white:   #ffffff !default;
+
+
+
+
+$zalf-gray:    #414143 !default;
+$zalf-faded-blue:    #729FCF !default;
+$zalf-khaki:   #647629 !default;
+$zalf-pea-soup:    #647629 !default;
+$zalf-darkish-green:    #647629 !default;
+$zalf-seaweed:    #3AAE6C !default;
+$zalf-greenish-blue:    #009999 !default;
+
+$primary:       $blue !default;
+$secondary:     $zalf-gray !default;
+$success:       $yellow !default;
+$info:          $teal !default;
+$warning:       $pink !default;
+$danger:        $red !default;
+$light:         #AEAEB1 !default;
+$dark:          $zalf-gray !default;
+
+$colors: (
+  "blue":       $blue,
+  "indigo":     $dark-blue,
+  "purple":     $purple,
+  "pink":       $pink,
+  "red":        $red,
+  "orange":     $orange,
+  "yellow":     $yellow,
+  "green":      $green,
+  "teal":       $teal,
+  "cyan":       $cyan,
+  "black":      $black,
+  "white":      $white,
+  "gray":       $gray,
+  "gray-dark":  $zalf-gray
+) !default;
+
+$theme-colors: (
+  "primary":    $primary,
+  "secondary":  $secondary,
+  "success":    $success,
+  "info":       $info,
+  "warning":    $warning,
+  "danger":     $danger,
+  "light":      $light,
+  "dark":       $dark
+) !default;
+
+
+
+
+$variable-prefix:             bs- !default; // Deprecated in v5.2.0 for the shorter `$prefix`
+$prefix:                      $variable-prefix !default;
+
+
+
+
+.form-check-input {
+  margin-bottom: 0%;
+  color: var(--#{$prefix}--#{$prefix}secondary-bg);
+  &:focus {
+    border-color: transparent;
+    outline: 0;
+    box-shadow: none;
+  }
+}
+
+.form-check-input:checked {
+  background-color: var(--#{$prefix}primary-bg);
+  border-color: var(--#{$prefix}primary-bg);
+}
+
+
+// Accordion
+
+// scss-docs-start accordion-variables
+
+
+
+$accordion-button-active-bg:              var(--#{$prefix}primary-bg) !default;
+
+$accordion-button-focus-border-color:     transparent !default;
+$accordion-button-focus-box-shadow:       none !default;
+
+
+
+
+
+// scss-docs-end accordion-variables
+
+
+@import './node_modules/bootstrap/scss/bootstrap';
+

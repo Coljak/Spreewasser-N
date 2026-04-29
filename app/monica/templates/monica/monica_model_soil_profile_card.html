@@ -1,0 +1,108 @@
+{% load crispy_forms_tags %}
+
+<!-- Soil profile-->
+
+
+<form method="post" id="soil-profile-formset">
+  {% csrf_token %}
+  <div id="div_id_soil_profile_name" class="mb-3 row">
+    <label for="id_soil_profile_name" class="form-label col-4 col-form-label">
+    Soil Profile Name
+    </label>   
+    <div class="col-8"> 
+      <input type="text" name="soil_profile_name" class="form-control" id="id_soil_profile_name" value="{{ profile_name }}"> 
+    </div>
+  </div>
+
+  {{ user_soil_profile_formset.management_form }}
+
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered align-middle soil-table"id="soil-layers-table">
+      <thead>
+        <tr>
+          <th>Horizon</th>
+          <th style="min-width: 80px;">Thickness (m)</th>
+          <th style="min-width: 80px;">Sand (%)</th>
+          <th style="min-width: 80px;">Clay (%)</th>
+          <th style="min-width: 80px;">pH</th>
+          <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Sceleton</th>
+          <th class="advanced-soil-parameters d-none" style="min-width: 80px;">lambda S (m³/m³)</th>
+          <th class="advanced-soil-parameters d-none" style="min-width: 80px;">field capacity (%)</th>
+          <th class="advanced-soil-parameters d-none" style="min-width: 80px;">pore volume</th>
+          <th class="advanced-soil-parameters d-none" style="min-width: 80px;">permanent wilting point</th>
+          <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Ammonium (mg/kg)</th>
+          <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Nitrate (NO₃–N/m³)</th>
+          <th style="min-width: 80px;">C:N</th>
+          <th style="min-width: 80px;">Raw Density (kg/ m³)</th>
+          <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Bulk Density</th>
+          <th style="min-width: 80px;">Corg (%)</th>
+          <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Organic matter</th>
+          <th class="advanced-soil-parameters d-none" style="min-width: 80px;">Soil Moisture</th>
+          <th class="advanced"></th>
+        </tr>
+      </thead>
+      <tbody id="soil-layers-table-body">
+        {% for form in user_soil_profile_formset %}
+          
+          
+          <tr class="soil-layer-row" data-horizon-no="{{ forloop.counter }}">
+            {{ form.id }}
+            <td class="horizon-no">
+              <div class="horizon-count">{{ forloop.counter }}</div>
+              {{ form.horizon_no.as_hidden }}
+            </td>
+            <td class="thickness">{{ form.thickness }}</td>
+            <td class="sand">{{ form.sand }}</td>
+            <td class="clay">{{ form.clay }}</td>
+            <td class="ph">{{ form.ph }}</td>
+            <td class="advanced-soil-parameters sceleton d-none">{{ form.sceleton }}</td>
+            <td class="advanced-soil-parameters lambda-s d-none">{{ form.lambda_s }}</td>
+            <td class="advanced-soil-parameters field-capacity d-none">{{ form.field_capacity }}</td>
+            <td class="advanced-soil-parameters pore-volume d-none">{{ form.pore_volume }}</td>
+            <td class="advanced-soil-parameters d-none permanent-wilting-point">{{ form.permanent_wilting_point }}</td>
+            <td class="advanced-soil-parameters ammonium d-none">{{ form.ammonium }}</td>
+            <td class="advanced-soil-parameters nitrate d-none">{{ form.nitrate }}</td>
+            <td class="c-n">{{ form.c_n }}</td>
+            <td class="raw-density">{{ form.raw_density }}</td>
+            <td class="advanced-soil-parameters bulk-density d-none">{{ form.bulk_density }}</td>
+            <td class="organic-carbon">{{ form.organic_carbon }}</td>
+            <td class="advanced-soil-parameters organic-matter d-none">{{ form.organic_matter }}</td>
+            <td class="advanced-soil-parameters soil-moisture d-none">{{ form.soil_moisture }}</td>  
+            <td class="advanced">
+              <button type="button" class="btn btn-danger btn-sm delete-horizon-button ">
+                Delete
+              </button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="advanced">
+    <div class="d-flex align-items-center mt-3 ">
+    
+      <button type="button" class="btn btn-outline-primary add-horizon-button ">
+        + Add horizon
+      </button>
+      <button type="button" class="btn btn-outline-primary reset-soil-form-button  mx-3" data-profile-type="{{ profile_type }}" data-profile-id="{{ profile_id }}" data-original-profile="{{ original_profile|yesno:'true,false' }}">
+        Reset horizons
+      </button>
+      <button type="button" class="btn btn-outline-primary save-soil-profile-button " data-id="{{ user_profile_id }}">
+        <span id="saveProfileIndicator"
+              class="badge rounded-pill bg-danger">
+          !
+        </span>
+        Save Profile
+      </button>
+    
+
+      <div class="ms-auto ">
+        <button type="button" class="btn btn-info  advanced-soil-parameters-toggle">
+          Erweiterte Bodenmerkmale
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+
+              

@@ -16,36 +16,43 @@ services:
       context: .
       dockerfile: Dockerfile.django
       # for DEV=false, expose port 80
-      args:
-        - DEV=true
+      
     ports:
       - 8000:8000 
       - 8888:8888
     volumes:
       - ./app:/app
-      - ./app/klim4cast/data/netcdf:/app/klim4cast/data/netcdf 
-      - ./app/raster_data:/app/raster_data
+      - ./app_data:/app_data
       # - ./thredds_data/data:/app/thredds_data
     command: 
       sh -c "python3 manage.py wait_for_db &&
       python3 manage.py migrate &&
+      echo '>>> MIGRATE DONE' &&
       python3 manage.py runserver 0.0.0.0:8000"
+
       # python3 manage.py runserver 0.0.0.0:8000 --reload --watcher polling  for file changes in docker
         
     environment:
-      - DEV=true
-      
-      - DB_HOST=db
-      - DB_NAME=postgis
-      - DB_USER=postgis
-      - DB_PASS=postgis
+      DJANGO_DEBUG: 1 # TODO set via env var in production
 
-      - GEOSERVER_URL=http://geoserver:8080/geoserver
-      - GEOSERVER_USER=admin
-      - GEOSERVER_PASS=geoserver
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY} # TODO set via env var in production   
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS} # TODO set via env var in production
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
 
-      - THREDDS_URL=http://thredds:8080/thredds
+      GEOSERVER_URL: http://geoserver:8080/geoserver
+      GEOSERVER_USER: ${GEOSERVER_USER}
+      GEOSERVER_PASS: ${GEOSERVER_PASS}
+
+      THREDDS_URL: http://thredds:8080/thredds
       # - NETCDF_DATA_PATH=/path/to/thredds_data
+
+      DWD_HOST: ${DWD_HOST}
+      DWD_USERNAME: ${DWD_USERNAME}
+      DWD_PASSWORD: ${DWD_PASSWORD}
+      DWD_PORT: ${DWD_PORT}
       
       
     container_name: swn_geo_django
@@ -64,8 +71,8 @@ services:
     #user: 1000:1000 
     environment:
       POSTGRES_DB: postgis
-      POSTGRES_USER: postgis
-      POSTGRES_PASSWORD: postgis
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
       PGDATA: /pg_data_2
 
     ports:
@@ -83,11 +90,11 @@ services:
       - ./geoserver/data:/opt/geoserver/data
       - ./app/raster_data:/opt/geoserver/raster_data
     environment:
-      - GEOSERVER_URL=geoserver
-      - GEOSERVER_ADMIN_USER=admin
-      - GEOSERVER_ADMIN_PASSWORD=geoserver
-      - GEOSERVER_DATA_DIR=/opt/geoserver/data
-      - GEOSERVER_RASTER_DATA_DIR=/opt/geoserver/raster_data
+      GEOSERVER_URL: geoserver
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_USER}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_PASS}
+      GEOSERVER_DATA_DIR: /opt/geoserver/data
+      GEOSERVER_RASTER_DATA_DIR: /opt/geoserver/raster_data
       # - CATALINA_TMPDIR=/geoserver_data/data/work
     ports:
       - 8080:8080
@@ -106,33 +113,26 @@ services:
     volumes:
       - ./thredds_tomcat/tomcat_logs:/usr/local/tomcat/logs/
       - ./thredds_tomcat/thredds_logs:/usr/local/tomcat/content/thredds/logs/
-      - ./app/klim4cast/data/netcdf:/usr/local/tomcat/content/thredds/public/data/Klim4Cast
-      - ./thredds_data/data/DWD_Data:/usr/local/tomcat/content/thredds/public/data/DWD_Data
+      # - ./app/klim4cast/data/netcdf:/usr/local/tomcat/content/thredds/public/data/Klim4Cast
+      - ./app_data/klim4cast/netcdf:/usr/local/tomcat/content/thredds/public/data/Klim4Cast
+      # - ./thredds_data/data/DWD_Data:/usr/local/tomcat/content/thredds/public/data/DWD_Data
+      - ./app_data/monica/netcdf_hindcast:/usr/local/tomcat/content/thredds/public/data/DWD_Data
 
-   
-    environment:
-      - THREDDS_URL=thredds
-  
-      - THREDDS_DATA_DIR=/usr/local/tomcat/content/thredds/public/data
+
     ports:
       - 8088:8080
     depends_on:
       - db
     networks:
       - swn_network
-    # aliases:
-    #   - swn_thredds
+
 
   # MONICA
   monica:
-    # image: zalfrpm/monica-cluster:3.6.10.soil_organic_fixed
     image: zalfrpm/monica-cluster:3.6.35.shared_id
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile.monica
+
     container_name: swn_monica
-    # volumes:
-    #   - ./monica:/run/monica
+
     expose:
       - 6666  # monica_producer_port
       - 6677  # monica_intern_in_port

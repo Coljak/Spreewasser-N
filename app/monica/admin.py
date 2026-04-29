@@ -34,6 +34,10 @@ class UserSoilTransportParametersAdmin(BaseUserAdmin):
     list_display = ('id', 'name', 'user', 'is_default')
     list_filter = ('user', 'is_default')
 
+class UserSoilOrganicParametersAdmin(BaseUserAdmin):
+    list_display = ('id', 'name', 'user', 'is_default')
+    list_filter = ('user', 'is_default')
+
 
 class OrganFromDBAdmin(BaseUserAdmin):
     list_display = ('id', 'species_name', 'get_organ_name', 'user', 'is_default')
@@ -45,7 +49,7 @@ class OrganFromDBAdmin(BaseUserAdmin):
 
 
 class MonicaSiteAdmin(BaseUserAdmin):
-    list_display = ('id', 'name', 'user', 'latitude', 'longitude')
+    list_display = ('id', 'site_name', 'user', 'latitude', 'longitude')
 
 class SiteParametersAdmin(BaseUserAdmin):
     list_display = ('id', 'name', 'user', 'latitude', 'longitude')
@@ -71,9 +75,10 @@ admin.site.register(models.UserCropParameters, UserParametersNameAdmin)
 admin.site.register(models.UserEnvironmentParameters, UserParametersNameAdmin)
 admin.site.register(models.UserSimulationSettings, UserParametersNameAdmin)
 admin.site.register(models.UserSoilMoistureParameters, UserParametersNameAdmin)
-admin.site.register(models.UserSoilOrganicParameters, UserParametersNameAdmin)
+admin.site.register(models.UserSoilOrganicParameters, UserSoilOrganicParametersAdmin)
 admin.site.register(models.SoilTemperatureModuleParameters, UserParametersNameAdmin)
 admin.site.register(models.UserSoilTransportParameters, UserSoilTransportParametersAdmin)
+
 admin.site.register(models.UserSoilProfile, admin.ModelAdmin)
 admin.site.register(models.WorkstepMineralFertilisation, BaseUserAdmin)
 admin.site.register(models.WorkstepOrganicFertilisation, admin.ModelAdmin)
@@ -88,7 +93,6 @@ admin.site.register(models.MonicaProject, MonicaProjectAdmin)
 admin.site.register(models.ModelSetup, ModelSetupAdmin)
 admin.site.register(models.Rotation, admin.ModelAdmin)
 admin.site.register(models.CropRotation, admin.ModelAdmin)
-
 admin.site.register(models.DWDGridToPointIndices, LeafletGeoAdmin)
 admin.site.register(models.DWDForecastGridToPointIndices, LeafletGeoAdmin)
 admin.site.register(models.DWDForecastGridAsPolygon, LeafletGeoAdmin)
@@ -101,3 +105,4 @@ admin.site.register(models.BBCHStage, admin.ModelAdmin)
 admin.site.register(models.CropStageDescription, admin.ModelAdmin)
 admin.site.register(models.MonicaCalculation, admin.ModelAdmin)
 admin.site.register(models.OutputSettings, admin.ModelAdmin)
+admin.site.register(models.GermanyModelParameters, admin.ModelAdmin)

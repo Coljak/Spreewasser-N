@@ -178,6 +178,11 @@ class UserField(models.Model):
     has_sieker_surface_water = models.BooleanField(default=False, null=True, blank=True)
     has_sieker_wetland = models.BooleanField(default=False, null=True, blank=True)
     has_sieker_drainage = models.BooleanField(default=False, null=True, blank=True)
+    toolbox_types = models.ManyToManyField(
+        "ToolboxType",
+        blank=True,
+        related_name="user_fields"
+    )
     filter_bounds = models.JSONField(default=dict, blank=True, null=True)
 
     def __str__(self):
@@ -269,22 +274,52 @@ class UserField(models.Model):
     def save(self, *args, **kwargs):
         if self.geom:
             self.geom25833 = self.geom.transform(25833, clone=True)
-            # TODO: 1. 
 
-        self.has_infiltration = Sink.objects.filter(geom4326__intersects=self.geom).exists()
-        if not self.has_infiltration:
-            self.has_infiltration = EnlargedSink.objects.filter(geom4326__intersects=self.geom).exists()
-
-        self.has_injection = OutlineInjection.objects.filter(geom__intersects=self.geom).exists()
-        self.has_sieker_sink = SiekerSink.objects.filter(geom4326__intersects=self.geom).exists()
-        self.has_sieker_gek = GekRetention.objects.filter(geom4326__intersects=self.geom).exists()
-        self.has_sieker_surface_water = SiekerLargeLake.objects.filter(geom4326__intersects=self.geom).exists()
-        self.has_sieker_wetland = HistoricalWetlands.objects.filter(geom4326__intersects=self.geom).exists()
-        # self.has_sieker_drainage = SiekerDrainage.objects.filter(geom4326__intersects=self.geom).exists()
-
+        # clear old relations
         super().save(*args, **kwargs)
+        self.toolbox_types.clear()
 
-            
+        def add_toolbox(tag):
+            tb = ToolboxType.objects.filter(name_tag=tag).first()
+            if tb:
+                self.toolbox_types.add(tb)
+
+        # spatial checks
+        if Sink.objects.filter(geom4326__intersects=self.geom).exists() \
+        or EnlargedSink.objects.filter(geom4326__intersects=self.geom).exists():
+            self.has_infiltration = True
+            add_toolbox("infiltration")
+
+        if OutlineInjection.objects.filter(geom4326__intersects=self.geom).exists():
+            self.has_injection = True
+            add_toolbox("injection")
+
+        if SiekerSink.objects.filter(geom4326__intersects=self.geom).exists():
+            self.has_sieker_sink = True
+            add_toolbox("sieker_sink")
+
+        if GekRetention.objects.filter(geom4326__intersects=self.geom).exists():
+            self.has_sieker_gek = True
+            add_toolbox("sieker_gek")
+
+        if SiekerLargeLake.objects.filter(geom4326__intersects=self.geom).exists():
+            self.has_sieker_surface_water = True
+            add_toolbox("sieker_surface_water")
+
+        if HistoricalWetlands.objects.filter(geom4326__intersects=self.geom).exists():
+            self.has_sieker_wetland = True
+            add_toolbox("sieker_wetland")
+
+        super().save(update_fields=[
+            "has_infiltration",
+            "has_injection",
+            "has_sieker_sink",
+            "has_sieker_gek",
+            "has_sieker_surface_water",
+            "has_sieker_wetland",
+        ])
+
+
 
 class ToolboxProject(models.Model):    
     name = models.CharField(max_length=255)
@@ -411,7 +446,8 @@ class OutlineInjection(gis_models.Model):
     Area where injection projects can be evaluated
     """
     name = models.CharField(max_length=64, null=True, blank=True)
-    geom = gis_models.MultiPolygonField('Injection')
+    geom25833 = gis_models.MultiPolygonField('Injection', srid=25833, null=True, blank=True)
+    geom4326 = gis_models.MultiPolygonField(srid=4326, null=True, blank=True)
 
     def __str__(self):
                 return self.name
@@ -424,6 +460,27 @@ class OutlineInjection(gis_models.Model):
             "geometry": geometry,
             "properties": {'name': self.name}
         }
+
+class OutlineDrainage(gis_models.Model):
+    """
+    Area where injection projects can be evaluated
+    """
+    name = models.CharField(max_length=64, null=True, blank=True)
+    geom25833 = gis_models.MultiPolygonField('Injection', srid=25833, null=True, blank=True)
+    geom4326 = gis_models.MultiPolygonField(srid=4326, null=True, blank=True)
+
+    def __str__(self):
+                return self.name
+    
+    
+    def to_feature(self, epsg=4326):
+        geometry = json.loads(self.geom.geojson)
+        return {
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": {'name': self.name}
+        }
+
 
 # DE: Ufernah /Qgis: ufernah_diss_4326
 class OutlineSurfaceWater(gis_models.Model):

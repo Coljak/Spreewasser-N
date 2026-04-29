@@ -93,11 +93,11 @@ def toolbox_dashboard(request):
     user = request.user
     project_region = swn_models.ProjectRegion.objects.first().to_feature()
 
-    outline_injection = models.OutlineInjection.objects.first().to_feature()
+    # outline_injection = models.OutlineInjection.objects.first().to_feature()
 
-    outline_surface_water = models.OutlineSurfaceWater.objects.first().to_feature()
+    # outline_surface_water = models.OutlineSurfaceWater.objects.first().to_feature()
 
-    outline_infiltration = models.OutlineInfiltration.objects.first().to_feature()
+    # outline_infiltration = models.OutlineInfiltration.objects.first().to_feature()
 
 
     counties_form = forms.PolygonSelectionForm(request.POST or None)
@@ -114,9 +114,9 @@ def toolbox_dashboard(request):
         # 'project_select_form': project_select_form,
         'project_form': project_form,
         'project_modal_title': project_modal_title,
-        'outline_injection': outline_injection,
-        'outline_surface_water': outline_surface_water,
-        'outline_infiltration': outline_infiltration,
+        # 'outline_injection': outline_injection,
+        # 'outline_surface_water': outline_surface_water,
+        # 'outline_infiltration': outline_infiltration,
     }
 
     return render(request, 'toolbox/toolbox_three_split.html', context)
@@ -269,13 +269,37 @@ def get_field_project_modal(request, id):
 
 
 #TODO needed here?
-def get_options(request, parameter):
-    dropdown_list = []
-    if parameter == 'toolbox-project':
-        toolbox_projects = models.ToolboxProject.objects.filter(user=request.user)
-        dropdown_list = [(project.id, project.name) for project in toolbox_projects]
-    return JsonResponse({'options': dropdown_list})
+# def get_options(request, parameter):
+#     dropdown_list = []
+#     if parameter == 'toolbox-project':
+#         toolbox_projects = models.ToolboxProject.objects.filter(user=request.user)
+#         dropdown_list = [(project.id, project.name) for project in toolbox_projects]
+#     return JsonResponse({'options': dropdown_list})
         
+def load_toolbox_project_modal(request):
+    # user_field = models.UserField.objects.get(pk=id)
+    if request.method == 'POST':
+        body = json.loads(request.body)
+        user_field_id = body.get("userFieldId")
+        page_reload = body.get("page_reload")
+        user_field = models.UserField(pk=user_field_id)
+
+        project_form = forms.ToolboxNewProjectForm(
+            user=request.user,
+            user_field=user_field
+        )
+
+        return render(
+            request,
+            "toolbox/toolbox_modals.html",
+            {   
+                "project_modal_title": user_field.name,
+                "page_reload": page_reload,
+                "project_form": project_form,
+                "user_field": user_field,
+            }
+        )
+
 
 
 def add_range_filter(filters, obj, field,  model_field=None):
@@ -1419,7 +1443,7 @@ def get_geks_and_measures(project):
     geks = models.GekRetention.objects.filter(measures__in=measures).distinct()
     return geks, measures
 
-# TODO: turn into filter gek
+
 def filter_sieker_geks(request):
    # add_range_filter(filters, obj, field,  model_field=None)
     start = datetime.now()
@@ -1537,10 +1561,8 @@ def load_sieker_wetland_gui(request, user_field_id):
 
 
 
-#TODO
 def filter_sieker_wetlands(request):
-   # add_range_filter(filters, obj, field,  model_field=None)
-    start = datetime.now()
+
     try:
         project = json.loads(request.body)
     except json.JSONDecodeError:
@@ -1750,7 +1772,7 @@ def delete_geoserver_layer(workspace, layer_name):
         pass
 
 
-def publish_raster_on_geoserver(layer_name, workspace='spreewassern_raster', style_name="style_raster_percent_sieker_2"):
+def publish_raster_on_geoserver(layer_name, path=settings.TOOLBOX_RASTER_OUTPUT_DIR, workspace='spreewassern_raster', style_name="style_raster_percent_sieker_2"):
     """
     Publishes a GeoTIFF to GeoServer as a coverage store and attaches an existing style.
     """
@@ -1761,7 +1783,7 @@ def publish_raster_on_geoserver(layer_name, workspace='spreewassern_raster', sty
         password=settings.GEOSERVER_PASS
     )
 
-    geo.create_coveragestore(layer_name=layer_name, path=f'/app/raster_data/{layer_name}.tif', workspace=workspace)
+    geo.create_coveragestore(layer_name=layer_name, path=f'{path}/{layer_name}.tif', workspace=workspace)
     geo.publish_style(layer_name=layer_name, style_name=style_name, workspace=workspace)
 
 
@@ -1769,7 +1791,7 @@ def publish_raster_on_geoserver(layer_name, workspace='spreewassern_raster', sty
 def compute_suitability_from_tifs(suitability_dict, user):
     FLOAT32_NODATA = np.float32(-3.4028235e+38)
 
-    with rasterio.open('raster_data/no_injection_area_mask_v2.tif') as mask:
+    with rasterio.open(f'{settings.TOOLBOX_RASTER_DATA_DIR}/no_injection_area_mask_v2.tif') as mask:
         nogo_mask = mask.read(1)
         mask_nodata = mask.nodata
         mask_width = mask.width
@@ -1814,7 +1836,7 @@ def compute_suitability_from_tifs(suitability_dict, user):
     result_2d = np.where(np.isnan(result_2d), np.nan, np.clip(result_2d, 0, 100))
     result_2d_to_write = np.where(np.isnan(result_2d), FLOAT32_NODATA, result_2d).astype(np.float32)
 
-    with rasterio.open(f'raster_data/{user.id}_mar_result.tif', 'w', **mask_profile) as f:
+    with rasterio.open(f'{settings.TOOLBOX_RASTER_OUTPUT_DIR}/{user.id}_mar_result.tif', 'w', **mask_profile) as f:
 
         f.write(result_2d_to_write.astype(np.float32),1)
 
@@ -1822,7 +1844,7 @@ def compute_suitability_from_tifs(suitability_dict, user):
     for key in suitability_dict:
         stack_to_write = np.where(np.isnan(stack[i]), FLOAT32_NODATA, stack[i]).astype(np.float32)
         print(i)
-        with rasterio.open(f'raster_data/{user.id}_weighted_stack_{key}.tif', 'w', **mask_profile) as f:
+        with rasterio.open(f'{settings.TOOLBOX_RASTER_OUTPUT_DIR}/{user.id}_weighted_stack_{key}.tif', 'w', **mask_profile) as f:
 
             f.write(stack_to_write.astype(np.float32),1)
         i += 1
@@ -1847,7 +1869,7 @@ def mar_calculate_area(request):
             default_score = label.default_score
             if suitability not in suitability_dict:
                 suitability_dict[suitability] = {'mapping': {}}
-            suitability_dict[suitability]['map_path'] = 'raster_data/' + label.map_name
+            suitability_dict[suitability]['map_path'] = f'{settings.TOOLBOX_RASTER_DATA_DIR}/{label.map_name}'
             suitability_dict[suitability]['weight'] = int(project.get(f'weighting_{suitability}', 5))/5
             suitability_dict[suitability]['mapping'][name] = {
                 'map_value': map_value,
@@ -2413,7 +2435,7 @@ def download_toolbox_results(request):
                                 writer.writerow([row["date"], row["discharge_m3s"]])
                     
         case 'injection':
-            filename= f'/app/raster_data/{request.user.id}_mar_result.tif'
+            filename= f'{settings.TOOLBOX_RASTER_OUTPUT_DIR}/{request.user.id}_mar_result.tif'
             target_path = os.path.join(tmpdir, "mar_result.tif")
             # copy file into tmpdir
             shutil.copy(filename, target_path)
@@ -2575,7 +2597,7 @@ def download_toolbox_results(request):
                 drained_area_fc = create_fc_for_download(drained_area, epsg, result_drained_areas, language=language)
                 create_download_files(drained_area_fc, drained_area, tmpdir, epsg, result_drained_areas, language=language)
             if len(result_probability_raster)> 0:
-                filename= f'/app/raster_data/Entwaesserungswahrscheinlichkeit_9Parameter_v2.tif'
+                filename= f'{settings.TOOLBOX_RASTER_DATA_DIR}/Entwaesserungswahrscheinlichkeit_9Parameter_v2.tif'
                 target_path = os.path.join(tmpdir, "Entwaesserungswahrscheinlichkeit.tif")
                 # copy file into tmpdir
                 shutil.copy(filename, target_path)

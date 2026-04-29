@@ -17,6 +17,8 @@ urlpatterns = [
     #user related paths
     path('sign-up/', views.sign_up, name='sign_up'),
     path('drought/', views.swn_dashboard, name='swn_dashboard'),
+    path('drought/get-rotation-forms/', views.get_hidden_rotation_forms, name='get-rotation-forms'),
+    path('drought/get-tab-rotation/', views.get_tab_rotation, name='get-tab-rotation'),
     path('drought/get-csrf-token/', views.get_csrf_token, name='get-csrf-token'),
     path('drought/save-user-field/', views.save_user_field, name='save-user-field'),
     path('drought/get-user-fields/', views.get_user_fields, name='get-user-fields'),
@@ -30,7 +32,8 @@ urlpatterns = [
     path('drought/field-projects-menu/<int:id>/', views.get_field_project_modal, name='field_projects_menu'),
     # path('drought/get_lat_lon/<int:user_field_id>/', views.get_centroid, name='get_centroid'),
     path('drought/select-soil-profile/<int:user_field_id>/', views.manual_soil_selection, name='manual_soil_selection'),
-    path('drought/recommended-soil-profile/<str:profile_landusage>/<int:user_field_id>/', views.recommended_soil_profile, name='recommended_soil_profile'),
+    path('drought/get-recommended-soil-profile/', views.get_soil_profile, name='get_soil_profile'),
+    
     path('drought/run-simulation/', views.run_simulation, name='run_simulation'),
     
     # Impressum and Acknoledgements

@@ -1,9 +1,13 @@
 from django import forms
+from django.forms import inlineformset_factory, modelformset_factory
 from . import models
-from swn.models import SwnProject
+from buek import models as buek_models
+
 
 from django.db.models import Q
 from django.contrib.postgres.fields import JSONField
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
 from django.core import validators
 from crispy_forms.helper import FormHelper
@@ -11,7 +15,7 @@ from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, C
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 from django_select2.forms import Select2Widget
 from .widgets import SingleRowTextarea
-from django.utils.translation import gettext_lazy as _
+
 from utilities.widgets import UnitInputWrapper
 
 from crispy_forms.layout import Field, Layout, Row, Column
@@ -124,31 +128,6 @@ class ParametersModelForm(forms.ModelForm):
                 self.helper.field_class = 'col-7'
         self.helper.layout = Layout(*layout_fields)
 
-class CoordinateForm(forms.Form):
-    latitude = forms.FloatField(
-        max_value=54.92,
-        min_value=47.27,
-        initial=50.00,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': 0.1})
-    )
-    longitude = forms.FloatField(
-        min_value=5.87,
-        max_value=15.04,
-        initial=10.00,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': 0.1})
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-
-        self.helper.label_class = 'col-6 col-form-label'
-        self.helper.field_class = 'col-6'
-
-        self.helper.layout = Layout(
-            Field('latitude', wrapper_class='row'),
-            Field('longitude', wrapper_class='row')
-        )
 
             
 class CultivarParametersForm(ParametersModelForm):
@@ -210,7 +189,6 @@ class CropResidueParametersForm(ParametersModelForm):
             "part_aom_slow_to_smb_slow": "kg/kg",
             "part_aom_to_aom_fast": "kg/kg",
             "part_aom_to_aom_slow": "kg/kg",
-
         }
 
         for field_name, unit in units.items():
@@ -237,7 +215,6 @@ class OrganicFertiliserForm(ParametersModelForm):
             "part_aom_slow_to_smb_slow": "kg/kg",
             "part_aom_to_aom_fast": "kg/kg",
             "part_aom_to_aom_slow": "kg/kg",
-
         }
 
         for field_name, unit in units.items():
@@ -261,7 +238,6 @@ class MineralFertiliserForm(ParametersModelForm):
             "carbamid": "kg/kg",
             "nh4": "kg/kg",
             "no3": "kg/kg",
-           
         }
 
         for field_name, unit in units.items():
@@ -276,9 +252,6 @@ class UserCropParametersForm(ParametersModelForm):
         exclude = ['id', 'user', 'is_default']
 
     
-    
-
-
 class UserCropParametersSelectionForm(forms.Form):
     user_crop_parameters = forms.ChoiceField(
         choices=[],
@@ -315,8 +288,6 @@ class UserCropParametersSelectionForm(forms.Form):
             )
 
 
-
-
 class UserEnvironmentParametersForm(ParametersModelForm):
     class Meta:
         model = models.UserEnvironmentParameters
@@ -340,8 +311,6 @@ class MonicaProjectSelectionForm(forms.Form):
             Field('monica_project', wrapper_class='row')
             
         )
-
-
 
 
 #TODO implement User Environment
@@ -594,7 +563,6 @@ class UserSoilTransportParametersForm(ParametersModelForm):
         exclude = ['id', 'user', 'is_default']
 
     
-
 class UserSoilTransportParametersInstanceSelectionForm(forms.Form):
     soil_transport = forms.ChoiceField(
         choices=[],
@@ -787,7 +755,7 @@ class WorkstepSowingForm(forms.ModelForm):
         self.helper.label_class = 'col-4 col-form-label'
         self.helper.field_class = 'col-8'
         # self.helper.button_class = 'col-5'
-        self.helper.form_tag = False  # Avoid rendering <form> wrapper if you're already in one
+        self.helper.form_tag = False  # Avoids rendering <form> wrapper if you're already in one
         self.helper.layout = Layout(
             Row(Div(
                 Field('date', wrapper_class='row'),
@@ -821,7 +789,6 @@ class WorkstepSowingForm(forms.ModelForm):
                         <span><i class="bi bi-pencil-square"></i></span>
                         </button>
                     """),
-               
             ),
             Row(
                 Div(
@@ -834,19 +801,12 @@ class WorkstepSowingForm(forms.ModelForm):
                     <span><i class="bi bi-pencil-square"></i></span>
                     </button>
                 """
-                ),
-                
+                ),   
             ),
         )
     
 
-
-
-
 class WorkstepMineralFertilisationForm(forms.ModelForm):
-
-
-
     date = forms.DateField(
         widget=forms.DateInput(attrs={
             'class': 'form-control datepicker workstep-datepicker',
@@ -958,9 +918,6 @@ class WorkstepOrganicFertilisationForm(forms.ModelForm):
 
 
 
-
-
-
 class WorkstepTillageForm(forms.ModelForm):
     date = forms.DateField(
         widget=forms.DateInput(attrs={
@@ -1029,7 +986,6 @@ class WorkstepHarvestForm(forms.ModelForm):
         self.helper = get_parameters_form_helper()
         for field_name in self.fields:
             row_content = [
-
                     Div(
                         Field(field_name, wrapper_class='row'),
                         css_class='col-11'
@@ -1110,7 +1066,6 @@ class WorkstepAutomaticHarvestForm(forms.ModelForm):
 
 
 class WorkstepNDemandFertilizationForm(forms.ModelForm):
-
     days = forms.IntegerField(
         initial=7,  
         validators=[
@@ -1187,4 +1142,218 @@ class WorkstepNDemandFertilizationForm(forms.ModelForm):
         self.fields['depth'].widget = UnitInputWrapper(widget=self.fields['depth'].widget, unit='m')
 
 
+class SoilProfileSelectionForm(forms.Form):
 
+    PROFILE_SOURCE_CHOICES = (
+        ('recommended', 'Recommended soil profile'),
+        ('buek', 'BÜK choices'),
+        ('user', 'User soil profile'),
+        ('scratch', 'Define soil profile from scratch'),
+    )
+
+    profile_source = forms.ChoiceField(
+        choices=PROFILE_SOURCE_CHOICES,
+        widget=forms.RadioSelect,
+        initial='recommended',
+        label='Soil profile source'
+    )
+
+    user_soil_profile = forms.ChoiceField(
+        choices=[],
+        required=False,
+        label='',
+        widget=forms.Select(
+            attrs={
+                'id': 'id_user_soil_profile_selector',
+                'class': 'form-select form-select-sm'
+            }
+        )
+    )
+
+    def _radio_with_inline_select(self):
+        return format_html(
+        """
+        <div class="form-check d-flex align-items-center gap-2 mb-2">
+            <input class="form-check-input"
+                   type="radio"
+                   name="profile_source"
+                   id="id_profile_source_user"
+                   value="user"
+                   >
+
+            <label class="form-check-label mb-0"
+                   for="id_profile_source_user">
+                My soil profile
+            </label>
+
+            {}
+        </div>
+        """,
+        self['user_soil_profile']
+    )
+
+    def _simple_radio(self, value, checked):
+        label = dict(self.PROFILE_SOURCE_CHOICES).get(value, value)
+        return f"""
+        <div class="form-check mb-2">
+            <input class="form-check-input"
+                type="radio"
+                name="profile_source"
+                id="id_profile_source_{value}"
+                value="{value}"
+                {checked}>
+
+            <label class="form-check-label mb-0"
+                for="id_profile_source_{value}">
+                {label}
+            </label>
+        </div>
+        """
+
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if user:
+            qs = models.UserSoilProfile.objects.filter(
+                Q(user=user) | Q(user=None)
+            )
+        else:
+            qs = models.UserSoilProfile.objects.none()
+
+        self.fields['user_soil_profile'].choices = [
+            (obj.id, obj.name) for obj in qs
+        ]
+
+        self.helper = get_parameters_form_helper()
+        self.helper.layout = Layout(
+            HTML(self._simple_radio('recommended', 'checked')),
+            HTML(self._simple_radio('buek', '')),
+            HTML(self._radio_with_inline_select()),
+            HTML(self._simple_radio('scratch', '')),
+        )
+
+
+
+class UserSoilProfileForm(forms.ModelForm):
+    class Meta:
+        exclude = ('user',)
+        model = models.UserSoilProfile
+
+
+
+class UserSoilHorizonForm(forms.ModelForm):
+    thickness = forms.FloatField(widget=forms.NumberInput(attrs={'step': 0.1}))
+    class Meta:
+        model = models.SoilHorizon
+        #TODO exclude 'permanent_wilting_point', 'field_capacity', 'bulk_density'??? wilting pt and field cap depend on texture
+        exclude = ('user_soil_profile', ) 
+
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["horizon_no"].widget.attrs["readonly"] = True
+
+        for field in self.fields.values():
+            field.widget.attrs.update({
+                "class": "form-control form-control-sm soil-table-input"
+            })
+
+        
+# Formset for Soil Horizons within an existing Soil Profile. 
+# This is used to display or edit existing buek profiles and UserSoilProfiles.
+SoilProfileHorizonFormSet = inlineformset_factory(
+    models.UserSoilProfile,
+    models.SoilHorizon,
+    form=UserSoilHorizonForm,
+    extra=0,          # allows adding horizons
+    can_delete=True,  # allows removing horizons
+)
+
+
+
+UserSoilHorizonImportFormSet = modelformset_factory(
+    models.SoilHorizon,
+    form=UserSoilHorizonForm,
+    extra=1,
+    can_delete=True,
+)
+
+
+
+class MonicaSiteForm(forms.ModelForm):
+    class Meta:
+        model = models.MonicaSite
+        exclude = ('user', 'is_default', 'site_name', 'soil_profile_content_type', 'soil_profile_object_id', 'soil_profile')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.label_class = 'col-4 col-form-label'
+        self.helper.field_class = 'col-8'
+        # self.helper.button_class = 'col-5'
+        self.helper.form_tag = False  # Avoids rendering <form> wrapper if you're already in one
+        self.helper.layout = Layout(
+            # Row(Div(
+            #     Field('site_name', wrapper_class='row'),
+            #     css_class='col-11 advanced'
+
+            #     ),
+                
+            # ),
+            # Field('date', wrapper_class='row'),
+            Row(
+                Div(
+                    Field('latitude', wrapper_class='row'),
+                    css_class='col-11'
+                ),
+                css_id='latitude-row',
+            ),
+            Row(
+                Div(
+                    Field('longitude', wrapper_class='row'),
+                    css_class='col-11'
+                ),
+                css_id='longitude-row',
+            ),
+            Row(
+                Div(
+                    Field('altitude', wrapper_class='row'),
+                    css_class='col-11 advanced'
+                ),
+                HTML(
+                """
+                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 reset get-auto-altitude advanced">
+                    <span><i class="bi bi-arrow-clockwise"></i></span>
+                    </button>
+                """
+                ),   
+            ),
+            Row(
+                Div(
+                    Field('slope', wrapper_class='row'),
+                    css_class='col-11 advanced'
+                ),
+                HTML(
+                """
+                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 reset get-auto-slope advanced">
+                    <span><i class="bi bi-arrow-clockwise"></i></span>
+                    </button>
+                """
+                ),   
+            ),
+            Row(
+                Div(
+                    Field('n_deposition', wrapper_class='row'),
+                    css_class='col-11 advanced'
+                ),
+                HTML(
+                """
+                    <button type="button"  class="btn btn-outline-secondary btn-sm col-1 mb-3 reset get-auto-n_deposition advanced">
+                    <span><i class="bi bi-arrow-clockwise"></i></span>
+                    </button>
+                """
+                ),   
+            ),
+        )

@@ -1,0 +1,28 @@
+.advanced {
+    display: none;
+  }
+
+.card.rotation > .card-body {
+    border: 2px solid var(--bs-primary);
+    border-radius: 5px;
+  }
+
+#chartDiv {
+    width: 100%;
+    height: 450px;
+  }
+
+/* 
+.soil-layers-table th {
+  resize: horizontal;
+  overflow: hidden;
+  min-width: 3rem;
+} */
+
+.soil-table th,
+.soil-table td {
+    resize: horizontal;
+  overflow: hidden;
+  min-width: 80px;  
+}
+ 

@@ -17,6 +17,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+import numpy as np
 
 class CropParametersExist(models.Model):
     species_name = models.CharField(max_length=100, blank=True)
@@ -374,7 +375,7 @@ class OrganFromDB(models.Model):
 class CropResidueParameters(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True)
     species_name = models.CharField(max_length=100,blank=True, null=True)
-    species_parameters = models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE, blank=True, null=True)
+    species_parameters = models.ForeignKey(SpeciesParameters, on_delete=models.CASCADE, related_name='crop_residue_parameters', blank=True, null=True)
     aom_dry_matter_content = models.FloatField(blank=True, null=True)
     aom_fast_dec_coeff_standard = models.FloatField(blank=True, null=True)
     aom_nh4_content = models.FloatField(blank=True, null=True)
@@ -685,6 +686,9 @@ class UserCropParameters(models.Model):
     tortuosity = models.FloatField()
     is_default = models.BooleanField(blank=True, null=True, default=False) # system's default
 
+    def __str__(self):
+        return self.name
+
     def to_json(self):
         return {
             "CanopyReflectionCoefficient": self.canopy_reflection_coefficient,
@@ -754,6 +758,9 @@ class UserEnvironmentParameters(models.Model):
     time_step = models.IntegerField() 
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
+    def __str__(self):
+        return self.name
+    
     def to_json(self):
         return {
             "Albedo": self.albedo,
@@ -801,21 +808,21 @@ class UserSoilMoistureParameters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     # default = models.BooleanField(default=False)
-    correction_rain = models.FloatField() # TODO integer
+    correction_rain = models.IntegerField()
     correction_snow = models.FloatField()
     critical_moisture_depth = models.FloatField()
-    evaporation_zeta = models.FloatField() # TODO integer
-    groundwater_discharge = models.FloatField() # TODO integer
+    evaporation_zeta = models.IntegerField() 
+    groundwater_discharge = models.IntegerField()
     hydraulic_conductivity_redux = models.FloatField()
     kc_factor = models.FloatField()
-    max_percolation_rate = models.FloatField() # TODO integer
-    maximum_evaporation_impact_depth = models.FloatField() # TODO integer
-    moisture_init_value = models.FloatField() # TODO integer
+    max_percolation_rate = models.IntegerField() 
+    maximum_evaporation_impact_depth = models.IntegerField() 
+    moisture_init_value = models.IntegerField()
     new_snow_density_min = models.FloatField()
     refreeze_parameter1 = models.FloatField()
     refreeze_parameter2 = models.FloatField()
     refreeze_temperature = models.FloatField()
-    saturated_hydraulic_conductivity = models.FloatField() # TODO integer
+    saturated_hydraulic_conductivity = models.IntegerField() 
     snow_accumulation_threshold_temperature = models.FloatField()
     snow_max_additional_density = models.FloatField()
     snow_melt_temperature = models.FloatField()
@@ -823,10 +830,14 @@ class UserSoilMoistureParameters(models.Model):
     snow_retention_capacity_max = models.FloatField()
     snow_retention_capacity_min = models.FloatField()
     surface_roughness = models.FloatField()
-    temperature_limit_for_liquid_water = models.FloatField() # TODO integer
+    temperature_limit_for_liquid_water = models.IntegerField()
     xsa_critical_soil_moisture = models.FloatField()
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
+
+    def __str__(self):
+        return self.name
+    
     def to_json(self):
         return {
             "CorrectionRain": self.correction_rain,
@@ -984,6 +995,9 @@ class UserSoilOrganicParameters(models.Model):
     profdenit = models.FloatField()
     vpotdenit = models.FloatField()
     is_default = models.BooleanField(blank=True, null=True, default=False)
+
+    def __str__(self):
+        return self.name
 
     def to_json(self):
         return {
@@ -1353,6 +1367,9 @@ class SoilTemperatureModuleParameters(models.Model):
     soil_moisture = models.FloatField()
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
+    def __str__(self):
+        return self.name
+
     def to_json(self):
         return {
         "BaseTemperature": self.base_temperature,
@@ -1410,6 +1427,9 @@ class UserSoilTransportParameters(models.Model):
     n_deposition = models.FloatField()
     is_default = models.BooleanField(blank=True, null=True, default=False)
 
+    def __str__(self):
+        return self.name
+    
     def to_json(self):
         return {
             "AD": self.ad,
@@ -1742,6 +1762,15 @@ class Organ(models.Model):
     description = models.TextField(null=True, blank=True)
 
 # Organ Classifications / stages https://github.com/zalf-rpm/monica/wiki/config_stages
+
+
+class BBCHMacrostage(models.Model):
+    """
+    Makrostadien zur Beschreibung der phänologischen Entwicklung mono- und dikotyle Pflanzen
+    """
+    stage_no = models.IntegerField()  
+    name_de = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
 class BBCHStage(models.Model):
     stage = models.CharField(max_length=4)  # e.g., "00", "09", "31", etc.
     macro_stage = models.IntegerField()
@@ -1801,6 +1830,7 @@ class DWDGridToPointIndices(models.Model):
     lat_idx = models.IntegerField()
     lon_idx = models.IntegerField()
     is_valid = models.BooleanField(default=True)
+    # this is just the climate station. There is not necessarily daa for each station/crop pair. Therefore use
     nearest_climate_station_for_sowing_dates = models.IntegerField(null=True, blank=True)
     forecast_lat_idx = models.IntegerField(null=True, blank=True)
     forecast_lon_idx = models.IntegerField(null=True, blank=True)
@@ -1824,9 +1854,84 @@ class DWDGridToPointIndices(models.Model):
         return self.objects.create(point=Point(lat, lon), lat=lat, lat_idx=lat_idx, lon=lon, lon_idx=lon_idx)
     
     @classmethod
+    def get_lat_lon_dictionary(cls):
+        objs = cls.objects.filter(is_valid=True).values(
+            'lat_idx',
+            'lon_idx',
+            'lat',
+            'forecast_lat_idx',
+            'forecast_lon_idx',
+        )
+
+        result = {}
+
+        for obj in objs:
+            lat_idx = obj['lat_idx']
+            lon_idx = obj['lon_idx']
+
+            if lat_idx not in result:
+                result[lat_idx] = {}
+
+            result[lat_idx][lon_idx] = {
+                'lat': obj['lat'],
+                'forecast_lat_idx': obj['forecast_lat_idx'],
+                'forecast_lon_idx': obj['forecast_lon_idx'],
+            }
+
+        return result
+
+    
+    @classmethod
+    def build_index_mappings_as_array(cls):
+        """
+        This creates a mapping as arrays to quickly access the indices of the forecast using the indices of the hindgcast:
+        forecast_lat_idx = lat_map[lat_idx, lon_idx]
+        forecast_lon_idx = lon_map[lat_idx, lon_idx]
+
+        returns numpy arrays lat_map and lon_map, where the value at [lat_idx, lon_idx] gives the corresponding forecast_lat_idx and forecast_lon_idx.
+         Additionally, it returns a reverse mapping as a dictionary where the key is a tuple of (forecast_lat_idx, forecast_lon_idx) and the value is a list of tuples of (lat_idx
+        """
+        qs = list(
+            cls.objects
+            .filter(is_valid=True)
+            .values_list(
+                'lat_idx',
+                'lon_idx',
+                'forecast_lat_idx',
+                'forecast_lon_idx'
+            )
+        )
+
+        max_lat = max(x[0] for x in qs) + 1
+        max_lon = max(x[1] for x in qs) + 1
+
+        hindcast_to_forecast_index = np.full((max_lat, max_lon), None, dtype=object)
+
+        forecast_to_hindcasts = {}
+
+        for lat_idx, lon_idx, f_lat, f_lon in qs:
+            if f_lat is None or f_lon is None:
+                continue
+
+            # forward (array lookup)
+            hindcast_to_forecast_index[lat_idx, lon_idx] = (f_lat, f_lon)
+
+            # reverse (grouping)
+            key = (f_lat, f_lon)
+            forecast_to_hindcasts.setdefault(key, []).append((lat_idx, lon_idx))
+
+
+        return hindcast_to_forecast_index, forecast_to_hindcasts
+
+    @classmethod
     def get_forecast_indices(cls, lat_idx, lon_idx):
         instance = cls.objects.get(lat_idx=lat_idx, lon_idx=lon_idx)
         return instance.forecast_lat_idx, instance.forecast_lon_idx
+
+    @classmethod
+    def get_hindcast_indices(cls, forecast_lat_idx, forecast_lon_idx):
+        instance = cls.objects.get(forecast_lat_idx=forecast_lat_idx, forecast_lon_idx=forecast_lon_idx)
+        return instance.lat_idx, instance.lon_idx
     
     @classmethod
     def get_points_within_geom(cls, geom):
@@ -1990,8 +2095,10 @@ class UserSoilProfile(models.Model):
     description = models.TextField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
+
     def __str__(self):
         return self.name
+
     
     def to_json(self):
         return {
@@ -1999,40 +2106,46 @@ class UserSoilProfile(models.Model):
             "description": self.description,
             # "horizons": [horizon.to_json() for horizon in self.soillayer_set.all()]
         }
+    
+    def get_monica_horizons_json(self):
+        # TODO for now is the same as above, but should be extended by queries if x exists include ....
+        hors = SoilHorizon.objects.filter(user_soil_profile=self).order_by('horizon_no')
+        return [horizon.to_monica_json() for horizon in hors], 'no message'
 
         
-# TODO implement the input option for soil
-class SoilLayer(models.Model):
-    user_soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE)
-    horizon_no = models.IntegerField()
-    thickness = models.FloatField() # in meters
-    sand = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil sand content as fraction
-    clay = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil clay content as fraction
-    silt = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil silt content as fraction
-    ph = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(14)]) # pH value
-    sceleton = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil stone content as fraction
-    lambda_s = models.FloatField() # soil ater conductivity coefficient
-    field_capacity = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil field capacity
-    pore_volume = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil pore volume, saturation
-    permanent_wilting_point = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil permanent wilting point
-    ka5_texture_class = models.ForeignKey(buek_models.Ka5TextureClass, on_delete=models.CASCADE)
-    ammonium = models.FloatField() # kg NH4-N m-3 intitial soil ammonium content
-    nitrate = models.FloatField() # kg NO3-N m-3 intitial soil nitrate content
-    c_n = models.FloatField() # kg kg-1 soil carbon nitrogen ratio
-    raw_density = models.FloatField(null=True) # kg m-3 soil raw density
-    bulk_density = models.FloatField(null=True) # kg m-3 soil bulk density
-    organic_carbon = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)], null=True) # kg kg-1 soil organic carbon content
-    organic_matter = models.FloatField(null=True) # kg kg-1 soil organic matter content
-    soil_moisture = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil moisture content
 
+class SoilHorizon(models.Model):
+    user_soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE, related_name='soil_horizons')
+    horizon_no = models.IntegerField(default=1)
+    thickness = models.FloatField(default=0.3) # in meters
+    sand = models.FloatField(default=33, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil sand content as fraction
+    clay = models.FloatField(default=33, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil clay content as fraction
+    silt = models.FloatField(default=34, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil silt content as fraction
+    ph = models.FloatField(default=7, validators=[MinValueValidator(0), MaxValueValidator(14)]) # pH value
+    sceleton = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # kg kg-1 soil stone content as fraction
+    lambda_s = models.FloatField(default=0.1, null=True, blank=True) # soil ater conductivity coefficient
+    field_capacity = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil field capacity
+    pore_volume = models.FloatField(default=0, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil pore volume, saturation
+    permanent_wilting_point = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil permanent wilting point
+    # ka5_texture_class = models.ForeignKey(buek_models.Ka5TextureClass, on_delete=models.CASCADE)
+    ammonium = models.FloatField(null=True, blank=True) # kg NH4-N m-3 intitial soil ammonium content
+    nitrate = models.FloatField(null=True, blank=True) # kg NO3-N m-3 intitial soil nitrate content
+    c_n = models.FloatField(default=11) # kg kg-1 soil carbon nitrogen ratio
+    raw_density = models.FloatField(null=True, blank=True) # kg m-3 soil raw density
+    bulk_density = models.FloatField(null=True, blank=True) # kg m-3 soil bulk density
+    organic_carbon = models.FloatField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)], null=True) # kg kg-1 soil organic carbon content
+    organic_matter = models.FloatField(null=True, blank=True) # kg kg-1 soil organic matter content
+    soil_moisture = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]) # m3 m-3 soil moisture content
+    
     def to_json(self):
-        if self.sand is None:
-            self.sand = 100 - self.clay - self.silt
-        if self.clay is None:
-            self.clay = 100 - self.sand - self.silt
+        # if self.sand is None:
+        #     self.sand = 100 - self.clay - self.silt
+        # if self.clay is None:
+        #     self.clay = 100 - self.sand - self.silt
         # if percentages are defined as 0-100 or 0-1 is not consistet in Monica
         return {
             "Thickness": self.thickness,
+            # "KA5TextureClass": self.ka5_texture_class.name,
             "Sand": self.sand / 100,
             "Clay": self.clay / 100,
             "pH": self.ph,
@@ -2041,7 +2154,6 @@ class SoilLayer(models.Model):
             "FieldCapacity": self.field_capacity / 100,
             "PoreVolume": self.pore_volume / 100,
             "PermanentWiltingPoint": self.permanent_wilting_point / 100,
-            "KA5TextureClass": self.ka5_texture_class.name,
             "SoilAmmonium": self.ammonium,
             "SoilNitrate": self.nitrate,
             "CN": self.c_n,
@@ -2051,6 +2163,66 @@ class SoilLayer(models.Model):
             "SoilOrganicMatter": self.organic_matter,
             "SoilMoisturePercentFC": self.soil_moisture
         }
+
+    def to_monica_json(self):
+        # if self.sand is None:
+        #     self.sand = 100 - self.clay - self.silt
+        # if self.clay is None:
+        #     self.clay = 100 - self.sand - self.silt
+        # if percentages are defined as 0-100 or 0-1 is not consistet in Monica
+        return {
+            "Thickness": self.thickness,
+            # "KA5TextureClass": self.ka5_texture_class.name,
+            "Sand": self.sand / 100,
+            "Clay": self.clay / 100,
+            "pH": self.ph,
+            "KA5TextureClass": '',
+            "FieldCapacity": self.field_capacity / 100,
+            # "PoreVolume": self.pore_volume / 100,
+            "WiltingPoint": self.permanent_wilting_point / 100,
+            # "SoilAmmonium": self.ammonium,
+            # "SoilNitrate": self.nitrate,
+            # "CN": self.c_n,
+            "SoilRawDensity": self.raw_density,
+            # "SoilBulkDensity": self.bulk_density,
+            "SoilOrganicCarbon": self.organic_carbon,
+            # "SoilOrganicMatter": self.organic_matter,
+            # "SoilMoisturePercentFC": self.soil_moisture
+        }
+
+    def get_ptf1_fc(self):
+        """
+        Returns the field capacity based on the PTF1 equation.
+        """
+        fc = (0.24490 - 0.1887 * (1 / (self.organic_carbon/ 100 + 1)) + 
+                0.0045270 * self.clay/100 + 
+                0.001535 * self.silt/ 100 +
+                0.001442 * self.silt/ 100 * (1 / (self.organic_carbon/ 100 + 1)) - 
+                0.0000511 * self.silt/ 100 * self.clay/ 100 +
+                0.0008676 * self.clay/ 100 * (1 / (self.organic_carbon/ 100 + 1))) 
+        return round(fc, 4)
+
+
+    def get_ptf1_wp(self):
+        """
+        Returns the permanent wilting point based on the PTF1 equation.
+        """
+        wp = (0.09878 + 0.002127 * self.clay/ 100 - 
+                0.0008366 * self.silt/ 100 - 
+                0.0767 * (1 / (self.organic_carbon/ 100 + 1)) + 
+                0.00003853 * self.silt/ 100 * self.clay/ 100 + 
+                0.00233 * self.clay/ 100 * (1 / (self.organic_carbon/ 100 + 1)) +
+                0.0009498 * self.silt/ 100 * (1 / (self.organic_carbon/ 100 + 1))) 
+        return round(wp, 4)
+
+    def save(self):
+        self.silt = 100 - self.sand - self.clay
+        # If field capacity or permanent wilting point are not provided, calculate them using the PTF1 equations
+        if self.field_capacity == 0 or self.field_capacity is None:
+            self.field_capacity = self.get_ptf1_fc() * 100  # Convert back to percentage
+        if self.permanent_wilting_point == 0 or self.permanent_wilting_point is None:
+            self.permanent_wilting_point = self.get_ptf1_wp() * 100  # Convert back to percentage
+        super().save()
 
 
 
@@ -2093,13 +2265,13 @@ class ModelSetup(models.Model):
     
 class MonicaSite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    name = models.CharField(max_length=255, null=True, blank=True)
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
-    altitude = models.FloatField(null=True, blank=True)
-    slope = models.FloatField(null=True, blank=True)
-    n_deposition = models.FloatField(null=True, blank=True)
-    # soil_profile = models.ForeignKey(UserSoilProfile, on_delete=models.CASCADE)
+    is_default = models.BooleanField(blank=True, null=True, default=False)
+    site_name = models.CharField(max_length=255, null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True, default=52.0)
+    longitude = models.FloatField(null=True, blank=True, default=10.0)
+    altitude = models.FloatField(null=True, blank=True, default=196)
+    slope = models.FloatField(null=True, blank=True, default=7.6)
+    n_deposition = models.FloatField(null=True, blank=True, default=10.5)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     soil_profile_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True) # identifies the class (buek.models.SoilProfile or UserSoilProfile)
@@ -2108,8 +2280,8 @@ class MonicaSite(models.Model):
 
 
     def __str__(self):
-        if self.name is not None:
-            return self.name
+        if self.site_name is not None:
+            return self.site_name
         else:
             return f"Site without a name id {self.id}"
     
@@ -2123,15 +2295,25 @@ class MonicaSite(models.Model):
                 soil_profile_type = 'userSoilProfile'
 
         return {
-            "site_name": self.name or None,
+            "site_name": self.site_name or None,
             "latitude": self.latitude or None,
             "longitude": self.longitude or None,
             "altitude": self.altitude or None,
             "slope": self.slope or None,
-            "nDeposition": self.n_deposition or None,
+            "n_deposition": self.n_deposition or None,
             # "soilProfileType": self.soil_profile_content_type.model if self.soil_profile_content_type else None,
             "soilProfileType": soil_profile_type,
             "soilProfileId": self.soil_profile_object_id or None
+        }
+    
+    def to_monica_json(self):
+        return {
+            "Latitude": self.latitude,
+            "Slope": self.slope,
+            "HeightNN": [self.altitude, 'm'],
+            "NDeposition": [self.n_deposition,"kg N ha-1 y-1"],
+            # "SoilProfileType": self.soil_profile_content_type.model if self.soil_profile_content_type else None,
+            "SoilProfileParameters": self.soil_profile.get_monica_horizons_json()[0] if self.soil_profile else None,
         }
 
 
@@ -2176,7 +2358,6 @@ class MonicaCalculation(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(null=True, blank=True)
    
-    # monica_site = models.ForeignKey(MonicaSite, on_delete=models.CASCADE)
     monica_project = models.ForeignKey(MonicaProject, on_delete=models.CASCADE)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -2227,4 +2408,62 @@ class OutputSettings(models.Model):
             "outputEvent": self.output_event
         }
     
+CULTIVARS = [
+    (1, 'alfalfa'),
+    (2, 'alfalfa clover grass ley mix'),
+    (11, 'silage maize'),
+    (16, 'moderately early potato'),
+    (17, 'winter rape'),
+    (18, 'winter rye'),
+    (22, 'sugar beet'),
+    (26, 'winter wheat'),
+    (27, 'winter barley'),
+    (32, 'grain maize'),
+    (37, 'silage winter rye'),
+    (57, 'spring wheat'),
+    # (None, 'spring triticale'), 
+]
+class GermanyModelParameters(models.Model):
+    """
+    This model stores the parameters for the Germany-wide model runs.
+    There should only be one instance that is is_default=True. The first is_default that is found
+    will be used for modelling.
+    
+    """
+    is_default = models.BooleanField(blank=True, null=True, default=False)
+    description = models.TextField(null=True, blank=True)
+    
+    simj = models.ForeignKey(UserSimulationSettings, on_delete=models.CASCADE, null=True, blank=True)
+    cultivar_name_for_sowing_dates = models.IntegerField(choices=CULTIVARS, default=1)
+    cultivar = models.ForeignKey(CultivarParameters, on_delete=models.CASCADE, null=True, blank=True)
+    user_crop_parameters = models.ForeignKey(UserCropParameters, on_delete=models.CASCADE, null=True, blank=True)
+    
+    user_environment_parameters = models.ForeignKey(UserEnvironmentParameters, on_delete=models.CASCADE, null=True, blank=True)
+    user_soil_moisture_parameters = models.ForeignKey(UserSoilMoistureParameters, on_delete=models.CASCADE, null=True, blank=True)
+    soil_temperature_module_parameters = models.ForeignKey(SoilTemperatureModuleParameters, on_delete=models.CASCADE, null=True, blank=True)
+    user_soil_transport_parameters = models.ForeignKey(UserSoilTransportParameters, on_delete=models.CASCADE, null=True, blank=True)
+    user_soil_organic_parameters = models.ForeignKey(UserSoilOrganicParameters, on_delete=models.CASCADE, null=True, blank=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["is_default"],
+                condition=Q(is_default=True),
+                name="only_one_default_germany_model_parameters"
+            )
+        ]
+    
+    def __str__(self):
+        return self.description or f"Germany-wide model parameters with cultivar {self.cultivar_name}"
 
+    def to_json(self):
+        return {
+            "type": "CentralParameterProvider",
+            "userCropParameters": self.user_crop_parameters.to_json() if self.user_crop_parameters else None,
+            "userEnvironmentParameters": self.user_environment_parameters.to_json() if self.user_environment_parameters else None,
+            "userSoilMoistureParameters": self.user_soil_moisture_parameters.to_json() if self.user_soil_moisture_parameters else None,
+            "userSoilTemperatureParameters": self.soil_temperature_module_parameters.to_json() if self.soil_temperature_module_parameters else None,
+            "userSoilTransportParameters": self.user_soil_transport_parameters.to_json() if self.user_soil_transport_parameters else None,
+            "userSoilOrganicParameters":self.user_soil_organic_parameters.to_json() if self.user_soil_organic_parameters else None,
+            "simulationParameters": self.simj.to_json() if self.simj else None, 
+            }

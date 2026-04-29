@@ -30,6 +30,27 @@ def save_project(project_data, user, project_class=models.MonicaProject):
             name += f' (new-{counter})'
             counter += 1
         return name
+
+
+    if project_data.get('siteId', None):
+        site = models.MonicaSite.objects.get(pk=data.get('siteId'))
+    else:
+        site = models.MonicaSite.objects.create(
+            user=user
+        )
+    site.name = data.get('siteName', '')
+    site.latitude = data.get('latitude')
+    site.longitude = data.get('longitude')
+    site.altitude = data.get('altitude', 0)
+    site.n_deposition = data.get('n_deposition', 11)
+    site.slope = data.get('slope', 0)
+    soil_profile_type = data.get('soilProfileType')
+    if soil_profile_type == 'buekSoilProfile':
+        soil_profile = SoilProfile.objects.get(pk=data.get('soilProfileId'))
+    elif soil_profile_type == 'userSoilProfile':
+        soil_profile = models.UserSoilProfile.objects.get(pk=data.get('userSoilProfileId'))
+    site.soil_profile = soil_profile
+    site.save()
     
     
     # modify project
@@ -44,42 +65,12 @@ def save_project(project_data, user, project_class=models.MonicaProject):
 
         project.start_date = data.get('startDate')
         project.description = data.get('description')
-        
-
-        
-        # save the site
-        try:
-            print('Monica Save Site')
-            print("data.get('latitude')", data.get('latitude'))
-            print("data.get('longitude')", data.get('longitude'))
-            print("data.get('altitude')", data.get('altitude', 0))
-            print("data.get('n_deposition')", data.get('n_deposition', 11))
-            print("data.get('soilProfileType')", data.get('soilProfileType'))
-
-
-            project.monica_site.latitude = data.get('latitude')
-            
-            project.monica_site.longitude = data.get('longitude')
-            project.monica_site.altitude = data.get('altitude', 0)
-            project.monica_site.n_deposition = data.get('n_deposition', 11)
-            soil_profile_type = data.get('soilProfileType')
-            if soil_profile_type == 'buekSoilProfile':
-                soil_profile = models.SoilProfile.objects.get(pk=data.get('soilProfileId'))
-            elif soil_profile_type == 'userSoilProfile':
-                soil_profile = models.UserSoilProfile.objects.get(pk=data.get('userSoilProfileId'))
-            project.monica_site.soil_profile = soil_profile
-            project.monica_site.save()
-        except Exception as e:
-            print("Error saving MonicaSite:", e)
-
 
         # save the model setup
         # monica_model_setup = ModelSetup.objects.get(id=data.get('modelSetupId'))
         project.monica_model_setup.name = data.get('modelSetupName', '')
 
         user_crop_parameters = models.UserCropParameters.objects.get(pk=data.get('userCropParametersId'))
-        print("data.get('userCropParametersId')", data.get('userCropParametersId'))
-        print("user_crop_parameters", user_crop_parameters)
         project.monica_model_setup.user_crop_parameters = user_crop_parameters
 
         user_environment_parameters = models.UserEnvironmentParameters.objects.get(pk=data.get('userEnvironmentParametersId'))
@@ -89,8 +80,6 @@ def save_project(project_data, user, project_class=models.MonicaProject):
         project.monica_model_setup.user_soil_moisture_parameters = user_soil_moisture_parameters
 
         user_soil_transport_parameters = models.UserSoilTransportParameters.objects.get(pk=data.get('userSoilTransportParametersId'))
-        print("data.get('userSoilTransportParametersId')", data.get('userSoilTransportParametersId'))
-        print("user_soil_transport_parameters", user_soil_transport_parameters)
         project.monica_model_setup.user_soil_transport_parameters = user_soil_transport_parameters
 
         user_soil_organic_parameters = models.UserSoilOrganicParameters.objects.get(pk=data.get('userSoilOrganicParametersId'))
@@ -99,7 +88,6 @@ def save_project(project_data, user, project_class=models.MonicaProject):
         user_soil_temperature_parameters = models.SoilTemperatureModuleParameters.objects.get(pk=data.get('userSoilTemperatureParametersId'))
         project.monica_model_setup.user_soil_temperature_parameters = user_soil_temperature_parameters
 
-        print("data.get('userSimulationSettingsId')", data.get('userSimulationSettingsId'))
         user_simulation_settings = models.UserSimulationSettings.objects.get(pk=data.get('userSimulationSettingsId'))
 
         project.monica_model_setup.user_simulation_settings = user_simulation_settings
@@ -132,9 +120,9 @@ def save_project(project_data, user, project_class=models.MonicaProject):
 
         # new site
         # monica
-        monica_site = models.MonicaSite(user=project.user)
-        monica_site.save()
-        project.monica_site = monica_site
+        # monica_site = models.MonicaSite(user=project.user)
+        # monica_site.save()
+    project.monica_site = site
 
     project.start_date = data.get('startDate').split('T')[0]
     project.description = data.get('description')

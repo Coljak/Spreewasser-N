@@ -7,26 +7,35 @@ from django.contrib.gis.db.models.functions import Transform
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.apps import apps
-from django.db.models import Q
+from django.db import transaction
+from django.db.models import Q, Min, Max
+
 from django.core.cache import cache
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
+from django.template.loader import render_to_string
+from django.forms import inlineformset_factory, modelformset_factory
 
+from monica.utils import climate_store
+#get_recommended_soil_profile, get_buek_polygon_id_from_point_buek200
 # from ...xx_obsolete.run_consumer_swn import run_consumer
 from . import models
-from . import monica_io3_swn
+from .utils import monica_io3_swn
 from swn import models as swn_models
 from . import forms
-from buek.views import get_soil_profile
+from buek import views as buek_views
 from buek import models as buek_models
-from .climate_data.lat_lon_mask import lat_lon_mask
-from .monica_events import swn_events
-from .utils import save_monica_project, get_weather_hindcasts, get_weather_forecast
+from .utils.monica_events import swn_events
+from .utils import save_monica_project, download_weather_hindcasts, download_weather_forecast
 from dateutil.relativedelta import relativedelta
+import requests
+from monica.utils import monica_constants
+
 import glob
 
 
 from netCDF4 import Dataset, date2index, MFDataset
+from app import settings
 from pathlib import Path
 import xarray as xr
 import dask.array as da
@@ -41,211 +50,70 @@ import csv
 import uuid
 import copy
 
-from datetime import datetime, timedelta, date
+import rasterio
+from rasterio.errors import RasterioIOError
+
+from datetime import datetime, timedelta, date, timezone
 from dask.diagnostics import ProgressBar
+from monica.utils import monica_constants
 import dask
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning, module="xarray")
 
 
-# layerAggOp
-OP_AVG = 0
-OP_MEDIAN = 1
-OP_SUM = 2
-OP_MIN = 3
-OP_MAX = 4
-OP_FIRST = 5
-OP_LAST = 6
-OP_NONE = 7
-OP_UNDEFINED_OP_ = 8
 
-
-ORGAN_ROOT = 0
-ORGAN_LEAF = 1
-ORGAN_SHOOT = 2
-ORGAN_FRUIT = 3
-ORGAN_STRUCT = 4
-ORGAN_SUGAR = 5
-ORGAN_UNDEFINED_ORGAN_ = 6
 #-------------------------- Monica Interface --------------------------#
-
-
-# all relevant climate variables. The key is already the the correct key for  MONICA climate jsons
-CLIMATE_VARIABLES = { 
-    '3': 'tasmin',
-    '4': 'tas',
-    '5': 'tasmax',
-    '6': 'pr',
-    '8': 'rsds',
-    '9': 'sfcWind',
-    '12': 'hurs'
-    }
 
 
 def ensure_datetime(d):
     return d if isinstance(d, datetime) else datetime.combine(d, datetime.min.time())
 
-# not in use
-def get_lat_lon_as_index(lat, lon):
-    """
-    Returns the index of the closest lat, lon to the given lat, lon in the netCDF grid. Used for matching differntly scaled grids.
-    """
-    lats = lat_lon_mask['lat']
-    
-    lons = lat_lon_mask['lon']
-    lat_idx = 0
-    lon_idx = 0
-    for i, lat_ in enumerate(lats):
-        if lat_ < lat:
-            lat_idx = i
-            break
-    
-    for j, lon_ in enumerate(lons):
-        if lon_ > lon:
-            lon_idx = j
-            break
-   
-    if (lats[lat_idx] + lats[lat_idx-1]) / 2 < lat:
-        print("lat is in if")
-        lat_idx = lat_idx - 1
-
-    if (lons[lon_idx] + lons[lon_idx-1]) / 2 > lon:
-        lon_idx = lon_idx - 1
-
-    return (lat_idx, lon_idx)
 
 
-def load_netcdf_to_memory():
-    """
-    Loads all netcdf files of at least the past two years into memory. 
-    This is done to avoid opening and closing the files for each request.
-    """
-    climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf')
 
-    this_year = datetime.now().year
-    start_year = this_year - 3
-
-    path_list = []
-    for _, value in CLIMATE_VARIABLES.items():
-
-        for year in range(start_year, this_year + 1):
-            file_path = f"{climate_data_path}/zalf_{value.lower()}_amber_{year}_v1-0.nc"
-            path_list.append(file_path)
-
-
-    climate = xr.open_mfdataset(path_list, combine='by_coords', chunks={'time':150, 'lat': 100, 'lon': 100}) 
-    climate_first_date = climate['time'][0]
-    climate_last_date = climate['time'][-1]
-    return climate, climate_first_date, climate_last_date
-
-# TODO REACTIVATE - only deactivated to prevet long loading times
-# CLIMATE_DATES = load_netcdf_to_memory()
-# CLIMATE = CLIMATE_DATES[0]
-# CLIMATE_FIRST_DATE = CLIMATE_DATES[1]
-# CLIMATE_LAST_DATE = CLIMATE_DATES[2]
-
-# def get_climate_data_as_json_new(start_date, end_date, lat_idx, lon_idx):
-#     start = datetime.now()
-#     climate_json = {}
-#     # with ProgressBar():
-#     climate_slice = CLIMATE.sel(time=slice(start_date, end_date)).isel(lat=lat_idx, lon=lon_idx)
-#     # Shows a progress bar for Dask computations
-
-
-#     for key, value in CLIMATE_VARIABLES.items():
-#         climate_json[key] = climate_slice[value].values.tolist()
-#     print('Time elapsed in get_climate_data_as_json_new: ', datetime.now() - start)
-#     return climate_json
-
-
-# # used
-# def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
-#     """Returns the climate data as json using monica's keys for the given start and end date and the given lat and lon index"""
+# def get_climate_data_as_json_from_hindcast(start_date, end_date, lat_idx, lon_idx):
+#     """Returns climate data as JSON using Monica's keys for the given start and end date and lat/lon index."""
 #     print("get_climate_data_as_json", start_date, end_date, lat_idx, lon_idx)
 
-#     # opening with MFDataset does not work, because time is not an unlimited dimension in the NetCDF files
+
 #     start = datetime.now()
-#     climate_json = { 
-#         '3': [],
-#         '4': [],
-#         '5': [],
-#         '6': [],
-#         '8': [],
-#         '9': [],
-#         '12': [],
-#         }
+#     climate_json = { '3': [], '4': [], '5': [], '6': [], '8': [], '9': [], '12': [] }
 #     climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf')
 
 #     for year in range(start_date.year, end_date.year + 1):
 #         print('climate data for loop', year)
-#         for key, value in CLIMATE_VARIABLES.items():
-            
+#         for key, value in monica_constants.CLIMATE_VARIABLES.items():
 #             file_path = f"{climate_data_path}/zalf_{value.lower()}_amber_{year}_v1-0.nc"
-#             print("filepath: ", file_path,  "getting key:", key)
-#             nc = Dataset(file_path, 'r')
-#             # print('climate data check 1')
-#             start_idx = 0
-#             end_idx = len(nc['time']) + 1
-#             if year == start_date.year:
-#                 start_idx = date2index(start_date, nc['time'])
-#             if year == end_date.year:
-#                 end_idx = date2index(end_date, nc['time']) +1
+#             print("filepath:", file_path, "getting key:", key)
 
-#             values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx]
-#             values = values.tolist()
+#             try:
+#                 # Use 'with' to ensure proper closure
+#                 with Dataset(file_path, 'r') as nc:
+#                     start_idx = 0
+#                     end_idx = len(nc['time']) + 1
+                    
+#                     if year == start_date.year:
+#                         start_idx = date2index(start_date, nc['time'])
+#                     if year == end_date.year:
+#                         end_idx = date2index(end_date, nc['time']) + 1
+                    
+#                     values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx].tolist()
+#                     climate_json[key].extend(values)
+                    
+#                 print(year, value, key)
 
-#             climate_json[key].extend(values)
+#             except Exception as e:
+#                 print(f"⚠️ Error reading {file_path}: {e}")
 
-#             nc.close()
+#     print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
+#     # climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
+#     climate_json['8'] = [x * .01 if x is not None and x != -9999 else 0 for x in climate_json['8']]
 
-#             print(year, value, key)
-#     print('Time elapsed in get_climate_data_as_json: ', datetime.now() - start)
-#     climate_json['8'] = [x / 100 for x in climate_json['8']]
 #     return climate_json
 
 
-
-def get_climate_data_as_json_from_hindcast(start_date, end_date, lat_idx, lon_idx):
-    """Returns climate data as JSON using Monica's keys for the given start and end date and lat/lon index."""
-    print("get_climate_data_as_json", start_date, end_date, lat_idx, lon_idx)
-
-
-    start = datetime.now()
-    climate_json = { '3': [], '4': [], '5': [], '6': [], '8': [], '9': [], '12': [] }
-    climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf')
-
-    for year in range(start_date.year, end_date.year + 1):
-        print('climate data for loop', year)
-        for key, value in CLIMATE_VARIABLES.items():
-            file_path = f"{climate_data_path}/zalf_{value.lower()}_amber_{year}_v1-0.nc"
-            print("filepath:", file_path, "getting key:", key)
-
-            try:
-                # Use 'with' to ensure proper closure
-                with Dataset(file_path, 'r') as nc:
-                    start_idx = 0
-                    end_idx = len(nc['time']) + 1
-                    
-                    if year == start_date.year:
-                        start_idx = date2index(start_date, nc['time'])
-                    if year == end_date.year:
-                        end_idx = date2index(end_date, nc['time']) + 1
-                    
-                    values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx].tolist()
-                    climate_json[key].extend(values)
-                    
-                print(year, value, key)
-
-            except Exception as e:
-                print(f"⚠️ Error reading {file_path}: {e}")
-
-    print('Time elapsed in get_climate_data_as_json:', datetime.now() - start)
-    # climate_json['8'] = [x * .00036 if x is not None and x != -9999 else 0 for x in climate_json['8']]
-    climate_json['8'] = [x * .01 if x is not None and x != -9999 else 0 for x in climate_json['8']]
-
-    return climate_json
-
+# TODO THIS IS OUT!!
 def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_idx):
     """Returns climate data as JSON using Monica's keys for the given start and end date and lat/lon index."""
     print("get_climate_data_as_json_from_forecast", start_date, end_date, lat_idx, lon_idx)
@@ -256,7 +124,7 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
     climate_json = { '3': [], '4': [], '5': [], '6': [], '8': [], '9': [], '12': [] }
     climate_data_path = Path(__file__).resolve().parent.joinpath('climate_netcdf_forecast')
 
-    for scenario in [get_weather_forecast.SCENARIOS[0]]:
+    for scenario in [monica_constants.SCENARIOS[0]]:
 
         glob_path = f"{climate_data_path}/forecast_{scenario}_*.nc"
         file_path = glob.glob(glob_path)[0]
@@ -264,7 +132,7 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
         with Dataset(file_path, 'r') as nc:
             start_idx = date2index(start_date, nc['time'], select='nearest')
             end_idx = date2index(end_date, nc['time'], select='nearest') + 1
-            for key, value in CLIMATE_VARIABLES.items():        
+            for key, value in monica_constants.CLIMATE_VARIABLES.items():        
                 values = nc.variables[value][start_idx:end_idx, lat_idx, lon_idx]
                 if value in ('tas', 'tasmin', 'tasmax'):
                     values = values - 273.15
@@ -286,14 +154,14 @@ def get_climate_data_as_json_from_forecast(start_date, end_date, lat_idx, lon_id
 
     return climate_json
 
-from datetime import timedelta
-
 def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     start_date = ensure_datetime(start_date)
     end_date = ensure_datetime(end_date)
-    last_hindcast_date = ensure_datetime(get_weather_hindcasts.get_last_valid_date_cached())
-    last_forecast_date = ensure_datetime(get_weather_forecast.get_last_valid_forecast_date_cached())
-    forecast_lat_idx, forecast_lon_idx = models.DWDGridToPointIndices.get_forecast_indices(lat_idx, lon_idx)
+    last_hindcast_date = ensure_datetime(climate_store.get_last_valid_hindcast_dates())
+    first_forecast_date, last_forecast_date = climate_store.get_last_valid_forecast_date()
+    first_forecast_date = ensure_datetime(first_forecast_date)
+    last_forecast_date = ensure_datetime(last_forecast_date)
+    
 
     # Initialize empty dictionaries
     hindcast_json = {}
@@ -303,13 +171,20 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     if start_date <= last_hindcast_date:
         hindcast_start_date = start_date
         hindcast_end_date = min(end_date, last_hindcast_date)  # Ensure it doesn't exceed last_hindcast_date
-        hindcast_json = get_climate_data_as_json_from_hindcast(hindcast_start_date, hindcast_end_date, lat_idx, lon_idx)
+        hindcast_json = climate_store.get_monica_hindcast_json_per_point(hindcast_start_date, hindcast_end_date, lat_idx, lon_idx)
     
+        
     # If end_date is after last_hindcast_date, we need forecast data
     if end_date > last_hindcast_date:
         forecast_start_date = max(start_date, last_hindcast_date + timedelta(days=1))  # Start from the day after hindcast ends
         forecast_end_date = end_date
-        forecast_json = get_climate_data_as_json_from_forecast(forecast_start_date, forecast_end_date, forecast_lat_idx, forecast_lon_idx)
+        forecast_json = climate_store.get_monica_forecast_json_per_point(
+            forecast_start_date, 
+            forecast_end_date, 
+            lat_idx, 
+            lon_idx, 
+            monica_constants.SCENARIOS[0]
+            )
 
     # If hindcast data is missing, return forecast data only, and vice versa
     if not hindcast_json:
@@ -323,21 +198,20 @@ def get_climate_data_as_json(start_date, end_date, lat_idx, lon_idx):
     return climate_json
 
 
+def new_approach_to_climate_data_for_germany(start_date, end_date):
+    subset_hindcast = CLIMATE.sel(time=slice(start_date, end_date))
+    subset_forecast = FORECAST.sel(time=slice(start_date, end_date))
+
 
 ### MONICA VIEWS ###
-
-
-
 def create_monica_env_from_json(json_data):
     print("create_monica_env_from_json",json_data)
     error = []
    
     cropRotation = []
-    
+    cropRotations = None
     for r in json_data['rotation']:
         rotation = {}
-
-        
         worksteps = []
         for k, v in r.items():
             # print("K: ", k)
@@ -444,10 +318,9 @@ def create_monica_env_from_json(json_data):
 
         cropRotation.append(rotation)
 
-    # print('cropRotation: ', cropRotation)
-    cropRotations = None
 
       # end of replacement -------------------------------------------
+    print('cropRotation: ', cropRotation)
     
     debugMode = True
 
@@ -461,20 +334,20 @@ def create_monica_env_from_json(json_data):
     if json_data.get('soilProfileId', None) is None:
         lat = json_data.get('latitude')
         lon = json_data.get('longitude')
-        soil_profile_parameters = get_soil_profile(landusage, lat, lon)['SoilProfileParameters']
+        soil_profile_parameters = buek_views.get_recommended_soil_profile(landusage, lat, lon)['SoilProfileParameters']
     else:
-        # TODO specify SoilProfile content Type!
         soil_profile_id = json_data.get('soilProfileId')
         soil_profile_type = json_data.get('soilProfileType')
-        # TODO SoilProfile content Type--> UserSoilProfile
-        # soil_profile_parameters = []
         if soil_profile_type == 'buekSoilProfile':
-            soil_profile_parameters, message = buek_models.SoilProfile.objects.get(id=soil_profile_id).get_monica_horizons_json()
+            soil_profile_parameters, _ = buek_models.SoilProfile.objects.get(id=soil_profile_id).get_monica_horizons_json()
+        elif soil_profile_type == 'userSoilProfile':
+            soil_profile_parameters, _ = models.UserSoilProfile.objects.get(id=soil_profile_id).get_monica_horizons_json()
 
-    # TODO site parameters
+    # TODO site parameters: n_deposition map from UBA
+    # slope = json_data.get('slope', 0)
     slope = 0
-    height_nn = 0
-    n_deposition = 30
+    height_nn = json_data.get('altitude', 0)
+    n_deposition = json_data.get('n_deposition', 30)
 
     siteParameters = {
         "Latitude": float(json_data['latitude']),
@@ -483,6 +356,8 @@ def create_monica_env_from_json(json_data):
         "NDeposition": [n_deposition,"kg N ha-1 y-1"],
         "SoilProfileParameters": soil_profile_parameters
     }
+
+    print('siteParameters: ', siteParameters)
     simulation_settings = json_data.get('userSimulationSettingsId')
     if simulation_settings is not None:
         simj = models.UserSimulationSettings.objects.get(id=simulation_settings).to_json()
@@ -501,6 +376,8 @@ def create_monica_env_from_json(json_data):
     else:
         user_environment_parameters = models.UserEnvironmentParameters.objects.get(is_default=True).to_json()
 
+    print('user_crop_parameters: ', user_crop_parameters)
+    print('user_environment_parameters: ', user_environment_parameters)
 
     user_soil_moisture_parameters_id = json_data.get('userSoilMoistureParametersId')
     if user_soil_moisture_parameters_id is not None:   
@@ -535,25 +412,27 @@ def create_monica_env_from_json(json_data):
     "userSoilTemperatureParameters": user_soil_temperature_parameters,
     "userSoilTransportParameters": user_soil_transport_parameters,
     "userSoilOrganicParameters":user_soil_organic_parameters,
-    "simulationParameters": simj, #UserSimulationSettings.objects.get(id=simulation_settings).to_json()
+    "simulationParameters": simj, 
     "siteParameters": siteParameters
     }
 
-     # get climate data from database
-    lat_idx, lon_idx = models.DWDGridAsPolygon.get_idx(float(json_data['latitude']), float(json_data['longitude']))
-    forecast_lat_idx, forecast_lon_idx = models.DWDGridToPointIndices.get_forecast_indices(lat_idx, lon_idx)
-    print('lat_idx, lon_idx', lat_idx, lon_idx, forecast_lat_idx, forecast_lon_idx)
-    
-    # TODO use get_climate_data_as_json_new and activate CLIMATE_DATES; BUT get_climate_data_as_json now also includes the forecast!!!
-    climate_data = get_climate_data_as_json(parser.parse(json_data['startDate'].split('T')[0]), parser.parse(json_data['endDate'].split('T')[0]), lat_idx, lon_idx)
+    print('cpp done..')
 
-    # print('available_climate_data', available_climate_data)
-    # print("check 1")
-    # print("Date type: ", type(json_data['startDate']), json_data['startDate'])
+     # get climate data from database
+    print('getting climate data from database for lat, lon: ', json_data['latitude'], json_data['longitude'])
+    lat_idx, lon_idx = models.DWDGridAsPolygon.get_idx(float(json_data['latitude']), float(json_data['longitude']))
+    print('lat_idx, lon_idx: ', lat_idx, lon_idx)
     start_date = json_data['startDate'].split('T')[0]
-    end_date = json_data['endDate'].split('T')[0]
-    # print("CLIMATE DATA START DATE ", start_date)
-    # print("check 2")
+    print('428 start_date: ', start_date, type(start_date))
+    print('start_date: ', start_date)
+    end_date = json_data['endDate'].split('T')[0]          
+    print('end_date: ', end_date)
+    # TODO use new CLIMATE and activate CLIMATE_DATES; BUT get_climate_data_as_json now also includes the forecast!!!
+    climate_data = get_climate_data_as_json(parser.parse(start_date), parser.parse(end_date), lat_idx, lon_idx)
+    print('climate_data: ', climate_data)
+
+
+
     climate_json = {
         "type": "DataAccessor",
         "data": climate_data,
@@ -664,7 +543,6 @@ def create_monica_env_from_json(json_data):
         "cropRotation": cropRotation,
         "cropRotations": cropRotations,
         "events": swn_events,
-        # "climateData": json.dumps(climate_json)
         "climateData": climate_json
     }
 
@@ -746,10 +624,7 @@ def msg_to_json(msg):
                 except:
                     output_id["result_dict"]["error"] = "Error in processing results"
                     
-        # processed_msg[orig_spec] = {
-        #     "output_ids": output_ids,     
-        # }
-           
+
     return for_chart
 
 def export_monica_result_to_csv(msg):
@@ -796,10 +671,8 @@ def get_parameter_options(request, parameter_type, id=None):
         options = models.SoilTemperatureModuleParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
     elif parameter_type == 'soil-transport-parameters':
         options = models.UserSoilTransportParameters.objects.filter(Q(user=None) | Q(user=user)).values('id', 'name')
-        # options = models.UserSoilTransportParameters.objects.values('id', 'name')
     elif parameter_type == 'species-parameters':
         options = models.SpeciesParameters.objects.filter(Q(user=None) | Q(user=user)).values('id','name')
-        # options = models.SpeciesParameters.objects.values('id', 'name')
     elif parameter_type == 'cultivar-parameters':
         if id is not None:
             # options = models.CultivarParameters.objects.filter(Q(user=None) | Q(user=user_id)).values('id','name')
@@ -834,7 +707,6 @@ def get_parameter_options(request, parameter_type, id=None):
     return JsonResponse({'options': list(options)})
 
 def load_monica_project(request, id):
-
     context = {}
     project = models.MonicaProject.objects.get(pk=id)
     print("Monica Project: ", project)
@@ -842,7 +714,7 @@ def load_monica_project(request, id):
         return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
     else:
         project_json = project.to_json()
-        project_json['endDate'] = get_weather_forecast.get_last_valid_forecast_date_cached()
+        project_json['endDate'] = download_weather_forecast.get_last_valid_forecast_date_cached()
         return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
 
 
@@ -856,29 +728,7 @@ def delete_monica_project(request, id):
         except:
             return JsonResponse({'message': {'success': False, 'message': 'Project not found'}})
     
-def save_monica_site(request):
-    """
-    Save a site to the database.
-    """
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        lat = data.get('latitude', None)
-        lon = data.get('longitude', None)
-        name = data.get('name', None)
-        altitude = data.get('altitude', 50) # TODO get altitude from dem
-        slope = data.get('slope', 0)
-        n_deposition = data.get('n_deposition', 11)
-        # if data.get('buek_soil_profile', True) == True:
 
-        soil_profile = data.get('soil_profile')
-
-        if soil_profile is not None:
-            return JsonResponse({'success': True, 'message': 'Site saved', 'site_id': site.id})
-        else:
-            return JsonResponse({'success': False, 'message': form.errors})
-        
-
-        
 
 def save_project(request):
     """
@@ -992,8 +842,6 @@ def modify_model_parameters(request, parameter, id, rotation=None):
 
     user = request.user
 
-    
-
     if parameter not in MODEL_FORM_MAPPING:
         return JsonResponse({'message': {'success': False, 'errors': 'Invalid model name'}})
     
@@ -1052,8 +900,6 @@ def modify_model_parameters(request, parameter, id, rotation=None):
         else:
             return JsonResponse({'message': {'success': False, 'errors': form.errors}})
     else:
-
-
         form = form_class(instance=obj)
         data_action_url = f'{parameter}/{id}/'
         if rotation is not None:
@@ -1096,15 +942,13 @@ def get_monica_forms(user):
         'workstep_automatic_harvest_form': workstep_automatic_harvest_form
         }
 
+
 def create_default_project(user):
     """
     Create a default project for the user.
     """
-
-    
-
     start_date = (datetime.now().date() - relativedelta(months=6)).replace(day=1)
-    end_date = get_weather_forecast.get_last_valid_forecast_date_cached()
+    end_date = download_weather_forecast.get_last_valid_forecast_date_cached()
     # end_date = (datetime.now().date() + relativedelta(months=7)).replace(day=1) - relativedelta(days=1)
 
     default_project = models.MonicaProject(
@@ -1112,6 +956,7 @@ def create_default_project(user):
         user=user,
         start_date=start_date,
         monica_model_setup=models.ModelSetup.objects.get(is_default=True),
+        monica_site = models.MonicaSite.objects.get(is_default=True),
     ).to_json()
     default_project['endDate'] = end_date
     sowing_date = start_date + relativedelta(months=1)
@@ -1121,7 +966,275 @@ def create_default_project(user):
     default_project['rotation'][0]['harvestWorkstep'][0]['date'] = harvest_date
 
     return json.dumps(default_project, default=str)
+
+
+def get_recommended_soil_profile(request):
+    print('monica.views.get_recommended_soil_profile')
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        lat = project.get('latitude', None)
+        lon = project.get('longitude', None)
+
+        try:
+            soil_profile = buek_views.get_recommended_soil_profile('general', lat, lon)
+            return JsonResponse({'success': True, 'soil_profile': soil_profile})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+def get_recommended_soil_profile_id(request, lat, lon):
+    print('monica.views.get_recommended_soil_profile_id')
+    if request.method == 'GET':
+        try:
+            soil_profile = buek_views.get_recommended_soil_profile_from_point('general', lat, lon)
+            return JsonResponse({'success': True, 'soil_profile': soil_profile})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+        
+        
+def get_soil_profile_info(request, profile_id):
+    print('monica.views.get_soil_profile_info')
+    if request.method == 'GET':
+        try:
+            soil_profile = buek_models.SoilProfile.objects.get(pk=profile_id)
+            soil_profile = buek_views.get_soil_data_for_modal(soil_profile)
+            return JsonResponse({'success': True, 'soil_profile': soil_profile})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+        
+
+def get_soil_profile_landusages(buek_polygon_ids):
+
+    unique_land_usages = buek_models.SoilProfile.objects.filter(
+        polygon_id__in=buek_polygon_ids
+        ).values_list('landusage_corine_code', 'landusage').distinct()
+        # Filter out water (code 51)
+    land_usage_choices = {code: usage for code, usage in unique_land_usages if code != 51}
+
+    return land_usage_choices
+
+
+def get_soil_profile_landusage_choices(request):
+    print('monica.views.get_soil_profile_landusage_choices')
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        lat = project.get('latitude', None)
+        lon = project.get('longitude', None)
+        profile_source = project.get('profile_source', None)
+        print(lat, lon)
+        buek_polygon = buek_views.get_buek_polygon_id_from_point_buek200(lat, lon)
+        land_usage_choices = get_soil_profile_landusages([buek_polygon])
+        print('land_usage_choices', land_usage_choices)
+        return JsonResponse({'success': True, 'land_usage_choices': land_usage_choices, 'buek_polygons': [buek_polygon]})
+
+
+def get_soil_profile_area_percentage_choices(request):
+    print('monica.views.get_soil_profile_area_percentage_choices')
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        print('project', project)
+        polygon_ids = project.get('soilProfileBuekPolygons', [])
+        print('polygon_ids', polygon_ids   )
+        print('type', type(polygon_ids))
+        landusage_corine_code = project.get('soilProfileLandusage', None)
+
+        unique_area_percentages = buek_models.SoilProfile.objects.filter(
+            Q(polygon_id__in=polygon_ids) & Q(landusage_corine_code=landusage_corine_code)
+            ).values_list('area_percentage', flat=True).distinct()
+        area_percentage_choices = {percentage: str(percentage)+ '%' for percentage in unique_area_percentages if percentage is not None}
+
+        return JsonResponse({'success': True, 'area_percentage_choices': area_percentage_choices})
     
+
+def get_soil_profile_system_unit_choices(request):
+    print('monica.views.get_soil_profile_system_unit_choices')
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        polygon_ids = project.get('soilProfileBuekPolygons', [])
+        landusage_corine_code = project.get('soilProfileLandusage', None)
+        area_percentage = project.get('soilProfileAreaPercentage', None)
+
+        unique_system_units = buek_models.SoilProfile.objects.filter(
+            Q(polygon_id__in=polygon_ids) & Q(landusage_corine_code=landusage_corine_code) & Q(area_percentage=area_percentage)
+            ).values_list('system_unit', flat=True).distinct()
+        system_unit_choices = {unit: unit for unit in unique_system_units if unit is not None}
+
+        return JsonResponse({'success': True, 'system_unit_choices': system_unit_choices})
+    
+    
+def get_soil_profile_choices(request):
+    print('monica.views.get_soil_profile_choices')
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        polygon_ids = project.get('soilProfileBuekPolygons', [])
+        print('polygon_ids', polygon_ids)
+        landusage_corine_code = project.get('soilProfileLandusage', None)
+        print('landusage_corine_code', landusage_corine_code)
+        area_percentage = project.get('soilProfileAreaPercentage', None)
+        print('area_percentage', area_percentage)
+        system_unit = project.get('soilProfileSystemUnit', None)
+        print('system_unit', system_unit)
+        soil_profiles = buek_models.SoilProfile.objects.filter(
+            Q(polygon_id__in=polygon_ids) & Q(landusage_corine_code=landusage_corine_code) & Q(area_percentage=area_percentage) & Q(system_unit=system_unit)
+            )
+        soil_profile_choices = {
+            profile.id: f"Profil {i+1}" for i, profile in enumerate(soil_profiles)
+        }
+        
+        return JsonResponse({'success': True, 'soil_profile_choices': soil_profile_choices})
+
+        
+
+def get_soil_profile_form(request):
+    print('monica.views.get_soil_profile_form')
+    """
+    The soil profile form is the display of a soil profile in a table on the tabSite in the form id="soil-profile-formset"
+    Profiles in the buek db are not always complete, the user has tw0 options for an incomplete profile: an automatically corrected,
+    or alternatively the original dataset that needs to be completed for Monica to not fail silently.
+    the profile is defined by the 
+    soilProfileType: buek_models.SoilProfile or models.UserSoilProfile for profiles cerated by the user
+    profile_source: can be recommended, buek, scratch
+    
+    :param request: Post request with the project as request.body.
+
+
+    """
+    if request.method == 'POST':
+        profile = json.loads(request.body)
+        print('Request soil profile:', profile)
+        profile_type = profile.get('profileType', None)
+        profile_id = profile.get('profileId', '')
+        original_profile = profile.get('originalProfile', False)
+        user_profile_id = ''
+    else:
+        return JsonResponse({'message': {'success': False, 'errors': 'Invalid request method'}})
+
+    print('Get Profile Form', profile_type, profile_id, original_profile)
+
+    if profile_type == 'scratch':
+        """
+        Get an empty soil profile form.
+        """
+        profile_name = f'Soil Profile {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+        formset = forms.UserSoilHorizonImportFormSet(
+            queryset=models.SoilHorizon.objects.none(),
+            prefix="soil_horizons",
+            )
+   
+    
+    elif profile_type == 'user':
+        profile = get_object_or_404(models.UserSoilProfile, pk=profile_id)
+        profile_name = profile.name
+        formset = forms.SoilProfileHorizonFormSet(
+            instance=profile,
+            queryset=models.SoilHorizon.objects.filter(user_soil_profile=profile).order_by('horizon_no'),
+        )
+
+    elif profile_type == 'buek':
+        """
+        This returns a form with prefilled with a buekSoilProfile. It can then be edited and saved as a userSoilProfile.
+        """
+        print('buekSoilProfile')
+        profile = buek_models.SoilProfile.objects.get(pk=profile_id)
+        profile_name = 'Bük Bodenprofil'
+        initial, msg = profile.get_monica_horizons_json(extended=True, original_profile=original_profile)
+        print(type(initial))
+        print('profile_json', initial)
+
+        # The formsetClass is defined here to get a dynamic 'extra' according to thelength of the profile
+        FormSetClass = inlineformset_factory(
+            models.UserSoilProfile,
+            models.SoilHorizon,
+            form=forms.UserSoilHorizonForm,
+            extra=len(initial),
+            can_delete=True,
+        )
+        formset = FormSetClass(
+            queryset=models.SoilHorizon.objects.none(),
+            initial=initial,
+        )
+
+    else:
+        return JsonResponse({'message': {'success': False, 'errors': 'Invalid profile type'}})
+        
+    html = render_to_string(
+        'monica/monica_model_soil_profile_card.html', 
+        context={
+            'user_soil_profile_formset': formset,
+            'profile_type': profile_type,
+            'profile_id': profile_id,
+            'original_profile': original_profile,
+            'user_profile_id': user_profile_id,
+            'profile_name': profile_name,
+            }
+            )
+
+    return JsonResponse({'message': {'success': True, 'html': html}})
+
+
+
+def save_soil_profile(request):
+    """
+    Save soil profile from the formset.
+    """
+    if request.method == 'POST':
+        user = request.user
+        
+        
+        print("Save soil profile, data: ", request.POST)
+        print('form data', request.POST)
+        project = json.loads(request.POST.get('project', '{}'))
+        profile_name = request.POST.get(
+            'soil_profile_name',
+            f'Soil Profile {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+        )
+        def check_profile_name(name):
+            if name in models.UserSoilProfile.objects.filter(user=user).values_list('name', flat=True):
+                return check_profile_name(f"{name} (copy)")
+            else:
+                return name
+        
+        
+
+        # TODO check if name & user exists
+
+        if project.get('soilProfileType') == 'userSoilProfile' and project.get('soilProfileId'):
+            print('soil profile exists, update it')
+            soil_profile = models.UserSoilProfile.objects.get(pk=project.get('soilProfileId'), user=user)
+            if (soil_profile.name.strip() != profile_name.strip()):
+                profile_name = check_profile_name(profile_name.strip())
+                soil_profile.name = profile_name
+            soil_profile.save()
+        else:
+            profile_name = check_profile_name(profile_name.strip())
+            soil_profile = models.UserSoilProfile.objects.create(
+                user=user,
+                name=profile_name,
+            )
+
+        formset = forms.SoilProfileHorizonFormSet(
+            request.POST,
+            instance=soil_profile,
+        )
+        print('formset is valid', formset.is_valid())
+        if formset.is_valid():
+            with transaction.atomic():
+                soil_profile.soil_horizons.all().delete()
+                for form in formset:
+                    horizon = form.save(commit=False)
+                    horizon.user_soil_profile = soil_profile
+                    horizon.save()
+
+                
+
+            options = models.UserSoilProfile.objects.filter(user=user).values_list('id', 'name')
+            return JsonResponse({'message': {'success': True, 'message': 'Soil profile saved successfully.'}, 'soil_profile_id': soil_profile.id, 'soil_profile_name': profile_name, 'options': list(options)})
+        else:
+            print('formset errors', formset.errors)
+            return JsonResponse({'message': {'success': False, 'message': 'Bitte füllen Sie alle nötigen Felder des Bodenprofils aus!'}})
+    else:
+        return JsonResponse({'message': {'success': False, 'message': 'Invalid request method'}})
+    
+
 @login_required
 def monica_model(request):
     """
@@ -1136,17 +1249,15 @@ def monica_model(request):
     project_select_form = forms.MonicaProjectSelectionForm(user=user)
     new_monica_project_form = forms.MonicaNewProjectForm(user=user)
     project_modal_title = 'Create new project'
-
-    coordinate_form = forms.CoordinateForm()
-    print('COORDINATE FORM', coordinate_form.helper )
    
     user_simulation_settings_select_form = forms.UserSimulationSettingsInstanceSelectionForm(user=user)
 
     user_crop_parameters_select_form = forms.UserCropParametersSelectionForm(user=user)
-    # user_crop_parameters_form = UserCropParametersForm()
 
     user_environment_parameters_select_form = forms.UserEnvironmentParametersSelectionForm(user=user)
-    # user_environment_parameters_form = UserEnvironmentParametersForm()
+
+    site_form = forms.MonicaSiteForm()
+    user_soil_profile_select_form = forms.SoilProfileSelectionForm(user=user)
 
     user_soil_moisture_select_form = forms.UserSoilMoistureInstanceSelectionForm(user=user)
     user_soil_organic_select_form = forms.UserSoilOrganicInstanceSelectionForm(user=user)
@@ -1159,10 +1270,13 @@ def monica_model(request):
         'project_select_form': project_select_form,
         'new_project_form': new_monica_project_form,
         'project_modal_title': project_modal_title,
-        'coordinate_form': coordinate_form,
+        
         'user_crop_parameters_select_form': user_crop_parameters_select_form,
         'user_simulation_settings_select_form': user_simulation_settings_select_form,
         'user_environment_parameters_select_form': user_environment_parameters_select_form,
+
+        'site_form': site_form,
+        'user_soil_profile_select_form': user_soil_profile_select_form,
 
         'user_soil_moisture_select_form': user_soil_moisture_select_form,
         'user_soil_organic_select_form': user_soil_organic_select_form,
@@ -1172,128 +1286,6 @@ def monica_model(request):
     context.update(data)
     return render(request, 'monica/monica_model.html', context)
 
-def get_soil_parameters(request, profile_landusage, lat, lon):
-    """
-    The view returns two profiles in cases where the profile has to be completed.
-    It is used in the soil tab of MONICA/swn-Monica.
-    """
-    soil_profile = get_soil_profile(profile_landusage, lat, lon)
-    
-    show_original_table = (soil_profile['SoilProfileParameters'] != soil_profile['OriginalSoilProfileParameters'])
-
-    for hor in soil_profile['SoilProfileParameters']:
-        i = 0
-        for key, value in hor.items():
-            if isinstance(value, list):
-                # print(type(value), ''.join(str(value)))
-                hor[key] = ''.join(map(str, value))
-                
-        i += 1
-    for hor in soil_profile['OriginalSoilProfileParameters']:
-        for key, value in hor.items():
-            if isinstance(value, list):
-                hor[key] = ''.join(map(str, value))
-    # soil_profile = 
-    
-    context = {
-        'modal_title': 'Soil Profile',
-        'soil_profile': soil_profile,
-        'show_original_table': show_original_table,
-        # 'soil_profile_id': soil_profile['SoilProfileParameters']['id'],
-        }
-    
-    print("Soil Profile: ", soil_profile)
-    return render(request, 'monica/soil_profile_modal.html', context)
-    # return JsonResponse(request, context)
-
-
-from collections import defaultdict
-import json
-
-
-# def soil_profiles_from_polygon_ids(soil_profile_polygon_ids):
-#     """
-#     Get soil profiles from polygon ids.
-#     """
-#     unique_land_usages = buek_models.SoilProfile.objects.filter(
-#         polygon_id__in=soil_profile_polygon_ids
-#     ).values_list('landusage_corine_code', 'landusage').distinct()
-#     # Filter out water (code 51)
-#     land_usage_choices = {code: usage for code, usage in unique_land_usages if code != 51}
-    
-#     # Initialize data_json with land usage codes
-#     data_json = {code: {} for code in land_usage_choices.keys()}
-
-#     soil_data = buek_models.SoilProfileHorizon.objects.select_related('soilprofile').filter(
-#         soilprofile__polygon_id__in=soil_profile_polygon_ids
-#         ).order_by('soilprofile__landusage_corine_code', 'soilprofile__system_unit', 'soilprofile__area_percentage', 'horizont_nr')
-
-#     # Loop through soil data and populate data_json
-    
-#     for item in soil_data:
-#         try:
-#             if item.soilprofile.landusage_corine_code != 51:
-#                 land_code = item.soilprofile.landusage_corine_code
-#                 system_unit = item.soilprofile.system_unit
-#                 area_percentage = item.soilprofile.area_percentage
-#                 profile_id = item.soilprofile.id
-#                 horizon_nr = item.horizont_nr
-
-#                 if system_unit not in data_json[land_code]:
-#                     data_json[land_code][system_unit] = {
-#                         'area_percentages': set(),
-#                         'soil_profiles': {}
-#                     }
-
-#                 data_json[land_code][system_unit]['area_percentages'].add(area_percentage)
-
-#                 if area_percentage not in data_json[land_code][system_unit]['soil_profiles']:
-#                     data_json[land_code][system_unit]['soil_profiles'][area_percentage] = {}
-
-#                 if profile_id not in data_json[land_code][system_unit]['soil_profiles'][area_percentage]:
-#                     data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id] = {'horizons': {}}
-
-#                 data_json[land_code][system_unit]['soil_profiles'][area_percentage][profile_id]['horizons'][horizon_nr] = {
-#                     'obergrenze_m': item.obergrenze_m,
-#                     'untergrenze_m': item.untergrenze_m,
-#                     'stratigraphie': item.stratigraphie,
-#                     'herkunft': item.herkunft,
-#                     'geogenese': item.geogenese,
-#                     # 'fraktion': item.fraktion,
-#                     'summe': item.summe,
-#                     # 'gefuege': item.gefuege,
-#                     # 'torfarten': item.torfarten,
-#                     # 'substanzvolumen': item.substanzvolumen,
-#                     'bulk_density_class': item.bulk_density_class.bulk_density_class if item.bulk_density_class_id is not None else 'no data',
-#                     'bulk_density': item.bulk_density_class.raw_density_g_per_cm3 if item.bulk_density_class_id is not None else 'no data',
-#                     'humus_class': item.humus_class.humus_class if item.humus_class_id is not None else 'no data',
-#                     'humus_corg': item.humus_class.corg if item.humus_class_id is not None else 'no data',
-#                     'ka5_texture_class': item.ka5_texture_class.ka5_soiltype if item.ka5_texture_class_id is not None else 'no data',
-#                     'sand': round(item.ka5_texture_class.sand, 2) if item.ka5_texture_class_id is not None else 'no data',
-#                     'clay': round(item.ka5_texture_class.clay, 2) if item.ka5_texture_class_id is not None else 'no data',
-#                     'silt': round(item.ka5_texture_class.silt, 2) if item.ka5_texture_class_id is not None else 'no data',
-#                     'ph_class': item.ph_class.ph_class if item.ph_class_id is not None else 'no data',
-#                     'ph_lower_value': item.ph_class.ph_lower_value if item.ph_class_id is not None else 'no data',
-#                     'ph_upper_value': item.ph_class.ph_upper_value if item.ph_class_id is not None else 'no data',                    
-#                 }
-#         except Exception as e:
-#             print("Exception occurred:", e)
-           
-#     # Sort area percentages
-#     for land_code in data_json:
-#         for system_unit in data_json[land_code]:
-#             data_json[land_code][system_unit]['area_percentages'] = sorted(list(data_json[land_code][system_unit]['area_percentages']))
-
-#     data_menu = {
-#         # 'soil_profile_form': forms.SoilProfileSelectionForm().set_choices(land_usage_choices),
-#         'text': 'name',
-#         'id': 1,
-#         'polygon_ids': soil_profile_polygon_ids,
-#         'system_unit_json': json.dumps(data_json),
-#         'landusage_choices': json.dumps(land_usage_choices),
-#     }
-    
-#     return data_menu
 
 
 def soil_profiles_from_polygon_ids(soil_profile_polygon_ids):
@@ -1376,27 +1368,67 @@ def soil_profiles_from_polygon_ids(soil_profile_polygon_ids):
     print('Time elapsed: ', datetime.now() - start)
     return data_menu
 
-# TODO: make this function work for all polygons_ids, not just one
+
 def manual_soil_selection(request, lat, lon):
     print("manual soil selection ", lat, lon)
-    
-
-    start_time = time.time()
-
     polygon_ids = [buek_models.Buek200.get_polygon_id_by_lat_lon(float(lat), float(lon))]
-
     data_menu = soil_profiles_from_polygon_ids(polygon_ids)
-    # data_menu['id'] = 1
-    # data_menu['text'] = 'name'
-
-    print('elapsed_time for soil json', (start_time - time.time()), ' seconds')
 
     return JsonResponse(data_menu)
 
+def get_altitude(request, lat, lon):
+    print("get altitude for ", lat, lon)
+    lat = float(lat)
+    lon = float(lon)
+
+    raster_path = os.path.join(MONICA_RASTER_DATA_DIR, 'dgm200_4326.tif')
+    try:
+        with rasterio.open(raster_path) as src:
+            for val in src.sample([(lon, lat)]):
+                altitude = int(val[0])
+        
+        return JsonResponse({'success': True, 'altitude': altitude})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+def get_slope(request, lat, lon):
+    print("get slope for ", lat, lon)
+    lat = float(lat)
+    lon = float(lon)
+    
+    raster_path = os.path.join(settings.MONICA_RASTER_DATA_DIR, 'dgm_1000_4326_slope.tif')
+    try:
+        with rasterio.open(raster_path) as src:
+            for val in src.sample([(lon, lat)]):
+                slope = round(float(val[0]),2)
+        
+        return JsonResponse({'success': True, 'slope': slope})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+    
+
+def get_n_deposition(request, lat, lon):
+    print("get n deposition for ", lat, lon)
+
+    lat = float(lat)
+    lon = float(lon)
+    n_deposition = 11
+    if n_deposition:
+        return JsonResponse({"success": True, "n_deposition": n_deposition})
+
+    else:
+        return JsonResponse({"success": False, "message": "Failed to retrieve data from WMS service."})
 
     
 def run_monica_simulation(envs):
-    print("running simulation")
+    """
+    Connection to the MONICA container is established, the environment json 
+    is sent and the output is received. 
+    Returns a list of result messages.
+    
+    :param envs: envs is a list of monica environment jsons
+    """
     json_msgs = []
     i = 0
     for e in envs:
@@ -1404,17 +1436,13 @@ def run_monica_simulation(envs):
         context = zmq.Context()
         producer_socket = context.socket(zmq.PUSH)
         producer_socket.connect("tcp://swn_monica:6666")
-        print("check 6")
-        # print(env)
 
         shared_id = str(uuid.uuid4())
         e['sharedId'] = shared_id
-        print("shared_id: ", shared_id)
         producer_socket.send_json(e)
         file_path = Path(__file__).resolve().parent
         with open(f'{file_path}/monica_io/env_{str(i)}.json', 'w') as _: 
             json.dump(e, _)
-        print("check 7")
 
         consumer_socket = context.socket(zmq.DEALER)
         consumer_socket.setsockopt_string(zmq.ROUTING_ID, shared_id)
@@ -1425,9 +1453,6 @@ def run_monica_simulation(envs):
         producer_socket.close()
         consumer_socket.close()
 
-        print("check 9: consumer run")
-        print("msg: ", msg)
-        
         if msg.get('data', []) == []:
             message = {'message': {
                 'success': False, 
@@ -1439,8 +1464,8 @@ def run_monica_simulation(envs):
         
         json_msg = msg_to_json(msg)
         json_msgs.append(json_msg)
-        print("check 10: ")
-        # print(msg)
+
+        # to file for debugging
         with open(f'{file_path}/monica_io/message_out_{str(i)}.json', 'w') as _: 
             json.dump(msg, _)
         with open(f'{file_path}/monica_io/json_message_out_{str(i)}.json', 'w') as _: 
@@ -1457,7 +1482,7 @@ def run_monica_simulation(envs):
                 if irrig != 0
             ]
 
-            # Write to CSV
+            # Write to CSV for debugging
             with open(f"{file_path}/monica_io/irrigation_events.csv", "w", newline="") as f:
                 writer = csv.writer(f)
                 writer.writerow(["Date", "Irrigation"])
@@ -1468,13 +1493,22 @@ def run_monica_simulation(envs):
     return json_msgs
 
 def download_irrigation_csv(request):
+    # TODO the irrigation_events.csv is currently not linked to the user!
+    # TODO save irrigation_events with project in db!
+    """
+    Downloads the irrigation events CSV file.
+
+    :return: HttpResponse with the CSV file or an error message
+    """
+    user = request.user
+    
     file_path = Path(__file__).resolve().parent
     csv_file_path = f"{file_path}/monica_io/irrigation_events.csv"
 
     try:
         with open(csv_file_path, 'r') as f:
             response = HttpResponse(f.read(), content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="irrigation_events.csv"'
+            response['Content-Disposition'] = f'attachment; filename="{user.id}_irrigation_events.csv"'
             return response
     except FileNotFoundError:
         return HttpResponse("Irrigation events file not found.", status=404)
@@ -1507,6 +1541,234 @@ def run_simulation(request):
 
     else:
         return JsonResponse({'message': {'success': False, 'message': 'Simulation not started.'}})
+
+
+def run_monica_and_write_to_netcdf(env, lat_idx, lon_idx):
+    """
+    Sends env to monica and receives the result.
+    that is then written into a netcdf
+    """
+
+    context = zmq.Context()
+    producer_socket = context.socket(zmq.PUSH)
+    producer_socket.connect("tcp://swn_monica:6666")
+
+    shared_id = str(uuid.uuid4())
+    e['sharedId'] = shared_id
+    producer_socket.send_json(e)
+    file_path = Path(__file__).resolve().parent
+    with open(f'{file_path}/monica_io/env_{str(i)}.json', 'w') as _: 
+        json.dump(e, _)
+
+    consumer_socket = context.socket(zmq.DEALER)
+    consumer_socket.setsockopt_string(zmq.ROUTING_ID, shared_id)
+    consumer_socket.RCVTIMEO = 20000
+    consumer_socket.connect("tcp://swn_monica:7777")
+    # msg = run_consumer()
+    msg = consumer_socket.recv_json()
+    producer_socket.close()
+    consumer_socket.close()
+
+    if msg.get('data', []) == []:
+        message = {'message': {
+            'success': False, 
+            'message': 'No data received from MONICA, error: ' + (', ').join(msg.get('errors', ''))
+            }
+            }
+        print("check 9b: ", message)
+        return message
         
+        json_msg = msg_to_json(msg)
+        json_msgs.append(json_msg)
+
+        # to file for debugging
+        with open(f'{file_path}/monica_io/message_out_{str(i)}.json', 'w') as _: 
+            json.dump(msg, _)
+        with open(f'{file_path}/monica_io/json_message_out_{str(i)}.json', 'w') as _: 
+            json.dump(json_msg, _)
+
+        if i ==2:
+            csv_dates = json_msg['daily']['Date']
+            csv_irrigation = json_msg['daily']['Irrig']
+
+            # Filter rows where irrigation > 0
+            rows = [
+                (date, irrig)
+                for date, irrig in zip(csv_dates, csv_irrigation)
+                if irrig != 0
+            ]
+
+            # Write to CSV for debugging
+            with open(f"{file_path}/monica_io/irrigation_events.csv", "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["Date", "Irrigation"])
+                writer.writerows(rows)
 
 
+    print('json_msgs is a  ', type(json_msgs))
+    return json_msgs
+
+
+
+
+def monica_run_over_germany():
+    """
+    This function creates a base_environment and modifies it according to each cell.
+    It then runs the simulation for each cell and saves the output in a netcdf file.
+    """
+
+    start = datetime.now()
+
+    germany_model_settings = models.GermanyModelParameters.objects.get(is_default=True)
+    # TODO: check with Claas or Marlene what parameters to use!  
+    cpp = germany_model_settings.to_json()
+    
+
+    # load all relevant soil data for Germany- otherwise the query on each pixel would take too long
+    with rasterio.open(os.path.join(settings.MONICA_RASTER_DATA_DIR, 'buek_id_agriculture_masked_4326.tif')) as ab:
+        agri_buek_arr = ab.read(1)
+    unique_buek_ids = np.unique(agri_buek_arr)
+    
+    height, width = agri_buek_arr.shape
+    unique_buek_ids = unique_buek_ids[unique_buek_ids != -9999]
+    soil_profiles = buek_models.SoilProfile.objects.filter(id__in=unique_buek_ids)
+    soil_profile_dict = {sp.id: sp.get_monica_horizons_json()[0] for sp in soil_profiles}
+    print("Soil profiles loaded")
+
+    with rasterio.open(os.path.join(settings.MONICA_RASTER_DATA_DIR, 'dgm200_4326_1000m.tif')) as alt:
+        altitude_arr = alt.read(1)
+
+    with rasterio.open(os.path.join(settings.MONICA_RASTER_DATA_DIR, 'slope_percentage_4326_1000m.tif')) as s:
+        slope_arr = s.read(1)
+    
+    # fetch all relevant soil profiles into memory
+    
+    
+    
+# get sowing dates
+    def doy_to_iso(doy):
+        if doy is None:
+            return None
+        date = datetime(2001, 1, 1) + timedelta(days=doy - 1)  # non-leap year
+        # TODO: check if the first rotation is always 0000
+        return f"0000-{date.strftime('%m-%d')}"
+    # cultivar is winter wheat!
+    cultivar = germany_model_settings.cultivar
+    
+    min_sowing_date = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).aggregate(Min('avg_sowing_doy'))['avg_sowing_doy__min']
+    max_harvest_date = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).aggregate(Max('avg_harvest_doy'))['avg_harvest_doy__max']
+    sowing_dates_list = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).values('climate_station__id', 'avg_sowing_doy', 'avg_harvest_doy')  
+    sowing_dates_per_station = {data['climate_station__id']: {'sowing_date': doy_to_iso(data['avg_sowing_doy']), 'harvest_date': doy_to_iso(data['avg_harvest_doy'])} for data in sowing_dates_list}
+    print('sowing dates loaded', sowing_dates_per_station)
+    
+    with rasterio.open(os.path.join(settings.MONICA_RASTER_DATA_DIR, 'nearest_station_per_cultivar', f'nearest_station_cultivar_{germany_model_settings.cultivar_name_for_sowing_dates}.tif')) as climate_stations_tif:
+        climate_stations_arr = climate_stations_tif.read(1)
+
+
+    workstep = {
+        "date":  '',               # "0000-10-13",
+        "type": "Sowing",
+        "crop": {
+            # "is-winter-crop": True, # TODO is winter-crop is probably not required!!!
+            "cropParams": {
+                "species": {
+                "=": cultivar.species_parameters.to_json()
+                },
+                "cultivar": {
+                "=": cultivar.to_json()
+                }
+            },
+            "residueParams": models.CropResidueParameters.objects.get(species_parameters=cultivar.species_parameters, is_default=True).to_json()
+        }
+    }
+            
+    
+    
+    #TODO get dates right
+    start_date = '2025-08-01'
+    end_date = '2026-06-01'
+    lat_lon_idx_dictionary = models.DWDGridToPointIndices.get_lat_lon_dictionary()
+    climate_json = {
+        "type": "DataAccessor",
+        "data": None,
+        "startDate": start_date,
+        "endDate": end_date,
+      }
+    events = [
+        "daily",
+            [
+                "Date",
+                "Yield",
+                "LAI",
+                "Stage",
+                [
+                "Mois",
+                [
+                    1,
+                    20
+                ]
+                ],
+                [
+                "Mois",
+                [
+                    1,
+                    10,
+                    "AVG"
+                ]
+                ],
+                
+            ]
+    ]
+    
+    for lat_idx in range(0, height):
+        for lon_idx in range(0, width):
+            if agri_buek_arr[lat_idx][lon_idx] and agri_buek_arr[lat_idx][lon_idx] != -9999:
+
+                indices_dict = lat_lon_idx_dictionary[lat_idx][lon_idx]
+                print(f"Running cell {lat_idx}, {lon_idx}")
+
+                buek_id = int(agri_buek_arr[lat_idx, lon_idx])
+                soil_profile = soil_profile_dict.get(buek_id, None)
+
+                #print(int(climate_stations_arr[lat_idx, lon_idx]), 'climate_stations_arr[i, j]')
+            
+
+                site_parameters = {
+                    "Latitude": indices_dict['lat'],
+                    "Slope": slope_arr[lat_idx, lon_idx] if slope_arr[lat_idx, lon_idx] != -9999 else 0,
+                    "HeightNN": altitude_arr[lat_idx, lon_idx] if altitude_arr[lat_idx, lon_idx] != -9999 else 100,
+                    # TODO: get N-deposition!!!!!
+                    "NDeposition": 30,
+                    "SoilProfileParameters": soil_profile,
+                }
+                cpp["siteParameters"] = site_parameters
+                
+                # create env for MONICA
+                dates = sowing_dates_per_station[climate_stations_arr[lat_idx, lon_idx]]
+                workstep['date'] = dates['sowing_date']
+
+                cropRotation = [
+                    {'worksteps': [workstep],}
+                ]
+
+                
+                climate_json['data'] = 'climate_data'
+                
+                env = {
+                    "type": "Env",
+                    "debugMode": False,
+                    "params": cpp,
+                    "cropRotation": cropRotation,
+                    "cropRotations": None,
+                    "events": events,
+                    "climateData": climate_json
+                }
+                print(f'env {lat_idx} {lon_idx} created, now running monica')
+
+
+                #run_monica_and_write_to_netcdf(env, lat_idx, lon_idx)
+
+    end = datetime.now() - start
+    print(f'done with env creation, now running simulation in {end}')
+
+    # return JsonResponse({'message': {'success': True, 'message': 'Started Germany-wide simulation.'}})

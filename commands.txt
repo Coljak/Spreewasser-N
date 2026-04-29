@@ -49,3 +49,34 @@ docker logs -f swn_geo_django
 
 docker-compose run --rm app sh -c "python3 manage.py runserver 0.0.0.0:8000"
 
+
+This deletes build cache and unused images, but NOT your volumes. only affect images + cache:
+docker builder prune -a
+docker image prune -a
+
+
+normal dev changes	up --build
+dependency changes	build --no-cache && up
+segfault / native crash	full rebuild + prune cache
+
+docker compose stop app
+docker compose rm -f   -----remove the whole thing
+docker compose rm -f app   ------remove app
+
+docker compose build --no-cache app
+
+
+#### PRODUCTION !!!!
+the command override the first docker-compose with the second
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+Docker commands 
+a) After changing docker-compose.(prod.)yml
+docker compose up
+b) After changing Dockerfile
+docker compose up --build
+c) Using production compose file
+
+If file is docker-compose.prod.yml:
+
+docker compose -f docker-compose.prod.yml up --build -d

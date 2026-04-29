@@ -1,4 +1,4 @@
-import json, asyncio, csv
+import json
 from django.middleware import csrf
 from multiprocessing import managers
 from django.shortcuts import render, redirect
@@ -28,10 +28,10 @@ from monica.utils import save_monica_project
 from monica import forms as monica_forms
 from monica import models as monica_models
 from monica import views as monica_views
-from monica.utils import get_weather_forecast
+from monica.utils import download_weather_forecast
 
 from buek import models as buek_models
-from buek import views as buek_views
+from buek.views import get_recommended_soil_profile
 
 import xmltodict
 from datetime import datetime, timedelta, date
@@ -44,6 +44,18 @@ import time
 import urllib
 
 
+def get_soil_profile(request):
+    if request.method == 'POST':
+        project = json.loads(request.body)
+        user_field_id = project.get('user_field')
+        user_field = models.UserField.objects.get(id=user_field_id)
+        lat, lon = user_field.geom.centroid.y, user_field.geom.centroid.x
+    
+        try:
+            soil_profile = get_recommended_soil_profile('general', lat, lon)
+            return JsonResponse({'success': True, 'soil_profile': soil_profile})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
 
 # dev feature displays all bootstrap colors etc.
 def bootstrap(request):
@@ -282,7 +294,7 @@ def swn_dashboard(request):
     print("sixth - fifth", sixth - fifth)
     project_modal_title = 'Create new project'
 
-    coordinate_form = monica_forms.CoordinateForm()
+    site_form = monica_forms.MonicaSiteForm()
     seventh = datetime.now()
     print("seventh - sixth", seventh - sixth)
     user_simulation_settings_select_form = monica_forms.UserSimulationSettingsInstanceSelectionForm(user=user)
@@ -296,6 +308,8 @@ def swn_dashboard(request):
     # user_environment_parameters_form = monica_forms.UserEnvironmentParametersForm(user=user)
     tenth = datetime.now()
     print("tenth - ninth", tenth - ninth)
+    user_soil_profile_select_form = monica_forms.SoilProfileSelectionForm(user=user)
+    user_soil_profile_form = monica_forms.SoilProfileHorizonFormSet()
     user_soil_moisture_select_form = monica_forms.UserSoilMoistureInstanceSelectionForm(user=user)
     user_soil_organic_select_form = monica_forms.UserSoilOrganicInstanceSelectionForm(user=user)
     soil_temperature_module_select_form = monica_forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
@@ -305,16 +319,19 @@ def swn_dashboard(request):
 
     data = {
             'default_project': default_project,
-            'state_county_district_form': state_county_district_form,
+            # 'state_county_district_form': state_county_district_form,
             'project_region': project_region,
             #MONICA FORMS
             'project_select_form': project_select_form,
             'new_project_form': new_swn_project_form,
             'project_modal_title': project_modal_title,
-            'coordinate_form': coordinate_form,
+            'site_form': site_form,
             'user_crop_parameters_select_form': user_crop_parameters_select_form,
             'user_simulation_settings_select_form': user_simulation_settings_select_form,
             'user_environment_parameters_select_form': user_environment_parameters_select_form,
+            
+            'user_soil_profile_select_form': user_soil_profile_select_form,
+            'user_soil_profile_form': user_soil_profile_form,
             'user_soil_moisture_select_form': user_soil_moisture_select_form,
             'user_soil_organic_select_form': user_soil_organic_select_form,
             'soil_temperature_module_selection_form': soil_temperature_module_select_form, 
@@ -323,6 +340,16 @@ def swn_dashboard(request):
     
     context.update(data)
     return render(request, 'swn/swn_three_split.html', context)
+
+def get_hidden_rotation_forms(request):
+    user = request.user
+    context = monica_views.get_monica_forms(user)
+    return render(request, 'monica/hidden_rotation_forms.html', context)
+
+
+def get_tab_rotation(request):
+    return render(request, 'swn/tab_rotation.html')
+
 
 
 
@@ -471,13 +498,6 @@ def manual_soil_selection(request, user_field_id):
     return JsonResponse(data_menu)
 
 
-def recommended_soil_profile(request, profile_landusage, user_field_id):
-    """
-    This function returns the preselected soil profile for the given UserField.
-    """
-    
-    user_field = models.UserField.objects.get(id=user_field_id)
-    return monica_views.get_soil_parameters(request, profile_landusage, user_field.centroid_lat, user_field.centroid_lon)
 
 
 def load_swn_project(request, id):
@@ -488,7 +508,7 @@ def load_swn_project(request, id):
         return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
     else:
         project_json = project.to_json()
-        project_json['endDate'] = get_weather_forecast.get_last_valid_forecast_date_cached()
+        project_json['endDate'] = download_weather_forecast.get_last_valid_forecast_date_cached()
         return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
 
     

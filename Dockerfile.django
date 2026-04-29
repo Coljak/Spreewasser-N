@@ -5,15 +5,22 @@ LABEL maintainer="Colja"
 ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
-    PATH="/py/bin:$PATH"
+    PATH="/scripts:/py/bin:${PATH}"
 
 ARG DEV=true
+ENV DEV=$DEV
 
 # Set working directory and copy app code
 WORKDIR /app
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements.dev.txt /tmp/requirements.dev.txt
 COPY ./app /app
+COPY ./scripts /scripts
+RUN chmod +x /scripts/*.sh
+
+RUN mkdir -p /vol/web/media
+RUN mkdir -p /vol/web/static
+
 
 # Expose application port
 EXPOSE 8000
@@ -52,5 +59,9 @@ RUN python3 -m venv /py && \
     rm -rf /tmp
 
 # Create a non-root user for security
-RUN adduser --disabled-password --no-create-home django-user
+RUN adduser -D --disabled-password --no-create-home user
+RUN chown -R user:user /vol
+RUN chmod -R 755 /vol/web
+USER user
 
+CMD ["entrypoint.sh"]

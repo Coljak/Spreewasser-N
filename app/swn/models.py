@@ -8,29 +8,15 @@ from statistics import mode
 from django.db import models
 from django.contrib.gis.db import models as gis_models
 
-from django.contrib.gis.db.models.functions import Intersection
-from django.db.models import Func, F
-from django.contrib.gis.gdal import GDALRaster
 from django.contrib.gis.geos import GEOSGeometry
-from django.core.files import File
-# from django_raster import fields as raster_fields
-from djgeojson.fields import PointField, PolygonField, MultiLineStringField, MultiPointField, MultiPolygonField, GeometryField
-#from user.models import User
+
 from django.contrib.auth.models import User
 import json
 from monica import models as monica_models
 from buek.models import Buek200
+from django.conf import settings
 
 import gettext as _
-import datetime
-import os
-
-from geo.Geoserver import Geoserver
-
-
-geo = Geoserver(os.environ.get('GEOSERVER_URL'), 
-                username=os.environ.get('GEOSERVER_USER'), 
-                password=os.environ.get('GEOSERVER_PASS'))
 
 
 class ProjectRegion(models.Model):

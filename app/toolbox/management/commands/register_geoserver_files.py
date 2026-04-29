@@ -6,6 +6,7 @@ from django.db.models.functions import TruncMonth, TruncYear
 from toolbox import models
 from pathlib import Path
 from geo.Geoserver import Geoserver
+from django.conf import settings
 import os
 
 
@@ -26,20 +27,27 @@ TOOLBOX_RASTER_FILES = [
 TOOLBOX_VECTOR_TABLES = ['toolbox_ezg25']
 
 
-geo = Geoserver(settings.GEOSERVER_URL, username=settings.GEOSERVER_USER, password=settings.GEOSERVER_PASS)
+geo = Geoserver(
+    settings.GEOSERVER_URL, 
+    username=settings.GEOSERVER_USER, 
+    password=settings.GEOSERVER_PASS
+    )
 
 
 
 
 def publish_all(workspace='spreewassern_raster'):
     for item in TOOLBOX_RASTER_FILES:
-        
-        geo.create_coveragestore(layer_name=item['name'], path=f'/app/raster_data/{item["name"]}.tif', workspace=workspace)
-        
-        geo.upload_style(path=f'/app/raster_data/{item["style"]}.sld', workspace=workspace)
-        if item['style'] is not None:  
-            geo.publish_style(layer_name=item['name'], style_name=item['style'], workspace=workspace)
+        try:
+            geo.create_coveragestore(layer_name=item['name'], path=f'{settings.TOOLBOX_RASTER_DATA_DIR}/{item["name"]}.tif', workspace=workspace)
+            
+            
+            if item['style'] is not None:  
+                geo.upload_style(path=f'{settings.TOOLBOX_RASTER_DATA_DIR}/{item["style"]}.sld', workspace=workspace)
+                geo.publish_style(layer_name=item['name'], style_name=item['style'], workspace=workspace)
+        except Exception as e:
 
+            print(f"Error publishing {item['name']}: {e}")
 
 
 def register_vector_files(workspace='spreewassern_vector', store_name='swn_featurestore'):
@@ -57,7 +65,7 @@ def register_vector_files(workspace='spreewassern_vector', store_name='swn_featu
         geo.publish_featurestore(workspace=workspace, store_name=store_name, pg_table=item)
 
 def register_style_files(workspace='spreewassern_raster'):
-    sld_dir = '/app/raster_data'
+    sld_dir = settings.TOOLBOX_RASTER_DATA_DIR
     for filename in os.listdir(sld_dir):
         if filename.endswith(".sld"):
             filepath = os.path.join(sld_dir, filename)
@@ -66,10 +74,24 @@ def register_style_files(workspace='spreewassern_raster'):
 
 class Command(BaseCommand):
     help = 'Set up the geoserver with workspaces, styles and files'
+    def handle(self, *args, **kwargs):
+        try:
+            geo.create_workspace(workspace='spreewassern_raster')
+            
+        except Exception as e:
+            print(f"Error setting up geoserver: {e}")
 
-    geo.create_workspace(workspace='spreewassern_raster')
-    geo.create_workspace(workspace='spreewassern_vector')
-    register_style_files()
-    
-    publish_all()
-    
+        try:
+            geo.create_workspace(workspace='spreewassern_vector')
+        except Exception as e:
+            print(f"Error setting up geoserver: {e}")
+
+        try:
+            register_style_files()
+        except Exception as e:
+            print(f"Error registering style files: {e}")
+        try:
+            publish_all()
+        except Exception as e:
+            print(f"Error publishing raster files: {e}")
+        

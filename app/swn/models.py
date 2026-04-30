@@ -14,7 +14,6 @@ from django.contrib.auth.models import User
 import json
 from monica import models as monica_models
 from buek.models import Buek200
-from django.conf import settings
 
 import gettext as _
 

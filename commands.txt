@@ -80,3 +80,13 @@ c) Using production compose file
 If file is docker-compose.prod.yml:
 
 docker compose -f docker-compose.prod.yml up --build -d
+
+
+DEBUG django while not running:
+docker compose run --rm app sh
+
+https://download.maxmind.com/geoip/databases/GeoLite2-ASN/download?suffix=tar.gz
+
+
+https://download.maxmind.com/geoip/databases/GeoLite2-Country/download?suffix=tar.gz
+https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz

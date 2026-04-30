@@ -102,7 +102,7 @@ const greyMap = L.tileLayer(greyMapUrl, {
 })
 // https://sgx.geodatenzentrum.de/wmts_topplus_open/legend/web_scale.png  legende
 
-export const projectRegion = new L.geoJSON(project_region, {
+export const projectRegion = new L.geoJSON(project_region, { // project_region is injected in swn_three_split.html
   attribution: 'Spreewasser:N Projektregion',
   pane: "overlayPolygonPane",
   style: {
@@ -778,188 +778,208 @@ export function initializeSidebarEventHandler({
 
     let clickTimeout;
 
-    sidebar.addEventListener("dblclick", (event) => {
-      clearTimeout(clickTimeout); // prevent single click logic
-      
-      const listElement = event.target.closest("li");
-      map.fitBounds(listElement.layer.getBounds());
-      console.log("DOUBLE CLICK");
-      
-    });
-
     sidebar.addEventListener("click", (event) => {
       console.log("sidebar click event", event.target.classList);
       const clickedElement = event.target;
-      let featureGroup = getFeatureGroup()
-      // if (event.target.closest(.))
-      if (event.target.closest('.all-userfields-switch')) {
-        return
-      } else if (event.target.closest('.accordion-button.user-field-accordion-header')) {
-        console.log('closest userfield-switch')
-        $('#userFieldsAccordion').toggleClass('show') 
-      } else if (event.target.id === 'addUserFieldPolygon'){
-        console.log('addUserFieldPolygon')
-        polygonDrawer.enable();
-        $('#endPolygonDraw').removeClass('d-none');
-      } else if (event.target.id === 'endPolygonDraw') {
-        polygonDrawer.disable();
+      const listEl = clickedElement.closest("li");
+      if (event.target.closest("label")) {
+        event.preventDefault();
       }
-  
-      
-      if (clickedElement.classList.contains("user-field-action")) {
-        const leafletId = clickedElement.getAttribute("leaflet-id");
-        const userFieldId = clickedElement.getAttribute("user-field-id");
+      clearTimeout(clickTimeout);
+        clickTimeout = setTimeout(() => {
 
-        console.log("user-field-action clicked", leafletId);
-        let userFields = getUserFields();
-        let userField = userFields[leafletId];
+        let featureGroup = getFeatureGroup()
+        // if (clickedElement.closest(.))
+        if (clickedElement.closest('.all-userfields-switch')) {
+          return
+        } else if (clickedElement.closest('.accordion-button.user-field-accordion-header')) {
+          console.log('closest userfield-switch')
+          $('#userFieldsAccordion').toggleClass('show') 
+        } else if (clickedElement.id === 'addUserFieldPolygon'){
+          console.log('addUserFieldPolygon')
+          polygonDrawer.enable();
+          $('#endPolygonDraw').removeClass('d-none');
+        } else if (clickedElement.id === 'endPolygonDraw') {
+          polygonDrawer.disable();
+        }
+    
         
+        if (clickedElement.classList.contains("user-field-action")) {
+          const leafletId = clickedElement.getAttribute("leaflet-id");
+          const userFieldId = clickedElement.getAttribute("user-field-id");
 
-        if (clickedElement.classList.contains("delete")) {
-          let confirmDelete = confirm(`Are you sure to delete ` + userFields[leafletId].name + "?");
-          if (confirmDelete) {
-            
-            let layer = featureGroup.getLayer(leafletId);
-            delete userFields[leafletId];
-            featureGroup.removeLayer(layer); // removes shape from map
+          console.log("user-field-action clicked", leafletId);
+          let userFields = getUserFields();
+          let userField = userFields[leafletId];
+          
 
-            const listElement = document.getElementById("accordion-"+leafletId);
-            listElement.remove(); // removes HTML element from sidebar
-            // removes field from dbprojectClass
-            console.log("delete UserField ", userFieldId)
-            fetch(`delete-user-field/${userFieldId}/`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCSRFToken(),
-              }
-            })
+          if (clickedElement.classList.contains("delete")) {
+            let confirmDelete = confirm(`Are you sure to delete ` + userFields[leafletId].name + "?");
+            if (confirmDelete) {
+              
+              let layer = featureGroup.getLayer(leafletId);
+              delete userFields[leafletId];
+              featureGroup.removeLayer(layer); // removes shape from map
+
+              const listElement = document.getElementById("accordion-"+leafletId);
+              listElement.remove(); // removes HTML element from sidebar
+              // removes field from dbprojectClass
+              console.log("delete UserField ", userFieldId)
+              fetch(`delete-user-field/${userFieldId}/`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": getCSRFToken(),
+                }
+              })
+              .then(response => response.json())
+              .then(data => {
+                handleAlerts(data.message);
+                console.log("Delete Success");
+              })
+              .catch(error => {
+                console.log(error);
+              });
+            }
+          } else if (clickedElement.classList.contains("field-menu")) {
+            selectUserField(userFieldId, getProject(), featureGroup);
+            console.log('field-menu clicked');
+            fetch(`field-projects-menu/${userFieldId}/`)
             .then(response => response.json())
             .then(data => {
-              handleAlerts(data.message);
-              console.log("Delete Success");
-            })
-            .catch(error => {
-              console.log(error);
+            // TODO the hardcoded # fieldMenuModal is triggered from button
+            const modalElement = document.getElementById('fieldMenuModal');
+            const modalContent = modalElement.querySelector('.modal-content')
+
+              modalContent.innerHTML = data.html;
+              const fieldMenuModal = new bootstrap.Modal(modalElement);
+              fieldMenuModal.show();
+
+              modalElement.addEventListener('click', (event) => {
+                if(clickedElement.classList.contains('open-project')) {
+                  const projectId = clickedElement.getAttribute('data-project-id');
+                  loadProjectFromDb(projectId)
+                  .then(project => startApplication(project))
+                  fieldMenuModal.hide();
+                }
+              });
             });
-          }
-        } else if (clickedElement.classList.contains("field-menu")) {
-          selectUserField(userFieldId, getProject(), featureGroup);
-          console.log('field-menu clicked');
-          fetch(`field-projects-menu/${userFieldId}/`)
-          .then(response => response.json())
-          .then(data => {
-          // TODO the hardcoded # fieldMenuModal is triggered from button
-          const modalElement = document.getElementById('fieldMenuModal');
-          const modalContent = modalElement.querySelector('.modal-content')
+          } else if (clickedElement.classList.contains("field-project-add")) {
+            selectUserField(userFieldId, getProject(), featureGroup);
+            //set the right user field in the modal
+            $('#userFieldSelect').val(userFieldId); 
 
-            modalContent.innerHTML = data.html;
-            const fieldMenuModal = new bootstrap.Modal(modalElement);
-            fieldMenuModal.show();
-
-            modalElement.addEventListener('click', (event) => {
-              if(event.target.classList.contains('open-project')) {
-                const projectId = event.target.getAttribute('data-project-id');
-                loadProjectFromDb(projectId)
-                .then(project => startApplication(project))
-                fieldMenuModal.hide();
-              }
-            });
-          });
-        } else if (clickedElement.classList.contains("field-project-add")) {
-          selectUserField(userFieldId, getProject(), featureGroup);
-          //set the right user field in the modal
-          $('#userFieldSelect').val(userFieldId); 
-
-          addProject(userFieldId);
-          
-        } else if (clickedElement.classList.contains('field-edit')) {
-          selectUserField(userFieldId, getProject(), featureGroup);
-          console.log('field-edit clicked');
-          let layer = featureGroup.getLayer(leafletId);
-        
-          if (layer && layer.editing && !layer.editing._enabled) {
-            console.log('Edit enabling')
-            // Save original latlngs for cancel
-            layer._originalLatLngs = L.LatLngUtil.cloneLatLngs(layer.getLatLngs());
-            layer.editing.enable();
-        
-            const popupHtml = `
-              <button class="btn btn-sm btn-success" id="btnUpdateUserField">Speichern</button>
-              <button class="btn btn-sm btn-danger" id="btnCancelEditUserField">Abbrechen</button>
-            `;
-        
-            // Bind and open the popup
+            addProject(userFieldId);
             
-        
-            // Listen for popupopen ON THE MAP
-            function onPopupOpen(e){
-              console.log("On Popup opened");
-              if (e.popup._source !== layer) return;
-        
-              const popupEl = e.popup.getElement();
-              const saveBtn = popupEl.querySelector('#btnUpdateUserField');
-              const cancelBtn = popupEl.querySelector('#btnCancelEditUserField');
-              let editConfirmed = false;
-        
-              // Save button
-              L.DomEvent.on(saveBtn, 'click', () => {
-                console.log('Save clicked');
-                editConfirmed = true;
-                saveUserField(userField.name, userFieldId, layer);
-                layer.editing.disable();
-                layer.closePopup();
-                layer.unbindPopup(); // Prevent popup from reopening later
-              });
-        
-              // Cancel button
-              L.DomEvent.on(cancelBtn, 'click', () => {
-                console.log('Cancel clicked');
-                editConfirmed = false;
-                revertEdit(layer);
-                layer.editing.disable();
-                layer.closePopup();
-                layer.unbindPopup(); // Also prevent reappearing
-              });
-        
-              // Popup close fallback — only revert if NOT confirmed
-              function onPopupClose(e){
-                console.log('On Popup close', layer)
-                if (e.popup._source === layer && !editConfirmed) {
-                  console.log('Popup closed without save – reverting');
+          } else if (clickedElement.classList.contains('field-edit')) {
+            selectUserField(userFieldId, getProject(), featureGroup);
+            console.log('field-edit clicked');
+            let layer = featureGroup.getLayer(leafletId);
+          
+            if (layer && layer.editing && !layer.editing._enabled) {
+              console.log('Edit enabling')
+              // Save original latlngs for cancel
+              layer._originalLatLngs = L.LatLngUtil.cloneLatLngs(layer.getLatLngs());
+              layer.editing.enable();
+          
+              const popupHtml = `
+                <button class="btn btn-sm btn-success" id="btnUpdateUserField">Speichern</button>
+                <button class="btn btn-sm btn-danger" id="btnCancelEditUserField">Abbrechen</button>
+              `;
+          
+              // Bind and open the popup
+              
+          
+              // Listen for popupopen ON THE MAP
+              function onPopupOpen(e){
+                console.log("On Popup opened");
+                if (e.popup._source !== layer) return;
+          
+                const popupEl = e.popup.getElement();
+                const saveBtn = popupEl.querySelector('#btnUpdateUserField');
+                const cancelBtn = popupEl.querySelector('#btnCancelEditUserField');
+                let editConfirmed = false;
+          
+                // Save button
+                L.DomEvent.on(saveBtn, 'click', () => {
+                  console.log('Save clicked');
+                  editConfirmed = true;
+                  saveUserField(userField.name, userFieldId, layer);
+                  layer.editing.disable();
+                  layer.closePopup();
+                  layer.unbindPopup(); // Prevent popup from reopening later
+                });
+          
+                // Cancel button
+                L.DomEvent.on(cancelBtn, 'click', () => {
+                  console.log('Cancel clicked');
+                  editConfirmed = false;
                   revertEdit(layer);
                   layer.editing.disable();
-                  layer.unbindPopup(); // Cleanup
-                  console.log('Popup closed:', layer);
-                }
-                map.off('popupclose', onPopupClose);
+                  layer.closePopup();
+                  layer.unbindPopup(); // Also prevent reappearing
+                });
+          
+                // Popup close fallback — only revert if NOT confirmed
+                function onPopupClose(e){
+                  console.log('On Popup close', layer)
+                  if (e.popup._source === layer && !editConfirmed) {
+                    console.log('Popup closed without save – reverting');
+                    revertEdit(layer);
+                    layer.editing.disable();
+                    layer.unbindPopup(); // Cleanup
+                    console.log('Popup closed:', layer);
+                  }
+                  map.off('popupclose', onPopupClose);
+                };
+          
+                map.on('popupclose', onPopupClose);
+                map.off('popupopen', onPopupOpen); // Prevent multiple bindings
               };
-        
-              map.on('popupclose', onPopupClose);
-              map.off('popupopen', onPopupOpen); // Prevent multiple bindings
-            };
-        
-            map.on('popupopen', onPopupOpen);
-            layer.bindPopup(popupHtml).openPopup();
-          } else {
-            console.log('Edit disabling');
-            layer.editing.disable();
-            layer.closePopup();
-            layer.unbindPopup(); // Prevent popup from reopening later
-          }
+          
+              map.on('popupopen', onPopupOpen);
+              layer.bindPopup(popupHtml).openPopup();
+            } else {
+              console.log('Edit disabling');
+              layer.editing.disable();
+              layer.closePopup();
+              layer.unbindPopup(); // Prevent popup from reopening later
+            }
 
+          }
+          else { return;}
+        } else if (listEl) {
+          
+          
+            if (listEl.hasAttribute("leaflet-id")) {
+            // clickTimeout = null;
+              const leafletId = listEl.getAttribute("leaflet-id");
+              console.log("user-field-header clicked", leafletId);
+              selectUserField(getUserFieldIdByLeafletId(leafletId), getProject(), featureGroup);
+            } 
+          
         }
-         else { return;}
-        } else if (clickedElement.closest("li") && clickedElement.closest("li").hasAttribute("leaflet-id")) {
-          const listEl = clickedElement.closest("li");
-        clearTimeout(clickTimeout);
-        clickTimeout = setTimeout(() => {
-          // clickTimeout = null;
-          const leafletId = listEl.getAttribute("leaflet-id");
-          console.log("user-field-header clicked", leafletId);
-          selectUserField(getUserFieldIdByLeafletId(leafletId), getProject(), featureGroup);
-        }, 250); }
-      });
+      }, 250); }
+    );
+
+
+
+    sidebar.addEventListener("dblclick", (event) => {
+      clearTimeout(clickTimeout); // prevent single click logic
+      const listElement = event.target.closest("li");
+
+      if (!listElement) return;
+      
+
+      if (listElement.classList.contains("user-field-header")) {
+        map.fitBounds(listElement.layer.getBounds());
+        
+      } else  if (listElement.id === "liElementProjectRegion") {
+        map.fitBounds(projectRegion.getBounds());
+      }
+      console.log("DOUBLE CLICK");
+      
+    });
 };
 
 

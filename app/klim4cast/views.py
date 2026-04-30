@@ -132,7 +132,7 @@ def get_data(request, name, variable, lat, lon):
     """
     Get data from the Thredds server.
     """
-    path = f"{settings.KLIM4CAST_NETCDF_DIR}/{name}.nc"
+    path = f"{settings.CLIM4CAST_NETCDF_DIR}/{name}.nc"
     nc = xr.open_dataset(path)
 
     lat = float(lat)

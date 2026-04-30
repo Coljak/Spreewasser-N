@@ -37,11 +37,8 @@ import xmltodict
 from datetime import datetime, timedelta, date
 import copy
 
-from .utils import get_geolocation
-import random
-
 import time
-import urllib
+
 
 
 def get_soil_profile(request):

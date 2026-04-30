@@ -31,7 +31,7 @@ docker exec -it swn_geo_django bash
 ```
 !! If you want to transfer Monica project data, you have to do a dump via postgres. Create the new db via postgres and finally do a 'python manage.py migrate --fake-initial' !!
 
-Then in the open bash run the django migrations:
+Then in the open bash run the django migrations in the following order:
 ```shell
 python manage.py makemigrations buek
 python manage.py makemigrations monica
@@ -59,7 +59,10 @@ for monica's weather data
 python manage.py import_all_hincast_data
 python manage.py import_forecast_data
 ```
-
+to register the rasterfiles used in the Toolbox
+```shell
+python manage.py register_geoserver_files
+```
 
 ### 5. Thredds Server
 The Thredds server is used to store and serve NetCDF data.
@@ -134,7 +137,7 @@ This aggregates only the monthly values (yearly accordingly)
 python manage.py your_command_name --type monthly
 ```
 
-This aggregates the yearly values only for the stations with the id 1, 2, and 3
+This aggregates the yearly values only for the stations with the id 1, 3, and 5
 ```shell
 python manage.py your_command_name --type yearly --station 1 3 5
 ```

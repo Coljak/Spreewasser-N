@@ -28,6 +28,8 @@ services:
       sh -c "python3 manage.py wait_for_db &&
       python3 manage.py migrate &&
       echo '>>> MIGRATE DONE' &&
+      python3 manage.py collectstatic --noinput &&
+      echo '>>> COLLECTSTATIC DONE' &&
       python3 manage.py runserver 0.0.0.0:8000"
 
       # python3 manage.py runserver 0.0.0.0:8000 --reload --watcher polling  for file changes in docker
@@ -53,6 +55,11 @@ services:
       DWD_USERNAME: ${DWD_USERNAME}
       DWD_PASSWORD: ${DWD_PASSWORD}
       DWD_PORT: ${DWD_PORT}
+
+      CLIM4CAST_FTP_SERVER: ${CLIM4CAST_FTP_SERVER}
+      CLIM4CAST_SFTP_USER: ${CLIM4CAST_SFTP_USER}
+      CLIM4CAST_SFTP_PORT: ${CLIM4CAST_SFTP_PORT}
+      CLIM4CAST_SFTP_PASSWORD: ${CLIM4CAST_SFTP_PASSWORD}
       
       
     container_name: swn_geo_django

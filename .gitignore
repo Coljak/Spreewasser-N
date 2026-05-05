@@ -167,7 +167,7 @@ geoserver/data/
 geoserver__/
 # GeoServer data directories to ignore
 geoserver/
-
+geoserver/data/user_projections/epsg.properties
 
 # GeoServer data directories to ignore
 geoserver/data/logs/

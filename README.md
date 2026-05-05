@@ -12,15 +12,59 @@
 ```shell
 sudo apt-get install git
 ```
-then you can puul this repository from git intop your working directory
 
 ### 2. Install docker on your system/ server
 https://docs.docker.com/engine/install/ubuntu/
 
 
-### 3. Run the docker build
+### 3. Get repo and run the docker build
+cd into the directory where the application is supposed to be built (user directory).
+Then clone the git repo into that folder:
 ```shell
-cd into/folder_of/docker-compose
+git clone https://github.com/ColjaK/Spreewasser-N.git
+```
+
+Copy the .env to Spreewasser-N/.env or create that file:
+```shell
+touch Spreewasser-N/.env
+nano .env
+```
+
+In nano add the passwords for
+DJANGO_SECRET_KEY=9???
+
+DJANGO_ALLOWED_HOSTS=???
+
+
+DB_NAME=postgis
+DB_USER=???
+DB_PASS=???
+
+GEOSERVER_USER=??
+GEOSERVER_PASS=???
+
+DWD_HOST=???
+DWD_USERNAME=??
+DWD_PASSWORD=??
+DWD_PORT=??
+
+
+CLIM4CAST_FTP_SERVER=???
+CLIM4CAST_SFTP_USER=???
+CLIM4CAST_SFTP_PORT=??
+CLIM4CAST_SFTP_PASSWORD=???
+    
+Copy the app_data folder to Spreewasser-n/. app_data contains the raster data for toolbox and monica as well as the geoip2 db and the location for klim4cast.
+
+Then check for development setups and change the variable accordingly:
+```shell
+nano docker-compose.prod.yml
+```
+set DEV="false" for production and save.
+set DJANGO_DEBUG: 0 for production, 1 for debugging. 
+
+```shell
+cd Spreewasser-N
 docker-compose build 
 ```
 ### 3. Start containers

@@ -5,14 +5,14 @@ services:
       dockerfile: Dockerfile.django
       args:
         DEV: "false" # CHANGE to trace errors on dev server
-    command: entrypoint.sh
+    command: ["/app/scripts/entrypoint.prod.sh"]
     volumes:
       - app_data:/app_data
       - static_data:/vol/web/static
       - media_data:/vol/web/media
     environment:
 
-      DJANGO_DEBUG: 1 # CHNAGE if you want to debug on the dev server 
+      DJANGO_DEBUG: 0 # CHNAGE if you want to debug (1) on the dev server, else 0 for production
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY} # why this? isn't it rpetative?
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
 

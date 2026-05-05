@@ -167,7 +167,7 @@ geoserver/data/
 geoserver__/
 # GeoServer data directories to ignore
 geoserver/
-
+geoserver/data/user_projections/epsg.properties
 
 # local files and folders for data import 
 raster_polygons.geojson

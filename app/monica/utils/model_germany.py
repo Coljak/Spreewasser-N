@@ -103,6 +103,7 @@ def run_monica_batch(envs, timeout_ms=20000):
     start_time = time.time()
 
     while received < expected:
+        print(f"[ZMQ] Waiting for messages... ({received}/{expected} received so far)")
         try:
             msg = consumer.recv_json()
             print('msg received with customId', msg.get("customId", 'no Custom Id!!'))
@@ -119,7 +120,7 @@ def run_monica_batch(envs, timeout_ms=20000):
 
         results[custom_id] = monica_utils.msg_to_json(msg)
         received += 1
-
+    print('got out of the loop, received', received, 'messages in total, expected was', expected)
     # --- CLEANUP ---
     producer.close()
     consumer.close()

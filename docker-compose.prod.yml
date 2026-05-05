@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile.django
       args:
         DEV: "false" # CHANGE to trace errors on dev server
-    command: ["/app/scripts/entrypoint.prod.sh"]
+    command: entrypoint.prod.sh
     volumes:
       - app_data:/app_data
       - static_data:/vol/web/static

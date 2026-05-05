@@ -15,17 +15,18 @@ from pathlib import Path
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DJANGO_DEBUG', 0)))
-DEBUG_TOOLBAR_CONFIG = {
-    "SHOW_SQL": False,
-}
+if DEBUG:
+    DEBUG_TOOLBAR_CONFIG = {
+        "SHOW_SQL": False,
+    }
 
-DEBUG_TOOLBAR_PANELS = [
-    'debug_toolbar.panels.timer.TimerPanel',
-    'debug_toolbar.panels.request.RequestPanel',
-    'debug_toolbar.panels.headers.HeadersPanel',
-    'debug_toolbar.panels.history.HistoryPanel',
-    'debug_toolbar.panels.profiling.ProfilingPanel',
-]
+    DEBUG_TOOLBAR_PANELS = [
+        'debug_toolbar.panels.timer.TimerPanel',
+        'debug_toolbar.panels.request.RequestPanel',
+        'debug_toolbar.panels.headers.HeadersPanel',
+        'debug_toolbar.panels.history.HistoryPanel',
+        'debug_toolbar.panels.profiling.ProfilingPanel',
+    ]
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent

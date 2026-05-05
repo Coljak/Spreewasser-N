@@ -89,13 +89,7 @@ def get_last_valid_forecast_date():
     print('last_valid_date: ', last_valid_date)
     return last_valid_date.astype('datetime64[D]').astype(date)
 
-def get_last_valid_forecast_date_cached(update=False):
-    last_valid_forecast_date = cache.get('last_valid_forecast_date')
-    if last_valid_forecast_date is None or update == True:
-        last_valid_forecast_date = get_last_valid_forecast_date()
-        cache.set('last_valid_forecast_date', last_valid_forecast_date, timeout=259200)  # Cache for 72 hours
 
-    return last_valid_forecast_date
 
 def delete_old_files(folder_path, new_files):
     """Delete old NetCDF files from the folder that are not in new_files list."""
@@ -198,7 +192,7 @@ def automated_thredds_download():
             for old_nc in old_combined_ncs:
                 os.remove(old_nc)
 
-        get_last_valid_forecast_date_cached(update=True)
+        
     except Exception as e:
         print(f"Combining NetCDF files failed: {e}")
 

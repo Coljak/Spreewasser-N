@@ -1,0 +1,88 @@
+def model_germany_(scenario=0):
+    """
+    This function creates a base_environment and modifies it according to each cell.
+    It then runs the simulation for each cell and saves the output in a netcdf file.
+    """
+
+
+    
+    height, width = agri_buek_arr.shape
+
+    print("Soil profiles loaded", datetime.now() - start)
+
+
+
+    unique_climate_stations = np.unique(climate_stations_arr[climate_stations_arr != -9999])
+
+
+
+
+    min_sowing_date = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).aggregate(Min('avg_sowing_doy'))['avg_sowing_doy__min']
+    max_harvest_date = models.SeedHarvestDates.objects.filter(cultivar_parameters=cultivar).aggregate(Max('avg_harvest_doy'))['avg_harvest_doy__max']
+    
+    
+    
+
+
+
+
+
+
+
+
+
+    params = []
+    for event in events[1]:
+        if event == "Date":
+            continue
+        else:
+            if isinstance(event, list): # TODO if one element is str, pop
+                if isinstance(event[1], list) and len(event[1]) >= 2:
+                    for i in range(event[1][0], event[1][1] + 1):
+                        params.append(str(event[0] + '_'+ str(i)))
+                    if len(event[1]) > 2:
+                        params.append(str(event[0] + '_'+ event[1][2]))
+                else:
+                    params.append(event)
+            else:
+                params.append(event)
+
+
+
+
+  
+
+
+
+
+
+
+        batch_results = run_monica_batch(envs)
+        for custom_id, msg in batch_results.items():
+            lat_idx = custom_id // 1000
+            lon_idx = custom_id % 1000 
+            for param in params:
+                print('param: ', param)
+                ds[param][:, lat_idx, lon_idx] = msg['daily'][param]
+            # Here you would convert the msg to netcdf and save it, or directly write to the xarray dataset
+            # For example:
+            # ds = result_msg_to_xarray(msg)
+            # ds.to_netcdf(f'monica_output_{lat_idx}_{lon_idx}.nc')
+
+
+        print(f'Batch for forecast cell {(f_lat, f_lon)} completed with {len(batch_results)}/{len(envs)} results received')
+
+        # if len(envs) > 0:
+        #     print(envs[0])
+    ds.to_netcdf(
+        "/app_data/monica/germany/monica_results.nc",
+        engine="netcdf4",
+        encoding=encoding,
+    )
+    ds.close()
+
+                #run_monica_and_write_to_netcdf(env, lat_idx, lon_idx)
+    print(f'Skipped {len(skipped)} cells due to missing data')
+    end = datetime.now() - start
+    print(f'done with env creation, now running simulation in {end}')
+    return batch_results

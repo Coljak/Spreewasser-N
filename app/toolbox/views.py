@@ -1,19 +1,17 @@
 from django.shortcuts import render
 from swn import models as swn_models
 # from swn import forms as swn_forms
-from swn.views import load_nuts_polygon
+
 from . import forms, models, filters
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry, LineString
-from django.contrib.gis.measure import D
-from django.contrib.gis.db.models import PointField
-from django.contrib.gis.db.models import OuterRef, Subquery
-from django.contrib.gis.db.models.functions import Distance,AsGeoJSON
+from .utils import publish_raster_on_geoserver
+
+from django.contrib.gis.db.models.functions import Distance
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.views.decorators.csrf import csrf_protect
-from django.forms.models import model_to_dict
 from django.utils import translation
 from django.template.loader import render_to_string
 from django.db import connection
@@ -23,10 +21,10 @@ from geo.Geoserver import Geoserver
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
 
-from shapely.geometry import shape as shapely_shape, mapping
+from shapely.geometry import shape as shapely_shape
 from shapely.ops import nearest_points, transform
 from pyproj import Transformer
-from collections import defaultdict
+
 import pandas as pd
 
 import numpy as np
@@ -40,9 +38,7 @@ import csv
 import shutil
 from copy import copy
 
-from rasterio.warp import reproject, Resampling, calculate_default_transform, transform_geom
-from rasterio.mask import mask
-from rasterio.enums import ColorInterp
+
 
 # TODO DELETE
 def test_html(request):
@@ -1772,19 +1768,6 @@ def delete_geoserver_layer(workspace, layer_name):
         pass
 
 
-def publish_raster_on_geoserver(layer_name, path=settings.TOOLBOX_RASTER_OUTPUT_DIR, workspace='spreewassern_raster', style_name="style_raster_percent_sieker_2"):
-    """
-    Publishes a GeoTIFF to GeoServer as a coverage store and attaches an existing style.
-    """
-
-    geo = Geoserver(
-        settings.GEOSERVER_URL,
-        username=settings.GEOSERVER_USER,
-        password=settings.GEOSERVER_PASS
-    )
-
-    geo.create_coveragestore(layer_name=layer_name, path=f'{path}/{layer_name}.tif', workspace=workspace)
-    geo.publish_style(layer_name=layer_name, style_name=style_name, workspace=workspace)
 
 
 

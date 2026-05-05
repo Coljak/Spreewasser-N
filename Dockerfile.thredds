@@ -4,7 +4,7 @@ LABEL maintainer="Colja"
 
 COPY ./thredds_config/catalog.xml /usr/local/tomcat/content/thredds/catalog.xml
 COPY ./thredds_config/threddsConfig.xml /usr/local/tomcat/content/thredds/threddsConfig.xml
-COPY ./app/klim4cast/data/netcdf /usr/local/tomcat/content/thredds/public/data/Klim4Cast
+COPY ./app_data/klim4cast/netcdf /usr/local/tomcat/content/thredds/public/data/Klim4Cast
 
 
 

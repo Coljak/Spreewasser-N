@@ -44,10 +44,10 @@ __pycache__/
 *.pyc
 *.ipynb_checkpoints/
 
+geoserver/data.backup/
 
-# git
-.git
-.gitignore
+.venv/
+.
 
 # node
 node_modules/

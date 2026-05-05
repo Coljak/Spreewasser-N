@@ -13,10 +13,23 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from pathlib import Path
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = bool(int(os.environ.get('DJANGO_DEBUG', 0)))
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_SQL": False,
+}
+
+DEBUG_TOOLBAR_PANELS = [
+    'debug_toolbar.panels.timer.TimerPanel',
+    'debug_toolbar.panels.request.RequestPanel',
+    'debug_toolbar.panels.headers.HeadersPanel',
+    'debug_toolbar.panels.history.HistoryPanel',
+    'debug_toolbar.panels.profiling.ProfilingPanel',
+]
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
-STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
 
 # AUTH_USER_MODEL = 'user.User'
@@ -26,11 +39,6 @@ STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-hl9ukq&o_m6c&^7co0-qlivgsq%f^ouhu5j(vc21sk8!xmf-h*')
-
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(int(os.environ.get('DJANGO_DEBUG', 0)))
-
 
 
 if DEBUG == True:
@@ -69,7 +77,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_spectacular',
     'sass_processor',
-    'debug_toolbar',
+
     'leaflet',
     'djgeojson',
     'django_bootstrap5',
@@ -80,6 +88,8 @@ INSTALLED_APPS = [
     # 'raster',
 ]
 
+if DEBUG:
+    INSTALLED_APPS += ["debug_toolbar"]
 
 
 MIDDLEWARE = [
@@ -119,30 +129,46 @@ WSGI_APPLICATION = 'app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+DB_HOST = os.environ.get('DB_HOST')
+DB_NAME = os.environ.get('DB_NAME')
+DB_USER = os.environ.get('DB_USER')
+DB_PASS = os.environ.get('DB_PASS')
+DB_PORT = int(os.environ.get('DB_PORT', '5432'))
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'HOST': os.environ.get('DB_HOST'),
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASS'),
+        'HOST': DB_HOST ,
+        'NAME': DB_NAME,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASS,
+        'PORT': DB_PORT,
     }
 }
+
+
 
 THREDDS_URL = os.environ.get('THREDDS_URL')
 THREDDS_CATALOG_XML = f"{THREDDS_URL}/catalog/data/Klim4Cast/catalog.xml"
 
 # other data
 APP_DATA_DIR =  Path(__file__).resolve().parent.parent.parent.joinpath('app_data')
+
+GEOIP_PATH = os.path.join(APP_DATA_DIR, 'geoip2_data')
 # django app monica
 MONICA_DATA_DIR = APP_DATA_DIR.joinpath('monica')
 MONICA_NETCDF_FORECAST_DIR = MONICA_DATA_DIR.joinpath('netcdf_forecast')
 MONICA_NETCDF_HINDCAST_DIR = MONICA_DATA_DIR.joinpath('netcdf_hindcast')
 MONICA_RASTER_DATA_DIR = MONICA_DATA_DIR.joinpath('raster_data')
 # django app klim4cast
-KLIM4CAST_DATA_DIR = os.path.join(APP_DATA_DIR, 'klim4cast')
-KLIM4CAST_DATA = os.path.join(KLIM4CAST_DATA_DIR, 'chech_globe_data')
-KLIM4CAST_NETCDF_DIR = os.path.join(KLIM4CAST_DATA_DIR, 'netcdf')
+CLIM4CAST_DATA_DIR = os.path.join(APP_DATA_DIR, 'klim4cast')
+CLIM4CAST_DATA = os.path.join(CLIM4CAST_DATA_DIR, 'chech_globe_data')
+CLIM4CAST_NETCDF_DIR = os.path.join(CLIM4CAST_DATA_DIR, 'netcdf')
+
+CLIM4CAST_FTP_SERVER = os.environ.get('CLIM4CAST_FTP_SERVER')
+CLIM4CAST_SFTP_USER = os.environ.get('CLIM4CAST_SFTP_USER')
+CLIM4CAST_SFTP_PORT = int(os.environ.get('CLIM4CAST_SFTP_PORT', '22'))
+CLIM4CAST_SFTP_PASSWORD = os.environ.get('CLIM4CAST_SFTP_PASSWORD')
 
 # django app toolbox
 TOOLBOX_DATA_DIR = os.path.join(APP_DATA_DIR, 'toolbox')
@@ -205,16 +231,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = '/static/static/'
-MEDIA_URL = '/static/media/'
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
 STATICFILES_DIRS = [
     STATIC_DIR,
-    Path.joinpath(BASE_DIR, 'swn/static/'),
-    Path.joinpath(BASE_DIR, 'monica/static/'),
-    Path.joinpath(BASE_DIR, 'toolbox/static/'),
-    # Path.joinpath(BASE_DIR, 'buek/static/'),
-    Path.joinpath(BASE_DIR, 'klim4cast/static/'),
-    ]
+    BASE_DIR / "swn/static",
+    BASE_DIR / "monica/static",
+    BASE_DIR / "toolbox/static",
+    BASE_DIR / "klim4cast/static",
+]
 
 # https://pypi.org/project/django-sass-processor/
 STATICFILES_FINDERS = [
@@ -229,8 +256,12 @@ SASS_PROCESSOR_OPTIONS = {
 }
 
 
-STATIC_ROOT = '/vol/web/static'
-MEDIA_ROOT = '/vol/web/static/media'
+if DEBUG:
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+    MEDIA_ROOT = BASE_DIR / "media"
+else:
+    STATIC_ROOT = "/vol/web/static"
+    MEDIA_ROOT = "/vol/web/media"
 
 LOGIN_URL = 'login/'
 LOGIN_REDIRECT_URL = '/'

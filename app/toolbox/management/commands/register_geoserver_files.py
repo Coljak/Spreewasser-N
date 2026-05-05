@@ -43,8 +43,14 @@ def publish_all(workspace='spreewassern_raster'):
             
             
             if item['style'] is not None:  
-                geo.upload_style(path=f'{settings.TOOLBOX_RASTER_DATA_DIR}/{item["style"]}.sld', workspace=workspace)
-                geo.publish_style(layer_name=item['name'], style_name=item['style'], workspace=workspace)
+                try:
+                    geo.upload_style(path=f'{settings.TOOLBOX_RASTER_DATA_DIR}/{item["style"]}.sld', workspace=workspace)
+                except Exception as e:
+                    print(f"Error uploading style {item['style']}: {e}")
+                try:
+                    geo.publish_style(layer_name=item['name'], style_name=item['style'], workspace=workspace)
+                except Exception as e:
+                    print(f"Error publishing style {item['style']} for layer {item['name']}: {e}")
         except Exception as e:
 
             print(f"Error publishing {item['name']}: {e}")
@@ -54,11 +60,11 @@ def register_vector_files(workspace='spreewassern_vector', store_name='swn_featu
     geo.create_featurestore(
         store_name='swn_featurestore',
         workspace='spreewassern_vector',
-        db=os.environ["DB_NAME"],
-        host=os.environ["DB_HOST"],  
-        port='5432',
-        pg_user=os.environ["DB_USER"],
-        pg_password=os.environ["DB_PASS"],
+        db=settings.DB_NAME,
+        host=settings.DB_HOST,  
+        port=settings.DB_PORT,
+        pg_user=settings.DB_USER,
+        pg_password=settings.DB_PASS,
         schema='public'
     )
     for item in TOOLBOX_VECTOR_TABLES:

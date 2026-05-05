@@ -35,6 +35,9 @@ import {
   startMonica
 } from '/static/monica/monica.js';
 
+
+
+
 async function loadDeferredMonicaHtml() {
   console.log('loadDeferredMonicaHtml')
   const rotationHtml = await fetch(getMonicaRotationUrl).then(r => r.text());

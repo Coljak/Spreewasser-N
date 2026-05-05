@@ -52,7 +52,7 @@
           >
           <ul class="list-group sidebar-list" id="overlayList">
             <!-- project region -->
-            <li class="list-group-item">
+            <li class="list-group-item" id="liElementProjectRegion">
               <div class="row">
                 <div class="form-check form-switch col">
                   <input type="checkbox" data-layer="projectRegion" class="form-check-input overlay-switch" id="projectRegionSwitch"/>
@@ -60,9 +60,7 @@
                     Spreewasser:N Projektgebiet
                   </label>
                 </div>
-                <div class="col-auto">
-                  <button class="btn btn-outline-secondary btn-sm zoom-to-project-region"><i class="bi bi-fullscreen"></i></button>             
-                </div>
+                
               </div>
             </li>
             {% for field in state_county_district_form.visible_fields %}

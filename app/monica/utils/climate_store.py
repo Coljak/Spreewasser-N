@@ -3,7 +3,7 @@ This is all about loading the hindcast and forecast, cashing it and retrieving i
 """
 
 import xarray as xr
-from datetime import datetime
+from datetime import date, datetime
 from monica.utils import monica_constants
 from monica import models
 from pathlib import Path
@@ -90,54 +90,42 @@ def get_hindcast():
     if HINDCAST is None:
         HINDCAST = load_hindcast()
         # set the last valid date for the hindcast data, which is needed to determine if new data needs to be downloaded
-        set_hindcast_last_valid_date(HINDCAST)
 
     return HINDCAST
+
+def get_last_valid_forecast_date():
+    ds = get_forecast(monica_constants.SCENARIOS[0]) # ensure forecast is loaded
+    times = ds.time[:].values
+    FORECAST_END_DATE = times[-1].astype('datetime64[D]').astype(datetime)
+
+    return FORECAST_END_DATE
+
+def get_first_valid_forecast_date():
+    ds = get_forecast(monica_constants.SCENARIOS[0]) # ensure forecast is loaded
+    times = ds.time[:].values
+    FORECAST_START_DATE = times[0].astype('datetime64[D]').astype(datetime)
+
+    return FORECAST_START_DATE
+
+
+def get_last_valid_hindcast_date():
+    ds = get_hindcast() # ensure hindcast is loaded
+    times = ds.time[:].values
+    hurs = ds['hurs'].isel(lat=200, lon=200) # this is needed to trigger the loading of the data and thus the setting of the last valid date, which is needed to determine if new data needs to be downloaded
+    last_date = hurs.dropna(dim='time', how='all').time.values[-1]
+    HINDCAST_LAST_DATE = last_date.astype('datetime64[D]').astype(datetime)
+    return HINDCAST_LAST_DATE   
+
+def get_first_valid_hindcast_date():
+    ds = get_hindcast() # ensure hindcast is loaded
+    times = ds.time[:].values
+    HINDCAST_FIRST_DATE = times[0].astype('datetime64[D]').astype(datetime)
+    return HINDCAST_FIRST_DATE
 
 def reload_all():
     global FORECAST, HINDCAST
     FORECAST = None
     HINDCAST = None
-
-def set_hindcast_last_valid_date(hindcast):
-    hindcast = hindcast
-    hurs = hindcast.hurs.isel(time=slice(-365, None), lat=200, lon=200)
-    vals = hurs.values
-    valid_indices = np.where(~np.isnan(vals))[0]
-    if valid_indices.size > 0:
-        last_valid_index = valid_indices[-1] 
-        last_valid_date = hindcast.time.values[last_valid_index] 
-        last_valid_date = last_valid_date.astype('datetime64[D]').astype(datetime)
-        cache.set('last_valid_hindcast_date', last_valid_date, timeout=129600)
-        return last_valid_date
-
-
-def get_last_valid_hindcast_dates():
-    last_valid_date = cache.get('last_valid_hindcast_date', None)
-    if last_valid_date is None: 
-       hindcast = get_hindcast()      
-       last_valid_date = set_hindcast_last_valid_date(hindcast)
-    return last_valid_date
-
-def set_forecast_valid_date(forecast):
-    times = forecast.time[:].values
-    last_valid_date = times[-1]
-    last_valid_date = last_valid_date.astype('datetime64[D]').astype(datetime)
-    first_valid_date = times[0]
-    first_valid_date = first_valid_date.astype('datetime64[D]').astype(datetime)
-    cache.set('first_valid_forecast_date', first_valid_date, timeout=129600)
-    cache.set('last_valid_forecast_date', last_valid_date, timeout=129600)
-    return first_valid_date, last_valid_date
-
-
-def get_last_valid_forecast_date():
-    first_valid_date = cache.get('first_valid_forecast_date', None)
-    last_valid_date = cache.get('last_valid_forecast_date', None)
-    if last_valid_date is None or first_valid_date is None: 
-       forecast = get_forecast(monica_constants.SCENARIOS[0])      
-       first_valid_date, last_valid_date = set_forecast_valid_date(forecast)
-    return first_valid_date, last_valid_date
-
 
 
 def get_hindcast_subset(hindcast_start_date, hindcast_end_date):

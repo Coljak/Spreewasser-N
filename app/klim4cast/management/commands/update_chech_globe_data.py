@@ -8,12 +8,13 @@ import logging
 from django.core.management.base import BaseCommand
 
 from django.conf import settings
-from .klim4cast_server_settings import sftp_server, sftp_user, sft_port, sftp_password
+# from .klim4cast_server_settings import sftp_server, sftp_user, sft_port, sftp_password
+import os
 from klim4cast.utils.tif_processing import process_tifs
 from klim4cast.utils.tif_download import download_directory, list_dates
 
 logging.basicConfig(
-    filename='ftp_download.log',
+    filename='klim4cast/ftp_download.log',
     level=logging.INFO,
     format='%(asctime)s - %(message)s'
 )
@@ -24,6 +25,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         try:
+            sftp_server = settings.CLIM4CAST_FTP_SERVER
+            sftp_user = settings.CLIM4CAST_SFTP_USER
+            sft_port = settings.CLIM4CAST_SFTP_PORT
+            sftp_password = settings.CLIM4CAST_SFTP_PASSWORD
             transport = paramiko.Transport((sftp_server, sft_port))
             transport.connect(username=sftp_user, password=sftp_password)
             sftp = paramiko.SFTPClient.from_transport(transport)
@@ -34,8 +39,8 @@ class Command(BaseCommand):
 
             # file_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-            local_dir = settings.KLIM4CAST_DATA
-            netcdf_dir = settings.KLIM4CAST_NETCDF_DIR
+            local_dir = settings.CLIM4CAST_DATA
+            netcdf_dir = settings.CLIM4CAST_NETCDF_DIR
             downloaded_dates = os.listdir(local_dir)
             if downloaded_dates == []:
                 self.stdout.write("No data downloaded yet ...")

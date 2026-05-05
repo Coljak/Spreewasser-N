@@ -21,8 +21,8 @@ urlpatterns = [
     # path('toolbox/get_options/<str:parameter>/', views.get_options, name='get-options'),
     path('toolbox/save-project/', views.save_toolbox_project, name='save-project'),
     path('toolbox/load-project/<int:id>/', views.load_toolbox_project, name='load-project'),
-    path('toolbox/load_polygon/', views.load_nuts_polygon, name='load_nuts_polygon'),
-    path('toolbox/load_polygon/<str:entity>/<int:polygon_id>/', views.load_nuts_polygon, name='load_nuts_polygon_entity'),
+    # path('toolbox/load_polygon/', views.load_nuts_polygon, name='load_nuts_polygon'),
+    # path('toolbox/load_polygon/<str:entity>/<int:polygon_id>/', views.load_nuts_polygon, name='load_nuts_polygon_entity'),
     path('toolbox/proxy/wms/', views.geoserver_wms, name='geoserver_wms'),
     path('toolbox/proxy/wms_sld/', views.geoserver_wms_sld, name='geoserver_wms_sld'),
     # Zalf sinks   

@@ -100,7 +100,7 @@ def run_monica_batch(envs, timeout_ms=20000):
 
     # --- RECEIVE ALL ---
     received = 0
-    start_time = time.time()
+    start_time = datetime.now()
 
     while received < expected:
         print(f"[ZMQ] Waiting for messages... ({received}/{expected} received so far)")
@@ -122,10 +122,18 @@ def run_monica_batch(envs, timeout_ms=20000):
         received += 1
     print('got out of the loop, received', received, 'messages in total, expected was', expected)
     # --- CLEANUP ---
+    producer.setsockopt(zmq.LINGER, 0)
+    consumer.setsockopt(zmq.LINGER, 0)
     producer.close()
+    print('Producer socket closed')
     consumer.close()
+    print('Consumer socket closed')
+
     context.term()
-    print('Batch processing time:', datetime.now() - start_time)
+    print('ZMQ context terminated')
+    end_time = datetime.now() - start_time
+
+    print('Batch processing time:', end_time)
 
     return results
 
@@ -264,10 +272,12 @@ def model_germany(scenario=SCENARIO):
 
     for (f_lat, f_lon), lat_lon_list in forecast_lat_lon_idxs_dictionary.items():
         print('start env creation')
-        # if counter == 50:
-        #     break
+        if counter == 50:
+            break
         counter += 1
         print(f'{counter} Processing forecast cell {(f_lat, f_lon)} with {len(lat_lon_list)} points')
+
+
 
         # --- Extract forecast ONCE ---
         # forecast_data = forecast_subset.isel(lat=f_lat, lon=f_lon)

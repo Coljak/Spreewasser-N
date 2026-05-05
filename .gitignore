@@ -172,6 +172,7 @@ geoserver/
 # local files and folders for data import 
 raster_polygons.geojson
 # climate_data/
+app_data/
 db_data/
 thredds_data/
 xx_obsolete/

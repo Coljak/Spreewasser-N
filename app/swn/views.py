@@ -1,6 +1,6 @@
 import json
 from django.middleware import csrf
-from multiprocessing import managers
+
 from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
@@ -9,28 +9,25 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.contrib.gis.geos import GEOSGeometry
-from django.contrib.gis.gdal import DataSource
-from django.forms.models import model_to_dict
-from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
+
+from django.views.generic import View, TemplateView
 from django.views.decorators.csrf import csrf_protect
 
 from django.core.serializers import serialize
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
-import numpy as np
+
 import requests
+
 from . import forms
 from . import models
-from monica.utils import save_monica_project
+from monica.utils import save_monica_project, climate_store
 
 from monica import forms as monica_forms
 from monica import models as monica_models
 from monica import views as monica_views
-from monica.utils import download_weather_forecast
 
-from buek import models as buek_models
 from buek.views import get_recommended_soil_profile
 
 import xmltodict
@@ -505,7 +502,7 @@ def load_swn_project(request, id):
         return JsonResponse({'message':{'success': False, 'message': 'Project not found'}})
     else:
         project_json = project.to_json()
-        project_json['endDate'] = download_weather_forecast.get_last_valid_forecast_date_cached()
+        project_json['endDate'] = climate_store.get_last_valid_forecast_date()
         return JsonResponse({'message':{'success': True, 'message': f'Project {project.name} loaded'}, 'project': project_json})
 
     

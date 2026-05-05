@@ -8,13 +8,13 @@ import logging
 from django.core.management.base import BaseCommand
 
 from django.conf import settings
-from .klim4cast_server_settings import sftp_server, sftp_user, sft_port, sftp_password
+# from .klim4cast_server_settings import sftp_server, sftp_user, sft_port, sftp_password
 import os
 from klim4cast.utils.tif_processing import process_tifs
 from klim4cast.utils.tif_download import download_directory, list_dates
 
 logging.basicConfig(
-    filename='ftp_download.log',
+    filename='klim4cast/ftp_download.log',
     level=logging.INFO,
     format='%(asctime)s - %(message)s'
 )

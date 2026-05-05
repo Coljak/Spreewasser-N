@@ -1855,7 +1855,9 @@ class DWDGridToPointIndices(models.Model):
     
     @classmethod
     def get_lat_lon_dictionary(cls):
-        objs = cls.objects.filter(is_valid=True).values(
+        objs = cls.objects.filter(
+            is_valid=True,
+            ).values(
             'lat_idx',
             'lon_idx',
             'lat',
@@ -1879,6 +1881,45 @@ class DWDGridToPointIndices(models.Model):
             }
 
         return result
+
+
+    @classmethod
+    def get_forecast_lat_lon_dictionary(cls):
+        objs = cls.objects.filter(
+            is_valid=True,
+            ).values(
+            'lat_idx',
+            'lon_idx',
+            'forecast_lat_idx',
+            'forecast_lon_idx',
+        )
+
+        result = {}
+
+        for obj in objs:
+
+            if (obj['forecast_lat_idx'], obj['forecast_lon_idx']) not in result:
+                result[(obj['forecast_lat_idx'], obj['forecast_lon_idx'])] = []
+                
+            result[(obj['forecast_lat_idx'], obj['forecast_lon_idx'])].append((obj['lat_idx'], obj['lon_idx']))
+
+        return result
+    
+
+    @classmethod
+    def get_forecast_index_touples(cls):
+        """
+        Returns a list of tuples of the form (forecast_lat_idx, forecast_lon_idx) for all valid points in the DWD grid.
+        """
+        return cls.objects.filter(
+                is_valid=True,
+                forecast_lat_idx__isnull=False,
+                forecast_lon_idx__isnull=False
+                ).values_list(
+                'forecast_lat_idx',
+                'forecast_lon_idx'
+                ).distinct()
+        
 
     
     @classmethod

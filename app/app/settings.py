@@ -133,7 +133,7 @@ DB_HOST = os.environ.get('DB_HOST')
 DB_NAME = os.environ.get('DB_NAME')
 DB_USER = os.environ.get('DB_USER')
 DB_PASS = os.environ.get('DB_PASS')
-DB_PORT = os.environ.get('DB_PORT', '5432')
+DB_PORT = int(os.environ.get('DB_PORT', '5432'))
 
 DATABASES = {
     'default': {
@@ -167,7 +167,7 @@ CLIM4CAST_NETCDF_DIR = os.path.join(CLIM4CAST_DATA_DIR, 'netcdf')
 
 CLIM4CAST_FTP_SERVER = os.environ.get('CLIM4CAST_FTP_SERVER')
 CLIM4CAST_SFTP_USER = os.environ.get('CLIM4CAST_SFTP_USER')
-CLIM4CAST_SFTP_PORT = os.environ.get('CLIM4CAST_SFTP_PORT')
+CLIM4CAST_SFTP_PORT = int(os.environ.get('CLIM4CAST_SFTP_PORT', '22'))
 CLIM4CAST_SFTP_PASSWORD = os.environ.get('CLIM4CAST_SFTP_PASSWORD')
 
 # django app toolbox

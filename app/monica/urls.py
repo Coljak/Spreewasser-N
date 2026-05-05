@@ -38,8 +38,8 @@ urlpatterns = [
     
     path('run-simulation/', views.run_simulation, name='run_simulation'),
     path('download_irrigation_csv/', views.download_irrigation_csv, name='download_irrigation_csv'),
-
-    path('model-test/', views.monica_run_over_germany, name='model_test'),
+    
+    path(('monica_run_over_germany/'), views.monica_run_over_germany, name='monica_run_over_germany'),
 ]
 
 

@@ -22,6 +22,7 @@ import requests
 
 from . import forms
 from . import models
+import pandas as pd
 from monica.utils import save_monica_project, climate_store
 
 from monica import forms as monica_forms
@@ -34,17 +35,20 @@ import xmltodict
 from datetime import datetime, timedelta, date
 import copy
 import xarray as xr
-
+from monica.utils.monica_vars_to_name import monica_vars_de
 import time
 
 
 def drought_monitor(request):
     nc = xr.open_dataset('/app_data/monica/germany/monica_results.nc')
     vars = list(nc.data_vars.keys())
-    print("vars:", vars)
+    vars_de = [{'key': var, 'attribute': monica_vars_de.get(var, var)} for var in vars]
+    start = pd.to_datetime(nc.time[0].values)
+    end = pd.to_datetime(nc.time[-1].values)
+    
+    print("vars:", vars_de)
 
-    return render(request, 'swn/drought_monitor.html', {'variables': vars})
-
+    return render(request, 'swn/drought_monitor.html', {'variables': vars_de})
 
 
 def get_soil_profile(request):

@@ -32,7 +32,7 @@
 
         <select id='netcdfVariableSelector' class="form-select" aria-label="netcdfVariableSelector-label">
             {% for var in variables %}
-                <option value="{{ var }}">{{ var }}</option>
+                <option value="{{ var.key }}">{{ var.attribute }}</option>
             {% endfor %}
         </select>
 

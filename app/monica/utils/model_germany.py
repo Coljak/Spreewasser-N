@@ -21,7 +21,7 @@ import time
 BATCH_SIZE = 150 # batches for monica runs, probably best between 100-300
 
 PARAMS = ["Yield", "LAI"] + [f"Mois_{i}" for i in range(1, 21)] + ["Mois_AVG"]
-EVENTS = ["daily", ["Yield","LAI",["Mois",[1, 20, "AVG"]], ]]
+EVENTS = ["daily", ["Yield","LAI", "AbBiom", "PASW", ["Mois",[1, 3, "AVG"], ["Mois",[4, 6, "AVG"], ["Mois",[5, 9, "AVG"]], ]]
 SCENARIO = monica_constants.SCENARIOS[0]
 
 def doy_to_iso(doy):

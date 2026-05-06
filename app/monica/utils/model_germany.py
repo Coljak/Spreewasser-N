@@ -280,9 +280,6 @@ def model_germany(scenario=SCENARIO):
 
 
         # --- Extract forecast ONCE ---
-        # forecast_data = forecast_subset.isel(lat=f_lat, lon=f_lon)
-
-        # Convert once per forecast cell
         forecast_dict = {
             key: forecast_np[val][:, f_lat, f_lon]  # keep as numpy array!
             for key, val in monica_constants.CLIMATE_VARIABLES.items()        }
@@ -294,10 +291,6 @@ def model_germany(scenario=SCENARIO):
                 # print(f'Skipping cell at lat_idx {lat_idx}, lon_idx {lon_idx} due to missing data')
                 continue
 
-            # hindcast_data = hindcast_subset.isel(lat=lat_idx, lon=lon_idx)
-
-            # same here: keep numpy arrays
-            
             climate_data = {
                 key: np.concatenate([
                     hindcast_np[val][:, lat_idx, lon_idx],
@@ -305,8 +298,6 @@ def model_germany(scenario=SCENARIO):
                 ]).tolist()  # convert to list for JSON serialization
                 for key, val in monica_constants.CLIMATE_VARIABLES.items()
             }
-            
- 
             
             buek_id = cell[0].astype(int)
             altitude = cell[1]
@@ -323,7 +314,7 @@ def model_germany(scenario=SCENARIO):
                 "Latitude": indices_dict['lat'],
                 "Slope": slope,
                 "HeightNN": [altitude, 'm'],
-                # TODO: get N-deposition!!!!!
+                # TODO: get N-deposition!!!!!?
                 "NDeposition": [10, 'kg N ha-1 y-1'],
                 "SoilProfileParameters": soil_profile,
             }

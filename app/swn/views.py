@@ -33,8 +33,17 @@ from buek.views import get_recommended_soil_profile
 import xmltodict
 from datetime import datetime, timedelta, date
 import copy
+import xarray as xr
 
 import time
+
+
+def drought_monitor(request):
+    nc = xr.open_dataset('/app_data/monica/germany/monica_results.nc')
+    vars = list(nc.data_vars.keys())
+    print("vars:", vars)
+
+    return render(request, 'swn/drought_monitor.html', {'variables': vars})
 
 
 

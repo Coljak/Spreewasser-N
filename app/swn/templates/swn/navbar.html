@@ -9,6 +9,7 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'swn:thredds-catalog' %}">Thredds catalog</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'swn:bootstrap' %}">Bootstrap</a></li>
         {% endif %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'swn:drought_monitor' %}">Dürremonitor</a></li>
         {% if user.is_authenticated  %}    
         {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'swn:user_dashboard' %}">Spreewasser:N Tools</a></li> {% endcomment %}
         {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:toolbox_dashboard' %}">Toolbox</a></li> {% endcomment %}
@@ -16,8 +17,8 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'monica:monica_model' %}">Monica</a></li>
         
           <li class="nav-item"><a class="nav-link" href="{% url 'toolbox:toolbox_dashboard' %}">Toolbox</a></li>
-          {% endif %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'api-docs' %}" target="_blank">API</a></li>
+        {% endif %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'api-docs' %}" target="_blank">API</a></li>
 
         
         

@@ -16,6 +16,7 @@ urlpatterns = [
     path('favicon.ico', views.favicon_view, name='favicon'),
     #user related paths
     path('sign-up/', views.sign_up, name='sign_up'),
+    path('drought-monitor/', views.drought_monitor, name="drought_monitor"),
     path('drought/', views.swn_dashboard, name='swn_dashboard'),
     path('drought/get-rotation-forms/', views.get_hidden_rotation_forms, name='get-rotation-forms'),
     path('drought/get-tab-rotation/', views.get_tab_rotation, name='get-tab-rotation'),

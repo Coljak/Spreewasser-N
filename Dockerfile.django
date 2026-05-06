@@ -62,8 +62,9 @@ RUN python3 -m venv /py && \
 RUN adduser --disabled-password --no-create-home user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
-USER user
 RUN chown -R user:user /app
 RUN chown -R user:user /scripts
+USER user
+
 
 CMD ["entrypoint.sh"]

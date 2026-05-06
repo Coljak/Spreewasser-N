@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile.django
       args:
         DEV: "false" # CHANGE to trace errors on dev server
-    command: entrypoint.prod.sh
+    # command: entrypoint.prod.sh
     volumes:
       - app_data:/app_data
       - static_data:/vol/web/static
@@ -57,6 +57,7 @@ services:
       - media_data:/vol/web/media
     depends_on:
       - app
+    container_name: swn_nginx
     networks:
       - swn_network
 

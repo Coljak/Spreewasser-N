@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-if ["$DEV " = "true"]; then
+if [ "$DEV" = "true" ]; then
   echo "Running in development mode"
   exec /scripts/entrypoint.dev.sh
 else

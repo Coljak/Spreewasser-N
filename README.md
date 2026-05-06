@@ -65,8 +65,20 @@ set DJANGO_DEBUG: 0 for production, 1 for debugging.
 
 ```shell
 cd Spreewasser-N
+```
+
+For development
+```shell
 docker-compose build 
 ```
+
+For production (you may have to run with sudo)
+```shell
+docker compose -f docker-compose.yml -f docker-compose.prod.yml build 
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up
+```
+
+
 ### 3. Start containers
 ### 4. Database
 First you have to setup the django database. Open the terminal in the django container:

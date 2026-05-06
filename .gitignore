@@ -178,6 +178,8 @@ geoserver/data/security/
 # GeoServer data directories to ignore
 geoserver/data/logs/
 geoserver/data/security/
+*.aux.xml
+
 
 # local files and folders for data import 
 raster_polygons.geojson

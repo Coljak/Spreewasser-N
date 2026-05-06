@@ -45,11 +45,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-hl9ukq&o_m6c&^
 if DEBUG == True:
     ALLOWED_HOSTS = ['10.10.88.183', 'srv-pb4-spreedev.zalf.de', '127.0.0.1', 'localhost' ]
 else:
-    ALLOWED_HOSTS = ['srv-pb4-spreedev.zalf.de', 'klima-hub.zalf.de']
+    ALLOWED_HOSTS = ['klima-hub.zalf.de', '10.11.10.39', ]
 
-ALLOWED_HOSTS_ENV = os.environ.get('DJANGO_ALLOWED_HOSTS')
-if ALLOWED_HOSTS_ENV:
-    ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
 
 
 # Application definition

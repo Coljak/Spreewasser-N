@@ -380,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $('.input-daterange').datepicker('destroy');
         netcdfVariableSelector.innerHTML = '';
 
-        const dataset = monica_results.nc; // datasetSelector.value;
+        const dataset = 'monica_results.nc'; // datasetSelector.value;
         console.log('dataset', dataset);
         fetch(`/klim4cast/get_ncml_metadata/${dataset}`)
             .then(response => response.text())

@@ -48,7 +48,8 @@ services:
       - swn_network
 
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./nginx
     ports:
       - 80:80
     volumes:

@@ -40,6 +40,12 @@ top: calc(var(--avatar-size) / 4); /* 25% of parent */
   text-align: center;
 }
 
+.background-image-section {
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+}
+
 
 /* Make the control look like a Bootstrap input */
 .bootstrap-vs .vscomp-option {

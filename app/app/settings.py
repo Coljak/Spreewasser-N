@@ -14,7 +14,8 @@ import os
 from pathlib import Path
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(int(os.environ.get('DJANGO_DEBUG', 0)))
+# DEBUG = bool(int(os.environ.get('DJANGO_DEBUG', 1)))
+DEBUG = True
 if DEBUG:
     DEBUG_TOOLBAR_CONFIG = {
         "SHOW_SQL": False,
@@ -256,13 +257,20 @@ SASS_PROCESSOR_OPTIONS = {
 }
 
 
+
 if DEBUG:
-    STATIC_ROOT = BASE_DIR / "staticfiles"
+    
+    # STATIC_ROOT = None
     MEDIA_ROOT = BASE_DIR / "media"
 else:
-    STATIC_ROOT = "/vol/web/static"
-    MEDIA_ROOT = "/vol/web/media"
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+    MEDIA_ROOT = BASE_DIR / "media"
+    # STATIC_ROOT = "/vol/web/static"
+    # MEDIA_ROOT = "/vol/web/media"
 
+
+
+    
 LOGIN_URL = 'login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'

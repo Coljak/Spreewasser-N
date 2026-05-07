@@ -40,10 +40,61 @@ top: calc(var(--avatar-size) / 4); /* 25% of parent */
   text-align: center;
 }
 
-.background-image-section {
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+.homepage-hero {
+    position: relative;
+
+    min-height: 100vh;
+
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
+
+    overflow: hidden;
+}
+
+.hero-overlay {
     min-height: 100vh;
+
+    /* background: rgba(0,0,0,0.45); */
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding-top: 100px;
+    padding-bottom: 100px;
+}
+
+.hero-content {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.homepage-card .card{
+    border-radius: 1rem;
+    backdrop-filter: blur(5px);
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+}
+
+.homepage-footer {
+    position: absolute;
+
+    bottom: 0;
+
+    width: 100%;
+
+    background: rgba(255,255,255,1);
+
+    padding: 1rem;
 }
 
 

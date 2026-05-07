@@ -1,63 +1,137 @@
 {% extends "swn/base.html" %}
-
 {% load static %}
 
 {% block body_block %}
-<div class="container">
-    <div class="">
+
+<section
+  class="homepage-hero"
+  style="background-image: url('{% static "swn/images/titelbild_altdoebern_mit_logo_2.jpg" %}');"
+>
+
+  <div class="hero-overlay">
+
+    <div class="container">
+
+      <div class="hero-content text-center text-white">
+
+        <h1 class="display-3 fw-bold mb-4">
+          SpreeWasser:N
+        </h1>
+
+        <p class="lead mb-5">
+          Innovative Werkzeuge für Dürremanagement und Wasser-Governance.
+        </p>
+
         
-        <h1 class="swn-logo py-5">SpreeWasser:N</h1>
-        <!-- Carousel -->
-        <div class="container-md pb-4">
-            <div class="background-image-section" style="background-image: url('{% static 'swn/images/titelbild_altdoebern_mit_logo_2.jpg' %}');">
-                <div class="d-flex flex-column align-items-center justify-content-center text-white py-5" style="background-color: rgba(0, 0, 0, 0.5);">
-                    <h2 class="mb-4">Willkommen bei SpreeWasser:N</h2>
-                    <p class="text-center mb-4">SpreeWasser:N ist eine innovative Toolbox, die Landwirten, Forschern und Entscheidungsträgern dabei hilft, die Auswirkungen von Dürren auf die landwirtschaftliche Produktion zu verstehen und zu bewältigen. Unsere Toolbox bietet eine Vielzahl von Funktionen, darunter ein Dürre-Frühwarnsystem, das auf einer quantitativen Analyse von Wetterextremen und saisonalen Vorhersagen basiert, um eine effektive Vorhersage von Dürreereignissen zu ermöglichen. Mit SpreeWasser:N können Sie sich besser auf Dürreereignisse vorbereiten und somit Schäden an Ihren Kulturen minimieren.</p>
-                    <a href="{% url 'swn:drought_monitor' %}" class="btn btn-primary btn-lg">Zum Dürremonitor</a>
-                </div>
-            </div>
-        </div>
-        <img class="d-block w-100" src="{% static 'img/2023-04-26_Dueereindex_2_h.png' %}" alt="Dürreindex">
-            
-     
 
-        <!-- Keypoints as accordion -->
-        <div class="accordion pt-4" id="accordionExample">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="headingOne">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                        <h2>Grundwasser Toolbox</h2>
-                    </button>
-                </h2>
-                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                        <p class="text-justify">Um die Toolbox nutzen zu können, müssen Sie sich <a href="{% url 'swn:sign_up' %}">registrieren</a> und <a href="{% url 'swn:login' %}">anmelden</a>.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="headingTwo">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                        <h2>Dürrefrühwarnsystem</h2>
-                    </button>
-                </h2>
-                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                        <p class="text-justify">Um die Toolbox nutzen zu können, müssen Sie sich <a href="{% url 'swn:sign_up' %}">registrieren</a> und <a href="{% url 'swn:login' %}">anmelden</a>.</p>
-                        <p class="text-justify">In Zeiten von Klimawandel und steigenden Temperaturen ist es wichtiger denn je, die Auswirkungen von Dürren auf die landwirtschaftliche Produktion zu verstehen. Eine Vorhersage und frühzeitige Erkennung von Dürreereignissen kann Landwirten helfen, sich besser auf solche Phänomene vorzubereiten und somit Schäden an ihren Kulturen zu minimieren. Das Projekt soll ein Dürre-Frühwarnsystem entwickeln, das auf einer quantitativen Analyse von Wetterextremen und saisonalen Vorhersagen basiert, um eine effektive Vorhersage von Dürreereignissen zu ermöglichen.</p>
-                        <p class="text-justify">Die Ableitung von Grenzwerten für das Eintreten einer Dürre, insbesondere in Bezug auf die landwirtschaftlichen Kulturen, ist eine komplexe Aufgabe, die ein tiefes Verständnis von agro-meteorologischen Zusammenhängen erfordert. Auch die Quantifizierung des Einflusses saisonaler Extreme und kleinskaliger klimatischer Wetterstrukturen auf die Wahrscheinlichkeit und Intensität von Trockenperioden und Dürren ist eine Herausforderung. Zudem müssen die Vorhersagehorizonte und die Eignung von saisonalen Witterungsvorhersagen für die Vorhersage von Dürren genau bewertet werden, um ein zuverlässiges Frühwarnsystem zu entwickeln.</p>
-                    </div>
-                </div>
-            </div>
+        <!-- Cards -->
+        <div class="row g-4 justify-content-center">
+
+          <div class="col-lg-5">
+            <a href="{% url 'toolbox:toolbox_dashboard' %}" class="card homepage-card h-100 shadow-lg border-0 text-decoration-none">
+              <div class="card-body p-4">
+                <h3 class="card-title mb-3">
+                  Grundwasser Toolbox
+                </h3>
+
+                <p>
+                  Registrierung und Werkzeuge für Analyse und Monitoring.
+                </p>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-lg-5">
+            <a href="{% url 'swn:swn_dashboard' %}" class="card homepage-card h-100 shadow-lg border-0 text-decoration-none">
+              <div class="card-body p-4">
+                <h3 class="card-title mb-3">
+                  Dürrefrühwarnsystem
+                </h3>
+
+                <p>
+                  Saisonale Vorhersagen und quantitative Analyse von Dürreereignissen.
+                </p>
+              </div>
+            </a>
+          </div>
 
         </div>
 
-      
-    
-        
-    
+        <div class="row g-4 justify-content-center py-4">
 
+          <div class="col-lg-5">
+            <a href="{% url 'swn:drought_monitor' %}" class="card homepage-card h-100 shadow-lg border-0 text-decoration-none">
 
-     
+                <div class="card-body p-4">
 
-{% endblock%}
+                    <h3 class="card-title mb-3">
+                        Dürremonitor
+                    </h3>
+
+                    <p>
+                        Registrierung und Werkzeuge für Analyse und Monitoring.
+                    </p>
+
+                </div>
+
+            </a>
+          </div>
+
+          <div class="col-lg-5">
+            <a href="{% url 'klim4cast:timelapse-page' %}" class="card homepage-card h-100 shadow-lg border-0 text-decoration-none">
+
+                <div class="card-body p-4">
+
+                    <h3 class="card-title mb-3">
+                        Clim4Cast
+                    </h3>
+
+                    <p>
+                        Clim4Cast in Kürze.
+                    </p>
+
+                </div>
+
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="homepage-footer">
+    <div class="container-fluid">
+
+      <div class="d-flex justify-content-center align-items-center flex-wrap gap-4">
+
+        <a href="https://www.zalf.de" target="_blank">
+          <img src="{% static 'img/zalf.jpeg' %}" height="30">
+        </a>
+
+        <a href="https://www.tu.berlin/" target="_blank">
+          <img src="{% static 'img/tub.jpeg' %}" height="30">
+        </a>
+
+        <a href="https://www.fona.de/de/" target="_blank">
+          <img src="{% static 'img/BMBF_FONA_Logo_de.svg' %}" height="30">
+        </a>
+
+        <a href="https://www.bmbf-wax.de/" target="_blank">
+          <img src="{% static 'img/WaX_Logo_RGB.png' %}" height="30">
+        </a>
+
+        <a href="https://www.bmftr.bund.de/" target="_blank">
+          <img src="{% static 'img/BMFTR_de.jpg' %}" height="50">
+        </a>
+
+      </div>
+
+    </div>
+  </footer>
+
+</section>
+
+{% endblock %}

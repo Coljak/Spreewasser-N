@@ -23,16 +23,7 @@ services:
     volumes:
       - ./app:/app
       - ./app_data:/app_data
-      # - ./thredds_data/data:/app/thredds_data
-    # command: entrypoint.dev.sh
-      # sh -c "python3 manage.py wait_for_db &&
-      # python3 manage.py migrate &&
-      # echo '>>> MIGRATE DONE' &&
-      # python3 manage.py collectstatic --noinput &&
-      # echo '>>> COLLECTSTATIC DONE' &&
-      # python3 manage.py runserver 0.0.0.0:8000"
 
-      # python3 manage.py runserver 0.0.0.0:8000 --reload --watcher polling  for file changes in docker
         
     environment:
       DJANGO_DEBUG: 1 # TODO set via env var in production

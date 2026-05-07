@@ -1152,13 +1152,15 @@ def save_soil_profile(request):
         return JsonResponse({'message': {'success': False, 'message': 'Invalid request method'}})
     
 
-@login_required
+
 def monica_model(request):
     """
     Sets up the GUI with all forms and data required for the MONICA model.
     This view is used for the MONICA page and also the SpreeWasser:N page.
     """
     user = request.user
+    if not user.is_authenticated:
+        return redirect('swn:login')
     print("monica views request.user", user)
     context = get_monica_forms(user)
 

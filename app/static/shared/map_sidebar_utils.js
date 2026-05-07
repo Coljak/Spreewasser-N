@@ -238,6 +238,7 @@ export function openUserFieldNameModal(layer, featureGroup) {
   modalEl.querySelector('#btnUserFieldSave').onclick = () => handleSaveUserField(layer, bootstrapModal, featureGroup);
   modalEl.querySelector('#btnUserFieldDismiss').onclick = () => dismissPolygon(layer, bootstrapModal, featureGroup);
   modalEl.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModal, featureGroup);
+  modalEl.querySelector('#fieldNameInput').onkeypress = (event) => {if (event.key === 'Enter') handleSaveUserField(layer, bootstrapModal, featureGroup)};
 
    // Reset alert box text when the modal is hidden
   modalEl.addEventListener('hidden.bs.modal', () => {

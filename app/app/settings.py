@@ -14,8 +14,8 @@ import os
 from pathlib import Path
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = bool(int(os.environ.get('DJANGO_DEBUG', 1)))
-DEBUG = True
+DEBUG = bool(int(os.environ.get('DJANGO_DEBUG', 1)))
+
 if DEBUG:
     DEBUG_TOOLBAR_CONFIG = {
         "SHOW_SQL": False,

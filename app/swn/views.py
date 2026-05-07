@@ -328,7 +328,7 @@ def swn_dashboard(request):
 
     data = {
             'default_project': default_project,
-            # 'state_county_district_form': state_county_district_form,
+            'state_county_district_form': state_county_district_form,
             'project_region': project_region,
             #MONICA FORMS
             'project_select_form': project_select_form,

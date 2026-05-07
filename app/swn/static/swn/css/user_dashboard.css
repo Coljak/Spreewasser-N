@@ -49,6 +49,10 @@
     border-radius: 2%;
   }
 
+  .sidebar-content {
+    margin: 1rem;
+  }
+
   .sidebar-content .accordion-button {
     background-color: var(--bs-secondary-bg-subtle);
     border: var(--bs-secondary) 2px solid;

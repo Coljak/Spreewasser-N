@@ -12,7 +12,7 @@
 {% endblock css %}
 
 {% block body_block %}
-<div class="content ">
+<div class="content main-content">
   <!-- Main panel container -->
   <div class="panel-container">
     <!-- Top panel (contains left and right panels) -->
@@ -35,12 +35,15 @@
     <div id="horizontalSplitter" class=" horizontal-splitter"></div>
 
     <!-- Bottom panel -->
-    <div class="panel-bottom py-2" id="bottomPanel">
-      <div class="d-flex ms-auto">
-        <button class="btn btn-outline-secondary btn-sm " id="toggleBottomFullscreen"><i class="bi bi-arrows-fullscreen justify-left"></i></button>
+    <div class="panel-bottom" id="bottomPanel">
+      <div class="mb-3 px-3">
+        <div class="d-flex ms-auto mx-3">
+          <button class="btn btn-outline-secondary btn-sm " id="toggleBottomFullscreen"><i class="bi bi-arrows-fullscreen justify-left"></i></button>
+        </div>
+      
+        {% block bottom_panel %}
+        {% endblock bottom_panel %}
       </div>
-      {% block bottom_panel %}
-      {% endblock bottom_panel %}
     </div>
   </div>
 </div>
@@ -49,11 +52,6 @@
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript" src="{% static 'vendor/resizable/jquery-resizable.js' %}"></script>
-{% comment %} <script src="https://rawgit.com/RickStrahl/jquery-resizable/master/src/jquery-resizable.js"></script> {% endcomment %}
-{% comment %} <script src="https://cdn.jsdelivr.net/gh/RickStrahl/jquery-resizable/dist/jquery-resizable.min.js"></script> {% endcomment %}
-
-
-
 
   <script type="text/javascript" src="{% static 'shared/three_split.js' %}"></script>
 {% endblock %}

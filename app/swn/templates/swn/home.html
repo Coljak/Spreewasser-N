@@ -10,13 +10,10 @@
 
   <div class="hero-overlay">
 
-    <div class="container">
+    {% comment %} <div class="container"> {% endcomment %}
 
       <div class="hero-content text-center text-white">
-
-        <h1 class="display-3 fw-bold mb-4">
-          SpreeWasser:N
-        </h1>
+        <h1 class="swn-logo mb-4">SpreeWasser:N</h1>
 
         <p class="lead mb-5">
           Innovative Werkzeuge für Dürremanagement und Wasser-Governance.
@@ -98,7 +95,7 @@
         </div>
 
       </div>
-    </div>
+    {% comment %} </div> {% endcomment %}
   </div>
 
   <!-- Footer -->
@@ -115,6 +112,10 @@
           <img src="{% static 'img/tub.jpeg' %}" height="30">
         </a>
 
+        <a href="https://www.sieker.de/" target="_blank">
+          <img src="{% static 'img/sieker_logo.png' %}" height="30">
+        </a>
+
         <a href="https://www.fona.de/de/" target="_blank">
           <img src="{% static 'img/BMBF_FONA_Logo_de.svg' %}" height="30">
         </a>
@@ -124,7 +125,7 @@
         </a>
 
         <a href="https://www.bmftr.bund.de/" target="_blank">
-          <img src="{% static 'img/BMFTR_de.jpg' %}" height="50">
+          <img src="{% static 'img/BMFTR.svg' %}" height="50">
         </a>
 
       </div>

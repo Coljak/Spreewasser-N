@@ -20,12 +20,14 @@
   <body>
     
     {% include 'swn/navbar.html' %}
+
     <div id="alert-box"></div>
     {% include 'swn/modal_interaction.html' %}
 
     
     {% block body_block %}
     {% endblock body_block %}
+
     <script type="text/javascript" src="{% static 'vendor/jquery/jquery-3.6.0.min.js' %}"></script>
       <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js' %}"></script>
     {% block javascript %}

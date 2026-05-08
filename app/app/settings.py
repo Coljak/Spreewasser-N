@@ -49,6 +49,9 @@ else:
     ALLOWED_HOSTS = ['klima-hub.zalf.de', '10.11.10.39', '127.0.0.1', 'localhost', 'srv-pb4-spreedev.zalf.de']
 
 
+CSRF_TRUSTED_ORIGINS = [
+    'http://srv-pb4-spreedev.zalf.de',
+    'http://klima-hub.zalf.de']
 
 # Application definition
 

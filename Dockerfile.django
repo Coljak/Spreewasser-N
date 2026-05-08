@@ -61,18 +61,18 @@ RUN python3 -m venv /py && \
 
 
 # Create a non-root user for security
-RUN adduser --disabled-password --no-create-home user
+# RUN adduser --disabled-password --no-create-home user
 # To stop matplotlib from trying to write to the home directory of the user 
-ENV MPLCONFIGDIR=/tmp/matplotlib
-RUN mkdir -p /tmp/matplotlib && chown -R user:user /tmp/matplotlib
-RUN mkdir -p /home/user && chown -R user:user /home/user
-ENV HOME=/home/user
+# ENV MPLCONFIGDIR=/tmp/matplotlib
+# RUN mkdir -p /tmp/matplotlib && chown -R user:user /tmp/matplotlib
+# RUN mkdir -p /home/user && chown -R user:user /home/user
+# ENV HOME=/home/user
 
 
-RUN chown -R user:user /vol /app /scripts
-RUN chmod -R 755 /vol/web
+# RUN chown -R user:user /vol /app /scripts
+# RUN chmod -R 755 /vol/web
 
-USER user
+# USER user
 
 
 CMD ["entrypoint.sh"]

@@ -13,6 +13,7 @@ services:
       - ./app_data:/app_data
 
     environment:
+      DEBUG: $(DJANGO_DEBUG) # TODO set via env var in production
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY} # TODO set via env var in production   
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS} # TODO set via env var in production
       DB_HOST: db

@@ -260,16 +260,10 @@ SASS_PROCESSOR_OPTIONS = {
 }
 
 
-
+STATIC_ROOT = "/vol/web/static"
+MEDIA_ROOT = "/vol/web/media"
 if DEBUG:
-    
-    # STATIC_ROOT = None
     MEDIA_ROOT = BASE_DIR / "media"
-else:
-    # STATIC_ROOT = BASE_DIR / "staticfiles"
-    # MEDIA_ROOT = BASE_DIR / "media"
-    STATIC_ROOT = "/vol/web/static"
-    MEDIA_ROOT = "/vol/web/media"
 
 
 

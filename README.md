@@ -75,7 +75,8 @@ cd Spreewasser-N
 
 For development
 ```shell
-docker-compose build 
+docker compose -f docker-compose.yml -f docker-compose.dev.yml build 
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
 For production (you may have to run with sudo)

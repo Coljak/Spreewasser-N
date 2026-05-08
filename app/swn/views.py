@@ -265,7 +265,7 @@ def sign_up(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('swn:swn_dashboard')
+            return redirect('swn:swn_index')
     else:
         form = forms.RegistrationForm()
 
@@ -276,9 +276,11 @@ def user_logout(request):
     logout(request)
     return HttpResponseRedirect(reverse('swn:swn_index'))
 
+
 def swn_dashboard(request):
-    print("Request.user", request.user)
     user = request.user
+    if not user.is_authenticated:
+        return redirect('swn:login')
     start = datetime.now()
     context = monica_views.get_monica_forms(user)
     first = datetime.now()
@@ -326,7 +328,7 @@ def swn_dashboard(request):
 
     data = {
             'default_project': default_project,
-            # 'state_county_district_form': state_county_district_form,
+            'state_county_district_form': state_county_district_form,
             'project_region': project_region,
             #MONICA FORMS
             'project_select_form': project_select_form,

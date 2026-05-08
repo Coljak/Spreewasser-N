@@ -238,6 +238,7 @@ export function openUserFieldNameModal(layer, featureGroup) {
   modalEl.querySelector('#btnUserFieldSave').onclick = () => handleSaveUserField(layer, bootstrapModal, featureGroup);
   modalEl.querySelector('#btnUserFieldDismiss').onclick = () => dismissPolygon(layer, bootstrapModal, featureGroup);
   modalEl.querySelector('#btnUserFieldDismissTop').onclick = () => dismissPolygon(layer, bootstrapModal, featureGroup);
+  modalEl.querySelector('#fieldNameInput').onkeypress = (event) => {if (event.key === 'Enter') handleSaveUserField(layer, bootstrapModal, featureGroup)};
 
    // Reset alert box text when the modal is hidden
   modalEl.addEventListener('hidden.bs.modal', () => {
@@ -703,9 +704,10 @@ $('#toggleBottomFullscreen').on('click', function () {
 
     if (isFullscreen) {
       // Exit fullscreen - restore layout
-      // $('.panel-top').css('height', '20%');
+      $('.panel-top').css('height', '50%');
       // $('.panel-left').css('visibility', 'visible');
-      $('#main-navbar').show();
+      // $('.panel-top').css('visibility', 'visible');
+      // $('#main-navbar').show();
       // $('.leaflet-control-container').show(); 
       $('#toggleBottomFullscreen').html('<i class="bi bi-arrows-fullscreen"></i>');
 
@@ -715,10 +717,10 @@ $('#toggleBottomFullscreen').on('click', function () {
 
     } else {
       // Enter fullscreen mode - shrink top, hide left
-      // $('.panel-top').css('height', '50%'); // or even '5%' if you want it smaller
-      // $('.panel-left').css('visibility', 'hidden');
+      $('.panel-top').css('height', '0%'); // or even '5%' if you want it smaller
+      // $('.panel-top').css('visibility', 'hidden');
             // hide the sidebar
-      $('#main-navbar').hide(); // hide the navbar
+      // $('#main-navbar').hide(); // hide the navbar
       // $('.leaflet-control-container').hide(); // hide Leaflet controls
 
 

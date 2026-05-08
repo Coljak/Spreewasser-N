@@ -1088,7 +1088,7 @@ def get_soil_profile_form(request):
     return JsonResponse({'message': {'success': True, 'html': html}})
 
 
-
+@login_required
 def save_soil_profile(request):
     """
     Save soil profile from the formset.
@@ -1152,13 +1152,15 @@ def save_soil_profile(request):
         return JsonResponse({'message': {'success': False, 'message': 'Invalid request method'}})
     
 
-@login_required
+
 def monica_model(request):
     """
     Sets up the GUI with all forms and data required for the MONICA model.
     This view is used for the MONICA page and also the SpreeWasser:N page.
     """
     user = request.user
+    if not user.is_authenticated:
+        return redirect('swn:login')
     print("monica views request.user", user)
     context = get_monica_forms(user)
 
@@ -1202,7 +1204,6 @@ def monica_model(request):
     }
     context.update(data)
     return render(request, 'monica/monica_model.html', context)
-
 
 
 def soil_profiles_from_polygon_ids(soil_profile_polygon_ids):
@@ -1410,6 +1411,8 @@ def run_monica_simulation(envs):
     print('json_msgs is a  ', type(json_msgs))
     return json_msgs
 
+
+@login_required
 def download_irrigation_csv(request):
     # TODO the irrigation_events.csv is currently not linked to the user!
     # TODO save irrigation_events with project in db!

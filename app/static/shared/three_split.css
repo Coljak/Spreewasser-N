@@ -11,13 +11,19 @@
     font-size: 1rem;
   }
 
+ 
+
   .content {
-    /* Full height minus navbar (56px) */
-    height: calc(100vh - 56px); 
-    padding: 20px;
+    height: calc(100vh - 56px);
+    /* padding-left: 20px;
+    padding-right: 20px; */
+
     display: flex;
     flex-direction: column;
-  }
+
+    box-sizing: border-box;
+    overflow: hidden;
+}
 
   /* Horizontal resizable panel */
   .panel-container {
@@ -37,13 +43,7 @@
     /* transition: height .5s ease; */
   }
 
-  /* .panel-bottom {  */
-    /* flex: 1 1 auto; */
-    /* height: 50%; Resizable */
-    /* min-height: 100px; */
-    /* overflow-x: auto; */
-    /* transition: height 0.5s ease; */
-  /* } */ 
+
 
   .panel-bottom {
     overflow-y: auto;       /* vertical scroll */
@@ -86,7 +86,7 @@
     flex: 0 0 auto;
     width: 30%; /* Initially 30% but resizable */
     min-width: 300px;
-    padding: 5px;
+    padding-right: 5px;
     overflow-y: auto; /* Scroll if content exceeds */
   }
 

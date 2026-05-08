@@ -1,33 +1,18 @@
 
 volumes:
-  raster_data:
+#   # raster_data:
   database_data:
+#   # app_data:
 services:
-  redis:
-    image: redis:latest
-    container_name: swn_redis
-    ports: 
-      - 6379:6379
-    networks:
-      - swn_network
-
   app:
     build: 
       context: .
       dockerfile: Dockerfile.django
-      # for DEV=false, expose port 80
-      
-    ports:
-      - 8000:8000 
-      - 8888:8888
+
     volumes:
-      - ./app:/app
       - ./app_data:/app_data
 
-        
     environment:
-      DJANGO_DEBUG: 1 # TODO set via env var in production
-
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY} # TODO set via env var in production   
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS} # TODO set via env var in production
       DB_HOST: db
@@ -40,7 +25,6 @@ services:
       GEOSERVER_PASS: ${GEOSERVER_PASS}
 
       THREDDS_URL: http://thredds:8080/thredds
-      # - NETCDF_DATA_PATH=/path/to/thredds_data
 
       DWD_HOST: ${DWD_HOST}
       DWD_USERNAME: ${DWD_USERNAME}
@@ -54,8 +38,6 @@ services:
       
       
     container_name: swn_geo_django
-    # if the container does not run, this line delays the runserver command
-    # entrypoint: ["sh", "-c", "sleep 2073600"]
     depends_on:
       - db
     networks:
@@ -64,17 +46,13 @@ services:
   # Postgres database
   db:
     image: postgis/postgis:14-3.3
-    volumes:
-    - ./database:/pg_data_2
+
     #user: 1000:1000 
     environment:
       POSTGRES_DB: postgis
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
-      PGDATA: /pg_data_2
 
-    ports:
-      - 5432:5432
     container_name: swn_postgis
     networks:
       - swn_network
@@ -86,7 +64,8 @@ services:
     container_name: swn_geoserver
     volumes:
       - ./geoserver/data:/opt/geoserver/data
-      - ./app/raster_data:/opt/geoserver/raster_data
+      # - ./app/raster_data:/opt/geoserver/raster_data
+      - ./app_data/toolbox:/opt/geoserver/raster_data
     environment:
       GEOSERVER_URL: geoserver
       GEOSERVER_ADMIN_USER: ${GEOSERVER_USER}
@@ -94,13 +73,17 @@ services:
       GEOSERVER_DATA_DIR: /opt/geoserver/data
       GEOSERVER_RASTER_DATA_DIR: /opt/geoserver/raster_data
       # - CATALINA_TMPDIR=/geoserver_data/data/work
-    ports:
-      - 8080:8080
+    
     depends_on:
       - db
     networks:
       - swn_network
 
+  redis:
+    image: redis:latest
+    container_name: swn_redis
+    networks:
+      - swn_network
 
   # thredds for sharing of netcdf data
   thredds:
@@ -116,9 +99,6 @@ services:
       # - ./thredds_data/data/DWD_Data:/usr/local/tomcat/content/thredds/public/data/DWD_Data
       - ./app_data/monica/netcdf_hindcast:/usr/local/tomcat/content/thredds/public/data/DWD_Data
 
-
-    ports:
-      - 8088:8080
     depends_on:
       - db
     networks:
@@ -136,57 +116,10 @@ services:
       - 6677  # monica_intern_in_port
       - 7777  # monica_consumer_port
       - 7788  # monica_intern_out_port
-    ports:
-      - 6666:6666
-      - 6677:6677
-      - 7777:7777
-      - 7788:7788
-    # entrypoint: ["sh", "-c", "sleep 2073600"]
     environment:
       - monica_proxy_out_mode=-prs
     networks:
       - swn_network
-
-  # redis:
-  #   image: redis:latest
-  #   container_name: swn_redis
-  #   ports: 
-  #     - 6379:6379
-  #   networks:
-  #     - swn_network
-  #   command: sh -c "apt-get update && apt-get install -y redis-tools && redis-server"
-
-  # celery-worker:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.django
-  #   command: celery -A app worker --loglevel=info
-  #   volumes:
-  #     - ./app:/app
-  #   depends_on:
-  #     - redis
-  #     - db
-  #   environment:
-  #     - CELERY_BROKER_URL=redis://redis:6379/0
-  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
-  #   networks:
-  #     - swn_network
-
-  # celery-beat:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.django
-  #   command: celery -A app beat --loglevel=info
-  #   volumes:
-  #     - ./app:/app
-  #   depends_on:
-  #     - redis
-  #     - db
-  #   environment:
-  #     - CELERY_BROKER_URL=redis://redis:6379/0
-  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
-  #   networks:
-  #     - swn_network
 
 
   # TODO Django Celery: https://www.youtube.com/watch?v=CWF-pTr1p68&list=PLOLrQ9Pn6cayGytG1fgUPEsUp3Onol8V7&index=5

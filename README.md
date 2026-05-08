@@ -23,6 +23,12 @@ Then clone the git repo into that folder:
 ```shell
 git clone https://github.com/ColjaK/Spreewasser-N.git
 ```
+Get the necessary data and paste the folder app_data into the directory Spreewasser-N.
+Get the database data and paste its folder into Spreewasser-N.
+
+```shell
+sudo chmod -R 777 ./app_data
+```
 
 Copy the .env to Spreewasser-N/.env or create that file:
 ```shell

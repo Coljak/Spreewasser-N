@@ -160,7 +160,7 @@ notes/
 model_exports/
 
 # Django stuff
-migrations/
+# migrations/
 
 #sass
 .sass-cache/

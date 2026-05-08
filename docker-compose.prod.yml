@@ -6,6 +6,7 @@ services:
   app:
    
     volumes:
+      - ./app/model_exports:/app/model_exports
       - ./app_data:/app_data
       - static_data:/vol/web/static
       - media_data:/vol/web/media

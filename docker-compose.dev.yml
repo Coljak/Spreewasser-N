@@ -9,8 +9,7 @@ services:
     volumes:
       - ./app:/app
       - ./app_data:/app_data   
-    environment:
-      DJANGO_DEBUG: 1 # TODO set via env var in production
+    command: ["entrypoint.dev.sh"]
 
 
   # Postgres database

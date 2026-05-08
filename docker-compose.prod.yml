@@ -10,6 +10,8 @@ services:
       - static_data:/vol/web/static
       - media_data:/vol/web/media
 
+    command: ["entrypoint.prod.sh"]
+
 
   # Postgres database
   db:

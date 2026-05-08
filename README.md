@@ -93,15 +93,6 @@ docker exec -it swn_geo_django bash
 ```
 !! If you want to transfer Monica project data, you have to do a dump via postgres. Create the new db via postgres and finally do a 'python manage.py migrate --fake-initial' !!
 
-Then in the open bash run the django migrations in the following order:
-```shell
-python manage.py makemigrations buek
-python manage.py makemigrations monica
-python manage.py makemigrations swn
-python manage.py makemigrations toolbox
-python manage.py makemigrations klim4cast
-python manage.py migrate
-```
 
 If you transfer Monica projects, it will cause problems due to a GenericForeignKey in the class MonicaSite. 
 Now the database is set up - you can connect to it from your localhost on port 5432.

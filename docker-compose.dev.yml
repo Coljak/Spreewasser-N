@@ -1,0 +1,30 @@
+volumes:
+  raster_data:
+  database_data:
+services:
+  app:
+    ports:
+      - 8000:8000 
+      - 8888:8888
+    volumes:
+      - ./app:/app
+      - ./app_data:/app_data   
+    command: ["entrypoint.dev.sh"]
+
+
+  # Postgres database
+  db:
+    volumes:
+      - ./database:/pg_data_2
+    ports:
+      - 5432:5432
+
+  geoserver:
+    ports:
+      - 8080:8080
+      
+
+  # thredds for sharing of netcdf data
+  thredds:
+    ports:
+      - 8088:8080

@@ -1,52 +1,25 @@
+volumes:
+  database_data:
+  static_data:
+  media_data:
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile.django
-      args:
-        DEV: "false" # CHANGE to trace errors on dev server
-    # command: entrypoint.prod.sh
+   
     volumes:
-      - app_data:/app_data
+      - ./app_data:/app_data
       - static_data:/vol/web/static
       - media_data:/vol/web/media
-    environment:
 
-      DJANGO_DEBUG: 0 # CHNAGE if you want to debug (1) on the dev server, else 0 for production
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY} # why this? isn't it rpetative?
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-
-      DB_HOST: db
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
-
-      GEOSERVER_URL: http://geoserver:8080/geoserver
-      GEOSERVER_USER: ${GEOSERVER_USER}
-      GEOSERVER_PASS: ${GEOSERVER_PASS}
-
-      THREDDS_URL: http://thredds:8080/thredds
-
-    depends_on:
-      - db
-    networks:
-      - swn_network
+    command: ["entrypoint.prod.sh"]
 
 
   # Postgres database
   db:
-    image: postgis/postgis:14-3.3
     volumes:
-    - database_data:/var/lib/postgresql/data # why this? whyshouldn_i it stay where it was? ./database:/pg_data_2
-
-    environment:
-      POSTGRES_DB: postgis
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
-
-    networks:
-      - swn_network
-
+    - database_data:/var/lib/postgresql/data 
+  geoserver:
+  redis:
+  thredds:
   nginx:
     build:
       context: ./nginx
@@ -62,11 +35,3 @@ services:
     networks:
       - swn_network
 
-networks:
-  swn_network:
-
-volumes:
-  app_data:
-  database_data:
-  static_data:
-  media_data:

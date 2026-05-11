@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from swn import models as swn_models
 # from swn import forms as swn_forms
 
@@ -10,7 +10,7 @@ from django.contrib.gis.geos import GEOSGeometry, LineString
 from .utils import publish_raster_on_geoserver
 
 from django.contrib.gis.db.models.functions import Distance
-from django.http import HttpResponse, redirect, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from django.utils import translation
 from django.template.loader import render_to_string

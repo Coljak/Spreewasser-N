@@ -51,7 +51,9 @@ else:
 
 CSRF_TRUSTED_ORIGINS = [
     'http://srv-pb4-spreedev.zalf.de',
-    'http://klima-hub.zalf.de']
+    'http://klima-hub.zalf.de',
+    'https://klima-hub.zalf.de',
+    ]
 
 # Application definition
 

@@ -179,7 +179,8 @@ CLIM4CAST_SFTP_PASSWORD = os.environ.get('CLIM4CAST_SFTP_PASSWORD')
 # django app toolbox
 TOOLBOX_DATA_DIR = os.path.join(APP_DATA_DIR, 'toolbox')
 TOOLBOX_RASTER_DATA_DIR = os.path.join(TOOLBOX_DATA_DIR, 'raster_data')
-TOOLBOX_RASTER_OUTPUT_DIR = os.path.join(TOOLBOX_DATA_DIR, 'raster_output')
+TOOLBOX_RASTER_STYLES_DIR = os.path.join(TOOLBOX_DATA_DIR, 'raster_styles')
+
 
 
 

@@ -1816,7 +1816,7 @@ def compute_suitability_from_tifs(suitability_dict, user):
     result_2d = np.where(np.isnan(result_2d), np.nan, np.clip(result_2d, 0, 100))
     result_2d_to_write = np.where(np.isnan(result_2d), FLOAT32_NODATA, result_2d).astype(np.float32)
 
-    with rasterio.open(f'{settings.TOOLBOX_RASTER_OUTPUT_DIR}/{user.id}_mar_result.tif', 'w', **mask_profile) as f:
+    with rasterio.open(f'{settings.TOOLBOX_RASTER_DATA_DIR}/{user.id}_mar_result.tif', 'w', **mask_profile) as f:
 
         f.write(result_2d_to_write.astype(np.float32),1)
 
@@ -1824,7 +1824,7 @@ def compute_suitability_from_tifs(suitability_dict, user):
     for key in suitability_dict:
         stack_to_write = np.where(np.isnan(stack[i]), FLOAT32_NODATA, stack[i]).astype(np.float32)
         print(i)
-        with rasterio.open(f'{settings.TOOLBOX_RASTER_OUTPUT_DIR}/{user.id}_weighted_stack_{key}.tif', 'w', **mask_profile) as f:
+        with rasterio.open(f'{settings.TOOLBOX_RASTER_DATA_DIR}/{user.id}_weighted_stack_{key}.tif', 'w', **mask_profile) as f:
 
             f.write(stack_to_write.astype(np.float32),1)
         i += 1
@@ -2415,7 +2415,7 @@ def download_toolbox_results(request):
                                 writer.writerow([row["date"], row["discharge_m3s"]])
                     
         case 'injection':
-            filename= f'{settings.TOOLBOX_RASTER_OUTPUT_DIR}/{request.user.id}_mar_result.tif'
+            filename= f'{settings.TOOLBOX_RASTER_DATA_DIR}/{request.user.id}_mar_result.tif'
             target_path = os.path.join(tmpdir, "mar_result.tif")
             # copy file into tmpdir
             shutil.copy(filename, target_path)

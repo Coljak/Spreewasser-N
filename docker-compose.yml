@@ -64,9 +64,10 @@ services:
     #user: "1000:1000"
     container_name: swn_geoserver
     volumes:
-      - ./geoserver/data:/opt/geoserver/data
+      # - ./geoserver/data:/opt/geoserver/data
       # - ./app/raster_data:/opt/geoserver/raster_data
-      - ./app_data/toolbox:/opt/geoserver/raster_data
+      - ./app_data/toolbox/raster_data:/opt/geoserver/data/raster_data
+      - ./app_data/toolbox/raster_styles:/opt/geoserver/data/raster_styles
     environment:
       GEOSERVER_ADMIN_USER: ${GEOSERVER_USER}
       GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_PASS}

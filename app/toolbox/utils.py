@@ -14,7 +14,7 @@ def get_bounds(qs, field):
 
 def publish_raster_on_geoserver(
         layer_name, 
-        path=settings.TOOLBOX_RASTER_OUTPUT_DIR, 
+        path=settings.TOOLBOX_RASTER_DATA_DIR, 
         workspace='spreewassern_raster', 
         style_name="style_raster_percent_sieker_2"
         ):

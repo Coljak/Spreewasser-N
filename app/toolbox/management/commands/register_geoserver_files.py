@@ -44,7 +44,7 @@ def publish_all(workspace='spreewassern_raster'):
             
             if item['style'] is not None:  
                 try:
-                    geo.upload_style(path=f'{settings.TOOLBOX_RASTER_DATA_DIR}/{item["style"]}.sld', workspace=workspace)
+                    geo.upload_style(path=f'{settings.TOOLBOX_RASTER_STYLES_DIR}/{item["style"]}.sld', workspace=workspace)
                 except Exception as e:
                     print(f"Error uploading style {item['style']}: {e}")
                 try:
@@ -71,7 +71,7 @@ def register_vector_files(workspace='spreewassern_vector', store_name='swn_featu
         geo.publish_featurestore(workspace=workspace, store_name=store_name, pg_table=item)
 
 def register_style_files(workspace='spreewassern_raster'):
-    sld_dir = settings.TOOLBOX_RASTER_DATA_DIR
+    sld_dir = settings.TOOLBOX_RASTER_STYLES_DIR
     for filename in os.listdir(sld_dir):
         if filename.endswith(".sld"):
             filepath = os.path.join(sld_dir, filename)

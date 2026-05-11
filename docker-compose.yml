@@ -68,7 +68,6 @@ services:
       # - ./app/raster_data:/opt/geoserver/raster_data
       - ./app_data/toolbox:/opt/geoserver/raster_data
     environment:
-      GEOSERVER_URL: geoserver
       GEOSERVER_ADMIN_USER: ${GEOSERVER_USER}
       GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_PASS}
       GEOSERVER_DATA_DIR: /opt/geoserver/data

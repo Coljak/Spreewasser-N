@@ -1,0 +1,10 @@
+{% extends "swn/base.html" %}
+{% load static %}
+
+{% block body_block %}
+
+    <div class="container">
+        {% include "drf_spectacular/swagger_ui.html" %}
+    </div>
+
+{% endblock %}

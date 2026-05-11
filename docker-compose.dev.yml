@@ -16,6 +16,8 @@ services:
   db:
     volumes:
       - ./database:/pg_data_2
+    environment:
+      PGDATA: /pg_data_2
     ports:
       - 5432:5432
 

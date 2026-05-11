@@ -94,13 +94,28 @@ docker exec -it swn_geo_django bash
 ```
 !! If you want to transfer Monica project data, you have to do a dump via postgres. Create the new db via postgres and finally do a 'python manage.py migrate --fake-initial' !!
 
-
+In dev mode:
 If you transfer Monica projects, it will cause problems due to a GenericForeignKey in the class MonicaSite. 
 Now the database is set up - you can connect to it from your localhost on port 5432.
 To import the database, point the management command to the folder holding the database as json files by:
 ```shell
 python manage.py db_to_disk --import-dir path/to/db_files
 ```
+
+For production copy the files into the directory app/model_imports.
+change the permissions of the model.jsons:
+```shell
+sudo docker exec -it swn_geo_django bash
+```
+inside the container do
+```shell
+chmod -R 777 app/model_imports
+```
+Then import the models
+```shell
+python manage.py db_to_disk --import-dir model_imports/
+```
+
 
 ### 5. Run management commands 
 For the manual import of data run

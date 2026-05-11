@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from swn import models as swn_models
 # from swn import forms as swn_forms
 
@@ -86,15 +86,11 @@ def create_point_feature_collection(queryset, epsg=4326):
 
 
 def toolbox_dashboard(request):
+    
     user = request.user
+    if not user.is_authenticated:
+        return redirect('swn:login')
     project_region = swn_models.ProjectRegion.objects.first().to_feature()
-
-    # outline_injection = models.OutlineInjection.objects.first().to_feature()
-
-    # outline_surface_water = models.OutlineSurfaceWater.objects.first().to_feature()
-
-    # outline_infiltration = models.OutlineInfiltration.objects.first().to_feature()
-
 
     counties_form = forms.PolygonSelectionForm(request.POST or None)
 
@@ -271,7 +267,8 @@ def get_field_project_modal(request, id):
 #         toolbox_projects = models.ToolboxProject.objects.filter(user=request.user)
 #         dropdown_list = [(project.id, project.name) for project in toolbox_projects]
 #     return JsonResponse({'options': dropdown_list})
-        
+
+@login_required 
 def load_toolbox_project_modal(request):
     # user_field = models.UserField.objects.get(pk=id)
     if request.method == 'POST':

@@ -49,6 +49,7 @@ body {
     overflow-x: hidden;
 }
 
+/* start page adjustments */
 .homepage-hero {
     min-height: calc(100vh - var(--bs-navbar-padding-y));
 
@@ -110,6 +111,24 @@ body {
     background: rgba(255,255,255,1);
     padding: 1rem;
 }
+
+/* SPINNERs */
+.spinner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0, 0, 0, 0.5);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 1000;
+}
+
 
 
 /* Make the control look like a Bootstrap input */

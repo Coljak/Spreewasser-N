@@ -1,7 +1,7 @@
 
 import {MonicaCalculation, MonicaProject, Rotation, Workstep } from '/static/monica/monica_model.js';
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, populateDropdown } from '/static/shared/utils.js';
-
+import { getOrCreateLegendList, htmlLegendPlugin } from '/static/vendor/chartjs/chartjs-html-legend.js';
 
 //TODO fix select dropdown for project. It does not load
 export async function loadProjectFromDB(project_id) {
@@ -330,14 +330,11 @@ export function createChartDataset() {
             }
         });
     });
-    minMaxDatasets['Mois'] = {'min': Infinity, 'max': -Infinity};
-    minMaxDatasets['SOC'] = {'min': Infinity, 'max': -Infinity};
-    minMaxDatasets['Irrig'] = {'min': Infinity, 'max': -Infinity};
-    minMaxDatasets['Mois']['min'] = Math.min(minMaxDatasets['Mois_1'].min, minMaxDatasets['Mois_2'].min, minMaxDatasets['Mois_3'].min);
+    minMaxDatasets['Mois'] = {'min': 0, 'max': -Infinity};
+    minMaxDatasets['SOC'] = {'min': 0, 'max': -Infinity};
+    minMaxDatasets['Irrig'] = {'min': 0, 'max': -Infinity};
     minMaxDatasets['Mois']['max'] = Math.max(minMaxDatasets['Mois_1'].max, minMaxDatasets['Mois_2'].max, minMaxDatasets['Mois_3'].max);
-    minMaxDatasets['SOC']['min'] = Math.min(minMaxDatasets['SOC_1'].min, minMaxDatasets['SOC_2'].min, minMaxDatasets['SOC_3'].min);
     minMaxDatasets['SOC']['max'] = Math.max(minMaxDatasets['SOC_1'].max, minMaxDatasets['SOC_2'].max, minMaxDatasets['SOC_3'].max);
-    minMaxDatasets['Irrig']['min'] = Math.min(Math.min(...listOfResults[0].daily.Precip), minMaxDatasets['Irrig']['min']);
     minMaxDatasets['Irrig']['max'] = Math.max(Math.max(...listOfResults[0].daily.Precip), minMaxDatasets['Irrig']['max']);
     console.log('minMaxDatasets', minMaxDatasets);
 
@@ -526,12 +523,13 @@ export function createChartDataset() {
             labels: dates,
             datasets: datasets,
         },
+        plugins: [htmlLegendPlugin],
         options: {
             scales: {
                 y1: {
                     type: 'linear',
                     position: 'right',
-                    title: 'Precipitation / Irrigation (mm)',
+                    title: { display: true, text: 'Precipitation / Irrigation (mm)' },
                     beginAtZero: true,
                     min: 0,
                     max: minMaxDatasets['Irrig'].max * 1.1,
@@ -539,7 +537,7 @@ export function createChartDataset() {
                 y2: {
                     type: 'linear',
                     position: 'left',
-                    title: 'Ertrag (t/ha)',
+                    title: { display: true, text: 'Ertrag (t/ha)' },
                     beginAtZero: true,
                     min: 0,
                     max: Math.ceil(minMaxDatasets['Yield'].max * 1.3),
@@ -547,7 +545,7 @@ export function createChartDataset() {
                 y3: {
                     type: 'linear',
                     position: 'right',
-                    title: 'Soil Moisture (%)',
+                    title: { display: true, text: 'Soil Moisture (%)' },
                     beginAtZero: true,
                     min: 0,
                     max: Math.ceil(minMaxDatasets['Mois'].max * 1.1),
@@ -555,7 +553,7 @@ export function createChartDataset() {
                 y4: {
                     type: 'linear',
                     position: 'left',
-                    title: 'pflanzenverfügbares Wasser',
+                    title: { display: true, text: 'Pflanzenverfügbares Wasser' },
                     beginAtZero: true,
                     min: 0,
                     max: Math.ceil(minMaxDatasets['PASW_AVG'].max * 1.1),
@@ -563,7 +561,7 @@ export function createChartDataset() {
                 y5: {
                     type: 'linear',
                     position: 'left',
-                    title: 'Biomasse (t/ha)',
+                    title: { display: true, text: 'Biomasse (t/ha)' },
                     beginAtZero: true,
                     min: 0,
                     max: Math.ceil(minMaxDatasets['AbBiom'].max * 1.1),
@@ -578,14 +576,24 @@ export function createChartDataset() {
             maintainAspectRatio: false,
             animation: false,
             plugins: {
-                // title: {
-                //     display: true,
-                //     text: 'Custom Chart Title'
-                // },
+                htmlLegend: {
+                    containerID: 'chartLegend',
+                },
                 legend: {
-                    position: 'right'
+                    display: false 
+                },
+                zoom: {
+                    zoom: {
+                    wheel: {
+                        enabled: true,
+                    },
+                    pinch: {
+                        enabled: true
+                    },
+                    mode: 'x',
+                    }
                 }
-            }
+            },    
         },
         
     });
@@ -1798,6 +1806,9 @@ export function addMonicaEvents() {
     $('#runSimulationButton').on('click', () => {
         const project = MonicaProject.loadFromLocalStorage();
         console.log('runSimulationButton clicked');
+        $('.nav-link.monica').removeClass('active');
+        $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
+        
         // TODO should be obsolete
         try {
             project.longitude = $('#id_longitude').val();
@@ -1818,6 +1829,9 @@ export function addMonicaEvents() {
 
 function runSimulation(monicaProject) {   
     console.log('runSimulation', monicaProject);
+
+    const spinner = $('#tabResultOverlay');
+    spinner.removeClass('d-none');
     fetch(runSimulationUrl, {
         method: 'POST',
         body: JSON.stringify(monicaProject),
@@ -1834,9 +1848,7 @@ function runSimulation(monicaProject) {
             $('#runSimulationButton').prop('disabled', true);
             $('#runSimulationButton').text('...Simulation running');
             // Remove 'active' class from all nav links
-            $('.nav-link.monica').removeClass('active');
-
-            $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
+            
 
             let listOfResults = data.message.message
             console.log('ListofResults: ', data);
@@ -1852,9 +1864,10 @@ function runSimulation(monicaProject) {
             $('#runSimulationButton').text('Simulation starten');
         }    
     })
-    .then(() => {
+    .finally(() => {
         //TODO: check if this is needed
-        $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
+        spinner.addClass('d-none');
+        $('#downloadTab').removeClass('disabled');
     });
 };
 

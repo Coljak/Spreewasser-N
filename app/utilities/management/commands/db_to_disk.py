@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 
-BATCH_SIZE = 1000
+BATCH_SIZE = 10000
 EXPORT_PART_SIZE = 500_000
 
 

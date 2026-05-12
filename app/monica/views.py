@@ -1183,6 +1183,7 @@ def monica_model(request):
     soil_temperature_module_select_form = forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
     user_soil_transport_parameters_select_form = forms.UserSoilTransportParametersInstanceSelectionForm(user=user)
 
+    monica_result_download_form = forms.MonicaResultDownloadForm()
 
     data = {
         'default_project': default_project,
@@ -1201,6 +1202,8 @@ def monica_model(request):
         'user_soil_organic_select_form': user_soil_organic_select_form,
         'soil_temperature_module_selection_form': soil_temperature_module_select_form, 
         'user_soil_transport_parameters_selection_form': user_soil_transport_parameters_select_form,
+
+        'monica_result_download_form': monica_result_download_form,
     }
     context.update(data)
     return render(request, 'monica/monica_model.html', context)

@@ -68,3 +68,19 @@ def render_tab_result(context):
 
     return context
 
+@register.inclusion_tag('monica/monica_model_tab_download.html', takes_context=True)
+def render_tab_download(
+    context, 
+    monica_result_download_form
+    ):
+    """
+    Render the 'monica/monica_model_tab_download.html' template.
+    """
+    request = context.get('request')
+    context = {
+        'request': request,
+        'monica_result_download_form': monica_result_download_form,
+    }
+
+    return context
+

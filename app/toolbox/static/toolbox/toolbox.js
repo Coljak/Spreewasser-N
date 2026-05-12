@@ -11,6 +11,7 @@ import {Layers} from '/static/toolbox/layers.js';
 import {geoserverLayers} from '/static/toolbox/geoserver_layers.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { dataTableGerman } from '/static/toolbox/dataTable_german.js'
+import { getOrCreateLegendList, htmlLegendPlugin } from '/static/vendor/chartjs/chartjs-html-legend.js';
 
 // all dataTypes mapped to their ProjectClass
 const projectClasses = {
@@ -138,31 +139,46 @@ function getWaterLevelTimeseries(waterLevelId) {
             spinner.classList.add('d-none');
 
             canvas.chart = new Chart(ctx, {
-            type: 'bar',
-            backgroundColor: 'rgb(54, 162, 235 )',
-            data: {
-                datasets: [{
-                    label: 'Wasserstand (cm)',
-                    data: data.chart_data
-                }]
-            },
-            options: {
-                responsive: true,
-                // aspectRation:3,
-                maintainAspectRatio: false,
-                scales: {
-                x: {
-                    type: 'time',
-                    adapters: { date: { locale: deLocale } },
-                    time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
-                    title: { display: true, text: 'Datum' }
+                type: 'bar',
+                backgroundColor: 'rgb(54, 162, 235 )',
+                data: {
+                    datasets: [{
+                        label: 'Wasserstand (cm)',
+                        data: data.chart_data
+                    }]
                 },
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Wasserstand (cm)' }
+                plugins: [htmlLegendPlugin],
+                options: {
+                    responsive: true,
+                    // aspectRation:3,
+                    maintainAspectRatio: false,
+                    scales: {
+                    x: {
+                        type: 'time',
+                        adapters: { date: { locale: deLocale } },
+                        time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
+                        title: { display: true, text: 'Datum' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Wasserstand (cm)' }
+                    }
+                    },
+                    plugins: {
+                        
+                        zoom: {
+                            zoom: {
+                            wheel: {
+                                enabled: true,
+                            },
+                            pinch: {
+                                enabled: true
+                            },
+                            mode: 'x',
+                            }
+                        }
+                    }
                 }
-                }
-            }
             })
         });
     } else return;
@@ -1523,72 +1539,6 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
         const deLocale = dateFns.locale?.de;
 
 
-        // let inletVolumeChart = new Chart(ctx, {
-        //   type: 'bar',
-        //   data: { 
-        //     datasets: [{ 
-        //       label: 'Abfluss (m³/s)', 
-        //       data: chartData ,
-        //       backgroundColor: 'rgb(54, 162, 235 )',   // DodgerBlue, fully opaque
-        //       borderColor: 'rgb(54, 162, 235 )',
-        //       hoverBackgroundColor: 'rgb(54, 162, 235 )', // DodgerBlue, semi-transparent
-        //       borderWidth: 1
-        //     }] 
-        //   },
-        //   options: {
-        //     transitions: {
-        //         active: {
-        //             animation: {
-        //             duration: 0 // disables fade animation
-        //             }
-        //         }
-        //     },
-        //     transitions: {
-        //         active: {
-        //             animation: {
-        //             duration: 0
-        //             }
-        //         }
-        //     },
-
-        //     interaction: {
-        //         mode: 'nearest',
-        //         intersect: true,
-        //     },
-        //     plugins: {
-        //         tooltip: {
-        //             enabled: true,
-        //             },
-                
-        //     },
-        //     elements: {
-        //         bar: {
-        //         backgroundColor: 'rgb(54, 162, 235)',
-        //         hoverBackgroundColor: 'rgb(54, 162, 235)',  // stays same on hover
-        //         borderSkipped: false,
-        //         hoverStyle: false,
-        //         }
-        //     },
-            
-
-        //     responsive: true,
-        //     // aspectRation:4,
-        //     maintainAspectRatio: false,
-        //     scales: {
-        //       x: {
-        //         type: 'time',
-        //         adapters: { date: { locale: deLocale } },
-        //         time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
-        //         title: { display: true, text: 'Datum' }
-        //       },
-        //       y: {
-        //         beginAtZero: true,
-        //         title: { display: true, text: 'Abfluss (m³/s)' }
-        //       }
-        //     }
-        //   }
-        // })
-
         let inletVolumeChart = new Chart(ctx, {
         type: 'bar',
         backgroundColor: 'rgb(54,162,235)',
@@ -1611,16 +1561,29 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
             maintainAspectRatio: false,
 
             scales: {
-            x: {
-                type: 'time',
-                adapters: { date: { locale: deLocale } },
-                time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
-                title: { display: true, text: 'Datum' }
+                x: {
+                    type: 'time',
+                    adapters: { date: { locale: deLocale } },
+                    time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
+                    title: { display: true, text: 'Datum' }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Abfluss (m³/s)' }
+                }
             },
-            y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Abfluss (m³/s)' }
-            }
+            plugins: {
+                zoom: {
+                    zoom: {
+                    wheel: {
+                        enabled: true,
+                    },
+                    pinch: {
+                        enabled: true
+                    },
+                    mode: 'x',
+                    }
+                }
             }
         }
         });

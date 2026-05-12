@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.contrib.postgres.fields import JSONField
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django.utils.safestring import mark_safe
 
 from django.core import validators
 from crispy_forms.helper import FormHelper
@@ -21,6 +22,8 @@ from utilities.widgets import UnitInputWrapper
 from crispy_forms.layout import Field, Layout, Row, Column
 from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import datetime
+
+from utilities.forms import InfoLabelFormMixin, CheckboxSelectMultipleWithAttrs, ResultForm
 
 
 
@@ -1357,3 +1360,51 @@ class MonicaSiteForm(forms.ModelForm):
                 ),   
             ),
         )
+
+
+
+
+class MonicaResultDownloadForm(ResultForm): #######
+    crs = forms.ChoiceField(
+        label='CRS',
+        widget=forms.RadioSelect,
+        choices = (),
+        initial='25833',
+        required=False,      
+    )
+
+
+    
+    probability_raster = forms.MultipleChoiceField(
+        label="Wahrscheinlichkeiten",
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,  
+        choices=[
+            ('raster_tif', 'als GeoTIFF Datei'),
+        ],
+        initial=['raster_tif']
+    )
+
+    drainage_network = forms.MultipleChoiceField(
+        label="Entwässerungsnetz",
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,   
+        choices=[
+            ('shp', 'als Shapefile'),
+            ('gjson', 'als GeoJSON'),
+        ],
+        initial=['shp'],
+    )
+
+    drained_areas = forms.MultipleChoiceField(
+        label="Entwässerte Flächen",
+        required=False,
+        widget=CheckboxSelectMultipleWithAttrs,        
+        choices=[
+            ('shp', 'als Shapefile'),
+            ('gjson', 'als GeoJSON'),
+        ],
+        initial=['shp'],
+    )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, toolbox_type='monica', **kwargs)

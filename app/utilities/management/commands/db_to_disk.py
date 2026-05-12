@@ -251,6 +251,12 @@ def import_all_models(
     if 'model_imports' in import_dir.split(os.sep):
         import_dir = import_dir.split('model_imports', 1)[1].lstrip(os.sep)
 
+    import_dir = os.path.join(
+        settings.APP_DATA_DIR,
+        'model_imports',
+        import_dir,
+    )
+
     files = sorted(
         f for f in os.listdir(import_dir)
         if f.endswith(".json")
@@ -277,8 +283,6 @@ def import_all_models(
 
     filepaths = [
         os.path.join(
-            settings.APP_DATA_DIR,
-            'model_imports',
             import_dir, 
             f
             )

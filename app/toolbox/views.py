@@ -633,8 +633,6 @@ def filter_waterbodies(request):
         return JsonResponse({'featureCollection': feature_collection, 'dataInfo': data_info, 'message': {'success': True}})
         
 
-
-
 def get_shortest_connection(sink, lakes, streams, epsg=4326, connection_id=0):
     """
     This function works for sinks, enlarged sinks and sieker sinks.
@@ -887,6 +885,9 @@ def get_injection_volume_chart(request, waterbody_type, id):
     elif waterbody_type == 'lake':
         wb = models.Lake.objects.get(pk=id)
 
+    qoek = wb.minimum_environmental_flow
+    qmean = wb.q_mean
+
     chart_data_qs = (
         models.DischargeTimeseries.objects
         .filter(fgw=wb.fgw)
@@ -902,7 +903,7 @@ def get_injection_volume_chart(request, waterbody_type, id):
         for record in chart_data_qs
     ]
 
-    return JsonResponse({"chart_data": chart_data})
+    return JsonResponse({"chart_data": chart_data, 'quoek': qoek, 'qmean': qmean})
 
 # TODO DEM fehlt noch
 def get_elevation_profile(line_geojson):

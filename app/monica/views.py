@@ -1342,12 +1342,27 @@ def get_n_deposition(request, lat, lon):
         return JsonResponse({"success": False, "message": "Failed to retrieve data from WMS service."})
 
     
+# def run_monica_simulation(envs): #### FAKE!!!!
+#     """
+#     Connection to the MONICA container is established, the environment json 
+#     is sent and the output is received. 
+#     Returns a list of result messages.
+    
+#     :param envs: envs is a list of monica environment jsons
+#     """
+    
+#     file_path = Path(__file__).resolve().parent
+#     with open(f'{file_path}/monica_io/json_message_out_x.json', 'r') as _: 
+#         json_msg = json.load(_)
+
+#     return [json_msg]
+
 def run_monica_simulation(envs):
     """
     Connection to the MONICA container is established, the environment json 
     is sent and the output is received. 
     Returns a list of result messages.
-    
+
     :param envs: envs is a list of monica environment jsons
     """
     json_msgs = []
@@ -1382,7 +1397,7 @@ def run_monica_simulation(envs):
                 }
             print("check 9b: ", message)
             return message
-        
+    
 
         json_msg = monica_utils.msg_to_json(msg)
         json_msgs.append(json_msg)

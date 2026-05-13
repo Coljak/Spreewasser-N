@@ -562,6 +562,7 @@ class Stream(models.Model):
     fgw = models.ForeignKey(Quoek, on_delete=models.CASCADE, null=True, blank=True)  # ArcEGMO-ID des Fließgewässerabschnittes
     # Ökologisch begründete Mindestwasserführung hergeleitet für den 3. BWZ ab 2021 (EZG x MOW / 1000)
     minimum_environmental_flow = models.FloatField(null=True, blank=True) # - m³/s  -777 kein berichtspflichtiger OWK; -999 künstlicher OWK
+    q_mean = models.FloatField(null=True, blank=True) # m³/s - mittlerer Abfluss des Fließgewässers (Quoek) - wird für die Berechnung der Umweltwasserführung herangezogen
     shape_length = models.FloatField()
     # id_source = models.IntegerField()
     min_surplus_volume = models.FloatField()
@@ -588,6 +589,7 @@ class Stream(models.Model):
                 'fgw_id': self.fgw.id if self.fgw else None,
                 'shape_length': round(self.shape_length),
                 'minimum_environmental_flow': self.minimum_environmental_flow,
+                'q_mean': self.q_mean,
                 'min_surplus_volume': round(self.min_surplus_volume),
                 'mean_surplus_volume': round(self.mean_surplus_volume),
                 'max_surplus_volume': round(self.max_surplus_volume),
@@ -630,6 +632,7 @@ class Lake(models.Model):
     fgw = models.ForeignKey(Quoek, on_delete=models.CASCADE, null=True, blank=True)  # ArcEGMO-ID des Fließgewässerabschnittes
     # Ökologisch begründete Mindestwasserführung hergeleitet für den 3. BWZ ab 2021 (EZG x MOW / 1000)
     minimum_environmental_flow = models.FloatField(null=True, blank=True) # - m³/s  -777 kein berichtspflichtiger OWK; -999 künstlicher OWK
+    q_mean = models.FloatField(null=True, blank=True) # m³/s - mittlerer Abfluss des zugeordneten Fließgewässers (Quoek) - wird für die Berechnung der Umweltwasserführung herangezogen
     geom = gis_models.MultiPolygonField(srid=4326)
     geom25833 = gis_models.MultiPolygonField(srid=25833, null=True, blank=True)
     centroid = gis_models.PointField(srid=4326, null=True, blank=True)
@@ -660,6 +663,7 @@ class Lake(models.Model):
                 # 'shape_length': round(self.shape_length, 2),
                 'shape_area': round(self.shape_area),
                 'minimum_environmental_flow': self.minimum_environmental_flow,
+                'q_mean': self.q_mean,
                 'min_surplus_volume': round(self.min_surplus_volume),
                 'mean_surplus_volume': round(self.mean_surplus_volume),
                 'max_surplus_volume': round(self.max_surplus_volume),

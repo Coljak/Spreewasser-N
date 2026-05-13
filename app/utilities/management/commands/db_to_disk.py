@@ -7,6 +7,7 @@ from django.core import serializers
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
+import traceback
 
 
 BATCH_SIZE = 10000
@@ -221,6 +222,8 @@ def load_data_from_json(
 
         except Exception as e:
 
+            traceback.print_exc()
+
             not_loaded.append(filepath)
 
             print(
@@ -232,11 +235,14 @@ def load_data_from_json(
 
         print("\n🔁 Retrying failed imports...")
 
-        if len(not_loaded) != len(filepaths):
+        if not_loaded and len(not_loaded) < len(filepaths):
+            print("\n🔁 Retrying failed imports once...")
             load_data_from_json(
                 not_loaded,
                 batch_size=batch_size,
             )
+        elif not_loaded:
+            print("\n❌ Some files could not be imported.")
 
 
 def import_all_models(

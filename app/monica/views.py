@@ -1183,6 +1183,7 @@ def monica_model(request):
     soil_temperature_module_select_form = forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
     user_soil_transport_parameters_select_form = forms.UserSoilTransportParametersInstanceSelectionForm(user=user)
 
+    monica_result_download_form = forms.MonicaResultDownloadForm()
 
     data = {
         'default_project': default_project,
@@ -1201,6 +1202,8 @@ def monica_model(request):
         'user_soil_organic_select_form': user_soil_organic_select_form,
         'soil_temperature_module_selection_form': soil_temperature_module_select_form, 
         'user_soil_transport_parameters_selection_form': user_soil_transport_parameters_select_form,
+
+        'monica_result_download_form': monica_result_download_form,
     }
     context.update(data)
     return render(request, 'monica/monica_model.html', context)
@@ -1339,12 +1342,27 @@ def get_n_deposition(request, lat, lon):
         return JsonResponse({"success": False, "message": "Failed to retrieve data from WMS service."})
 
     
+# def run_monica_simulation(envs): #### FAKE!!!!
+#     """
+#     Connection to the MONICA container is established, the environment json 
+#     is sent and the output is received. 
+#     Returns a list of result messages.
+    
+#     :param envs: envs is a list of monica environment jsons
+#     """
+    
+#     file_path = Path(__file__).resolve().parent
+#     with open(f'{file_path}/monica_io/json_message_out_x.json', 'r') as _: 
+#         json_msg = json.load(_)
+
+#     return [json_msg]
+
 def run_monica_simulation(envs):
     """
     Connection to the MONICA container is established, the environment json 
     is sent and the output is received. 
     Returns a list of result messages.
-    
+
     :param envs: envs is a list of monica environment jsons
     """
     json_msgs = []
@@ -1379,7 +1397,7 @@ def run_monica_simulation(envs):
                 }
             print("check 9b: ", message)
             return message
-        
+    
 
         json_msg = monica_utils.msg_to_json(msg)
         json_msgs.append(json_msg)

@@ -5,6 +5,8 @@ and the bootstrap datepicker https://bootstrap-datepicker.readthedocs.io/en/late
 
 This javaScript is the derived from map_thredds....js in the django app swn
 */
+
+import { getOrCreateLegendList, htmlLegendPlugin } from '/static/vendor/chartjs/chartjs-html-legend.js';
 const palettes = [ "default", "default-inv", "div-BrBG", "div-BrBG-inv", "div-BuRd", "div-BuRd-inv", "div-BuRd2", "div-BuRd2-inv", "div-PRGn", "div-PRGn-inv", "div-PiYG", "div-PiYG-inv", "div-PuOr", "div-PuOr-inv", "div-RdBu", "div-RdBu-inv", "div-RdGy", "div-RdGy-inv", "div-RdYlBu", "div-RdYlBu-inv", "div-RdYlGn", "div-RdYlGn-inv", "div-Spectral", "div-Spectral-inv", "psu-inferno", "psu-inferno-inv", "psu-magma", "psu-magma-inv", "psu-plasma", "psu-plasma-inv", "psu-viridis", "psu-viridis-inv", "seq-BkBu", "seq-BkBu-inv", "seq-BkGn", "seq-BkGn-inv", "seq-BkRd", "seq-BkRd-inv", "seq-BkYl", "seq-BkYl-inv", "seq-BlueHeat", "seq-BlueHeat-inv", "seq-Blues", "seq-Blues-inv", "seq-BuGn", "seq-BuGn-inv", "seq-BuPu", "seq-BuPu-inv", "seq-BuYl", "seq-BuYl-inv", "seq-GnBu", "seq-GnBu-inv", "seq-Greens", "seq-Greens-inv", "seq-Greys", "seq-Greys-inv", "seq-GreysRev", "seq-GreysRev-inv", "seq-Heat", "seq-Heat-inv", "seq-OrRd", "seq-OrRd-inv", "seq-Oranges", "seq-Oranges-inv", "seq-PuBu", "seq-PuBu-inv", "seq-PuBuGn", "seq-PuBuGn-inv", "seq-PuRd", "seq-PuRd-inv", "seq-Purples", "seq-Purples-inv", "seq-RdPu", "seq-RdPu-inv", "seq-Reds", "seq-Reds-inv", "seq-YlGn", "seq-YlGn-inv", "seq-YlGnBu", "seq-YlGnBu-inv", "seq-YlOrBr", "seq-YlOrBr-inv", "seq-YlOrRd", "seq-YlOrRd-inv", "seq-cubeYF", "seq-cubeYF-inv", "x-Ncview", "x-Ncview-inv", "x-Occam", "x-Occam-inv", "x-Rainbow", "x-Rainbow-inv", "x-Sst", "x-Sst-inv",]
 
 // in this object, defaults are set for the color palette and the min and max values for the color scale. This can be moved to the thredds server metadata, but has to be modified theer for each dataset
@@ -229,12 +231,26 @@ function createChart(data) {
                     fill: false // Set whether the area under the line should be filled
                 }]
             },
+
+            plugins: [htmlLegendPlugin],
             options: {
                 responsive: true,
                 plugins: {
                     legend: {
                         position: 'right' // Position of the legend
-                    }
+                    },
+                    zoom: {
+                        zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        pinch: {
+                            enabled: true
+                        },
+                        mode: 'x',
+                        }
+                    },
+            
                 },
                 scales: {
                     x: {

@@ -1,7 +1,7 @@
 
 import {MonicaCalculation, MonicaProject, Rotation, Workstep } from '/static/monica/monica_model.js';
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, populateDropdown } from '/static/shared/utils.js';
-
+import { getOrCreateLegendList, htmlLegendPlugin, htmlMonicaLegendPlugin } from '/static/vendor/chartjs/chartjs-html-legend.js';
 
 //TODO fix select dropdown for project. It does not load
 export async function loadProjectFromDB(project_id) {
@@ -268,254 +268,290 @@ const resultTranslation = {
     'Irrig': 'Bewässerung',
     'Date': 'Datum',
     'Precip': 'Niederschlag',
-    'LAI': 'LAI',
-    'PASW_AVG': 'Pflanzenverfügbares Wasser 0-10cm',
-    // 'PASW_2': 'Pflanzenverfügbares Wasser 10-20cm',
-    // 'PASW_3': 'Pflanzenverfügbares Wasser 20-30cm',
-    // 'PASW_4': 'Pflanzenverfügbares Wasser 30-40cm',
-    // 'PASW_5': 'Pflanzenverfügbares Wasser 40-50cm',
+    'LAI': 'LAI, Überblattungsindex',
+    'PASW': 'Pflanzenverfügbares Wasser',
+    'PASW_AVG': 'Pflanzenverfügbares Wasser ∅',
+    'PASW_1': 'Pflanzenverfügbares Wasser 0-10cm',
+    'PASW_2': 'Pflanzenverfügbares Wasser 10-20cm',
+    'PASW_3': 'Pflanzenverfügbares Wasser 20-30cm',
+    'PASW_4': 'Pflanzenverfügbares Wasser 30-40cm',
+    'PASW_5': 'Pflanzenverfügbares Wasser 40-50cm',
+    'PASW_6': 'Pflanzenverfügbares Wasser 50-60cm',
+    'PASW_7': 'Pflanzenverfügbares Wasser 60-70cm',
+    'PASW_8': 'Pflanzenverfügbares Wasser 70-80cm',
+    'PASW_9': 'Pflanzenverfügbares Wasser 80-90cm',
+    'PASW_10': 'Pflanzenverfügbares Wasser 90-100cm',
+    'PASW_11': 'Pflanzenverfügbares Wasser 100-110cm',
+    'PASW_12': 'Pflanzenverfügbares Wasser 110-120cm',
+    'PASW_13': 'Pflanzenverfügbares Wasser 120-130cm',
+    'PASW_14': 'Pflanzenverfügbares Wasser 130-140cm',
+    'PASW_15': 'Pflanzenverfügbares Wasser 140-150cm',
+    'PASW_16': 'Pflanzenverfügbares Wasser 150-160cm',
+    'PASW_17': 'Pflanzenverfügbares Wasser 160-170cm',
+    'PASW_18': 'Pflanzenverfügbares Wasser 170-180cm',
+    'PASW_19': 'Pflanzenverfügbares Wasser 180-190cm',
+    'PASW_20': 'Pflanzenverfügbares Wasser 190-200cm',
+    'Mois': 'Bodenfeuchte',
+    'Mois_AVG': 'Bodenfeuchte ∅',
     'Mois_1': 'Bodenfeuchte 0-10cm',
     'Mois_2': 'Bodenfeuchte 10-20cm',
     'Mois_3': 'Bodenfeuchte 20-30cm',
+    'Mois_4': 'Bodenfeuchte 30-40cm',
+    'Mois_5': 'Bodenfeuchte 40-50cm',
+    'Mois_6': 'Bodenfeuchte 50-60cm',
+    'Mois_7': 'Bodenfeuchte 60-70cm',
+    'Mois_8': 'Bodenfeuchte 70-80cm',
+    'Mois_9': 'Bodenfeuchte 80-90cm',
+    'Mois_10': 'Bodenfeuchte 90-100cm',
+    'Mois_11': 'Bodenfeuchte 100-110cm',
+    'Mois_12': 'Bodenfeuchte 110-120cm',
+    'Mois_13': 'Bodenfeuchte 120-130cm',
+    'Mois_14': 'Bodenfeuchte 130-140cm',
+    'Mois_15': 'Bodenfeuchte 140-150cm',
+    'Mois_16': 'Bodenfeuchte 150-160cm',
+    'Mois_17': 'Bodenfeuchte 160-170cm',
+    'Mois_18': 'Bodenfeuchte 170-180cm',
+    'Mois_19': 'Bodenfeuchte 180-190cm',
+    'Mois_20': 'Bodenfeuchte 190-200cm',
+    'SOC': 'organischer Kohlenstoff',
+    'SOC_AVG': 'organischer Kohlenstoff ∅',
     'SOC_1': 'organischer Kohlenstoff 0-10cm',
     'SOC_2': 'organischer Kohlenstoff 10-20cm',
     'SOC_3': 'organischer Kohlenstoff 20-30cm',
+    'SOC_4': 'organischer Kohlenstoff 30-40cm',
+    'SOC_5': 'organischer Kohlenstoff 40-50cm',
+    'SOC_6': 'organischer Kohlenstoff 50-60cm',
+    'SOC_7': 'organischer Kohlenstoff 60-70cm',
+    'SOC_8': 'organischer Kohlenstoff 70-80cm',
+    'SOC_9': 'organischer Kohlenstoff 80-90cm',
+    'SOC_10': 'organischer Kohlenstoff 90-100cm',
+    'SOC_11': 'organischer Kohlenstoff 100-110cm',
+    'SOC_12': 'organischer Kohlenstoff 110-120cm',
+    'SOC_13': 'organischer Kohlenstoff 120-130cm',
+    'SOC_14': 'organischer Kohlenstoff 130-140cm',
+    'SOC_15': 'organischer Kohlenstoff 140-150cm',
+    'SOC_16': 'organischer Kohlenstoff 150-160cm',
+    'SOC_17': 'organischer Kohlenstoff 160-170cm',
+    'SOC_18': 'organischer Kohlenstoff 170-180cm',
+    'SOC_19': 'organischer Kohlenstoff 180-190cm',
+    'SOC_20': 'organischer Kohlenstoff 190-200cm',
+
 };
 
-export function createChartDataset() {
 
+const parameterColors = {
+    Yield: '#ff9800',
+    AbBiom: '#4caf50',
+    PASW: '#2196f3',
+    Mois: '#9c27b0',
+    SOC: '#795548',
+    LAI: '#009688',
+    Irrig: '#09dbdbff',
+    Precip: '#1976d2'
+};
+
+const resultLineStyles = [
+    [],
+    [10, 5],
+    [2, 4]
+];
+const axisGroups = {
+    Irrig: 'y1',
+    Precip: 'y1',
+
+    Yield: 'y2',
+    AbBiom: 'y2',
+    LAI: 'y3',
+    Mois: 'y4',
+    SOC: 'y5',
+    PASW: 'y6',
+    organ: 'y7'
+};
+
+const axisUnits = {
+    y1: 'mm',
+
+    y2: 't/ha',
+    y3: '%',
+    y4: 'm²/m²',
+    y5: '%',
+    y6: '%',
+    y7: ''
+};
+
+// the reverse of axisGroups to assign the right parameters to the right axis in the chart options
+
+
+export function setOutputSettings() {
+    localStorage.setItem(
+        'outputSettings',
+        JSON.stringify({
+        colors: [
+            'rgba(255, 200, 0, 0.7)', 
+            'rgba(0, 150, 200, 0.7)', 
+            'rgba(0, 200, 255, 0.7)', 
+            'rgba(0, 255, 200, 0.7)',
+            'rgba(0, 255, 100, 0.7)'],
+    
+        resultOutput: {
+            'Precip': false,
+            'Yield': true,
+            'Irrig': false,
+            // 'organ': false,
+            'AbBiom': false,
+            'PASW_AVG': false,
+            // 'PASW_2': true,
+            // 'PASW_3': true,
+            // 'PASW_4': true,
+            // 'PASW_5': true,
+            'Mois_1': false,
+            'Mois_2': false,
+            'Mois_3': false,
+            'SOC_1': false,
+            'SOC_2': false,
+            'SOC_3': false,
+            'LAI': false,
+        }
+    }));
+};
+
+
+export function createChartDataset() {
+    let listOfResults = JSON.parse(localStorage.getItem('monicaResults'));
     let outputSettings = JSON.parse(localStorage.getItem('outputSettings'));
     console.log('outputSettings', outputSettings);
-    let colors = outputSettings.colors;
-    let resultOutput = outputSettings.resultOutput;
 
-    let listOfResults = JSON.parse(localStorage.getItem('monicaResults'));
+    let resultOutput = outputSettings.resultOutput;
+    // all parameters present in the result
+    let parameters = [];
+    Object.entries(resultOutput).forEach(([key, value]) => {
+        if (value) {
+            parameters.push(key);
+        }
+    });
+    function getBaseParam(p) {
+        return p.split('_')[0];
+    }
+    // all base parameters (no layer number or avg)
+    const base_parameters = [
+        ...new Set(
+            parameters.map(p => getBaseParam(p))
+        )
+    ];
+
+    let axisMapping = {};
+    Object.entries(axisGroups).forEach(([key, value]) => {
+        if (base_parameters.includes(key)) {
+            if (!axisMapping[value]) {
+                axisMapping[value] = [];
+            }
+            axisMapping[value].push(key);
+        }
+    });
+
+    // axis
+    let axisTitles = {};
+    let axisExtents = {};
+    Object.entries(axisMapping).forEach(([axis, base_ps]) => {
+        // title of each axis
+        const axisTitle = base_ps.map(p => resultTranslation[p]).join(', ') + ` (${axisUnits[axis]})`; 
+        // translates them and joins them with a comma
+        axisTitles[axis] = axisTitle;
+
+        // extends of each axis, finding min and max
+        if (!axisExtents[axis]) {
+            axisExtents[axis] = {
+                min: Infinity,
+                max: -Infinity
+            };
+        }
+        base_ps.forEach(base_p => {
+            let all_vals = [];
+            listOfResults.forEach(result => {
+                const daily = result.daily;
+                Object.entries(daily).forEach(([key, value]) => {
+                    if (key.startsWith(base_p)) {
+                        all_vals = all_vals.concat(Object.values(value).filter(v => !isNaN(v)));
+                    }
+                });
+
+                if (all_vals.length) {
+                    const minVal = Math.min(...all_vals);
+                    const maxVal = Math.max(...all_vals);
+
+                // Update global min/max
+                axisExtents[axis].min = Math.min(axisExtents[axis].min, minVal);
+                axisExtents[axis].max = Math.max(axisExtents[axis].max, maxVal);
+                //     }
+                }
+            });
+        });
+    });
+
+    /// NEW /////
+    let scales = {};
+    Object.entries(axisMapping).forEach(([axis, base_ps]) => {
+        scales[axis] = {
+            type: 'linear',
+            position: axis === 'y1' ? 'right' : 'left',
+            title: { display: true, text: axisTitles[axis] },
+            beginAtZero: true,
+            min: axisExtents[axis].min,
+            max: axisExtents[axis].max * 1.1,
+               
+        };
+    });
+
+    // creating the list of datasets
+    // get Precip only once
     let dates = listOfResults[0].daily.Date;
     let datasets = [];
     if (resultOutput.Precip) {
         datasets.push({
             type: 'bar',  // Specifies the type as bar for precipitation
-            yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
+            yAxisID: axisGroups.Precip,  
             label: resultTranslation.Precip,
             data: listOfResults[0].daily.Precip,
-            backgroundColor: 'rgba(0, 0, 255, 0.8)',  // Semi-transparent blue
-            borderColor: 'rgba(0, 0, 255, 0.7)',
+            backgroundColor: parameterColors.Precip,  
+            borderColor: parameterColors.Precip,
             borderWidth: 1,
         })
     }
-
-    let minMaxDatasets = {};
-    const parameters = [
-        'Yield', 'AbBiom', 'Irrig', 'organ', 
-        'PASW_AVG', 'Mois_1', 'Mois_2', 'Mois_3', 
-        'SOC_1', 'SOC_2', 'SOC_3', 'LAI'
-    ];
-    parameters.forEach(p => {
-        minMaxDatasets[p] = { min: Infinity, max: -Infinity };
-    });
-    listOfResults.forEach(result => {
-        const daily = result.daily;
-
-        parameters.forEach(p => {
-            if (daily[p]) {
-                const values = Object.values(daily[p]).filter(v => !isNaN(v));
-                if (values.length) {
-                    const minVal = Math.min(...values);
-                    const maxVal = Math.max(...values);
-
-                    // Update global min/max
-                    minMaxDatasets[p].min = Math.min(minMaxDatasets[p].min, minVal);
-                    minMaxDatasets[p].max = Math.max(minMaxDatasets[p].max, maxVal);
-                }
-            }
-        });
-    });
-    minMaxDatasets['Mois'] = {'min': Infinity, 'max': -Infinity};
-    minMaxDatasets['SOC'] = {'min': Infinity, 'max': -Infinity};
-    minMaxDatasets['Irrig'] = {'min': Infinity, 'max': -Infinity};
-    minMaxDatasets['Mois']['min'] = Math.min(minMaxDatasets['Mois_1'].min, minMaxDatasets['Mois_2'].min, minMaxDatasets['Mois_3'].min);
-    minMaxDatasets['Mois']['max'] = Math.max(minMaxDatasets['Mois_1'].max, minMaxDatasets['Mois_2'].max, minMaxDatasets['Mois_3'].max);
-    minMaxDatasets['SOC']['min'] = Math.min(minMaxDatasets['SOC_1'].min, minMaxDatasets['SOC_2'].min, minMaxDatasets['SOC_3'].min);
-    minMaxDatasets['SOC']['max'] = Math.max(minMaxDatasets['SOC_1'].max, minMaxDatasets['SOC_2'].max, minMaxDatasets['SOC_3'].max);
-    minMaxDatasets['Irrig']['min'] = Math.min(Math.min(...listOfResults[0].daily.Precip), minMaxDatasets['Irrig']['min']);
-    minMaxDatasets['Irrig']['max'] = Math.max(Math.max(...listOfResults[0].daily.Precip), minMaxDatasets['Irrig']['max']);
-    console.log('minMaxDatasets', minMaxDatasets);
+    const simulationLabels = {
+        0: 'Baseline',
+        1: 'Bewässert 1',
+        2: 'Bewässert 2'
+    };
 
     for (let i = 0; i < listOfResults.length; i++) {
         console.log(i);
         var msg = listOfResults[i].daily
+        parameters.forEach(p => {
+            if (p !== 'Precip' && msg[p]) {
+                 // Irrigation should be on the same y-axis as Precip
+                let base_p = getBaseParam(p);
+                let axis = axisGroups[base_p];
+                let ds = {
+                    type: base_p === 'Irrig' ? 'bar' : 'line',  // Use bar for irrigation, line for others
+                    yAxisID: axis,
+                    label: `${resultTranslation[p]}`,
+                    data: msg[p],
+                    borderWidth: 2,
+                    borderColor: parameterColors[base_p],
+                    borderDash: resultLineStyles[i % resultLineStyles.length], // in case there should ever be more than 3 runs in one
+                    pointHitRadius: 10,
+                    simulationIndex: i,
+                    simulationLabel: simulationLabels[i],
+                    parameter: p,
+                    base_parameter: base_p,
+                }
+                datasets.push(ds);
+            }
+        });
         
-        if (resultOutput.Yield) {
-            datasets.push({
-                yAxisID: 'y2',
-                label: `${i} ${resultTranslation.Yield}`,
-                data: msg.Yield,
-                borderWidth: 2,
-                borderColor: colors[i],
-                pointHitRadius: 10,
-            });
-        };
-        if (resultOutput.AbBiom) {
-            datasets.push({
-                yAxisID: 'y5',
-                label: `${i} ${resultTranslation.AbBiom}`,
-                data: msg.AbBiom,
-                borderWidth: 2,
-                borderColor: colors[i],
-                pointHitRadius: 10,
-            });
-        };
-
-        if (resultOutput.Irrig){
-            datasets.push({
-                type: 'bar',  
-                yAxisID: 'y1',  
-                label: ` ${i} ${resultTranslation.Irrig}`,
-                data: msg.Irrig,
-                backgroundColor: colors[i],  // Semi-transparent blue
-                borderColor: colors[i],
-                borderWidth: 1,
-                pointHitRadius: 10,
-            });
-        };
-
-        if (resultOutput.organ) {
-            datasets.push({
-                type: 'bar',  // Specifies the type as bar for precipitation
-                yAxisID: 'y1',  // Optional: Add a separate y-axis if needed
-                label: ` ${i} ${resultTranslation.organ}`,
-                data: msg.Stage,
-                backgroundColor: colors[i],  // Semi-transparent blue
-                borderColor: colors[i],
-                borderWidth: 1,
-                pointHitRadius: 10,
-            });
-        };
-        if (resultOutput.PASW_AVG) {
-            datasets.push({
-                yAxisID: 'y4',
-                label: ` ${i} ${resultTranslation.PASW_AVG}`,
-                data: msg.PASW_AVG,
-                borderWidth: 2,
-                borderColor: colors[i],
-                pointHitRadius: 10,
-            });
-        };
-        // if (resultOutput.PASW_2) {
-        //     datasets.push({
-        //         yAxisID: 'y4',
-        //         label: ` ${i} ${resultTranslation.PASW_2}`,
-        //         data: msg.PASW_2,
-        //         borderWidth: 2,
-        //         borderColor: colors[i],
-        //         pointHitRadius: 10,
-        //     });
-        // };
-        // if (resultOutput.PASW_3) {
-        //     datasets.push({
-        //         yAxisID: 'y4',
-        //         label: ` ${i} ${resultTranslation.PASW_3}`,
-        //         data: msg.PASW_3,
-        //         borderWidth: 2,
-        //         borderColor: colors[i],
-        //         pointHitRadius: 10,
-        //     });
-        // };
-        // if (resultOutput.PASW_4) {
-        //     datasets.push({
-        //         yAxisID: 'y4',
-        //         label: ` ${i} ${resultTranslation.PASW_4}`,
-        //         data: msg.PASW_4,
-        //         borderWidth: 2,
-        //         borderColor: colors[i],
-        //         pointHitRadius: 10,
-        //     });
-        // };
-        // if (resultOutput.PASW_5) {
-        //     datasets.push({
-        //         yAxisID: 'y4',
-        //         label: `${i} ${resultTranslation.PASW_5}`,
-        //         data: msg.PASW_5,
-        //         borderWidth: 2,
-        //         borderColor: colors[i],
-        //         pointHitRadius: 10,
-        //     });
-        // };
-        if (resultOutput.Mois_1) {
-            datasets.push({
-                yAxisID: 'y3',
-                label: `${i} ${resultTranslation.Mois_1}`,
-                data: msg.Mois_1,
-                borderWidth: 2,
-                borderColor: colors[i],
-                pointHitRadius: 10,
-            });
-        };
-        if (resultOutput.Mois_2) {
-            datasets.push({
-                yAxisID: 'y3',
-                label: `${i} ${resultTranslation.Mois_2}`,
-                data: msg.Mois_2,
-                borderWidth: 2,
-                borderColor: colors[i],
-                pointHitRadius: 10,
-            });
-        };
-        if (resultOutput.Mois_3) {
-            datasets.push({
-                yAxisID: 'y3',
-                label: `${i} ${resultTranslation.Mois_3}`,
-                data: msg.Mois_3,
-                borderWidth: 2,
-                borderColor: colors[i],
-                pointHitRadius: 10,
-            });
-        };
-        if (resultOutput.SOC_1) {
-            datasets.push({
-                yAxisID: 'y4',
-                label: `${i} ${resultTranslation.SOC_1}`,
-                data: msg.SOC_1,
-                borderWidth: 2,
-                borderColor: colors[i],
-                pointHitRadius: 10,
-            });
-        };
-        if (resultOutput.SOC_2) {
-            datasets.push({
-                yAxisID: 'y4',
-                label: `${i} ${resultTranslation.SOC_2}`,
-                data: msg.SOC_2,
-                borderWidth: 2,
-                borderColor: colors[i],
-                pointHitRadius: 10,
-            });
-        };
-        if (resultOutput.SOC_3) {
-            datasets.push({
-                yAxisID: 'y4',
-                label: `${i} ${resultTranslation.SOC_3}`,
-                data: msg.SOC_3,
-                borderWidth: 2,
-                borderColor: colors[i],
-                pointHitRadius: 10,
-            });
-        };
-        if (resultOutput.LAI) {
-            datasets.push({
-                yAxisID: 'y5',
-                label: `${i} ${resultTranslation.LAI}`,
-                data: msg.LAI,
-                borderWidth: 2,
-                borderColor: colors[i],
-                pointHitRadius: 10,
-                pointHoverRadius: 10,
-                pointHoverBackgroundColor: 'rgba(0, 0, 0, 0)',
-                pointHoverBorderColor: 'rgba(0, 0, 0, 0)',
-            });
-        };
-
     };
+
+ 
     console.log("Datasets", datasets)
 
     chartDiv.innerHTML = '<canvas id="Chart"></canvas>'
@@ -526,49 +562,10 @@ export function createChartDataset() {
             labels: dates,
             datasets: datasets,
         },
+        plugins: [htmlMonicaLegendPlugin],
         options: {
-            scales: {
-                y1: {
-                    type: 'linear',
-                    position: 'right',
-                    title: 'Precipitation / Irrigation (mm)',
-                    beginAtZero: true,
-                    min: 0,
-                    max: minMaxDatasets['Irrig'].max * 1.1,
-                },
-                y2: {
-                    type: 'linear',
-                    position: 'left',
-                    title: 'Ertrag (t/ha)',
-                    beginAtZero: true,
-                    min: 0,
-                    max: Math.ceil(minMaxDatasets['Yield'].max * 1.3),
-                },
-                y3: {
-                    type: 'linear',
-                    position: 'right',
-                    title: 'Soil Moisture (%)',
-                    beginAtZero: true,
-                    min: 0,
-                    max: Math.ceil(minMaxDatasets['Mois'].max * 1.1),
-                },
-                y4: {
-                    type: 'linear',
-                    position: 'left',
-                    title: 'pflanzenverfügbares Wasser',
-                    beginAtZero: true,
-                    min: 0,
-                    max: Math.ceil(minMaxDatasets['PASW_AVG'].max * 1.1),
-                },
-                y5: {
-                    type: 'linear',
-                    position: 'left',
-                    title: 'Biomasse (t/ha)',
-                    beginAtZero: true,
-                    min: 0,
-                    max: Math.ceil(minMaxDatasets['AbBiom'].max * 1.1),
-                },
-            },
+            scales: scales,
+            
             elements: {
                 point: {
                 radius: 0,
@@ -578,14 +575,24 @@ export function createChartDataset() {
             maintainAspectRatio: false,
             animation: false,
             plugins: {
-                // title: {
-                //     display: true,
-                //     text: 'Custom Chart Title'
-                // },
+                htmlLegend: {
+                    containerID: 'chartLegend',
+                },
                 legend: {
-                    position: 'right'
+                    display: false 
+                },
+                zoom: {
+                    zoom: {
+                    wheel: {
+                        enabled: true,
+                    },
+                    pinch: {
+                        enabled: true
+                    },
+                    mode: 'x',
+                    }
                 }
-            }
+            },    
         },
         
     });
@@ -832,40 +839,6 @@ function createModal(params) {
         console.error('Error:', error);
     }
 };
-
-export function setOutputSettings() {
-    localStorage.setItem(
-        'outputSettings',
-        JSON.stringify({
-        colors: [
-            'rgba(255, 200, 0, 0.7)', 
-            'rgba(0, 150, 200, 0.7)', 
-            'rgba(0, 200, 255, 0.7)', 
-            'rgba(0, 255, 200, 0.7)',
-            'rgba(0, 255, 100, 0.7)'],
-    
-        resultOutput: {
-            'Precip': false,
-            'Yield': true,
-            'Irrig': false,
-            // 'organ': false,
-            'AbBiom': false,
-            'PASW_AVG': false,
-            // 'PASW_2': true,
-            // 'PASW_3': true,
-            // 'PASW_4': true,
-            // 'PASW_5': true,
-            'Mois_1': false,
-            'Mois_2': false,
-            'Mois_3': false,
-            'SOC_1': false,
-            'SOC_2': false,
-            'SOC_3': false,
-            'LAI': false,
-        }
-    }));
-};
-
 
 
 function validateSoilProfileFormset() {
@@ -1797,7 +1770,7 @@ export function addMonicaEvents() {
 
     $('#runSimulationButton').on('click', () => {
         const project = MonicaProject.loadFromLocalStorage();
-        console.log('runSimulationButton clicked');
+        console.log('runSimulationButton clicked');    
         // TODO should be obsolete
         try {
             project.longitude = $('#id_longitude').val();
@@ -1809,6 +1782,8 @@ export function addMonicaEvents() {
             } catch {;}
         }
         if (validateProject(project)) {
+            $('.nav-link.monica').removeClass('active');
+            $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
             runSimulation(project);
         }  
     });
@@ -1818,6 +1793,9 @@ export function addMonicaEvents() {
 
 function runSimulation(monicaProject) {   
     console.log('runSimulation', monicaProject);
+
+    const spinner = $('#tabResultOverlay');
+    spinner.removeClass('d-none');
     fetch(runSimulationUrl, {
         method: 'POST',
         body: JSON.stringify(monicaProject),
@@ -1834,9 +1812,7 @@ function runSimulation(monicaProject) {
             $('#runSimulationButton').prop('disabled', true);
             $('#runSimulationButton').text('...Simulation running');
             // Remove 'active' class from all nav links
-            $('.nav-link.monica').removeClass('active');
-
-            $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
+            
 
             let listOfResults = data.message.message
             console.log('ListofResults: ', data);
@@ -1852,9 +1828,10 @@ function runSimulation(monicaProject) {
             $('#runSimulationButton').text('Simulation starten');
         }    
     })
-    .then(() => {
+    .finally(() => {
         //TODO: check if this is needed
-        $('#resultTab').removeClass('disabled').addClass('active').trigger('click');
+        spinner.addClass('d-none');
+        $('#downloadTab').removeClass('disabled');
     });
 };
 

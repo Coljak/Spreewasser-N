@@ -22,8 +22,10 @@ services:
   redis:
   thredds:
   nginx:
-    build:
-      context: ./nginx
+    build: 
+      context: .
+      dockerfile: Dockerfile.nginx
+
     ports:
       - 80:80
     volumes:

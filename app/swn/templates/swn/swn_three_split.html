@@ -67,6 +67,8 @@
                 <li class="nav-item">
                     <a id="resultTab" class="monica nav-link disabled" aria-disabled="true" href="#tabResult">Ergebnis</a>
                 </li>
+                <li class="nav-item">
+                    <a id="downloadTab" class="monica nav-link disabled" aria-disabled="true" href="#tabDownload">Downloads</a>
             </ul>
 
             <button id="toggle-advanced-mode-de" class="btn btn-primary simple" type="button">
@@ -112,6 +114,7 @@
             {% comment %} {% render_tab_crop_rotation %} {% endcomment %}
             {% render_tab_soil site_form user_soil_profile_select_form user_soil_profile_form user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
             {% render_tab_result %}
+            {% render_tab_download monica_result_download_form %}
             
 
             <button id="previousButton" class="btn btn-primary mt-3">Zurück</button>
@@ -157,7 +160,7 @@
 
     {% comment %} <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js" defer></script> {% endcomment %}
     <script type="text/javascript" src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
-
+    <script type="text/javascript" src="{% static 'vendor/chartjs/chartjs-plugin-zoom.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/virtual-select/virtual-select.min.js' %}"></script> 
     <script type="module" src="{% static 'swn/js/swn_three_split.js' %}" defer></script>
 

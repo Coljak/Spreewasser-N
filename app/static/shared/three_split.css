@@ -61,7 +61,7 @@
   .horizontal-splitter::after {
     content: "";
     position: absolute;
-    top: 0px;    /* extends grab area above */
+    top: 15px;    /* extends grab area above */
     left: 0;
     right: 0;
     height: 15px; /* total grab area height */

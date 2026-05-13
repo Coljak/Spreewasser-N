@@ -323,6 +323,9 @@ def swn_dashboard(request):
     user_soil_organic_select_form = monica_forms.UserSoilOrganicInstanceSelectionForm(user=user)
     soil_temperature_module_select_form = monica_forms.SoilTemperatureModuleInstanceSelectionForm(user=user)
     user_soil_transport_parameters_select_form = monica_forms.UserSoilTransportParametersInstanceSelectionForm(user=user)
+    monica_result_download_form = monica_forms.MonicaResultDownloadForm()
+
+
     eleventh = datetime.now()
     print("eleventh - tenth", eleventh - tenth)
 
@@ -345,6 +348,7 @@ def swn_dashboard(request):
             'user_soil_organic_select_form': user_soil_organic_select_form,
             'soil_temperature_module_selection_form': soil_temperature_module_select_form, 
             'user_soil_transport_parameters_selection_form': user_soil_transport_parameters_select_form,
+            'monica_result_download_form': monica_result_download_form,
             }
     
     context.update(data)

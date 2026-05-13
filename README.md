@@ -132,6 +132,22 @@ to register the rasterfiles used in the Toolbox
 ```shell
 python manage.py register_geoserver_files
 ```
+For database imports and exports:
+to register the rasterfiles used in the Toolbox
+```shell
+python manage.py db_to_disk <flags> <arguments>
+```
+the flags are 
+####Import
+--import-dir: path to the folder; the path should be /app_data/model_imports/<your-floder>/, as argument the folder is enough. The command searches automatically in app_data/model_imports/.
+--part-size: for large datasets. Number of rows you want to export into one .part file. Defaults to 500,000
+####Export
+--no-today: at export, does not write a date folder.
+--apps: add the django apps you want to export, e.g. --apps swn toolbox
+--models: list the models, e.g. Lake Cultivar
+--batch-size: add a batch size for large datasets. The smaller the batch size, the longer the operation takes.
+
+
 
 ### 5. Thredds Server
 The Thredds server is used to store and serve NetCDF data.

@@ -11,6 +11,7 @@ import {Layers} from '/static/toolbox/layers.js';
 import {geoserverLayers} from '/static/toolbox/geoserver_layers.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
 import { dataTableGerman } from '/static/toolbox/dataTable_german.js'
+import { getOrCreateLegendList, htmlLegendPlugin } from '/static/vendor/chartjs/chartjs-html-legend.js';
 
 // all dataTypes mapped to their ProjectClass
 const projectClasses = {
@@ -138,31 +139,46 @@ function getWaterLevelTimeseries(waterLevelId) {
             spinner.classList.add('d-none');
 
             canvas.chart = new Chart(ctx, {
-            type: 'bar',
-            backgroundColor: 'rgb(54, 162, 235 )',
-            data: {
-                datasets: [{
-                    label: 'Wasserstand (cm)',
-                    data: data.chart_data
-                }]
-            },
-            options: {
-                responsive: true,
-                // aspectRation:3,
-                maintainAspectRatio: false,
-                scales: {
-                x: {
-                    type: 'time',
-                    adapters: { date: { locale: deLocale } },
-                    time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
-                    title: { display: true, text: 'Datum' }
+                type: 'bar',
+                backgroundColor: 'rgb(54, 162, 235 )',
+                data: {
+                    datasets: [{
+                        label: 'Wasserstand (cm)',
+                        data: data.chart_data
+                    }]
                 },
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Wasserstand (cm)' }
+                plugins: [htmlLegendPlugin],
+                options: {
+                    responsive: true,
+                    // aspectRation:3,
+                    maintainAspectRatio: false,
+                    scales: {
+                    x: {
+                        type: 'time',
+                        adapters: { date: { locale: deLocale } },
+                        time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
+                        title: { display: true, text: 'Datum' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Wasserstand (cm)' }
+                    }
+                    },
+                    plugins: {
+                        
+                        zoom: {
+                            zoom: {
+                            wheel: {
+                                enabled: true,
+                            },
+                            pinch: {
+                                enabled: true
+                            },
+                            mode: 'x',
+                            }
+                        }
+                    }
                 }
-                }
-            }
             })
         });
     } else return;
@@ -1499,14 +1515,7 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
     console.log('getInletVolumeChart', waterbodyType, waterbodyId, inletId)
     // const spinner = document.querySelector('#inletChartSpinnerWrapper'); 
     const canvas = document.getElementById(`inlet-chart-${inletId}`);
-    // const observer = new MutationObserver((mutations) => {
-    //     mutations.forEach(mutation => {
-    //         console.log('Mutation:', mutation);
-    //     });
-    //     });
-    // observer.observe(canvas, { attributes: true });                                                         
-
-
+                                                        
 
     if (Chart.getChart(canvas)) {
         console.log(`Canvas inlet-chart-${inletId} is already in use. Skipping.`);
@@ -1519,110 +1528,122 @@ function getInletVolumeChart(waterbodyType, waterbodyId, inletId) {
     .then(data => {
         console.log('Chart data', data);
         const chartData = data.chart_data;
-
+        const qmean = data.qmean ?? null;
+        const qoek = data.qoek ?? null;
         const deLocale = dateFns.locale?.de;
 
 
-        // let inletVolumeChart = new Chart(ctx, {
-        //   type: 'bar',
-        //   data: { 
-        //     datasets: [{ 
-        //       label: 'Abfluss (m³/s)', 
-        //       data: chartData ,
-        //       backgroundColor: 'rgb(54, 162, 235 )',   // DodgerBlue, fully opaque
-        //       borderColor: 'rgb(54, 162, 235 )',
-        //       hoverBackgroundColor: 'rgb(54, 162, 235 )', // DodgerBlue, semi-transparent
-        //       borderWidth: 1
-        //     }] 
-        //   },
-        //   options: {
-        //     transitions: {
-        //         active: {
-        //             animation: {
-        //             duration: 0 // disables fade animation
-        //             }
-        //         }
-        //     },
-        //     transitions: {
-        //         active: {
-        //             animation: {
-        //             duration: 0
-        //             }
-        //         }
-        //     },
-
-        //     interaction: {
-        //         mode: 'nearest',
-        //         intersect: true,
-        //     },
-        //     plugins: {
-        //         tooltip: {
-        //             enabled: true,
-        //             },
-                
-        //     },
-        //     elements: {
-        //         bar: {
-        //         backgroundColor: 'rgb(54, 162, 235)',
-        //         hoverBackgroundColor: 'rgb(54, 162, 235)',  // stays same on hover
-        //         borderSkipped: false,
-        //         hoverStyle: false,
-        //         }
-        //     },
-            
-
-        //     responsive: true,
-        //     // aspectRation:4,
-        //     maintainAspectRatio: false,
-        //     scales: {
-        //       x: {
-        //         type: 'time',
-        //         adapters: { date: { locale: deLocale } },
-        //         time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
-        //         title: { display: true, text: 'Datum' }
-        //       },
-        //       y: {
-        //         beginAtZero: true,
-        //         title: { display: true, text: 'Abfluss (m³/s)' }
-        //       }
-        //     }
-        //   }
-        // })
-
-        let inletVolumeChart = new Chart(ctx, {
-        type: 'bar',
-        backgroundColor: 'rgb(54,162,235)',
-        data: {
-            datasets: [{
-            label: 'Abfluss (m³/s)',
-            data: chartData,        
-            }]
-        },
-        options: {
-
-            transitions: {
-            active: {
-                animation: { duration: 0 } // disable active transition
+        const datasets = [
+            {
+                type: 'bar',
+                label: 'Abfluss (m³/s)',
+                data: chartData,
+                backgroundColor: 'rgb(54,162,235)'
             }
-            },
+        ];
+        
 
-
-            responsive: true,
-            maintainAspectRatio: false,
-
-            scales: {
-            x: {
-                type: 'time',
-                adapters: { date: { locale: deLocale } },
-                time: { unit: 'month', displayFormats: { month: 'MM-yyyy' } },
-                title: { display: true, text: 'Datum' }
-            },
-            y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Abfluss (m³/s)' }
-            }
-            }
+        // Prefer Qoek over Qmean
+        if (qoek !== null) {
+            datasets.push({
+                type: 'line',
+                label: 'Qoek',
+                data: chartData.map(d => ({
+                    x: d.x,
+                    y: qoek
+                })),
+                borderColor: 'rgb(34,139,34)',
+                borderWidth: 2,
+                borderDash: [8, 6],
+                pointRadius: 0,
+                fill: false
+            });
+        } else if (qmean !== null) {
+            datasets.push({
+                type: 'line',
+                label: 'MQ',
+                data: chartData.map(d => ({
+                    x: d.x,
+                    y: qmean
+                })),
+                borderColor: 'rgb(60,179,113)',
+                borderWidth: 2,
+                borderDash: [8, 6],
+                pointRadius: 0,
+                fill: false
+            });
         }
+        console.log('datasets', datasets)
+        let inletVolumeChart = new Chart(ctx, {
+            data: {
+                datasets: datasets
+            },
+            options: {
+
+                transitions: {
+                    active: {
+                        animation: { duration: 0 }
+                    }
+                },
+
+                responsive: true,
+                maintainAspectRatio: false,
+
+                scales: {
+                    x: {
+                        type: 'time',
+                        adapters: { date: { locale: deLocale } },
+                        time: {
+                            unit: 'month',
+                            displayFormats: { month: 'MM-yyyy' }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Datum'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Abfluss (m³/s)'
+                        }
+                    }
+                },
+
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function (context) {
+
+                                const raw = context[0].raw;
+
+                                // current y-value of Abfluss
+                                const y = typeof raw === 'object' ? raw.y : raw;
+
+                                const ref = (qoek != null) ? qoek : qmean;
+
+                                if (ref == null) return [];
+
+                                const ueberschuss = y - ref;
+
+                                return [`Überschuss: ${ueberschuss.toFixed(2)} m³/s`];
+                            }
+                        }
+                    },
+                    zoom: {
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                            },
+                            pinch: {
+                                enabled: true
+                            },
+                            mode: 'x',
+                        }
+                    }
+                }
+            }
         });
 
     });

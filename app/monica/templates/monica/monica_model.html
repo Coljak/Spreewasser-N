@@ -40,6 +40,9 @@
           <li class="nav-item">
               <a id="resultTab" class="monica nav-link disabled" aria-disabled="true" href="#tabResult">Result</a>
           </li>
+          <li class="nav-item">
+              <a id="downloadTab" class="monica nav-link "  href="#tabDownload">Downloads</a>
+          </li>
 
         </ul>
 
@@ -77,6 +80,7 @@
       {% render_tab_crop_rotation %}
       {% render_tab_soil site_form user_soil_profile_select_form user_soil_profile_form user_soil_moisture_select_form user_soil_organic_select_form soil_temperature_module_selection_form user_soil_transport_parameters_selection_form %}
       {% render_tab_result %}
+      {% render_tab_download monica_result_download_form %}
 
  
 
@@ -104,6 +108,7 @@
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/bootstrap/bootstrap-datepicker.de.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/chartjs/chartjs-plugin-zoom.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/chartjs/chartjs-adapter-date-fns.bundle.min.js' %}"></script>
     <script type="module" src="{% static 'monica/monica_app.js' %}"></script>
   {% endblock %}

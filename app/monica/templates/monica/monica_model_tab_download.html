@@ -1,0 +1,18 @@
+{% load crispy_forms_tags %}
+
+<div id="tabDownload" class="tab-pane card mb-3">
+    <div class="advanced"><!-- keep empty, is for .advanced --></div>
+    <div class="card-body">
+        <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Downloads</h5>
+                    <p>Sie können hier alle ausgewählten Daten herunterladen.</p>
+                    {% crispy monica_result_download_form %}
+                </div>
+        </div>
+        
+
+    </div>
+
+    
+</div>

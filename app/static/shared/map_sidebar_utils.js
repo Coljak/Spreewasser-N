@@ -542,8 +542,6 @@ export function getUserFieldIdByLeafletId(leafletId) {
 
 
 export function highlightLayer(leafletId, featureGroup) {
-  console.log("HIGHLIGHT", leafletId);
-
   // remove highlight class from all layers
   featureGroup.eachLayer(function (layer) {
     if (layer.getElement) {
@@ -589,34 +587,36 @@ export function selectUserField(userFieldId, project, featureGroup) {
     const userField = getUserFields()[leafletId];
     highlightLayer(leafletId, featureGroup);
 
-    const needsConfirmation = (
-        project && project.id &&
-        (
-            (project.userField && project.userField !== userFieldId) ||
-            (!project.userField || project.userField === '')
-        ) 
-    ) || (project.toolboxType && project.toolboxType !== 'generic' && project.userField && project.userField !== userFieldId);
+    const needsConfirmation = (project && project.userField && project.userField !== userFieldId && 
+      ((project.toolboxType && project.toolboxType !== 'generic') || !project.toolboxType)
+    )
+        
+            // (!project.userField || project.userField === '') // Monica project without user field to SWN
+    //     ) 
+    // ) || (
+    //   project.toolboxType && 
+    //   project.toolboxType !== 'generic' && 
+    //   project.userField && 
+    //   project.userField !== userFieldId
+    // );
     console.log('needsConfirmation', needsConfirmation, userFieldId, userField);
 
     if (needsConfirmation) {
-        const isChangingExisting = !!project.userField;
 
-        if (project.toolboxType) {
+        if (project.toolboxType ) {
           showUserFieldModal({
-            title: "Auswahl des Suchbereichs",
-            text: isChangingExisting
-                ? "Wollen Sie den Suchbereich wechseln?"
-                : "Falls ein Projekt geöffnet ist, wird es ohne zu speichern geschlossen.",
+            title: "Änderung des Suchgebiets",
+            text: "Falls ein Projekt geöffnet ist, wird es ohne zu speichern geschlossen.",
             onConfirm: () => {
                 commitSwitchUserField(project, userFieldId, userField, featureGroup);
+                $('.toolbox-back-to-initial').click();
             }
         });
-        } else {
+        } else if (!project.toolboxType && project.id){
+          // const projectExisting = project.id ? true : false;
           showUserFieldModal({
-            title: "User Field Selection",
-            text: isChangingExisting
-                ? "You are changing a Monica Project's user field."
-                : "You are changing a Monica Project without UserField to a SWN Project with UserField. The location of the project will be changed to the UserField location.",
+            title: "Auswahl ändern",
+            text: "Sind Sie sich sicher, dass Sie das Feld im bestehenden Projekt ändern wollen?",
             onConfirm: () => {
                 commitSwitchUserField(project, userFieldId, userField, featureGroup);
             }
@@ -652,13 +652,13 @@ function showUserFieldModal({ title, text, onConfirm }) {
 }
 
 function commitSwitchUserField(project, userFieldId, userField, featureGroup) {
-  console.log('commitSwitchUserField', userFieldId, userField);
-  project['userField'] = userFieldId;
-  try {
-    project['latitude'] = userField.lat;
-    project['longitude'] = userField.lon;
-  } catch {;};
-  
+    project['userField'] = userFieldId;
+    try {
+      // project SWN
+      project['latitude'] = userField.lat;
+      project['longitude'] = userField.lon;
+    } catch {;};
+
   project.saveToLocalStorage();
   highlightLayer(getLeafletIdByUserFieldId(userFieldId), featureGroup);
 }

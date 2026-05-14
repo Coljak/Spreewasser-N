@@ -262,8 +262,11 @@ export function tableCheckSelectedItems(project, dataType) {
     checkboxes.forEach(checkbox => {
         const checked = project[`selected_${dataType}s`].includes(String(checkbox.dataset.id)) ? true : false;
         // const checked = project[`selected_${dataType}s`].includes(checkbox.dataset.id) ? true : false;
-
         checkbox.checked = checked;
+        if (checkbox.classList.contains('toggle-sink-result')) {
+            console.log(`Triggering change event for checkbox ${checkbox.getAttribute('data-type')} ${checkbox.dataset.id} with checked=${checked}`);
+            $(checkbox).change();
+        } 
         })
     }
 };

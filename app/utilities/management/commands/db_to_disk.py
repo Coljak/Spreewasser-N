@@ -274,8 +274,8 @@ def import_all_models(
 
         # Example:
         # app.Model.part1.json
-
-        base = f.rsplit(".part", 1)[0]
+        # the .json split is to retrofit old exports that didn't have the .partX in the name
+        base = f.rsplit('.json')[0].rsplit('.part')[0]
 
         app_label, model_name = base.split(".", 1)
 

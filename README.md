@@ -8,6 +8,10 @@
 
 
 ## Installation
+
+### 1. Nginx
+Nginx runs in a container. The necessary certificates remain at their default locations on the host server:
+/etc/
 ### 1. Install git
 ```shell
 sudo apt-get install git

@@ -28,6 +28,7 @@ services:
 
     ports:
       - 80:80
+      - 443:443
     volumes:
       - /etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
       - /etc/ssl/klima-hub:/etc/ssl/klima-hub:ro

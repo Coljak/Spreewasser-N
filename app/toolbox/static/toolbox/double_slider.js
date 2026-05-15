@@ -1,5 +1,4 @@
 export function initializeSliders() {
-  console.log("Initializing sliders...");
   $(".double-slider").each(function () {
       let $input = $(this);
       let slider = $input.slider(); // initializes Bootstrap slider
@@ -31,7 +30,6 @@ export function initializeSliders() {
   document.querySelectorAll('.reset-double-slider').forEach(btn => {
     btn.addEventListener('click', function (e) {
       const $target = $(btn.dataset.target);
-      console.log('target', $target);
       const min = parseFloat($target.data('slider-min'));
       const max = parseFloat($target.data('slider-max'));
       $target.slider('setValue', [min, max], true, true); // true: triggerSlideEvent, true: triggerChangeEvent

@@ -23,11 +23,14 @@
     
     <!-- Navigation -->
     <ul class="nav nav-tabs mb-3">
+        <li class="nav-item infiltration">
+            <a class="toolbox nav-link description-nav-link active" data-bs-toggle="tab" href="#tabinfiltrationDescription" aria-selected="true">Projektbeschreibung</a>
+        </li>
         <li class="nav-item">
-            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
+            <a class="toolbox nav-link project-nav-link" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
         </li>
         <li class="nav-item infiltration">
-            <a id="navInfiltrationWeightingForms" class="toolbox nav-link" data-bs-toggle="tab" href="#tabWeightingForms" aria-selected="false"
+            <a id="navInfiltrationWeightingForms" class="toolbox nav-link nav-link-start" data-bs-toggle="tab" href="#tabWeightingForms" aria-selected="false"
             data-toggle="tooltip" data-placement="top" title="Erklärung zur Gewichtung"
             >Gewichtung Bodenbewertung</a>
         </li>
@@ -55,7 +58,7 @@
         </li>
         
         <li class="nav-item infiltration">
-            <a id="navInfiltrationResult" class="toolbox nav-link disabled" data-bs-toggle="tab" href="#tabToolboxResult">Ergebnis</a>
+            <a id="navInfiltrationResult" class="toolbox result-tab nav-link disabled" data-bs-toggle="tab" href="#tabToolboxResult">Ergebnis</a>
         </li>
         <li class="nav-item infiltration">
             <a id="navInfiltrationResultDownload" class="toolbox nav-link" data-bs-toggle="tab" href="#tabInfiltrationResultDownload">Download</a>
@@ -65,7 +68,33 @@
     <!-- Tab Content Wrapper -->
     <div class="tab-content" id="toolboxTabContent">
 
-        <div id="tabToolboxProject" class="tab-pane active show">
+        <div id="tabInfiltrationDescription" class="tab-pane active show">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Grundwasseranreicherung durch Versickerung</h5>        
+                    <p>Herzlich willkommen im Tool Grundwasseranreicherung durch Versickerung!</p>          
+                    <div class="row g-3">
+                        <div class="col-6">
+                           
+                                <div class="card-body">
+                                    <img src="{% static 'images/versickerung-grafik.png' %}" 
+                                        class="img-fluid border rounded" 
+                                        alt="Versickerung">
+                                </div>
+                            
+                        </div>
+                        <div class="col-6">
+                            <p>
+                                Das Tool ermöglicht die Vorplanung von Wasserspeichermaßnahmen bei denen überschüssiges Wasser aus Oberflächengewässern in natürliche Senken der Landschaft umgeleitet und versickert wird. Zu diesem Zweck können sowohl natürliche als auch baulich erweiterte Senken gesucht, verglichen und passenden Entnahmegewässern zugeordnet werden. Im Fokus steht die Eignung von Standorten mit hoher Durchlässigkeit und guter Anbindung an den oberflächennahen Grundwasserleiter, dessen Anreicherung die Wasserverfügbarkeit im Oberflächen- und Grundwasser stützt.
+                            </p>
+                        </div>
+                    </div>  
+                </div>
+            </div>
+        </div>
+
+
+        <div id="tabToolboxProject" class="tab-pane">
             <div class="card mb-3">
                 <div class="card-body">
                     {% crispy project_select_form %}
@@ -96,9 +125,9 @@
                     </form>
                 </div>
             </div>
-            <div id="card-sink-table" class="card mb-3 d-none overflow-auto">
+            <div id="card-sink-table" class="card table-card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="sink-table-container" class="table-responsive"></div>
+                    <div id="sink-table-container" class="table-responsive table-container"></div>
                     
                 </div>
             </div>
@@ -126,9 +155,9 @@
                 </div>
             </div>
             
-            <div id="card-enlarged_sink-table"  class="card mb-3 d-none overflow-auto">
+            <div id="card-enlarged_sink-table"  class="card table-card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="enlarged_sink-table-container" class="table-responsive"></div>
+                    <div id="enlarged_sink-table-container" class="table-responsive table-container"></div>
                    
                 </div>
             </div>
@@ -155,9 +184,9 @@
                     </div>
                 </div>
             </div>
-            <div id="card-lake-table"  class="card mb-3 d-none overflow-auto">
+            <div id="card-lake-table"  class="card table-card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="lake-table-container" class="table-responsive"></div>
+                    <div id="lake-table-container" class="table-responsive table-container"></div>
                 </div>
             </div>
             
@@ -183,9 +212,9 @@
                     </div>
                 </div>
             </div>
-            <div id="card-stream-table"  class="card mb-3 d-none overflow-auto">
+            <div id="card-stream-table"  class="card table-card mb-3 d-none overflow-auto">
                 <div class="card-body">
-                    <div id="stream-table-container" class="table-responsive"></div>
+                    <div id="stream-table-container" class="table-responsive table-container"></div>
                   
                 </div>
             </div>
@@ -250,7 +279,7 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>
-                    <div id="infiltration_result-table-container" class="table-responsive"></div>  
+                    <div id="infiltration_result-table-container" class="table-responsive table-container"></div>  
                                 
                 </div>
             </div>

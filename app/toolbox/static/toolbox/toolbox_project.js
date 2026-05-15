@@ -57,6 +57,8 @@ export class ToolboxProject {
     }
   }
 
+
+
   static subclassRegistry = {};
 
   static registerSubclass(toolboxType, subclass) {

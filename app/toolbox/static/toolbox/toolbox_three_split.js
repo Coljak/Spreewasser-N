@@ -1,5 +1,5 @@
 import { getGeolocation, handleAlerts, saveProject, observeDropdown,  getCSRFToken, setLanguage, addToDropdown } from '/static/shared/utils.js';
-import { loadProjectFromDb} from '/static/toolbox/toolbox.js';
+import { loadProjectFromDb, saveNewProjectModalEvents} from '/static/toolbox/toolbox.js';
 import {initializeSliders} from '/static/toolbox/double_slider.js';
 import { ToolboxProject } from '/static/toolbox/toolbox_project.js';
 import { SiekerSink } from '/static/toolbox/sieker_sink_model.js';
@@ -35,7 +35,7 @@ import {
   selectUserField,
   dismissPolygon,
 } from '/static/shared/map_sidebar_utils.js';
-import { saveNewProjectModalEvents } from '/static/toolbox/toolbox_modals.js';
+
 
 // for info elements with help text
 function getInfoText(el) {
@@ -148,6 +148,8 @@ async function startInfiltration() {
   if (!project.id) {
     const infiltration = new Infiltration(data.default_project);
     infiltration.saveToLocalStorage();
+  } else {
+    $('#id_toolbox_project').val(project.id);
   }
 
   initializeInfiltration(); // initialize UI
@@ -178,7 +180,7 @@ async function startSurfaceWaters() {
   // ----- Fetch + parse JSON safely -----
   try {
     const response = await fetch(
-      `load_surface_waters_gui/${project.userField}/`
+      `load_sieker_surface_water_gui/${project.userField}/`
     );
 
     rawText = await response.text();
@@ -317,6 +319,8 @@ async function startSiekerGeks() {
   if (!project.id) {
     const siekerGeks = new SiekerGek(data.default_project);
     siekerGeks.saveToLocalStorage();
+  } else {
+    $('#id_toolbox_project').val(project.id);
   }
   initializeSiekerGek({
     'sliderLabels': data.slider_labels,
@@ -358,6 +362,8 @@ async function startFormerWetlands() {
   if (!project.id) {
     const formerWetlands = new SiekerWetland(data.default_project);
     formerWetlands.saveToLocalStorage();
+  } else {
+    $('#id_toolbox_project').val(project.id);
   }
 
   initializeSiekerWetland({
@@ -389,6 +395,8 @@ async function startInjection() {
       const defaultProject = data.default_project;
       const injection = new Injection(defaultProject);
       injection.saveToLocalStorage();
+    } else {
+      $('#id_toolbox_project').val(project.id);
     }
 
     return {
@@ -437,6 +445,8 @@ async function startDrainage() {
   if (!project.id) {
     const drainage = new Drainage(data.default_project);
     drainage.saveToLocalStorage();
+  } else {
+    $('#id_toolbox_project').val(project.id);
   }
    
   $('input[detail]').each(function() {

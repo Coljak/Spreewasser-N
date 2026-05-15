@@ -82,11 +82,11 @@ def export_bounds_for_project(filter_set, metadata={}):
     return metadata
 
 
-def create_default_project(user_filed, list_of_filters, toolbox_type):
+def create_default_project(user_field, list_of_filters, toolbox_type):
     """
     Docstring for create_default_project
     
-    :param user_filed: the project's userField, of type UserField
+    :param user_field: the project's userField, of type UserField
     :param list_of_filters: list of filter classes
     :param toolbox_type: string of ToolboxType.name
 
@@ -137,7 +137,7 @@ def create_default_project(user_filed, list_of_filters, toolbox_type):
 
     
     project = {
-        "userField": user_filed.id if user_filed else None,
+        "userField": user_field.id if user_field else None,
         "toolboxType": toolbox_type
     }
     print(project)

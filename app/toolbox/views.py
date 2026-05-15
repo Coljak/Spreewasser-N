@@ -97,18 +97,13 @@ def toolbox_dashboard(request):
     project_form = forms.ToolboxProjectForm(user=user)
     project_modal_title = 'Neues Projekt erstellen'
 
-    # default_project = create_default_project(user)
 
     context = {
         'project_region': project_region,
-        # 'default_project': default_project,
         'counties_form': counties_form,
         # 'project_select_form': project_select_form,
         'project_form': project_form,
         'project_modal_title': project_modal_title,
-        # 'outline_injection': outline_injection,
-        # 'outline_surface_water': outline_surface_water,
-        # 'outline_infiltration': outline_infiltration,
     }
 
     return render(request, 'toolbox/toolbox_three_split.html', context)
@@ -171,7 +166,7 @@ def save_toolbox_project(request):
         print('Error saving project:', e)
         return JsonResponse({'message': {'success': False, 'message': str(e)}}, status=400)
     
-
+@login_required
 def load_toolbox_project(request, id):
 
     project = models.ToolboxProject.objects.get(pk=id)
@@ -182,7 +177,24 @@ def load_toolbox_project(request, id):
         project_json = project.to_json()
         return JsonResponse({'success': True, 'message': f'Projekt {project.name} wurde geladen.', 'project': project_json})
 
-    
+@login_required
+def delete_toolbox_project(request, id):
+
+    if request.method == 'DELETE':
+
+        try:
+            project = models.ToolboxProject.objects.get(pk=id, user=request.user)
+            project.delete()
+            return JsonResponse({'message': {'success': True, 'message': f'Projekt {project.name} wurde gelöscht.'}})
+
+        except models.ToolboxProject.DoesNotExist:
+            return JsonResponse({'message': {'success': False, 'message': 'Projekt existiert nicht.'}})
+        
+    else:
+        return JsonResponse({
+            'success': False,
+            'message': 'Ungültige Anfrage.'
+        }, status=405)
 
 @login_required
 @csrf_protect
@@ -382,6 +394,7 @@ def load_infiltration_gui(request, user_field_id):
             'enlarged_sink_filter': enlarged_sink_form,
             'streams_form': stream_form,
             'lakes_form': lake_form,
+
             'overall_weighting': overall_weighting,
             'forest_weighting': forest_weighting,
             'agriculture_weighting': agriculture_weighting,
@@ -389,6 +402,7 @@ def load_infiltration_gui(request, user_field_id):
             'inlet_weighting': inlet_weighting,
             'result_form': result_form,
         }, request=request) 
+
         default_project = filters.create_default_project(
             user_field, 
             [
@@ -948,7 +962,7 @@ def get_elevations_for_line(line_geom):
 ####### SIEKER TOOLBOX ########################
 
 ##### Surface Waters ######
-def load_sieker_surface_waters_gui(request, user_field_id):
+def load_sieker_surface_water_gui(request, user_field_id):
     if user_field_id == "null":
 
         return JsonResponse({'message':{'success': False, 'message': 'Das Suchgebiet konnte nicht gefunden werden.'}})

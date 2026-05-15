@@ -21,11 +21,11 @@
     <!-- Navigation -->
     <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersProject" aria-selected="true">Projekt</a>
+            <a class="toolbox nav-link project-nav-link active" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersProject" aria-selected="true">Projekt</a>
         </li>
     
         <li class="nav-item sieker_surface_water">
-            <a id="navSiekerSurfaceWatersLakes" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersLakes" aria-selected="false">Seen</a>
+            <a id="navSiekerSurfaceWatersLakes" class="toolbox nav-link nav-link-start" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersLakes" aria-selected="false">Seen</a>
         </li>
         <li class="nav-item sieker_surface_water">
             <a id="navSiekerSurfaceWatersLevels" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerSurfaceWatersLevels" aria-selected="false">Pegelzeitreihen</a>
@@ -82,10 +82,8 @@
             </div>
             <div id="card-sieker_surface_water-table" class="card mb-3 overflow-auto">
                 <div class="card-body">
-                    {% comment %} <div id="sieker-lake-table-container" class="table-responsive"></div> {% endcomment %}
-                    <div id="sieker_surface_water-table-container" class="table-responsive"></div>
-                    {% comment %} <button id="btnContinueWithSinkSelection" type="button" class="btn btn-primary mt-3 evaluate-selected-sinks">Auswahl bewerten</button> {% endcomment %}
-                    {% comment %} <button id="btnShowSinkOutlines" type="button" class="btn btn-primary mt-3 show-sink-outlines">Senken anzeigen</button> {% endcomment %}
+                    <div id="sieker_surface_water-table-container" class="table-responsive table-container"></div>
+                  
 
                 </div>
             </div>
@@ -118,7 +116,6 @@
                         <h5 class="card-title">Oberirdische Einzugsgebiete</h5>
                         <button class="btn btn-secondary toggle-feature-group" data-type="above_ground_catchment_area">Layer ausblenden</button>                                                                                             
                     </div>
-                    {% comment %} <div id="sieker-lake-table-container" class="table-responsive"></div> {% endcomment %}
                     <div id="above_ground_catchment_area-table-container" class="table-responsive"></div>
                 </div>
             </div>

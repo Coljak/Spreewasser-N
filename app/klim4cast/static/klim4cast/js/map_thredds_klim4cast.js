@@ -199,13 +199,101 @@ function showCoordinates (e) {
     alert(`Länge: ${e.latlng.lat}, Breite: ${e.latlng.lng}`);
 };
 
+
+
+
+
+
+function createChart(data) {
+    
+    let modalTile = document.getElementById('clim4castChartTitle');
+    modalTile.innerHTML = `${data.long_name} at ${data.latitude.toFixed(2)}, ${data.longitude.toFixed(2)}`;
+
+    // Ensure that the modal is shown before attempting to create the chart
+    let chartDiv = document.getElementById('clim4castChartDiv');
+    console.log(chartDiv);
+
+  
+
+    // Add a small delay before creating the chart to make sure the modal (and canvas) is fully visible
+    setTimeout(function() {
+        const chart = new Chart(chartDiv, {
+            type: "line",
+            data: {
+                labels: data.dates, // the date labels
+                datasets: [{
+                    label: `${data.long_name} ${data.units}`,
+                    data: data.values,
+                    borderColor: 'rgba(75, 192, 192, 1)', // Set color for the line
+                    fill: false // Set whether the area under the line should be filled
+                }]
+            },
+
+            plugins: [htmlLegendPlugin],
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right' // Position of the legend
+                    },
+                    zoom: {
+                        zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        pinch: {
+                            enabled: true
+                        },
+                        mode: 'x',
+                        }
+                    },
+            
+                },
+                scales: {
+                    x: {
+                        type: 'category',
+                        labels: data.dates, // the dates as labels on the x-axis
+                        title: {
+                            display: true,
+                            text: 'Dates'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: `${data.units}`
+                        }
+                    }
+                }
+            },
+        });
+
+        chart.update();
+    }, 200);  // Delay of 200ms (adjust if necessary)
+
+};
+
+
+
 function showData (e) {
     let nc = datasetSelector.value;
     let variable = netcdfVariableSelector.value;
 
     // Optionally, add a loading spinner here instead of the text message
 
-    fetch(`/klim4cast/get_data/${nc}/${variable}/${e.latlng.lat}/${e.latlng.lng}`)
+    fetch('/get_point_data/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken') // Include CSRF token for Django
+        },
+        body: JSON.stringify({
+            'netcdf': nc,
+            'param': variable,
+            'lat': e.latlng.lat,
+            'lon': e.latlng.lng
+        })
+    })
     .then(response => response.json())
     .then(data => {
         // Create the chart

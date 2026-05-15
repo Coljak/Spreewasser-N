@@ -128,6 +128,33 @@ def timelapse_django_passthrough_wms(request, netcdf):
         return HttpResponse(f"Error: {e}", content_type='text/plain')
     
 
+def get_point_data(request):
+    """
+    Incoming requests are passed through to the Thredds server.
+    """
+
+    if request.method != 'POST':
+        data = json.loads(request.body)
+
+        netcdf = f"{data.get('netcdf', '')}.nc"
+        param = data.get('param', '')
+        lat = data.get('lat', '')
+        lon = data.get('lon', '')
+
+        with xr.open_dataset(f"{settings.CLIM4CAST_NETCDF_DIR}/{netcdf}", decode_times=False) as ds:
+            point_data = ds[param].sel(lat=lat, lon=lon, method='nearest').values
+            time = ds['time'].sel(lat=lat, lon=lon, method='nearest').values
+            long_name = ds.data_vars[param].long_name if 'long_name' in ds.data_vars[param].attrs else param
+            unit = ds.data_vars[param].units if 'units' in ds.data_vars[param].
+
+        return JsonResponse({
+            'point_data': point_data.tolist(),
+            'time': time.tolist(),
+            'long_name': long_name,
+            'unit': unit,
+        })
+    
+
 def get_data(request, name, variable, lat, lon):
     """
     Get data from the Thredds server.
@@ -137,8 +164,6 @@ def get_data(request, name, variable, lat, lon):
 
     lat = float(lat)
     lon = float(lon)
-    print('lat', lat)
-    print('lon', lon)
 
     ds = nc.sel(lat=lat, lon=lon, method='nearest')
 

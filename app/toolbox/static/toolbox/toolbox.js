@@ -6,7 +6,7 @@ import {SiekerSink} from '/static/toolbox/sieker_sink_model.js';
 import {SiekerSurfaceWaters} from '/static/toolbox/sieker_surface_waters_model.js';
 import {SiekerWetland} from '/static/toolbox/sieker_wetland_model.js';
 import { Drainage } from '/static/toolbox/sieker_drainage_model.js';
-import {map, removeLegendFromMap, getSelectedUserField} from '/static/shared/map_sidebar_utils.js';
+import {map, removeLegendFromMap, getSelectedUserField, showInteractionModal} from '/static/shared/map_sidebar_utils.js';
 import {Layers} from '/static/toolbox/layers.js';
 import {geoserverLayers} from '/static/toolbox/geoserver_layers.js';
 import {ToolboxProject} from '/static/toolbox/toolbox_project.js';
@@ -59,6 +59,63 @@ function toggleValueInArray(list, val) {
   }
   return list;
 };
+
+export function saveNewProjectModalEvents() {
+    $('#saveToolboxProjectButton').on('click', async function () {
+        const projectNameInput = $('#id_project_name');
+        const projectName = projectNameInput.val().trim();
+
+        // Validate project name
+        if (!projectName) {
+            projectNameInput.addClass('is-invalid');
+            projectNameInput.focus();
+            return;
+        } else {
+        projectNameInput.removeClass('is-invalid');
+        }
+
+        const project = ToolboxProject.loadFromLocalStorage();
+        // const isNewProject = (project.toolboxType === 'generic');
+        const pageReload = $('#saveToolboxProjectButton').data('page-reload')
+        project.name = projectName;
+        project.toolboxType = $('#projectTypeSelect').val();
+        project.description = $('#id_project_description').val().trim();
+        project.saveToLocalStorage();
+        try {
+            setProjectInfoHeader(project);
+        } catch {;}
+        
+
+        $('#toolboxProjectModal').modal('hide');
+        try {
+            const data = await project.saveToDB(); 
+            console.log('data', data);
+
+            if (data.success) {
+
+                handleAlerts({ success: data.success, message: data.message });
+                if (pageReload) {
+                    startToolbox(project); 
+                } else {
+                    $('#id_toolbox_project').prepend($('<option>', { value: project.id, text: project.name }));
+                    console.log('project id', project.id);
+                    $('#id_toolbox_project').val(project.id);
+                }
+
+            } else {
+                
+                handleAlerts(data.message);
+            }
+
+        } catch (err) {
+        console.error('Failed to save project:', err);
+        handleAlerts({ success: false, message: 'Error saving project.' });
+        }
+    });
+  
+    
+};
+    
 
 export function toggleInlet(dataType, inlet_id, layer_id) {
     const featureGroup = Layers[dataType];
@@ -575,8 +632,7 @@ export function setProjectInfoHeader(project) {
     if (project.userField) {
 
         const userFields = JSON.parse(localStorage.getItem('userFields')) || [];
-        console.log('userFields', userFields);
-        const userFieldName = Object.values(userFields).find((uf => uf.id === project.userField)).name;
+        const userFieldName = Object.values(userFields).find((uf => String(uf.id) === String(project.userField))).name;
         
         if (userFieldName) {
             $('.title-user-field-name').text(userFieldName);
@@ -589,6 +645,11 @@ export function setProjectInfoHeader(project) {
 export function loadProjectToGui(project) {
 
     console.log('loadProjectToGui', project);
+    // reset all tables
+    $('#toolboxPanel .table-container').html("");
+    $('.table-card').addClass('d-none');
+    $('.result-tab').addClass('disabled');
+  
     setProjectInfoHeader(project)
     
     const doubleSliders = $('#toolboxPanel input.double-slider');
@@ -620,17 +681,13 @@ export function loadProjectToGui(project) {
     // these checkboxes are in drainage network
     if ($checkboxes.length) {
         $checkboxes.each(function () {
-            // console.log('checkbox this', this)
             const $checkbox = $(this);
             const val = $checkbox.val();
             const key = $checkbox.attr('prefix') + '_' + $checkbox.attr('name');
-            // console.log('checkbox val key', val, key)
-            console.log('checkbox checked key', key, val)
             $checkbox.prop('checked', project[key].includes(val));
         });
     }
 
-    
     for (const [key, value] of Object.entries(project)) {
         if (key.startsWith('all_') && key.endsWith('_ids') && value.length > 0) {
             const dataType = key.replace('all_', '').replace('_ids', '');
@@ -643,6 +700,7 @@ export function loadProjectToGui(project) {
                     $(`button.filter-features[data-type="${dataType}"]`).trigger('click')
                 }
                 tableCheckSelectedItems(project, 'sieker_water_level')
+                
 
             } else if (project.toolboxType === 'sieker_gek') {
                 console.log('Toolbox Type sieker_gek key', key)
@@ -657,9 +715,9 @@ export function loadProjectToGui(project) {
                     $(`button.filter-features[data-type="${dataType}"]`).trigger('click')
                 }
 
-            } else if (project.toolboxType === 'infiltration' && dataType === 'infiltration_result' && project.selected_infiltration_results.length > 0) {
-                console.log('Special case for infiltration_result', project.selected_infiltration_results)
-                $(`#btnGetInfiltrationResults`).trigger('click')
+            } else if (project.toolboxType === 'infiltration' && dataType === 'infiltration_result' && project.selected_infiltration_results.length > 0) {             
+                    console.log('Special case for infiltration_result', project.selected_infiltration_results)
+                    $(`#btnGetInfiltrationResults`).trigger('click')
             } else if (project.toolboxType === 'sieker_sink' && dataType === 'sieker_sink_result' && project.selected_sieker_sink_results.length > 0) {
                 console.log('Special case for sieker_sink_result', project.selected_sieker_sink_results)
                 $(`#btnGetSiekerSinkResults`).trigger('click')
@@ -706,6 +764,47 @@ export function clearToolboxPanel(){
     newProject.userField = getSelectedUserField();
     newProject.saveToLocalStorage();
 };
+
+
+function openProjectModal(project) {
+    
+    $('#userFieldSelect').val(project.userField);
+    $('#toolboxProjectModal').modal('show');
+    saveNewProjectModalEvents();
+    
+    $('#id_project_name').focus();
+    
+    $('#projectTypeSelect').val(project.toolboxType);
+    $('#projectTypeSelect').prop('disabled', true);
+    $('#userFieldSelect').prop('disabled', true);
+    $('#saveToolboxProjectButton').attr('data-page-reload', false);
+}
+
+
+function resetProject(project) {
+    const ProjectClass = projectClasses[project.toolboxType] || ToolboxProject;
+    const userField = project.toolboxType === 'injection' ? '' : `${project.userField}/`;
+    const url = `load_${project.toolboxType}_gui/${userField}`;
+    fetch(url)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const resetProject = ProjectClass.fromJson(data.default_project);
+            resetProject.saveToLocalStorage();
+            loadProjectToGui(resetProject);
+            const tab = new bootstrap.Tab(document.querySelector('.project-nav-link'));
+            tab.show();
+
+            return resetProject;
+        } else {
+            handleAlerts(data.message);
+        }
+    })
+    
+    
+
+}
+
 
 
 export function addClickEventListenerToToolboxPanel(projectClass) {
@@ -797,28 +896,75 @@ export function addClickEventListenerToToolboxPanel(projectClass) {
             
         } else if ($target.hasClass('save-toolbox-project')) {
             if (!project.id || project.name === '') {
-                $('#userFieldSelect').val(project.userField);
-                $('#toolboxProjectModal').modal('show');
-                
-                $('#id_project_name').focus();
-                
-                $('#projectTypeSelect').val($target.data('type'));
-                $('#projectTypeSelect').prop('disabled', true);
-                $('#userFieldSelect').prop('disabled', true);
-                $('#saveToolboxProjectButton').attr('data-page-reload', false);
+                openProjectModal(project);
+
 
             } else {
                 project.saveToDB();
                 handleAlerts({success: true, message: `${project.name} wurde gespeichert.`});
             }
-        } else if ($target.hasClass('toolbox-load-project')) {
+        } else if ($target.closest('.toolbox-load-project').length) {
             console.log('button has class')
             const project_id = $('#id_toolbox_project').val();
-            const loadedProject = loadProjectFromDb(project_id);
-            loadedProject.then(project => {
-                console.log('Loaded project:', project);
-                loadProjectToGui(project);
-            });
+            if (project_id === '') {
+
+                openProjectModal(project);
+                
+            } else {
+                const loadedProject = loadProjectFromDb(project_id);
+                loadedProject.then(project => {
+                    console.log('Loaded project:', project);
+                    loadProjectToGui(project);
+                });
+            }
+            const tab = new bootstrap.Tab(document.querySelector('.nav-link-start'));
+            tab.show();
+            
+            
+        } else if ($target.closest('.toolbox-delete-project').length) {
+            console.log('button has class delete')
+            const project_id = $('#id_toolbox_project').val();
+            if (project_id === '') {
+                return      
+            } else {
+                showInteractionModal({ 
+                    title: $('#id_toolbox_project option:selected').text(),
+                    text: 'Möchten Sie dieses Projekt wirklich löschen?',
+                    onConfirm:() => {
+                        
+                        fetch(`delete-project/${project_id}/`, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRFToken': getCSRFToken() }
+                            
+                        })
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.message.success) {
+                                console.log('delete success')
+                                handleAlerts(response.message);
+                                // remove deleted project from dropdown
+
+                                const project = ToolboxProject.loadFromLocalStorage();
+                                console.log('current project', project)
+                                console.log('deleted id', project_id)
+                                if (String(project.id) === String(project_id)) {
+                                    console.log('reset project', project)
+                                    // if the deleted project is currently loaded
+                                    resetProject(project);
+                                }
+                                $('#id_toolbox_project').val('');
+                                $(`#id_toolbox_project option[value="${project_id}"]`).remove();
+                                // reset dropdown to default
+                                
+                            } else {
+                                handleAlerts({success: false, message: 'Fehler beim Löschen des Projekts.'});
+                            }
+                        })
+                        .catch(error => {;})
+                    }
+                    })
+                }
+            
         } else if ($target.closest('tr').hasClass('table-parent-row') &&
                     !$target.is('input, button, a')) {           
             const tRow = $target.closest('tr');

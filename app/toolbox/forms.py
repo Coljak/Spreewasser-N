@@ -89,45 +89,105 @@ class ToolboxProjectSelectionForm(InfoLabelFormMixin, forms.Form):
     toolbox_project = forms.ChoiceField(
         required=False,
         choices=[],
-        label="Projekt",
+        label="",
         widget=forms.Select(attrs={'class': 'form-control toolbox-project'})
     )
 
-    def __init__(self, *args,qs=None, data_type=None, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args,qs=None, data_type=None, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     choices = [("", "Kein Projekt ausgewählt")]
         
+    #     if qs:
+    #         choices += [
+    #             (instance.id, instance.name) for instance in qs
+    #         ]
+    #     self.fields['toolbox_project'].choices = choices
+
+    #     self.helper = FormHelper(self)
+    #     self.helper.form_method = 'GET'
+    #     self.helper.form_class = 'form-horizontal toolbox-selection-form'
+    #     self.helper.label_class = 'col-lg-3 col-md-4 col-sm-auto'
+    #     self.helper.field_class = 'col-lg-7 col-md-8 col-sm-auto'
+    #     self.helper.add_input(Button(
+    #         'load-project', 
+    #         'Laden', 
+    #         css_class='col-2 toolbox-load-project btn btn-secondary',
+    #         **{'data-type': data_type}))
+    #     self.helper.add_input(Button(
+    #         'delete-project', 
+    #         'Löschen', 
+    #         css_class='col-2 toolbox-delete-project btn btn-secondary',
+    #         **{'data-type': data_type}))
+
+        
+    def __init__(self, *args, qs=None, data_type=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        choices = [("", "Neues Projekt anlegen")]
+
         if qs:
-            self.fields['toolbox_project'].choices = [
-                (instance.id, instance.name) for instance in qs
+            choices += [
+                (instance.id, instance.name)
+                for instance in qs
             ]
+
+        self.fields['toolbox_project'].choices = choices
 
         self.helper = FormHelper(self)
         self.helper.form_method = 'GET'
         self.helper.form_class = 'form-horizontal toolbox-selection-form'
-        self.helper.label_class = 'col-lg-4 col-md-4 col-sm-auto'
-        self.helper.field_class = 'col-lg-8 col-md-8 col-sm-auto'
-        self.helper.add_input(Button(
-            'load-project', 
-            'Laden', 
-            css_class='toolbox-load-project btn btn-secondary',
-            **{'data-type': data_type}))
-        self.helper.add_input(Button(
-            'delete-project', 
-            'Löschen', 
-            css_class='toolbox-delete-project btn btn-secondary',
-            **{'data-type': data_type}))
-        self.helper.add_input(Button(
-            'info-project', 
-            'Projektinfo', 
-            css_class='toolbox-project-info btn btn-secondary',
-            **{'data-type': data_type}))
-        self.helper.add_input(Button(
-            'new-project', 
-            'Neues Projekt', 
-            css_class='toolbox-new-project btn btn-secondary',
-            **{'data-type': data_type}))
-        
 
+        self.helper.layout = Layout(
+            Row(
+                Column(
+                    HTML("""
+                        <label for="id_toolbox_project"
+                            class="col-form-label mb-3">
+                            Projekt
+                        </label>
+                    """),
+                    css_class='col-3'
+                ),
+
+                Column(
+                    Field(
+                        'toolbox_project',
+                        wrapper_class='mb-0'
+                    ),
+                    css_class='col-7'
+                ),
+
+                Column(
+                    HTML(f"""
+                        <button
+                            type="button"
+                            class="toolbox-load-project btn btn-success w-100 mb-3"
+                            data-type="{data_type}"
+                            title="Laden"
+                        >
+                            <i class="bi bi-check-square"></i>
+                        </button>
+                    """),
+                    css_class='col-1'
+                ),
+
+                Column(
+                    HTML(f"""
+                        <button
+                            type="button"
+                            class="toolbox-delete-project btn btn-danger w-100 mb-3"
+                            data-type="{data_type}"
+                            title="Löschen"
+                        >
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    """),
+                    css_class='col-1'
+                ),
+
+                css_class='align-items-center'
+            )
+        )
 
 
 class ToolboxProjectForm(InfoLabelFormMixin, forms.Form):
@@ -730,7 +790,7 @@ class InfiltrationResultDownloadForm(ResultForm):
             ('shp', 'als Shapefile'),
             ('gjson', 'als GeoJSON')
         ],
-        initial=['result_shp'],
+        initial=['gjson'],
     )
 
     sinks = forms.MultipleChoiceField(
@@ -744,7 +804,7 @@ class InfiltrationResultDownloadForm(ResultForm):
             ('pt_gjson', 'Punkte als GeoJSON'),    
             ('csv', 'als CSV-Datei'),
         ],
-        # initial=['sinks_shp']
+        initial=['gjson']
     )
     enlarged_sinks = forms.MultipleChoiceField(
         label="Vergrößerte Senken", 
@@ -757,7 +817,7 @@ class InfiltrationResultDownloadForm(ResultForm):
             ('pt_gjson', 'Punkte als GeoJSON'),
             ('csv', 'als CSV-Datei'),
         ],
-        # initial=['shp'],
+        initial=['gjson'],
     )
 
     waterbodies = forms.MultipleChoiceField(
@@ -769,7 +829,7 @@ class InfiltrationResultDownloadForm(ResultForm):
             ('gjson', 'als GeoJSON'),
             ('csv', 'als CSV-Datei'),
         ],
-        initial=['shp'],
+        initial=['gjson'],
     )
 
     

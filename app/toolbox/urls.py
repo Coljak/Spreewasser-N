@@ -21,6 +21,7 @@ urlpatterns = [
     # path('toolbox/get_options/<str:parameter>/', views.get_options, name='get-options'),
     path('toolbox/save-project/', views.save_toolbox_project, name='save-project'),
     path('toolbox/load-project/<int:id>/', views.load_toolbox_project, name='load-project'),
+    path('toolbox/delete-project/<int:id>/', views.delete_toolbox_project, name='delete-project'),
     # path('toolbox/load_polygon/', views.load_nuts_polygon, name='load_nuts_polygon'),
     # path('toolbox/load_polygon/<str:entity>/<int:polygon_id>/', views.load_nuts_polygon, name='load_nuts_polygon_entity'),
     path('toolbox/proxy/wms/', views.geoserver_wms, name='geoserver_wms'),
@@ -37,7 +38,7 @@ urlpatterns = [
     path('toolbox/mar_calculate_area/', views.mar_calculate_area, name='mar_calculate_area'),
     #### Sieker ####
     # Surface Waters
-    path('toolbox/load_surface_waters_gui/<int:user_field_id>/', views.load_sieker_surface_waters_gui, name='sieker_surface_waters_gui'),
+    path('toolbox/load_sieker_surface_water_gui/<int:user_field_id>/', views.load_sieker_surface_water_gui, name='sieker_surface_waters_gui'),
     path('toolbox/get_water_levels/<int:user_field_id>/', views.get_water_levels, name='get_water_levels'),
     path('toolbox/filter_sieker_surface_waters/', views.filter_sieker_surface_waters, name='filter_sieker_surface_waters'),
     path('toolbox/get_all_sieker_surface_waters/', views.get_all_sieker_surface_waters, name='get_all_sieker_surface_waters'),

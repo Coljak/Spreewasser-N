@@ -604,7 +604,7 @@ export function selectUserField(userFieldId, project, featureGroup) {
     if (needsConfirmation) {
 
         if (project.toolboxType ) {
-          showUserFieldModal({
+          showInteractionModal({
             title: "Änderung des Suchgebiets",
             text: "Falls ein Projekt geöffnet ist, wird es ohne zu speichern geschlossen.",
             onConfirm: () => {
@@ -614,7 +614,7 @@ export function selectUserField(userFieldId, project, featureGroup) {
         });
         } else if (!project.toolboxType && project.id){
           // const projectExisting = project.id ? true : false;
-          showUserFieldModal({
+          showInteractionModal({
             title: "Auswahl ändern",
             text: "Sind Sie sich sicher, dass Sie das Feld im bestehenden Projekt ändern wollen?",
             onConfirm: () => {
@@ -634,7 +634,7 @@ export function getSelectedUserField() {
   } else { return null; }
 }
 
-function showUserFieldModal({ title, text, onConfirm }) {
+export function showInteractionModal({ title, text, onConfirm }) {
     const modal = document.getElementById('interactionModal');
     const modalInstance = new bootstrap.Modal(modal);
 

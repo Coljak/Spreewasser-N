@@ -24,11 +24,11 @@
     <!-- Navigation -->
     <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
+            <a class="toolbox nav-link project-nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
         </li>
         
         <li class="nav-item sieker-sink">
-            <a id="navSiekerSinks" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerSinks" aria-selected="false">Senken</a>
+            <a id="navSiekerSinks" class="toolbox nav-link nav-link-start" data-bs-toggle="tab" href="#tabSiekerSinks" aria-selected="false">Senken</a>
         </li>
         
         <li class="nav-item sieker-sink">
@@ -39,7 +39,7 @@
         </li>
         
         <li class="nav-item sieker-sink">
-            <a id="navSiekerSinkResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerSinkResult">Ergebnis</a>
+            <a id="navSiekerSinkResult" class="toolbox result-tab nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerSinkResult">Ergebnis</a>
         </li>
 
         <li class="nav-item infiltration">
@@ -82,9 +82,9 @@
                     </form>
                 </div>
             </div>
-            <div id="card-sieker_sink-table" class="card mb-3 d-none">
+            <div id="card-sieker_sink-table" class="card table-card mb-3 d-none">
                 <div class="card-body">
-                    <div id="sieker_sink-table-container" class="table-responsive"></div>
+                    <div id="sieker_sink-table-container" class="table-responsive table-container"></div>
                     
                 </div>
             </div>
@@ -109,9 +109,9 @@
                     </div>
                 </div>
             </div>
-            <div id="card-sieker_lake-table"  class="card mb-3 d-none">
+            <div id="card-sieker_lake-table"  class="card table-card mb-3 d-none">
                 <div class="card-body">
-                    <div id="sieker_lake-table-container" class="table-responsive"></div>
+                    <div id="sieker_lake-table-container" class="table-responsive table-container"></div>
                 </div>
             </div>
             
@@ -136,9 +136,9 @@
                     </div>
                 </div>
             </div>
-            <div id="card-sieker_stream-table"  class="card mb-3 d-none">
+            <div id="card-sieker_stream-table"  class="card table-card mb-3 d-none">
                 <div class="card-body">
-                    <div id="sieker_stream-table-container" class="table-responsive"></div>
+                    <div id="sieker_stream-table-container" class="table-responsive table-container"></div>
                   
                 </div>
             </div>
@@ -149,7 +149,7 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>
-                    <div id="sieker_sink_result-table-container" class="table-responsive"></div>  
+                    <div id="sieker_sink_result-table-container" class="table-responsive table-container"></div>  
                     
                 </div>
             </div>

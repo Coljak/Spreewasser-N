@@ -24,11 +24,11 @@
     <!-- Navigation -->
     <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
+            <a class="toolbox nav-link project-nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
         </li>
         
         <li class="nav-item sieker-wetland">
-            <a id="navSiekerWetland" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerWetlands" aria-selected="false">Ehemalige Feuchtgebiete</a>
+            <a id="navSiekerWetland" class="toolbox nav-link nav-link-start" data-bs-toggle="tab" href="#tabSiekerWetlands" aria-selected="false">Ehemalige Feuchtgebiete</a>
         </li>
         <li class="nav-item sieker-wetland">
             <a id="navSiekerWetlandsLakes" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerWetlandsLakes" aria-selected="false">Seen</a>
@@ -38,7 +38,7 @@
         </li>
         
         <li class="nav-item sieker-wetland">
-            <a id="navSiekerWetlandsResult" class="toolbox nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerWetlandsResult">Ergebnis</a>
+            <a id="navSiekerWetlandsResult" class="toolbox result-tab nav-link disabled" aria-disabled="true" data-bs-toggle="tab" href="#tabSiekerWetlandsResult">Ergebnis</a>
         </li>
 
         <li class="nav-item infiltration">
@@ -76,10 +76,10 @@
             </div>
             
             
-            <div id="card-wetland-table" class="card mb-3 d-none">
+            <div id="card-wetland-table" class="card table-card mb-3 d-none">
                 <div class="card-body">
                                                                                                                
-                    <div id="wetland-table-container" class="table-responsive"></div>     
+                    <div id="wetland-table-container" class="table-responsive table-container"></div>     
                 </div>
             </div>
         </div>
@@ -103,9 +103,9 @@
                     </div>
                 </div>
             </div>
-            <div id="card-wetland_lake-table"  class="card mb-3 d-none">
+            <div id="card-wetland_lake-table"  class="card table-card mb-3 d-none">
                 <div class="card-body">
-                    <div id="wetland_lake-table-container" class="table-responsive"></div>
+                    <div id="wetland_lake-table-container" class="table-responsive table-container"></div>
                 </div>
             </div>
             
@@ -129,9 +129,9 @@
                     </div>
                 </div>
             </div>
-            <div id="card-wetland_stream-table"  class="card mb-3 d-none">
+            <div id="card-wetland_stream-table"  class="card table-card mb-3 d-none">
                 <div class="card-body">
-                    <div id="wetland_stream-table-container" class="table-responsive"></div>
+                    <div id="wetland_stream-table-container" class="table-responsive table-container"></div>
                   
                 </div>
             </div>
@@ -142,7 +142,7 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Ergebnis</h5>
-                    <div id="wetland_result-table-container" class="table-responsive"></div>  
+                    <div id="wetland_result-table-container" class="table-responsive table-container"></div>  
                     
                 </div>
             </div>

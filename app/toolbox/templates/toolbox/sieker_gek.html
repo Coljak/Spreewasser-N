@@ -20,11 +20,11 @@
         <!-- Navigation -->
     <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-            <a class="toolbox nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
+            <a class="toolbox nav-link project-nav-link active" data-bs-toggle="tab" href="#tabToolboxProject" aria-selected="true">Projekt</a>
         </li>
         
         <li class="nav-item sieker-gek">
-            <a id="navSiekerGek" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerGeks" aria-selected="false">Gewässerentwicklungskonzepte</a>
+            <a id="navSiekerGek" class="toolbox nav-link nav-link-start" data-bs-toggle="tab" href="#tabSiekerGeks" aria-selected="false">Gewässerentwicklungskonzepte</a>
         </li>
         <li class="nav-item sieker-gek">
             <a id="navSiekerGekMeasures" class="toolbox nav-link" data-bs-toggle="tab" href="#tabSiekerGekMeasures" aria-selected="false">Maßnahmen</a>
@@ -69,10 +69,10 @@
                 </div>
             </div>
             
-            <div id="card-sieker_gek-table" class="card mb-3 d-none">
+            <div id="card-sieker_gek-table" class="card table-card mb-3 d-none">
                 <div class="card-body">
                     <div class="card-title">Gewässer</div>
-                    <div id="sieker_gek-table-container" class="table-responsive"></div>
+                    <div id="sieker_gek-table-container" class="table-responsive table-container"></div>
                     
                 </div>
             </div>
@@ -86,7 +86,7 @@
                         <button class="btn btn-secondary toggle-feature-group" data-type="filtered_sieker_gek">Layer ausblenden</button>                                                                                             
                     </div>
                     
-                    <div id="filtered_sieker_gek-table-container" class="table-responsive"></div>
+                    <div id="filtered_sieker_gek-table-container" class="table-responsive table-container"></div>
                     <div id="sieker_gek-info-card" class="card mt-3" style="display: none;">
                         <div id="sieker_gek-info-card-body" class="card-body"></div>
                     </div>

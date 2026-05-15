@@ -816,33 +816,36 @@ export function initializeSidebarEventHandler({
           
 
           if (clickedElement.classList.contains("delete")) {
-            let confirmDelete = confirm(`Are you sure to delete ` + userFields[leafletId].name + "?");
-            if (confirmDelete) {
-              
-              let layer = featureGroup.getLayer(leafletId);
-              delete userFields[leafletId];
-              featureGroup.removeLayer(layer); // removes shape from map
+            showInteractionModal(
+              { title: userFields[leafletId].name,
+                 text: 'Wollen Sie den ' + userFields[leafletId].name + ' wirklich löschen?',
+                  onConfirm: () => {
+                      let layer = featureGroup.getLayer(leafletId);
+                      delete userFields[leafletId];
+                      featureGroup.removeLayer(layer); // removes shape from map
 
-              const listElement = document.getElementById("accordion-"+leafletId);
-              listElement.remove(); // removes HTML element from sidebar
-              // removes field from dbprojectClass
-              console.log("delete UserField ", userFieldId)
-              fetch(`delete-user-field/${userFieldId}/`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": getCSRFToken(),
-                }
-              })
-              .then(response => response.json())
-              .then(data => {
-                handleAlerts(data.message);
-                console.log("Delete Success");
-              })
-              .catch(error => {
-                console.log(error);
-              });
-            }
+                      const listElement = document.getElementById("accordion-"+leafletId);
+                      listElement.remove(); // removes HTML element from sidebar
+                      // removes field from dbprojectClass
+                      console.log("delete UserField ", userFieldId)
+                      fetch(`delete-user-field/${userFieldId}/`, {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          "X-CSRFToken": getCSRFToken(),
+                        }
+                      })
+                      .then(response => response.json())
+                      .then(data => {
+                        handleAlerts(data.message);
+                        console.log("Delete Success");
+                      })
+                      .catch(error => {
+                        console.log(error);
+                      });
+                  }})
+            
+
           } else if (clickedElement.classList.contains("field-menu")) {
             selectUserField(userFieldId, getProject(), featureGroup);
             console.log('field-menu clicked');

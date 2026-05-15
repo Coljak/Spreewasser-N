@@ -207,6 +207,11 @@ function showCoordinates (e) {
     alert(`Länge: ${e.latlng.lat}, Breite: ${e.latlng.lng}`);
 };
 
+
+
+
+
+
 function createChart(data) {
     
     let modalTile = document.getElementById('clim4castChartTitle');
@@ -284,7 +289,19 @@ function showData (e) {
 
     // Optionally, add a loading spinner here instead of the text message
 
-    fetch(`/klim4cast/get_data/${nc}/${variable}/${e.latlng.lat}/${e.latlng.lng}`)
+    fetch('/get_point_data/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken') // Include CSRF token for Django
+        },
+        body: JSON.stringify({
+            'netcdf': nc,
+            'param': variable,
+            'lat': e.latlng.lat,
+            'lon': e.latlng.lng
+        })
+    })
     .then(response => response.json())
     .then(data => {
         // Create the chart

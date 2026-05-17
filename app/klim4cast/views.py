@@ -9,99 +9,72 @@ import numpy as np
 from datetime import datetime, timedelta, date
 import json
 from django.conf import settings
-def klim4cast(request):
-    return 'Klim4Cast'
+import os
+
 
 def klim4cast_timelapse_items(request):
     # List of datasaet as in the thredds_catalog view
 
-    response = requests.get(settings.THREDDS_CATALOG_XML)
-    catalog_dict = xmltodict.parse(response.content)
-    print("\nKlim4Cast catalog_dict['catalog']['dataset']['dataset']\n", catalog_dict['catalog']['dataset']['dataset'], type(catalog_dict['catalog']['dataset']['dataset']))
-    print('TYPE is list:', type(catalog_dict['catalog']['dataset']['dataset']) == 'list')
-    # thredds content as dataset from list comprehension
-    if isinstance(catalog_dict['catalog']['dataset']['dataset'], list):
-        catalog_dict_list = [
-            {
-                "name": dataset['@name'].split('.nc')[0],
-                "urlPath": dataset['@urlPath'],
-                "size": f"{dataset['dataSize']['#text']} {dataset['dataSize']['@units']}",
-                "date_modified": (
-                    datetime.strptime(dataset['date']['#text'], "%Y-%m-%dT%H:%M:%S.%fZ")
-                    if '.' in dataset['date']['#text']
-                    else datetime.strptime(dataset['date']['#text'], "%Y-%m-%dT%H:%M:%SZ")
-                ).strftime("%d-%m-%Y"),
-            }
-            for dataset in catalog_dict['catalog']['dataset']['dataset']
-        ]
-    else:
-        catalog_dict_list = [
-            {
-                "name": catalog_dict['catalog']['dataset']['dataset']['@name'],
-                "urlPath": catalog_dict['catalog']['dataset']['dataset']['@urlPath'],
-                "size": f"{catalog_dict['catalog']['dataset']['dataset']['dataSize']['#text']} {catalog_dict['catalog']['dataset']['dataset']['dataSize']['@units']}",
-                "date_modified": (
-                    datetime.strptime(catalog_dict['catalog']['dataset']['dataset']['date']['#text'], "%Y-%m-%dT%H:%M:%S.%fZ")
-                    if '.' in catalog_dict['catalog']['dataset']['dataset']['date']['#text']
-                    else datetime.strptime(catalog_dict['catalog']['dataset']['dataset']['date']['#text'], "%Y-%m-%dT%H:%M:%SZ")
-                ).strftime("%d-%m-%Y"),
-            }
-        ]
+    netcdfs = os.listdir(settings.CLIM4CAST_NETCDF_DIR)
+    netcdfs = [f.split('.nc')[0] for f in netcdfs if f.endswith('.nc')]
 
-    return render(request, 'klim4cast/klim4cast.html', {'catalog_json': catalog_dict_list, 'thredds_data': 'thredds_data'})
+
+    return render(request, 'klim4cast/klim4cast.html', {'netcdfs': netcdfs})
+
 
 
 def get_ncml_metadata(request, name):
-    url = f"{settings.THREDDS_URL}/ncml/data/Klim4Cast/{name}.nc"
-    nc_dict = {}
-    ncml = requests.get(url)
-    ncml_data = xmltodict.parse(ncml.text)
-    try:
-        nc_dict['global_attributes'] = {}
-        for attr in ncml_data['netcdf']['attribute']:
-            nc_dict['global_attributes'][attr['@name']] = attr['@value']
 
-        nc_dict['dimensions'] = {}
-        for var in ncml_data['netcdf']['dimension']:
-            nc_dict['dimensions'][var['@name']] = {'length': var['@length']}
-            if '@isUnlimited' in var.keys():
-                nc_dict['dimensions'][var['@name']]['isUnlimited'] = var['@isUnlimited']
+    data = {'variables': {}}
 
-        nc_dict['variables'] = {}
-        for var in ncml_data['netcdf']['variable']:
-            print('var', var)
-            if var['@name'] not in ['latitude', 'lat', 'longitude', 'lon', 'long', 'time']:
-                nc_dict['variables'][var['@name']] = {'shape': var['@shape'], 'type': var['@type'], 'attributes': {}}
-                for att in var['attribute']:
-                    attribute_name = att['@name']
-                    attribute_value = att.get('@value', '')  # Use .get to provide a default empty string
-                    print(f"Processing attribute {attribute_name} with value {attribute_value}")
-                    # Ensure attribute_value is a string
-                    if isinstance(attribute_value, str):
-                        nc_dict['variables'][var['@name']]['attributes'][attribute_name] = attribute_value.encode('utf-8').decode('utf-8')
-                    else:
-                        nc_dict['variables'][var['@name']]['attributes'][attribute_name] = str(attribute_value)
-    except Exception as e:
-        print(f"Error processing NCML metadata: {e}")
-        nc_dict = {'error': 'No metadata available'}
+    with xr.open_dataset(
+        f"{settings.CLIM4CAST_NETCDF_DIR}/{name}.nc",
+        decode_times=False
+    ) as ds:
 
-    data = {}
-    data['title'] = nc_dict['global_attributes']['title']
-    data['variable'] = [x for x in list(nc_dict['variables'].keys()) if x not in list(nc_dict['dimensions'].keys())]
-    time_coverage_start = nc_dict['global_attributes']['time_coverage_start']
-    
-    start_date = datetime.strptime(time_coverage_start, "%Y-%m-%d %H:%M:%SA")
-    time_coverage_start = start_date.strftime("%Y-%m-%d")
-    data['time_coverage_start'] = time_coverage_start
-    new_date = start_date + timedelta(days=int(nc_dict['dimensions']['time']['length']))
-    data['time_coverage_end'] = new_date.strftime("%Y-%m-%d")
-    nc_dict['global_attributes']['time_coverage_start_ymd'] = time_coverage_start
-    nc_dict['global_attributes']['time_coverage_end_ymd'] = new_date.strftime("%Y-%m-%d")
+        for var_name, da in ds.data_vars.items():
 
-    # print('data', data)         
-    print('NC Dict:', nc_dict)
+            data['variables'][var_name] = {
+                'attributes': dict(da.attrs),
+                # 'shape': da.shape,
+                # 'dtype': str(da.dtype),
+                # 'dims': da.dims,
+            }
 
-    return JsonResponse(nc_dict)
+            for attr_name, attr_value in da.attrs.items():
+                if isinstance(attr_value, bytes):
+                    data['variables'][var_name]['attributes'][attr_name] = attr_value.decode('utf-8')
+                else:
+                    data['variables'][var_name]['attributes'][attr_name] = str(attr_value)
+        data['title'] = ds.attrs['title']
+
+        data['time_coverage_start'] = (
+            ds.attrs['time_coverage_start'].split(' ')[0]
+        )
+
+        start_date = datetime.strptime(
+            ds.attrs['time_coverage_start'],
+            "%Y-%m-%d %H:%M:%SA"
+        )
+
+        new_date = start_date + timedelta(
+            days=int(ds.sizes['time'])
+        )
+
+        data['time_coverage_end'] = (
+            new_date.strftime("%Y-%m-%d")
+        )
+
+        data['time_coverage_start_ymd'] = (
+            data['time_coverage_start']
+        )
+
+        data['time_coverage_end_ymd'] = (
+            new_date.strftime("%Y-%m-%d")
+        )
+    print(data)
+    return JsonResponse(data)
+
 
 
 def timelapse_django_passthrough_wms(request, netcdf):
@@ -132,8 +105,8 @@ def get_point_data(request):
     """
     Incoming requests are passed through to the Thredds server.
     """
-
-    if request.method != 'POST':
+    print('check 1 - get_point_data called with method:', request.method)
+    if request.method == 'POST':
         data = json.loads(request.body)
 
         netcdf = f"{data.get('netcdf', '')}.nc"
@@ -141,52 +114,56 @@ def get_point_data(request):
         lat = data.get('lat', '')
         lon = data.get('lon', '')
 
-        with xr.open_dataset(f"{settings.CLIM4CAST_NETCDF_DIR}/{netcdf}", decode_times=False) as ds:
+        print("klim4cast.views.get_point_data", netcdf, param, lat, lon)
+
+        with xr.open_dataset(f"{settings.CLIM4CAST_NETCDF_DIR}/{netcdf}") as ds:
             point_data = ds[param].sel(lat=lat, lon=lon, method='nearest').values
-            time = ds['time'].sel(lat=lat, lon=lon, method='nearest').values
+            dates = ds['time'].dt.strftime('%Y-%m-%d').values.tolist()
             long_name = ds.data_vars[param].long_name if 'long_name' in ds.data_vars[param].attrs else param
-            unit = ds.data_vars[param].units if 'units' in ds.data_vars[param].
+            unit = ds.data_vars[param].units if 'units' in ds.data_vars[param].attrs else ''
 
         return JsonResponse({
             'point_data': point_data.tolist(),
-            'time': time.tolist(),
+            'dates': dates,
             'long_name': long_name,
             'unit': unit,
+            'latitude': lat,
+            'longitude': lon,
         })
     
 
-def get_data(request, name, variable, lat, lon):
-    """
-    Get data from the Thredds server.
-    """
-    path = f"{settings.CLIM4CAST_NETCDF_DIR}/{name}.nc"
-    nc = xr.open_dataset(path)
+# def get_data(request, name, variable, lat, lon):
+#     """
+#     Get data from the Thredds server.
+#     """
+#     path = f"{settings.CLIM4CAST_NETCDF_DIR}/{name}.nc"
+#     nc = xr.open_dataset(path)
 
-    lat = float(lat)
-    lon = float(lon)
+#     lat = float(lat)
+#     lon = float(lon)
 
-    ds = nc.sel(lat=lat, lon=lon, method='nearest')
+#     ds = nc.sel(lat=lat, lon=lon, method='nearest')
 
-    context = {
-        'variable': variable,
-        'long_name': ds.data_vars[variable].long_name,
-        'dates': [str(date)[:10] for date in ds.time.values],  # Convert datetime64 to string
-        'values': [float(val) for val in ds.data_vars[variable].values.flatten()],  # Convert NumPy types to Python
-        'latitude': lat,
-        'longitude': lon,
-    }
+#     context = {
+#         'variable': variable,
+#         'long_name': ds.data_vars[variable].long_name,
+#         'dates': [str(date)[:10] for date in ds.time.values],  # Convert datetime64 to string
+#         'values': [float(val) for val in ds.data_vars[variable].values.flatten()],  # Convert NumPy types to Python
+#         'latitude': lat,
+#         'longitude': lon,
+#     }
 
-    try:
-        context['unit'] = ds.data_vars[variable].units
-    except AttributeError:
-        context['unit'] = ''
+#     try:
+#         context['unit'] = ds.data_vars[variable].units
+#     except AttributeError:
+#         context['unit'] = ''
 
-    try:
-        context['upper_limit'] = float(ds.data_vars[variable].upper_limit) if np.isscalar(ds.data_vars[variable].upper_limit) else ''
-        context['lower_limit'] = float(ds.data_vars[variable].lower_limit) if np.isscalar(ds.data_vars[variable].lower_limit) else ''
-    except AttributeError:
-        context['upper_limit'] = ''
-        context['lower_limit'] = ''
+#     try:
+#         context['upper_limit'] = float(ds.data_vars[variable].upper_limit) if np.isscalar(ds.data_vars[variable].upper_limit) else ''
+#         context['lower_limit'] = float(ds.data_vars[variable].lower_limit) if np.isscalar(ds.data_vars[variable].lower_limit) else ''
+#     except AttributeError:
+#         context['upper_limit'] = ''
+#         context['lower_limit'] = ''
 
-    print('context', context)
-    return JsonResponse(context)
+#     print('context', context)
+#     return JsonResponse(context)

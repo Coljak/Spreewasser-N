@@ -24,15 +24,15 @@
 
 {% block left_panel %}
 <div class="card">
-    <div class="card-header text-white bg-primary">Title</div>
+    <div class="card-header text-white bg-primary">Clim4Cast</div>
     <div class="card-body card-body-fixed-height">
 
     <div id="timelapseControl" class="">
 
         <select id='datasetSelector' class="form-select" aria-label="datasetSelector-label">
             
-            {% for dataset in catalog_json %}
-                <option value="{{ dataset.name }}">{{ dataset.name }}</option>
+            {% for netcdf in netcdfs %}
+                <option value="{{ netcdf }}">{{ netcdf }}</option>
                 
             {% endfor %}
         </select>
@@ -45,33 +45,22 @@
             <span class="input-group-addon  px-3"> bis </span>
             <input type="text" id="endDatePicker" class="input-sm form-control" name="end" />
         </div> 
-        <button class="btn btn-primary" id="loadNetCDFButton">Load Timeseries</button>
+        <button class="btn btn-primary" id="loadNetCDFButton">Display Timeseries</button>
         
     </div>
 </div>
 </div>
 
 
-    <script>
-        var netcdfVariableSelector = document.getElementById('netcdfVariableSelector');
-        var datasetSelector = document.getElementById('datasetSelector');
-        var loadNetCDFButton = document.getElementById('loadNetCDFButton')
-        
-
-    </script>
 {% endblock left_panel %}
 
 {% block bottom_panel %}
 
 <div class="card">
-    <div class="card-header text-white bg-primary" id="clim4castChartTitle">Title</div>
-    <div class="card-body card-body-fixed-height">
+    <div class="card-header text-white bg-primary" id="clim4castChartTitle">Clim4Cast</div>
+    <div id="clim4castChartBody" class="card-body card-body-fixed-height">
         
-
-
-        
-        <canvas id="clim4castChartDiv"></canvas>
-
+        <div id="clim4castChartLegend"></div>
     </div>
 </div>
 {% endblock bottom_panel %}
@@ -90,5 +79,5 @@
     <script type="text/javascript" src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/chartjs/chartjs-plugin-zoom.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/leaflet/leaflet.contextmenu.js' %}"></script>
-    <script type="text/javascript" src="{% static 'klim4cast/js/map_thredds_klim4cast.js' %}"></script>
+    <script type="module" src="{% static 'klim4cast/js/map_thredds_klim4cast.js' %}"></script>
 {% endblock %}

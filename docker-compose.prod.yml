@@ -4,6 +4,7 @@ volumes:
   media_data:
 services:
   app:
+    restart: unless-stopped
    
     volumes:
       - ./app/model_imports:/app/model_imports
@@ -18,14 +19,20 @@ services:
   db:
     volumes:
     - database_data:/var/lib/postgresql/data 
+    restart: unless-stopped
   geoserver:
+    restart: unless-stopped
+  monica:
+    restart: unless-stopped
   redis:
+    restart: unless-stopped
   thredds:
+    restart: unless-stopped
   nginx:
     build: 
       context: .
       dockerfile: Dockerfile.nginx
-
+    restart: unless-stopped
     ports:
       - 80:80
       - 443:443

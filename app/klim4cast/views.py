@@ -17,6 +17,7 @@ def klim4cast_timelapse_items(request):
 
     netcdfs = os.listdir(settings.CLIM4CAST_NETCDF_DIR)
     netcdfs = [f.split('.nc')[0] for f in netcdfs if f.endswith('.nc')]
+    netcdfs.sort(reverse=True)
 
 
     return render(request, 'klim4cast/klim4cast.html', {'netcdfs': netcdfs})

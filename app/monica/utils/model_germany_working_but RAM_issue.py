@@ -96,95 +96,77 @@ def chunked(iterable, size):
 
 
 
-# ============================================================
-# RUN MONICA BATCH
-# STREAM RESULTS DIRECTLY INTO QUEUE
-# NO LARGE RESULT LISTS IN MEMORY
-# ============================================================
 
-def run_monica_batch(envs, queue, timeout_ms=20000):
+def run_monica_batch(envs, timeout_ms=20000):
+    """
+    Sends a batch of MONICA environments and collects results.
+
+    :param envs: list of env dicts
+    :param timeout_ms: receive timeout in milliseconds
+    :return: dict {sharedId: msg}
+    """
     start_time = datetime.now()
     if not envs:
-        return
+        return {}
 
     context = zmq.Context()
 
+    # --- producer (send jobs) ---
     producer = context.socket(zmq.PUSH)
     producer.connect("tcp://swn_monica:6666")
 
+    # --- consumer (receive results) ---
     consumer = context.socket(zmq.DEALER)
-
     shared_id = str(uuid.uuid4())
-
-    consumer.setsockopt_string(
-        zmq.ROUTING_ID,
-        shared_id
-    )
-
+    consumer.setsockopt_string(zmq.ROUTING_ID, shared_id)
     consumer.RCVTIMEO = timeout_ms
-
     consumer.connect("tcp://swn_monica:7777")
 
+    results = []
     expected = len(envs)
 
-    # --------------------------------------------------------
-    # SEND
-    # --------------------------------------------------------
+    # --- SEND ALL ---
+    id_map = {}  # customId -> env (optional, for debugging)
 
     for env in envs:
-
-        env["sharedId"] = shared_id
-
+        env['sharedId'] = shared_id  # ensure sharedId is set
         producer.send_json(env)
+        id_map[env["customId"]] = env
 
-    # --------------------------------------------------------
-    # RECEIVE + STREAM DIRECTLY TO WRITER
-    # --------------------------------------------------------
-
+    # --- RECEIVE ALL ---
     received = 0
+    start_time = datetime.now()
 
     while received < expected:
         print(f"[ZMQ] Waiting for messages... ({received}/{expected} received so far)")
         try:
-
             msg = consumer.recv_json()
             print('msg received with customId', msg.get("customId", 'no Custom Id!!'))
         except zmq.Again:
-
-            print(
-                f"[ZMQ] Timeout after "
-                f"{received}/{expected}"
-            )
-
+            # timeout
+            print(f"[ZMQ] Timeout after receiving {received}/{expected} messages")
             break
 
-        queue.put(msg)
+        
 
+        results.append(msg)
         received += 1
-
+    print('got out of the loop, received', received, 'messages in total, expected was', expected)
+    # --- CLEANUP ---
     producer.setsockopt(zmq.LINGER, 0)
     consumer.setsockopt(zmq.LINGER, 0)
-
     producer.close()
+    print('Producer socket closed')
     consumer.close()
+    print('Consumer socket closed')
 
     context.term()
+    print('ZMQ context terminated')
     end_time = datetime.now() - start_time
 
     print('Batch processing time:', end_time)
 
-
-def run_monica_single(env):
-    q = Queue(maxsize=1)
-
-    run_monica_batch([env], q)
-
-    # pull exactly one message from queue
-    msg = q.get()
-    print(type(msg), "msg type in run_monica_single")
-
-    return msg
-
+    return results
 
 LONG_NAMES_EN = {
     'Date': 'Date',
@@ -288,21 +270,8 @@ def parse_monica_metadata(sample_result):
 
     return daily_meta, monthly_meta
 
-# ============================================================
-# WRITER THREAD
-# DIRECT NETCDF WRITING
-# NO XARRAY
-# NO DASK
-# ============================================================
 
-def writer_worker(
-    queue,
-    nc_daily_vars,
-    nc_monthly_vars,
-    daily_var_order,
-    monthly_var_order,
-    width
-):
+def writer_worker(queue, ds_daily, ds_monthly, daily_var_order, monthly_var_order):
 
     daily_var_index = {
         v: i for i, v in enumerate(daily_var_order)
@@ -314,78 +283,81 @@ def writer_worker(
 
     while True:
 
-        msg = queue.get()
+        batch_results = queue.get()
 
-        if msg is None:
+        if batch_results is None:
             queue.task_done()
             break
 
-        custom_id = msg["customId"]
+        # ---------------------------------------------------------
+        # PROCESS COMPLETE BATCH IN MEMORY FIRST
+        # ---------------------------------------------------------
 
-        lat_idx = custom_id // width
-        lon_idx = custom_id % width
+        daily_pixel_data = []
+        monthly_pixel_data = []
 
-        # =====================================================
-        # DAILY
-        # =====================================================
+        for msg in batch_results:
 
-        daily_block = next(
-            d for d in msg["data"]
-            if d["origSpec"] == '"daily"'
-        )
+            custom_id = msg["customId"]
 
-        daily_results = []
+            lat_idx = custom_id // 1000
+            lon_idx = custom_id % 1000
 
-        for r in daily_block["results"][1:]:
+            # ---------------- DAILY ----------------
 
-            if isinstance(r, list):
-                daily_results.append(r)
-            else:
-                daily_results.append([r])
+            daily_block = next(
+                d for d in msg["data"]
+                if d["origSpec"] == '"daily"'
+            )
 
-        daily_arr = np.asarray(
-            daily_results,
-            dtype=np.float32
-        ).T
+            daily_arr = np.asarray(
+                daily_block["results"][1:],   # skip dates
+                dtype=np.float32
+            ).T
 
-        for var_name, i in daily_var_index.items():
+            daily_pixel_data.append(
+                (lat_idx, lon_idx, daily_arr)
+            )
 
-            nc_daily_vars[var_name][
-                :,
-                lat_idx,
-                lon_idx
-            ] = daily_arr[:, i]
+            # ---------------- MONTHLY ----------------
 
-        # =====================================================
-        # MONTHLY
-        # =====================================================
+            monthly_block = next(
+                d for d in msg["data"]
+                if d["origSpec"] == '"monthly"'
+            )
 
-        monthly_block = next(
-            d for d in msg["data"]
-            if d["origSpec"] == '"monthly"'
-        )
+            monthly_arr = np.asarray(
+                monthly_block["results"][1:],
+                dtype=np.float32
+            ).T
 
-        monthly_results = []
+            monthly_pixel_data.append(
+                (lat_idx, lon_idx, monthly_arr)
+            )
 
-        for r in monthly_block["results"][1:]:
+        # ---------------------------------------------------------
+        # WRITE DAILY
+        # ---------------------------------------------------------
 
-            if isinstance(r, list):
-                monthly_results.append(r)
-            else:
-                monthly_results.append([r])
+        for var_name, var_i in daily_var_index.items():
 
-        monthly_arr = np.asarray(
-            monthly_results,
-            dtype=np.float32
-        ).T
+            da_var = ds_daily[var_name]
 
-        for var_name, i in monthly_var_index.items():
+            for lat_idx, lon_idx, arr in daily_pixel_data:
 
-            nc_monthly_vars[var_name][
-                :,
-                lat_idx,
-                lon_idx
-            ] = monthly_arr[:, i]
+                da_var[:, lat_idx, lon_idx] = arr[:, var_i]
+
+        # ---------------------------------------------------------
+        # WRITE MONTHLY
+        # ---------------------------------------------------------
+
+        for var_name, var_i in monthly_var_index.items():
+
+            da_var = ds_monthly[var_name]
+
+            for lat_idx, lon_idx, arr in monthly_pixel_data:
+
+                da_var[:, lat_idx, lon_idx] = arr[:, var_i]
 
         queue.task_done()
 
@@ -554,10 +526,14 @@ def model_germany(scenario=SCENARIO):
 
     counter = 0
 
-    for (f_lat, f_lon), lat_lon_list in (forecast_lat_lon_idxs_dictionary.items()):
+
+
+    for (f_lat, f_lon), lat_lon_list in (
+        forecast_lat_lon_idxs_dictionary.items()
+    ):
         
-        if counter == 50:       
-            break
+        # if counter == 50:       
+        #     break
 
         
         counter += 1
@@ -646,8 +622,7 @@ def model_germany(scenario=SCENARIO):
     # ============================================================
     print("Env", all_envs[0])
 
-
-    sample_result = run_monica_single(all_envs[0])
+    sample_result = run_monica_batch([all_envs[0]])[0]
 
     daily_meta, monthly_meta = parse_monica_metadata(
         sample_result
@@ -674,168 +649,98 @@ def model_germany(scenario=SCENARIO):
         np.arange(height) + 0.5
     ) * transform.e
 
-
     # ============================================================
-    # NETCDF CREATION
-    # ============================================================
-
-    daily_nc = Dataset(
-        "/app_data/monica/germany/monica_daily.nc",
-        "w",
-        format="NETCDF4"
-    )
-
-    monthly_nc = Dataset(
-        "/app_data/monica/germany/monica_monthly.nc",
-        "w",
-        format="NETCDF4"
-    )
-
-    daily_nc.createDimension(
-        "time",
-        len(daily_meta["dates"])
-    )
-
-    monthly_nc.createDimension(
-        "time",
-        len(monthly_meta["dates"])
-    )
-
-    for nc in [daily_nc, monthly_nc]:
-
-        nc.createDimension("y", height)
-        nc.createDimension("x", width)
-
-    
-    # ------------------------------------------------------------
-    # COORDS
-    # ------------------------------------------------------------
-
-    def create_coords(nc, dates):
-
-        time_var = nc.createVariable(
-            "time",
-            "i4",
-            ("time",)
-        )
-
-        y_var = nc.createVariable(
-            "y",
-            "i4",
-            ("y",)
-        )
-
-        x_var = nc.createVariable(
-            "x",
-            "i4",
-            ("x",)
-        )
-
-        lat_var = nc.createVariable(
-            "lat",
-            "f4",
-            ("y",)
-        )
-
-        lon_var = nc.createVariable(
-            "lon",
-            "f4",
-            ("x",)
-        )
-
-        time_var.units = (
-            f"days since {start_date}"
-        )
-
-        time_var.calendar = "standard"
-
-        time_var[:] = nc4.date2num(
-            pd.to_datetime(dates).to_pydatetime(),
-            units=time_var.units,
-            calendar=time_var.calendar
-        )
-
-        y_var[:] = np.arange(height)
-        x_var[:] = np.arange(width)
-
-        lat_var[:] = lat
-        lon_var[:] = lon
-
-
-    create_coords(
-        daily_nc,
-        daily_meta["dates"]
-    )
-
-    create_coords(
-        monthly_nc,
-        monthly_meta["dates"]
-    )
-
-    # ============================================================
-    # CREATE VARIABLES
+    # DAILY DATASET
     # ============================================================
 
-    nc_daily_vars = {}
+    daily_data_vars = {}
 
     for meta in daily_meta["variables"]:
 
         var_name = meta["name_lower"]
 
-        var = daily_nc.createVariable(
-            var_name,
-            "f4",
+        daily_data_vars[var_name] = (
             ("time", "y", "x"),
-            fill_value=np.nan,
-            chunksizes=(1, 256, 256),
-            zlib=True,
-            complevel=4
+            da.full(
+                (
+                    daily_time_len,
+                    height,
+                    width
+                ),
+                np.nan,
+                chunks=(1, 256, 256),
+                dtype=np.float32
+            ),
+            {
+                "long_name": meta["longname"],
+                "units": meta.get("unit", "")
+            }
         )
 
-        var.long_name = meta["longname"]
+    ds_daily = xr.Dataset(
+        data_vars=daily_data_vars,
+        coords={
+            "time": daily_meta["dates"],
+            "y": np.arange(height),
+            "x": np.arange(width),
+            "lat": ("y", lat),
+            "lon": ("x", lon),
+        }
+    )
 
-        var.units = meta.get("unit", "")
+    # ============================================================
+    # MONTHLY DATASET
+    # ============================================================
 
-        nc_daily_vars[var_name] = var
-
-
-    nc_monthly_vars = {}
+    monthly_data_vars = {}
 
     for meta in monthly_meta["variables"]:
 
         var_name = meta["name_lower"]
 
-        var = monthly_nc.createVariable(
-            var_name,
-            "f4",
+        monthly_data_vars[var_name] = (
             ("time", "y", "x"),
-            fill_value=np.nan,
-            chunksizes=(1, 256, 256),
-            zlib=True,
-            complevel=4
+            da.full(
+                (
+                    monthly_time_len,
+                    height,
+                    width
+                ),
+                np.nan,
+                chunks=(1, 256, 256),
+                dtype=np.float32
+            ),
+            {
+                "long_name": meta["longname"],
+                "units": meta.get("unit", "")
+            }
         )
 
-        var.long_name = meta["longname"]
-
-        var.units = meta.get("unit", "")
-
-        nc_monthly_vars[var_name] = var
+    ds_monthly = xr.Dataset(
+        data_vars=monthly_data_vars,
+        coords={
+            "time": monthly_meta["dates"],
+            "y": np.arange(height),
+            "x": np.arange(width),
+            "lat": ("y", lat),
+            "lon": ("x", lon),
+        }
+    )
 
     # ============================================================
-    # START WRITER
+    # WRITER THREAD
     # ============================================================
 
-    q = Queue(maxsize=1000)
+    q = Queue(maxsize=5)
 
     writer = Thread(
         target=writer_worker,
         args=(
             q,
-            nc_daily_vars,
-            nc_monthly_vars,
+            ds_daily,
+            ds_monthly,
             daily_var_order,
-            monthly_var_order,
-            width
+            monthly_var_order
         )
     )
 
@@ -847,54 +752,51 @@ def model_germany(scenario=SCENARIO):
 
     for batch in chunked(all_envs, BATCH_SIZE):
 
-        run_monica_batch(
-            batch,
-            q
-        )
+        results = run_monica_batch(batch)
+
+        q.put(results)
 
     q.put(None)
 
     writer.join()
 
     # ============================================================
-    # FINALIZE
+    # SAVE
     # ============================================================
 
-    daily_nc.sync()
-    monthly_nc.sync()
+    daily_path = (
+        "/app_data/monica/germany/monica_daily.nc"
+    )
 
-    daily_nc.close()
-    monthly_nc.close()
-    # # ============================================================
-    # # SAVE
-    # # ============================================================
+    monthly_path = (
+        "/app_data/monica/germany/monica_monthly.nc"
+    )
 
+    encoding = {
+        var: {
+            "zlib": True,
+            "complevel": 4,
+            "dtype": "float32",
+            "_FillValue": np.nan,
+            "chunksizes": (1, 256, 256),
+        }
+        for var in ds_daily.data_vars
+    }
 
-    # encoding = {
-    #     var: {
-    #         "zlib": True,
-    #         "complevel": 4,
-    #         "dtype": "float32",
-    #         "_FillValue": np.nan,
-    #         "chunksizes": (1, 256, 256),
-    #     }
-    #     for var in ds_daily.data_vars
-    # }
+    ds_daily.to_netcdf(
+        daily_path,
+        engine="netcdf4",
+        encoding=encoding
+    )
 
-    # ds_daily.to_netcdf(
-    #     daily_path,
-    #     engine="netcdf4",
-    #     encoding=encoding
-    # )
+    ds_monthly.to_netcdf(
+        monthly_path,
+        engine="netcdf4",
+        encoding=encoding
+    )
 
-    # ds_monthly.to_netcdf(
-    #     monthly_path,
-    #     engine="netcdf4",
-    #     encoding=encoding
-    # )
-
-    # ds_daily.close()
-    # ds_monthly.close()
+    ds_daily.close()
+    ds_monthly.close()
 
     print(
         "Complete model run done in",

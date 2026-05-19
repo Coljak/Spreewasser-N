@@ -169,10 +169,24 @@ To expose the website on port 8000
 ```shell
 python manage.py runserver 0.0.0.0:8000
 ```
+### 8. Maintain production server
+If code is changed, the according container needs to be rebuilt. In order to do so, stop the containers
+shell ```
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml stop
+```
+In the folder Spreewasser-N do a git pull to update the code or the compose files etc.
+
+then rebuild the container with
+shell ```
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml build application_name (app, monica, thredds...)
+```
+After the rebuild or if compose files, environment variables, mounts or commands are changed, you must run compose again:
+shell ```
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
 
 
-
-### Apps
+### Apps in Django
 
 ### buek
 This app provides an API for soil data of Germany. The data is based on the [Buek200 by the BGR](https://www.bgr.bund.de/DE/Themen/Boden/Produkte/produkte_node.html). 

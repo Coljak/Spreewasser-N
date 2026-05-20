@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import json
 import numpy as np
 import os
 import rasterio
@@ -7,7 +8,9 @@ from . import monica_constants, climate_store, monica_utils
 from monica import models
 from django.conf import settings
 import buek.models as buek_models
-from django.db.models import Q, Min, Max
+import numpy as np
+
+
 import uuid
 
 from queue import Queue
@@ -18,173 +21,41 @@ import netCDF4 as nc4
 import zmq
 import uuid
 import time
+
 import copy
 import pandas as pd
 
 
+global SKIPPED_IDS_DAILY
+SKIPPED_IDS_DAILY = set()
+global SKIPPED_IDS_MONTHLY
+SKIPPED_IDS_MONTHLY = set()
+
 BATCH_SIZE = 150 # batches for monica runs, probably best between 100-300
+CHUNK_SIZE = 256 # chunks the arrays, and defines the netCDF tilesize
+SCENARIO = monica_constants.SCENARIOS[0]
 
 # PARAMS = ["Yield", "LAI"] + [f"Mois_{i}" for i in range(1, 21)] + ["Mois_AVG"]
 # EVENTS = [
 #     "daily", ["Date", "Yield","LAI", "AbBiom", "PASW", ["Mois",[1, 3, "AVG"]], ["Mois",[4, 6, "AVG"]], ["Mois",[5, 9, "AVG"]], ["Mois",[1, 6, "AVG"]] ],
 #     "monthly", ["Date","Yield","LAI", "AbBiom", "PASW", ["Mois",[1, 3, "AVG"]], ["Mois",[4, 6, "AVG"]], ["Mois",[5, 9, "AVG"]], ["Mois",[1, 6, "AVG"]]],
+
+
 #     ]
 
 
+
+
+# EVENTS = [
+#     "daily", ["Date", "Yield", ["PASW", [1, 7, "AVG"]], ["Mois",[1, 3, "AVG"]], ["Mois",[4, 6, "AVG"]],],
+#     "monthly", ["Date", "Yield", ["PASW", [1, 7, "AVG"]], ["Mois",[1, 3, "AVG"]], ["Mois",[4, 6, "AVG"]], ],
+#     ]
+
 ###### IMPORTANT !!! Do not produce results that are nested lists. that happens for all non aggregated results that stem from layers (Mois, PASW, SOC). The reason is that the current frontend code is not able to handle nested lists and it would require a lot of changes to make it work. So please always produce flat lists, even for non-aggregated layer results. For example, for PASW, instead of producing a list of 10 values (one per layer), produce a list of 10 values with the same value (the non-aggregated value) for each layer. This way, the frontend can handle it without any changes. The same applies to Mois and SOC. For Mois, if it's not aggregated, produce a list of 20 values with the same value for each layer. For SOC, if it's not aggregated, produce a list of 3 values with the same value for each layer. Thank you! ######
 EVENTS = [
-    "daily", ["Date", "Yield", ["PASW", [1, 7, "AVG"]], ["Mois",[1, 3, "AVG"]], ["Mois",[4, 6, "AVG"]],],
-    "monthly", ["Date", "Yield", ["PASW", [1, 7, "AVG"]], ["Mois",[1, 3, "AVG"]], ["Mois",[4, 6, "AVG"]], ],
+    "daily", ["Date", "Yield", ["PASW", [1, 7, "AVG"]]],
+    "monthly", ["Date", "Yield", ["PASW", [1, 7, "AVG"]],], 
     ]
-SCENARIO = monica_constants.SCENARIOS[0]
-
-def doy_to_iso(doy):
-    if doy is None:
-        return None
-    date = datetime(2001, 1, 1) + timedelta(days=doy - 1)  # non-leap year
-    # TODO: check if the first rotation is always 0000
-    return f"0000-{date.strftime('%m-%d')}"
-
-
-def chunked(iterable, size):
-    for i in range(0, len(iterable), size):
-        yield iterable[i:i + size]
-
-
-# def writer_worker(queue, nc_variables, metadata_variables):
-
-#     while True:
-
-#         batch_results = queue.get()
-
-#         if batch_results is None:
-#             queue.task_done()
-#             break
-
-#         for msg in batch_results:
-
-#             custom_id = msg["customId"]
-
-#             lat_idx = custom_id // 1000
-#             lon_idx = custom_id % 1000
-
-#             daily_block = next(
-#                 d for d in msg["data"]
-#                 if d["origSpec"] == '"daily"'
-#             )
-
-#             results = daily_block["results"]
-
-#             # arr = np.asarray(results, dtype=np.float32).squeeze()
-#             # block = np.array(results, dtype=np.float32)
-#             # ds_block[:, lat_idx, lon_idx] = block
-
-#             for meta in metadata_variables:
-
-#                 var_name = meta["name_lower"]
-
-#                 result_index = meta["result_index"]
-
-#                 values = np.asarray(
-#                     results[result_index],
-#                     dtype=np.float32
-#                 ).squeeze()
-
-#                 nc_variables[var_name][:, lat_idx, lon_idx] = values
-
-#         queue.task_done()
-
-
-
-# ============================================================
-# RUN MONICA BATCH
-# STREAM RESULTS DIRECTLY INTO QUEUE
-# NO LARGE RESULT LISTS IN MEMORY
-# ============================================================
-
-def run_monica_batch(envs, queue, timeout_ms=20000):
-    start_time = datetime.now()
-    if not envs:
-        return
-
-    context = zmq.Context()
-
-    producer = context.socket(zmq.PUSH)
-    producer.connect("tcp://swn_monica:6666")
-
-    consumer = context.socket(zmq.DEALER)
-
-    shared_id = str(uuid.uuid4())
-
-    consumer.setsockopt_string(
-        zmq.ROUTING_ID,
-        shared_id
-    )
-
-    consumer.RCVTIMEO = timeout_ms
-
-    consumer.connect("tcp://swn_monica:7777")
-
-    expected = len(envs)
-
-    # --------------------------------------------------------
-    # SEND
-    # --------------------------------------------------------
-
-    for env in envs:
-
-        env["sharedId"] = shared_id
-
-        producer.send_json(env)
-
-    # --------------------------------------------------------
-    # RECEIVE + STREAM DIRECTLY TO WRITER
-    # --------------------------------------------------------
-
-    received = 0
-
-    while received < expected:
-        print(f"[ZMQ] Waiting for messages... ({received}/{expected} received so far)")
-        try:
-
-            msg = consumer.recv_json()
-            print('msg received with customId', msg.get("customId", 'no Custom Id!!'))
-        except zmq.Again:
-
-            print(
-                f"[ZMQ] Timeout after "
-                f"{received}/{expected}"
-            )
-
-            break
-
-        queue.put(msg)
-
-        received += 1
-
-    producer.setsockopt(zmq.LINGER, 0)
-    consumer.setsockopt(zmq.LINGER, 0)
-
-    producer.close()
-    consumer.close()
-
-    context.term()
-    end_time = datetime.now() - start_time
-
-    print('Batch processing time:', end_time)
-
-
-def run_monica_single(env):
-    q = Queue(maxsize=1)
-
-    run_monica_batch([env], q)
-
-    # pull exactly one message from queue
-    msg = q.get()
-    print(type(msg), "msg type in run_monica_single")
-
-    return msg
-
 
 LONG_NAMES_EN = {
     'Date': 'Date',
@@ -211,6 +82,225 @@ LONG_NAMES_DE = {
     'LAI': 'Blattflächenindex',
     'Mois': 'Bodenfeuchtigkeit',
 }
+
+
+def doy_to_iso(doy):
+    if doy is None:
+        return None
+    date = datetime(2001, 1, 1) + timedelta(days=doy - 1)  # non-leap year
+    # TODO: check if the first rotation is always 0000
+    return f"0000-{date.strftime('%m-%d')}"
+
+
+def chunked(iterable, size):
+    for i in range(0, len(iterable), size):
+        yield iterable[i:i + size]
+
+def get_tile_key(lat_idx, lon_idx):
+
+    tile_y = lat_idx // CHUNK_SIZE
+    tile_x = lon_idx // CHUNK_SIZE
+
+    return (tile_y, tile_x)
+
+# ============================================================
+# RUN MONICA BATCH
+# SKIP HANGING PIXELS
+# LOG FAILED PIXELS
+# ============================================================
+
+def run_monica_batch(
+    envs,
+    queue,
+    timeout_ms=120000,   # 2 minutes without a message => stop batch
+):
+    start_time = datetime.now()
+
+    if not envs:
+        return []
+
+    context = zmq.Context()
+
+    producer = context.socket(zmq.PUSH)
+    producer.connect("tcp://swn_monica:6666")
+
+    consumer = context.socket(zmq.DEALER)
+
+    shared_id = str(uuid.uuid4())
+
+    consumer.setsockopt_string(
+        zmq.ROUTING_ID,
+        shared_id
+    )
+
+    consumer.RCVTIMEO = timeout_ms
+
+    consumer.connect("tcp://swn_monica:7777")
+
+    expected = len(envs)
+
+    # --------------------------------------------------------
+    # TRACK SENT IDS
+    # --------------------------------------------------------
+
+    sent_ids = set()
+
+    for env in envs:
+
+        env["sharedId"] = shared_id
+
+        sent_ids.add(env["customId"])
+
+        producer.send_json(env)
+
+    # --------------------------------------------------------
+    # RECEIVE
+    # --------------------------------------------------------
+
+    received_ids = set()
+
+ 
+    poller = zmq.Poller()
+
+    poller.register(
+        consumer,
+        zmq.POLLIN
+    )
+
+    last_message_time = time.time()
+
+    while len(received_ids) < expected:
+
+        print(
+            f"[ZMQ] Waiting for messages... "
+            f"({len(received_ids)}/{expected} received)"
+        )
+
+        socks = dict(
+            poller.poll(5000)   # check every 5 sec
+        )
+
+        # --------------------------------------------------------
+        # MESSAGE AVAILABLE
+        # --------------------------------------------------------
+
+        if consumer in socks:
+
+            msg = consumer.recv_json()
+
+            last_message_time = time.time()
+
+            custom_id = msg.get("customId")
+
+            if custom_id is None:
+
+                print("[ZMQ] message without customId")
+
+                continue
+
+            if custom_id in received_ids:
+
+                print(f"[ZMQ] duplicate result {custom_id}")
+
+                continue
+
+            received_ids.add(custom_id)
+
+            print(
+                "msg received with customId",
+                custom_id
+            )
+            print(
+                "[QUEUE] size before put:",
+                queue.qsize()
+            )
+
+            queue.put(msg)
+
+    # --------------------------------------------------------
+    # NO MESSAGE
+    # --------------------------------------------------------
+
+        else:
+
+            seconds_without_message = (
+                time.time() - last_message_time
+            )
+
+            print(
+                "[ZMQ] no message for",
+                round(seconds_without_message, 1),
+                "seconds"
+            )
+
+            if seconds_without_message > 120:
+
+                print(
+                    "[ZMQ] BATCH TIMEOUT"
+                )
+
+                break
+
+
+
+    # --------------------------------------------------------
+    # FIND FAILED PIXELS
+    # --------------------------------------------------------
+
+    missing_ids = sent_ids - received_ids
+
+    if missing_ids:
+
+        print("\n==============================")
+        print("MISSING MONICA RESULTS")
+        print("==============================")
+
+        for mid in sorted(missing_ids):
+
+            lat_idx = mid // 1000
+            lon_idx = mid % 1000
+
+            print(
+                f"FAILED PIXEL "
+                f"customId={mid} "
+                f"lat_idx={lat_idx} "
+                f"lon_idx={lon_idx}"
+            )
+
+        print("==============================\n")
+
+    # --------------------------------------------------------
+    # CLEANUP
+    # --------------------------------------------------------
+
+    producer.setsockopt(zmq.LINGER, 0)
+    consumer.setsockopt(zmq.LINGER, 0)
+
+    producer.close()
+    consumer.close()
+
+    context.term()
+
+    print(
+        "Batch processing time:",
+        datetime.now() - start_time
+    )
+
+    return missing_ids
+
+
+def run_monica_single(env):
+    q = Queue(maxsize=1)
+
+    run_monica_batch([env], q)
+
+    # pull exactly one message from queue
+    msg = q.get()
+    print(type(msg), "msg type in run_monica_single")
+
+    return msg
+
+
 
 
 def parse_monica_metadata(sample_result):
@@ -288,11 +378,10 @@ def parse_monica_metadata(sample_result):
 
     return daily_meta, monthly_meta
 
+
 # ============================================================
 # WRITER THREAD
 # DIRECT NETCDF WRITING
-# NO XARRAY
-# NO DASK
 # ============================================================
 
 def writer_worker(
@@ -301,8 +390,16 @@ def writer_worker(
     nc_monthly_vars,
     daily_var_order,
     monthly_var_order,
-    width
+    width,
+    height,
+    tile_size=CHUNK_SIZE,
+    sync_every=50,
+    tiles=None
 ):
+
+    # =========================================================
+    # VARIABLE INDEX MAPS
+    # =========================================================
 
     daily_var_index = {
         v: i for i, v in enumerate(daily_var_order)
@@ -312,27 +409,201 @@ def writer_worker(
         v: i for i, v in enumerate(monthly_var_order)
     }
 
+    # =========================================================
+    # TILE BUFFERS
+    # =========================================================
+
+    daily_buffers = {}
+    monthly_buffers = {}
+
+    tile_counts = {}
+    write_counter = 0
+
+    # =========================================================
+    # HELPERS
+    # =========================================================
+
+    def get_or_create_daily_tile(tile_key, time_len):
+        
+        if tile_key not in daily_buffers:
+
+            daily_buffers[tile_key] = {
+                var_name: np.full(
+                    (
+                        time_len,
+                        tile_size,
+                        tile_size
+                    ),
+                    np.nan,
+                    dtype=np.float32
+                )
+                for var_name in daily_var_order
+            }
+
+            tile_counts[tile_key] = 0
+
+
+        return daily_buffers[tile_key]
+
+    def get_or_create_monthly_tile(tile_key, time_len):
+
+        if tile_key not in monthly_buffers:
+
+            monthly_buffers[tile_key] = {
+                var_name: np.full(
+                    (
+                        time_len,
+                        tile_size,
+                        tile_size
+                    ),
+                    np.nan,
+                    dtype=np.float32
+                )
+                for var_name in monthly_var_order
+            }
+
+        return monthly_buffers[tile_key]
+
+    # =========================================================
+    # FLUSH TILE
+    # =========================================================
+
+    def flush_tile(tile_key):
+        print('flushing tile', tile_key)
+        
+        nonlocal write_counter
+
+        tile_y, tile_x = tile_key
+
+        y0 = tile_y * tile_size
+        x0 = tile_x * tile_size
+
+        y1 = min(y0 + tile_size, height)
+        x1 = min(x0 + tile_size, width)
+
+        local_h = y1 - y0
+        local_w = x1 - x0
+        print(f"[WRITER] flushing tile {tile_key} at y={y0}:{y1}, x={x0}:{x1}")
+        # -----------------------------------------------------
+        # DAILY
+        # -----------------------------------------------------
+
+        if tile_key in daily_buffers:
+
+            for var_name, arr in daily_buffers[tile_key].items():
+
+                nc_daily_vars[var_name][
+                    :,
+                    y0:y1,
+                    x0:x1
+                ] = arr[
+                    :,
+                    :local_h,
+                    :local_w
+                ]
+
+            del daily_buffers[tile_key]
+
+        # -----------------------------------------------------
+        # MONTHLY
+        # -----------------------------------------------------
+
+        if tile_key in monthly_buffers:
+
+            for var_name, arr in monthly_buffers[tile_key].items():
+
+                nc_monthly_vars[var_name][
+                    :,
+                    y0:y1,
+                    x0:x1
+                ] = arr[
+                    :,
+                    :local_h,
+                    :local_w
+                ]
+
+            del monthly_buffers[tile_key]
+
+        write_counter += 1
+
+        # -----------------------------------------------------
+        # PERIODIC DISK FLUSH
+        # -----------------------------------------------------
+
+        tile_counts.pop(tile_key, None)
+
+        if write_counter % sync_every == 0:
+            print(f"[WRITER] syncing to disk after {write_counter} tile writes...")
+
+            first_daily = next(iter(nc_daily_vars.values()))
+            first_monthly = next(iter(nc_monthly_vars.values()))
+
+            first_daily.group().sync()
+            first_monthly.group().sync()
+
+    # =========================================================
+    # MAIN LOOP
+    # =========================================================
+    current_tile = None
+
     while True:
 
         msg = queue.get()
 
+        # -----------------------------------------------------
+        # FINAL FLUSH
+        # -----------------------------------------------------
+
         if msg is None:
+            print('message is none- flushing all remaining tiles and exiting')
+            keys = set(list(daily_buffers.keys())).copy()
+            for tile_key in keys:
+                
+                flush_tile(tile_key)
+
             queue.task_done()
+
             break
 
         custom_id = msg["customId"]
 
-        lat_idx = custom_id // width
-        lon_idx = custom_id % width
+        lat_idx = custom_id // 1000
+        lon_idx = custom_id % 1000
+
+        tile_key = get_tile_key(
+            lat_idx,
+            lon_idx
+        )
+
+        if tile_key != current_tile:
+            current_tile = tile_key
+
+        local_y = lat_idx % tile_size
+        local_x = lon_idx % tile_size
+
 
         # =====================================================
         # DAILY
         # =====================================================
 
         daily_block = next(
-            d for d in msg["data"]
-            if d["origSpec"] == '"daily"'
+            (
+                d for d in msg.get("data", [])
+                if d.get("origSpec") == '"daily"'
+            ),
+            None
         )
+
+        if daily_block is None:
+            SKIPPED_IDS_DAILY.add(custom_id)
+            with open("skipped_daily_ids.txt", "a") as f:
+                f.write(f"{json.dumps(msg)}\n")
+            print(
+                f"[WRITER] missing daily block "
+                f"customId={custom_id}"
+            )
+            queue.task_done()
+            continue
 
         daily_results = []
 
@@ -348,12 +619,17 @@ def writer_worker(
             dtype=np.float32
         ).T
 
+        daily_tile = get_or_create_daily_tile(
+            tile_key,
+            daily_arr.shape[0]
+        )
+
         for var_name, i in daily_var_index.items():
 
-            nc_daily_vars[var_name][
+            daily_tile[var_name][
                 :,
-                lat_idx,
-                lon_idx
+                local_y,
+                local_x
             ] = daily_arr[:, i]
 
         # =====================================================
@@ -361,10 +637,21 @@ def writer_worker(
         # =====================================================
 
         monthly_block = next(
-            d for d in msg["data"]
-            if d["origSpec"] == '"monthly"'
+            (
+                d for d in msg.get("data", [])
+                if d.get("origSpec") == '"monthly"'
+            ),
+            None
         )
 
+        if monthly_block is None:
+            SKIPPED_IDS_MONTHLY.add(custom_id)
+            print(
+                f"[WRITER] missing monthly block "
+                f"customId={custom_id}"
+            )
+            queue.task_done()
+            continue
         monthly_results = []
 
         for r in monthly_block["results"][1:]:
@@ -379,14 +666,24 @@ def writer_worker(
             dtype=np.float32
         ).T
 
+        monthly_tile = get_or_create_monthly_tile(
+            tile_key,
+            monthly_arr.shape[0]
+        )
+
         for var_name, i in monthly_var_index.items():
 
-            nc_monthly_vars[var_name][
+            monthly_tile[var_name][
                 :,
-                lat_idx,
-                lon_idx
+                local_y,
+                local_x
             ] = monthly_arr[:, i]
 
+        if tiles.get(current_tile, None) is not None:
+            tiles[current_tile].remove((lat_idx, lon_idx))
+            if len(tiles[current_tile]) == 0:  # if the list is empty, all pixels of the tile have been written
+                flush_tile(current_tile)
+                print(f"[WRITER] tile {current_tile} done, all pixels written")
         queue.task_done()
 
 
@@ -395,6 +692,7 @@ def model_germany(scenario=SCENARIO):
     start = datetime.now()
 
     print("starting Germany forecast")
+    chunksize = CHUNK_SIZE
 
     germany_model_settings = models.GermanyModelParameters.objects.get(
         is_default=True
@@ -419,6 +717,9 @@ def model_germany(scenario=SCENARIO):
         height = ab.height
         width = ab.width
         crs = ab.crs
+
+        global WIDTH
+        WIDTH = width
 
     unique_buek_ids = np.unique(
         agri_buek_arr[agri_buek_arr != -9999]
@@ -550,14 +851,19 @@ def model_germany(scenario=SCENARIO):
         }
     }
 
+    # ==========================================================
+    #  CREATE ENVS FOR ALL CELLS
+    # ==========================================================
+
     all_envs = []
+    tiles = {}
 
     counter = 0
 
     for (f_lat, f_lon), lat_lon_list in (forecast_lat_lon_idxs_dictionary.items()):
         
-        if counter == 50:       
-            break
+        # if counter == 50:       
+        #     break
 
         
         counter += 1
@@ -574,10 +880,21 @@ def model_germany(scenario=SCENARIO):
 
         for (lat_idx, lon_idx) in lat_lon_list:
 
+            # create a dict of all tiles with their lat_lon_list, so that they can be accessed by the writer thread
+            tile_key = get_tile_key(
+                lat_idx,
+                lon_idx
+            )
+            if not tile_key in tiles:
+                tiles[tile_key] = set()
+            
+
             cell = stack[:, lat_idx, lon_idx]
 
             if np.isnan(cell).any():
                 continue
+
+            tiles[tile_key].add((lat_idx, lon_idx))
 
             climate_data = {
                 key: np.concatenate([
@@ -641,6 +958,14 @@ def model_germany(scenario=SCENARIO):
 
     print("Total envs:", len(all_envs))
 
+    # SORT THE ENVS BY TILES
+    all_envs.sort(
+        key=lambda e: (
+            (e["customId"] // 1000) // chunksize,
+            (e["customId"] % 1000) // chunksize
+        )
+    )
+
     # ============================================================
     # METADATA
     # ============================================================
@@ -663,30 +988,38 @@ def model_germany(scenario=SCENARIO):
         for m in monthly_meta["variables"]
     ]
 
-    daily_time_len = len(daily_meta["dates"])
-    monthly_time_len = len(monthly_meta["dates"])
-
-    lon = transform.c + (
-        np.arange(width) + 0.5
-    ) * transform.a
-
-    lat = transform.f + (
-        np.arange(height) + 0.5
-    ) * transform.e
 
 
     # ============================================================
     # NETCDF CREATION
     # ============================================================
+    daily_tmp_path = os.path.join(
+        settings.MONICA_GERMANY_DATA_DIR,
+        "germany_daily_tmp.nc"
+    )
+    daily_path = os.path.join(
+        settings.MONICA_GERMANY_DATA_DIR,
+        "germany_daily.nc"
+    )
+    monthly_tmp_path = os.path.join(
+        settings.MONICA_GERMANY_DATA_DIR,
+        "germany_monthly_tmp.nc"
+    )
+    monthly_path = os.path.join(
+        settings.MONICA_GERMANY_DATA_DIR,
+        "germany_monthly.nc"
+     )
+    os.remove(daily_tmp_path) if os.path.exists(daily_tmp_path) else None
+    os.remove(monthly_tmp_path) if os.path.exists(monthly_tmp_path) else None
 
     daily_nc = Dataset(
-        "/app_data/monica/germany/monica_daily.nc",
+        daily_tmp_path,
         "w",
         format="NETCDF4"
     )
 
     monthly_nc = Dataset(
-        "/app_data/monica/germany/monica_monthly.nc",
+        monthly_tmp_path,
         "w",
         format="NETCDF4"
     )
@@ -702,9 +1035,8 @@ def model_germany(scenario=SCENARIO):
     )
 
     for nc in [daily_nc, monthly_nc]:
-
-        nc.createDimension("y", height)
-        nc.createDimension("x", width)
+        nc.createDimension("lat", height)
+        nc.createDimension("lon", width)
 
     
     # ------------------------------------------------------------
@@ -719,28 +1051,17 @@ def model_germany(scenario=SCENARIO):
             ("time",)
         )
 
-        y_var = nc.createVariable(
-            "y",
-            "i4",
-            ("y",)
-        )
-
-        x_var = nc.createVariable(
-            "x",
-            "i4",
-            ("x",)
-        )
 
         lat_var = nc.createVariable(
             "lat",
             "f4",
-            ("y",)
+            ("lat",)
         )
 
         lon_var = nc.createVariable(
             "lon",
             "f4",
-            ("x",)
+            ("lon",)
         )
 
         time_var.units = (
@@ -755,12 +1076,41 @@ def model_germany(scenario=SCENARIO):
             calendar=time_var.calendar
         )
 
-        y_var[:] = np.arange(height)
-        x_var[:] = np.arange(width)
+
+        # ---------------------------------------------------------
+        # geographic coordinates
+        # ---------------------------------------------------------
+        lon = transform.c + (
+            np.arange(width) + 0.5
+        ) * transform.a
+
+        lat = transform.f + (
+            np.arange(height) + 0.5
+        ) * transform.e
 
         lat_var[:] = lat
         lon_var[:] = lon
 
+        lat_var.standard_name = "latitude"
+        lat_var.units = "degrees_north"
+        lat_var.axis = "Y"
+
+        lon_var.standard_name = "longitude"
+        lon_var.units = "degrees_east"
+        lon_var.axis = "X"
+
+
+        # ---------------------------------------------------------
+        # CRS
+        # ---------------------------------------------------------
+        crs_var = nc.createVariable(
+            "crs", 
+            "i4"
+            )
+        crs_var.spatial_ref = crs.to_wkt()
+        crs_var.grid_mapping_name = "latitude_longitude"
+
+        crs_var.crs_wkt = crs.to_wkt()
 
     create_coords(
         daily_nc,
@@ -777,6 +1127,7 @@ def model_germany(scenario=SCENARIO):
     # ============================================================
 
     nc_daily_vars = {}
+    
 
     for meta in daily_meta["variables"]:
 
@@ -785,16 +1136,19 @@ def model_germany(scenario=SCENARIO):
         var = daily_nc.createVariable(
             var_name,
             "f4",
-            ("time", "y", "x"),
+            ("time", "lat", "lon"),
             fill_value=np.nan,
-            chunksizes=(1, 256, 256),
-            zlib=True,
-            complevel=4
+            chunksizes=(1, chunksize, chunksize),
+            zlib=False,
+            # complevel=4
         )
 
         var.long_name = meta["longname"]
 
         var.units = meta.get("unit", "")
+
+        var.grid_mapping = "crs"
+        var.coordinates = "lat lon"
 
         nc_daily_vars[var_name] = var
 
@@ -808,16 +1162,19 @@ def model_germany(scenario=SCENARIO):
         var = monthly_nc.createVariable(
             var_name,
             "f4",
-            ("time", "y", "x"),
+            ("time", "lat", "lon"),
             fill_value=np.nan,
-            chunksizes=(1, 256, 256),
-            zlib=True,
-            complevel=4
+            chunksizes=(1, chunksize, chunksize),
+            zlib=False,
+            # complevel=4
         )
 
         var.long_name = meta["longname"]
 
         var.units = meta.get("unit", "")
+
+        var.grid_mapping = "crs"
+        var.coordinates = "lat lon"
 
         nc_monthly_vars[var_name] = var
 
@@ -825,7 +1182,7 @@ def model_germany(scenario=SCENARIO):
     # START WRITER
     # ============================================================
 
-    q = Queue(maxsize=1000)
+    q = Queue(maxsize=10000)
 
     writer = Thread(
         target=writer_worker,
@@ -835,7 +1192,11 @@ def model_germany(scenario=SCENARIO):
             nc_monthly_vars,
             daily_var_order,
             monthly_var_order,
-            width
+            width,
+            height,
+            chunksize,   # tile size
+            50,
+            tiles   # sync every N tile writes
         )
     )
 
@@ -844,13 +1205,17 @@ def model_germany(scenario=SCENARIO):
     # ============================================================
     # RUN BATCHES
     # ============================================================
-
+    failed_pixels = []
+    i = 0
     for batch in chunked(all_envs, BATCH_SIZE):
-
-        run_monica_batch(
+        i +=1
+        print('Batch no:', i, 'with batch size:', len(batch))
+        missing_ids = run_monica_batch(
             batch,
             q
         )
+
+        failed_pixels.extend(missing_ids)
 
     q.put(None)
 
@@ -865,40 +1230,39 @@ def model_germany(scenario=SCENARIO):
 
     daily_nc.close()
     monthly_nc.close()
-    # # ============================================================
-    # # SAVE
-    # # ============================================================
 
+    os.rename(daily_tmp_path, daily_path)
+    os.rename(monthly_tmp_path, monthly_path)
 
-    # encoding = {
-    #     var: {
-    #         "zlib": True,
-    #         "complevel": 4,
-    #         "dtype": "float32",
-    #         "_FillValue": np.nan,
-    #         "chunksizes": (1, 256, 256),
-    #     }
-    #     for var in ds_daily.data_vars
-    # }
+    os.remove(daily_tmp_path) if os.path.exists(daily_tmp_path) else None
+    os.remove(monthly_tmp_path) if os.path.exists(monthly_tmp_path) else None
 
-    # ds_daily.to_netcdf(
-    #     daily_path,
-    #     engine="netcdf4",
-    #     encoding=encoding
-    # )
+    print("FAILED PIXELS TOTAL:", len(failed_pixels))
 
-    # ds_monthly.to_netcdf(
-    #     monthly_path,
-    #     engine="netcdf4",
-    #     encoding=encoding
-    # )
+    if failed_pixels:
 
-    # ds_daily.close()
-    # ds_monthly.close()
+        failed_path = os.path.join(
+            settings.MONICA_GERMANY_DATA_DIR,
+            "failed_pixels.txt"
+        )
 
+        with open(failed_path, "w") as f:
+
+            for mid in failed_pixels:
+
+                lat_idx = mid // 1000
+                lon_idx = mid % 1000
+
+                f.write(
+                    f"{mid},{lat_idx},{lon_idx}\n"
+                )
+
+        print("failed pixels written to", failed_path)
     print(
         "Complete model run done in",
-        datetime.now() - start
+        datetime.now() - start,
+        "skipped daily blocks:", SKIPPED_IDS_DAILY,
+        "skipped monthly blocks:", SKIPPED_IDS_MONTHLY
     )
 
 

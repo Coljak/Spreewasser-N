@@ -166,6 +166,7 @@ MONICA_DATA_DIR = APP_DATA_DIR.joinpath('monica')
 MONICA_NETCDF_FORECAST_DIR = MONICA_DATA_DIR.joinpath('netcdf_forecast')
 MONICA_NETCDF_HINDCAST_DIR = MONICA_DATA_DIR.joinpath('netcdf_hindcast')
 MONICA_RASTER_DATA_DIR = MONICA_DATA_DIR.joinpath('raster_data')
+MONICA_GERMANY_DATA_DIR = MONICA_DATA_DIR.joinpath('germany')
 # django app klim4cast
 CLIM4CAST_DATA_DIR = os.path.join(APP_DATA_DIR, 'klim4cast')
 CLIM4CAST_DATA = os.path.join(CLIM4CAST_DATA_DIR, 'chech_globe_data')
